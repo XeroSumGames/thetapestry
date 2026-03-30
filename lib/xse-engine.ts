@@ -151,6 +151,7 @@ export interface WizardState {
   secondaryAmmo: number
   equipment: string
   incidentalItem: string
+  rations: string
 }
 
 export function createWizardState(): WizardState {
@@ -173,6 +174,7 @@ export function createWizardState(): WizardState {
     secondaryAmmo: 0,
     equipment: '',
     incidentalItem: '',
+    rations: '',
   }
 }
 

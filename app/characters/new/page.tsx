@@ -3,6 +3,11 @@ import { useState } from 'react'
 import { createWizardState, WizardState } from '../../../lib/xse-engine'
 import StepXero from '../../../components/wizard/StepXero'
 import StepAttr from '../../../components/wizard/StepAttr'
+import StepFour from '../../../components/wizard/StepFour'
+import StepSix from '../../../components/wizard/StepSix'
+import StepSeven from '../../../components/wizard/StepSeven'
+import StepEight from '../../../components/wizard/StepEight'
+import StepNine from '../../../components/wizard/StepNine'
 
 const STEPS = [
   { num: 0, short: 'Zero',  title: 'Character Concept' },
@@ -91,6 +96,12 @@ export default function NewCharacterPage() {
         {step === 1 && <StepAttr stepIndex={0} stepNumber={1} stepTitle="Where they grew up" skillBudget={2} maxAttr={1} maxSkill={2} placeholder="1–2 sentences: what happened in their early years?" state={state} onChange={handleChange} />}
         {step === 2 && <StepAttr stepIndex={1} stepNumber={2} stepTitle="What they learned" skillBudget={3} maxAttr={2} maxSkill={2} placeholder="1–2 sentences: what did they study or learn?" state={state} onChange={handleChange} />}
         {step === 3 && <StepAttr stepIndex={2} stepNumber={3} stepTitle="What they liked to do" skillBudget={3} maxAttr={2} maxSkill={2} placeholder="1–2 sentences: hobbies, habits, spare time?" state={state} onChange={handleChange} />}
+        {step === 4 && <StepFour state={state} onChange={handleChange} />}
+        {step === 5 && <StepAttr stepIndex={4} stepNumber={5} stepTitle="What they learned after" skillBudget={3} maxAttr={0} maxSkill={3} placeholder="1–2 sentences: what new skills did they pick up after the world fell apart?" state={state} onChange={handleChange} />}
+        {step === 6 && <StepSix state={state} onChange={handleChange} />}
+        {step === 7 && <StepSeven state={state} />}
+        {step === 8 && <StepEight state={state} onChange={handleChange} />}
+        {step === 9 && <StepNine state={state} onChange={handleChange} />}
       </div>
 
       {/* Nav */}

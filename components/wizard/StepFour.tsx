@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { WizardState, StepData, getCumulativeAttributes, getCumulativeSkills, skillStepUp } from '../../lib/xse-engine'
-import { SKILLS, ATTRIBUTE_LABELS, SKILL_LABELS, AttributeName } from '../../lib/xse-schema'
+import { SKILLS, ATTRIBUTE_LABELS, SKILL_LABELS, PROFESSIONS, AttributeName } from '../../lib/xse-schema'
 
 const ATTR_KEYS: AttributeName[] = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 const ATTR_FULL: Record<AttributeName, string> = {
@@ -9,35 +9,41 @@ const ATTR_FULL: Record<AttributeName, string> = {
 }
 
 interface Props {
-  stepIndex: number
-  stepNumber: number
-  stepTitle: string
-  skillBudget: number
-  maxAttr: number
-  maxSkill: number
-  placeholder: string
   state: WizardState
   onChange: (updated: Partial<WizardState>) => void
 }
 
-export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget, maxAttr, maxSkill, placeholder, state, onChange }: Props) {
+export default function StepFour({ state, onChange }: Props) {
   const [skillFilter, setSkillFilter] = useState('')
 
-  const stepData = state.steps[stepIndex] ?? {}
-  const cumulativeAttrs = getCumulativeAttributes(state.steps)
-  const cumulativeSkills = getCumulativeSkills(state.steps)
+  const stepData = state.steps[3] ?? {}
+  const attrSpent = stepData.attrSpent ?? {}
+  const totalAttrSpent = Object.values(attrSpent).reduce((a, v) => a + (v ?? 0), 0)
   const skillCDPSpent = stepData.skillCDPSpent ?? 0
   const skillDeltas = stepData.skillDeltas ?? {}
 
+  const cumulativeAttrs = getCumulativeAttributes(state.steps)
+  const cumulativeSkills = getCumulativeSkills(state.steps)
+
+  const profSkills = PROFESSIONS.find(p => p.name === stepData.profession)?.skills ?? []
+
   function updateStep(patch: Partial<StepData>) {
     const newSteps = [...state.steps]
-    newSteps[stepIndex] = { ...stepData, ...patch }
+    newSteps[3] = { ...stepData, ...patch }
     onChange({ steps: newSteps })
   }
 
-  function pickAttr(key: AttributeName) {
-    if (stepData.attrKey === key) updateStep({ attrKey: null })
-    else if (!stepData.attrKey && cumulativeAttrs[key] < maxAttr) updateStep({ attrKey: key })
+  function changeAttr(key: AttributeName, dir: 1 | -1) {
+    const spent = attrSpent[key] ?? 0
+    const cumVal = cumulativeAttrs[key]
+    if (dir === 1) {
+      if (totalAttrSpent >= 2) return
+      if (cumVal >= 3) return
+      updateStep({ attrSpent: { ...attrSpent, [key]: spent + 1 } })
+    } else {
+      if (spent <= 0) return
+      updateStep({ attrSpent: { ...attrSpent, [key]: spent - 1 } })
+    }
   }
 
   function changeSkill(skillName: string, dir: 1 | -1) {
@@ -46,9 +52,9 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
     const deltaThisStep = skillDeltas[skillName] ?? 0
     const newDeltas = { ...skillDeltas }
     if (dir === 1) {
-      if (skillCDPSpent >= skillBudget) return
+      if (skillCDPSpent >= 4) return
       const next = skillStepUp(cumVal, skill.vocational)
-      if (next > maxSkill) return
+      if (next > 3) return
       newDeltas[skillName] = deltaThisStep + 1
       updateStep({ skillDeltas: newDeltas, skillCDPSpent: skillCDPSpent + 1 })
     } else {
@@ -65,11 +71,12 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
     s.attribute.toLowerCase().includes(skillFilter.toLowerCase())
   )
 
+  // Locked history for steps 1-3
   const lockedSteps = [
     { idx: 0, num: 1, title: 'Where they grew up' },
     { idx: 1, num: 2, title: 'What they learned' },
     { idx: 2, num: 3, title: 'What they liked to do' },
-  ].filter(s => s.num < stepNumber)
+  ]
 
   return (
     <div>
@@ -78,10 +85,8 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
       {lockedSteps.map(({ idx, num, title }) => {
         const d = state.steps[idx] ?? {}
         const attrKey = d.attrKey as AttributeName | null
-        const attrVal = attrKey ? cumulativeAttrs[attrKey] : null
-        const attrStr = attrKey && attrVal !== null
-          ? `${attrKey} → +${attrVal} (${ATTRIBUTE_LABELS[attrVal]})`
-          : 'none'
+        const attrVal = attrKey ? getCumulativeAttributes(state.steps.slice(0, idx + 1))[attrKey] : null
+        const attrStr = attrKey && attrVal !== null ? `${attrKey} → +${attrVal} (${ATTRIBUTE_LABELS[attrVal]})` : 'none'
         const gained = Object.entries(d.skillDeltas ?? {}).filter(([, v]) => (v ?? 0) > 0).map(([n]) => n)
         return (
           <div key={idx} style={{ background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px 12px', marginBottom: '8px' }}>
@@ -103,61 +108,78 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
         )
       })}
 
-      {/* Attribute picker */}
-      <div style={sh}>Attribute — raise one (max {ATTRIBUTE_LABELS[maxAttr]} +{maxAttr})</div>
+      {/* Profession */}
+      <div style={sh}>Profession</div>
+      <div style={{ marginBottom: '10px' }}>
+        <label style={lbl}>Choose a profession — vocation skills highlighted (recommendation only)</label>
+        <select
+          style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }}
+          value={stepData.profession ?? ''}
+          onChange={e => updateStep({ profession: e.target.value })}>
+          <option value="">— select —</option>
+          {PROFESSIONS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
+        </select>
+      </div>
+
+      {/* Attribute picker — 2 CDP */}
+      <div style={sh}>Attributes — 2 CDP (max Exceptional +3)</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#242424', borderRadius: '3px', padding: '8px 12px', marginBottom: '10px', border: '1px solid #2e2e2e' }}>
         <div style={{ display: 'flex', gap: '3px' }}>
-          {[0, 1].map(i => (
-            <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', border: `1px solid ${i < (stepData.attrKey ? 1 : 0) ? '#c0392b' : '#3a3a3a'}`, background: i < (stepData.attrKey ? 1 : 0) ? '#c0392b' : '#0f0f0f' }} />
+          {[0, 1, 2].map(i => (
+            <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', border: `1px solid ${i < totalAttrSpent ? '#c0392b' : '#3a3a3a'}`, background: i < totalAttrSpent ? '#c0392b' : '#0f0f0f' }} />
           ))}
         </div>
-        <span style={{ fontSize: '12px', color: '#f5f2ee', flex: 1 }}>Attribute CDP — raise one attribute</span>
-        <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '36px', textAlign: 'right', color: stepData.attrKey ? '#f5a89a' : '#f5f2ee' }}>
-          {stepData.attrKey ? '0 left' : '1 left'}
+        <span style={{ fontSize: '12px', color: '#f5f2ee', flex: 1 }}>Attribute CDP — up to 2 points, max Exceptional +3</span>
+        <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '36px', textAlign: 'right', color: totalAttrSpent >= 2 ? '#f5a89a' : '#f5f2ee' }}>
+          {2 - totalAttrSpent} left
         </span>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', marginBottom: '8px' }}>
         {ATTR_KEYS.map(k => {
           const val = cumulativeAttrs[k]
-          const isSelected = stepData.attrKey === k
-          const canSelect = !stepData.attrKey && val < maxAttr
+          const spent = attrSpent[k] ?? 0
+          const canInc = totalAttrSpent < 2 && val < 3
+          const canDec = spent > 0
           return (
-            <div key={k} onClick={() => pickAttr(k)} style={{
-              background: isSelected ? '#2a1210' : '#242424',
-              border: `1px solid ${isSelected ? '#c0392b' : '#3a3a3a'}`,
+            <div key={k} style={{
+              background: spent > 0 ? '#2a1210' : '#242424',
+              border: `1px solid ${spent > 0 ? '#c0392b' : '#3a3a3a'}`,
               borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
-              cursor: canSelect || isSelected ? 'pointer' : 'default',
-              opacity: !canSelect && !isSelected ? 0.5 : 1,
-              transition: 'all .15s',
             }}>
               <div style={{ fontSize: '10px', color: '#b0aaa4', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-              <div style={{ fontSize: '7px', color: '#b0aaa4', marginBottom: '5px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
-              <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', color: isSelected ? '#f5a89a' : val > 0 ? '#f5f2ee' : '#b0aaa4' }}>
-                {val >= 0 ? `+${val}` : val}
+              <div style={{ fontSize: '7px', color: '#b0aaa4', marginBottom: '4px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                <button onClick={() => changeAttr(k, -1)} disabled={!canDec} style={attrBtn(!canDec)}>−</button>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', color: spent > 0 ? '#f5a89a' : val > 0 ? '#f5f2ee' : '#b0aaa4' }}>
+                    {val >= 0 ? `+${val}` : val}
+                  </div>
+                  <div style={{ fontSize: '7px', color: spent > 0 ? '#f5a89a' : '#b0aaa4', marginTop: '1px' }}>{ATTRIBUTE_LABELS[val]}</div>
+                </div>
+                <button onClick={() => changeAttr(k, 1)} disabled={!canInc} style={attrBtn(!canInc)}>+</button>
               </div>
-              <div style={{ fontSize: '7px', color: isSelected ? '#f5a89a' : '#b0aaa4', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
             </div>
           )
         })}
       </div>
-      {stepData.attrKey && (
-        <p style={{ fontSize: '12px', color: '#b0aaa4', marginBottom: '8px', lineHeight: 1.6 }}>
-          Raised {ATTR_FULL[stepData.attrKey as AttributeName]} this step. One attribute per step in stages 1–3.
+
+      {/* Skill picker — 4 CDP */}
+      <div style={sh}>Skills — 4 CDP (max Professional +3)</div>
+      {profSkills.length > 0 && (
+        <p style={{ fontSize: '12px', color: '#b0aaa4', marginBottom: '6px', lineHeight: 1.6 }}>
+          Profession skills highlighted: {profSkills.join(', ')}
         </p>
       )}
-
-      {/* Skill picker */}
-      <div style={sh}>Skills — {skillBudget} CDP (max {SKILL_LABELS[maxSkill]})</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#242424', borderRadius: '3px', padding: '8px 12px', marginBottom: '10px', border: '1px solid #2e2e2e' }}>
         <div style={{ display: 'flex', gap: '3px' }}>
-          {Array.from({ length: skillBudget }).map((_, i) => (
+          {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', border: `1px solid ${i < skillCDPSpent ? '#c0392b' : '#3a3a3a'}`, background: i < skillCDPSpent ? '#c0392b' : '#0f0f0f' }} />
           ))}
         </div>
         <span style={{ fontSize: '12px', color: '#f5f2ee', flex: 1 }}>Skill CDP</span>
-        <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '36px', textAlign: 'right', color: skillCDPSpent >= skillBudget ? '#f5a89a' : '#f5f2ee' }}>
-          {skillBudget - skillCDPSpent} left
+        <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '36px', textAlign: 'right', color: skillCDPSpent >= 4 ? '#f5a89a' : '#f5f2ee' }}>
+          {4 - skillCDPSpent} left
         </span>
       </div>
 
@@ -171,17 +193,18 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
         {filteredSkills.map(sk => {
           const cumVal = cumulativeSkills[sk.name]
           const deltaThisStep = skillDeltas[sk.name] ?? 0
-          const canInc = skillCDPSpent < skillBudget && cumVal < maxSkill
+          const isProfSk = profSkills.includes(sk.name)
+          const canInc = skillCDPSpent < 4 && cumVal < 3
           const canDec = deltaThisStep > 0
           const disp = cumVal >= 0 ? (cumVal > 0 ? `+${cumVal}` : '0') : String(cumVal)
           return (
             <div key={sk.name} style={{
               display: 'flex', alignItems: 'center', gap: '6px',
-              border: `1px ${sk.vocational ? 'dashed' : 'solid'} #2e2e2e`,
+              border: `1px ${sk.vocational ? 'dashed' : 'solid'} ${isProfSk ? '#7a1f16' : '#2e2e2e'}`,
               borderRadius: '3px', padding: '5px 7px', background: '#242424',
             }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '11.5px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: deltaThisStep > 0 ? '#f5a89a' : '#f5f2ee' }}>
+                <div style={{ fontSize: '11.5px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: isProfSk ? '#f5a89a' : deltaThisStep > 0 ? '#f5a89a' : '#f5f2ee' }}>
                   {sk.name}{sk.vocational ? '*' : ''}
                 </div>
                 <div style={{ fontSize: '9.5px', color: '#b0aaa4' }}>
@@ -206,7 +229,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
         style={{ width: '100%', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 10px', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', minHeight: '60px', resize: 'vertical', lineHeight: 1.5, boxSizing: 'border-box' }}
         value={stepData.note ?? ''}
         onChange={e => updateStep({ note: e.target.value })}
-        placeholder={placeholder} />
+        placeholder="1–2 sentences: what did they do for work before the Dog Flu?" />
 
     </div>
   )
@@ -220,14 +243,32 @@ const sh: React.CSSProperties = {
   paddingBottom: '4px',
 }
 
-function skBtn(disabled: boolean): React.CSSProperties {
+const lbl: React.CSSProperties = {
+  fontSize: '11px', color: '#f5f2ee',
+  letterSpacing: '.05em', textTransform: 'uppercase',
+  display: 'block', marginBottom: '4px',
+}
+
+function attrBtn(disabled: boolean): React.CSSProperties {
   return {
-    width: '19px', height: '19px', border: `1px solid #3a3a3a`,
+    width: '19px', height: '19px', border: '1px solid #3a3a3a',
     borderRadius: '2px', background: '#1a1a1a',
     cursor: disabled ? 'not-allowed' : 'pointer',
     fontSize: '12px', color: '#f5f2ee',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: 0, lineHeight: 1, opacity: disabled ? 0.18 : 1,
-    transition: 'all .1s', fontFamily: 'Barlow, sans-serif',
+    transition: 'all .1s',
+  }
+}
+
+function skBtn(disabled: boolean): React.CSSProperties {
+  return {
+    width: '19px', height: '19px', border: '1px solid #3a3a3a',
+    borderRadius: '2px', background: '#1a1a1a',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    fontSize: '12px', color: '#f5f2ee',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: 0, lineHeight: 1, opacity: disabled ? 0.18 : 1,
+    transition: 'all .1s',
   }
 }
