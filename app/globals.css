@@ -1,26 +1,74 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0f0f0f;
+  --surface: #1a1a1a;
+  --surface2: #242424;
+  --border: #2e2e2e;
+  --border2: #3a3a3a;
+  --text: #f5f2ee;
+  --text2: #f5f2ee;
+  --text3: #b0aaa4;
+  --accent: #c0392b;
+  --accent-lt: #2a1210;
+  --accent-mid: #7a1f16;
+  --accent-text: #f5a89a;
+  --green: #2d5a1b;
+  --green-lt: #1a2e10;
+  --blue: #1a3a5c;
+  --blue-lt: #0f2035;
+  --blue-text: #7ab3d4;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+input[type=text], input[type=email], input[type=password], textarea, select {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  width: 100%;
+  transition: border-color .15s;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--bg);
+}
+
+textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+input, textarea, select {
+  background-color: #242424 !important;
+  border: 1px solid #3a3a3a !important;
+  border-radius: 3px !important;
+  color: #f5f2ee !important;
+  padding: 8px 10px !important;
+  font-family: 'Barlow', sans-serif !important;
+  font-size: 14px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none !important;
+  border-color: #c0392b !important;
+  background-color: #0f0f0f !important;
 }

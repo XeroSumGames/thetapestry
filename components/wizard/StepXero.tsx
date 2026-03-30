@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react'
 import { WizardState } from '../../lib/xse-engine'
 
-const ALL_WORDS = ["Accommodating","Accountable","Adaptable","Admirable","Adroit","Adventurous","Affectionate","Agreeable","Alert","Altruistic","Ambitious","Amiable","Articulate","Aspiring","Assertive","Attentive","Authentic","Authoritative","Balanced","Benevolent","Bold","Brave","Brilliant","Calm","Candid","Capable","Caring","Charismatic","Charming","Cheerful","Clever","Collaborative","Compassionate","Confident","Conscientious","Considerate","Convivial","Cooperative","Courageous","Courteous","Creative","Cultured","Cunning","Curious","Daring","Decisive","Dedicated","Deliberate","Dependable","Determined","Devoted","Dignified","Diligent","Diplomatic","Disciplined","Discreet","Dutiful","Dynamic","Earnest","Ebullient","Efficient","Egalitarian","Elegant","Eloquent","Empathetic","Encouraging","Energetic","Engaging","Enterprising","Enthusiastic","Ethical","Exemplary","Exuberant","Fair","Fair-minded","Faithful","Farsighted","Fearless","Fervent","Fierce","Flexible","Focused","Forgiving","Forthright","Frank","Friendly","Fun-loving","Generous","Gentle","Genuine","Good-humored","Gracious","Gregarious","Grounded","Hardworking","Helpful","Honest","Honorable","Hopeful","Humane","Humble","Humorous","Idealistic","Imaginative","Impartial","Independent","Industrious","Innovative","Inquisitive","Insightful","Inspirational","Intelligent","Intuitive","Inventive","Joyful","Judicious","Just","Keen","Kind","Kind-hearted","Knowledgeable","Laudable","Logical","Loyal","Magnanimous","Mature","Methodical","Meticulous","Modest","Motivated","Noble","Objective","Observant","Optimistic","Orderly","Organized","Original","Passionate","Patient","Perceptive","Perseverant","Persevering","Persistent","Persuasive","Philanthropic","Philosophical","Pioneering","Poised","Polished","Polite","Practical","Pragmatic","Precise","Principled","Proactive","Prudent","Punctual","Purposeful","Quiet","Rational","Realistic","Reflective","Reliable","Resilient","Resourceful","Respectful","Responsible","Responsive","Reverent","Selfless","Sensible","Sensitive","Serene","Sincere","Sociable","Sophisticated","Stable","Steadfast","Strategic","Supportive","Sympathetic","Systematic","Tactful","Tenacious","Thoughtful","Tolerant","Trusting","Trustworthy","Unassuming","Unbiased","Understanding","Unique","Upbeat","Valiant","Versatile","Vibrant","Vigilant","Visionary","Vivid","Warm","Warm-hearted","Willing","Wise","Witty","Youthful","Zealous"]
+const ALL_WORDS = ["Adaptable","Adventurous","Affectionate","Altruistic","Ambitious","Argumentative","Articulate","Assertive","Authentic","Authoritative","Bold","Braggadocious","Calm","Candid","Charismatic","Clever","Collaborative","Combative","Compassionate","Confident","Conscientious","Contrarian","Courageous","Creative","Cultured","Cunning","Curious","Daring","Decisive","Deliberate","Determined","Dignified","Diligent","Diplomatic","Discreet","Eloquent","Empathetic","Energetic","Enterprising","Fair","Fervent","Fierce","Flexible","Focused","Forgiving","Generous","Genuine","Gregarious","Grounded","Honorable","Humble","Idealistic","Imaginative","Independent","Insightful","Intelligent","Intuitive","Inventive","Joyful","Just","Loyal","Mature","Meticulous","Observant","Original","Passionate","Patient","Perceptive","Persuasive","Philanthropic","Pragmatic","Precise","Principled","Prudent","Purposeful","Rational","Realistic","Reflective","Reliable","Resilient","Resourceful","Sensitive","Sincere","Sociable","Steadfast","Strategic","Tactful","Tenacious","Thoughtful","Tolerant","Trusting","Trustworthy","Understanding","Unique","Versatile","Vigilant","Visionary","Wise","Witty","Zealous"]
 
 interface Props {
   state: WizardState
@@ -42,97 +42,77 @@ export default function StepXero({ state, onChange }: Props) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div>
 
       {/* Character concept */}
-      <div>
-        <div style={shStyle}>Character concept</div>
-        <label style={labelStyle}>In a sentence or two — who is this person before the story begins?</label>
-        <textarea style={textareaStyle} value={state.concept}
+      <div style={sh}>Character concept</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '10px' }}>
+        <label style={lbl}>In a sentence or two — who is this person before the story begins?</label>
+        <textarea style={ta} value={state.concept}
           onChange={e => onChange({ concept: e.target.value })}
           placeholder="e.g. A disgraced detective who walked away from everything after a case went wrong..." />
       </div>
 
       {/* Basic details */}
-      <div>
-        <div style={shStyle}>Basic details</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          <div>
-            <label style={labelStyle}>Name</label>
-            <input style={inputStyle} value={state.name}
-              onChange={e => onChange({ name: e.target.value })}
-              placeholder="Full name" />
-          </div>
-          <div>
-            <label style={labelStyle}>Nickname</label>
-            <input style={inputStyle} value={state.nickname ?? ''}
-              onChange={e => onChange({ nickname: e.target.value })}
-              placeholder="Optional" />
-          </div>
-          <div>
-            <label style={labelStyle}>Age</label>
-            <input style={inputStyle} value={state.age}
-              onChange={e => onChange({ age: e.target.value })}
-              placeholder="e.g. 34" />
-          </div>
-          <div>
-            <label style={labelStyle}>Gender</label>
-            <input style={inputStyle} value={state.gender}
-              onChange={e => onChange({ gender: e.target.value })}
-              placeholder="Optional" />
-          </div>
-          <div>
-            <label style={labelStyle}>Height</label>
-            <input style={inputStyle} value={state.height}
-              onChange={e => onChange({ height: e.target.value })}
-              placeholder="e.g. 5'10&quot;" />
-          </div>
-          <div>
-            <label style={labelStyle}>Weight</label>
-            <input style={inputStyle} value={state.weight}
-              onChange={e => onChange({ weight: e.target.value })}
-              placeholder="e.g. 170 lbs" />
-          </div>
+      <div style={sh}>Basic details</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={lbl}>Name</label>
+          <input style={inp} value={state.name} onChange={e => onChange({ name: e.target.value })} placeholder="Full name" />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={lbl}>Age</label>
+          <input style={inp} value={state.age} onChange={e => onChange({ age: e.target.value })} placeholder="e.g. 34" />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={lbl}>Gender</label>
+          <input style={inp} value={state.gender} onChange={e => onChange({ gender: e.target.value })} placeholder="Optional" />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={lbl}>Height</label>
+          <input style={inp} value={state.height} onChange={e => onChange({ height: e.target.value })} placeholder="e.g. 5'10&quot;" />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={lbl}>Weight</label>
+          <input style={inp} value={state.weight} onChange={e => onChange({ weight: e.target.value })} placeholder="e.g. 170 lbs" />
         </div>
       </div>
 
       {/* Physical description */}
-      <div>
-        <div style={shStyle}>Physical description</div>
-        <label style={labelStyle}>How does this character look? Build, hair, distinguishing features...</label>
-        <textarea style={textareaStyle} value={state.physdesc}
+      <div style={sh}>Physical description</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '10px' }}>
+        <label style={lbl}>How does this character look? Build, hair, distinguishing features...</label>
+        <textarea style={ta} value={state.physdesc}
           onChange={e => onChange({ physdesc: e.target.value })}
           placeholder="e.g. Stocky, mid-40s, weathered skin, a jagged scar across the left cheek, always wears a faded red baseball cap..." />
       </div>
 
       {/* Photo */}
-      <div>
-        <div style={shStyle}>Character photo (optional)</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {state.photoDataUrl
-            ? <img src={state.photoDataUrl} alt="Character" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #2e2e2e' }} />
-            : <div style={{ width: '80px', height: '80px', border: '1px dashed #2e2e2e', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#5a5550' }}>No photo</div>
-          }
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <button onClick={() => fileRef.current?.click()} style={nbtnStyle}>Upload photo</button>
-            {state.photoDataUrl &&
-              <button onClick={() => onChange({ photoDataUrl: '' })} style={nbtnStyle}>Remove</button>
-            }
-            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhoto} />
-          </div>
+      <div style={sh}>Character photo (optional)</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
+        {state.photoDataUrl
+          ? <img src={state.photoDataUrl} alt="Character" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #3a3a3a' }} />
+          : <div style={{ width: '80px', height: '80px', border: '1px dashed #3a3a3a', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#5a5550' }}>No photo</div>
+        }
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <button onClick={() => fileRef.current?.click()} style={nbtn}>Upload photo</button>
+          {state.photoDataUrl && <button onClick={() => onChange({ photoDataUrl: '' })} style={nbtn}>Remove</button>}
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhoto} />
         </div>
       </div>
 
       {/* Three words */}
-      <div>
-        <div style={shStyle}>Three words</div>
-        <p style={{ fontSize: '13px', color: '#9a948a', marginBottom: '0.75rem', lineHeight: 1.5 }}>
-          Type freely or pick from the list. Specific words beat broad ones.
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
-          {[0, 1, 2].map(i => (
-            <div key={i} style={{ position: 'relative' }}>
-              <input style={inputStyle} value={state.threeWords[i]}
+      <div style={sh}>Three words</div>
+      <p style={{ fontSize: '12px', color: '#b0aaa4', lineHeight: 1.6, marginBottom: '8px' }}>
+        Type freely or pick from the list. Specific words beat broad ones.
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '1rem' }}>
+        {[0, 1, 2].map(i => (
+          <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={lbl}>Word {i + 1}</label>
+            <div style={{ position: 'relative' }}>
+              <input style={{ ...inp, paddingRight: state.threeWords[i] ? '28px' : '10px', ...(state.threeWords[i] ? { borderColor: '#c0392b', background: '#2a1210', color: '#f5a89a' } : {}) }}
+                value={state.threeWords[i]}
                 onChange={e => {
                   const words: [string, string, string] = [...state.threeWords]
                   words[i] = e.target.value
@@ -141,95 +121,70 @@ export default function StepXero({ state, onChange }: Props) {
                 placeholder={['e.g. Determined', 'e.g. Loyal', 'e.g. Ruthless'][i]} />
               {state.threeWords[i] && (
                 <button onClick={() => clearWord(i)}
-                  style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }}>
-                  ×
+                  style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#b0aaa4', cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: 0 }}>
+                  x
                 </button>
               )}
             </div>
-          ))}
-        </div>
-        <div style={shStyle}>Or choose from the list</div>
-        <input style={{ ...inputStyle, marginBottom: '0.75rem' }}
-          placeholder="Search words..."
-          value={search}
-          onChange={e => setSearch(e.target.value)} />
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', maxHeight: '180px', overflowY: 'auto', padding: '2px' }}>
-          {filtered.map(word => (
-            <button key={word} onClick={() => pickWord(word)} style={chipStyle}>{word}</button>
-          ))}
-          {filtered.length === 0 && (
-            <span style={{ fontSize: '12px', color: '#5a5550' }}>No matches</span>
-          )}
-        </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={sh}>Or choose from the list</div>
+      <input style={{ ...inp, marginBottom: '8px' }}
+        placeholder="Search words..."
+        value={search}
+        onChange={e => setSearch(e.target.value)} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '3px', maxHeight: '180px', overflowY: 'auto', paddingRight: '2px', marginBottom: '1rem' }}>
+        {filtered.map(word => (
+          <button key={word} onClick={() => pickWord(word)} style={chip}>{word}</button>
+        ))}
+        {filtered.length === 0 && <span style={{ fontSize: '12px', color: '#5a5550' }}>No matches</span>}
       </div>
 
     </div>
   )
 }
 
-const shStyle: React.CSSProperties = {
-  fontSize: '11px',
-  fontWeight: 600,
-  color: '#c0392b',
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  marginBottom: '8px',
-  fontFamily: 'monospace',
+const sh: React.CSSProperties = {
+  fontFamily: 'Barlow Condensed, sans-serif',
+  fontSize: '10px', fontWeight: 600, color: '#f5f2ee',
+  textTransform: 'uppercase', letterSpacing: '.1em',
+  margin: '1.25rem 0 8px', borderBottom: '1px solid #2e2e2e',
+  paddingBottom: '4px',
 }
 
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: '11px',
-  letterSpacing: '0.06em',
-  color: '#9a948a',
-  marginBottom: '6px',
-  fontFamily: 'monospace',
+const lbl: React.CSSProperties = {
+  fontSize: '11px', color: '#f5f2ee',
+  letterSpacing: '.05em', textTransform: 'uppercase',
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem 0.75rem',
-  background: '#1a1a1a',
-  border: '1px solid #2e2e2e',
-  borderRadius: '4px',
-  color: '#e8e4dc',
-  fontSize: '14px',
-  fontFamily: 'monospace',
+const inp: React.CSSProperties = {
+  width: '100%', padding: '8px 10px',
+  background: '#242424', border: '1px solid #3a3a3a',
+  borderRadius: '3px', color: '#f5f2ee',
+  fontSize: '14px', fontFamily: 'Barlow, sans-serif',
+  boxSizing: 'border-box',
 }
 
-const textareaStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem 0.75rem',
-  background: '#1a1a1a',
-  border: '1px solid #2e2e2e',
-  borderRadius: '4px',
-  color: '#e8e4dc',
-  fontSize: '14px',
-  fontFamily: 'monospace',
-  minHeight: '80px',
-  resize: 'vertical',
-  lineHeight: 1.5,
+const ta: React.CSSProperties = {
+  width: '100%', padding: '8px 10px',
+  background: '#242424', border: '1px solid #3a3a3a',
+  borderRadius: '3px', color: '#f5f2ee',
+  fontSize: '14px', fontFamily: 'Barlow, sans-serif',
+  minHeight: '60px', resize: 'vertical', lineHeight: 1.5,
+  boxSizing: 'border-box',
 }
 
-const nbtnStyle: React.CSSProperties = {
-  padding: '6px 14px',
-  background: '#242424',
-  border: '1px solid #2e2e2e',
-  borderRadius: '4px',
-  color: '#e8e4dc',
-  fontSize: '12px',
-  cursor: 'pointer',
-  fontFamily: 'monospace',
+const nbtn: React.CSSProperties = {
+  padding: '6px 14px', borderRadius: '3px', fontSize: '12px', cursor: 'pointer',
+  border: '1px solid #3a3a3a', background: '#242424', color: '#f5f2ee',
+  fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
 }
 
-const chipStyle: React.CSSProperties = {
-  padding: '4px 10px',
-  background: '#242424',
-  border: '1px solid #2e2e2e',
-  borderRadius: '3px',
-  color: '#9a948a',
-  fontSize: '12px',
-  cursor: 'pointer',
-  fontFamily: 'monospace',
-  letterSpacing: '0.03em',
+const chip: React.CSSProperties = {
+  background: '#242424', border: '1px solid #2e2e2e',
+  borderRadius: '3px', padding: '4px 6px', fontSize: '11px', cursor: 'pointer',
+  textAlign: 'center', lineHeight: 1.3, color: '#f5f2ee',
+  fontFamily: 'Barlow, sans-serif',
 }
