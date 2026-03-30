@@ -164,18 +164,25 @@ export default function StepNine({ state, onChange }: Props) {
         </div>
       </div>
 
-      {/* Backstory notes */}
-      {backstoryNotes.length > 0 && (
-        <div style={section}>
-          <div style={sectionTitle}>Backstory notes</div>
-          {backstoryNotes.map(({ step, note }) => (
-            <div key={step} style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '10px', color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '3px' }}>{step}</div>
-              <div style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.6 }}>{note}</div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Backstory */}
+      <div style={section}>
+        <div style={sectionTitle}>Backstory</div>
+        {state.concept && (
+          <p style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '8px', fontStyle: 'italic' }}>
+            {state.concept}
+          </p>
+        )}
+        {state.physdesc && (
+          <p style={{ fontSize: '13px', color: '#b0aaa4', lineHeight: 1.8, marginBottom: '12px' }}>
+            {state.name ? `${state.name} was ` : ''}{state.physdesc}
+          </p>
+        )}
+        {backstoryNotes.length > 0 && (
+          <p style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.8 }}>
+            {backstoryNotes.map(b => b.note).join(' ')}
+          </p>
+        )}
+      </div>
 
       {/* Additional notes */}
       <div style={section}>

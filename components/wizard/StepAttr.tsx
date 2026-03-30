@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { WizardState, StepData, getCumulativeAttributes, getCumulativeSkills, skillStepUp } from '../../lib/xse-engine'
-import { SKILLS, ATTRIBUTE_LABELS, SKILL_LABELS, AttributeName } from '../../lib/xse-schema'
+import { SKILLS, ATTRIBUTE_LABELS, SKILL_LABELS, AttributeName, SkillValue } from '../../lib/xse-schema'
 
 const ATTR_KEYS: AttributeName[] = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 const ATTR_FULL: Record<AttributeName, string> = {
@@ -40,22 +40,34 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
     else if (!stepData.attrKey && cumulativeAttrs[key] < maxAttr) updateStep({ attrKey: key })
   }
 
-  function changeSkill(skillName: string, dir: 1 | -1) {
+    function changeSkill(skillName: string, dir: 1 | -1) {
     const skill = SKILLS.find(s => s.name === skillName)!
     const cumVal = cumulativeSkills[skillName]
-    const deltaThisStep = skillDeltas[skillName] ?? 0
+    const cdpMap = stepData.skillCDPMap ?? {}
+    const cdpThisSkill = cdpMap[skillName] ?? 0
     const newDeltas = { ...skillDeltas }
+    const newCDPMap = { ...cdpMap }
+
     if (dir === 1) {
       if (skillCDPSpent >= skillBudget) return
       const next = skillStepUp(cumVal, skill.vocational)
       if (next > maxSkill) return
-      newDeltas[skillName] = deltaThisStep + 1
-      updateStep({ skillDeltas: newDeltas, skillCDPSpent: skillCDPSpent + 1 })
+      const gain = next - cumVal
+      newDeltas[skillName] = (newDeltas[skillName] ?? 0) + gain
+      newCDPMap[skillName] = cdpThisSkill + 1
+      updateStep({ skillDeltas: newDeltas, skillCDPSpent: skillCDPSpent + 1, skillCDPMap: newCDPMap })
     } else {
-      if (deltaThisStep <= 0) return
-      newDeltas[skillName] = deltaThisStep - 1
-      if (newDeltas[skillName] === 0) delete newDeltas[skillName]
-      updateStep({ skillDeltas: newDeltas, skillCDPSpent: Math.max(0, skillCDPSpent - 1) })
+      if (cdpThisSkill <= 0) return
+      const prev = skillStepUp(
+        (cumVal - 1) as SkillValue,
+        false
+      )
+      const loss = cumVal - prev
+      newDeltas[skillName] = (newDeltas[skillName] ?? 0) - loss
+      if ((newDeltas[skillName] ?? 0) <= 0) delete newDeltas[skillName]
+      newCDPMap[skillName] = cdpThisSkill - 1
+      if (newCDPMap[skillName] <= 0) delete newCDPMap[skillName]
+      updateStep({ skillDeltas: newDeltas, skillCDPSpent: Math.max(0, skillCDPSpent - 1), skillCDPMap: newCDPMap })
     }
   }
 
@@ -103,48 +115,56 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
         )
       })}
 
-      {/* Attribute picker */}
-      <div style={sh}>Attribute — raise one (max {ATTRIBUTE_LABELS[maxAttr]} +{maxAttr})</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#242424', borderRadius: '3px', padding: '8px 12px', marginBottom: '10px', border: '1px solid #2e2e2e' }}>
-        <div style={{ display: 'flex', gap: '3px' }}>
-          {[0, 1].map(i => (
-            <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', border: `1px solid ${i < (stepData.attrKey ? 1 : 0) ? '#c0392b' : '#3a3a3a'}`, background: i < (stepData.attrKey ? 1 : 0) ? '#c0392b' : '#0f0f0f' }} />
-          ))}
-        </div>
-        <span style={{ fontSize: '12px', color: '#f5f2ee', flex: 1 }}>Attribute CDP — raise one attribute</span>
-        <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '36px', textAlign: 'right', color: stepData.attrKey ? '#f5a89a' : '#f5f2ee' }}>
-          {stepData.attrKey ? '0 left' : '1 left'}
-        </span>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', marginBottom: '8px' }}>
-        {ATTR_KEYS.map(k => {
-          const val = cumulativeAttrs[k]
-          const isSelected = stepData.attrKey === k
-          const canSelect = !stepData.attrKey && val < maxAttr
-          return (
-            <div key={k} onClick={() => pickAttr(k)} style={{
-              background: isSelected ? '#2a1210' : '#242424',
-              border: `1px solid ${isSelected ? '#c0392b' : '#3a3a3a'}`,
-              borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
-              cursor: canSelect || isSelected ? 'pointer' : 'default',
-              opacity: !canSelect && !isSelected ? 0.5 : 1,
-              transition: 'all .15s',
-            }}>
-              <div style={{ fontSize: '10px', color: '#b0aaa4', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-              <div style={{ fontSize: '7px', color: '#b0aaa4', marginBottom: '5px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
-              <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', color: isSelected ? '#f5a89a' : val > 0 ? '#f5f2ee' : '#b0aaa4' }}>
-                {val >= 0 ? `+${val}` : val}
-              </div>
-              <div style={{ fontSize: '7px', color: isSelected ? '#f5a89a' : '#b0aaa4', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
+      {/* Attribute picker — only shown when maxAttr > 0 */}
+      {maxAttr > 0 && (
+        <div>
+          <div style={sh}>Attribute — raise one (max {ATTRIBUTE_LABELS[maxAttr]} +{maxAttr})</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#242424', borderRadius: '3px', padding: '8px 12px', marginBottom: '10px', border: '1px solid #2e2e2e' }}>
+            <div style={{ display: 'flex', gap: '3px' }}>
+              {[0, 1].map(i => (
+                <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', border: `1px solid ${i < (stepData.attrKey ? 1 : 0) ? '#c0392b' : '#3a3a3a'}`, background: i < (stepData.attrKey ? 1 : 0) ? '#c0392b' : '#0f0f0f' }} />
+              ))}
             </div>
-          )
-        })}
-      </div>
-      {stepData.attrKey && (
-        <p style={{ fontSize: '12px', color: '#b0aaa4', marginBottom: '8px', lineHeight: 1.6 }}>
-          Raised {ATTR_FULL[stepData.attrKey as AttributeName]} this step. One attribute per step in stages 1–3.
-        </p>
+            <span style={{ fontSize: '12px', color: '#f5f2ee', flex: 1 }}>Attribute CDP — raise one attribute</span>
+            <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '36px', textAlign: 'right', color: stepData.attrKey ? '#f5a89a' : '#f5f2ee' }}>
+              {stepData.attrKey ? '0 left' : '1 left'}
+            </span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', marginBottom: '8px' }}>
+            {ATTR_KEYS.map(k => {
+              const val = cumulativeAttrs[k]
+              const isSelected = stepData.attrKey === k
+              const canInc = !stepData.attrKey && val < maxAttr
+              const canDec = isSelected
+              return (
+                <div key={k} style={{
+                  background: isSelected ? '#2a1210' : '#242424',
+                  border: `1px solid ${isSelected ? '#c0392b' : '#3a3a3a'}`,
+                  borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
+                  transition: 'all .15s',
+                }}>
+                  <div style={{ fontSize: '10px', color: '#b0aaa4', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                  <div style={{ fontSize: '7px', color: '#b0aaa4', marginBottom: '4px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    <button onClick={() => pickAttr(k)} disabled={!canDec} style={attrBtn(!canDec)}>−</button>
+                    <div>
+                      <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', color: isSelected ? '#f5a89a' : val > 0 ? '#f5f2ee' : '#b0aaa4' }}>
+                        {val >= 0 ? `+${val}` : val}
+                      </div>
+                      <div style={{ fontSize: '7px', color: isSelected ? '#f5a89a' : '#b0aaa4', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
+                    </div>
+                    <button onClick={() => pickAttr(k)} disabled={!canInc} style={attrBtn(!canInc)}>+</button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          {stepData.attrKey && (
+            <p style={{ fontSize: '12px', color: '#b0aaa4', marginBottom: '8px', lineHeight: 1.6 }}>
+              Raised {ATTR_FULL[stepData.attrKey as AttributeName]} this step. One attribute per step in stages 1–3.
+            </p>
+          )}
+        </div>
       )}
 
       {/* Skill picker */}
@@ -172,7 +192,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
           const cumVal = cumulativeSkills[sk.name]
           const deltaThisStep = skillDeltas[sk.name] ?? 0
           const canInc = skillCDPSpent < skillBudget && cumVal < maxSkill
-          const canDec = deltaThisStep > 0
+          const canDec = (stepData.skillCDPMap?.[sk.name] ?? 0) > 0
           const disp = cumVal >= 0 ? (cumVal > 0 ? `+${cumVal}` : '0') : String(cumVal)
           return (
             <div key={sk.name} style={{
@@ -220,14 +240,26 @@ const sh: React.CSSProperties = {
   paddingBottom: '4px',
 }
 
-function skBtn(disabled: boolean): React.CSSProperties {
+function attrBtn(disabled: boolean): React.CSSProperties {
   return {
-    width: '19px', height: '19px', border: `1px solid #3a3a3a`,
+    width: '19px', height: '19px', border: '1px solid #3a3a3a',
     borderRadius: '2px', background: '#1a1a1a',
     cursor: disabled ? 'not-allowed' : 'pointer',
     fontSize: '12px', color: '#f5f2ee',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: 0, lineHeight: 1, opacity: disabled ? 0.18 : 1,
-    transition: 'all .1s', fontFamily: 'Barlow, sans-serif',
+    transition: 'all .1s',
+  }
+}
+
+function skBtn(disabled: boolean): React.CSSProperties {
+  return {
+    width: '19px', height: '19px', border: '1px solid #3a3a3a',
+    borderRadius: '2px', background: '#1a1a1a',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    fontSize: '12px', color: '#f5f2ee',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: 0, lineHeight: 1, opacity: disabled ? 0.18 : 1,
+    transition: 'all .1s',
   }
 }

@@ -186,7 +186,7 @@ export default function StepEight({ state, onChange }: Props) {
       </div>
       <div style={{ marginBottom: '1rem' }}>
         <label style={{ fontSize: '11px', color: '#f5f2ee', letterSpacing: '.05em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
-          Enter your own incidental items
+          Enter your own incidental item
         </label>
         <input
           style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }}

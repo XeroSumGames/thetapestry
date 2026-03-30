@@ -121,49 +121,6 @@ export default function StepFour({ state, onChange }: Props) {
         </select>
       </div>
 
-      {/* Attribute picker — 2 CDP */}
-      <div style={sh}>Attributes — 2 CDP (max Exceptional +3)</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#242424', borderRadius: '3px', padding: '8px 12px', marginBottom: '10px', border: '1px solid #2e2e2e' }}>
-        <div style={{ display: 'flex', gap: '3px' }}>
-          {[0, 1, 2].map(i => (
-            <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', border: `1px solid ${i < totalAttrSpent ? '#c0392b' : '#3a3a3a'}`, background: i < totalAttrSpent ? '#c0392b' : '#0f0f0f' }} />
-          ))}
-        </div>
-        <span style={{ fontSize: '12px', color: '#f5f2ee', flex: 1 }}>Attribute CDP — up to 2 points, max Exceptional +3</span>
-        <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '36px', textAlign: 'right', color: totalAttrSpent >= 2 ? '#f5a89a' : '#f5f2ee' }}>
-          {2 - totalAttrSpent} left
-        </span>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', marginBottom: '8px' }}>
-        {ATTR_KEYS.map(k => {
-          const val = cumulativeAttrs[k]
-          const spent = attrSpent[k] ?? 0
-          const canInc = totalAttrSpent < 2 && val < 3
-          const canDec = spent > 0
-          return (
-            <div key={k} style={{
-              background: spent > 0 ? '#2a1210' : '#242424',
-              border: `1px solid ${spent > 0 ? '#c0392b' : '#3a3a3a'}`,
-              borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
-            }}>
-              <div style={{ fontSize: '10px', color: '#b0aaa4', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-              <div style={{ fontSize: '7px', color: '#b0aaa4', marginBottom: '4px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                <button onClick={() => changeAttr(k, -1)} disabled={!canDec} style={attrBtn(!canDec)}>−</button>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', color: spent > 0 ? '#f5a89a' : val > 0 ? '#f5f2ee' : '#b0aaa4' }}>
-                    {val >= 0 ? `+${val}` : val}
-                  </div>
-                  <div style={{ fontSize: '7px', color: spent > 0 ? '#f5a89a' : '#b0aaa4', marginTop: '1px' }}>{ATTRIBUTE_LABELS[val]}</div>
-                </div>
-                <button onClick={() => changeAttr(k, 1)} disabled={!canInc} style={attrBtn(!canInc)}>+</button>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
       {/* Skill picker — 4 CDP */}
       <div style={sh}>Skills — 4 CDP (max Professional +3)</div>
       {profSkills.length > 0 && (
