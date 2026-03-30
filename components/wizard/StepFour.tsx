@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { WizardState, StepData, getCumulativeAttributes, getCumulativeSkills, skillStepUp } from '../../lib/xse-engine'
-import { SKILLS, ATTRIBUTE_LABELS, SKILL_LABELS, PROFESSIONS, AttributeName } from '../../lib/xse-schema'
+import { SKILLS, ATTRIBUTE_LABELS, SKILL_LABELS, PROFESSIONS, AttributeName, SkillValue } from '../../lib/xse-schema'
 
 const ATTR_KEYS: AttributeName[] = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 const ATTR_FULL: Record<AttributeName, string> = {
@@ -49,19 +49,28 @@ export default function StepFour({ state, onChange }: Props) {
   function changeSkill(skillName: string, dir: 1 | -1) {
     const skill = SKILLS.find(s => s.name === skillName)!
     const cumVal = cumulativeSkills[skillName]
-    const deltaThisStep = skillDeltas[skillName] ?? 0
+    const cdpMap = stepData.skillCDPMap ?? {}
+    const cdpThisSkill = cdpMap[skillName] ?? 0
     const newDeltas = { ...skillDeltas }
+    const newCDPMap = { ...cdpMap }
+
     if (dir === 1) {
       if (skillCDPSpent >= 4) return
       const next = skillStepUp(cumVal, skill.vocational)
       if (next > 3) return
-      newDeltas[skillName] = deltaThisStep + 1
-      updateStep({ skillDeltas: newDeltas, skillCDPSpent: skillCDPSpent + 1 })
+      const gain = next - cumVal
+      newDeltas[skillName] = (newDeltas[skillName] ?? 0) + gain
+      newCDPMap[skillName] = cdpThisSkill + 1
+      updateStep({ skillDeltas: newDeltas, skillCDPSpent: skillCDPSpent + 1, skillCDPMap: newCDPMap })
     } else {
-      if (deltaThisStep <= 0) return
-      newDeltas[skillName] = deltaThisStep - 1
-      if (newDeltas[skillName] === 0) delete newDeltas[skillName]
-      updateStep({ skillDeltas: newDeltas, skillCDPSpent: Math.max(0, skillCDPSpent - 1) })
+      if (cdpThisSkill <= 0) return
+      const prev = skillStepUp((cumVal - 1) as SkillValue, false)
+      const loss = cumVal - prev
+      newDeltas[skillName] = (newDeltas[skillName] ?? 0) - loss
+      if ((newDeltas[skillName] ?? 0) <= 0) delete newDeltas[skillName]
+      newCDPMap[skillName] = cdpThisSkill - 1
+      if (newCDPMap[skillName] <= 0) delete newCDPMap[skillName]
+      updateStep({ skillDeltas: newDeltas, skillCDPSpent: skillCDPSpent + 1 - 1, skillCDPMap: newCDPMap })
     }
   }
 

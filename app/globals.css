@@ -72,3 +72,12 @@ input:focus, textarea:focus, select:focus {
   border-color: #c0392b !important;
   background-color: #0f0f0f !important;
 }
+@media print {
+  body * { visibility: hidden; }
+  #print-sheet-container, #print-sheet-container * { visibility: visible; }
+  #print-sheet-container {
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%;
+  }
+}

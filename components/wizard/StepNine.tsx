@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
-import { WizardState, getCumulativeAttributes, getCumulativeSkills, buildCharacter } from '../../lib/xse-engine'
-import { ATTRIBUTE_LABELS, SKILL_LABELS, COMPLICATIONS, MOTIVATIONS, PROFESSIONS, deriveSecondaryStats, AttributeName } from '../../lib/xse-schema'
+import { WizardState, getCumulativeAttributes, getCumulativeSkills } from '../../lib/xse-engine'
+import { ATTRIBUTE_LABELS, COMPLICATIONS, MOTIVATIONS, deriveSecondaryStats, AttributeName } from '../../lib/xse-schema'
+import PrintSheet from './PrintSheet'
 
 const ATTR_KEYS: AttributeName[] = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 const ATTR_FULL: Record<string, string> = {
@@ -114,11 +115,11 @@ export default function StepNine({ state, onChange }: Props) {
         <div style={sectionTitle}>Secondary stats</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
           {[
-            { label: 'Wound Points',      value: derived.woundPoints,      hi: true },
-            { label: 'Resilience Points', value: derived.resiliencePoints, hi: true },
-            { label: 'Initiative',        value: sgn(derived.initiative),  hi: false },
-            { label: 'Perception',        value: sgn(derived.perception),  hi: false },
-            { label: 'Encumbrance',       value: derived.encumbrance,      hi: false },
+            { label: 'Wound Points',      value: derived.woundPoints,         hi: true },
+            { label: 'Resilience Points', value: derived.resiliencePoints,    hi: true },
+            { label: 'Initiative',        value: sgn(derived.initiative),     hi: false },
+            { label: 'Perception',        value: sgn(derived.perception),     hi: false },
+            { label: 'Encumbrance',       value: derived.encumbrance,         hi: false },
             { label: 'Stress Mod',        value: sgn(derived.stressModifier), hi: false },
           ].map(({ label, value, hi }) => (
             <div key={label} style={{ background: '#242424', border: `1px solid ${hi ? '#7a1f16' : '#2e2e2e'}`, borderRadius: '3px', padding: '8px 10px' }}>
@@ -156,9 +157,9 @@ export default function StepNine({ state, onChange }: Props) {
             ['Incidental item',  state.incidentalItem],
             ['Rations',          state.rations],
           ].map(([label, value]) => (
-            <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <div key={String(label)} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
               <label style={fieldLabel}>{label}</label>
-              <input style={{ ...fieldInput, opacity: label.includes('ammo') ? 0.5 : 1 }} defaultValue={value} readOnly={label.includes('ammo')} />
+              <input style={{ ...fieldInput, opacity: String(label).includes('ammo') ? 0.5 : 1 }} defaultValue={String(value)} readOnly={String(label).includes('ammo')} />
             </div>
           ))}
         </div>
@@ -192,6 +193,11 @@ export default function StepNine({ state, onChange }: Props) {
           value={notes}
           onChange={e => setNotes(e.target.value)}
           placeholder="Any additional notes, GM hooks, or personality details..." />
+      </div>
+
+      {/* Hidden print sheet — revealed only during print */}
+      <div id="print-sheet-container" style={{ display: 'none' }}>
+        <PrintSheet state={state} />
       </div>
 
     </div>

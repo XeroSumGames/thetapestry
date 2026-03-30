@@ -11,16 +11,16 @@ import StepEight from '../../../components/wizard/StepEight'
 import StepNine from '../../../components/wizard/StepNine'
 
 const STEPS = [
-  { num: 0, short: 'Zero',  title: 'Character Concept' },
-  { num: 1, short: 'One',   title: 'Where They Grew Up' },
-  { num: 2, short: 'Two',   title: 'What They Learned' },
-  { num: 3, short: 'Three', title: 'What They Liked To Do' },
-  { num: 4, short: 'Four',  title: 'How They Made Money' },
-  { num: 5, short: 'Five',  title: 'What They Learned After' },
-  { num: 6, short: 'Six',   title: 'What Drives Them?' },
-  { num: 7, short: 'Seven', title: 'Secondary Stats' },
-  { num: 8, short: 'Eight', title: 'What They Have' },
-  { num: 9, short: 'Nine',  title: 'Final Review' },
+  { num: 0, title: 'Character Concept' },
+  { num: 1, title: 'Where They Grew Up' },
+  { num: 2, title: 'What They Learned' },
+  { num: 3, title: 'What They Liked To Do' },
+  { num: 4, title: 'How They Made Money' },
+  { num: 5, title: 'What They Learned After' },
+  { num: 6, title: 'What Drives Them?' },
+  { num: 7, title: 'Secondary Stats' },
+  { num: 8, title: 'What They Have' },
+  { num: 9, title: 'Final Review' },
 ]
 
 const STEP_DESC = [
@@ -63,6 +63,13 @@ export default function NewCharacterPage() {
     if (error) { setSaveError(error.message); setSaving(false); return }
     setSaved(true)
     setSaving(false)
+  }
+
+  function handlePrint() {
+    const el = document.getElementById('print-sheet-container')
+    if (el) el.style.display = 'block'
+    window.print()
+    if (el) el.style.display = 'none'
   }
 
   return (
@@ -141,14 +148,21 @@ export default function NewCharacterPage() {
             Step {step} of 9
           </div>
         </div>
-        {step < 9
-          ? <button onClick={() => { setState(p => ({ ...p, currentStep: Math.min(9, p.currentStep + 1) })); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={navBtn(true)}>
-              Advance
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {step === 9 && (
+            <button onClick={handlePrint} style={{ ...navBtn(false), borderColor: '#2d5a1b', color: '#7fc458' }}>
+              Print Character
             </button>
-          : <button onClick={handleSave} disabled={saving || saved} style={{ ...navBtn(true), opacity: saving || saved ? 0.6 : 1 }}>
-              {saving ? 'Saving...' : saved ? 'Saved ✓' : 'Save Character'}
-            </button>
-        }
+          )}
+          {step < 9
+            ? <button onClick={() => { setState(p => ({ ...p, currentStep: Math.min(9, p.currentStep + 1) })); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={navBtn(true)}>
+                Advance
+              </button>
+            : <button onClick={handleSave} disabled={saving || saved} style={{ ...navBtn(true), opacity: saving || saved ? 0.6 : 1 }}>
+                {saving ? 'Saving...' : saved ? 'Saved ✓' : 'Save Character'}
+              </button>
+          }
+        </div>
       </div>
 
     </div>
