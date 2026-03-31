@@ -31,9 +31,10 @@ export default function MapView({ embedded = false }: MapViewProps) {
   const markersRef = useRef<Record<string, any>>({})
   const [pins, setPins] = useState<Pin[]>([])
   const [userId, setUserId] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<'survivor' | 'thriver'>('survivor')
   const [showForm, setShowForm] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(!embedded)
-  const [sidebarTab, setSidebarTab] = useState<'mine' | 'public'>('mine')
+  const [sidebarTab, setSidebarTab] = useState<'mine' | 'public' | 'all'>('mine')
   const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private' })
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -44,7 +45,11 @@ export default function MapView({ embedded = false }: MapViewProps) {
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) setUserId(user.id)
+      if (user) {
+        setUserId(user.id)
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+        if (profile) setUserRole(profile.role as 'survivor' | 'thriver')
+      }
 
       const L = (await import('leaflet')).default
       await import('leaflet/dist/leaflet.css')
@@ -123,10 +128,12 @@ export default function MapView({ embedded = false }: MapViewProps) {
     if (!form.title.trim()) return
     if (!userId) { alert('Not logged in'); return }
     setSaving(true)
+    const isThriver = userRole === 'thriver'
+    const pin_type = isThriver ? 'gm' : form.pin_type
+    const status = isThriver ? 'approved' : form.pin_type === 'rumor' ? 'pending' : 'active'
     const { error } = await supabase.from('map_pins').insert({
-      user_id: userId,
-      lat: form.lat, lng: form.lng, title: form.title, notes: form.notes,
-      pin_type: form.pin_type, status: form.pin_type === 'rumor' ? 'pending' : 'active',
+      user_id: userId, lat: form.lat, lng: form.lng,
+      title: form.title, notes: form.notes, pin_type, status,
     }).select()
     if (!error) { setShowForm(false); loadPins() }
     else alert('Error: ' + error.message)
@@ -138,6 +145,12 @@ export default function MapView({ embedded = false }: MapViewProps) {
     await supabase.from('map_pins').delete().eq('id', id)
     await loadPins()
     setDeletingId(null)
+  }
+
+  async function handleTogglePublic(pin: Pin) {
+    const newStatus = pin.status === 'approved' ? 'active' : 'approved'
+    await supabase.from('map_pins').update({ status: newStatus }).eq('id', pin.id)
+    loadPins()
   }
 
   function startEdit(pin: Pin) {
@@ -157,7 +170,8 @@ export default function MapView({ embedded = false }: MapViewProps) {
 
   const myPins = pins.filter(p => p.user_id === userId)
   const publicPins = pins.filter(p => p.status === 'approved')
-  const displayedPins = sidebarTab === 'mine' ? myPins : publicPins
+  const allPins = userRole === 'thriver' ? pins : []
+  const displayedPins = sidebarTab === 'mine' ? myPins : sidebarTab === 'public' ? publicPins : allPins
 
   function pinTypeLabel(p: Pin) {
     if (p.pin_type === 'rumor' && p.status === 'pending') return 'Rumor — pending'
@@ -169,6 +183,10 @@ export default function MapView({ embedded = false }: MapViewProps) {
   function pinColor(p: Pin) {
     return p.pin_type === 'rumor' ? '#EF9F27' : p.pin_type === 'gm' ? '#c0392b' : '#7ab3d4'
   }
+
+  const tabs: ['mine' | 'public' | 'all', string][] = userRole === 'thriver'
+    ? [['mine', 'Mine'], ['public', 'Public'], ['all', 'All']]
+    : [['mine', 'My Pins'], ['public', 'Public']]
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
@@ -208,17 +226,17 @@ export default function MapView({ embedded = false }: MapViewProps) {
         {!embedded && sidebarOpen && (
           <div style={{ width: '300px', flexShrink: 0, background: '#1a1a1a', borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', zIndex: 500 }}>
             <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e' }}>
-              {([['mine', 'My Pins'], ['public', 'Public']] as const).map(([tab, label]) => (
+              {tabs.map(([tab, label]) => (
                 <button key={tab} onClick={() => setSidebarTab(tab)}
                   style={{ flex: 1, padding: '10px', background: sidebarTab === tab ? '#242424' : 'transparent', border: 'none', borderBottom: `2px solid ${sidebarTab === tab ? '#c0392b' : 'transparent'}`, color: sidebarTab === tab ? '#f5f2ee' : '#b0aaa4', cursor: 'pointer', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                  {label} {tab === 'mine' ? `(${myPins.length})` : `(${publicPins.length})`}
+                  {label}
                 </button>
               ))}
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
               {displayedPins.length === 0 && (
                 <div style={{ padding: '2rem', textAlign: 'center', fontSize: '12px', color: '#5a5550' }}>
-                  {sidebarTab === 'mine' ? 'Click anywhere on the map to place your first pin.' : 'No approved public pins yet.'}
+                  {sidebarTab === 'mine' ? 'Click anywhere on the map to place your first pin.' : 'No pins here yet.'}
                 </div>
               )}
               {displayedPins.map(p => (
@@ -230,8 +248,14 @@ export default function MapView({ embedded = false }: MapViewProps) {
                       {p.notes && <div style={{ fontSize: '11px', color: '#b0aaa4', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.notes}</div>}
                       <div style={{ fontSize: '9px', color: '#5a5550', marginTop: '3px', textTransform: 'uppercase', letterSpacing: '.06em' }}>{pinTypeLabel(p)}</div>
                     </div>
-                    {p.user_id === userId && (
+                    {(p.user_id === userId || userRole === 'thriver') && (
                       <div style={{ display: 'flex', gap: '4px', marginLeft: '8px', flexShrink: 0 }}>
+                        {userRole === 'thriver' && (
+                          <button onClick={e => { e.stopPropagation(); handleTogglePublic(p) }}
+                            style={{ background: 'none', border: 'none', color: p.status === 'approved' ? '#7fc458' : '#5a5550', cursor: 'pointer', fontSize: '10px', padding: '0 2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                            {p.status === 'approved' ? 'Public' : 'Private'}
+                          </button>
+                        )}
                         <button onClick={e => { e.stopPropagation(); startEdit(p) }}
                           style={{ background: 'none', border: 'none', color: '#b0aaa4', cursor: 'pointer', fontSize: '11px', padding: '0 2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
                           Edit
@@ -269,22 +293,29 @@ export default function MapView({ embedded = false }: MapViewProps) {
               <label style={lbl}>Notes</label>
               <textarea style={{ ...inp, minHeight: '60px', resize: 'vertical' }} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="What did you find here?" />
             </div>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={lbl}>Type</label>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                {(['private', 'rumor'] as const).map(t => (
-                  <button key={t} onClick={() => setForm(p => ({ ...p, pin_type: t }))}
-                    style={{ flex: 1, padding: '6px', border: `1px solid ${form.pin_type === t ? '#c0392b' : '#3a3a3a'}`, background: form.pin_type === t ? '#2a1210' : '#242424', color: form.pin_type === t ? '#f5a89a' : '#b0aaa4', borderRadius: '3px', cursor: 'pointer', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                    {t === 'private' ? 'Private' : 'Submit Rumor'}
-                  </button>
-                ))}
-              </div>
-              {form.pin_type === 'rumor' && (
-                <div style={{ fontSize: '10px', color: '#b0aaa4', marginTop: '4px', lineHeight: 1.4 }}>
-                  Rumors are submitted for moderation before becoming visible to other players.
+            {userRole === 'survivor' && (
+              <div style={{ marginBottom: '12px' }}>
+                <label style={lbl}>Type</label>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {(['private', 'rumor'] as const).map(t => (
+                    <button key={t} onClick={() => setForm(p => ({ ...p, pin_type: t }))}
+                      style={{ flex: 1, padding: '6px', border: `1px solid ${form.pin_type === t ? '#c0392b' : '#3a3a3a'}`, background: form.pin_type === t ? '#2a1210' : '#242424', color: form.pin_type === t ? '#f5a89a' : '#b0aaa4', borderRadius: '3px', cursor: 'pointer', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                      {t === 'private' ? 'Private' : 'Submit Rumor'}
+                    </button>
+                  ))}
                 </div>
-              )}
-            </div>
+                {form.pin_type === 'rumor' && (
+                  <div style={{ fontSize: '10px', color: '#b0aaa4', marginTop: '4px', lineHeight: 1.4 }}>
+                    Rumors are submitted for moderation before becoming visible to other players.
+                  </div>
+                )}
+              </div>
+            )}
+            {userRole === 'thriver' && (
+              <div style={{ marginBottom: '12px', fontSize: '11px', color: '#7fc458', padding: '6px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
+                As a Thriver, your pins are immediately public on the map.
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '6px' }}>
               <button onClick={handleSavePin} disabled={saving || !form.title.trim()}
                 style={{ flex: 1, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', cursor: 'pointer', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', opacity: saving || !form.title.trim() ? 0.5 : 1 }}>

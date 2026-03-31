@@ -1,10 +1,26 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
 export default function NavBar() {
+  const [userRole, setUserRole] = useState<'survivor' | 'thriver' | null>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      if (profile) setUserRole(profile.role as 'survivor' | 'thriver')
+    }
+    load()
+  }, [])
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -29,6 +45,9 @@ export default function NavBar() {
       <a href="/characters" style={navLink}>Characters</a>
       <a href="#" style={navLink}>The Campfire</a>
       <a href="/dashboard" style={navLink}>Dashboard</a>
+      {userRole === 'thriver' && (
+        <a href="/moderate" style={{ ...navLink, borderColor: '#EF9F27', color: '#EF9F27' }}>Moderation</a>
+      )}
       <button onClick={handleLogout} style={{ ...navLink, border: '1px solid #c0392b', color: '#f5a89a', cursor: 'pointer', background: '#242424' }}>
         Log Out
       </button>
