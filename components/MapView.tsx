@@ -38,6 +38,8 @@ export default function MapView({ embedded = false }: MapViewProps) {
   const [sidebarTab, setSidebarTab] = useState<'mine' | 'public' | 'all'>('mine')
   const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private' })
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [attachments, setAttachments] = useState<File[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
   const [editForm, setEditForm] = useState({ title: '', notes: '' })
@@ -76,6 +78,7 @@ export default function MapView({ embedded = false }: MapViewProps) {
 
       map.on('click', (e: any) => {
         setForm({ lat: e.latlng.lat, lng: e.latlng.lng, title: '', notes: '', pin_type: 'private' })
+        setAttachments([])
         setShowForm(true)
         setEditingPin(null)
       })
@@ -159,14 +162,26 @@ export default function MapView({ embedded = false }: MapViewProps) {
     if (!userId) { alert('Not logged in'); return }
     setSaving(true)
     const isThriver = userRole === 'thriver'
-    const { error } = await supabase.from('map_pins').insert({
+    const { error, data } = await supabase.from('map_pins').insert({
       user_id: userId, lat: form.lat, lng: form.lng,
       title: form.title, notes: form.notes,
       pin_type: isThriver ? 'gm' : 'rumor',
       status: isThriver ? 'approved' : 'pending',
-    }).select()
-    if (!error) { setShowForm(false); await loadPins() }
-    else alert('Error: ' + error.message)
+    }).select().single()
+    if (error) { alert('Error: ' + error.message); setSaving(false); return }
+
+    if (attachments.length > 0 && data) {
+      setUploading(true)
+      for (const file of attachments) {
+        const path = `${userId}/${data.id}/${file.name}`
+        await supabase.storage.from('pin-attachments').upload(path, file)
+      }
+      setUploading(false)
+    }
+
+    setAttachments([])
+    setShowForm(false)
+    await loadPins()
     setSaving(false)
   }
 
@@ -324,9 +339,10 @@ export default function MapView({ embedded = false }: MapViewProps) {
 
         {/* New pin form */}
         {showForm && (
-          <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 1001, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '1rem', width: '300px' }}>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 600, color: '#c0392b', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '6px' }}>New Pin</div>
+          <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 1001, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '1rem', width: '300px', resize: 'both', overflow: 'auto', minWidth: '260px', maxWidth: '600px' }}>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 600, color: '#c0392b', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Add a Rumor</div>
             <div style={{ fontSize: '12px', color: '#5a5550', marginBottom: '10px' }}>{form.lat.toFixed(4)}, {form.lng.toFixed(4)}</div>
+
             <div style={{ marginBottom: '8px' }}>
               <label style={lbl}>Title</label>
               <input style={inp} value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Abandoned hospital" />
@@ -335,6 +351,29 @@ export default function MapView({ embedded = false }: MapViewProps) {
               <label style={lbl}>Notes</label>
               <textarea style={{ ...inp, minHeight: '60px', resize: 'vertical' }} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="What did you find here?" />
             </div>
+
+            {/* Attachments */}
+            <div style={{ marginBottom: '12px' }}>
+              <label style={lbl}>Attachments</label>
+              <label style={{ display: 'block', padding: '8px 10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: '#b0aaa4' }}>
+                {attachments.length > 0 ? `${attachments.length} file${attachments.length > 1 ? 's' : ''} selected` : 'Click to attach files'}
+                <input type="file" multiple style={{ display: 'none' }} onChange={e => {
+                  if (e.target.files) setAttachments(Array.from(e.target.files))
+                }} />
+              </label>
+              {attachments.length > 0 && (
+                <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  {attachments.map((f, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#b0aaa4', padding: '3px 6px', background: '#0f0f0f', borderRadius: '2px' }}>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{f.name}</span>
+                      <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))}
+                        style={{ background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '14px', padding: '0 2px', flexShrink: 0 }}>×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div style={{ marginBottom: '12px', fontSize: '13px', padding: '6px 8px', borderRadius: '3px',
               background: userRole === 'thriver' ? '#1a2e10' : '#1a1a2e',
               border: `1px solid ${userRole === 'thriver' ? '#2d5a1b' : '#2e2e5a'}`,
@@ -345,12 +384,13 @@ export default function MapView({ embedded = false }: MapViewProps) {
                 ? 'As a Thriver, your pins are immediately public on the map.'
                 : 'Your pin will be visible to you and submitted to the Thriver queue. If approved, it will appear as a Rumor for all players.'}
             </div>
+
             <div style={{ display: 'flex', gap: '6px' }}>
-              <button onClick={handleSavePin} disabled={saving || !form.title.trim()}
-                style={{ flex: 1, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', opacity: saving || !form.title.trim() ? 0.5 : 1 }}>
-                {saving ? 'Saving...' : 'Save Pin'}
+              <button onClick={handleSavePin} disabled={saving || uploading || !form.title.trim()}
+                style={{ flex: 1, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', opacity: saving || uploading || !form.title.trim() ? 0.5 : 1 }}>
+                {uploading ? 'Uploading...' : saving ? 'Saving...' : 'Save Pin'}
               </button>
-              <button onClick={() => setShowForm(false)}
+              <button onClick={() => { setShowForm(false); setAttachments([]) }}
                 style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 Cancel
               </button>
@@ -360,7 +400,7 @@ export default function MapView({ embedded = false }: MapViewProps) {
 
         {/* Edit pin form */}
         {editingPin && (
-          <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 1001, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #7ab3d4', borderRadius: '4px', padding: '1rem', width: '300px' }}>
+          <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 1001, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #7ab3d4', borderRadius: '4px', padding: '1rem', width: '300px', resize: 'both', overflow: 'auto', minWidth: '260px', maxWidth: '600px' }}>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 600, color: '#7ab3d4', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '10px' }}>Edit Pin</div>
             <div style={{ marginBottom: '8px' }}>
               <label style={lbl}>Title</label>

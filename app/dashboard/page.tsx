@@ -8,6 +8,7 @@ const MapView = dynamic(() => import('../../components/MapView'), { ssr: false }
 
 interface Pin {
   id: string
+  user_id: string
   title: string
   notes: string
   lat: number
@@ -16,6 +17,7 @@ interface Pin {
   pin_type: string
   created_at: string
   profiles?: { username: string }
+  attachments?: string[]
 }
 
 export default function DashboardPage() {
@@ -36,13 +38,20 @@ export default function DashboardPage() {
         setUsername(profile.username)
         setUserRole(profile.role as 'survivor' | 'thriver')
         if (profile.role === 'thriver') {
-          const { data: rumors } = await supabase
+          const { data: rawRumors } = await supabase
             .from('map_pins')
             .select('*, profiles(username)')
             .eq('pin_type', 'rumor')
             .eq('status', 'pending')
             .order('created_at', { ascending: false })
-          setPendingPins(rumors ?? [])
+
+          const rumors = await Promise.all((rawRumors ?? []).map(async (pin: any) => {
+            const { data: files } = await supabase.storage
+              .from('pin-attachments')
+              .list(`${pin.user_id}/${pin.id}`)
+            return { ...pin, attachments: files?.map((f: any) => f.name) ?? [] }
+          }))
+          setPendingPins(rumors)
         }
       }
       setLoading(false)
@@ -71,10 +80,10 @@ export default function DashboardPage() {
 
         {/* Welcome header */}
         <div style={{ padding: '16px 14px 8px', fontSize: '13px', color: '#f5f2ee', letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', borderBottom: '1px solid #2e2e2e', marginBottom: '8px' }}>
-          Welcome, {username}
+          {username}
           {userRole === 'thriver'
-            ? <span style={{ marginLeft: '6px', background: '#c0392b', color: '#fff', fontSize: '8px', padding: '1px 5px', borderRadius: '2px' }}>Thriver</span>
-            : <span style={{ marginLeft: '6px', background: '#2d5a1b', color: '#7fc458', fontSize: '8px', padding: '1px 5px', borderRadius: '2px' }}>Survivor</span>
+            ? <span style={{ marginLeft: '6px', background: '#c0392b', color: '#fff', fontSize: '10px', padding: '1px 5px', borderRadius: '2px' }}>Thriver</span>
+            : <span style={{ marginLeft: '6px', background: '#2d5a1b', color: '#7fc458', fontSize: '10px', padding: '1px 5px', borderRadius: '2px' }}>Survivor</span>
           }
         </div>
 
@@ -149,14 +158,26 @@ export default function DashboardPage() {
                 <div style={{ fontSize: '12px', color: '#5a5550', marginBottom: '6px' }}>
                   {p.profiles?.username ?? 'unknown'} · {p.lat.toFixed(3)}, {p.lng.toFixed(3)}
                 </div>
-                {p.notes && <div style={{ fontSize: '13px', color: '#b0aaa4', marginBottom: '8px', lineHeight: 1.5 }}>{p.notes}</div>}
+                {p.notes && (
+                  <div style={{ fontSize: '13px', color: '#b0aaa4', marginBottom: '6px', lineHeight: 1.5 }}>{p.notes}</div>
+                )}
+                {p.attachments && p.attachments.length > 0 && (
+                  <div style={{ marginBottom: '8px' }}>
+                    {p.attachments.map((name: string) => (
+                      <div key={name} style={{ fontSize: '11px', color: '#7ab3d4', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '3px' }}>
+                        <span style={{ opacity: 0.7 }}>📎</span>
+                        <span>Uploaded file: {name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: '4px' }}>
                   <button onClick={() => handleAction(p.id, 'approved')} disabled={acting === p.id}
                     style={{ flex: 1, padding: '5px', background: 'none', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                     Approve
                   </button>
                   <button onClick={() => handleAction(p.id, 'rejected')} disabled={acting === p.id}
-                    style={{ flex: 1, padding: '5px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '10px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                    style={{ flex: 1, padding: '5px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                     Reject
                   </button>
                 </div>
