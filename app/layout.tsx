@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import NavBar from "../components/NavBar";
+import LayoutShell from "../components/LayoutShell";
 
 export const metadata: Metadata = {
   title: "The Tapestry — Distemper",
@@ -21,9 +22,7 @@ export default function RootLayout({
       </head>
       <body style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', background: '#0f0f0f', margin: 0, padding: 0, fontFamily: 'Barlow, sans-serif', fontSize: '15px' }}>
         <NavBar />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          {children}
-        </div>
+        <LayoutShell>{children}</LayoutShell>
       </body>
     </html>
   )

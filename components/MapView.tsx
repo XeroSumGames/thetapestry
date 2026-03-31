@@ -23,9 +23,10 @@ interface PinForm {
 
 interface MapViewProps {
   embedded?: boolean
+  showHeader?: boolean
 }
 
-export default function MapView({ embedded = false }: MapViewProps) {
+export default function MapView({ embedded = false, showHeader = true }: MapViewProps) {
   const mapRef = useRef<any>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<Record<string, any>>({})
@@ -239,7 +240,7 @@ export default function MapView({ embedded = false }: MapViewProps) {
     <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
 
       {/* Header — standalone only */}
-      {!embedded && (
+      {!embedded && showHeader && (
         <div style={{ flexShrink: 0, zIndex: 1000, background: '#0f0f0f', borderBottom: '1px solid #c0392b', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
             The Tapestry
