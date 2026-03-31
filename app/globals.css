@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap');
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
 :root {
   --bg: #0f0f0f;
@@ -29,6 +31,8 @@ html, body {
   font-size: 15px;
   line-height: 1.5;
   min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
 input[type=text], input[type=email], input[type=password], textarea, select {
@@ -36,7 +40,7 @@ input[type=text], input[type=email], input[type=password], textarea, select {
   border: 1px solid var(--border2);
   border-radius: 3px;
   padding: 8px 10px;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text);
   font-family: 'Barlow', sans-serif;
   width: 100%;
@@ -55,23 +59,6 @@ textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-input, textarea, select {
-  background-color: #242424 !important;
-  border: 1px solid #3a3a3a !important;
-  border-radius: 3px !important;
-  color: #f5f2ee !important;
-  padding: 8px 10px !important;
-  font-family: 'Barlow', sans-serif !important;
-  font-size: 14px !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-input:focus, textarea:focus, select:focus {
-  outline: none !important;
-  border-color: #c0392b !important;
-  background-color: #0f0f0f !important;
-}
 @media print {
   body * { visibility: hidden; }
   #print-sheet-container, #print-sheet-container * { visibility: visible; }

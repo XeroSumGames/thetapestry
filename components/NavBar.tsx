@@ -34,17 +34,17 @@ export default function NavBar() {
       padding: '10px 16px', flexShrink: 0,
       fontFamily: 'Barlow Condensed, sans-serif',
     }}>
-      <a href="/dashboard" style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee', textDecoration: 'none' }}>
+       <a href="/dashboard" style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee', textDecoration: 'none' }}>
         The Tapestry
       </a>
-      <span style={{ fontSize: '11px', color: '#b0aaa4', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+      <span style={{ fontSize: '13px', color: '#b0aaa4', letterSpacing: '.08em', textTransform: 'uppercase' }}>
         DistemperVerse v1.0
       </span>
       <div style={{ flex: 1 }} />
-      <a href="/map" style={navLink}>Map</a>
-      <a href="/characters" style={navLink}>Characters</a>
-      <a href="#" style={navLink}>The Campfire</a>
       <a href="/dashboard" style={navLink}>Dashboard</a>
+      <a href="/characters" style={navLink}>Characters</a>
+      <a href="/map" style={navLink}>Map</a>
+      <a href="#" style={navLink}>The Campfire</a>
       {userRole === 'thriver' && (
         <a href="/moderate" style={{ ...navLink, borderColor: '#EF9F27', color: '#EF9F27' }}>Moderation</a>
       )}
@@ -56,9 +56,9 @@ export default function NavBar() {
 }
 
 const navLink: React.CSSProperties = {
-  padding: '5px 12px', background: '#242424',
+  padding: '6px 14px', background: '#242424',
   border: '1px solid #3a3a3a', borderRadius: '3px',
-  color: '#f5f2ee', fontSize: '11px',
+  color: '#f5f2ee', fontSize: '13px',
   letterSpacing: '.06em', textTransform: 'uppercase',
   textDecoration: 'none', fontFamily: 'Barlow Condensed, sans-serif',
 }
