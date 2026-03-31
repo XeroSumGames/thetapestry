@@ -21,18 +21,24 @@ interface PinForm {
   pin_type: 'private' | 'rumor'
 }
 
-export default function MapView() {
+interface MapViewProps {
+  embedded?: boolean
+}
+
+export default function MapView({ embedded = false }: MapViewProps) {
   const mapRef = useRef<any>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<Record<string, any>>({})
   const [pins, setPins] = useState<Pin[]>([])
   const [userId, setUserId] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(!embedded)
   const [sidebarTab, setSidebarTab] = useState<'mine' | 'public'>('mine')
   const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private' })
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [editingPin, setEditingPin] = useState<Pin | null>(null)
+  const [editForm, setEditForm] = useState({ title: '', notes: '' })
   const supabase = createClient()
 
   useEffect(() => {
@@ -52,7 +58,7 @@ export default function MapView() {
 
       if (!mapRef.current || mapInstanceRef.current) return
 
-      const map = L.map(mapRef.current, { center: [20, 0], zoom: 3, zoomControl: true })
+      const map = L.map(mapRef.current, { center: [44.97, -103.77], zoom: 4, zoomControl: true })
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -64,6 +70,7 @@ export default function MapView() {
       map.on('click', (e: any) => {
         setForm({ lat: e.latlng.lat, lng: e.latlng.lng, title: '', notes: '', pin_type: 'private' })
         setShowForm(true)
+        setEditingPin(null)
       })
 
       loadPins(L, map)
@@ -114,12 +121,15 @@ export default function MapView() {
 
   async function handleSavePin() {
     if (!form.title.trim()) return
+    if (!userId) { alert('Not logged in'); return }
     setSaving(true)
     const { error } = await supabase.from('map_pins').insert({
+      user_id: userId,
       lat: form.lat, lng: form.lng, title: form.title, notes: form.notes,
       pin_type: form.pin_type, status: form.pin_type === 'rumor' ? 'pending' : 'active',
-    })
+    }).select()
     if (!error) { setShowForm(false); loadPins() }
+    else alert('Error: ' + error.message)
     setSaving(false)
   }
 
@@ -130,9 +140,23 @@ export default function MapView() {
     setDeletingId(null)
   }
 
+  function startEdit(pin: Pin) {
+    setEditingPin(pin)
+    setEditForm({ title: pin.title, notes: pin.notes })
+    setShowForm(false)
+  }
+
+  async function handleSaveEdit() {
+    if (!editingPin || !editForm.title.trim()) return
+    const { error } = await supabase.from('map_pins')
+      .update({ title: editForm.title, notes: editForm.notes })
+      .eq('id', editingPin.id)
+    if (!error) { setEditingPin(null); loadPins() }
+    else alert('Error: ' + error.message)
+  }
+
   const myPins = pins.filter(p => p.user_id === userId)
   const publicPins = pins.filter(p => p.status === 'approved')
-
   const displayedPins = sidebarTab === 'mine' ? myPins : publicPins
 
   function pinTypeLabel(p: Pin) {
@@ -149,28 +173,30 @@ export default function MapView() {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
 
-      {/* Header */}
-      <div style={{ flexShrink: 0, zIndex: 1000, background: '#0f0f0f', borderBottom: '1px solid #c0392b', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
-          The Tapestry
+      {/* Header — standalone only */}
+      {!embedded && (
+        <div style={{ flexShrink: 0, zIndex: 1000, background: '#0f0f0f', borderBottom: '1px solid #c0392b', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+            The Tapestry
+          </div>
+          <div style={{ fontSize: '11px', color: '#b0aaa4', letterSpacing: '.08em', textTransform: 'uppercase' }}>World Map</div>
+          <div style={{ flex: 1 }} />
+          <div style={{ display: 'flex', gap: '8px', fontSize: '10px', color: '#b0aaa4', alignItems: 'center' }}>
+            {[['#7ab3d4', 'Private'], ['#EF9F27', 'Rumor'], ['#c0392b', 'GM']].map(([color, label]) => (
+              <span key={label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: color, display: 'inline-block' }} />{label}
+              </span>
+            ))}
+          </div>
+          <button onClick={() => setSidebarOpen(p => !p)}
+            style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            {sidebarOpen ? 'Hide Pins' : 'Show Pins'}
+          </button>
+          <a href="/dashboard" style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            Dashboard
+          </a>
         </div>
-        <div style={{ fontSize: '11px', color: '#b0aaa4', letterSpacing: '.08em', textTransform: 'uppercase' }}>World Map</div>
-        <div style={{ flex: 1 }} />
-        <div style={{ display: 'flex', gap: '8px', fontSize: '10px', color: '#b0aaa4', alignItems: 'center' }}>
-          {[['#7ab3d4', 'Private'], ['#EF9F27', 'Rumor'], ['#c0392b', 'GM']].map(([color, label]) => (
-            <span key={label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: color, display: 'inline-block' }} />{label}
-            </span>
-          ))}
-        </div>
-        <button onClick={() => setSidebarOpen(p => !p)}
-          style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-          {sidebarOpen ? 'Hide Pins' : 'Show Pins'}
-        </button>
-        <a href="/dashboard" style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
-          Dashboard
-        </a>
-      </div>
+      )}
 
       {/* Body */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
@@ -178,11 +204,9 @@ export default function MapView() {
         {/* Map */}
         <div ref={mapRef} style={{ flex: 1, height: '100%' }} />
 
-        {/* Sidebar */}
-        {sidebarOpen && (
+        {/* Sidebar — standalone only */}
+        {!embedded && sidebarOpen && (
           <div style={{ width: '300px', flexShrink: 0, background: '#1a1a1a', borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', zIndex: 500 }}>
-
-            {/* Tabs */}
             <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e' }}>
               {([['mine', 'My Pins'], ['public', 'Public']] as const).map(([tab, label]) => (
                 <button key={tab} onClick={() => setSidebarTab(tab)}
@@ -191,8 +215,6 @@ export default function MapView() {
                 </button>
               ))}
             </div>
-
-            {/* Pin list */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
               {displayedPins.length === 0 && (
                 <div style={{ padding: '2rem', textAlign: 'center', fontSize: '12px', color: '#5a5550' }}>
@@ -200,9 +222,8 @@ export default function MapView() {
                 </div>
               )}
               {displayedPins.map(p => (
-                <div key={p.id}
-                  onClick={() => flyToPin(p)}
-                  style={{ padding: '10px 12px', marginBottom: '4px', background: '#242424', border: '1px solid #2e2e2e', borderLeft: `3px solid ${pinColor(p)}`, borderRadius: '3px', cursor: 'pointer', transition: 'border-color .1s' }}>
+                <div key={p.id} onClick={() => flyToPin(p)}
+                  style={{ padding: '10px 12px', marginBottom: '4px', background: '#242424', border: '1px solid #2e2e2e', borderLeft: `3px solid ${pinColor(p)}`, borderRadius: '3px', cursor: 'pointer' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.title}</div>
@@ -210,32 +231,36 @@ export default function MapView() {
                       <div style={{ fontSize: '9px', color: '#5a5550', marginTop: '3px', textTransform: 'uppercase', letterSpacing: '.06em' }}>{pinTypeLabel(p)}</div>
                     </div>
                     {p.user_id === userId && (
-                      <button
-                        onClick={e => { e.stopPropagation(); handleDeletePin(p.id) }}
-                        disabled={deletingId === p.id}
-                        style={{ marginLeft: '8px', background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '14px', padding: '0 2px', flexShrink: 0, opacity: deletingId === p.id ? 0.4 : 1 }}>
-                        ×
-                      </button>
+                      <div style={{ display: 'flex', gap: '4px', marginLeft: '8px', flexShrink: 0 }}>
+                        <button onClick={e => { e.stopPropagation(); startEdit(p) }}
+                          style={{ background: 'none', border: 'none', color: '#b0aaa4', cursor: 'pointer', fontSize: '11px', padding: '0 2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                          Edit
+                        </button>
+                        <button onClick={e => { e.stopPropagation(); handleDeletePin(p.id) }} disabled={deletingId === p.id}
+                          style={{ background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '14px', padding: '0 2px', opacity: deletingId === p.id ? 0.4 : 1 }}>
+                          ×
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
               ))}
             </div>
-
           </div>
         )}
 
-        {/* Hint */}
-        <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'rgba(15,15,15,.85)', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px 14px', fontSize: '11px', color: '#b0aaa4', fontFamily: 'Barlow, sans-serif', pointerEvents: 'none' }}>
-          Click anywhere on the map to place a pin
-        </div>
+        {/* Hint — standalone only */}
+        {!embedded && (
+          <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'rgba(15,15,15,.85)', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px 14px', fontSize: '11px', color: '#b0aaa4', fontFamily: 'Barlow, sans-serif', pointerEvents: 'none' }}>
+            Click anywhere on the map to place a pin
+          </div>
+        )}
 
-        {/* Pin form */}
+        {/* New pin form */}
         {showForm && (
           <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 1001, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '1rem', width: '280px' }}>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '12px', fontWeight: 600, color: '#c0392b', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '6px' }}>New Pin</div>
             <div style={{ fontSize: '10px', color: '#5a5550', marginBottom: '10px' }}>{form.lat.toFixed(4)}, {form.lng.toFixed(4)}</div>
-
             <div style={{ marginBottom: '8px' }}>
               <label style={lbl}>Title</label>
               <input style={inp} value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Abandoned hospital" />
@@ -266,6 +291,31 @@ export default function MapView() {
                 {saving ? 'Saving...' : 'Save Pin'}
               </button>
               <button onClick={() => setShowForm(false)}
+                style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', cursor: 'pointer', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Edit pin form */}
+        {editingPin && (
+          <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 1001, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #7ab3d4', borderRadius: '4px', padding: '1rem', width: '280px' }}>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '12px', fontWeight: 600, color: '#7ab3d4', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '10px' }}>Edit Pin</div>
+            <div style={{ marginBottom: '8px' }}>
+              <label style={lbl}>Title</label>
+              <input style={inp} value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))} />
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={lbl}>Notes</label>
+              <textarea style={{ ...inp, minHeight: '60px', resize: 'vertical' }} value={editForm.notes} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} />
+            </div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button onClick={handleSaveEdit} disabled={!editForm.title.trim()}
+                style={{ flex: 1, padding: '8px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', cursor: 'pointer', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                Save
+              </button>
+              <button onClick={() => setEditingPin(null)}
                 style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', cursor: 'pointer', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 Cancel
               </button>
