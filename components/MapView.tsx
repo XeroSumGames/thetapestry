@@ -2,6 +2,25 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 
+const PIN_CATEGORIES = [
+  { value: 'location',   label: 'Location / POI',     emoji: '📍' },
+  { value: 'residence',  label: 'Residence',           emoji: '🏠' },
+  { value: 'business',   label: 'Business / Shop',     emoji: '🏪' },
+  { value: 'church',     label: 'Church',              emoji: '⛪' },
+  { value: 'government', label: 'Government',          emoji: '🏛️' },
+  { value: 'airport',    label: 'Airport / Transport', emoji: '✈️' },
+  { value: 'hospital',   label: 'Hospital / Medical',  emoji: '🏥' },
+  { value: 'military',   label: 'Military / Outpost',  emoji: '⚔️' },
+  { value: 'person',     label: 'Person / NPC',        emoji: '👤' },
+  { value: 'danger',     label: 'Danger / Threat',     emoji: '☠️' },
+  { value: 'resource',   label: 'Resource / Supply',   emoji: '🎒' },
+  { value: 'rumor',      label: 'Rumor / Unverified',  emoji: '❓' },
+]
+
+function getCategoryEmoji(category: string): string {
+  return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '📍'
+}
+
 interface Pin {
   id: string
   lat: number
@@ -11,6 +30,7 @@ interface Pin {
   pin_type: string
   status: string
   user_id: string
+  category: string
 }
 
 interface PinForm {
@@ -19,6 +39,7 @@ interface PinForm {
   title: string
   notes: string
   pin_type: 'private' | 'rumor'
+  category: string
 }
 
 interface MapViewProps {
@@ -37,7 +58,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
   const [showForm, setShowForm] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(!embedded)
   const [sidebarTab, setSidebarTab] = useState<'mine' | 'public' | 'all'>('mine')
-  const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private' })
+  const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private', category: 'location' })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [attachments, setAttachments] = useState<File[]>([])
@@ -78,7 +99,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
       mapInstanceRef.current = map
 
       map.on('click', (e: any) => {
-        setForm({ lat: e.latlng.lat, lng: e.latlng.lng, title: '', notes: '', pin_type: 'private' })
+        setForm({ lat: e.latlng.lat, lng: e.latlng.lng, title: '', notes: '', pin_type: 'private', category: 'location' })
         setAttachments([])
         setShowForm(true)
         setEditingPin(null)
@@ -106,16 +127,16 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
     markersRef.current = {}
 
     data.forEach((pin: Pin) => {
-      const color = pin.pin_type === 'rumor' ? '#EF9F27' : pin.pin_type === 'gm' ? '#c0392b' : '#7ab3d4'
+      const emoji = getCategoryEmoji(pin.category ?? 'location')
       const icon = leaflet.divIcon({
-        html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
-        className: '', iconSize: [14, 14], iconAnchor: [7, 7],
+        html: `<div style="font-size:20px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6));cursor:pointer;" title="${pin.title}">${emoji}</div>`,
+        className: '', iconSize: [24, 24], iconAnchor: [12, 12],
       })
       const marker = leaflet.marker([pin.lat, pin.lng], { icon })
         .addTo(mapInst)
         .bindPopup(`
           <div style="font-family:Barlow,sans-serif;min-width:180px">
-            <div style="font-weight:700;font-size:14px;margin-bottom:4px">${pin.title}</div>
+            <div style="font-weight:700;font-size:14px;margin-bottom:4px">${emoji} ${pin.title}</div>
             ${pin.notes ? `<div style="font-size:12px;color:#555;margin-bottom:6px">${pin.notes}</div>` : ''}
             <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.06em">${pin.pin_type === 'rumor' ? 'Rumor' : pin.pin_type === 'gm' ? 'GM Content' : 'Private note'}</div>
           </div>
@@ -168,6 +189,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
       title: form.title, notes: form.notes,
       pin_type: isThriver ? 'gm' : 'rumor',
       status: isThriver ? 'approved' : 'pending',
+      category: form.category,
     }).select().single()
     if (error) { alert('Error: ' + error.message); setSaving(false); return }
 
@@ -247,13 +269,6 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
           </div>
           <div style={{ fontSize: '13px', color: '#b0aaa4', letterSpacing: '.08em', textTransform: 'uppercase' }}>World Map</div>
           <div style={{ flex: 1 }} />
-          <div style={{ display: 'flex', gap: '8px', fontSize: '12px', color: '#b0aaa4', alignItems: 'center' }}>
-            {[['#7ab3d4', 'Private'], ['#EF9F27', 'Rumor'], ['#c0392b', 'GM']].map(([color, label]) => (
-              <span key={label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: color, display: 'inline-block' }} />{label}
-              </span>
-            ))}
-          </div>
           <button onClick={() => setSidebarOpen(p => !p)}
             style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             {sidebarOpen ? 'Hide Pins' : 'Show Pins'}
@@ -292,7 +307,9 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
                   style={{ padding: '10px 12px', marginBottom: '4px', background: '#242424', border: '1px solid #2e2e2e', borderLeft: `3px solid ${pinColor(p)}`, borderRadius: '3px', cursor: 'pointer' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '15px', fontWeight: 600, color: '#f5f2ee', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.title}</div>
+                      <div style={{ fontSize: '15px', fontWeight: 600, color: '#f5f2ee', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {getCategoryEmoji(p.category ?? 'location')} {p.title}
+                      </div>
                       {p.notes && <div style={{ fontSize: '13px', color: '#b0aaa4', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.notes}</div>}
                       <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '3px', textTransform: 'uppercase', letterSpacing: '.06em' }}>{pinTypeLabel(p)}</div>
                     </div>
@@ -321,28 +338,44 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
           </div>
         )}
 
-        {/* Hint + layer switcher — standalone only */}
+        {/* Hint — standalone only */}
+        {!embedded && showHeader && (
+          <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'rgba(15,15,15,.85)', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px 14px', fontSize: '13px', color: '#b0aaa4', fontFamily: 'Barlow, sans-serif', pointerEvents: 'none' }}>
+            Click anywhere on the map to place a pin
+          </div>
+        )}
+
+        {/* Layer switcher — always shown when not embedded */}
         {!embedded && (
-          <>
-            <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'rgba(15,15,15,.85)', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px 14px', fontSize: '13px', color: '#b0aaa4', fontFamily: 'Barlow, sans-serif', pointerEvents: 'none' }}>
-              Click anywhere on the map to place a pin
-            </div>
-            <div style={{ position: 'absolute', top: '6px', right: sidebarOpen ? '306px' : '6px', zIndex: 1000, display: 'flex', gap: '4px', transition: 'right .2s' }}>
-              {([['street', 'Street'], ['satellite', 'Satellite'], ['dark', 'Dark']] as const).map(([layer, label]) => (
-                <button key={layer} onClick={() => switchLayer(layer)}
-                  style={{ padding: '5px 10px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#b0aaa4' }}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          </>
+          <div style={{ position: 'absolute', top: '6px', right: sidebarOpen ? '306px' : '6px', zIndex: 1000, display: 'flex', gap: '4px', transition: 'right .2s' }}>
+            {([['street', 'Street'], ['satellite', 'Satellite'], ['dark', 'Dark']] as const).map(([layer, label]) => (
+              <button key={layer} onClick={() => switchLayer(layer)}
+                style={{ padding: '5px 10px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#b0aaa4' }}>
+                {label}
+              </button>
+            ))}
+          </div>
         )}
 
         {/* New pin form */}
         {showForm && (
-          <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 1001, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '1rem', width: '300px', resize: 'both', overflow: 'auto', minWidth: '260px', maxWidth: '600px' }}>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 600, color: '#c0392b', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Add a Rumor</div>
+          <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 1001, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '1rem', width: '320px', resize: 'both', overflow: 'auto', minWidth: '280px', maxWidth: '600px' }}>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 600, color: '#c0392b', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Add a Pin</div>
             <div style={{ fontSize: '12px', color: '#5a5550', marginBottom: '10px' }}>{form.lat.toFixed(4)}, {form.lng.toFixed(4)}</div>
+
+            {/* Category picker */}
+            <div style={{ marginBottom: '10px' }}>
+              <label style={lbl}>Category</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
+                {PIN_CATEGORIES.map(cat => (
+                  <button key={cat.value} onClick={() => setForm(p => ({ ...p, category: cat.value }))}
+                    style={{ padding: '6px 4px', border: `1px solid ${form.category === cat.value ? '#c0392b' : '#3a3a3a'}`, background: form.category === cat.value ? '#2a1210' : '#242424', borderRadius: '3px', cursor: 'pointer', textAlign: 'center', fontFamily: 'Barlow, sans-serif' }}>
+                    <div style={{ fontSize: '18px', marginBottom: '2px' }}>{cat.emoji}</div>
+                    <div style={{ fontSize: '9px', color: form.category === cat.value ? '#f5a89a' : '#b0aaa4', lineHeight: 1.2 }}>{cat.label.split('/')[0].trim()}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <div style={{ marginBottom: '8px' }}>
               <label style={lbl}>Title</label>
@@ -354,7 +387,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
             </div>
 
             {/* Attachments */}
-            <div style={{ marginBottom: '12px' }}>
+            <div style={{ marginBottom: '10px' }}>
               <label style={lbl}>Attachments</label>
               <label style={{ display: 'block', padding: '8px 10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: '#b0aaa4' }}>
                 {attachments.length > 0 ? `${attachments.length} file${attachments.length > 1 ? 's' : ''} selected` : 'Click to attach files'}
@@ -375,7 +408,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
               )}
             </div>
 
-            <div style={{ marginBottom: '12px', fontSize: '13px', padding: '6px 8px', borderRadius: '3px',
+            <div style={{ marginBottom: '10px', fontSize: '13px', padding: '6px 8px', borderRadius: '3px',
               background: userRole === 'thriver' ? '#1a2e10' : '#1a1a2e',
               border: `1px solid ${userRole === 'thriver' ? '#2d5a1b' : '#2e2e5a'}`,
               color: userRole === 'thriver' ? '#7fc458' : '#b0aaa4',

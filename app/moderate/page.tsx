@@ -5,15 +5,16 @@ import { useRouter } from 'next/navigation'
 
 interface Pin {
   id: string
+  user_id: string
   lat: number
   lng: number
   title: string
   notes: string
   pin_type: string
   status: string
-  user_id: string
   created_at: string
   profiles?: { username: string }
+  attachments?: string[]
 }
 
 export default function ModerationPage() {
@@ -35,13 +36,20 @@ export default function ModerationPage() {
 
   async function load() {
     setLoading(true)
-    const { data } = await supabase
+    const { data: rawData } = await supabase
       .from('map_pins')
-      .select('*, profiles(username)')
+      .select('*, profiles!map_pins_user_id_fkey(username)')
       .eq('pin_type', 'rumor')
       .eq('status', filter)
       .order('created_at', { ascending: false })
-    setPins(data ?? [])
+
+    const withAttachments = await Promise.all((rawData ?? []).map(async (pin: any) => {
+      const { data: files } = await supabase.storage
+        .from('pin-attachments')
+        .list(`${pin.user_id}/${pin.id}`)
+      return { ...pin, attachments: files?.map((f: any) => f.name) ?? [] }
+    }))
+    setPins(withAttachments)
     setLoading(false)
   }
 
@@ -76,7 +84,6 @@ export default function ModerationPage() {
         </div>
         <div style={{ flex: 1 }} />
         <a href="/map" style={navLink}>Map</a>
-        <a href="/dashboard" style={navLink}>Dashboard</a>
       </div>
 
       {/* Filter tabs */}
@@ -126,8 +133,20 @@ export default function ModerationPage() {
 
             {/* Notes */}
             {p.notes && (
-              <div style={{ fontSize: '13px', color: '#b0aaa4', lineHeight: 1.6, marginBottom: '10px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a' }}>
+              <div style={{ fontSize: '13px', color: '#b0aaa4', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a' }}>
                 {p.notes}
+              </div>
+            )}
+
+            {/* Attachments */}
+            {p.attachments && p.attachments.length > 0 && (
+              <div style={{ marginBottom: '8px' }}>
+                {p.attachments.map((name: string) => (
+                  <div key={name} style={{ fontSize: '12px', color: '#7ab3d4', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '3px' }}>
+                    <span style={{ opacity: 0.7 }}>📎</span>
+                    <span>Uploaded file: {name}</span>
+                  </div>
+                ))}
               </div>
             )}
 
