@@ -78,7 +78,7 @@ export default function MapView({ embedded = false }: MapViewProps) {
         setEditingPin(null)
       })
 
-      loadPins(L, map)
+      await loadPins(L, map)
     }
 
     init()
@@ -96,7 +96,7 @@ export default function MapView({ embedded = false }: MapViewProps) {
     if (!data) return
     setPins(data)
 
-    Object.values(markersRef.current).forEach((m: any) => m.remove())
+    Object.values(markersRef.current).forEach((m: any) => { try { m.remove() } catch (e) {} })
     markersRef.current = {}
 
     data.forEach((pin: Pin) => {
@@ -116,6 +116,8 @@ export default function MapView({ embedded = false }: MapViewProps) {
         `)
       markersRef.current[pin.id] = marker
     })
+
+    setTimeout(() => mapInst.invalidateSize(), 100)
   }
 
   function flyToPin(pin: Pin) {
@@ -135,7 +137,7 @@ export default function MapView({ embedded = false }: MapViewProps) {
       user_id: userId, lat: form.lat, lng: form.lng,
       title: form.title, notes: form.notes, pin_type, status,
     }).select()
-    if (!error) { setShowForm(false); loadPins() }
+    if (!error) { setShowForm(false); await loadPins() }
     else alert('Error: ' + error.message)
     setSaving(false)
   }
@@ -150,7 +152,7 @@ export default function MapView({ embedded = false }: MapViewProps) {
   async function handleTogglePublic(pin: Pin) {
     const newStatus = pin.status === 'approved' ? 'active' : 'approved'
     await supabase.from('map_pins').update({ status: newStatus }).eq('id', pin.id)
-    loadPins()
+    await loadPins()
   }
 
   function startEdit(pin: Pin) {
@@ -164,7 +166,7 @@ export default function MapView({ embedded = false }: MapViewProps) {
     const { error } = await supabase.from('map_pins')
       .update({ title: editForm.title, notes: editForm.notes })
       .eq('id', editingPin.id)
-    if (!error) { setEditingPin(null); loadPins() }
+    if (!error) { setEditingPin(null); await loadPins() }
     else alert('Error: ' + error.message)
   }
 
