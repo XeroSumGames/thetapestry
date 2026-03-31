@@ -40,7 +40,7 @@ export default function DashboardPage() {
         if (profile.role === 'thriver') {
           const { data: rawRumors } = await supabase
             .from('map_pins')
-            .select('*, profiles(username)')
+            .select('*, profiles!map_pins_user_id_fkey(username)')
             .eq('pin_type', 'rumor')
             .eq('status', 'pending')
             .order('created_at', { ascending: false })
