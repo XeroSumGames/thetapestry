@@ -23,7 +23,7 @@ async function handleSignup(e: React.FormEvent) {
     }
   })
   if (signUpError) { setError(signUpError.message); return }
-  router.push('/dashboard')
+  router.push('/welcome')
 }
 
   return (
