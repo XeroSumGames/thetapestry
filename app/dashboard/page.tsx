@@ -33,8 +33,9 @@ export default function DashboardPage() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
-      const { data: profile } = await supabase.from('profiles').select('username, role').eq('id', user.id).single()
-      if (profile) {
+      const { data: profile } = await supabase.from('profiles').select('username, role, onboarded').eq('id', user.id).single()
+       if (profile) {
+        if (!profile.onboarded) { router.push('/welcome'); return }
         setUsername(profile.username)
         setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
         if (profile.role === 'thriver') {
