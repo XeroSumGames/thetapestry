@@ -13,18 +13,18 @@ export default function SignupPage() {
   const supabase = createClient()
 
 async function handleSignup(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { username }
-      }
-    })
-    if (signUpError) { setError(signUpError.message); return }
-    setMessage('Check your email to confirm your account.')
-  }
+  e.preventDefault()
+  setError('')
+  const { error: signUpError } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { username }
+    }
+  })
+  if (signUpError) { setError(signUpError.message); return }
+  router.push('/dashboard')
+}
 
   return (
     <main style={{ padding: '2rem', maxWidth: '400px', margin: '0 auto', fontFamily: 'monospace' }}>
