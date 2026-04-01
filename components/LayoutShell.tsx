@@ -14,18 +14,32 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   const hideSidebar = pathname === '/login' || pathname === '/signup' || pathname === '/welcome'
 
   useEffect(() => {
-    async function checkSuspension() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setChecked(true); return }
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('suspended')
-        .eq('id', user.id)
-        .single()
-      if (profile?.suspended) setSuspended(true)
-      setChecked(true)
+    async function checkSession() {
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+        if (userError || !user) {
+          // Clean up any stale session data
+          await supabase.auth.signOut()
+          setChecked(true)
+          return
+        }
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('suspended')
+          .eq('id', user.id)
+          .single()
+
+        if (profile?.suspended) setSuspended(true)
+        setChecked(true)
+      } catch (e) {
+        // Any auth error — clear session and continue
+        await supabase.auth.signOut()
+        setChecked(true)
+      }
     }
-    checkSuspension()
+    checkSession()
   }, [pathname])
 
   if (!checked) return null
