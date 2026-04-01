@@ -11,7 +11,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   const [suspended, setSuspended] = useState(false)
   const [checked, setChecked] = useState(false)
 
-  const hideSidebar = pathname === '/login' || pathname === '/signup'
+  const hideSidebar = pathname === '/login' || pathname === '/signup' || pathname === '/welcome'
 
   useEffect(() => {
     async function checkSuspension() {

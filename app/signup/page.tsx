@@ -8,41 +8,65 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
   const router = useRouter()
   const supabase = createClient()
 
-async function handleSignup(e: React.FormEvent) {
-  e.preventDefault()
-  setError('')
-  const { error: signUpError } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { username }
-    }
-  })
-  if (signUpError) { setError(signUpError.message); return }
-  router.push('/welcome')
-}
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { username } }
+    })
+    if (signUpError) { setError(signUpError.message); return }
+    router.push('/welcome')
+  }
+
+  const inp: React.CSSProperties = {
+    padding: '10px 12px', fontSize: '14px',
+    background: '#1a1a1a', border: '1px solid #3a3a3a',
+    borderRadius: '3px', color: '#f5f2ee',
+    fontFamily: 'Barlow, sans-serif',
+    width: '100%', boxSizing: 'border-box',
+  }
 
   return (
-    <main style={{ padding: '2rem', maxWidth: '400px', margin: '0 auto', fontFamily: 'monospace' }}>
-      <h1>Create account</h1>
-      <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.5rem' }}>
-        <input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)}
-          style={{ padding: '0.5rem', fontSize: '1rem' }} required />
-        <input placeholder="Email" type="email" value={email} onChange={e => setEmail(e.target.value)}
-          style={{ padding: '0.5rem', fontSize: '1rem' }} required />
-        <input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)}
-          style={{ padding: '0.5rem', fontSize: '1rem' }} required />
-        <button type="submit" style={{ padding: '0.5rem', fontSize: '1rem', cursor: 'pointer' }}>
-          Sign up
-        </button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        {message && <p style={{ color: 'green' }}>{message}</p>}
-      </form>
-      <p style={{ marginTop: '1rem' }}>Already have an account? <a href="/login">Log in</a></p>
+    <main style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow, sans-serif' }}>
+      <div style={{ width: '100%', maxWidth: '380px', padding: '2rem' }}>
+
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+            Create Account
+          </div>
+          <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px' }}>
+            Join the DistemperVerse
+          </div>
+        </div>
+
+        <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} style={inp} required />
+          <input placeholder="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} style={inp} required />
+          <input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} style={inp} required />
+
+          {error && (
+            <div style={{ fontSize: '13px', color: '#f5a89a', padding: '8px 10px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px' }}>
+              {error}
+            </div>
+          )}
+
+          <button type="submit"
+            style={{ marginTop: '4px', padding: '10px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            Sign Up
+          </button>
+        </form>
+
+        <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '13px', color: '#5a5550' }}>
+          Already have an account?{' '}
+          <a href="/login" style={{ color: '#b0aaa4', textDecoration: 'none' }}>Log in</a>
+        </p>
+
+      </div>
     </main>
   )
 }
