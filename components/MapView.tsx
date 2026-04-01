@@ -74,7 +74,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
       if (user) {
         setUserId(user.id)
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-        if (profile) setUserRole(profile.role as 'survivor' | 'thriver')
+        if (profile) setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
       }
 
       const L = (await import('leaflet')).default

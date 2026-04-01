@@ -15,7 +15,7 @@ export default function Sidebar() {
       const { data: profile } = await supabase.from('profiles').select('username, role').eq('id', user.id).single()
       if (!profile) return
       setUsername(profile.username)
-      setUserRole(profile.role as 'survivor' | 'thriver')
+      setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
       if (profile.role === 'thriver') {
         const { count } = await supabase.from('map_pins').select('*', { count: 'exact', head: true }).eq('pin_type', 'rumor').eq('status', 'pending')
         setPendingCount(count ?? 0)
@@ -33,7 +33,7 @@ export default function Sidebar() {
       <div style={{ padding: '16px 14px 8px', fontSize: '13px', color: '#f5f2ee', letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', borderBottom: '1px solid #2e2e2e', marginBottom: '8px' }}>
         {username}
         {userRole === 'thriver'
-          ? <span style={{ marginLeft: '6px', background: '#c0392b', color: '#fff', fontSize: '10px', padding: '1px 5px', borderRadius: '2px' }}>Thriver</span>
+          ? <span style={{ marginLeft: '6px', background: '#c0392b', color: '#fff', fontSize: '10px', padding: '1px 5px', borderRadius: '2px' }}>thriver</span>
           : <span style={{ marginLeft: '6px', background: '#2d5a1b', color: '#7fc458', fontSize: '10px', padding: '1px 5px', borderRadius: '2px' }}>Survivor</span>
         }
       </div>
@@ -59,7 +59,7 @@ export default function Sidebar() {
         World Map
       </a>
 
-      {/* Moderation — Thrivers only */}
+      {/* Moderation — thrivers only */}
       {userRole === 'thriver' && (
         <a href="/moderate" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', color: '#f5f2ee', textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: '3px solid #EF9F27', marginBottom: '2px' }}
           onMouseEnter={e => (e.currentTarget.style.background = '#242424')}

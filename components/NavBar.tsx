@@ -17,7 +17,7 @@ export default function NavBar() {
         .select('role')
         .eq('id', user.id)
         .single()
-      if (profile) setUserRole(profile.role as 'survivor' | 'thriver')
+      if (profile) setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
     }
     load()
   }, [])

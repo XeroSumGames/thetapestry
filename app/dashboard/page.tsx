@@ -36,7 +36,7 @@ export default function DashboardPage() {
       const { data: profile } = await supabase.from('profiles').select('username, role').eq('id', user.id).single()
       if (profile) {
         setUsername(profile.username)
-        setUserRole(profile.role as 'survivor' | 'thriver')
+        setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
         if (profile.role === 'thriver') {
           const { data: rawRumors } = await supabase
             .from('map_pins')
