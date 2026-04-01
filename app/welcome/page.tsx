@@ -45,7 +45,7 @@ export default function WelcomePage() {
         </div>
         {username && (
           <div style={{ fontSize: '16px', color: '#b0aaa4', marginBottom: '2rem' }}>
-            Good to have you with us, <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{username}</span>.
+            Good luck, <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{username}</span>. You're gonne need it.
           </div>
         )}
         <div style={{ fontSize: '15px', color: '#b0aaa4', maxWidth: '540px', lineHeight: 1.8 }}>
