@@ -22,6 +22,7 @@ interface Profile {
   username: string
   role: string
   created_at: string
+  suspended: boolean
 }
 
 export default function ModerationPage() {
@@ -81,6 +82,20 @@ export default function ModerationPage() {
     setActing(id)
     await supabase.from('profiles').update({ role: newRole }).eq('id', id)
     setUsers(prev => prev.map(u => u.id === id ? { ...u, role: newRole } : u))
+    setActing(null)
+  }
+async function handleSuspend(id: string, suspended: boolean) {
+    setActing(id)
+    await supabase.from('profiles').update({ suspended }).eq('id', id)
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, suspended } : u))
+    setActing(null)
+  }
+
+  async function handleDeleteUser(id: string) {
+    if (!confirm('Permanently delete this account? This cannot be undone.')) return
+    setActing(id)
+    await supabase.from('profiles').delete().eq('id', id)
+    setUsers(prev => prev.filter(u => u.id !== id))
     setActing(null)
   }
 
@@ -238,7 +253,12 @@ export default function ModerationPage() {
                     Joined {formatDate(u.created_at)}
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  {u.suspended && (
+                    <span style={{ fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px', background: '#2a1a00', color: '#EF9F27', border: '1px solid #EF9F27' }}>
+                      Suspended
+                    </span>
+                  )}
                   <span style={{
                     fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em',
                     textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px',
@@ -259,6 +279,14 @@ export default function ModerationPage() {
                       Make Thriver
                     </button>
                   )}
+                  <button onClick={() => handleSuspend(u.id, !u.suspended)} disabled={acting === u.id}
+                    style={actionBtn(u.suspended ? '#2d5a1b' : '#5a3a00', u.suspended ? '#7fc458' : '#EF9F27')}>
+                    {u.suspended ? 'Unsuspend' : 'Suspend'}
+                  </button>
+                  <button onClick={() => handleDeleteUser(u.id)} disabled={acting === u.id}
+                    style={actionBtn('#7a1f16', '#f5a89a')}>
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}
