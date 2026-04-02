@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { WizardState, StepData, rollComplication, rollMotivation } from '../../lib/xse-engine'
 import { COMPLICATIONS, MOTIVATIONS } from '../../lib/xse-schema'
 
@@ -30,7 +30,7 @@ export default function StepSix({ state, onChange }: Props) {
       <button
         onClick={() => updateStep({ complication: rollComplication() })}
         style={{ ...nbtn, marginBottom: '10px' }}>
-        Roll 2d6
+        Random Complication
       </button>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginBottom: '1.5rem' }}>
         {complications.map(c => (
@@ -57,7 +57,7 @@ export default function StepSix({ state, onChange }: Props) {
       <button
         onClick={() => updateStep({ motivation: rollMotivation() })}
         style={{ ...nbtn, marginBottom: '10px' }}>
-        Roll 2d6
+        Random Motivation
       </button>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
         {motivations.map(m => (
