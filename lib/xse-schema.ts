@@ -683,6 +683,7 @@ export interface XSECharacter {
   // Equipment
   equipment: string[];     // item names
   incidentalItem: string;
+  rations: string;
 
   // Tracking
   insightDice: number;     // starts at 2
@@ -744,6 +745,7 @@ export function createBlankCharacter(): XSECharacter {
     weaponSecondary: { weaponName: '', condition: 'Used', ammoCurrent: 0 },
     equipment: [],
     incidentalItem: '',
+    rations: '',
     insightDice: 2,
     cdp: 0,
     stressLevel: 0,
@@ -752,6 +754,8 @@ export function createBlankCharacter(): XSECharacter {
     relationships: [],
   };
 }
+
+
 
 
 

@@ -153,6 +153,9 @@ export default function CharactersPage() {
 
                 {/* Header row */}
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  {c.data?.photoDataUrl && (
+                    <img src={c.data.photoDataUrl} alt={c.name} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '3px', border: '1px solid #3a3a3a', flexShrink: 0, marginRight: '4px' }} />
+                  )}
                   <div>
                     <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>
                       {c.name}

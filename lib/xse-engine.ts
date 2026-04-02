@@ -182,6 +182,8 @@ export function buildCharacter(state: WizardState): XSECharacter {
   }
   char.equipment = state.equipment ? [state.equipment] : []
   char.incidentalItem = state.incidentalItem
+  char.rations = state.rations
 
   return char
 }
+
