@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 
@@ -31,7 +31,7 @@ export default function MapPage() {
   return (
     <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
       <MapView showHeader={false} />
-      <form onSubmit={handleSearch} style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', gap: '4px' }}>
+      <form onSubmit={handleSearch} style={{ position: 'absolute', top: '6px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', gap: '4px' }}>
         <input
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
@@ -46,3 +46,4 @@ export default function MapPage() {
     </div>
   )
 }
+
