@@ -158,7 +158,7 @@ export default function CharactersPage() {
                       {c.name}
                     </div>
                     <div style={{ fontSize: '11px', color: '#b0aaa4', marginTop: '2px' }}>
-                      {c.data?.profession || 'No profession'} Â· Created {formatDate(c.created_at)}
+                      {c.data?.profession || 'No profession'} &middot; Created {formatDate(c.created_at)}
                     </div>
                   </div>
                   {/* Action buttons */}
