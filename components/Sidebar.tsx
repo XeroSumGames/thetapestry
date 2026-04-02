@@ -48,8 +48,8 @@ export default function Sidebar() {
   }
 
   const sectionHeading = {
-    padding: '10px 14px 4px', fontSize: '9px', color: '#5a5550',
-    fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.14em',
+    padding: '10px 14px 6px', fontSize: '15px', color: '#f5f2ee',
+    fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em',
     textTransform: 'uppercase' as const, fontWeight: 700,
   }
 
@@ -113,3 +113,4 @@ export default function Sidebar() {
     </div>
   )
 }
+

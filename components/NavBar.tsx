@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
@@ -43,7 +43,7 @@ export default function NavBar() {
       <div style={{ flex: 1 }} />
       <a href="/dashboard" style={navLink}>Dashboard</a>
       <a href="/characters" style={navLink}>Characters</a>
-      <a href="/map" style={navLink}>Map</a>
+      <a href="/map" style={navLink}>The World</a>
       <a href="#" style={navLink}>The Campfire</a>
       {userRole === 'thriver' && (
         <a href="/moderate" style={{ ...navLink, borderColor: '#EF9F27', color: '#EF9F27' }}>Moderation</a>
