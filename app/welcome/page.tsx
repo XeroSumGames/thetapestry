@@ -15,7 +15,6 @@ export default function WelcomePage() {
       if (!user) { router.push('/login'); return }
       const { data: profile } = await supabase.from('profiles').select('username, onboarded').eq('id', user.id).single()
       if (!profile) return
-      if (profile?.onboarded === true) { router.push('/dashboard'); return }
       setUsername(profile.username)
     }
     load()

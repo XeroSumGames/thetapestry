@@ -69,6 +69,11 @@ export default function Sidebar() {
         </a>
       )}
 
+      <a href="/welcome" style={{ display: 'block', padding: '10px 14px', color: '#b0aaa4', textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: '3px solid #3a3a3a', marginBottom: '2px' }}
+        onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+        About The Tapestry
+      </a>
       <div style={{ height: '1px', background: '#2e2e2e', margin: '8px 0' }} />
 
       {/* Coming soon */}
