@@ -82,7 +82,7 @@ export default function RandomCharacterPage() {
       // Map paradigm skills onto step 4 deltas
       const skillDeltas: Partial<Record<string, number>> = {}
       for (const entry of paradigm.skills) {
-        const skillName = entry.skillName.replace('*', '')
+        const skillName = entry.skillName
         const found = Object.keys(skillDeltas).find(k => k === skillName)
         if (!found) skillDeltas[skillName] = entry.level
       }
