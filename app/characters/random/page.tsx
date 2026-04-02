@@ -23,6 +23,12 @@ const LAST_NAMES = [
 ]
 const GENDERS = ['Male', 'Female', 'Non-binary']
 
+const THREE_WORDS = [
+  'Cautious', 'Reckless', 'Loyal', 'Bitter', 'Hopeful', 'Ruthless', 'Quiet', 'Fierce',
+  'Broken', 'Stubborn', 'Cunning', 'Weary', 'Driven', 'Haunted', 'Pragmatic', 'Bold',
+  'Volatile', 'Steady', 'Scarred', 'Resourceful', 'Cold', 'Warm', 'Lost', 'Focused',
+  'Suspicious', 'Generous', 'Hardened', 'Idealistic', 'Cynical', 'Determined',
+]
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
 }
@@ -63,6 +69,8 @@ export default function RandomCharacterPage() {
       state.height = randHeight()
       state.weight = randWeight()
       state.currentStep = 9
+      state.threeWords = [pick(THREE_WORDS), pick(THREE_WORDS), pick(THREE_WORDS)]
+      state.rations = 'Standard'
 
       // Map paradigm RAPID onto step data via attrSpent
       state.steps[3] = {

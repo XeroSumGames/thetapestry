@@ -68,6 +68,8 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
   const [editForm, setEditForm] = useState({ title: '', notes: '' })
   const [mapLayer, setMapLayer] = useState<'street' | 'satellite' | 'dark'>('street')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searching, setSearching] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -156,6 +158,25 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
     })
 
     setTimeout(() => mapInst.invalidateSize(), 100)
+  }
+
+  async function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    if (!searchQuery.trim() || !mapInstanceRef.current) return
+    setSearching(true)
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`, {
+        headers: { 'Accept-Language': 'en' }
+      })
+      const results = await res.json()
+      if (results.length > 0) {
+        const { lat, lon } = results[0]
+        mapInstanceRef.current.flyTo([parseFloat(lat), parseFloat(lon)], 13, { duration: 1.2 })
+      }
+    } catch (e) {
+      console.error('Search failed:', e)
+    }
+    setSearching(false)
   }
 
   async function switchLayer(layer: 'street' | 'satellite' | 'dark') {

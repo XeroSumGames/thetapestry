@@ -82,9 +82,10 @@ export default function Sidebar() {
 
       {divider}
 
-      {/* The World section */}
-      <div style={sectionHeading}>The World</div>
-      <a href="/map" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Map</a>
+      {/* The Tapestry section */}
+      <div style={sectionHeading}>The Tapestry</div>
+      <a href="/welcome" style={dimLinkStyle} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Welcome to the Tapestry</a>
+      <a href="/map" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The World</a>
       <a href="#" style={soonStyle}>The Campfire <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span></a>
 
       {/* Moderation — thrivers only */}
@@ -97,8 +98,7 @@ export default function Sidebar() {
 
       {divider}
 
-      {/* Info & Community */}
-      <a href="/welcome" style={dimLinkStyle} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Welcome to the Tapestry</a>
+      {/* Coming soon */}
       {[
         { href: '#', label: 'Rules' },
         { href: '#', label: 'Equipment Catalog' },
@@ -113,4 +113,3 @@ export default function Sidebar() {
     </div>
   )
 }
-
