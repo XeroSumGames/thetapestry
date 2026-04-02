@@ -3,22 +3,23 @@ import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 
 const PIN_CATEGORIES = [
-  { value: 'location',   label: 'Location / POI',     emoji: 'ðŸ“' },
-  { value: 'residence',  label: 'Residence',           emoji: 'ðŸ ' },
-  { value: 'business',   label: 'Business / Shop',     emoji: 'ðŸª' },
-  { value: 'church',     label: 'Church',              emoji: 'â›ª' },
-  { value: 'government', label: 'Government',          emoji: 'ðŸ›ï¸' },
-  { value: 'airport',    label: 'Airport / Transport', emoji: 'âœˆï¸' },
-  { value: 'hospital',   label: 'Hospital / Medical',  emoji: 'ðŸ¥' },
-  { value: 'military',   label: 'Military / Outpost',  emoji: 'âš”ï¸' },
-  { value: 'person',     label: 'Person / NPC',        emoji: 'ðŸ‘¤' },
-  { value: 'danger',     label: 'Danger / Threat',     emoji: 'â˜ ï¸' },
-  { value: 'resource',   label: 'Resource / Supply',   emoji: 'ðŸŽ’' },
-  { value: 'rumor',      label: 'Rumor / Unverified',  emoji: 'â“' },
+  { value: 'location',   label: 'Location / POI',     emoji: '📍' },
+  { value: 'residence',  label: 'Residence',           emoji: '🏠' },
+  { value: 'business',   label: 'Business / Shop',     emoji: '🎪' },
+  { value: 'church',     label: 'Church',              emoji: '⛪' },
+  { value: 'government', label: 'Government',          emoji: '🏛️' },
+  { value: 'airport',    label: 'Airport / Transport', emoji: '✈️' },
+  { value: 'hospital',   label: 'Hospital / Medical',  emoji: '🏥' },
+  { value: 'military',   label: 'Military / Outpost',  emoji: '⚔️' },
+  { value: 'person',     label: 'Person / NPC',        emoji: '👤' },
+  { value: 'danger',     label: 'Danger / Threat',     emoji: '☠️' },
+  { value: 'resource',   label: 'Resource / Supply',   emoji: '🎒' },
+  { value: 'rumor',      label: 'Rumor / Unverified',  emoji: '❓' },
+  { value: 'medical',    label: 'Medical',             emoji: '<span style="color:#e74c3c;font-weight:900;font-size:20px;line-height:1;">+</span>' },
 ]
 
 function getCategoryEmoji(category: string): string {
-  return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? 'ðŸ“'
+  return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '📍'
 }
 
 interface Pin {
