@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 
@@ -49,6 +49,19 @@ export default function Sidebar() {
           {label}
         </a>
       ))}
+      <a href="/characters/quick" style={{ display: 'block', padding: '10px 14px', color: '#f5f2ee', textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: '3px solid #3a3a3a', marginBottom: '2px' }}
+        onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+        Quick Character
+      </a>
+      <a href="/characters/random" style={{ display: 'block', padding: '10px 14px', color: '#f5f2ee', textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: '3px solid #3a3a3a', marginBottom: '2px' }}
+        onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+        Random Character
+      </a>
+      <a href="#" style={{ display: 'block', padding: '10px 14px', color: '#5a5550', textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: '3px solid transparent', marginBottom: '2px' }}>
+        Paradigms <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span>
+      </a>
 
       <div style={{ height: '1px', background: '#2e2e2e', margin: '8px 0' }} />
 
@@ -59,7 +72,7 @@ export default function Sidebar() {
         World Map
       </a>
 
-      {/* Moderation — thrivers only */}
+      {/* Moderation â€” thrivers only */}
       {userRole === 'thriver' && (
         <a href="/moderate" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', color: '#f5f2ee', textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: '3px solid #EF9F27', marginBottom: '2px' }}
           onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
@@ -84,7 +97,7 @@ export default function Sidebar() {
         { href: '#', label: 'Looking for Group' },
       ].map(({ href, label }) => (
         <a key={label} href={href} style={{ display: 'block', padding: '10px 14px', color: '#b0aaa4', textDecoration: 'none', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: '3px solid transparent', marginBottom: '2px' }}>
-          {label} <span style={{ fontSize: '9px', color: '#5a5550' }}>— soon</span>
+          {label} <span style={{ fontSize: '9px', color: '#5a5550' }}>â€” soon</span>
         </a>
       ))}
 
