@@ -63,7 +63,7 @@ export default function WelcomePage() {
           </div>
         )}
         <div style={{ fontSize: '15px', color: '#b0aaa4', maxWidth: '600px', lineHeight: 1.8 }}>
-          <p style={{ marginBottom: '1rem' }}>The Tapestry is the online home of Distemper &mdash; a post-apocalyptic comic book &amp; tabletop RPG set in the aftermath of the dog flu, a pandemic that almost wiped out humanity. What is left is a dangerous, brutal, and capricious new reality. It is a one-stop shop for character creation, world exploration, and finding your people in the wasteland.</p>
+          <p style={{ marginBottom: '1rem' }}>The Tapestry is the online home of Distemper &mdash; a post-apocalyptic comic book &amp; tabletop RPG set in the aftermath of the dog flu, a pandemic that almost wiped out humanity. What is left is a dangerous, brutal, and capricious new reality. It is a one-stop shop for character creation, world exploration, and finding your people in this broken new world.</p>
           <p style={{ marginBottom: '1rem' }}>Here, players and Game Masters share their stories, settings, and campaigns, allowing them to be curated and shared with the community &mdash; potentially even being worked into future comic book story arcs or game content.</p>
           <p style={{ marginBottom: '1rem' }}>It is entirely possible that the actions of player characters, Game Masters, writers, content creators, and other community members will influence the course of human history and define ongoing events in this new world.</p>
           <p>Collectively, the narratives weaved together across various media and via disparate platforms make up The Tapestry of The DistemperVerse.</p>
@@ -149,7 +149,7 @@ export default function WelcomePage() {
         <div style={{ textAlign: 'center', paddingBottom: '4rem' }}>
           <button onClick={handleGetStarted} disabled={marking}
             style={{ padding: '14px 48px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '16px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', opacity: marking ? 0.6 : 1 }}>
-            {marking ? 'Loading...' : 'Enter the Wasteland'}
+            {marking ? 'Loading...' : 'Welcome to the DistemperVerse'}
           </button>
         </div>
 
@@ -157,4 +157,6 @@ export default function WelcomePage() {
     </div>
   )
 }
+
+
 
