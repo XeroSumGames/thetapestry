@@ -60,7 +60,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
       if (cdpThisSkill <= 0) return
       const prev = skillStepUp(
         (cumVal - 1) as SkillValue,
-        false
+        skill.vocational
       )
       const loss = cumVal - prev
       newDeltas[skillName] = (newDeltas[skillName] ?? 0) - loss
