@@ -130,7 +130,7 @@ export default function WelcomePage() {
         </div>
 
         {/* Links */}
-        <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '2rem', marginBottom: '2rem', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '2rem', marginBottom: '2rem', display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
           <a href="https://www.distemperverse.com" target="_blank" rel="noreferrer"
             style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
             DistemperVerse.com ↗
@@ -138,6 +138,10 @@ export default function WelcomePage() {
           <a href="https://www.xerosumgames.com" target="_blank" rel="noreferrer"
             style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
             XeroSumGames.com ↗
+          </a>
+          <a href="https://www.xerosumstudio.com" target="_blank" rel="noreferrer"
+            style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            XeroSumStudio.com ↗
           </a>
         </div>
 
@@ -153,3 +157,4 @@ export default function WelcomePage() {
     </div>
   )
 }
+
