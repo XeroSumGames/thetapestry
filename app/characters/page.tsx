@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
@@ -79,7 +79,6 @@ export default function CharactersPage() {
 
   function sgn(v: number) { return v > 0 ? `+${v}` : String(v) }
 
-  // Convert saved XSECharacter data back to a WizardState-compatible shape for PrintSheet
   function toWizardState(data: any): WizardState {
     const base = createWizardState()
     return {
@@ -120,28 +119,25 @@ export default function CharactersPage() {
   return (
     <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
 
-      {/* Masthead */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           My Characters
         </div>
         <div style={{ flex: 1 }} />
-        <a href="/characters/new" style={{ padding: '7px 18px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <a href='/characters/new' style={{ padding: '7px 18px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           New Character
         </a>
       </div>
 
-      {/* Empty state */}
       {characters.length === 0 && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '3rem', textAlign: 'center' }}>
           <div style={{ fontSize: '14px', color: '#b0aaa4', marginBottom: '1rem' }}>No characters yet.</div>
-          <a href="/characters/new" style={{ padding: '9px 22px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+          <a href='/characters/new' style={{ padding: '9px 22px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
             Create your first character
           </a>
         </div>
       )}
 
-      {/* Character list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {characters.map(c => {
           const rapid = c.data?.rapid ?? {}
@@ -150,42 +146,25 @@ export default function CharactersPage() {
           return (
             <div key={c.id}>
               <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', borderLeft: '3px solid #c0392b' }}>
-
-                {/* Header row */}
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '8px' }}>
                   {c.data?.photoDataUrl && (
                     <img src={c.data.photoDataUrl} alt={c.name} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '3px', border: '1px solid #3a3a3a', flexShrink: 0, marginRight: '4px' }} />
                   )}
-                  <div>
-                    <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+                  <div style={{ flex: 1 }}>
+                    <a href={`/characters/${c.id}`} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', textDecoration: 'none', display: 'block' }}>
                       {c.name}
-                    </div>
+                    </a>
                     <div style={{ fontSize: '11px', color: '#b0aaa4', marginTop: '2px' }}>
                       {c.data?.profession || 'No profession'} &middot; Created {formatDate(c.created_at)}
                     </div>
                   </div>
-                  {/* Action buttons */}
                   <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                    <button onClick={() => router.push(`/characters/${c.id}/edit`)}
-                      style={actionBtn('#c0392b', '#f5a89a')}>
-                      Edit
-                    </button>
-                    <button onClick={() => handlePrint(c.id)}
-                      style={actionBtn('#2d5a1b', '#7fc458')}>
-                      Print
-                    </button>
-                    <button onClick={() => handleDuplicate(c)} disabled={duplicating === c.id}
-                      style={actionBtn('#1a3a5c', '#7ab3d4')}>
-                      {duplicating === c.id ? '...' : 'Duplicate'}
-                    </button>
-                    <button onClick={() => handleDelete(c.id)} disabled={deleting === c.id}
-                      style={actionBtn('#2e2e2e', '#b0aaa4')}>
-                      {deleting === c.id ? '...' : 'Delete'}
-                    </button>
+                    <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={actionBtn('#c0392b', '#f5a89a')}>Edit</button>
+                    <button onClick={() => handlePrint(c.id)} style={actionBtn('#2d5a1b', '#7fc458')}>Print</button>
+                    <button onClick={() => handleDuplicate(c)} disabled={duplicating === c.id} style={actionBtn('#1a3a5c', '#7ab3d4')}>{duplicating === c.id ? '...' : 'Duplicate'}</button>
+                    <button onClick={() => handleDelete(c.id)} disabled={deleting === c.id} style={actionBtn('#2e2e2e', '#b0aaa4')}>{deleting === c.id ? '...' : 'Delete'}</button>
                   </div>
                 </div>
-
-                {/* RAPID attributes */}
                 <div style={{ display: 'flex', gap: '4px', marginBottom: '8px' }}>
                   {attrKeys.map(k => {
                     const v = rapid[k] ?? 0
@@ -197,15 +176,12 @@ export default function CharactersPage() {
                     )
                   })}
                 </div>
-
-                {/* Complication + Motivation */}
                 {(c.data?.complication || c.data?.motivation) && (
-                  <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: '#b0aaa4' }}>
+                  <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: '#b0aaa4', marginBottom: '6px' }}>
                     {c.data?.complication && <span><span style={{ color: '#5a5550' }}>Complication:</span> {c.data.complication}</span>}
                     {c.data?.motivation && <span><span style={{ color: '#5a5550' }}>Motivation:</span> {c.data.motivation}</span>}
                   </div>
                 )}
-                {/* Trained skills */}
                 {c.data?.skills?.filter((s: any) => s.level > 0).length > 0 && (
                   <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                     {c.data.skills.filter((s: any) => s.level > 0).map((s: any) => (
@@ -216,8 +192,6 @@ export default function CharactersPage() {
                   </div>
                 )}
               </div>
-
-              {/* Hidden print container */}
               <div id={`print-container-${c.id}`} style={{ display: 'none' }}>
                 <PrintSheet state={wizardState} />
               </div>
