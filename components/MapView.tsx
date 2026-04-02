@@ -111,6 +111,15 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
 
       await loadPins(L, map)
 
+      // Listen for fly-to events from dashboard search
+      const flyToHandler = (e: Event) => {
+        const { lat, lon } = (e as CustomEvent).detail
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.flyTo([lat, lon], 13, { duration: 1.2 })
+        }
+      }
+      window.addEventListener('tapestry-fly-to', flyToHandler)
+
       channelRef.current = supabase
         .channel('map_pins_changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'map_pins' }, () => {

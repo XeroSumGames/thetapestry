@@ -26,6 +26,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [pendingPins, setPendingPins] = useState<Pin[]>([])
   const [acting, setActing] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searching, setSearching] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -67,6 +69,27 @@ export default function DashboardPage() {
     setActing(null)
   }
 
+  async function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    if (!searchQuery.trim()) return
+    setSearching(true)
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`, {
+        headers: { 'Accept-Language': 'en' }
+      })
+      const results = await res.json()
+      if (results.length > 0) {
+        // Dispatch a custom event that MapView can listen to
+        window.dispatchEvent(new CustomEvent('tapestry-fly-to', {
+          detail: { lat: parseFloat(results[0].lat), lon: parseFloat(results[0].lon) }
+        }))
+      }
+    } catch (e) {
+      console.error('Search failed:', e)
+    }
+    setSearching(false)
+  }
+
   if (loading) return (
     <div style={{ flex: 1, background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif' }}>
       Loading...
@@ -79,6 +102,18 @@ export default function DashboardPage() {
       {/* Center — map */}
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         <MapView embedded />
+        <form onSubmit={handleSearch} style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', gap: '4px' }}>
+          <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search address..."
+            style={{ padding: '6px 10px', background: 'rgba(15,15,15,0.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', width: '220px', outline: 'none' }}
+          />
+          <button type="submit" disabled={searching}
+            style={{ padding: '6px 12px', background: 'rgba(15,15,15,0.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: searching ? '#5a5550' : '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching ? 'not-allowed' : 'pointer' }}>
+            {searching ? '...' : 'Go'}
+          </button>
+        </form>
       </div>
 
       {/* Right panel — Thrivers only */}
