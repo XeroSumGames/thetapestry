@@ -33,7 +33,7 @@ export default function WelcomePage() {
     textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px',
   }
   const sectionBody: React.CSSProperties = {
-    fontSize: '14px', color: '#f5f2ee', lineHeight: 1.8,
+    fontSize: '16px', color: '#f5f2ee', lineHeight: 1.8,
   }
   const sectionWrap: React.CSSProperties = {
     display: 'flex', gap: '1.5rem', marginBottom: '2.5rem', alignItems: 'flex-start',
@@ -62,7 +62,7 @@ export default function WelcomePage() {
             Good luck, <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{username}</span>. You&apos;re gonna need it.
           </div>
         )}
-        <div style={{ fontSize: '15px', color: '#f5f2ee', maxWidth: '600px', lineHeight: 1.8 }}>
+        <div style={{ fontSize: '17px', color: '#f5f2ee', maxWidth: '600px', lineHeight: 1.8 }}>
           <p style={{ marginBottom: '1rem' }}>The Tapestry is the online home of Distemper &mdash; a post-apocalyptic comic book &amp; tabletop RPG set in the aftermath of the dog flu, a pandemic that almost wiped out humanity. What is left is a dangerous, brutal, and capricious new reality. It is a one-stop shop for character creation, world exploration, and finding your people in this broken new world.</p>
           <p style={{ marginBottom: '1rem' }}>Here, players and Game Masters share their stories, settings, and campaigns, allowing them to be curated and shared with the community &mdash; potentially even being worked into future comic book story arcs or game content.</p>
           <p style={{ marginBottom: '1rem' }}>It is entirely possible that the actions of player characters, Game Masters, writers, content creators, and other community members will influence the course of human history and define ongoing events in this new world.</p>
@@ -157,6 +157,7 @@ export default function WelcomePage() {
     </div>
   )
 }
+
 
 
 
