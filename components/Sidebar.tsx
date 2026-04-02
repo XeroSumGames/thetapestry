@@ -47,6 +47,12 @@ export default function Sidebar() {
     borderLeft: '3px solid transparent', marginBottom: '2px',
   }
 
+  const sectionHeading = {
+    padding: '10px 14px 4px', fontSize: '9px', color: '#5a5550',
+    fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.14em',
+    textTransform: 'uppercase' as const, fontWeight: 700,
+  }
+
   const divider = <div style={{ height: '1px', background: '#2e2e2e', margin: '8px 0' }} />
 
   function hover(e: React.MouseEvent<HTMLAnchorElement>, on: boolean) {
@@ -65,17 +71,21 @@ export default function Sidebar() {
         }
       </div>
 
-      {/* Character links */}
+      {/* Characters section */}
+      <div style={sectionHeading}>Characters</div>
       <a href="/characters/new" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</a>
       <a href="/characters/quick" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Character</a>
       <a href="/characters/random" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</a>
       <a href="/characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Characters</a>
       <a href="#" style={soonStyle}>Paradigms <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span></a>
+      <a href="#" style={soonStyle}>Creating a Character <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span></a>
 
       {divider}
 
-      {/* Map */}
-      <a href="/map" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>World Map</a>
+      {/* The World section */}
+      <div style={sectionHeading}>The World</div>
+      <a href="/map" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Map</a>
+      <a href="#" style={soonStyle}>The Campfire <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span></a>
 
       {/* Moderation — thrivers only */}
       {userRole === 'thriver' && (
@@ -85,11 +95,10 @@ export default function Sidebar() {
         </a>
       )}
 
-      <a href="/welcome" style={dimLinkStyle} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>About The Tapestry</a>
-
       {divider}
 
-      {/* Coming soon */}
+      {/* Info & Community */}
+      <a href="/welcome" style={dimLinkStyle} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Welcome to the Tapestry</a>
       {[
         { href: '#', label: 'Rules' },
         { href: '#', label: 'Equipment Catalog' },
