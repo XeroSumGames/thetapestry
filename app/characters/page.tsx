@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
@@ -158,7 +158,7 @@ export default function CharactersPage() {
                       {c.name}
                     </div>
                     <div style={{ fontSize: '11px', color: '#b0aaa4', marginTop: '2px' }}>
-                      {c.data?.profession || 'No profession'} · Created {formatDate(c.created_at)}
+                      {c.data?.profession || 'No profession'} Â· Created {formatDate(c.created_at)}
                     </div>
                   </div>
                   {/* Action buttons */}
@@ -196,6 +196,16 @@ export default function CharactersPage() {
                   <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: '#b0aaa4' }}>
                     {c.data?.complication && <span><span style={{ color: '#5a5550' }}>Complication:</span> {c.data.complication}</span>}
                     {c.data?.motivation && <span><span style={{ color: '#5a5550' }}>Motivation:</span> {c.data.motivation}</span>}
+                  </div>
+                )}
+                {/* Trained skills */}
+                {c.data?.skills?.filter((s: any) => s.level > 0).length > 0 && (
+                  <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {c.data.skills.filter((s: any) => s.level > 0).map((s: any) => (
+                      <span key={s.skillName} style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '3px', background: '#2a1210', border: '1px solid #7a1f16', color: '#f5a89a' }}>
+                        {s.skillName} {sgn(s.level)}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
