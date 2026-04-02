@@ -1,5 +1,5 @@
-// ============================================================
-// XERO SUM ENGINE SRD v1.1 — Character Schema & Static Data
+﻿// ============================================================
+// XERO SUM ENGINE SRD v1.1 â€” Character Schema & Static Data
 // ============================================================
 
 // ----------------------------
@@ -9,7 +9,7 @@
 export type AttributeName = 'RSN' | 'ACU' | 'PHY' | 'INF' | 'DEX';
 
 export type AttributeValue = -2 | -1 | 0 | 1 | 2 | 3 | 4; // -2=Diminished, +4=Human Peak
-// Animals/machines can go to +5 (Superhuman) — PCs capped at +4
+// Animals/machines can go to +5 (Superhuman) â€” PCs capped at +4
 
 export type SkillValue = -3 | 0 | 1 | 2 | 3 | 4;
 // -3=Inept (vocational only), 0=Untrained, 1=Beginner, 2=Journeyman, 3=Professional, 4=Life's Work
@@ -67,9 +67,9 @@ export const SKILL_LABELS: Record<number, string> = {
 // ----------------------------
 
 export const OUTCOMES = [
-  { range: '0–3',  label: 'Dire Failure' },
-  { range: '4–8',  label: 'Failure' },
-  { range: '9–13', label: 'Success' },
+  { range: '0â€“3',  label: 'Dire Failure' },
+  { range: '4â€“8',  label: 'Failure' },
+  { range: '9â€“13', label: 'Success' },
   { range: '14+',  label: 'Wild Success' },
   { range: '1+1',  label: 'Moment of Low Insight' },
   { range: '6+6',  label: 'Moment of High Insight' },
@@ -88,33 +88,30 @@ export interface SkillDefinition {
 
 export const SKILLS: SkillDefinition[] = [
   { name: 'Animal Handling',    attribute: 'INF', vocational: false, description: 'Understanding how to work with animals, from basic obedience to herd management' },
-  { name: 'Astronautics',       attribute: 'RSN', vocational: false, description: 'Space vessel operations, including astrogation, jump operations, EVA/zero-G procedures, and safety protocols' },
   { name: 'Athletics',          attribute: 'PHY', vocational: false, description: 'Fitness, agility, stamina, and coordination, including climbing, jumping, swimming, and overcoming obstacles' },
   { name: 'Barter',             attribute: 'INF', vocational: false, description: 'Arranging deals, enticing buyers, appraising goods, haggling for the best outcome, and closing deals' },
-  { name: 'Computers',          attribute: 'RSN', vocational: false, description: 'Deep understanding of digital systems and architecture, covering troubleshooting to coding, hacking, and system control' },
   { name: 'Demolitions*',       attribute: 'PHY', vocational: true,  description: 'The manufacture and use of explosives, ranging from improvised charges to precision military demolitions' },
-  { name: 'Driving/Pilot',      attribute: 'DEX', vocational: false, description: 'Drive any vehicle with confidence and finesse; also covers aircraft and spacecraft piloting' },
-  { name: 'Entertainment',      attribute: 'INF', vocational: false, description: 'The charisma and talent to captivate an audience through music, song, acting, comedy, storytelling, or other performance' },
+  { name: 'Driving',            attribute: 'DEX', vocational: false, description: 'Drive any vehicle with confidence and finesse, this allows for reckless maneuvers without wrecking' },
+  { name: 'Entertainment',      attribute: 'INF', vocational: false, description: 'The charisma and talent to captivate an audience through music, song, acting, comedy, storytelling, or other form of performance' },
   { name: 'Farming',            attribute: 'ACU', vocational: false, description: 'Knowing how to grow crops or raise livestock at scale to sustain large groups of people' },
-  { name: 'Gambling',           attribute: 'ACU', vocational: false, description: 'The understanding of underlying mechanics behind games of chance, risk, and reward, and knowing when to bet or fold' },
+  { name: 'Gambling',           attribute: 'ACU', vocational: false, description: 'The understanding of underlying mechanics behind games of chance, risk, and reward, and the confidence of knowing when to bet or fold' },
   { name: 'Heavy Weapons*',     attribute: 'PHY', vocational: true,  description: 'The operation of complex, large-scale battlefield weapons like machine guns, launchers, and artillery' },
   { name: 'Inspiration',        attribute: 'INF', vocational: false, description: 'Being able to boost the morale of individuals or groups or motivate them behind a shared vision or belief' },
   { name: 'Lock-Picking*',      attribute: 'ACU', vocational: true,  description: 'Bypassing locks and security devices to open them without keys or codes' },
-  { name: 'Manipulation',       attribute: 'INF', vocational: false, description: 'Getting others to think, believe, or act in ways they may not have otherwise done' },
+  { name: 'Manipulation',       attribute: 'INF', vocational: false, description: 'Getting others to think, believe, or act in ways that they may not have otherwise done' },
   { name: 'Mechanic*',          attribute: 'RSN', vocational: true,  description: 'Diagnose, repair, maintain, or build complex machines, tools, vehicles, and systems' },
   { name: 'Medicine*',          attribute: 'RSN', vocational: true,  description: 'Providing first aid, diagnosis, treatment, emergency stabilization and advanced medical care to the injured or ill' },
   { name: 'Melee Combat',       attribute: 'PHY', vocational: false, description: 'Training with melee weapons to improve close-quarters precision, accuracy and damage' },
   { name: 'Navigation',         attribute: 'ACU', vocational: false, description: 'Innately able to discern directions, remember routes, and plot accurate courses' },
-  { name: 'Psychology*',        attribute: 'INF', vocational: true,  description: 'Leveraging an understanding of human behavior to influence, predict, exploit, or manipulate outcomes' },
+  { name: 'Psychology*',        attribute: 'RSN', vocational: true,  description: 'Leveraging an understanding of human behavior to influence, predict, exploit, or manipulate outcomes' },
   { name: 'Ranged Combat',      attribute: 'DEX', vocational: false, description: 'Accurately and safely using projectile weapons, ranging from thrown objects to sniper rifles' },
   { name: 'Research',           attribute: 'RSN', vocational: false, description: 'Being able to efficiently organize, distill, and absorb information to quickly become well informed on any subject' },
   { name: 'Scavenging',         attribute: 'ACU', vocational: false, description: 'Finding and evaluating missed, hidden, or discarded items that still have use for survival or trade' },
-  { name: 'Science*',           attribute: 'RSN', vocational: true,  description: 'Practical application of scientific principles relating to research, experiments, and innovations' },
   { name: 'Sleight of Hand',    attribute: 'DEX', vocational: false, description: 'Well practiced in performing sleight-of-hand tricks, palming, pickpocketing, concealment, and creating subtle diversions' },
-  { name: 'Specific Knowledge', attribute: 'RSN', vocational: false, description: 'Knowledge about the history, layout, and secrets of a specific area, community, person, or discipline, such as law' },
-  { name: 'Stealth',            attribute: 'PHY', vocational: false, description: 'Knowing how to move and to stick to the shadows while avoiding being detected' },
+  { name: 'Specific Knowledge', attribute: 'RSN', vocational: false, description: 'Knowledge about the history, layout, and secrets of a specific area, community, person, or discipline (e.g. law) — note the specific area on the character sheet' },
+  { name: 'Stealth',            attribute: 'PHY', vocational: false, description: 'Avoid notice, moving unseen, sticking to the shadows, and avoiding detection' },
   { name: 'Streetwise',         attribute: 'ACU', vocational: false, description: 'Instinctively being able to navigate urban environments, read situations for danger, and identify underworld resources' },
-  { name: 'Survival',           attribute: 'ACU', vocational: false, description: 'The natural inclination and ability to make something out of nothing, fix seemingly unfixable things, or take something that works and make it work better' },
+  { name: 'Survival',           attribute: 'ACU', vocational: false, description: 'Knowing how to survive in the wild, live off the land, and track people or animals' },
   { name: 'Tactics*',           attribute: 'RSN', vocational: true,  description: 'The application of battlefield or interpersonal strategies in order to gain a situational advantage or upper hand' },
   { name: 'Tinkerer',           attribute: 'DEX', vocational: false, description: 'Being adept at fixing, modifying, or improving machines, gear, or weapons as well as the ability to improvise inventions' },
   { name: 'Unarmed Combat',     attribute: 'PHY', vocational: false, description: 'Knowledge and practice of grappling, fist fight, bare fists or martial arts, and body control' },
@@ -167,18 +164,18 @@ export interface ProfessionDefinition {
 }
 
 export const PROFESSIONS: ProfessionDefinition[] = [
-  { name: 'Academic',        skills: ['Farming', 'General Knowledge', 'Medicine*', 'Psychology*', 'Research', 'Tactics*', 'Survival'] },
-  { name: 'Driver',          skills: ['Animal Handling', 'Driving/Pilot', 'Mechanic*', 'Navigation', 'Scavenging', 'Sleight of Hand', 'Tinkerer'] },
-  { name: 'Entrepreneur',    skills: ['Barter', 'Specific Knowledge', 'Inspiration', 'Manipulation', 'Psychology*', 'Sleight of Hand', 'Tinkerer'] },
-  { name: 'Law Enforcement', skills: ['Athletics', 'Survival', 'Manipulation', 'Ranged Combat', 'Stealth', 'Tactics*', 'Unarmed Combat'] },
-  { name: 'Mechanic',        skills: ['Athletics', 'Barter', 'Demolitions*', 'Specific Knowledge', 'Mechanic*', 'Scavenging', 'Tinkerer'] },
-  { name: 'Medic',           skills: ['Athletics', 'Specific Knowledge', 'Inspiration', 'Medicine*', 'Psychology*', 'Research', 'Sleight of Hand'] },
-  { name: 'Military',        skills: ['Athletics', 'Demolitions*', 'Ranged Combat', 'Stealth', 'Survival', 'Tactics*', 'Unarmed Combat'] },
-  { name: 'Outdoorsman',     skills: ['Animal Handling', 'Farming', 'Melee Combat', 'Navigation', 'Ranged Combat', 'Stealth', 'Survival'] },
-  { name: 'Outlaw',          skills: ['Manipulation', 'Manipulation', 'Psychology*', 'Ranged Combat', 'Sleight of Hand', 'Stealth', 'Unarmed Combat'] },
-  { name: 'Performer',       skills: ['Athletics', 'Barter', 'Inspiration', 'Manipulation', 'Psychology*', 'Sleight of Hand', 'Stealth'] },
-  { name: 'Politician',      skills: ['Barter', 'Specific Knowledge', 'Inspiration', 'Manipulation', 'Manipulation', 'Psychology*', 'Tactics*'] },
-  { name: 'Trader',          skills: ['Barter', 'Specific Knowledge', 'Inspiration', 'Manipulation', 'Scavenging', 'Sleight of Hand', 'Tinkerer'] },
+  { name: 'Academic',        skills: ['Mechanic*', 'Psychology*', 'Research', 'Specific Knowledge', 'Tactics*'] },
+  { name: 'Driver',          skills: ['Animal Handling', 'Driving', 'Lock-Picking*', 'Mechanic*', 'Navigation'] },
+  { name: 'Entrepreneur',    skills: ['Barter', 'Gambling', 'Inspiration', 'Manipulation', 'Research'] },
+  { name: 'Law Enforcement', skills: ['Athletics', 'Ranged Combat', 'Streetwise', 'Survival', 'Tactics*'] },
+  { name: 'Mechanic',        skills: ['Barter', 'Demolitions*', 'Mechanic*', 'Scavenging', 'Tinkerer'] },
+  { name: 'Medic',           skills: ['Manipulation', 'Medicine*', 'Psychology*', 'Research', 'Sleight of Hand'] },
+  { name: 'Military',        skills: ['Demolitions*', 'Heavy Weapons*', 'Ranged Combat', 'Tactics*', 'Unarmed Combat'] },
+  { name: 'Outdoorsman',     skills: ['Animal Handling', 'Navigation', 'Ranged Combat', 'Stealth', 'Survival'] },
+  { name: 'Outlaw',          skills: ['Gambling', 'Lock-Picking*', 'Sleight of Hand', 'Stealth', 'Streetwise'] },
+  { name: 'Performer',       skills: ['Athletics', 'Entertainment', 'Inspiration', 'Manipulation', 'Specific Knowledge'] },
+  { name: 'Politician',      skills: ['Inspiration', 'Manipulation', 'Psychology*', 'Streetwise', 'Tactics*'] },
+  { name: 'Trader',          skills: ['Barter', 'Scavenging', 'Sleight of Hand', 'Specific Knowledge', 'Tinkerer'] },
 ];
 
 // ----------------------------
@@ -187,7 +184,7 @@ export const PROFESSIONS: ProfessionDefinition[] = [
 
 export interface WeaponTrait {
   name: ItemTrait;
-  value?: number; // e.g. Automatic Burst (3) — rounds used
+  value?: number; // e.g. Automatic Burst (3) â€” rounds used
 }
 
 // ----------------------------
@@ -261,7 +258,7 @@ export const RANGED_WEAPONS: RangedWeapon[] = [
 ];
 
 // ----------------------------
-// EQUIPMENT (Table 20) — condensed
+// EQUIPMENT (Table 20) â€” condensed
 // ----------------------------
 
 export interface EquipmentItem {
@@ -322,7 +319,7 @@ export interface Paradigm {
   profession: string;
   rapid: Record<AttributeName, AttributeValue>;
   skills: ParadigmSkillEntry[];
-  // Secondary stats are always derived — not stored
+  // Secondary stats are always derived â€” not stored
 }
 
 export const PARADIGMS: Paradigm[] = [
@@ -347,7 +344,7 @@ export const PARADIGMS: Paradigm[] = [
     name: 'Biker', profession: 'Driver',
     rapid: { RSN: 0, ACU: 2, PHY: 1, INF: 0, DEX: 2 },
     skills: [
-      { skillName: 'Driving/Pilot',   level: 2 },
+      { skillName: 'Driving',   level: 2 },
       { skillName: 'Barter',          level: 1 },
       { skillName: 'Demolitions*',    level: 1 },
       { skillName: 'Lock-Picking*',   level: 1 },
@@ -408,7 +405,7 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Mechanic*',       level: 3 },
       { skillName: 'Barter',          level: 2 },
       { skillName: 'Demolitions*',    level: 2 },
-      { skillName: 'Driving/Pilot',   level: 1 },
+      { skillName: 'Driving',   level: 1 },
       { skillName: 'Lock-Picking*',   level: 1 },
       { skillName: 'Melee Combat',    level: 1 },
       { skillName: 'Navigation',      level: 1 },
@@ -424,7 +421,7 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Athletics',       level: 2 },
       { skillName: 'Medicine*',       level: 2 },
       { skillName: 'Psychology*',     level: 2 },
-      { skillName: 'Driving/Pilot',   level: 1 },
+      { skillName: 'Driving',   level: 1 },
       { skillName: 'Inspiration',     level: 1 },
       { skillName: 'Manipulation',    level: 1 },
       { skillName: 'Navigation',      level: 1 },
@@ -591,7 +588,7 @@ export const BACKSTORY_STEPS: BackstoryStep[] = [
   },
   {
     id: 'step1', title: 'Step One: Where They Grew Up',
-    description: 'The first 10–15 years. Raise 1 attribute from 0 to 1. Spend 2 CDP on skills (max Journeyman).',
+    description: 'The first 10â€“15 years. Raise 1 attribute from 0 to 1. Spend 2 CDP on skills (max Journeyman).',
     attributeCDP: 1, skillCDP: 2,
     maxAttributeLevel: 1, maxSkillLevel: 2,
   },
@@ -690,8 +687,8 @@ export interface XSECharacter {
   // Tracking
   insightDice: number;     // starts at 2
   cdp: number;             // unspent CDP
-  stressLevel: number;     // 0–5
-  breakingPoint: number;   // 0–5
+  stressLevel: number;     // 0â€“5
+  breakingPoint: number;   // 0â€“5
   lastingWounds: string[]; // list of wound names
 
   // Relationships
@@ -755,3 +752,4 @@ export function createBlankCharacter(): XSECharacter {
     relationships: [],
   };
 }
+
