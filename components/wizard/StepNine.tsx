@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import { WizardState, getCumulativeAttributes, getCumulativeSkills } from '../../lib/xse-engine'
 import { ATTRIBUTE_LABELS, COMPLICATIONS, MOTIVATIONS, deriveSecondaryStats, AttributeName } from '../../lib/xse-schema'
@@ -29,11 +29,11 @@ export default function StepNine({ state, onChange }: Props) {
   function sgn(v: number) { return v > 0 ? `+${v}` : String(v) }
 
   const backstoryNotes = [
-    { step: 'Step 1 — Where they grew up',     note: state.steps[0]?.note },
-    { step: 'Step 2 — What they learned',       note: state.steps[1]?.note },
-    { step: 'Step 3 — What they liked to do',   note: state.steps[2]?.note },
-    { step: 'Step 4 — How they made money',     note: state.steps[3]?.note },
-    { step: 'Step 5 — What they learned after', note: state.steps[4]?.note },
+    { step: 'Step 1 â€” Where they grew up',     note: state.steps[0]?.note },
+    { step: 'Step 2 â€” What they learned',       note: state.steps[1]?.note },
+    { step: 'Step 3 â€” What they liked to do',   note: state.steps[2]?.note },
+    { step: 'Step 4 â€” How they made money',     note: state.steps[3]?.note },
+    { step: 'Step 5 â€” What they learned after', note: state.steps[4]?.note },
   ].filter(b => b.note?.trim())
 
   return (
@@ -72,14 +72,14 @@ export default function StepNine({ state, onChange }: Props) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <label style={fieldLabel}>Complication</label>
             <select style={fieldInput} defaultValue={step6.complication ?? ''}>
-              <option value="">— none —</option>
+              <option value="">â€” none â€”</option>
               {complications.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <label style={fieldLabel}>Motivation</label>
             <select style={fieldInput} defaultValue={step6.motivation ?? ''}>
-              <option value="">— none —</option>
+              <option value="">â€” none â€”</option>
               {motivations.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
@@ -151,8 +151,8 @@ export default function StepNine({ state, onChange }: Props) {
           {[
             ['Primary weapon',   state.weaponPrimary],
             ['Secondary weapon', state.weaponSecondary],
-            ['Primary ammo',     state.primaryAmmo ? `${state.primaryAmmo} reload${state.primaryAmmo > 1 ? 's' : ''}` : '—'],
-            ['Secondary ammo',   state.secondaryAmmo ? `${state.secondaryAmmo} reload${state.secondaryAmmo > 1 ? 's' : ''}` : '—'],
+            ['Primary ammo',     state.primaryAmmo ? `${state.primaryAmmo} reload${state.primaryAmmo > 1 ? 's' : ''}` : 'â€”'],
+            ['Secondary ammo',   state.secondaryAmmo ? `${state.secondaryAmmo} reload${state.secondaryAmmo > 1 ? 's' : ''}` : 'â€”'],
             ['Equipment',        state.equipment],
             ['Incidental item',  state.incidentalItem],
             ['Rations',          state.rations],
@@ -169,18 +169,28 @@ export default function StepNine({ state, onChange }: Props) {
       <div style={section}>
         <div style={sectionTitle}>Backstory</div>
         {state.concept && (
-          <p style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '8px', fontStyle: 'italic' }}>
+          <p style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '8px' }}>
             {state.concept}
           </p>
         )}
         {state.physdesc && (
-          <p style={{ fontSize: '13px', color: '#b0aaa4', lineHeight: 1.8, marginBottom: '12px' }}>
+          <p style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '10px' }}>
             {state.name ? `${state.name} was ` : ''}{state.physdesc}
           </p>
         )}
-        {backstoryNotes.length > 0 && (
+        {(state.steps[0]?.note || state.steps[1]?.note) && (
+          <p style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '10px' }}>
+            {[state.steps[0]?.note, state.steps[1]?.note].filter(Boolean).join(' ')}
+          </p>
+        )}
+        {(state.steps[2]?.note || state.steps[3]?.note) && (
+          <p style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '10px' }}>
+            {[state.steps[2]?.note, state.steps[3]?.note].filter(Boolean).join(' ')}
+          </p>
+        )}
+        {state.steps[4]?.note && (
           <p style={{ fontSize: '13px', color: '#f5f2ee', lineHeight: 1.8 }}>
-            {backstoryNotes.map(b => b.note).join(' ')}
+            {state.steps[4].note}
           </p>
         )}
       </div>
@@ -195,7 +205,7 @@ export default function StepNine({ state, onChange }: Props) {
           placeholder="Any additional notes, GM hooks, or personality details..." />
       </div>
 
-      {/* Hidden print sheet — revealed only during print */}
+      {/* Hidden print sheet â€” revealed only during print */}
       <div id="print-sheet-container" style={{ display: 'none' }}>
         <PrintSheet state={state} />
       </div>
