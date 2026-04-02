@@ -108,18 +108,18 @@ export default function RandomCharacterPage() {
       character.paradigmName = paradigm.name
       character.creationMethod = 'paradigm'
 
-      const { error } = await supabase.from('characters').insert({
+      const { error, data: newChar } = await supabase.from('characters').insert({
         user_id: user.id,
         name: character.name || 'Random Survivor',
         data: character,
-      })
+      }).select().single()
 
       if (error) {
         setStatus('Error: ' + error.message)
         return
       }
 
-      router.push('/characters')
+      router.push(`/characters/${newChar.id}/edit?step=4`)
     }
 
     generate()

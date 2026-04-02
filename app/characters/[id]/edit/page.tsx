@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../../lib/supabase-browser'
 import { createWizardState, WizardState, buildCharacter } from '../../../../lib/xse-engine'
 import { SKILLS } from '../../../../lib/xse-schema'
@@ -24,9 +24,11 @@ export default function EditCharacterPage() {
   const id = params.id as string
   const supabase = createClient()
 
+  const searchParams = useSearchParams()
+  const initialStep = parseInt(searchParams.get('step') ?? '0', 10)
   const [state, setState] = useState<WizardState | null>(null)
   const [characterName, setCharacterName] = useState('')
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState(initialStep)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState('')
