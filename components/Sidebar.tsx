@@ -26,6 +26,33 @@ export default function Sidebar() {
 
   if (userRole === null) return null
 
+  const linkStyle = (accent: string) => ({
+    display: 'block' as const, padding: '10px 14px', color: '#f5f2ee',
+    textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif',
+    letterSpacing: '.04em', textTransform: 'uppercase' as const,
+    borderLeft: `3px solid ${accent}`, marginBottom: '2px',
+  })
+
+  const dimLinkStyle = {
+    display: 'block' as const, padding: '10px 14px', color: '#b0aaa4',
+    textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif',
+    letterSpacing: '.04em', textTransform: 'uppercase' as const,
+    borderLeft: '3px solid #3a3a3a', marginBottom: '2px',
+  }
+
+  const soonStyle = {
+    display: 'block' as const, padding: '10px 14px', color: '#5a5550',
+    textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif',
+    letterSpacing: '.04em', textTransform: 'uppercase' as const,
+    borderLeft: '3px solid transparent', marginBottom: '2px',
+  }
+
+  const divider = <div style={{ height: '1px', background: '#2e2e2e', margin: '8px 0' }} />
+
+  function hover(e: React.MouseEvent<HTMLAnchorElement>, on: boolean) {
+    e.currentTarget.style.background = on ? '#242424' : 'transparent'
+  }
+
   return (
     <div style={{ width: '220px', flexShrink: 0, background: '#1a1a1a', borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
 
@@ -39,55 +66,28 @@ export default function Sidebar() {
       </div>
 
       {/* Character links */}
-      {[
-        { href: '/characters/new', label: 'Backstory Generation', accent: '#c0392b' },
-        { href: '/characters', label: 'My Characters', accent: '#3a3a3a' },
-      ].map(({ href, label, accent }) => (
-        <a key={label} href={href} style={{ display: 'block', padding: '10px 14px', color: '#f5f2ee', textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: `3px solid ${accent}`, marginBottom: '2px' }}
-          onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-          {label}
-        </a>
-      ))}
-      <a href="/characters/quick" style={{ display: 'block', padding: '10px 14px', color: '#f5f2ee', textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: '3px solid #3a3a3a', marginBottom: '2px' }}
-        onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-        Quick Character
-      </a>
-      <a href="/characters/random" style={{ display: 'block', padding: '10px 14px', color: '#f5f2ee', textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: '3px solid #3a3a3a', marginBottom: '2px' }}
-        onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-        Random Character
-      </a>
-      <a href="#" style={{ display: 'block', padding: '10px 14px', color: '#5a5550', textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: '3px solid transparent', marginBottom: '2px' }}>
-        Paradigms <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span>
-      </a>
+      <a href="/characters/new" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</a>
+      <a href="/characters/quick" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Character</a>
+      <a href="/characters/random" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</a>
+      <a href="/characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Characters</a>
+      <a href="#" style={soonStyle}>Paradigms <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span></a>
 
-      <div style={{ height: '1px', background: '#2e2e2e', margin: '8px 0' }} />
+      {divider}
 
       {/* Map */}
-      <a href="/map" style={{ display: 'block', padding: '10px 14px', color: '#f5f2ee', textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: '3px solid #c0392b', marginBottom: '2px' }}
-        onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-        World Map
-      </a>
+      <a href="/map" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>World Map</a>
 
-      {/* Moderation â€” thrivers only */}
+      {/* Moderation — thrivers only */}
       {userRole === 'thriver' && (
-        <a href="/moderate" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', color: '#f5f2ee', textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: '3px solid #EF9F27', marginBottom: '2px' }}
-          onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+        <a href="/moderate" style={{ ...linkStyle('#EF9F27'), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
           Moderation Queue
           {pendingCount > 0 && <span style={{ background: '#c0392b', color: '#fff', fontSize: '10px', padding: '1px 6px', borderRadius: '3px' }}>{pendingCount}</span>}
         </a>
       )}
 
-      <a href="/welcome" style={{ display: 'block', padding: '10px 14px', color: '#b0aaa4', textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: '3px solid #3a3a3a', marginBottom: '2px' }}
-        onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-        About The Tapestry
-      </a>
-      <div style={{ height: '1px', background: '#2e2e2e', margin: '8px 0' }} />
+      <a href="/welcome" style={dimLinkStyle} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>About The Tapestry</a>
+
+      {divider}
 
       {/* Coming soon */}
       {[
@@ -96,8 +96,8 @@ export default function Sidebar() {
         { href: '#', label: 'Forums' },
         { href: '#', label: 'Looking for Group' },
       ].map(({ href, label }) => (
-        <a key={label} href={href} style={{ display: 'block', padding: '10px 14px', color: '#b0aaa4', textDecoration: 'none', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', borderLeft: '3px solid transparent', marginBottom: '2px' }}>
-          {label} <span style={{ fontSize: '9px', color: '#5a5550' }}>â€” soon</span>
+        <a key={label} href={href} style={soonStyle}>
+          {label} <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span>
         </a>
       ))}
 
