@@ -163,6 +163,10 @@ export default function CharactersPage() {
                   </div>
                   {/* Action buttons */}
                   <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                    <button onClick={() => router.push(`/characters/${c.id}/edit`)}
+                      style={actionBtn('#c0392b', '#f5a89a')}>
+                      Edit
+                    </button>
                     <button onClick={() => handlePrint(c.id)}
                       style={actionBtn('#2d5a1b', '#7fc458')}>
                       Print
