@@ -14,13 +14,13 @@ export default function CreatingACharacterPage() {
             Building Your Survivor
           </h1>
           <p style={{ fontSize: '17px', color: '#f5f2ee', lineHeight: 1.8, margin: 0 }}>
-            Every character in Distemper has a story before the story begins. The Xero Sum Engine gives you three ways to create yours — from a detailed life-history approach to a quick-start option for when you just want to get to the table.
+            Every character in Distemper has a story before the story begins. The Xero Sum Engine give you three ways to tell yours — from a detailed lifepathing, point-buy approach to a quick-start option for when you just want to get to the table.
           </p>
         </div>
 
         {/* Three methods */}
         <div style={{ marginBottom: '4rem' }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#5a5550', marginBottom: '1rem' }}>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#2d5a1b', marginBottom: '1rem' }}>
             Three Ways to Build
           </div>
 
