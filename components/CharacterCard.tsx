@@ -213,9 +213,9 @@ export default function CharacterCard({
           {ATTR_KEYS.map(k => {
             const v = rapid[k] ?? 0
             return (
-              <div key={k} style={{ flex: 1, background: v > 0 ? '#2a1210' : '#242424', border: `1px solid ${v > 0 ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', padding: '4px 2px', textAlign: 'center' }}>
+              <div key={k} style={{ flex: 1, background: v > 0 ? '#1a2e10' : '#242424', border: `1px solid ${v > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', padding: '4px 2px', textAlign: 'center' }}>
                 <div style={{ fontSize: '8px', color: '#b0aaa4', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-                <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: v > 0 ? '#f5a89a' : '#b0aaa4' }}>{sgn(v)}</div>
+                <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: v > 0 ? '#7fc458' : '#b0aaa4' }}>{sgn(v)}</div>
               </div>
             )
           })}
@@ -267,9 +267,9 @@ export default function CharacterCard({
     return (
       <span key={s.skillName} style={{
         fontSize: '10px', padding: '3px 6px', borderRadius: '3px',
-        background: raised ? '#2a1210' : '#1a1a1a',
-        border: `1px solid ${raised ? '#7a1f16' : '#2e2e2e'}`,
-        color: raised ? '#f5a89a' : s.level < 0 ? '#7a4a4a' : '#f5f2ee',
+        background: raised ? '#1a2e10' : '#1a1a1a',
+border: `1px solid ${raised ? '#2d5a1b' : '#2e2e2e'}`,
+color: raised ? '#7fc458' : s.level < 0 ? '#7a4a4a' : '#f5f2ee',
         textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
       }}>
         {s.skillName} {sgn(s.level)}
