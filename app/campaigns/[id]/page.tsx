@@ -68,9 +68,8 @@ export default function CampaignPage() {
         .from('campaign_members')
         .select(`
           id, user_id, character_id, joined_at,
-          profiles:user_id(username, role),
-          characters:character_id(id, name)
-        `)
+    characters:character_id(id, name)
+  `)
         .eq('campaign_id', id)
         .order('joined_at', { ascending: true })
       setMembers((mems ?? []) as any)
@@ -107,9 +106,8 @@ export default function CampaignPage() {
         .from('campaign_members')
         .select(`
           id, user_id, character_id, joined_at,
-          profiles:user_id(username, role),
-          characters:character_id(id, name)
-        `)
+    characters:character_id(id, name)
+  `)
         .eq('campaign_id', id)
         .order('joined_at', { ascending: true })
       setMembers((mems ?? []) as any)
