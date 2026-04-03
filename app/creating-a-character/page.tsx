@@ -31,7 +31,7 @@ export default function CreatingACharacterPage() {
               tag: 'Recommended',
               tagColor: '#2d5a1b',
               tagText: '#7fc458',
-              desc: 'The full XSE experience. You spend Character Development Points (CDP) across nine chapters of your character\'s life — where they grew up, what they learned, how they made their way in the world. Every decision shapes who they are and what they can do.',
+              desc: 'The full experience. You spend Character Development Points (CDP) across nine chapters of your character\'s life — where they grew up, what they learned, how they made their way in the world. Every decision shapes who they are and what they can do.',
               bestFor: 'Players who want to know their character inside and out before the first session.',
               time: '15–30 minutes',
             },
