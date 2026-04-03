@@ -86,6 +86,7 @@ export default function CharactersPage() {
     stress: c.data?.stressLevel ?? 0,
     insight_dice: c.data?.insightDice ?? 2,
     morality: c.data?.secondary?.morality ?? 3,
+    cdp: c.data?.cdp ?? 0,
   }}
   showButtons={true}
   isMySheet={true}

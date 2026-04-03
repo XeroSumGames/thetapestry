@@ -21,6 +21,7 @@ export interface LiveState {
   stress: number
   insight_dice: number
   morality: number
+  cdp: number
 }
 
 interface Props {
@@ -235,8 +236,8 @@ export default function CharacterCard({
         {motivation && <span><span style={{ color: '#5a5550' }}>Motivation:</span> {motivation}</span>}
       </div>
     )}
-    {c.data?.notes && <div style={{ color: '#b0aaa4', fontStyle: 'italic' }}>{c.data.notes}</div>}
-    {c.data?.physdesc && <div style={{ color: '#b0aaa4' }}>{c.data.physdesc}</div>}
+    {c.data?.notes && <div><span style={{ color: '#5a5550' }}>Concept:</span> {c.data.notes}</div>}
+{c.data?.physdesc && <div><span style={{ color: '#5a5550' }}>Description:</span> {c.data.physdesc}</div>}
   </div>
 )}
 
@@ -246,10 +247,11 @@ export default function CharacterCard({
     <DotTracker label="Wound Points" current={liveState.wp_current} max={liveState.wp_max} field="wp_current" color="#c0392b" />
     <DotTracker label="Resilience Points" current={liveState.rp_current} max={liveState.rp_max} field="rp_current" color="#7ab3d4" />
     <div style={{ display: 'flex', gap: '16px', marginTop: '10px', justifyContent: 'space-around' }}>
-      <Counter label="Stress" value={liveState.stress} field="stress" max={5} color="#EF9F27" />
-      <Counter label="Insight" value={liveState.insight_dice} field="insight_dice" max={9} color="#7fc458" />
-      <Counter label="Morality" value={liveState.morality} field="morality" max={5} color="#b0aaa4" />
-    </div>
+  <Counter label="Stress" value={liveState.stress} field="stress" max={5} color="#EF9F27" />
+  <Counter label="CDP" value={liveState.cdp} field="cdp" max={20} color="#7ab3d4" />
+  <Counter label="Insight" value={liveState.insight_dice} field="insight_dice" max={9} color="#7fc458" />
+  <Counter label="Morality" value={liveState.morality} field="morality" max={5} color="#b0aaa4" />
+</div>
   </div>
 )}
 

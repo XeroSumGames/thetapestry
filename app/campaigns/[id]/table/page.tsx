@@ -63,7 +63,7 @@ export default function TablePage() {
         id: s.id,
         wp_current: s.wp_current, wp_max: s.wp_max,
         rp_current: s.rp_current, rp_max: s.rp_max,
-        stress: s.stress, insight_dice: s.insight_dice, morality: s.morality,
+        stress: s.stress, insight_dice: s.insight_dice, morality: s.morality, cdp: s.cdp ?? 0,
       },
     })))
   }
