@@ -29,11 +29,11 @@ export default function StepNine({ state, onChange }: Props) {
   function sgn(v: number) { return v > 0 ? `+${v}` : String(v) }
 
   const backstoryNotes = [
-    { step: 'Step 1 â€” Where they grew up',     note: state.steps[0]?.note },
-    { step: 'Step 2 â€” What they learned',       note: state.steps[1]?.note },
-    { step: 'Step 3 â€” What they liked to do',   note: state.steps[2]?.note },
-    { step: 'Step 4 â€” How they made money',     note: state.steps[3]?.note },
-    { step: 'Step 5 â€” What they learned after', note: state.steps[4]?.note },
+    { step: 'Step 1 — Where they grew up',     note: state.steps[0]?.note },
+{ step: 'Step 2 — What they learned',       note: state.steps[1]?.note },
+{ step: 'Step 3 — What they liked to do',   note: state.steps[2]?.note },
+{ step: 'Step 4 — How they made money',     note: state.steps[3]?.note },
+{ step: 'Step 5 — What they learned after', note: state.steps[4]?.note },
   ].filter(b => b.note?.trim())
 
   return (
