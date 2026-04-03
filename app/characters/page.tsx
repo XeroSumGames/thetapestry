@@ -66,9 +66,15 @@ export default function CharactersPage() {
     setPrintingId(id)
     setTimeout(() => {
       const el = document.getElementById(`print-container-${id}`)
-      if (el) el.style.display = 'block'
+      if (el) {
+        el.classList.add('print-container-active')
+        document.body.classList.add('printing')
+      }
       window.print()
-      if (el) el.style.display = 'none'
+      if (el) {
+        el.classList.remove('print-container-active')
+        document.body.classList.remove('printing')
+      }
       setPrintingId(null)
     }, 100)
   }

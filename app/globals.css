@@ -60,11 +60,29 @@ textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
 @media print {
-  body * { visibility: hidden; }
-  #print-sheet-container, #print-sheet-container * { visibility: visible; }
-  #print-sheet-container {
-    position: absolute;
-    left: 0; top: 0;
+  @page {
+    size: Letter portrait;
+    margin: 0.4in 0.4in 0.4in 0.4in;
+  }
+
+  /* Hide everything except the active print container */
+  body > * { display: none !important; }
+  .print-container-active { display: block !important; }
+  .print-container-active * { display: revert !important; }
+
+  /* Force single page */
+  #print-sheet-inner {
     width: 100%;
+    max-height: 9.2in;
+    overflow: hidden;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Prevent any element from breaking across pages */
+  * {
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }
