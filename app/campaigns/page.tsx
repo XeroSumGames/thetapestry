@@ -15,7 +15,7 @@ interface Campaign {
 }
 
 const SETTINGS: Record<string, string> = {
-  custom: 'New Setting',  
+  custom: 'New Setting',
   district0: 'District Zero',
   mongrels: 'Minnie & The Magnificent Mongrels',
   chased: 'Chased',
@@ -76,7 +76,7 @@ export default function CampaignsPage() {
 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
-          Campaigns
+          My Stories
         </div>
         <div style={{ flex: 1 }} />
         <a href="/campaigns/new" style={{ padding: '7px 18px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
@@ -105,23 +105,25 @@ export default function CampaignsPage() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {gmCampaigns.map(c => (
-              <a key={c.id} href={`/campaigns/${c.id}`} style={{ textDecoration: 'none' }}>
-                <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', borderLeft: '3px solid #c0392b', cursor: 'pointer' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>{c.name}</div>
-                      <div style={{ fontSize: '11px', color: '#b0aaa4', marginTop: '2px' }}>
-                        {SETTINGS[c.setting] ?? c.setting} &middot; Created {formatDate(c.created_at)}
-                      </div>
-                      {c.description && <div style={{ fontSize: '13px', color: '#b0aaa4', marginTop: '6px', lineHeight: 1.5 }}>{c.description}</div>}
+              <div key={c.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', borderLeft: '3px solid #c0392b' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                  <div>
+                    <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>{c.name}</div>
+                    <div style={{ fontSize: '11px', color: '#b0aaa4', marginTop: '2px' }}>
+                      {SETTINGS[c.setting] ?? c.setting} &middot; Created {formatDate(c.created_at)}
                     </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '12px' }}>
-                      <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>Invite Code</div>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em' }}>{c.invite_code}</div>
-                    </div>
+                    {c.description && <div style={{ fontSize: '13px', color: '#b0aaa4', marginTop: '6px', lineHeight: 1.5 }}>{c.description}</div>}
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '12px' }}>
+                    <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>Invite Code</div>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em' }}>{c.invite_code}</div>
                   </div>
                 </div>
-              </a>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <a href={`/campaigns/${c.id}`} style={{ padding: '5px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Launch</a>
+                  <a href={`/campaigns/${c.id}/edit`} style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Edit</a>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -134,15 +136,18 @@ export default function CampaignsPage() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {playerCampaigns.map(c => (
-              <a key={c.id} href={`/campaigns/${c.id}`} style={{ textDecoration: 'none' }}>
-                <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', borderLeft: '3px solid #7ab3d4', cursor: 'pointer' }}>
+              <div key={c.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', borderLeft: '3px solid #7ab3d4' }}>
+                <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>{c.name}</div>
                   <div style={{ fontSize: '11px', color: '#b0aaa4', marginTop: '2px' }}>
                     {SETTINGS[c.setting] ?? c.setting} &middot; Joined {formatDate(c.created_at)}
                   </div>
                   {c.description && <div style={{ fontSize: '13px', color: '#b0aaa4', marginTop: '6px', lineHeight: 1.5 }}>{c.description}</div>}
                 </div>
-              </a>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <a href={`/campaigns/${c.id}`} style={{ padding: '5px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Launch</a>
+                </div>
+              </div>
             ))}
           </div>
         </div>
