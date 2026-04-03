@@ -78,8 +78,9 @@ export default function Sidebar() {
       {/* The Tapestry section */}
       <div style={sectionHeading}>The Tapestry</div>
       <a href="/welcome" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Welcome to the Tapestry</a>
-      <a href="/map" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The World</a>
-      <a href="#" style={soonStyle}>The Campfire <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span></a>
+<a href="/map" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The World</a>
+<a href="/campaigns" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Campaigns</a>
+<a href="#" style={soonStyle}>The Campfire <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span></a>
 
       {/* Moderation — thrivers only */}
       {userRole === 'thriver' && (
