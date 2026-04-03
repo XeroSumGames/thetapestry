@@ -146,6 +146,11 @@ export default function CampaignPage() {
     }
     setCloning(false)
   }
+async function handleDelete() {
+  if (!confirm('Permanently delete this campaign? This cannot be undone.')) return
+  await supabase.from('campaigns').delete().eq('id', id)
+  router.push('/campaigns')
+}
 
   function copyInviteLink() {
     if (!campaign) return
@@ -185,15 +190,18 @@ export default function CampaignPage() {
       {/* GM Action buttons */}
       {isGM && (
         <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
-          <a href={`/campaigns/${id}/table`} style={actionLink('#c0392b', '#fff', '#c0392b')}>Launch</a>
-          <a href={`/campaigns/${id}/edit`} style={actionLink('#242424', '#f5f2ee', '#3a3a3a')}>Edit</a>
-          <button onClick={handleClone} disabled={cloning} style={{ ...actionLink('#242424', '#b0aaa4', '#3a3a3a'), opacity: cloning ? 0.6 : 1 } as any}>
-            {cloning ? 'Cloning...' : 'Clone'}
-          </button>
-          <button onClick={copyInviteLink} style={actionLink('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
-            {copied ? 'Copied!' : 'Share'}
-          </button>
-        </div>
+  <a href={`/campaigns/${id}/table`} style={actionLink('#c0392b', '#fff', '#c0392b')}>Launch</a>
+  <a href={`/campaigns/${id}/edit`} style={actionLink('#242424', '#f5f2ee', '#3a3a3a')}>Edit</a>
+  <button onClick={handleClone} disabled={cloning} style={{ ...actionLink('#242424', '#b0aaa4', '#3a3a3a'), opacity: cloning ? 0.6 : 1 } as any}>
+    {cloning ? 'Cloning...' : 'Clone'}
+  </button>
+  <button onClick={copyInviteLink} style={actionLink('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
+    {copied ? 'Copied!' : 'Share'}
+  </button>
+  <button onClick={handleDelete} style={actionLink('#7a1f16', '#f5a89a', '#7a1f16') as any}>
+    Delete
+  </button>
+</div>
       )}
 
       {/* GM VIEW */}
