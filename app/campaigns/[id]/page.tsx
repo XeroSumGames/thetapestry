@@ -64,10 +64,14 @@ export default function CampaignPage() {
       setCampaign(camp)
 
       const { data: mems } = await supabase
-        .from('campaign_members')
-        .select('id, user_id, character_id, joined_at, profiles(username, role), characters(id, name)')
-        .eq('campaign_id', id)
-        .order('joined_at', { ascending: true })
+  .from('campaign_members')
+  .select(`
+    id, user_id, character_id, joined_at,
+    profiles:user_id(username, role),
+    characters:character_id(id, name)
+  `)
+  .eq('campaign_id', id)
+  .order('joined_at', { ascending: true })
       setMembers((mems ?? []) as any)
 
       const { data: chars } = await supabase
@@ -99,10 +103,14 @@ export default function CampaignPage() {
       const chosen = myCharacters.find(c => c.id === selectedCharId)
       setAssignedCharName(chosen?.name ?? '')
       const { data: mems } = await supabase
-        .from('campaign_members')
-        .select('id, user_id, character_id, joined_at, profiles(username, role), characters(id, name)')
-        .eq('campaign_id', id)
-        .order('joined_at', { ascending: true })
+  .from('campaign_members')
+  .select(`
+    id, user_id, character_id, joined_at,
+    profiles:user_id(username, role),
+    characters:character_id(id, name)
+  `)
+  .eq('campaign_id', id)
+  .order('joined_at', { ascending: true })
       setMembers((mems ?? []) as any)
     }
     setAssigning(false)
