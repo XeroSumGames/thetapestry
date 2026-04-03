@@ -6,9 +6,6 @@ import PrintSheet from './wizard/PrintSheet'
 import { WizardState, createWizardState } from '../lib/xse-engine'
 
 const ATTR_KEYS = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
-const ATTR_FULL: Record<string, string> = {
-  RSN: 'Reason', ACU: 'Acumen', PHY: 'Physicality', INF: 'Influence', DEX: 'Dexterity'
-}
 
 function sgn(v: number) { return v > 0 ? `+${v}` : String(v) }
 
@@ -59,8 +56,6 @@ export default function CharacterCard({
 
   const rapid = c.data?.rapid ?? {}
   const skills: { skillName: string; level: number }[] = c.data?.skills ?? []
-  const raisedSkills = skills.filter(s => s.level > 0)
-  const unraisedSkills = skills.filter(s => s.level <= 0)
   const profession = c.data?.profession ?? ''
   const complication = c.data?.complication ?? ''
   const motivation = c.data?.motivation ?? ''
@@ -119,10 +114,7 @@ export default function CharacterCard({
 
   function handlePrint() {
     setPrinting(true)
-    setTimeout(() => {
-      window.print()
-      setPrinting(false)
-    }, 100)
+    setTimeout(() => { window.print(); setPrinting(false) }, 100)
   }
 
   async function updateStat(stateId: string, field: string, value: number) {
@@ -138,7 +130,7 @@ export default function CharacterCard({
     if (!liveState) return null
     const isUpd = updating === liveState.id + field
     return (
-      <div style={{ marginBottom: '10px' }}>
+      <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
           <span style={{ fontSize: '9px', color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>{label}</span>
           <span style={{ fontSize: '11px', color, fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{current} / {max}</span>
@@ -192,6 +184,7 @@ export default function CharacterCard({
         borderLeft: `3px solid ${isMySheet ? '#c0392b' : '#3a3a3a'}`,
         borderRadius: '4px', padding: '1rem 1.25rem',
       }}>
+
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '8px' }}>
           <div style={{ flex: 1 }}>
@@ -228,49 +221,61 @@ export default function CharacterCard({
           })}
         </div>
 
+        {/* Complication / Motivation / Concept / Description */}
         {(complication || motivation || c.data?.notes || c.data?.physdesc) && (
-  <div style={{ fontSize: '11px', color: '#b0aaa4', marginBottom: '8px', lineHeight: 1.6 }}>
-    {(complication || motivation) && (
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '3px' }}>
-        {complication && <span><span style={{ color: '#5a5550' }}>Complication:</span> {complication}</span>}
-        {motivation && <span><span style={{ color: '#5a5550' }}>Motivation:</span> {motivation}</span>}
-      </div>
-    )}
-    {c.data?.notes && <div><span style={{ color: '#5a5550' }}>Concept:</span> {c.data.notes}</div>}
-{c.data?.physdesc && <div><span style={{ color: '#5a5550' }}>Description:</span> {c.data.physdesc}</div>}
-  </div>
-)}
+          <div style={{ fontSize: '11px', color: '#b0aaa4', marginBottom: '8px', lineHeight: 1.6 }}>
+            {(complication || motivation) && (
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
+                {complication && <span><span style={{ color: '#5a5550' }}>Complication:</span> {complication}</span>}
+                {motivation && <span><span style={{ color: '#5a5550' }}>Motivation:</span> {motivation}</span>}
+              </div>
+            )}
+            {(c.data?.notes || c.data?.physdesc) && (
+              <div>
+                {c.data?.notes && <span><span style={{ color: '#5a5550' }}>Concept:</span> {c.data.notes}</span>}
+                {c.data?.notes && c.data?.physdesc && <span style={{ color: '#5a5550' }}> &middot; </span>}
+                {c.data?.physdesc && <span><span style={{ color: '#5a5550' }}>Description:</span> {c.data.physdesc}</span>}
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* Live trackers — only shown when liveState provided */}
+        {/* Live trackers */}
         {liveState && (
-  <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginBottom: '10px' }}>
-    <DotTracker label="Wound Points" current={liveState.wp_current} max={liveState.wp_max} field="wp_current" color="#c0392b" />
-    <DotTracker label="Resilience Points" current={liveState.rp_current} max={liveState.rp_max} field="rp_current" color="#7ab3d4" />
-    <div style={{ display: 'flex', gap: '16px', marginTop: '10px', justifyContent: 'space-around' }}>
-  <Counter label="Stress" value={liveState.stress} field="stress" max={5} color="#EF9F27" />
-  <Counter label="CDP" value={liveState.cdp} field="cdp" max={20} color="#7ab3d4" />
-  <Counter label="Insight" value={liveState.insight_dice} field="insight_dice" max={9} color="#7fc458" />
-  <Counter label="Morality" value={liveState.morality} field="morality" max={5} color="#b0aaa4" />
-</div>
-  </div>
-)}
+          <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', gap: '24px', marginBottom: '10px' }}>
+              <div style={{ flex: 1 }}>
+                <DotTracker label="Wound Points" current={liveState.wp_current} max={liveState.wp_max} field="wp_current" color="#c0392b" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <DotTracker label="Resilience Points" current={liveState.rp_current} max={liveState.rp_max} field="rp_current" color="#7ab3d4" />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'space-around' }}>
+              <Counter label="Stress" value={liveState.stress} field="stress" max={5} color="#EF9F27" />
+              <Counter label="CDP" value={liveState.cdp} field="cdp" max={20} color="#7ab3d4" />
+              <Counter label="Insight" value={liveState.insight_dice} field="insight_dice" max={9} color="#7fc458" />
+              <Counter label="Morality" value={liveState.morality} field="morality" max={5} color="#b0aaa4" />
+            </div>
+          </div>
+        )}
 
         {/* Skills — always in original order */}
-<div style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-  {skills.map(s => {
-    const raised = s.level > 0
-    return (
-      <span key={s.skillName} style={{
-        fontSize: '11px', padding: '2px 8px', borderRadius: '3px',
-        background: raised ? '#2a1210' : '#1a1a1a',
-        border: `1px solid ${raised ? '#7a1f16' : '#2e2e2e'}`,
-        color: raised ? '#f5a89a' : s.level < 0 ? '#7a4a4a' : '#f5f2ee',
-      }}>
-        {s.skillName} {sgn(s.level)}
-      </span>
-    )
-  })}
-</div>
+        <div style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+          {skills.map(s => {
+            const raised = s.level > 0
+            return (
+              <span key={s.skillName} style={{
+                fontSize: '11px', padding: '2px 8px', borderRadius: '3px',
+                background: raised ? '#2a1210' : '#1a1a1a',
+                border: `1px solid ${raised ? '#7a1f16' : '#2e2e2e'}`,
+                color: raised ? '#f5a89a' : s.level < 0 ? '#7a4a4a' : '#f5f2ee',
+              }}>
+                {s.skillName} {sgn(s.level)}
+              </span>
+            )
+          })}
+        </div>
 
       </div>
 
