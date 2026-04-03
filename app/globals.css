@@ -1,5 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap');
 
+@font-face {
+  font-family: 'Distemper';
+  src: url('/fonts/Distemper.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }

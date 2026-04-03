@@ -34,9 +34,9 @@ export default function NavBar() {
       <a href="https://www.xerosumgames.com" target="_blank" rel="noreferrer" style={{ flexShrink: 0 }}>
         <img src="/XeroSumGamesLogoV13.png" alt="Xero Sum Games" style={{ height: '32px', objectFit: 'contain', opacity: 0.85, display: 'block' }} />
       </a>
-      <a href="/dashboard" style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee', textDecoration: 'none', flexShrink: 0 }}>
-        The Tapestry
-      </a>
+      <a href="/dashboard" style={{ fontSize: '28px', fontFamily: 'Distemper, sans-serif', textTransform: 'uppercase', color: '#f5f2ee', textDecoration: 'none', flexShrink: 0, lineHeight: 1 }}>
+  The Tapestry
+</a>
       <span style={{ fontSize: '13px', color: '#b0aaa4', letterSpacing: '.08em', textTransform: 'uppercase', flexShrink: 0 }}>
         DistemperVerse v1.0
       </span>
