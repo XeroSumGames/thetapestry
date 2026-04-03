@@ -29,9 +29,12 @@ interface Character {
 }
 
 const SETTINGS: Record<string, string> = {
-  district0: 'District 0',
-  mini: 'MINI',
-  mongols: 'Magnificent Mongols',
+  district0: 'District Zero',
+  mongrels: 'Minnie & The Magnificent Mongrels',
+  chased: 'Chased',
+  empty: 'Empty',
+  therock: 'The Rock',
+  custom: 'New Setting',
 }
 
 export default function CampaignPage() {
