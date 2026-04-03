@@ -4,12 +4,12 @@ import { createClient } from '../../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
 const SETTINGS = [
+  { value: 'custom', label: 'New Setting' },
   { value: 'district0', label: 'District Zero' },
   { value: 'mongrels', label: 'Minnie & The Magnificent Mongrels' },
   { value: 'chased', label: 'Chased' },
   { value: 'empty', label: 'Empty' },
   { value: 'therock', label: 'The Rock' },
-  { value: 'custom', label: 'New Setting' },
 ]
 
 function generateCode(): string {
