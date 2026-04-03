@@ -64,25 +64,27 @@ textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
     size: Letter portrait;
     margin: 0.4in 0.4in 0.4in 0.4in;
   }
-
-  /* Hide everything except the active print container */
-  body > * { display: none !important; }
-  .print-container-active { display: block !important; }
-  .print-container-active * { display: revert !important; }
-
-  /* Force single page */
+  body > * {
+    display: none !important;
+  }
+  #print-sheet-container {
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    background: #fff !important;
+    color: #111 !important;
+  }
+  #print-sheet-container * {
+    display: revert !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   #print-sheet-inner {
     width: 100%;
-    max-height: 9.2in;
     overflow: hidden;
     page-break-after: avoid;
     page-break-inside: avoid;
-  }
-
-  /* Prevent any element from breaking across pages */
-  * {
-    page-break-inside: avoid;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
   }
 }

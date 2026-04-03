@@ -9,6 +9,7 @@ import StepSix from '../../../../components/wizard/StepSix'
 import StepSeven from '../../../../components/wizard/StepSeven'
 import StepEight from '../../../../components/wizard/StepEight'
 import StepNine from '../../../../components/wizard/StepNine'
+import PrintSheet from '../../../../components/wizard/PrintSheet'
 
 const STEPS = [
   { num: 0, title: 'Character Concept' },
@@ -115,10 +116,7 @@ export default function EditCharacterPage() {
   }
 
   function handlePrint() {
-    const el = document.getElementById('print-sheet-container')
-    if (el) el.style.display = 'block'
     window.print()
-    if (el) el.style.display = 'none'
   }
 
   if (loading || !state) return (
@@ -166,10 +164,16 @@ export default function EditCharacterPage() {
           {step === 4 && <button onClick={handlePrint} style={{ ...navBtn(false), borderColor: '#2d5a1b', color: '#7fc458' }}>Print</button>}
           {step < 4
             ? <button onClick={() => { setStep(s => Math.min(4, s + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={navBtn(true)}>Advance</button>
-            : <button onClick={handleSave} disabled={saving || saved} style={{ ...navBtn(true), opacity: saving || saved ? 0.6 : 1 }}>{saving ? 'Saving...' : saved ? 'Saved ✓' : 'Save Changes'}</button>
+            : <button onClick={handleSave} disabled={saving || saved} style={{ ...navBtn(true), opacity: saving || saved ? 0.6 : 1 }}>{saving ? 'Saving...' : saved ? 'Saved' : 'Save Changes'}</button>
           }
         </div>
       </div>
+
+      {/* Print sheet - hidden on screen, visible on print */}
+      <div id="print-sheet-container" style={{ display: 'none' }}>
+        <PrintSheet state={state} />
+      </div>
+
     </div>
   )
 }
