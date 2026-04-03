@@ -57,22 +57,19 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
       newCDPMap[skillName] = cdpThisSkill + 1
       updateStep({ skillDeltas: newDeltas, skillCDPSpent: skillCDPSpent + 1, skillCDPMap: newCDPMap })
     } else {
-      // Guard 1: no CDP spent on this skill this step
-      if (cdpThisSkill <= 0) return
-      // Guard 2: delta for this skill this step must be positive
-      const deltaThisStep = newDeltas[skillName] ?? 0
-      if (deltaThisStep <= 0) return
-      // Calculate the value before the last increment
-      const prevVal = (cumVal - deltaThisStep) as SkillValue
-      const oneStepUp = skillStepUp(prevVal, skill.vocational)
-      const loss = cumVal - oneStepUp
-      const newDelta = deltaThisStep - loss
-      if (newDelta <= 0) delete newDeltas[skillName]
-      else newDeltas[skillName] = newDelta
-      newCDPMap[skillName] = cdpThisSkill - 1
-      if (newCDPMap[skillName] <= 0) delete newCDPMap[skillName]
-      updateStep({ skillDeltas: newDeltas, skillCDPSpent: Math.max(0, skillCDPSpent - 1), skillCDPMap: newCDPMap })
-    }
+  if (cdpThisSkill <= 0) return
+  const deltaThisStep = newDeltas[skillName] ?? 0
+  if (deltaThisStep <= 0) return
+  // Step back one CDP worth from current cumulative value
+  const baseVal = (cumVal - deltaThisStep) as SkillValue
+  const prevStepVal = skillStepUp(baseVal, skill.vocational)
+  const newDelta = prevStepVal - baseVal
+  if (newDelta <= 0) delete newDeltas[skillName]
+  else newDeltas[skillName] = newDelta
+  newCDPMap[skillName] = cdpThisSkill - 1
+  if (newCDPMap[skillName] <= 0) delete newCDPMap[skillName]
+  updateStep({ skillDeltas: newDeltas, skillCDPSpent: Math.max(0, skillCDPSpent - 1), skillCDPMap: newCDPMap })
+}
   }
 
   const filteredSkills = SKILLS.filter(s =>
