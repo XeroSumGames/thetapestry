@@ -33,13 +33,6 @@ export default function Sidebar() {
     borderLeft: `3px solid ${accent}`, marginBottom: '2px',
   })
 
-  const dimLinkStyle = {
-    display: 'block' as const, padding: '10px 14px', color: '#b0aaa4',
-    textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif',
-    letterSpacing: '.04em', textTransform: 'uppercase' as const,
-    borderLeft: '3px solid #3a3a3a', marginBottom: '2px',
-  }
-
   const soonStyle = {
     display: 'block' as const, padding: '10px 14px', color: '#5a5550',
     textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif',
@@ -71,14 +64,14 @@ export default function Sidebar() {
         }
       </div>
 
-      {/* Characters section */}
+      {/* Survivors section */}
       <div style={sectionHeading}>Survivors</div>
+      <a href="/creating-a-character" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>How to Create a Survivor</a>
       <a href="/characters/new" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</a>
       <a href="/characters/quick" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Character</a>
       <a href="/characters/random" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</a>
       <a href="/characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Characters</a>
       <a href="#" style={soonStyle}>Paradigms <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span></a>
-      <a href="#" style={soonStyle}>Creating a Character <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span></a>
 
       {divider}
 
@@ -113,6 +106,3 @@ export default function Sidebar() {
     </div>
   )
 }
-
-
-
