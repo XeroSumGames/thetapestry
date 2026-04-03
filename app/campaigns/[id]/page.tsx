@@ -182,7 +182,7 @@ export default function CampaignPage() {
       {/* GM Action buttons */}
       {isGM && (
         <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
-          <a href={`/campaigns/${id}`} style={actionLink('#c0392b', '#fff', '#c0392b')}>Launch</a>
+          <a href={`/campaigns/${id}/table`} style={actionLink('#c0392b', '#fff', '#c0392b')}>Launch</a>
           <a href={`/campaigns/${id}/edit`} style={actionLink('#242424', '#f5f2ee', '#3a3a3a')}>Edit</a>
           <button onClick={handleClone} disabled={cloning} style={{ ...actionLink('#242424', '#b0aaa4', '#3a3a3a'), opacity: cloning ? 0.6 : 1 } as any}>
             {cloning ? 'Cloning...' : 'Clone'}
