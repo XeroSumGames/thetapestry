@@ -15,7 +15,7 @@ const PIN_CATEGORIES = [
   { value: 'danger',     label: 'Danger / Threat',     emoji: '☠️' },
   { value: 'resource',   label: 'Resource / Supply',   emoji: '🎒' },
   { value: 'rumor',      label: 'Rumor / Unverified',  emoji: '❓' },
-  { value: 'medical',    label: 'Medical',             emoji: '<span style="color:#e74c3c;font-weight:900;font-size:20px;line-height:1;">+</span>' },
+  { value: 'medical',    label: 'Medical',             emoji: '🩺' },
 ]
 
 function getCategoryEmoji(category: string): string {
