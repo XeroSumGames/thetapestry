@@ -3,19 +3,22 @@ import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 
 const PIN_CATEGORIES = [
-  { value: 'location',   label: 'Location / POI',     emoji: '📍' },
-  { value: 'residence',  label: 'Residence',           emoji: '🏠' },
-  { value: 'business',   label: 'Business / Shop',     emoji: '🎪' },
-  { value: 'church',     label: 'Church',              emoji: '⛪' },
-  { value: 'government', label: 'Government',          emoji: '🏛️' },
-  { value: 'airport',    label: 'Airport / Transport', emoji: '✈️' },
-  { value: 'hospital',   label: 'Hospital / Medical',  emoji: '🏥' },
-  { value: 'military',   label: 'Military / Outpost',  emoji: '⚔️' },
-  { value: 'person',     label: 'Person / NPC',        emoji: '👤' },
-  { value: 'danger',     label: 'Danger / Threat',     emoji: '☠️' },
-  { value: 'resource',   label: 'Resource / Supply',   emoji: '🎒' },
-  { value: 'rumor',      label: 'Rumor / Unverified',  emoji: '❓' },
-  { value: 'medical',    label: 'Medical',             emoji: '🩺' },
+  { value: 'rumor',      label: 'Rumor',      emoji: '❓' },
+  { value: 'location',   label: 'Location',   emoji: '📍' },
+  { value: 'residence',  label: 'Residence',  emoji: '🏠' },
+  { value: 'business',   label: 'Business',   emoji: '🎪' },
+  { value: 'church',     label: 'Church',     emoji: '⛪' },
+  { value: 'government', label: 'Government', emoji: '🏛️' },
+  { value: 'airport',    label: 'Transport',  emoji: '✈️' },
+  { value: 'hospital',   label: 'Hospital',   emoji: '🏥' },
+  { value: 'military',   label: 'Military',   emoji: '⚔️' },
+  { value: 'person',     label: 'Person',     emoji: '👤' },
+  { value: 'danger',     label: 'Danger',     emoji: '☠️' },
+  { value: 'resource',   label: 'Resource',   emoji: '🎒' },
+  { value: 'medical',    label: 'Medical',    emoji: '🩺' },
+  { value: 'group',      label: 'Group',      emoji: '👥' },
+  { value: 'animals',    label: 'Animals',    emoji: '🐾' },
+  { value: 'community',  label: 'Community',  emoji: '🏘️' },
 ]
 
 function getCategoryEmoji(category: string): string {
@@ -386,7 +389,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
                   <button key={cat.value} onClick={() => setForm(p => ({ ...p, category: cat.value }))}
                     style={{ padding: '6px 4px', border: `1px solid ${form.category === cat.value ? '#c0392b' : '#3a3a3a'}`, background: form.category === cat.value ? '#2a1210' : '#242424', borderRadius: '3px', cursor: 'pointer', textAlign: 'center', fontFamily: 'Barlow, sans-serif' }}>
                     <div style={{ fontSize: '18px', marginBottom: '2px' }}>{cat.emoji}</div>
-                    <div style={{ fontSize: '9px', color: form.category === cat.value ? '#f5a89a' : '#b0aaa4', lineHeight: 1.2 }}>{cat.label.split('/')[0].trim()}</div>
+                    <div style={{ fontSize: '11px', color: '#f5f2ee', lineHeight: 1.2 }}>{cat.label}</div>
                   </button>
                 ))}
               </div>
