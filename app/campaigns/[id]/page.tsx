@@ -37,6 +37,25 @@ const SETTINGS: Record<string, string> = {
   therock: 'The Rock',
 }
 
+async function fetchMembersWithProfiles(supabase: any, campaignId: string): Promise<Member[]> {
+  const { data: mems } = await supabase
+    .from('campaign_members')
+    .select(`id, user_id, character_id, joined_at, characters:character_id(id, name)`)
+    .eq('campaign_id', campaignId)
+    .order('joined_at', { ascending: true })
+  if (!mems) return []
+  const userIds = mems.map((m: any) => m.user_id)
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('id, username, role')
+    .in('id', userIds)
+  const profileMap = Object.fromEntries((profileData ?? []).map((p: any) => [p.id, p]))
+  return mems.map((m: any) => ({
+    ...m,
+    profiles: profileMap[m.user_id] ?? { username: 'Unknown', role: 'survivor' },
+  }))
+}
+
 export default function CampaignPage() {
   const params = useParams()
   const id = params.id as string
@@ -64,15 +83,8 @@ export default function CampaignPage() {
       if (!camp) { router.push('/campaigns'); return }
       setCampaign(camp)
 
-      const { data: mems } = await supabase
-        .from('campaign_members')
-        .select(`
-          id, user_id, character_id, joined_at,
-    characters:character_id(id, name)
-  `)
-        .eq('campaign_id', id)
-        .order('joined_at', { ascending: true })
-      setMembers((mems ?? []) as any)
+      const mems = await fetchMembersWithProfiles(supabase, id)
+      setMembers(mems)
 
       const { data: chars } = await supabase
         .from('characters')
@@ -81,7 +93,7 @@ export default function CampaignPage() {
         .order('created_at', { ascending: false })
       setMyCharacters(chars ?? [])
 
-      const myMembership = (mems ?? []).find((m: any) => m.user_id === user.id) as any
+      const myMembership = mems.find((m: any) => m.user_id === user.id) as any
       if (myMembership?.character_id) {
         setSelectedCharId(myMembership.character_id)
         setAssignedCharName((myMembership.characters as any)?.name ?? '')
@@ -102,15 +114,8 @@ export default function CampaignPage() {
     if (!error) {
       const chosen = myCharacters.find(c => c.id === selectedCharId)
       setAssignedCharName(chosen?.name ?? '')
-      const { data: mems } = await supabase
-        .from('campaign_members')
-        .select(`
-          id, user_id, character_id, joined_at,
-    characters:character_id(id, name)
-  `)
-        .eq('campaign_id', id)
-        .order('joined_at', { ascending: true })
-      setMembers((mems ?? []) as any)
+      const mems = await fetchMembersWithProfiles(supabase, id)
+      setMembers(mems)
     }
     setAssigning(false)
   }
@@ -194,7 +199,6 @@ export default function CampaignPage() {
       {/* GM VIEW */}
       {isGM && (
         <>
-          {/* Invite link */}
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
             <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Invite Link</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -211,7 +215,6 @@ export default function CampaignPage() {
             </div>
           </div>
 
-          {/* Members */}
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
             <div style={{ fontSize: '10px', fontWeight: 600, color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
               Members ({members.length})
@@ -247,7 +250,6 @@ export default function CampaignPage() {
       {/* PLAYER VIEW */}
       {!isGM && (
         <>
-          {/* My character assignment */}
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
             <div style={{ fontSize: '10px', fontWeight: 600, color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
               My Survivor
@@ -263,9 +265,7 @@ export default function CampaignPage() {
               </div>
             ) : (
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <select
-                  value={selectedCharId}
-                  onChange={e => setSelectedCharId(e.target.value)}
+                <select value={selectedCharId} onChange={e => setSelectedCharId(e.target.value)}
                   style={{ flex: 1, padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif' }}>
                   <option value="">— Select a survivor —</option>
                   {myCharacters.map(c => (
@@ -280,7 +280,6 @@ export default function CampaignPage() {
             )}
           </div>
 
-          {/* Members */}
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
             <div style={{ fontSize: '10px', fontWeight: 600, color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
               Members ({members.length})
