@@ -52,6 +52,7 @@ export default function CampaignPage() {
   const [assignedCharName, setAssignedCharName] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [cloning, setCloning] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -64,14 +65,14 @@ export default function CampaignPage() {
       setCampaign(camp)
 
       const { data: mems } = await supabase
-  .from('campaign_members')
-  .select(`
-    id, user_id, character_id, joined_at,
-    profiles:user_id(username, role),
-    characters:character_id(id, name)
-  `)
-  .eq('campaign_id', id)
-  .order('joined_at', { ascending: true })
+        .from('campaign_members')
+        .select(`
+          id, user_id, character_id, joined_at,
+          profiles:user_id(username, role),
+          characters:character_id(id, name)
+        `)
+        .eq('campaign_id', id)
+        .order('joined_at', { ascending: true })
       setMembers((mems ?? []) as any)
 
       const { data: chars } = await supabase
@@ -103,14 +104,14 @@ export default function CampaignPage() {
       const chosen = myCharacters.find(c => c.id === selectedCharId)
       setAssignedCharName(chosen?.name ?? '')
       const { data: mems } = await supabase
-  .from('campaign_members')
-  .select(`
-    id, user_id, character_id, joined_at,
-    profiles:user_id(username, role),
-    characters:character_id(id, name)
-  `)
-  .eq('campaign_id', id)
-  .order('joined_at', { ascending: true })
+        .from('campaign_members')
+        .select(`
+          id, user_id, character_id, joined_at,
+          profiles:user_id(username, role),
+          characters:character_id(id, name)
+        `)
+        .eq('campaign_id', id)
+        .order('joined_at', { ascending: true })
       setMembers((mems ?? []) as any)
     }
     setAssigning(false)
@@ -121,6 +122,26 @@ export default function CampaignPage() {
     if (campaign.gm_user_id === userId) return
     await supabase.from('campaign_members').delete().eq('campaign_id', id).eq('user_id', userId)
     router.push('/campaigns')
+  }
+
+  async function handleClone() {
+    if (!campaign || !userId) return
+    setCloning(true)
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    const code = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+    const { data, error } = await supabase.from('campaigns').insert({
+      name: `Copy of ${campaign.name}`,
+      description: campaign.description,
+      setting: campaign.setting,
+      gm_user_id: userId,
+      invite_code: code,
+      status: 'active',
+    }).select().single()
+    if (!error && data) {
+      await supabase.from('campaign_members').insert({ campaign_id: data.id, user_id: userId })
+      router.push(`/campaigns/${data.id}`)
+    }
+    setCloning(false)
   }
 
   function copyInviteLink() {
@@ -146,7 +167,7 @@ export default function CampaignPage() {
     <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
 
       {/* Header */}
-      <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
+      <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1rem' }}>
         <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px', fontFamily: 'Barlow Condensed, sans-serif' }}>
           {SETTINGS[campaign.setting] ?? campaign.setting} &mdash; {isGM ? 'Game Master' : 'Player'}
         </div>
@@ -157,6 +178,20 @@ export default function CampaignPage() {
           <p style={{ fontSize: '13px', color: '#b0aaa4', marginTop: '6px', lineHeight: 1.6 }}>{campaign.description}</p>
         )}
       </div>
+
+      {/* GM Action buttons */}
+      {isGM && (
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
+          <a href={`/campaigns/${id}`} style={actionLink('#c0392b', '#fff', '#c0392b')}>Launch</a>
+          <a href={`/campaigns/${id}/edit`} style={actionLink('#242424', '#f5f2ee', '#3a3a3a')}>Edit</a>
+          <button onClick={handleClone} disabled={cloning} style={{ ...actionLink('#242424', '#b0aaa4', '#3a3a3a'), opacity: cloning ? 0.6 : 1 } as any}>
+            {cloning ? 'Cloning...' : 'Clone'}
+          </button>
+          <button onClick={copyInviteLink} style={actionLink('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
+            {copied ? 'Copied!' : 'Share'}
+          </button>
+        </div>
+      )}
 
       {/* GM VIEW */}
       {isGM && (
@@ -288,4 +323,13 @@ export default function CampaignPage() {
 
     </div>
   )
+}
+
+function actionLink(bg: string, color: string, border: string): React.CSSProperties {
+  return {
+    padding: '8px 18px', background: bg, border: `1px solid ${border}`,
+    borderRadius: '3px', color, fontSize: '12px',
+    fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
+    textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer',
+  }
 }
