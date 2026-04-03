@@ -59,6 +59,16 @@ textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
+@media screen {
+  #print-sheet-container {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    width: 816px;
+    visibility: hidden;
+  }
+}
+
 @media print {
   @page {
     size: Letter portrait;
@@ -73,18 +83,13 @@ textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;
+    visibility: visible !important;
     background: #fff !important;
     color: #111 !important;
   }
   #print-sheet-container * {
-    display: revert !important;
+    visibility: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-  }
-  #print-sheet-inner {
-    width: 100%;
-    overflow: hidden;
-    page-break-after: avoid;
-    page-break-inside: avoid;
   }
 }
