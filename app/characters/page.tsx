@@ -75,13 +75,23 @@ export default function CharactersPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {characters.map(c => (
           <CharacterCard
-            key={c.id}
-            character={c}
-            showButtons={true}
-            isMySheet={true}
-            onDelete={handleDelete}
-            onDuplicate={handleDuplicate}
-          />
+  key={c.id}
+  character={c}
+  liveState={{
+    id: c.id,
+    wp_current: c.data?.secondary?.woundPoints ?? 10,
+    wp_max: c.data?.secondary?.woundPoints ?? 10,
+    rp_current: c.data?.secondary?.resiliencePoints ?? 6,
+    rp_max: c.data?.secondary?.resiliencePoints ?? 6,
+    stress: c.data?.stressLevel ?? 0,
+    insight_dice: c.data?.insightDice ?? 2,
+    morality: c.data?.secondary?.morality ?? 3,
+  }}
+  showButtons={true}
+  isMySheet={true}
+  onDelete={handleDelete}
+  onDuplicate={handleDuplicate}
+/>
         ))}
       </div>
     </div>

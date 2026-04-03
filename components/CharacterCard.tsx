@@ -227,13 +227,18 @@ export default function CharacterCard({
           })}
         </div>
 
-        {/* Complication + Motivation */}
-        {(complication || motivation) && (
-          <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: '#b0aaa4', marginBottom: '8px' }}>
-            {complication && <span><span style={{ color: '#5a5550' }}>Complication:</span> {complication}</span>}
-            {motivation && <span><span style={{ color: '#5a5550' }}>Motivation:</span> {motivation}</span>}
-          </div>
-        )}
+        {(complication || motivation || c.data?.notes || c.data?.physdesc) && (
+  <div style={{ fontSize: '11px', color: '#b0aaa4', marginBottom: '8px', lineHeight: 1.6 }}>
+    {(complication || motivation) && (
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '3px' }}>
+        {complication && <span><span style={{ color: '#5a5550' }}>Complication:</span> {complication}</span>}
+        {motivation && <span><span style={{ color: '#5a5550' }}>Motivation:</span> {motivation}</span>}
+      </div>
+    )}
+    {c.data?.notes && <div style={{ color: '#b0aaa4', fontStyle: 'italic' }}>{c.data.notes}</div>}
+    {c.data?.physdesc && <div style={{ color: '#b0aaa4' }}>{c.data.physdesc}</div>}
+  </div>
+)}
 
         {/* Live trackers — only shown when liveState provided */}
         {liveState && (
@@ -248,19 +253,22 @@ export default function CharacterCard({
   </div>
 )}
 
-        {/* Skills */}
-        <div style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-          {raisedSkills.map(s => (
-            <span key={s.skillName} style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '3px', background: '#2a1210', border: '1px solid #7a1f16', color: '#f5a89a' }}>
-              {s.skillName} {sgn(s.level)}
-            </span>
-          ))}
-          {unraisedSkills.map(s => (
-            <span key={s.skillName} style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '3px', background: '#1a1a1a', border: '1px solid #2e2e2e', color: s.level < 0 ? '#7a4a4a' : '#f5f2ee' }}>
-              {s.skillName} {sgn(s.level)}
-            </span>
-          ))}
-        </div>
+        {/* Skills — always in original order */}
+<div style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+  {skills.map(s => {
+    const raised = s.level > 0
+    return (
+      <span key={s.skillName} style={{
+        fontSize: '11px', padding: '2px 8px', borderRadius: '3px',
+        background: raised ? '#2a1210' : '#1a1a1a',
+        border: `1px solid ${raised ? '#7a1f16' : '#2e2e2e'}`,
+        color: raised ? '#f5a89a' : s.level < 0 ? '#7a4a4a' : '#f5f2ee',
+      }}>
+        {s.skillName} {sgn(s.level)}
+      </span>
+    )
+  })}
+</div>
 
       </div>
 
