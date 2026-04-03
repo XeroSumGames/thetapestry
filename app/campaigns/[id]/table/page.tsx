@@ -155,6 +155,7 @@ export default function TablePage() {
   async function updateStat(stateId: string, field: string, value: number) {
     setUpdating(stateId + field)
     await supabase.from('character_states').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', stateId)
+    await loadStates(id)
     setUpdating(null)
   }
 
