@@ -253,9 +253,9 @@ export default function CharacterCard({
             </div>
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'space-around' }}>
               <Counter label="Stress" value={liveState.stress} field="stress" max={5} color="#EF9F27" />
-              <Counter label="CDP" value={liveState.cdp} field="cdp" max={20} color="#7ab3d4" />
-              <Counter label="Insight" value={liveState.insight_dice} field="insight_dice" max={9} color="#7fc458" />
-              <Counter label="Morality" value={liveState.morality} field="morality" max={5} color="#b0aaa4" />
+<Counter label="Insight" value={liveState.insight_dice} field="insight_dice" max={9} color="#7fc458" />
+<Counter label="CDP" value={liveState.cdp} field="cdp" max={20} color="#7ab3d4" />
+<Counter label="Morality" value={liveState.morality} field="morality" max={5} color="#b0aaa4" />
             </div>
           </div>
         )}
