@@ -63,9 +63,10 @@ export default function WelcomePage() {
           </div>
         )}
         <div style={{ fontSize: '17px', color: '#f5f2ee', maxWidth: '600px', lineHeight: 1.8 }}>
-          <p style={{ marginBottom: '1rem' }}>The Tapestry is the online home of Distemper &mdash; a post-apocalyptic comic book &amp; tabletop RPG set in the aftermath of the dog flu, a pandemic that almost wiped out humanity. What is left is a dangerous, brutal, and capricious new reality. It is a one-stop shop for character creation, world exploration, and finding your people in this broken new world.</p>
+          <p style={{ marginBottom: '1rem' }}>The Tapestry is the online home of Distemper, a post-apocalyptic comic book &amp; tabletop RPG that take place in the aftermath of the dog flu, a pandemic that wiped out almost 90% of mankind in less than a year. What is left is a dangerous, brutal, and capricious new reality where only the strong survive. There are no zombies, mutants, or aliens - just other, desparate survivors.</p>
+          <p style={{ marginBottom: '1rem' }}>The Tapestry is a one-stop shop with tools for character creation, world building, writing and playing campaign, as well as finding your people in this broken new world.</p>
           <p style={{ marginBottom: '1rem' }}>Here, players and Game Masters share their stories, settings, and campaigns, allowing them to be curated and shared with the community &mdash; potentially even being worked into future comic book story arcs or game content.</p>
-          <p style={{ marginBottom: '1rem' }}>It is entirely possible that the actions of player characters, Game Masters, writers, content creators, and other community members will influence the course of human history and define ongoing events in this new world.</p>
+          <p style={{ marginBottom: '1rem' }}>The Tapestry lets the actions of player characters, Game Masters, writers, content creators, and other community members influence the course of human history and define ongoing events in this new world.</p>
           <p>Collectively, the narratives weaved together across various media and via disparate platforms make up The Tapestry of The DistemperVerse.</p>
         </div>
       </div>
@@ -82,7 +83,8 @@ export default function WelcomePage() {
           <div>
             <div style={sectionTitle}>Create Your Survivor</div>
             <div style={sectionBody}>
-              <p style={{ marginBottom: '0.75rem' }}>Build your character using either the Xero Sum Engine Backstory Generation system or the Quick Character Generator. Here you will spend Character Development Points (CDP) through the chapters of your character&apos;s life as you define where they grew up, what they learned, how they made their way in the world before &mdash; and what they have learned in the world after.</p>
+              <p style={{ marginBottom: '0.75rem' }}>Build your character using either the Backstory Generation system. Here you will spend Character Development Points (CDP) through the chapters of your character&apos;s life as you define where they grew up, what they learned, how they made their way in the world before. and what they have learned in the world after.</p>
+<p>Experienced players can used the Quick Character Generator to spend 20 CDP to customize their character.</p>
               <p>Every character has a story before the story begins. Here is where you write yours.</p>
             </div>
           </div>
@@ -94,7 +96,7 @@ export default function WelcomePage() {
           <div>
             <div style={sectionTitle}>The World Map</div>
             <div style={sectionBody}>
-              <p style={{ marginBottom: '0.75rem' }}>The world map is the living, breathing Tapestry of the DistemperVerse. Players and GMs can drop pins to mark locations, leave notes, and submit Rumors for others to substantiate.</p>
+              <p style={{ marginBottom: '0.75rem' }}>This interactive maps is the backbone of the living, breathing Tapestry of the DistemperVerse. Players and GMs can drop pins to mark locations, leave notes, and submit Rumors for others to substantiate.</p>
               <p>It is here that groups can write the story of this dark new world and potentially shape the history yet to come.</p>
             </div>
           </div>
