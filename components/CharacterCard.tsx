@@ -260,22 +260,23 @@ export default function CharacterCard({
           </div>
         )}
 
-        {/* Skills — always in original order */}
-        <div style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-          {skills.map(s => {
-            const raised = s.level > 0
-            return (
-              <span key={s.skillName} style={{
-                fontSize: '11px', padding: '2px 8px', borderRadius: '3px',
-                background: raised ? '#2a1210' : '#1a1a1a',
-                border: `1px solid ${raised ? '#7a1f16' : '#2e2e2e'}`,
-                color: raised ? '#f5a89a' : s.level < 0 ? '#7a4a4a' : '#f5f2ee',
-              }}>
-                {s.skillName} {sgn(s.level)}
-              </span>
-            )
-          })}
-        </div>
+        {/* Skills — 5 rows of 6/6/6/6/5 */}
+<div style={{ marginTop: '6px', display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
+  {skills.map(s => {
+    const raised = s.level > 0
+    return (
+      <span key={s.skillName} style={{
+        fontSize: '10px', padding: '3px 6px', borderRadius: '3px',
+        background: raised ? '#2a1210' : '#1a1a1a',
+        border: `1px solid ${raised ? '#7a1f16' : '#2e2e2e'}`,
+        color: raised ? '#f5a89a' : s.level < 0 ? '#7a4a4a' : '#f5f2ee',
+        textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+      }}>
+        {s.skillName} {sgn(s.level)}
+      </span>
+    )
+  })}
+</div>
 
       </div>
 
