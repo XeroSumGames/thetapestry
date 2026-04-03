@@ -25,13 +25,13 @@ const STEPS = [
 
 const STEP_FLAVOR = [
   'Define your character concept — name, age, gender, height, weight, and three words that anchor who they are. Write a sentence or two that sums them up.',
-  'The first 10-15 years of their life. Write a sentence or two about where they grew up, who was present, and what their life was like.',
-  'The educational stage of life. Write a sentence or two about what they studied or learned, where they learned it, and who they learned it from.',
-  'Hobbies and spare time. Write a sentence or two about how they spent their free time and what they picked up along the way.',
-  'Career and vocation. Write a sentence or two about what this character did for work before the Dog Flu.',
-  'This new world is nothing but harsh lessons and struggles since civilization fell apart. Survivors have all had to pick up new tricks just to get by. Write a sentence or two about what they learned after the world ended.',
-  'Choose or roll a Complication and Motivation. These are narrative tools to help with roleplay and character definition — not mechanical penalties.',
-  'Secondary stats are derived automatically from your RAPID attributes. No action is required during this step.',
+  'This step covers the first 10-15 years of their life. Write a sentence or two about where they grew up, who was present, and what their life was like.',
+  'This is the educational stage of life. Write a sentence or two about where they studied, what they learned, who they learned it from, and what lessons they took from it.',
+  'This covers their hobbies and spare time. Write a sentence or two about their passions, how they spent their free time, and what knowledge they picked up along the way.',
+  'This step details their career and vocation. Write a sentence or two about what this character did for work or how they made money before the Dog Flu.',
+  'This new world is nothing but harsh lessons and struggles since civilization fell apart. Survivors have all had to pick up new tricks just to get by. Write a sentence or two about what they learned after the world they knew ended.',
+  'Choose or roll a Complication and Motivation. These are narrative tools to help with roleplay and character definition.',
+  'Secondary stats are derived automatically from your RAPID attributes and affect different elements of gameplay.',
   'Choose a primary weapon and a secondary weapon. It is recommended to pick one melee and one ranged. Ranged weapons start with 1d3 reloads of ammo. Pick one piece of equipment and one incidental item.',
   'Review your character and save when ready.',
 ]
