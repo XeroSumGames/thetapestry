@@ -58,12 +58,15 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
       updateStep({ skillDeltas: newDeltas, skillCDPSpent: skillCDPSpent + 1, skillCDPMap: newCDPMap })
     } else {
   if (cdpThisSkill <= 0) return
+  // Remove one CDP worth — set delta back to what it was before last increment
   const deltaThisStep = newDeltas[skillName] ?? 0
   if (deltaThisStep <= 0) return
-  // Step back one CDP worth from current cumulative value
-  const baseVal = (cumVal - deltaThisStep) as SkillValue
-  const prevStepVal = skillStepUp(baseVal, skill.vocational)
-  const newDelta = prevStepVal - baseVal
+  const cumBase = (cumVal - deltaThisStep) as SkillValue
+  // What was cumVal before this step's last +1 CDP?
+  const prevCumVal = skillStepUp(cumBase, skill.vocational) === cumVal
+    ? cumBase  // one step back
+    : cumBase
+  const newDelta = prevCumVal - cumBase
   if (newDelta <= 0) delete newDeltas[skillName]
   else newDeltas[skillName] = newDelta
   newCDPMap[skillName] = cdpThisSkill - 1
