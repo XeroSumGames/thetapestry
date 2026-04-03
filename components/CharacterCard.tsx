@@ -237,16 +237,16 @@ export default function CharacterCard({
 
         {/* Live trackers — only shown when liveState provided */}
         {liveState && (
-          <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginBottom: '10px' }}>
-            <DotTracker label="Wound Points" current={liveState.wp_current} max={liveState.wp_max} field="wp_current" color="#c0392b" />
-            <DotTracker label="Resilience Points" current={liveState.rp_current} max={liveState.rp_max} field="rp_current" color="#7ab3d4" />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '8px' }}>
-              <Counter label="Stress" value={liveState.stress} field="stress" max={5} color="#EF9F27" />
-              <Counter label="Insight" value={liveState.insight_dice} field="insight_dice" max={9} color="#7fc458" />
-              <Counter label="Morality" value={liveState.morality} field="morality" max={5} color="#b0aaa4" />
-            </div>
-          </div>
-        )}
+  <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginBottom: '10px' }}>
+    <DotTracker label="Wound Points" current={liveState.wp_current} max={liveState.wp_max} field="wp_current" color="#c0392b" />
+    <DotTracker label="Resilience Points" current={liveState.rp_current} max={liveState.rp_max} field="rp_current" color="#7ab3d4" />
+    <div style={{ display: 'flex', gap: '16px', marginTop: '10px', justifyContent: 'space-around' }}>
+      <Counter label="Stress" value={liveState.stress} field="stress" max={5} color="#EF9F27" />
+      <Counter label="Insight" value={liveState.insight_dice} field="insight_dice" max={9} color="#7fc458" />
+      <Counter label="Morality" value={liveState.morality} field="morality" max={5} color="#b0aaa4" />
+    </div>
+  </div>
+)}
 
         {/* Skills */}
         <div style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
@@ -256,7 +256,7 @@ export default function CharacterCard({
             </span>
           ))}
           {unraisedSkills.map(s => (
-            <span key={s.skillName} style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '3px', background: '#1a1a1a', border: '1px solid #2e2e2e', color: s.level < 0 ? '#4a3030' : '#3a3a3a' }}>
+            <span key={s.skillName} style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '3px', background: '#1a1a1a', border: '1px solid #2e2e2e', color: s.level < 0 ? '#7a4a4a' : '#f5f2ee' }}>
               {s.skillName} {sgn(s.level)}
             </span>
           ))}
