@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState } from 'react'
 import { WizardState, StepData, getCumulativeAttributes, getCumulativeSkills, skillStepUp } from '../../lib/xse-engine'
 import { SKILLS, ATTRIBUTE_LABELS, SKILL_LABELS, AttributeName, SkillValue } from '../../lib/xse-schema'
@@ -40,7 +40,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
     else if (!stepData.attrKey && cumulativeAttrs[key] < maxAttr) updateStep({ attrKey: key })
   }
 
-    function changeSkill(skillName: string, dir: 1 | -1) {
+  function changeSkill(skillName: string, dir: 1 | -1) {
     const skill = SKILLS.find(s => s.name === skillName)!
     const cumVal = cumulativeSkills[skillName]
     const cdpMap = stepData.skillCDPMap ?? {}
@@ -57,14 +57,18 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
       newCDPMap[skillName] = cdpThisSkill + 1
       updateStep({ skillDeltas: newDeltas, skillCDPSpent: skillCDPSpent + 1, skillCDPMap: newCDPMap })
     } else {
+      // Guard 1: no CDP spent on this skill this step
       if (cdpThisSkill <= 0) return
-      const prev = skillStepUp(
-        (cumVal - 1) as SkillValue,
-        skill.vocational
-      )
-      const loss = cumVal - prev
-      newDeltas[skillName] = (newDeltas[skillName] ?? 0) - loss
-      if ((newDeltas[skillName] ?? 0) <= 0) delete newDeltas[skillName]
+      // Guard 2: delta for this skill this step must be positive
+      const deltaThisStep = newDeltas[skillName] ?? 0
+      if (deltaThisStep <= 0) return
+      // Calculate the value before the last increment
+      const prevVal = (cumVal - deltaThisStep) as SkillValue
+      const oneStepUp = skillStepUp(prevVal, skill.vocational)
+      const loss = cumVal - oneStepUp
+      const newDelta = deltaThisStep - loss
+      if (newDelta <= 0) delete newDeltas[skillName]
+      else newDeltas[skillName] = newDelta
       newCDPMap[skillName] = cdpThisSkill - 1
       if (newCDPMap[skillName] <= 0) delete newCDPMap[skillName]
       updateStep({ skillDeltas: newDeltas, skillCDPSpent: Math.max(0, skillCDPSpent - 1), skillCDPMap: newCDPMap })
@@ -85,15 +89,6 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
 
   return (
     <div>
-      {/* CDP reminder - Step 1 only */}
-      {stepNumber === 1 && (
-        <div style={{ background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', padding: '10px 14px', marginBottom: '12px', fontSize: '13px', color: '#7fc458', lineHeight: 1.7 }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '4px', color: '#7fc458' }}>How to spend CDP</div>
-          You have <strong>1 Attribute CDP</strong> — raise one RAPID attribute from Average (0) to Good (+1).<br />
-          You have <strong>2 Skill CDP</strong> — raise one skill to Journeyman (+2), or two skills to Beginner (+1).<br />
-          Vocational skills marked with <strong>*</strong> start at Inept (-3) and cost 1 CDP to reach Beginner (+1).
-        </div>
-      )}
 
       {/* Locked history */}
       {lockedSteps.map(({ idx, num, title }) => {
@@ -101,7 +96,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
         const attrKey = d.attrKey as AttributeName | null
         const attrVal = attrKey ? cumulativeAttrs[attrKey] : null
         const attrStr = attrKey && attrVal !== null
-          ? `${attrKey} â†’ +${attrVal} (${ATTRIBUTE_LABELS[attrVal]})`
+          ? `${attrKey} +${attrVal} (${ATTRIBUTE_LABELS[attrVal]})`
           : 'none'
         const gained = Object.entries(d.skillDeltas ?? {}).filter(([, v]) => (v ?? 0) > 0).map(([n]) => n)
         return (
@@ -124,17 +119,17 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
         )
       })}
 
-      {/* Attribute picker â€” only shown when maxAttr > 0 */}
+      {/* Attribute picker — only shown when maxAttr > 0 */}
       {maxAttr > 0 && (
         <div>
-          <div style={sh}>Attribute â€” raise one (max {ATTRIBUTE_LABELS[maxAttr]} +{maxAttr})</div>
+          <div style={sh}>Attribute — raise one (max +{maxAttr} {ATTRIBUTE_LABELS[maxAttr]})</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#242424', borderRadius: '3px', padding: '8px 12px', marginBottom: '10px', border: '1px solid #2e2e2e' }}>
             <div style={{ display: 'flex', gap: '3px' }}>
               {[0, 1].map(i => (
                 <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', border: `1px solid ${i < (stepData.attrKey ? 1 : 0) ? '#c0392b' : '#3a3a3a'}`, background: i < (stepData.attrKey ? 1 : 0) ? '#c0392b' : '#0f0f0f' }} />
               ))}
             </div>
-            <span style={{ fontSize: '12px', color: '#f5f2ee', flex: 1 }}>Attribute CDP â€” raise one attribute</span>
+            <span style={{ fontSize: '12px', color: '#f5f2ee', flex: 1 }}>Attribute CDP — raise one attribute</span>
             <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '36px', textAlign: 'right', color: stepData.attrKey ? '#f5a89a' : '#f5f2ee' }}>
               {stepData.attrKey ? '0 left' : '1 left'}
             </span>
@@ -155,7 +150,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
                   <div style={{ fontSize: '10px', color: '#b0aaa4', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
                   <div style={{ fontSize: '7px', color: '#b0aaa4', marginBottom: '4px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                    <button onClick={() => pickAttr(k)} disabled={!canDec} style={attrBtn(!canDec)}>âˆ’</button>
+                    <button onClick={() => pickAttr(k)} disabled={!canDec} style={attrBtn(!canDec)}>-</button>
                     <div>
                       <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', color: isSelected ? '#f5a89a' : val > 0 ? '#f5f2ee' : '#b0aaa4' }}>
                         {val >= 0 ? `+${val}` : val}
@@ -170,14 +165,14 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
           </div>
           {stepData.attrKey && (
             <p style={{ fontSize: '12px', color: '#b0aaa4', marginBottom: '8px', lineHeight: 1.6 }}>
-              Raised {ATTR_FULL[stepData.attrKey as AttributeName]} this step. One attribute per step in stages 1â€“3.
+              Raised {ATTR_FULL[stepData.attrKey as AttributeName]} this step. One attribute per step in stages 1-3.
             </p>
           )}
         </div>
       )}
 
       {/* Skill picker */}
-      <div style={sh}>Skills â€” {skillBudget} CDP (max {SKILL_LABELS[maxSkill]})</div>
+      <div style={sh}>Skills — {skillBudget} CDP (max +{maxSkill} {SKILL_LABELS[maxSkill]})</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#242424', borderRadius: '3px', padding: '8px 12px', marginBottom: '10px', border: '1px solid #2e2e2e' }}>
         <div style={{ display: 'flex', gap: '3px' }}>
           {Array.from({ length: skillBudget }).map((_, i) => (
@@ -214,11 +209,11 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
                   {sk.name}{sk.vocational ? '*' : ''}
                 </div>
                 <div style={{ fontSize: '9.5px', color: '#b0aaa4' }}>
-                  {sk.attribute} â€” {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}
+                  {sk.attribute} — {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
-                <button onClick={() => changeSkill(sk.name, -1)} disabled={!canDec} style={skBtn(!canDec)}>âˆ’</button>
+                <button onClick={() => changeSkill(sk.name, -1)} disabled={!canDec} style={skBtn(!canDec)}>-</button>
                 <span style={{ fontSize: '12px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Barlow Condensed, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>
                   {disp}
                 </span>
