@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
 import PrintSheet from './wizard/PrintSheet'
@@ -55,7 +55,14 @@ export default function CharacterCard({
   const [deleting, setDeleting] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [printing, setPrinting] = useState(false)
-  const [updating, setUpdating] = useState<string | null>(null)
+
+  // Local optimistic state — mirrors liveState, updates instantly on click
+  const [localState, setLocalState] = useState<LiveState | null>(liveState ?? null)
+
+  // Sync when liveState changes from outside (Realtime updates)
+  useEffect(() => {
+    if (liveState) setLocalState(liveState)
+  }, [liveState])
 
   const rapid = c.data?.rapid ?? {}
   const skills: { skillName: string; level: number }[] = c.data?.skills ?? []
@@ -120,11 +127,11 @@ export default function CharacterCard({
     setTimeout(() => { window.print(); setPrinting(false) }, 100)
   }
 
-  async function updateStat(stateId: string, field: string, value: number) {
-    if (!onStatUpdate) return
-    setUpdating(stateId + field)
-    await onStatUpdate(stateId, field, value)
-    setUpdating(null)
+  // Optimistic update: update local state immediately, fire Supabase in background
+  function updateStat(stateId: string, field: string, value: number) {
+    if (!onStatUpdate || !localState) return
+    setLocalState(prev => prev ? { ...prev, [field]: value } : prev)
+    onStatUpdate(stateId, field, value) // fire and forget — no await
   }
 
   function handleSkillClick(skillName: string, level: number) {
@@ -144,8 +151,7 @@ export default function CharacterCard({
   function DotTracker({ label, current, max, field, color }: {
     label: string, current: number, max: number, field: string, color: string
   }) {
-    if (!liveState) return null
-    const isUpd = updating === liveState.id + field
+    if (!localState) return null
     return (
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
@@ -157,13 +163,12 @@ export default function CharacterCard({
             const filled = i < current
             return (
               <button key={i}
-                onClick={() => { if (!canEdit || isUpd || !liveState) return; updateStat(liveState.id, field, filled ? i : i + 1) }}
+                onClick={() => { if (!canEdit || !localState) return; updateStat(localState.id, field, filled ? i : i + 1) }}
                 style={{
                   width: '16px', height: '16px', borderRadius: '50%', padding: 0,
                   border: `2px solid ${filled ? color : '#3a3a3a'}`,
                   background: filled ? color : 'transparent',
                   cursor: canEdit ? 'pointer' : 'default',
-                  opacity: isUpd ? 0.4 : 1,
                   transition: 'all .1s',
                 }} />
             )
@@ -176,17 +181,17 @@ export default function CharacterCard({
   function Counter({ label, value, field, max, color }: {
     label: string, value: number, field: string, max: number, color: string
   }) {
-    if (!liveState) return null
+    if (!localState) return null
     return (
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: '9px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>{label}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
           <button disabled={!canEdit || value <= 0}
-            onClick={() => canEdit && value > 0 && liveState && updateStat(liveState.id, field, value - 1)}
+            onClick={() => canEdit && value > 0 && localState && updateStat(localState.id, field, value - 1)}
             style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && value > 0 ? 'pointer' : 'not-allowed', opacity: canEdit && value > 0 ? 1 : 0.3, fontSize: '12px', lineHeight: 1, padding: 0 }}>-</button>
           <span style={{ fontSize: '16px', fontWeight: 700, color, fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'center' }}>{value}</span>
           <button disabled={!canEdit || value >= max}
-            onClick={() => canEdit && value < max && liveState && updateStat(liveState.id, field, value + 1)}
+            onClick={() => canEdit && value < max && localState && updateStat(localState.id, field, value + 1)}
             style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && value < max ? 'pointer' : 'not-allowed', opacity: canEdit && value < max ? 1 : 0.3, fontSize: '12px', lineHeight: 1, padding: 0 }}>+</button>
         </div>
       </div>
@@ -271,21 +276,21 @@ export default function CharacterCard({
         )}
 
         {/* Live trackers */}
-        {liveState && (
+        {localState && (
           <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginBottom: '10px' }}>
             <div style={{ display: 'flex', gap: '24px', marginBottom: '10px' }}>
               <div style={{ flex: 1 }}>
-                <DotTracker label="Wound Points" current={liveState.wp_current} max={liveState.wp_max} field="wp_current" color="#c0392b" />
+                <DotTracker label="Wound Points" current={localState.wp_current} max={localState.wp_max} field="wp_current" color="#c0392b" />
               </div>
               <div style={{ flex: 1 }}>
-                <DotTracker label="Resilience Points" current={liveState.rp_current} max={liveState.rp_max} field="rp_current" color="#7ab3d4" />
+                <DotTracker label="Resilience Points" current={localState.rp_current} max={localState.rp_max} field="rp_current" color="#7ab3d4" />
               </div>
             </div>
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'space-around' }}>
-              <Counter label="Stress" value={liveState.stress} field="stress" max={5} color="#EF9F27" />
-              <Counter label="Insight" value={liveState.insight_dice} field="insight_dice" max={9} color="#7fc458" />
-              <Counter label="CDP" value={liveState.cdp} field="cdp" max={20} color="#7ab3d4" />
-              <Counter label="Morality" value={liveState.morality} field="morality" max={5} color="#d4cfc9" />
+              <Counter label="Stress" value={localState.stress} field="stress" max={5} color="#EF9F27" />
+              <Counter label="Insight" value={localState.insight_dice} field="insight_dice" max={9} color="#7fc458" />
+              <Counter label="CDP" value={localState.cdp} field="cdp" max={20} color="#7ab3d4" />
+              <Counter label="Morality" value={localState.morality} field="morality" max={5} color="#d4cfc9" />
             </div>
           </div>
         )}
