@@ -247,11 +247,12 @@ async function handleSuspend(id: string, suspended: boolean) {
               <div key={u.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${u.role === 'Thriver' ? '#c0392b' : '#3a3a3a'}`, borderRadius: '4px', padding: '10px 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em' }}>
-                    {u.username}
-                  </div>
-                  <div style={{ fontSize: '10px', color: '#5a5550', marginTop: '2px' }}>
-                    Joined {formatDate(u.created_at)}
-                  </div>
+  {u.username}
+</div>
+<div style={{ fontSize: '10px', color: '#5a5550', marginTop: '2px' }}>
+  {(u as any).email && <span style={{ color: '#b0aaa4', marginRight: '8px' }}>{(u as any).email}</span>}
+  Joined {formatDate(u.created_at)}
+</div>
                 </div>
                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   {u.suspended && (
