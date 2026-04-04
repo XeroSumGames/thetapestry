@@ -240,8 +240,7 @@ export default function TablePage() {
   }, [id])
 
   async function handleStatUpdate(stateId: string, field: string, value: number) {
-    await supabase.from('character_states').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', stateId)
-    await loadEntries(id)
+    supabase.from('character_states').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', stateId)
   }
 
   function handleRollRequest(label: string, amod: number, smod: number) {
