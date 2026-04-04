@@ -123,6 +123,7 @@ export default function CampaignPage() {
   async function handleLeave() {
     if (!userId || !campaign) return
     if (campaign.gm_user_id === userId) return
+    if (!confirm('Leave this campaign?')) return
     await supabase.from('campaign_members').delete().eq('campaign_id', id).eq('user_id', userId)
     router.push('/campaigns')
   }
@@ -146,11 +147,12 @@ export default function CampaignPage() {
     }
     setCloning(false)
   }
-async function handleDelete() {
-  if (!confirm('Permanently delete this campaign? This cannot be undone.')) return
-  await supabase.from('campaigns').delete().eq('id', id)
-  router.push('/campaigns')
-}
+
+  async function handleDelete() {
+    if (!confirm('Permanently delete this campaign? This cannot be undone.')) return
+    await supabase.from('campaigns').delete().eq('id', id)
+    router.push('/campaigns')
+  }
 
   function copyInviteLink() {
     if (!campaign) return
@@ -187,154 +189,134 @@ async function handleDelete() {
         )}
       </div>
 
-      {/* GM Action buttons */}
+      {/* Action buttons — GM */}
       {isGM && (
         <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
-  <a href={`/campaigns/${id}/table`} style={actionLink('#c0392b', '#fff', '#c0392b')}>Launch</a>
-  <a href={`/campaigns/${id}/edit`} style={actionLink('#242424', '#f5f2ee', '#3a3a3a')}>Edit</a>
-  <button onClick={handleClone} disabled={cloning} style={{ ...actionLink('#242424', '#b0aaa4', '#3a3a3a'), opacity: cloning ? 0.6 : 1 } as any}>
-    {cloning ? 'Cloning...' : 'Clone'}
-  </button>
-  <button onClick={copyInviteLink} style={actionLink('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
-    {copied ? 'Copied!' : 'Share'}
-  </button>
-  <button onClick={handleDelete} style={actionLink('#7a1f16', '#f5a89a', '#7a1f16') as any}>
-    Delete
-  </button>
-</div>
+          <a href={`/campaigns/${id}/table`} style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
+          <a href={`/campaigns/${id}/edit`} style={btn('#242424', '#f5f2ee', '#3a3a3a')}>Edit</a>
+          <button onClick={handleClone} disabled={cloning} style={{ ...btn('#242424', '#b0aaa4', '#3a3a3a'), opacity: cloning ? 0.6 : 1 } as any}>
+            {cloning ? 'Cloning...' : 'Clone'}
+          </button>
+          <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
+            {copied ? 'Copied!' : 'Share'}
+          </button>
+          <button onClick={handleDelete} style={btn('#7a1f16', '#f5a89a', '#7a1f16') as any}>
+            Delete
+          </button>
+        </div>
       )}
 
-      {/* GM VIEW */}
-      {isGM && (
-        <>
-          <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-            <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Invite Link</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ flex: 1, fontSize: '13px', color: '#7ab3d4', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', padding: '8px 10px', fontFamily: 'Barlow, sans-serif', wordBreak: 'break-all' }}>
-                {inviteLink}
-              </div>
-              <button onClick={copyInviteLink}
-                style={{ flexShrink: 0, padding: '8px 16px', background: copied ? '#1a2e10' : '#242424', border: `1px solid ${copied ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: copied ? '#7fc458' : '#b0aaa4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                {copied ? 'Copied!' : 'Copy Link'}
+      {/* Action buttons — Player */}
+      {!isGM && (
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
+          <a href={`/campaigns/${id}/table`} style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
+          <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
+            {copied ? 'Copied!' : 'Share'}
+          </button>
+          <button onClick={handleLeave} style={btn('#7a1f16', '#f5a89a', '#7a1f16') as any}>
+            Leave
+          </button>
+        </div>
+      )}
+
+      {/* Invite link — both views */}
+      <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
+        <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Invite Link</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ flex: 1, fontSize: '13px', color: '#7ab3d4', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', padding: '8px 10px', fontFamily: 'Barlow, sans-serif', wordBreak: 'break-all' }}>
+            {inviteLink}
+          </div>
+          <button onClick={copyInviteLink}
+            style={{ flexShrink: 0, padding: '8px 16px', background: copied ? '#1a2e10' : '#242424', border: `1px solid ${copied ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: copied ? '#7fc458' : '#b0aaa4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            {copied ? 'Copied!' : 'Copy Link'}
+          </button>
+        </div>
+        <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '6px' }}>
+          Code: <span style={{ color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', fontWeight: 700 }}>{campaign.invite_code}</span>
+        </div>
+      </div>
+
+      {/* My Survivor — player only */}
+      {!isGM && (
+        <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
+          <div style={{ fontSize: '10px', fontWeight: 600, color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+            My Survivor
+          </div>
+          {assignedCharName && (
+            <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '8px' }}>
+              Currently playing: <strong>{assignedCharName}</strong>
+            </div>
+          )}
+          {myCharacters.length === 0 ? (
+            <div style={{ fontSize: '13px', color: '#5a5550' }}>
+              You have no characters. <a href="/characters/new" style={{ color: '#7ab3d4', textDecoration: 'none' }}>Create one first.</a>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <select value={selectedCharId} onChange={e => setSelectedCharId(e.target.value)}
+                style={{ flex: 1, padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif' }}>
+                <option value="">— Select a survivor —</option>
+                {myCharacters.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <button onClick={handleAssignCharacter} disabled={assigning || !selectedCharId}
+                style={{ padding: '8px 16px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: assigning || !selectedCharId ? 'not-allowed' : 'pointer', opacity: assigning || !selectedCharId ? 0.6 : 1 }}>
+                {assigning ? 'Saving...' : 'Assign'}
               </button>
             </div>
-            <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '6px' }}>
-              Code: <span style={{ color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', fontWeight: 700 }}>{campaign.invite_code}</span>
-            </div>
-          </div>
-
-          <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-            <div style={{ fontSize: '10px', fontWeight: 600, color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
-              Members ({members.length})
-            </div>
-            {members.length === 0 ? (
-              <div style={{ fontSize: '13px', color: '#5a5550', textAlign: 'center', padding: '1rem' }}>No players yet. Share the invite link above.</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {members.map(m => {
-                  const isThisGM = m.user_id === campaign.gm_user_id
-                  return (
-                    <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: '#242424', borderRadius: '3px', border: '1px solid #2e2e2e' }}>
-                      <div>
-                        <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>{(m.profiles as any)?.username ?? 'Unknown'}</span>
-                        {isThisGM && <span style={{ marginLeft: '6px', fontSize: '9px', background: '#c0392b', color: '#fff', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em' }}>GM</span>}
-                        {(m.characters as any)?.name && (
-                          <div style={{ fontSize: '11px', color: '#b0aaa4', marginTop: '2px' }}>Playing: {(m.characters as any).name}</div>
-                        )}
-                        {!(m.characters as any)?.name && !isThisGM && (
-                          <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '2px' }}>No character assigned</div>
-                        )}
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#5a5550' }}>Joined {formatDate(m.joined_at)}</div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        </>
+          )}
+        </div>
       )}
 
-      {/* PLAYER VIEW */}
-      {!isGM && (
-        <>
-          <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-            <div style={{ fontSize: '10px', fontWeight: 600, color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
-              My Survivor
-            </div>
-            {assignedCharName && (
-              <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '8px' }}>
-                Currently playing: <strong>{assignedCharName}</strong>
-              </div>
-            )}
-            {myCharacters.length === 0 ? (
-              <div style={{ fontSize: '13px', color: '#5a5550' }}>
-                You have no characters. <a href="/characters/new" style={{ color: '#7ab3d4', textDecoration: 'none' }}>Create one first.</a>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <select value={selectedCharId} onChange={e => setSelectedCharId(e.target.value)}
-                  style={{ flex: 1, padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif' }}>
-                  <option value="">— Select a survivor —</option>
-                  {myCharacters.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-                <button onClick={handleAssignCharacter} disabled={assigning || !selectedCharId}
-                  style={{ padding: '8px 16px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: assigning || !selectedCharId ? 'not-allowed' : 'pointer', opacity: assigning || !selectedCharId ? 0.6 : 1 }}>
-                  {assigning ? 'Saving...' : 'Assign'}
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-            <div style={{ fontSize: '10px', fontWeight: 600, color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
-              Members ({members.length})
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {members.map(m => {
-                const isThisGM = m.user_id === campaign.gm_user_id
-                return (
-                  <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: '#242424', borderRadius: '3px', border: '1px solid #2e2e2e' }}>
-                    <div>
-                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>{(m.profiles as any)?.username ?? 'Unknown'}</span>
-                      {isThisGM && <span style={{ marginLeft: '6px', fontSize: '9px', background: '#c0392b', color: '#fff', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em' }}>GM</span>}
-                      {(m.characters as any)?.name && (
-                        <div style={{ fontSize: '11px', color: '#b0aaa4', marginTop: '2px' }}>Playing: {(m.characters as any).name}</div>
-                      )}
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#5a5550' }}>Joined {formatDate(m.joined_at)}</div>
+      {/* Members list — both views */}
+      <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
+        <div style={{ fontSize: '10px', fontWeight: 600, color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+          Members ({members.length})
+        </div>
+        {members.length === 0 ? (
+          <div style={{ fontSize: '13px', color: '#5a5550', textAlign: 'center', padding: '1rem' }}>No players yet. Share the invite link above.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {members.map(m => {
+              const isThisGM = m.user_id === campaign.gm_user_id
+              return (
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: '#242424', borderRadius: '3px', border: '1px solid #2e2e2e' }}>
+                  <div>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>{(m.profiles as any)?.username ?? 'Unknown'}</span>
+                    {isThisGM && <span style={{ marginLeft: '6px', fontSize: '9px', background: '#c0392b', color: '#fff', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em' }}>GM</span>}
+                    {(m.characters as any)?.name && (
+                      <div style={{ fontSize: '11px', color: '#b0aaa4', marginTop: '2px' }}>Playing: {(m.characters as any).name}</div>
+                    )}
+                    {!(m.characters as any)?.name && !isThisGM && (
+                      <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '2px' }}>No character assigned</div>
+                    )}
                   </div>
-                )
-              })}
-            </div>
+                  <div style={{ fontSize: '11px', color: '#5a5550' }}>Joined {formatDate(m.joined_at)}</div>
+                </div>
+              )
+            })}
           </div>
-        </>
-      )}
+        )}
+      </div>
 
-      {/* Actions */}
+      {/* Back button */}
       <div style={{ display: 'flex', gap: '8px' }}>
         <a href="/campaigns" style={{ padding: '9px 22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           Back
         </a>
-        {!isGM && (
-          <button onClick={handleLeave}
-            style={{ padding: '9px 22px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            Leave Campaign
-          </button>
-        )}
       </div>
 
     </div>
   )
 }
 
-function actionLink(bg: string, color: string, border: string): React.CSSProperties {
+function btn(bg: string, color: string, border: string): React.CSSProperties {
   return {
     padding: '8px 18px', background: bg, border: `1px solid ${border}`,
     borderRadius: '3px', color, fontSize: '12px',
     fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer',
+    display: 'inline-block',
   }
 }
