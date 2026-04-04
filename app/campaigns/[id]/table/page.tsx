@@ -79,7 +79,10 @@ export default function TablePage() {
       supabase.from('profiles').select('id, username').in('id', userIds),
     ])
 
-    const charMap = Object.fromEntries((chars ?? []).map((c: any) => [c.id, c]))
+    const charMap = Object.fromEntries((chars ?? []).map((c: any) => {
+  const { photoDataUrl, ...dataWithoutPhoto } = c.data ?? {}
+  return [c.id, { ...c, data: dataWithoutPhoto }]
+}))
     const profileMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.id, p.username]))
 
     setEntries(filteredStates.map((s: any) => ({
@@ -142,7 +145,7 @@ export default function TablePage() {
       const [{ data: gmProfile }, { data: members }] = await Promise.all([
         supabase.from('profiles').select('id, username').eq('id', camp.gm_user_id).single(),
         supabase.from('campaign_members')
-          .select('user_id, character_id, characters:character_id(id, name, data)')
+  .select('user_id, character_id, characters:character_id(id, name, data->rapid)')
           .eq('campaign_id', id)
           .not('character_id', 'is', null),
       ])
