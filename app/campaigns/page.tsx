@@ -120,8 +120,7 @@ export default function CampaignsPage() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  <a href={`/campaigns/${c.id}/table`} style={{ padding: '5px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Launch</a>
-                  <a href={`/campaigns/${c.id}`} style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Manage</a>
+                  <a href={`/campaigns/${c.id}`} style={{ padding: '5px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Enter</a>
                   <a href={`/campaigns/${c.id}/edit`} style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Edit</a>
                   <button onClick={async () => { if (!confirm('Delete this campaign?')) return; await supabase.from('campaigns').delete().eq('id', c.id); setGmCampaigns(prev => prev.filter(x => x.id !== c.id)) }} style={{ padding: '5px 14px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Delete</button>
                 </div>
@@ -147,8 +146,7 @@ export default function CampaignsPage() {
                   {c.description && <div style={{ fontSize: '13px', color: '#b0aaa4', marginTop: '6px', lineHeight: 1.5 }}>{c.description}</div>}
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  <a href={`/campaigns/${c.id}/table`} style={{ padding: '5px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Launch</a>
-                  <a href={`/campaigns/${c.id}`} style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Manage</a>
+                  <a href={`/campaigns/${c.id}`} style={{ padding: '5px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Enter</a>
                 </div>
               </div>
             ))}
