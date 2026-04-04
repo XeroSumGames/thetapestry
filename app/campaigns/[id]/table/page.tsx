@@ -27,6 +27,7 @@ interface GmInfo {
 interface RollEntry {
   id: string
   character_name: string
+  username?: string
   label: string
   die1: number
   die2: number
@@ -120,20 +121,15 @@ export default function TablePage() {
     const charIds = filteredStates.map((s: any) => s.character_id)
     const userIds = filteredStates.map((s: any) => s.user_id)
 
-    // Parallel: characters (no photo) + profiles
     const [{ data: chars }, { data: profiles }] = await Promise.all([
       supabase.from('characters').select('id, name, created_at, data').in('id', charIds),
       supabase.from('profiles').select('id, username').in('id', userIds),
     ])
 
-    // Strip photo from bulk load — fetch separately below for portrait strip
-    const charMap = Object.fromEntries((chars ?? []).map((c: any) => {
-      const { photoDataUrl, ...dataWithoutPhoto } = c.data ?? {}
-      return [c.id, { ...c, data: dataWithoutPhoto }]
-    }))
+    const charMap = Object.fromEntries((chars ?? []).map((c: any) => [c.id, c]))
     const profileMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.id, p.username]))
 
-    const newEntries: TableEntry[] = filteredStates.map((s: any) => ({
+    setEntries(filteredStates.map((s: any) => ({
       stateId: s.id,
       userId: s.user_id,
       username: profileMap[s.user_id] ?? 'Unknown',
@@ -144,30 +140,8 @@ export default function TablePage() {
         rp_current: s.rp_current, rp_max: s.rp_max,
         stress: s.stress, insight_dice: s.insight_dice, morality: s.morality, cdp: s.cdp ?? 0,
       },
-    }))
-
-    setEntries(newEntries)
+    })))
     setEntriesLoading(false)
-
-    // Fetch photos separately and merge in — lightweight after main data is shown
-    const { data: photoRows } = await supabase
-      .from('characters')
-      .select('id, data->photoDataUrl')
-      .in('id', charIds)
-
-    if (photoRows && photoRows.length > 0) {
-      const photoMap: Record<string, string> = {}
-      for (const row of photoRows as any[]) {
-        if (row.photoDataUrl) photoMap[row.id] = row.photoDataUrl
-      }
-      setEntries(prev => prev.map(e => ({
-        ...e,
-        character: {
-          ...e.character,
-          data: { ...e.character.data, photoDataUrl: photoMap[e.character.id] ?? null },
-        },
-      })))
-    }
   }
 
   async function loadRolls(campaignId: string) {
@@ -213,15 +187,12 @@ export default function TablePage() {
 
       const [{ data: gmProfile }, { data: members }] = await Promise.all([
         supabase.from('profiles').select('id, username').eq('id', camp.gm_user_id).single(),
-        supabase.from('campaign_members')
-          .select('user_id, character_id, characters:character_id(id, name, data->rapid)')
-          .eq('campaign_id', id)
-          .not('character_id', 'is', null),
+        supabase.from('campaign_members').select('user_id, character_id, characters:character_id(id, name, data)').eq('campaign_id', id).not('character_id', 'is', null),
       ])
 
       setGmInfo({ userId: camp.gm_user_id, username: (gmProfile as any)?.username ?? 'GM' })
 
-      if (members && members.length > 0) ensureCharacterStates(id, members as any[])
+      if (members && members.length > 0) await ensureCharacterStates(id, members as any[])
       await Promise.all([loadEntries(id), loadRolls(id)])
 
       channelRef.current = supabase.channel(`table_${id}`)
@@ -252,22 +223,32 @@ export default function TablePage() {
   async function executeRoll() {
     if (!pendingRoll || !userId) return
     setRolling(true)
+
     const die1 = Math.floor(Math.random() * 6) + 1
     const die2 = Math.floor(Math.random() * 6) + 1
     const cmodVal = parseInt(cmod) || 0
     const total = die1 + die2 + pendingRoll.amod + pendingRoll.smod + cmodVal
     const outcome = getOutcome(total, die1, die2)
     const insightAwarded = outcome === 'Low Insight' || outcome === 'High Insight'
+
     const myEntry = entries.find(e => e.userId === userId)
     const characterName = myEntry?.character.name ?? 'Unknown'
 
     await supabase.from('roll_log').insert({
-      campaign_id: id, user_id: userId, character_name: characterName,
-      label: pendingRoll.label, die1, die2,
-      amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
-      total, outcome, insight_awarded: insightAwarded,
+      campaign_id: id,
+      user_id: userId,
+      character_name: characterName,
+      label: pendingRoll.label,
+      die1, die2,
+      amod: pendingRoll.amod,
+      smod: pendingRoll.smod,
+      cmod: cmodVal,
+      total,
+      outcome,
+      insight_awarded: insightAwarded,
     })
 
+    // Award insight die if applicable
     if (insightAwarded && myEntry?.liveState) {
       const newInsight = Math.min(myEntry.liveState.insight_dice + 1, 9)
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
@@ -323,17 +304,19 @@ export default function TablePage() {
       {/* Main area */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
 
-        {/* Left — Roll Feed */}
+        {/* Left — Dice & Roll Feed */}
         <div style={{ width: '260px', flexShrink: 0, borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ padding: '10px 14px', borderBottom: '1px solid #2e2e2e', fontSize: '10px', fontWeight: 600, color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Barlow Condensed, sans-serif' }}>
             Roll Feed
           </div>
+
+          {/* Roll feed */}
           <div ref={rollFeedRef} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
             {rolls.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a' }}>
                 <div style={{ fontSize: '24px', marginBottom: '8px' }}>🎲</div>
                 <div style={{ fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                  Click a skill or attribute on your sheet to roll
+                  Click a skill or attribute on your character sheet to roll
                 </div>
               </div>
             ) : (
@@ -359,6 +342,8 @@ export default function TablePage() {
               ))
             )}
           </div>
+
+          {/* Quick roll button for own sheet */}
           {myEntry && (
             <div style={{ padding: '8px', borderTop: '1px solid #2e2e2e' }}>
               <button
@@ -387,6 +372,8 @@ export default function TablePage() {
 
       {/* Bottom portrait strip */}
       <div style={{ borderTop: '1px solid #2e2e2e', display: 'flex', flexShrink: 0, background: '#0f0f0f', height: '80px' }}>
+
+        {/* GM slot */}
         <button
           onClick={() => gmEntry && setSelectedEntry(gmEntry)}
           style={{ width: '120px', flexShrink: 0, background: gmEntry ? '#1a1a1a' : '#111', borderTop: 'none', borderBottom: 'none', borderLeft: 'none', borderRight: '1px solid #2e2e2e', cursor: gmEntry ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px', transition: 'background 0.15s' }}
@@ -404,6 +391,7 @@ export default function TablePage() {
           </div>
         </button>
 
+        {/* Player slots */}
         {Array.from({ length: PLAYER_SLOTS }).map((_, i) => {
           const entry = playerEntries[i] ?? null
           const photo = entry ? getCharPhoto(entry) : null
@@ -457,11 +445,13 @@ export default function TablePage() {
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
             <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Rolling</div>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>{pendingRoll.label}</div>
+
             <div style={{ display: 'flex', gap: '12px', marginBottom: '1rem', fontSize: '12px', color: '#b0aaa4', fontFamily: 'Barlow Condensed, sans-serif' }}>
               <span>2d6</span>
               {pendingRoll.amod !== 0 && <span style={{ color: pendingRoll.amod > 0 ? '#7fc458' : '#c0392b' }}>{pendingRoll.amod > 0 ? '+' : ''}{pendingRoll.amod} AMod</span>}
               {pendingRoll.smod !== 0 && <span style={{ color: pendingRoll.smod > 0 ? '#7fc458' : '#c0392b' }}>{pendingRoll.smod > 0 ? '+' : ''}{pendingRoll.smod} SMod</span>}
             </div>
+
             <div style={{ marginBottom: '1.25rem' }}>
               <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>CMod (Relationship / Situational)</div>
               <input
@@ -473,8 +463,11 @@ export default function TablePage() {
                 style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '16px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }}
               />
             </div>
+
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => setPendingRoll(null)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setPendingRoll(null)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                Cancel
+              </button>
               <button onClick={executeRoll} disabled={rolling} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer', opacity: rolling ? 0.6 : 1 }}>
                 {rolling ? 'Rolling...' : '🎲 Roll'}
               </button>
