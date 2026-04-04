@@ -347,9 +347,9 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
                           Edit
                         </button>
                         <button onClick={e => { e.stopPropagation(); handleDeletePin(p.id) }} disabled={deletingId === p.id}
-                          style={{ background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '16px', padding: '0 2px', opacity: deletingId === p.id ? 0.4 : 1 }}>
-                          ×
-                        </button>
+  style={{ background: 'none', border: 'none', color: '#f5a89a', cursor: 'pointer', fontSize: '16px', padding: '0 4px', opacity: deletingId === p.id ? 0.4 : 1 }}>
+  ×
+</button>
                       </div>
                     )}
                   </div>
