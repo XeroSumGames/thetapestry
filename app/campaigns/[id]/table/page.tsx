@@ -275,7 +275,7 @@ export default function TablePage() {
 
     setPendingRoll(null)
     setRolling(false)
-    await loadEntries(id)
+    await Promise.all([loadEntries(id), loadRolls(id)])
   }
 
   function getInitials(name: string) {
@@ -408,8 +408,8 @@ export default function TablePage() {
           const entry = playerEntries[i] ?? null
           const photo = entry ? getCharPhoto(entry) : null
           return (
-            <button key={i} onClick={() => entry && setSelectedEntry(entry)}
-              style={{ flex: 1, background: entry ? '#1a1a1a' : '#0d0d0d', borderTop: 'none', borderBottom: 'none', borderLeft: 'none', borderRight: i < PLAYER_SLOTS - 1 ? '1px solid #2e2e2e' : 'none', cursor: entry ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px', transition: 'background 0.15s' }}
+            <button key={i} onClick={() => (isGM || entry?.userId === userId) && entry && setSelectedEntry(entry)}
+              style={{ flex: 1, background: entry ? '#1a1a1a' : '#0d0d0d', borderTop: 'none', borderBottom: 'none', borderLeft: 'none', borderRight: i < PLAYER_SLOTS - 1 ? '1px solid #2e2e2e' : 'none', cursor: entry && (isGM || entry.userId === userId) ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px', transition: 'background 0.15s' }}
               onMouseEnter={e => { if (entry) (e.currentTarget as HTMLElement).style.background = '#242424' }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = entry ? '#1a1a1a' : '#0d0d0d' }}
             >
