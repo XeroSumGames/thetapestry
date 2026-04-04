@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
 import PrintSheet from './wizard/PrintSheet'
 import { WizardState, createWizardState } from '../lib/xse-engine'
+import { SKILLS } from '../lib/xse-schema'
 
 const ATTR_KEYS = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 
@@ -35,6 +36,7 @@ interface Props {
   onStatUpdate?: (stateId: string, field: string, value: number) => void
   onDelete?: (id: string) => void
   onDuplicate?: (c: any) => void
+  onRoll?: (label: string, amod: number, smod: number) => void
 }
 
 export default function CharacterCard({
@@ -46,6 +48,7 @@ export default function CharacterCard({
   onStatUpdate,
   onDelete,
   onDuplicate,
+  onRoll,
 }: Props) {
   const router = useRouter()
   const supabase = createClient()
@@ -122,6 +125,20 @@ export default function CharacterCard({
     setUpdating(stateId + field)
     await onStatUpdate(stateId, field, value)
     setUpdating(null)
+  }
+
+  function handleSkillClick(skillName: string, level: number) {
+    if (!onRoll) return
+    const skillDef = SKILLS.find(s => s.name === skillName)
+    const attrKey = skillDef?.attribute ?? 'RSN'
+    const amod = rapid[attrKey] ?? 0
+    onRoll(`${skillName} (${attrKey})`, amod, level)
+  }
+
+  function handleAttrClick(attrKey: string) {
+    if (!onRoll) return
+    const amod = rapid[attrKey] ?? 0
+    onRoll(`${attrKey} Check`, amod, 0)
   }
 
   function DotTracker({ label, current, max, field, color }: {
@@ -212,10 +229,23 @@ export default function CharacterCard({
         <div style={{ display: 'flex', gap: '4px', marginBottom: '8px' }}>
           {ATTR_KEYS.map(k => {
             const v = rapid[k] ?? 0
+            const clickable = !!onRoll
             return (
-              <div key={k} style={{ flex: 1, background: v > 0 ? '#1a2e10' : '#242424', border: `1px solid ${v > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', padding: '4px 2px', textAlign: 'center' }}>
+              <div key={k}
+                onClick={() => handleAttrClick(k)}
+                style={{
+                  flex: 1, background: v > 0 ? '#1a2e10' : '#242424',
+                  border: `1px solid ${v > 0 ? '#2d5a1b' : '#3a3a3a'}`,
+                  borderRadius: '3px', padding: '4px 2px', textAlign: 'center',
+                  cursor: clickable ? 'pointer' : 'default',
+                  transition: clickable ? 'border-color 0.1s, background 0.1s' : undefined,
+                }}
+                onMouseEnter={e => { if (clickable) { (e.currentTarget as HTMLElement).style.borderColor = '#7fc458'; (e.currentTarget as HTMLElement).style.background = v > 0 ? '#243e14' : '#2e2e2e' } }}
+                onMouseLeave={e => { if (clickable) { (e.currentTarget as HTMLElement).style.borderColor = v > 0 ? '#2d5a1b' : '#3a3a3a'; (e.currentTarget as HTMLElement).style.background = v > 0 ? '#1a2e10' : '#242424' } }}
+              >
                 <div style={{ fontSize: '8px', color: '#b0aaa4', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
                 <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: v > 0 ? '#7fc458' : '#b0aaa4' }}>{sgn(v)}</div>
+                {clickable && <div style={{ fontSize: '7px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>ROLL</div>}
               </div>
             )
           })}
@@ -253,30 +283,38 @@ export default function CharacterCard({
             </div>
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'space-around' }}>
               <Counter label="Stress" value={liveState.stress} field="stress" max={5} color="#EF9F27" />
-<Counter label="Insight" value={liveState.insight_dice} field="insight_dice" max={9} color="#7fc458" />
-<Counter label="CDP" value={liveState.cdp} field="cdp" max={20} color="#7ab3d4" />
-<Counter label="Morality" value={liveState.morality} field="morality" max={5} color="#b0aaa4" />
+              <Counter label="Insight" value={liveState.insight_dice} field="insight_dice" max={9} color="#7fc458" />
+              <Counter label="CDP" value={liveState.cdp} field="cdp" max={20} color="#7ab3d4" />
+              <Counter label="Morality" value={liveState.morality} field="morality" max={5} color="#b0aaa4" />
             </div>
           </div>
         )}
 
-        {/* Skills — 5 rows of 6/6/6/6/5 */}
-<div style={{ marginTop: '6px', display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
-  {skills.map(s => {
-    const raised = s.level > 0
-    return (
-      <span key={s.skillName} style={{
-        fontSize: '10px', padding: '3px 6px', borderRadius: '3px',
-        background: raised ? '#1a2e10' : '#1a1a1a',
-border: `1px solid ${raised ? '#2d5a1b' : '#2e2e2e'}`,
-color: raised ? '#7fc458' : s.level < 0 ? '#7a4a4a' : '#f5f2ee',
-        textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-      }}>
-        {s.skillName.replace('Specific Knowledge', 'Specific Know.')} {sgn(s.level)}
-      </span>
-    )
-  })}
-</div>
+        {/* Skills grid */}
+        <div style={{ marginTop: '6px', display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
+          {skills.map(s => {
+            const raised = s.level > 0
+            const clickable = !!onRoll
+            return (
+              <span key={s.skillName}
+                onClick={() => handleSkillClick(s.skillName, s.level)}
+                style={{
+                  fontSize: '10px', padding: '3px 6px', borderRadius: '3px',
+                  background: raised ? '#1a2e10' : '#1a1a1a',
+                  border: `1px solid ${raised ? '#2d5a1b' : '#2e2e2e'}`,
+                  color: raised ? '#7fc458' : s.level < 0 ? '#7a4a4a' : '#f5f2ee',
+                  textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  cursor: clickable ? 'pointer' : 'default',
+                  transition: clickable ? 'border-color 0.1s' : undefined,
+                }}
+                onMouseEnter={e => { if (clickable) (e.currentTarget as HTMLElement).style.borderColor = '#7ab3d4' }}
+                onMouseLeave={e => { if (clickable) (e.currentTarget as HTMLElement).style.borderColor = raised ? '#2d5a1b' : '#2e2e2e' }}
+              >
+                {s.skillName.replace('Specific Knowledge', 'Specific Know.')} {sgn(s.level)}
+              </span>
+            )
+          })}
+        </div>
 
       </div>
 
