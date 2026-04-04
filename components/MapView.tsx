@@ -346,7 +346,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
                           style={{ background: 'none', border: 'none', color: '#b0aaa4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
                           Edit
                         </button>
-                        <button onClick={e => { e.stopPropagation(); handleDeletePin(p.id) }} disabled={deletingId === p.id}
+                        <button onClick={e => { e.stopPropagation(); if (confirm('Delete this pin?')) handleDeletePin(p.id) }} disabled={deletingId === p.id}
   style={{ background: 'none', border: 'none', color: '#f5a89a', cursor: 'pointer', fontSize: '16px', padding: '0 4px', opacity: deletingId === p.id ? 0.4 : 1 }}>
   ×
 </button>
