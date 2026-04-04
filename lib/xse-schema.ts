@@ -1,5 +1,5 @@
-﻿// ============================================================
-// XERO SUM ENGINE SRD v1.1 â€” Character Schema & Static Data
+// ============================================================
+// XERO SUM ENGINE SRD v1.1 — Character Schema & Static Data
 // ============================================================
 
 // ----------------------------
@@ -8,20 +8,12 @@
 
 export type AttributeName = 'RSN' | 'ACU' | 'PHY' | 'INF' | 'DEX';
 
-export type AttributeValue = -2 | -1 | 0 | 1 | 2 | 3 | 4; // -2=Diminished, +4=Human Peak
-// Animals/machines can go to +5 (Superhuman) â€” PCs capped at +4
-
+export type AttributeValue = -2 | -1 | 0 | 1 | 2 | 3 | 4;
 export type SkillValue = -3 | 0 | 1 | 2 | 3 | 4;
-// -3=Inept (vocational only), 0=Untrained, 1=Beginner, 2=Journeyman, 3=Professional, 4=Life's Work
-
 export type ItemCondition = 'Pristine' | 'Used' | 'Worn' | 'Damaged' | 'Broken';
-
 export type WeaponSkill = 'Melee' | 'Unarmed' | 'Athletics' | 'Ranged' | 'Demolitions*';
-
 export type WeaponRange = 'Engaged' | 'Close' | 'Medium' | 'Long' | 'Distant';
-
 export type ItemRarity = 'Common' | 'Uncommon' | 'Rare';
-
 export type ItemTrait =
   | 'Automatic Burst'
   | 'Blast Radius'
@@ -31,7 +23,6 @@ export type ItemTrait =
   | 'Stunned'
   | 'Tracking'
   | 'Unwieldy';
-
 export type CreationMethod = 'backstory' | 'paradigm' | 'pregen';
 
 // ----------------------------
@@ -46,7 +37,7 @@ export const ATTRIBUTE_LABELS: Record<number, string> = {
   2: 'Strong',
   3: 'Exceptional',
   4: 'Human Peak',
-  5: 'Superhuman', // NPCs/animals only
+  5: 'Superhuman',
 };
 
 // ----------------------------
@@ -67,9 +58,9 @@ export const SKILL_LABELS: Record<number, string> = {
 // ----------------------------
 
 export const OUTCOMES = [
-  { range: '0â€“3',  label: 'Dire Failure' },
-  { range: '4â€“8',  label: 'Failure' },
-  { range: '9â€“13', label: 'Success' },
+  { range: '0-3',  label: 'Dire Failure' },
+  { range: '4-8',  label: 'Failure' },
+  { range: '9-13', label: 'Success' },
   { range: '14+',  label: 'Wild Success' },
   { range: '1+1',  label: 'Moment of Low Insight' },
   { range: '6+6',  label: 'Moment of High Insight' },
@@ -82,7 +73,7 @@ export const OUTCOMES = [
 export interface SkillDefinition {
   name: string;
   attribute: AttributeName;
-  vocational: boolean; // true = starts at -3 (Inept), marked with *
+  vocational: boolean;
   description: string;
 }
 
@@ -108,7 +99,7 @@ export const SKILLS: SkillDefinition[] = [
   { name: 'Research',           attribute: 'RSN', vocational: false, description: 'Being able to efficiently organize, distill, and absorb information to quickly become well informed on any subject' },
   { name: 'Scavenging',         attribute: 'ACU', vocational: false, description: 'Finding and evaluating missed, hidden, or discarded items that still have use for survival or trade' },
   { name: 'Sleight of Hand',    attribute: 'DEX', vocational: false, description: 'Well practiced in performing sleight-of-hand tricks, palming, pickpocketing, concealment, and creating subtle diversions' },
-  { name: 'Specific Knowledge', attribute: 'RSN', vocational: false, description: 'Knowledge about the history, layout, and secrets of a specific area, community, person, or discipline (e.g. law) — note the specific area on the character sheet' },
+  { name: 'Specific Knowledge', attribute: 'RSN', vocational: false, description: 'Knowledge about the history, layout, and secrets of a specific area, community, person, or discipline' },
   { name: 'Stealth',            attribute: 'PHY', vocational: false, description: 'Avoid notice, moving unseen, sticking to the shadows, and avoiding detection' },
   { name: 'Streetwise',         attribute: 'ACU', vocational: false, description: 'Instinctively being able to navigate urban environments, read situations for danger, and identify underworld resources' },
   { name: 'Survival',           attribute: 'ACU', vocational: false, description: 'Knowing how to survive in the wild, live off the land, and track people or animals' },
@@ -160,7 +151,7 @@ export const MOTIVATIONS: Record<number, string> = {
 
 export interface ProfessionDefinition {
   name: string;
-  skills: string[]; // skill names from SKILLS array
+  skills: string[];
 }
 
 export const PROFESSIONS: ProfessionDefinition[] = [
@@ -184,7 +175,7 @@ export const PROFESSIONS: ProfessionDefinition[] = [
 
 export interface WeaponTrait {
   name: ItemTrait;
-  value?: number; // e.g. Automatic Burst (3) â€” rounds used
+  value?: number;
 }
 
 // ----------------------------
@@ -196,16 +187,16 @@ export interface MeleeWeapon {
   skill: 'Melee' | 'Unarmed' | 'Athletics';
   range: 'Engaged' | 'Close';
   rarity: ItemRarity;
-  damageBase: number;   // fixed portion
-  damageDice: string;   // e.g. "1d6", "2d3"
-  rpPercent: number;    // 50 or 100
+  damageBase: number;
+  damageDice: string;
+  rpPercent: number;
   enc: number;
   traits: WeaponTrait[];
 }
 
 export const MELEE_WEAPONS: MeleeWeapon[] = [
   { name: 'Baseball Bat',    skill: 'Melee',    range: 'Engaged', rarity: 'Common',   damageBase: 4, damageDice: '1d6', rpPercent: 100, enc: 1, traits: [] },
-  { name: 'Brass Knuckles',  skill: 'Unarmed',  range: 'Engaged', rarity: 'Uncommon', damageBase: 1, damageDice: '',    rpPercent: 100, enc: 0, traits: [] }, // +1 flat
+  { name: 'Brass Knuckles',  skill: 'Unarmed',  range: 'Engaged', rarity: 'Uncommon', damageBase: 1, damageDice: '',    rpPercent: 100, enc: 0, traits: [] },
   { name: 'Bullwhip',        skill: 'Athletics',range: 'Close',   rarity: 'Uncommon', damageBase: 1, damageDice: '1d3', rpPercent: 100, enc: 1, traits: [{ name: 'Unwieldy', value: 2 }] },
   { name: 'Club',            skill: 'Melee',    range: 'Engaged', rarity: 'Common',   damageBase: 5, damageDice: '1d6', rpPercent: 100, enc: 2, traits: [{ name: 'Cumbersome', value: 1 }] },
   { name: 'Fire Axe',        skill: 'Melee',    range: 'Close',   rarity: 'Uncommon', damageBase: 3, damageDice: '2d3', rpPercent:  50, enc: 1, traits: [] },
@@ -258,7 +249,7 @@ export const RANGED_WEAPONS: RangedWeapon[] = [
 ];
 
 // ----------------------------
-// EQUIPMENT (Table 20) â€” condensed
+// EQUIPMENT (Table 20)
 // ----------------------------
 
 export interface EquipmentItem {
@@ -319,7 +310,6 @@ export interface Paradigm {
   profession: string;
   rapid: Record<AttributeName, AttributeValue>;
   skills: ParadigmSkillEntry[];
-  // Secondary stats are always derived â€” not stored
 }
 
 export const PARADIGMS: Paradigm[] = [
@@ -344,7 +334,7 @@ export const PARADIGMS: Paradigm[] = [
     name: 'Biker', profession: 'Driver',
     rapid: { RSN: 0, ACU: 2, PHY: 1, INF: 0, DEX: 2 },
     skills: [
-      { skillName: 'Driving',   level: 2 },
+      { skillName: 'Driving',         level: 2 },
       { skillName: 'Barter',          level: 1 },
       { skillName: 'Demolitions*',    level: 1 },
       { skillName: 'Lock-Picking*',   level: 1 },
@@ -386,16 +376,16 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Tactics*',        level: 2 },
       { skillName: 'Manipulation',    level: 2 },
       { skillName: 'Animal Handling', level: 1 },
-      { skillName: 'Barter',         level: 1 },
-      { skillName: 'Inspiration',    level: 1 },
-      { skillName: 'Lock-Picking*',  level: 1 },
-      { skillName: 'Navigation',     level: 1 },
-      { skillName: 'Psychology*',    level: 1 },
-      { skillName: 'Ranged Combat',  level: 1 },
-      { skillName: 'Scavenging',     level: 1 },
-      { skillName: 'Sleight of Hand',level: 1 },
-      { skillName: 'Stealth',        level: 1 },
-      { skillName: 'Unarmed Combat', level: 1 },
+      { skillName: 'Barter',          level: 1 },
+      { skillName: 'Inspiration',     level: 1 },
+      { skillName: 'Lock-Picking*',   level: 1 },
+      { skillName: 'Navigation',      level: 1 },
+      { skillName: 'Psychology*',     level: 1 },
+      { skillName: 'Ranged Combat',   level: 1 },
+      { skillName: 'Scavenging',      level: 1 },
+      { skillName: 'Sleight of Hand', level: 1 },
+      { skillName: 'Stealth',         level: 1 },
+      { skillName: 'Unarmed Combat',  level: 1 },
     ],
   },
   {
@@ -405,7 +395,7 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Mechanic*',       level: 3 },
       { skillName: 'Barter',          level: 2 },
       { skillName: 'Demolitions*',    level: 2 },
-      { skillName: 'Driving',   level: 1 },
+      { skillName: 'Driving',         level: 1 },
       { skillName: 'Lock-Picking*',   level: 1 },
       { skillName: 'Melee Combat',    level: 1 },
       { skillName: 'Navigation',      level: 1 },
@@ -421,7 +411,7 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Athletics',       level: 2 },
       { skillName: 'Medicine*',       level: 2 },
       { skillName: 'Psychology*',     level: 2 },
-      { skillName: 'Driving',   level: 1 },
+      { skillName: 'Driving',         level: 1 },
       { skillName: 'Inspiration',     level: 1 },
       { skillName: 'Manipulation',    level: 1 },
       { skillName: 'Navigation',      level: 1 },
@@ -573,55 +563,20 @@ export interface BackstoryStep {
   id: string;
   title: string;
   description: string;
-  attributeCDP: number;   // CDP to spend on attributes this step
-  skillCDP: number;       // CDP to spend on skills this step
+  attributeCDP: number;
+  skillCDP: number;
   maxAttributeLevel: AttributeValue;
   maxSkillLevel: SkillValue;
 }
 
 export const BACKSTORY_STEPS: BackstoryStep[] = [
-  {
-    id: 'step0', title: 'Step Zero: Who Are They?',
-    description: 'Define name, age, height, weight, and pick 3 thematic words.',
-    attributeCDP: 0, skillCDP: 0,
-    maxAttributeLevel: 0, maxSkillLevel: 0,
-  },
-  {
-    id: 'step1', title: 'Step One: Where They Grew Up',
-    description: 'The first 10â€“15 years. Raise 1 attribute from 0 to 1. Spend 2 CDP on skills (max Journeyman).',
-    attributeCDP: 1, skillCDP: 2,
-    maxAttributeLevel: 1, maxSkillLevel: 2,
-  },
-  {
-    id: 'step2', title: 'Step Two: What They Learned',
-    description: 'The educational stage. Raise 1 attribute. Spend 3 CDP on skills (max Journeyman).',
-    attributeCDP: 1, skillCDP: 3,
-    maxAttributeLevel: 1, maxSkillLevel: 2,
-  },
-  {
-    id: 'step3', title: 'Step Three: What They Like To Do',
-    description: 'Hobbies and spare time. Raise 1 attribute. Spend 3 CDP on skills (max Journeyman).',
-    attributeCDP: 1, skillCDP: 3,
-    maxAttributeLevel: 1, maxSkillLevel: 2,
-  },
-  {
-    id: 'step4', title: 'Step Four: How They Make Money',
-    description: 'Career and vocation. Raise up to 2 attributes (max Exceptional). Spend 4 CDP on skills (max Professional). Choose a Profession.',
-    attributeCDP: 2, skillCDP: 4,
-    maxAttributeLevel: 3, maxSkillLevel: 3,
-  },
-  {
-    id: 'step5', title: 'Step Five: What Makes Them Them',
-    description: 'Final polish. Spend 3 CDP on skills (max Professional). No attributes this step.',
-    attributeCDP: 0, skillCDP: 3,
-    maxAttributeLevel: 3, maxSkillLevel: 3,
-  },
-  {
-    id: 'step6', title: 'Step Six: What Drives Them?',
-    description: 'Choose or roll Complication and Motivation.',
-    attributeCDP: 0, skillCDP: 0,
-    maxAttributeLevel: 3, maxSkillLevel: 3,
-  },
+  { id: 'step0', title: 'Step Zero: Who Are They?', description: 'Define name, age, height, weight, and pick 3 thematic words.', attributeCDP: 0, skillCDP: 0, maxAttributeLevel: 0, maxSkillLevel: 0 },
+  { id: 'step1', title: 'Step One: Where They Grew Up', description: 'The first 10-15 years. Raise 1 attribute from 0 to 1. Spend 2 CDP on skills (max Journeyman).', attributeCDP: 1, skillCDP: 2, maxAttributeLevel: 1, maxSkillLevel: 2 },
+  { id: 'step2', title: 'Step Two: What They Learned', description: 'The educational stage. Raise 1 attribute. Spend 3 CDP on skills (max Journeyman).', attributeCDP: 1, skillCDP: 3, maxAttributeLevel: 1, maxSkillLevel: 2 },
+  { id: 'step3', title: 'Step Three: What They Like To Do', description: 'Hobbies and spare time. Raise 1 attribute. Spend 3 CDP on skills (max Journeyman).', attributeCDP: 1, skillCDP: 3, maxAttributeLevel: 1, maxSkillLevel: 2 },
+  { id: 'step4', title: 'Step Four: How They Make Money', description: 'Career and vocation. Raise up to 2 attributes (max Exceptional). Spend 4 CDP on skills (max Professional). Choose a Profession.', attributeCDP: 2, skillCDP: 4, maxAttributeLevel: 3, maxSkillLevel: 3 },
+  { id: 'step5', title: 'Step Five: What Makes Them Them', description: 'Final polish. Spend 3 CDP on skills (max Professional). No attributes this step.', attributeCDP: 0, skillCDP: 3, maxAttributeLevel: 3, maxSkillLevel: 3 },
+  { id: 'step6', title: 'Step Six: What Drives Them?', description: 'Choose or roll Complication and Motivation.', attributeCDP: 0, skillCDP: 0, maxAttributeLevel: 3, maxSkillLevel: 3 },
 ];
 
 // ----------------------------
@@ -631,7 +586,7 @@ export const BACKSTORY_STEPS: BackstoryStep[] = [
 export interface CharacterWeapon {
   weaponName: string;
   condition: ItemCondition;
-  ammoCurrent: number; // number of reload boxes checked
+  ammoCurrent: number;
 }
 
 export interface CharacterSkill {
@@ -640,24 +595,27 @@ export interface CharacterSkill {
 }
 
 export interface SecondaryStats {
-  woundPoints: number;        // 10 + PHY + DEX
-  resiliencePoints: number;   // 6 + PHY
-  rangedDefense: number;      // DEX AMod
-  meleeDefense: number;       // PHY AMod
-  initiative: number;         // DEX + ACU
-  encumbrance: number;        // 6 + PHY
-  perception: number;         // RSN + ACU
-  stressModifier: number;     // RSN + ACU
-  morality: number;           // starts at 3
+  woundPoints: number;
+  resiliencePoints: number;
+  rangedDefense: number;
+  meleeDefense: number;
+  initiative: number;
+  encumbrance: number;
+  perception: number;
+  stressModifier: number;
+  morality: number;
 }
 
 export interface XSECharacter {
   // Identity
   name: string;
+  age: string;
   gender: string;
   profession: string;
   height: string;
   weight: string;
+  physdesc: string;
+  photoDataUrl: string;
   threeWords: [string, string, string];
   complication: string;
   motivation: string;
@@ -665,12 +623,12 @@ export interface XSECharacter {
 
   // Creation
   creationMethod: CreationMethod;
-  paradigmName?: string; // if creationMethod === 'paradigm'
+  paradigmName?: string;
 
   // Attributes
   rapid: Record<AttributeName, AttributeValue>;
 
-  // Derived (always computed from rapid)
+  // Derived
   secondary: SecondaryStats;
 
   // Skills
@@ -681,16 +639,16 @@ export interface XSECharacter {
   weaponSecondary: CharacterWeapon;
 
   // Equipment
-  equipment: string[];     // item names
+  equipment: string[];
   incidentalItem: string;
   rations: string;
 
   // Tracking
-  insightDice: number;     // starts at 2
-  cdp: number;             // unspent CDP
-  stressLevel: number;     // 0â€“5
-  breakingPoint: number;   // 0â€“5
-  lastingWounds: string[]; // list of wound names
+  insightDice: number;
+  cdp: number;
+  stressLevel: number;
+  breakingPoint: number;
+  lastingWounds: string[];
 
   // Relationships
   relationships: Array<{ npc: string; cmod: number }>;
@@ -726,10 +684,13 @@ export function createBlankCharacter(): XSECharacter {
   };
   return {
     name: '',
+    age: '',
     gender: '',
     profession: '',
     height: '',
     weight: '',
+    physdesc: '',
+    photoDataUrl: '',
     threeWords: ['', '', ''],
     complication: '',
     motivation: '',
@@ -754,8 +715,3 @@ export function createBlankCharacter(): XSECharacter {
     relationships: [],
   };
 }
-
-
-
-
-

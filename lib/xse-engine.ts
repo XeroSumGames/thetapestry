@@ -146,12 +146,15 @@ export function buildCharacter(state: WizardState): XSECharacter {
   const char = createBlankCharacter()
 
   char.name = state.name
-  char.gender = state.gender
-  char.height = state.height
-  char.weight = state.weight
-  char.threeWords = state.threeWords
-  char.notes = state.concept
-  char.creationMethod = 'backstory'
+char.age = state.age
+char.gender = state.gender
+char.height = state.height
+char.weight = state.weight
+char.threeWords = state.threeWords
+char.notes = state.concept
+char.physdesc = state.physdesc
+char.photoDataUrl = state.photoDataUrl
+char.creationMethod = 'backstory'
 
   const rapid = getCumulativeAttributes(state.steps)
   char.rapid = rapid
