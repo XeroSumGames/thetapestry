@@ -189,7 +189,7 @@ export default function CharacterCard({
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '8px' }}>
           <div style={{ flex: 1 }}>
             {c.data?.photoDataUrl && (
-              <img src={c.data.photoDataUrl} alt={c.name} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '3px', border: '1px solid #3a3a3a', float: 'left', marginRight: '10px' }} />
+              <img src={c.data.photoDataUrl} alt={c.name} style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '3px', border: '1px solid #3a3a3a', float: 'left', marginRight: '12px' }} />
             )}
             <a href={`/characters/${c.id}`} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', textDecoration: 'none', display: 'block' }}>
               {c.name}
@@ -272,7 +272,7 @@ border: `1px solid ${raised ? '#2d5a1b' : '#2e2e2e'}`,
 color: raised ? '#7fc458' : s.level < 0 ? '#7a4a4a' : '#f5f2ee',
         textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
       }}>
-        {s.skillName} {sgn(s.level)}
+        {s.skillName.replace('Specific Knowledge', 'Specific Know.')} {sgn(s.level)}
       </span>
     )
   })}
