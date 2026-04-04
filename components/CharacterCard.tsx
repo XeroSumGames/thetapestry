@@ -120,7 +120,7 @@ export default function CharacterCard({
   async function updateStat(stateId: string, field: string, value: number) {
     if (!onStatUpdate) return
     setUpdating(stateId + field)
-    onStatUpdate(stateId, field, value)
+    await onStatUpdate(stateId, field, value)
     setUpdating(null)
   }
 

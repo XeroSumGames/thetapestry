@@ -113,7 +113,7 @@ export default function TablePage() {
       .filter((m: any) => m.character_id && !existingCharIds.has(m.character_id))
       .map((m: any) => {
         const rapid = m.characters?.data?.rapid ?? {}
-        const wp = 10 + (rapid.PHY ?? 0)
+        const wp = 10 + (rapid.PHY ?? 0) + (rapid.DEX ?? 0)
         const rp = 6 + (rapid.RSN ?? 0)
         return {
           campaign_id: campaignId, character_id: m.character_id, user_id: m.user_id,
