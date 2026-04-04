@@ -348,7 +348,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
                         </button>
                         <button onClick={e => { e.stopPropagation(); handleDeletePin(p.id) }} disabled={deletingId === p.id}
                           style={{ background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '16px', padding: '0 2px', opacity: deletingId === p.id ? 0.4 : 1 }}>
-                          Ã—
+                          ×
                         </button>
                       </div>
                     )}
@@ -424,7 +424,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
                   {attachments.map((f, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#b0aaa4', padding: '3px 6px', background: '#0f0f0f', borderRadius: '2px' }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{f.name}</span>
-                      <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '14px', padding: '0 2px', flexShrink: 0 }}>Ã—</button>
+                      <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '14px', padding: '0 2px', flexShrink: 0 }}>×</button>
                     </div>
                   ))}
                 </div>
