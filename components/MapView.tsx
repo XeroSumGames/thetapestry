@@ -1,28 +1,28 @@
-'use client'
+﻿'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 
 const PIN_CATEGORIES = [
-  { value: 'rumor',      label: 'Rumor',      emoji: '?' },
-  { value: 'location',   label: 'Location',   emoji: '??' },
-  { value: 'residence',  label: 'Residence',  emoji: '??' },
-  { value: 'business',   label: 'Business',   emoji: '??' },
-  { value: 'church',     label: 'Church',     emoji: '?' },
-  { value: 'government', label: 'Government', emoji: '???' },
-  { value: 'airport',    label: 'Transport',  emoji: '??' },
-  { value: 'hospital',   label: 'Hospital',   emoji: '??' },
-  { value: 'military',   label: 'Military',   emoji: '??' },
-  { value: 'person',     label: 'Person',     emoji: '??' },
-  { value: 'danger',     label: 'Danger',     emoji: '??' },
-  { value: 'resource',   label: 'Resource',   emoji: '??' },
-  { value: 'medical',    label: 'Medical',    emoji: '??' },
-  { value: 'group',      label: 'Group',      emoji: '??' },
-  { value: 'animals',    label: 'Animals',    emoji: '??' },
-  { value: 'community',  label: 'Community',  emoji: '???' },
+  { value: 'rumor',      label: 'Rumor',      emoji: '🎒' },
+  { value: 'location',   label: 'Location',   emoji: '📍' },
+  { value: 'residence',  label: 'Residence',  emoji: '🏠' },
+  { value: 'business',   label: 'Business',   emoji: '🏪' },
+  { value: 'church',     label: 'Church',     emoji: '⛪' },
+  { value: 'government', label: 'Government', emoji: '🏛️' },
+  { value: 'airport',    label: 'Transport',  emoji: '✈️' },
+  { value: 'hospital',   label: 'Hospital',   emoji: '🏥' },
+  { value: 'military',   label: 'Military',   emoji: '⚔️' },
+  { value: 'person',     label: 'Person',     emoji: '👤' },
+  { value: 'danger',     label: 'Danger',     emoji: '☠️' },
+  { value: 'resource',   label: 'Resource',   emoji: '🎒' },
+  { value: 'medical',    label: 'Medical',    emoji: '🏥' },
+  { value: 'group',      label: 'Group',      emoji: '👥' },
+  { value: 'animals',    label: 'Animals',    emoji: '🐾' },
+  { value: 'community',  label: 'Community',  emoji: '🏘️' },
 ]
 
 function getCategoryEmoji(category: string): string {
-  return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '??'
+  return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '📍'
 }
 
 interface Pin {
@@ -99,7 +99,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
       const map = L.map(mapRef.current, { center: [44.97, -103.77], zoom: 4, zoomControl: true })
 
       tileLayerRef.current = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        attribution: 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
       }).addTo(map)
 
@@ -197,9 +197,9 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
     if (!map) return
     if (tileLayerRef.current) tileLayerRef.current.remove()
     const tiles: Record<string, { url: string, attribution: string }> = {
-      street: { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
-      satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attribution: '© <a href="https://www.esri.com">Esri</a>' },
-      dark: { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com">CARTO</a>' },
+      street: { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
+      satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attribution: 'Â© <a href="https://www.esri.com">Esri</a>' },
+      dark: { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attribution: 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> Â© <a href="https://carto.com">CARTO</a>' },
     }
     tileLayerRef.current = L.tileLayer(tiles[layer].url, { attribution: tiles[layer].attribution, maxZoom: 19 }).addTo(map)
     setMapLayer(layer)
@@ -270,10 +270,10 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
   const displayedPins = sidebarTab === 'mine' ? myPins : sidebarTab === 'public' ? publicPins : allPins
 
   function pinTypeLabel(p: Pin) {
-    if (p.pin_type === 'gm' && p.status === 'approved') return 'GM -� public'
-    if (p.pin_type === 'gm') return 'GM -� pending'
-    if (p.pin_type === 'rumor' && p.status === 'approved') return 'Rumor -� public'
-    if (p.pin_type === 'rumor' && p.status === 'pending') return 'Submitted -� awaiting review'
+    if (p.pin_type === 'gm' && p.status === 'approved') return 'GM -” public'
+    if (p.pin_type === 'gm') return 'GM -” pending'
+    if (p.pin_type === 'rumor' && p.status === 'approved') return 'Rumor -” public'
+    if (p.pin_type === 'rumor' && p.status === 'pending') return 'Submitted -” awaiting review'
     if (p.pin_type === 'rumor' && p.status === 'rejected') return 'Rejected'
     return 'Private'
   }
@@ -349,7 +349,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
                         </button>
                         <button onClick={e => { e.stopPropagation(); if (confirm('Delete this pin?')) handleDeletePin(p.id) }} disabled={deletingId === p.id}
   style={{ background: 'none', border: 'none', color: '#f5a89a', cursor: 'pointer', fontSize: '16px', padding: '0 4px', opacity: deletingId === p.id ? 0.4 : 1 }}>
-  �
+  ×
 </button>
                       </div>
                     )}
@@ -425,7 +425,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
                   {attachments.map((f, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#d4cfc9', padding: '3px 6px', background: '#0f0f0f', borderRadius: '2px' }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{f.name}</span>
-                      <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '14px', padding: '0 2px', flexShrink: 0 }}>�</button>
+                      <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '14px', padding: '0 2px', flexShrink: 0 }}>×</button>
                     </div>
                   ))}
                 </div>
