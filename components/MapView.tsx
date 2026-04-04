@@ -69,7 +69,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
   const [attachments, setAttachments] = useState<File[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
-  const [editForm, setEditForm] = useState({ title: '', notes: '' })
+  const [editForm, setEditForm] = useState({ title: '', notes: '', category: 'location' })
   const [mapLayer, setMapLayer] = useState<'street' | 'satellite' | 'dark'>('street')
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
@@ -251,17 +251,17 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
   }
 
   function startEdit(pin: Pin) {
-    setEditingPin(pin)
-    setEditForm({ title: pin.title, notes: pin.notes })
-    setShowForm(false)
-  }
+  setEditingPin(pin)
+  setEditForm({ title: pin.title, notes: pin.notes, category: pin.category ?? 'location' })
+  setShowForm(false)
+}
 
   async function handleSaveEdit() {
-    if (!editingPin || !editForm.title.trim()) return
-    const { error } = await supabase.from('map_pins').update({ title: editForm.title, notes: editForm.notes }).eq('id', editingPin.id)
-    if (!error) setEditingPin(null)
-    else alert('Error: ' + error.message)
-  }
+  if (!editingPin || !editForm.title.trim()) return
+  const { error } = await supabase.from('map_pins').update({ title: editForm.title, notes: editForm.notes, category: editForm.category }).eq('id', editingPin.id)
+  if (!error) setEditingPin(null)
+  else alert('Error: ' + error.message)
+}
 
   const myPins = pins.filter(p => p.user_id === userId)
   const publicPins = pins.filter(p => p.status === 'approved')
@@ -447,28 +447,44 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
         )}
 
         {editingPin && (
-          <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 1001, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #7ab3d4', borderRadius: '4px', padding: '1rem', width: '300px', resize: 'both', overflow: 'auto', minWidth: '260px', maxWidth: '600px' }}>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 600, color: '#7ab3d4', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '10px' }}>Edit Pin</div>
-            <div style={{ marginBottom: '8px' }}>
-              <label style={lbl}>Title</label>
-              <input style={inp} value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))} />
-            </div>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={lbl}>Notes</label>
-              <textarea style={{ ...inp, minHeight: '60px', resize: 'vertical' }} value={editForm.notes} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} />
-            </div>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <button onClick={handleSaveEdit} disabled={!editForm.title.trim()}
-                style={{ flex: 1, padding: '8px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                Save
-              </button>
-              <button onClick={() => setEditingPin(null)}
-                style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
+  <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 1001, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #7ab3d4', borderRadius: '4px', padding: '1rem', width: '300px', resize: 'both', overflow: 'auto', minWidth: '260px', maxWidth: '600px' }}>
+    <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 600, color: '#7ab3d4', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '10px' }}>Edit Pin</div>
+    <div style={{ marginBottom: '8px' }}>
+      <label style={lbl}>Title</label>
+      <input style={inp} value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))} />
+    </div>
+    <div style={{ marginBottom: '8px' }}>
+      <label style={lbl}>Notes</label>
+      <textarea style={{ ...inp, minHeight: '60px', resize: 'vertical' }} value={editForm.notes} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} />
+    </div>
+    <div style={{ marginBottom: '12px' }}>
+      <label style={lbl}>Category</label>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
+        {PIN_CATEGORIES.map(cat => (
+          <button key={cat.value} onClick={() => setEditForm(p => ({ ...p, category: cat.value }))}
+            style={{ padding: '6px 4px', border: `1px solid ${editForm.category === cat.value ? '#7ab3d4' : '#3a3a3a'}`, background: editForm.category === cat.value ? '#0f2035' : '#242424', borderRadius: '3px', cursor: 'pointer', textAlign: 'center' }}>
+            <div style={{ fontSize: '16px', marginBottom: '2px' }}>{cat.emoji}</div>
+            <div style={{ fontSize: '8px', color: editForm.category === cat.value ? '#7ab3d4' : '#b0aaa4', lineHeight: 1.2 }}>{cat.label.split('/')[0].trim()}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+    <div style={{ display: 'flex', gap: '6px' }}>
+      <button onClick={handleSaveEdit} disabled={!editForm.title.trim()}
+        style={{ flex: 1, padding: '8px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+        Save
+      </button>
+      <button onClick={() => { handleDeletePin(editingPin.id); setEditingPin(null) }}
+        style={{ padding: '8px 12px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+        Delete
+      </button>
+      <button onClick={() => setEditingPin(null)}
+        style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+        Cancel
+      </button>
+    </div>
+  </div>
+)}
 
       </div>
     </div>
