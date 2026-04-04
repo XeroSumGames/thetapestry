@@ -144,7 +144,7 @@ export default function TablePage() {
   }
 
   if (loading || !campaign) return (
-    <div style={{ height: 'calc(100vh - 56px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow, sans-serif', color: '#5a5550', background: '#0f0f0f' }}>
+    <div style={{ height: 'calc(100vh - 74px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow, sans-serif', color: '#5a5550', background: '#0f0f0f' }}>
       Loading table...
     </div>
   )
@@ -162,7 +162,7 @@ export default function TablePage() {
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      height: 'calc(100vh - 56px)',
+      height: 'calc(100vh - 74px)',
       overflow: 'hidden',
       fontFamily: 'Barlow, sans-serif',
       background: '#0f0f0f',
