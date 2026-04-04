@@ -269,10 +269,10 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
   const displayedPins = sidebarTab === 'mine' ? myPins : sidebarTab === 'public' ? publicPins : allPins
 
   function pinTypeLabel(p: Pin) {
-    if (p.pin_type === 'gm' && p.status === 'approved') return 'GM â€” public'
-    if (p.pin_type === 'gm') return 'GM â€” pending'
-    if (p.pin_type === 'rumor' && p.status === 'approved') return 'Rumor â€” public'
-    if (p.pin_type === 'rumor' && p.status === 'pending') return 'Submitted â€” awaiting review'
+    if (p.pin_type === 'gm' && p.status === 'approved') return 'GM -” public'
+    if (p.pin_type === 'gm') return 'GM -” pending'
+    if (p.pin_type === 'rumor' && p.status === 'approved') return 'Rumor -” public'
+    if (p.pin_type === 'rumor' && p.status === 'pending') return 'Submitted -” awaiting review'
     if (p.pin_type === 'rumor' && p.status === 'rejected') return 'Rejected'
     return 'Private'
   }
