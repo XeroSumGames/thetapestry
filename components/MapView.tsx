@@ -240,10 +240,11 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
   }
 
   async function handleDeletePin(id: string) {
-    setDeletingId(id)
-    await supabase.from('map_pins').delete().eq('id', id)
-    setDeletingId(null)
-  }
+  setDeletingId(id)
+  await supabase.from('map_pins').delete().eq('id', id)
+  setDeletingId(null)
+  await loadPins()
+}
 
   async function handleTogglePublic(pin: Pin) {
     const newStatus = pin.status === 'approved' ? 'active' : 'approved'
