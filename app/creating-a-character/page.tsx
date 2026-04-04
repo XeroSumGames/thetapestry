@@ -63,7 +63,7 @@ export default function CreatingACharacterPage() {
                 <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#5a5550' }}>{time}</span>
               </div>
               <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.7, margin: '0 0 8px' }}>{desc}</p>
-              <p style={{ fontSize: '12px', color: '#b0aaa4', lineHeight: 1.6, margin: '0 0 14px' }}><span style={{ color: '#5a5550' }}>Best for:</span> {bestFor}</p>
+              <p style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.6, margin: '0 0 14px' }}><span style={{ color: '#5a5550' }}>Best for:</span> {bestFor}</p>
               <a href={href} style={{ display: 'inline-block', padding: '8px 20px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
                 {label} →
               </a>
@@ -136,7 +136,7 @@ export default function CreatingACharacterPage() {
                 <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '11px', fontWeight: 700, color: '#c0392b', textTransform: 'uppercase', letterSpacing: '.06em', minWidth: '80px', paddingTop: '2px' }}>{step}</div>
                 <div>
                   <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '15px', fontWeight: 700, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '2px' }}>{title}</div>
-                  <div style={{ fontSize: '13px', color: '#b0aaa4', lineHeight: 1.6 }}>{desc}</div>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6 }}>{desc}</div>
                 </div>
               </div>
             ))}
@@ -165,7 +165,7 @@ export default function CreatingACharacterPage() {
                   <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, color: '#f5f2ee' }}>{range}</span>
                   <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 700, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.04em' }}>{label}</span>
                 </div>
-                <div style={{ fontSize: '12px', color: '#b0aaa4', lineHeight: 1.6 }}>{desc}</div>
+                <div style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.6 }}>{desc}</div>
               </div>
             ))}
           </div>

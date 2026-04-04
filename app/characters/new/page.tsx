@@ -91,7 +91,7 @@ export default function NewCharacterPage() {
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Distemper Character Generator
         </div>
-        <div style={{ fontSize: '11px', color: '#b0aaa4', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
+        <div style={{ fontSize: '11px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
           DistemperVerse
         </div>
       </div>
@@ -107,7 +107,7 @@ export default function NewCharacterPage() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontFamily: 'Barlow Condensed, sans-serif',
               fontSize: '9px', fontWeight: 700,
-              color: i < step ? '#fff' : i === step ? '#c0392b' : '#b0aaa4',
+              color: i < step ? '#fff' : i === step ? '#c0392b' : '#d4cfc9',
               transition: 'all .2s', flexShrink: 0,
             }}>
               {i}
@@ -124,7 +124,7 @@ export default function NewCharacterPage() {
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '26px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '10px', color: '#f5f2ee' }}>
           {STEPS[step].title}
         </div>
-        <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#b0aaa4', lineHeight: 1.8, fontStyle: 'italic' }}>
+        <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#d4cfc9', lineHeight: 1.8, fontStyle: 'italic' }}>
           {STEP_FLAVOR[step]}
         </p>
         {STEP_INSTRUCTIONS[step] && (
@@ -164,7 +164,7 @@ export default function NewCharacterPage() {
         <div style={{ textAlign: 'center' }}>
           {saveError && <div style={{ fontSize: '11px', color: '#f5a89a', marginBottom: '2px' }}>{saveError}</div>}
           {saved && <div style={{ fontSize: '11px', color: '#7fc458', marginBottom: '2px' }}>Character saved!</div>}
-          <div style={{ fontSize: '11px', color: '#b0aaa4', letterSpacing: '.05em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '11px', color: '#d4cfc9', letterSpacing: '.05em', textTransform: 'uppercase' }}>
             Step {step} of 9
           </div>
         </div>

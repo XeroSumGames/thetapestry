@@ -58,7 +58,7 @@ export default function JoinCampaignPage() {
       </div>
 
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1.5rem', borderLeft: '3px solid #7ab3d4' }}>
-        <p style={{ fontSize: '13px', color: '#b0aaa4', lineHeight: 1.7, marginBottom: '16px' }}>
+        <p style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.7, marginBottom: '16px' }}>
           Enter the invite code your GM gave you. Codes are 6 characters and look like <strong style={{ color: '#f5f2ee' }}>WOLF47</strong>.
         </p>
 
@@ -85,7 +85,7 @@ export default function JoinCampaignPage() {
             {joining ? 'Joining...' : 'Join Campaign'}
           </button>
           <button onClick={() => router.back()}
-            style={{ padding: '10px 20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '10px 20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Cancel
           </button>
         </div>
@@ -96,6 +96,6 @@ export default function JoinCampaignPage() {
 
 const lbl: React.CSSProperties = {
   display: 'block', fontSize: '11px', fontWeight: 600,
-  color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.08em',
+  color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em',
   marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif',
 }

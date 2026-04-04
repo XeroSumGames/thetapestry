@@ -1,4 +1,4 @@
-﻿import {
+import {
   AttributeName,
   AttributeValue,
   SkillValue,

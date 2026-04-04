@@ -99,20 +99,20 @@ export default function StepFour({ state, onChange }: Props) {
         const gained = Object.entries(d.skillDeltas ?? {}).filter(([, v]) => (v ?? 0) > 0).map(([n]) => n)
         return (
           <div key={idx} style={{ background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px 12px', marginBottom: '8px' }}>
-            <div style={{ fontSize: '9.5px', fontWeight: 600, color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '5px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+            <div style={{ fontSize: '9.5px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '5px', fontFamily: 'Barlow Condensed, sans-serif' }}>
               Step {num}: {title}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', padding: '2px 0', borderBottom: '1px solid #2e2e2e' }}>
-              <span style={{ color: '#b0aaa4' }}>Attribute</span>
+              <span style={{ color: '#d4cfc9' }}>Attribute</span>
               <span style={{ fontWeight: 500, color: '#f5f2ee' }}>{attrStr}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', padding: '2px 0' }}>
-              <span style={{ color: '#b0aaa4' }}>Skills</span>
+              <span style={{ color: '#d4cfc9' }}>Skills</span>
               <span style={{ fontWeight: 500, color: '#f5f2ee', maxWidth: '65%', textAlign: 'right', wordBreak: 'break-word' }}>
                 {gained.length ? gained.join(', ') : 'none'}
               </span>
             </div>
-            {d.note && <div style={{ fontSize: '11px', color: '#b0aaa4', marginTop: '5px', lineHeight: 1.5, fontStyle: 'italic' }}>"{d.note}"</div>}
+            {d.note && <div style={{ fontSize: '11px', color: '#d4cfc9', marginTop: '5px', lineHeight: 1.5, fontStyle: 'italic' }}>"{d.note}"</div>}
           </div>
         )
       })}
@@ -133,7 +133,7 @@ export default function StepFour({ state, onChange }: Props) {
       {/* Skill picker — 4 CDP */}
       <div style={sh}>Skills — 4 CDP (max Professional +3)</div>
       {profSkills.length > 0 && (
-        <p style={{ fontSize: '12px', color: '#b0aaa4', marginBottom: '6px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: '12px', color: '#d4cfc9', marginBottom: '6px', lineHeight: 1.6 }}>
           Profession skills highlighted: {profSkills.join(', ')}
         </p>
       )}
@@ -173,7 +173,7 @@ export default function StepFour({ state, onChange }: Props) {
                 <div style={{ fontSize: '11.5px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: isProfSk ? '#f5a89a' : deltaThisStep > 0 ? '#f5a89a' : '#f5f2ee' }}>
                   {sk.name}{sk.vocational ? '*' : ''}
                 </div>
-                <div style={{ fontSize: '9.5px', color: '#b0aaa4' }}>
+                <div style={{ fontSize: '9.5px', color: '#d4cfc9' }}>
                   {sk.attribute} — {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}
                 </div>
               </div>

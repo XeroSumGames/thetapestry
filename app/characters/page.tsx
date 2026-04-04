@@ -65,7 +65,7 @@ export default function CharactersPage() {
 
       {characters.length === 0 && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '3rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '14px', color: '#b0aaa4', marginBottom: '1rem' }}>No characters yet.</div>
+          <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '1rem' }}>No characters yet.</div>
           <a href='/characters/new' style={{ padding: '9px 22px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
             Create your first character
           </a>

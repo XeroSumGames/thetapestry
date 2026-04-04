@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
@@ -13,21 +13,52 @@ import {
 
 const FIRST_NAMES = [
   'Mara','Cole','Jesse','Petra','Dex','Avery','Rook','Sloane','Cas','Wren',
-  'Holt','Nadia','Flynn','Sable','Cruz','Tatum','Bram','Lena','Gus','Vera',
-  'Kai','Thea','Reed','Nova','Ash','Juno','Pike','Cora','Finn','Zara',
+'Holt','Nadia','Flynn','Sable','Cruz','Tatum','Bram','Lena','Gus','Vera',
+'Kai','Thea','Reed','Nova','Ash','Juno','Pike','Cora','Finn','Zara',
+'Ellis','Milo','Sage','Dani','Crew','Lyra','Beck','Faye','Jax','Nora',
+'Tris','Orin','Cleo','Soren','Bex','Maren','Levi','Willa','Rue','Daxton',
+'Iris','Otto','Vale','Remy','Slade','Bryn','Cade','Pia','Fox','Elara',
+'Nash','Celeste','Rowan','Arlo','Suki','Penn','Daire','Lior','Zev','Mila',
+'Cian','Vesper','Bode','Ines','Rafe','Tova','Leif','Opal','Colt','Fern',
+'Ewan','Liora','Blaise','Mira','Thorn','Ada','Corbin','Zia','Pax','Elowen',
+'Sable','Ren','Cato','Wren','Odette','Tam','Blythe','Quill','Zola','Caspian',
+'Brix','Niamh','Gage','Soleil','Zane','Rhea','Strider','Calla','Dov','Lark',
+'Stellan','Fen','Merritt','Oberon','Tali','Cree','Senna','Wolf','Piper','Idris',
+'Vida','Cael','Orion','Bess','Iver','Thane','Riona','Beckett','Luz','Sable',
+'Caius','Veda','Knox','Ione','Rafferty','Saoirse','Idra','Tegan','Bao','Luce',
+'Ozzy','Calyx','Dex','Eira','Matteo','Zephyr','Sable','Neve','Cain','Lyric',
+'Amos','Vesna','Cree','Fallon','Rigel','Mabel','Cove','Petra','Shaw','Indra',
+'Lex','Corin','Dara','Stellan','Owyn','Cira','Blaze','Tindra','Rook','Esme',
+'Jett','Calla','Soren','Brin','Ode','Lacey','Ciar','Vex','Mads','Theron',
+'Lena','Dakarai','Cree','Yael','Aldric','Zuri','Cael','Nox','Sable','Fen',
+'Arlo','Clio','Daire','Vesper','Rook','Sable','Tov','Lyra','Cove','Maren',
 ]
 const LAST_NAMES = [
-  'Voss','Harlan','Reyes','Mack','Steele','Doran','Cross','Fenn','Bale','Marsh',
-  'Solis','Grime','Ward','Thorn','Hess','Crane','Pike','Dunn','Fox','Lowe',
-  'Nox','Caine','Stone','Weld','Carr','Drax','Hull','Vale','Roan','Shade',
+  'Voss','Harlan','Reyes','Mack','Steele','Doran','Cross','Fenn','Bale','Holt',
+'Crane','Mercer','Ashby','Vane','Rook','Calloway','Drex','Finch','Sable','Thorn',
+'Graves','Wicker','Ashford','Blaine','Corso','Dusk','Emery','Falco','Gable','Hale',
+'Irons','Janeway','Keene','Lorne','Mace','Noor','Okafor','Pell','Quinn','Rand',
+'Sayer','Tull','Ulric','Vance','Wren','Yuen','Zell','Archer','Bowen','Cain',
+'Daley','Egan','Frost','Greer','Haven','Innis','Jarvik','Kade','Lund','Morrow',
+'Niven','Orin','Pryce','Quill','Rowe','Saxon','Thane','Upton','Vale','Wilder',
+'Yates','Zeleny','Alden','Brand','Corvin','Drake','Elara','Falk','Goss','Herd',
+'Irwin','Joss','Kline','Langford','Munroe','Neff','Oban','Pax','Remy','Shire',
+'Taft','Ulmer','Veld','Wace','Xan','Yarrow','Zorn','Alcott','Beckett','Croft',
+'Danvers','Ennis','Forde','Garrick','Hewitt','Ives','Jericho','Kell','Layne','Marsh',
+'Norris','Osei','Preen','Radley','Soren','Tayne','Umbra','Voss','Wade','Xander',
+'Yardley','Zane','Ashworth','Bram','Cooke','Daws','Elkin','Fenwick','Gore','Hext',
+'Ingram','Judd','Kray','Lask','Maren','Noel','Ormond','Penn','Rake','Sable',
+'Theron','Udale','Varro','Weld','Xenos','Yarvis','Zwick','Alford','Birch','Carver',
+'Dade','Eskin','Fey','Gant','Heron','Inwood','Jurgen','Kelso','Lark','Mast',
+'Nace','Orin','Pruett','Rask','Slade','Teel','Ulric','Vex','Watt','Yorn',
+'Zavala','Aldiss','Brek','Coyle','Dann','Elvin','Firth','Grail','Hask','Idris',
+'Jarn','Koss','Lune','Marek','Neld','Oban','Pell','Rand','Skov','Thane',
+'Uvell','Vorn','Wisk','Xell','Yeld','Zask','Arken','Beld','Corvus','Darke',
 ]
 const GENDERS = ['Male', 'Female', 'Non-binary']
 
 const THREE_WORDS = [
-  'Cautious', 'Reckless', 'Loyal', 'Bitter', 'Hopeful', 'Ruthless', 'Quiet', 'Fierce',
-  'Broken', 'Stubborn', 'Cunning', 'Weary', 'Driven', 'Haunted', 'Pragmatic', 'Bold',
-  'Volatile', 'Steady', 'Scarred', 'Resourceful', 'Cold', 'Warm', 'Lost', 'Focused',
-  'Suspicious', 'Generous', 'Hardened', 'Idealistic', 'Cynical', 'Determined',
+   'Adaptable ', 'Adventurous ', 'Affectionate ', 'Altruistic ', 'Ambitious ', 'Argumentative ', 'Articulate ', 'Assertive ', 'Authentic ', 'Authoritative ', 'Bold ', 'Braggadocious ', 'Calm ', 'Candid ', 'Charismatic ', 'Clever ', 'Collaborative ', 'Combative ', 'Compassionate ', 'Confident ', 'Conscientious ', 'Contrarian ', 'Courageous ', 'Creative ', 'Cultured ', 'Cunning ', 'Curious ', 'Daring ', 'Decisive ', 'Deliberate ', 'Determined ', 'Dignified ', 'Diligent ', 'Diplomatic ', 'Discreet ', 'Eloquent ', 'Empathetic ', 'Energetic ', 'Enterprising ', 'Fair ', 'Fervent ', 'Fierce ', 'Flexible ', 'Focused ', 'Forgiving ', 'Generous ', 'Genuine ', 'Gregarious ', 'Grounded ', 'Honorable ', 'Humble ', 'Idealistic ', 'Imaginative ', 'Independent ', 'Insightful ', 'Intelligent ', 'Intuitive ', 'Inventive ', 'Joyful ', 'Just ', 'Loyal ', 'Mature ', 'Meticulous ', 'Observant ', 'Original ', 'Passionate ', 'Patient ', 'Perceptive ', 'Persuasive ', 'Philanthropic ', 'Pragmatic ', 'Precise ', 'Principled ', 'Prudent ', 'Purposeful ', 'Rational ', 'Realistic ', 'Reflective ', 'Reliable ', 'Resilient ', 'Resourceful ', 'Sensitive ', 'Sincere ', 'Sociable ', 'Steadfast ', 'Strategic ', 'Tactful ', 'Tenacious ', 'Thoughtful ', 'Tolerant ', 'Trusting ', 'Trustworthy ', 'Understanding ', 'Unique ', 'Versatile ', 'Vigilant ', 'Visionary ', 'Wise ', 'Witty ', 'Zealous ',
 ]
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
@@ -139,7 +170,7 @@ export default function RandomCharacterPage() {
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>
           Random Character
         </div>
-        <div style={{ fontSize: '14px', color: '#b0aaa4', letterSpacing: '.06em' }}>{status}</div>
+        <div style={{ fontSize: '14px', color: '#d4cfc9', letterSpacing: '.06em' }}>{status}</div>
         <div style={{ marginTop: '24px', display: 'flex', gap: '6px', justifyContent: 'center' }}>
           {[0,1,2].map(i => (
             <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#c0392b', animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite` }} />

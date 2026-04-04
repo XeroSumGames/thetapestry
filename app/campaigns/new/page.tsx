@@ -78,7 +78,7 @@ export default function NewCampaignPage() {
           <div style={{ display: 'flex', gap: '6px' }}>
             {SETTINGS.map(s => (
               <button key={s.value} onClick={() => setSetting(s.value)}
-                style={{ flex: 1, padding: '8px', border: `1px solid ${setting === s.value ? '#c0392b' : '#3a3a3a'}`, background: setting === s.value ? '#2a1210' : '#242424', borderRadius: '3px', color: setting === s.value ? '#f5a89a' : '#b0aaa4', cursor: 'pointer', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                style={{ flex: 1, padding: '8px', border: `1px solid ${setting === s.value ? '#c0392b' : '#3a3a3a'}`, background: setting === s.value ? '#2a1210' : '#242424', borderRadius: '3px', color: setting === s.value ? '#f5a89a' : '#d4cfc9', cursor: 'pointer', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 {s.label}
               </button>
             ))}
@@ -102,7 +102,7 @@ export default function NewCampaignPage() {
             {saving ? 'Creating...' : 'Create Campaign'}
           </button>
           <button onClick={() => router.back()}
-            style={{ padding: '10px 20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '10px 20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Cancel
           </button>
         </div>
@@ -114,6 +114,6 @@ export default function NewCampaignPage() {
 
 const lbl: React.CSSProperties = {
   display: 'block', fontSize: '11px', fontWeight: 600,
-  color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.08em',
+  color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em',
   marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif',
 }

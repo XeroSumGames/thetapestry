@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState } from 'react'
 import { WizardState, getCumulativeAttributes, getCumulativeSkills } from '../../lib/xse-engine'
 import { ATTRIBUTE_LABELS, COMPLICATIONS, MOTIVATIONS, deriveSecondaryStats, AttributeName } from '../../lib/xse-schema'
@@ -29,16 +29,16 @@ export default function StepNine({ state, onChange }: Props) {
   function sgn(v: number) { return v > 0 ? `+${v}` : String(v) }
 
   const backstoryNotes = [
-    { step: 'Step 1 — Where they grew up',     note: state.steps[0]?.note },
-{ step: 'Step 2 — What they learned',       note: state.steps[1]?.note },
-{ step: 'Step 3 — What they liked to do',   note: state.steps[2]?.note },
-{ step: 'Step 4 — How they made money',     note: state.steps[3]?.note },
-{ step: 'Step 5 — What they learned after', note: state.steps[4]?.note },
+    { step: 'Step 1 � Where they grew up',     note: state.steps[0]?.note },
+{ step: 'Step 2 � What they learned',       note: state.steps[1]?.note },
+{ step: 'Step 3 � What they liked to do',   note: state.steps[2]?.note },
+{ step: 'Step 4 � How they made money',     note: state.steps[3]?.note },
+{ step: 'Step 5 � What they learned after', note: state.steps[4]?.note },
   ].filter(b => b.note?.trim())
 
   return (
     <div>
-      <p style={{ fontSize: '12px', color: '#b0aaa4', lineHeight: 1.6, marginBottom: '1rem' }}>
+      <p style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '1rem' }}>
         Review everything below before saving your character.
       </p>
 
@@ -72,14 +72,14 @@ export default function StepNine({ state, onChange }: Props) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <label style={fieldLabel}>Complication</label>
             <select style={fieldInput} defaultValue={step6.complication ?? ''}>
-              <option value="">â€” none â€”</option>
+              <option value="">— none —</option>
               {complications.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <label style={fieldLabel}>Motivation</label>
             <select style={fieldInput} defaultValue={step6.motivation ?? ''}>
-              <option value="">â€” none â€”</option>
+              <option value="">— none —</option>
               {motivations.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
@@ -98,12 +98,12 @@ export default function StepNine({ state, onChange }: Props) {
                 border: `1px solid ${val > 0 ? '#c0392b' : '#3a3a3a'}`,
                 borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
               }}>
-                <div style={{ fontSize: '10px', color: '#b0aaa4', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-                <div style={{ fontSize: '7px', color: '#b0aaa4', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
+                <div style={{ fontSize: '10px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                <div style={{ fontSize: '7px', color: '#d4cfc9', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
                 <div style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee', margin: '3px 0' }}>
                   {sgn(val)}
                 </div>
-                <div style={{ fontSize: '7px', color: val > 0 ? '#f5a89a' : '#b0aaa4' }}>{ATTRIBUTE_LABELS[val]}</div>
+                <div style={{ fontSize: '7px', color: val > 0 ? '#f5a89a' : '#d4cfc9' }}>{ATTRIBUTE_LABELS[val]}</div>
               </div>
             )
           })}
@@ -123,7 +123,7 @@ export default function StepNine({ state, onChange }: Props) {
             { label: 'Stress Mod',        value: sgn(derived.stressModifier), hi: false },
           ].map(({ label, value, hi }) => (
             <div key={label} style={{ background: '#242424', border: `1px solid ${hi ? '#7a1f16' : '#2e2e2e'}`, borderRadius: '3px', padding: '8px 10px' }}>
-              <div style={{ fontSize: '9.5px', color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '1px' }}>{label}</div>
+              <div style={{ fontSize: '9.5px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '1px' }}>{label}</div>
               <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: hi ? '#f5a89a' : '#f5f2ee' }}>{value}</div>
             </div>
           ))}
@@ -151,8 +151,8 @@ export default function StepNine({ state, onChange }: Props) {
           {[
             ['Primary weapon',   state.weaponPrimary],
             ['Secondary weapon', state.weaponSecondary],
-            ['Primary ammo',     state.primaryAmmo ? `${state.primaryAmmo} reload${state.primaryAmmo > 1 ? 's' : ''}` : 'â€”'],
-            ['Secondary ammo',   state.secondaryAmmo ? `${state.secondaryAmmo} reload${state.secondaryAmmo > 1 ? 's' : ''}` : 'â€”'],
+            ['Primary ammo',     state.primaryAmmo ? `${state.primaryAmmo} reload${state.primaryAmmo > 1 ? 's' : ''}` : '—'],
+            ['Secondary ammo',   state.secondaryAmmo ? `${state.secondaryAmmo} reload${state.secondaryAmmo > 1 ? 's' : ''}` : '—'],
             ['Equipment',        state.equipment],
             ['Incidental item',  state.incidentalItem],
             ['Rations',          state.rations],
@@ -205,7 +205,7 @@ export default function StepNine({ state, onChange }: Props) {
           placeholder="Any additional notes, GM hooks, or personality details..." />
       </div>
 
-      {/* Hidden print sheet â€” revealed only during print */}
+      {/* Hidden print sheet — revealed only during print */}
       <div id="print-sheet-container" style={{ display: 'none' }}>
         <PrintSheet state={state} />
       </div>

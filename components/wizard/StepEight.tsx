@@ -84,7 +84,7 @@ export default function StepEight({ state, onChange }: Props) {
                   {w.cat}
                 </div>
                 <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee' }}>{w.name}</div>
-                <div style={{ fontSize: '10px', color: '#b0aaa4', marginTop: '2px' }}>
+                <div style={{ fontSize: '10px', color: '#d4cfc9', marginTop: '2px' }}>
                   {w.range} — {dmg} — RP {'rpPercent' in w ? w.rpPercent : ''}% — ENC {w.enc}
                 </div>
                 {'traits' in w && w.traits.length > 0 && (
@@ -158,7 +158,7 @@ export default function StepEight({ state, onChange }: Props) {
                 {item.rarity}
               </div>
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee' }}>{item.name}</div>
-              <div style={{ fontSize: '10px', color: '#b0aaa4', marginTop: '2px' }}>
+              <div style={{ fontSize: '10px', color: '#d4cfc9', marginTop: '2px' }}>
                 ENC {item.enc}{item.notes ? ` — ${item.notes}` : ''}
               </div>
             </div>
@@ -218,7 +218,7 @@ export default function StepEight({ state, onChange }: Props) {
                 {item.rarity}
               </div>
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee' }}>{item.name}</div>
-              <div style={{ fontSize: '10px', color: '#b0aaa4', marginTop: '2px' }}>ENC {item.enc} — {item.notes}</div>
+              <div style={{ fontSize: '10px', color: '#d4cfc9', marginTop: '2px' }}>ENC {item.enc} — {item.notes}</div>
             </div>
           )
         })}

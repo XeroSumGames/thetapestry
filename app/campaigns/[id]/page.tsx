@@ -185,7 +185,7 @@ export default function CampaignPage() {
           {campaign.name}
         </div>
         {campaign.description && (
-          <p style={{ fontSize: '13px', color: '#b0aaa4', marginTop: '6px', lineHeight: 1.6 }}>{campaign.description}</p>
+          <p style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '6px', lineHeight: 1.6 }}>{campaign.description}</p>
         )}
       </div>
 
@@ -194,7 +194,7 @@ export default function CampaignPage() {
         <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
           <a href={`/campaigns/${id}/table`} style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
           <a href={`/campaigns/${id}/edit`} style={btn('#242424', '#f5f2ee', '#3a3a3a')}>Edit</a>
-          <button onClick={handleClone} disabled={cloning} style={{ ...btn('#242424', '#b0aaa4', '#3a3a3a'), opacity: cloning ? 0.6 : 1 } as any}>
+          <button onClick={handleClone} disabled={cloning} style={{ ...btn('#242424', '#d4cfc9', '#3a3a3a'), opacity: cloning ? 0.6 : 1 } as any}>
             {cloning ? 'Cloning...' : 'Clone'}
           </button>
           <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
@@ -227,7 +227,7 @@ export default function CampaignPage() {
             {inviteLink}
           </div>
           <button onClick={copyInviteLink}
-            style={{ flexShrink: 0, padding: '8px 16px', background: copied ? '#1a2e10' : '#242424', border: `1px solid ${copied ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: copied ? '#7fc458' : '#b0aaa4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ flexShrink: 0, padding: '8px 16px', background: copied ? '#1a2e10' : '#242424', border: `1px solid ${copied ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: copied ? '#7fc458' : '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             {copied ? 'Copied!' : 'Copy Link'}
           </button>
         </div>
@@ -239,7 +239,7 @@ export default function CampaignPage() {
       {/* My Survivor — player only */}
       {!isGM && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-          <div style={{ fontSize: '10px', fontWeight: 600, color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <div style={{ fontSize: '10px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
             My Survivor
           </div>
           {assignedCharName && (
@@ -271,7 +271,7 @@ export default function CampaignPage() {
 
       {/* Members list — both views */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-        <div style={{ fontSize: '10px', fontWeight: 600, color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+        <div style={{ fontSize: '10px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
           Members ({members.length})
         </div>
         {members.length === 0 ? (
@@ -286,7 +286,7 @@ export default function CampaignPage() {
                     <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>{(m.profiles as any)?.username ?? 'Unknown'}</span>
                     {isThisGM && <span style={{ marginLeft: '6px', fontSize: '9px', background: '#c0392b', color: '#fff', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em' }}>GM</span>}
                     {(m.characters as any)?.name && (
-                      <div style={{ fontSize: '11px', color: '#b0aaa4', marginTop: '2px' }}>Playing: {(m.characters as any).name}</div>
+                      <div style={{ fontSize: '11px', color: '#d4cfc9', marginTop: '2px' }}>Playing: {(m.characters as any).name}</div>
                     )}
                     {!(m.characters as any)?.name && !isThisGM && (
                       <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '2px' }}>No character assigned</div>
@@ -302,7 +302,7 @@ export default function CampaignPage() {
 
       {/* Back button */}
       <div style={{ display: 'flex', gap: '8px' }}>
-        <a href="/campaigns" style={{ padding: '9px 22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <a href="/campaigns" style={{ padding: '9px 22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           Back
         </a>
       </div>

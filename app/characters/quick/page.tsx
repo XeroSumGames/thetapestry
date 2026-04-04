@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
@@ -45,7 +45,7 @@ export default function QuickCharacterPage() {
   const [skillFilter, setSkillFilter] = useState('')
   const [profession, setProfession] = useState('')
 
-  // Quick build state — stored in steps[3] (profession step equivalent)
+  // Quick build state � stored in steps[3] (profession step equivalent)
   const attrSpent: Partial<Record<AttributeName, number>> = state.steps[3].attrSpent ?? {}
   const skillDeltas: Partial<Record<string, number>> = state.steps[3].skillDeltas ?? {}
   const skillCDPMap: Partial<Record<string, number>> = state.steps[3].skillCDPMap ?? {}
@@ -163,15 +163,15 @@ export default function QuickCharacterPage() {
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Quick Character Creation
         </div>
-        <div style={{ fontSize: '11px', color: '#b0aaa4', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
-          20 CDP — No Life-Stage Structure
+        <div style={{ fontSize: '11px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
+          20 CDP � No Life-Stage Structure
         </div>
       </div>
 
       {/* Progress */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginBottom: '1.25rem' }}>
         {QUICK_STEPS.map((s, i) => (
-          <div key={i} style={{ width: '28px', height: '28px', borderRadius: '50%', border: `1px solid ${i === step ? '#c0392b' : '#3a3a3a'}`, background: i < step ? '#c0392b' : i === step ? '#2a1210' : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '9px', fontWeight: 700, color: i < step ? '#fff' : i === step ? '#c0392b' : '#b0aaa4', flexShrink: 0 }}>
+          <div key={i} style={{ width: '28px', height: '28px', borderRadius: '50%', border: `1px solid ${i === step ? '#c0392b' : '#3a3a3a'}`, background: i < step ? '#c0392b' : i === step ? '#2a1210' : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '9px', fontWeight: 700, color: i < step ? '#fff' : i === step ? '#c0392b' : '#d4cfc9', flexShrink: 0 }}>
             {i}
           </div>
         ))}
@@ -194,7 +194,7 @@ export default function QuickCharacterPage() {
 
         {step === 1 && (
           <div>
-            <p style={{ fontSize: '13px', color: '#b0aaa4', lineHeight: 1.7, marginBottom: '1rem' }}>
+            <p style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.7, marginBottom: '1rem' }}>
               Spend <strong style={{ color: '#f5f2ee' }}>5 CDP</strong> on attributes and <strong style={{ color: '#f5f2ee' }}>15 CDP</strong> on skills freely. No life-stage restrictions. Max attribute: Exceptional (+3). Max skill: Professional (+3).
             </p>
 
@@ -210,7 +210,7 @@ export default function QuickCharacterPage() {
             </div>
 
             {/* Attribute spend */}
-            <div style={sh}>Attributes — {ATTR_BUDGET - attrCDPSpent} CDP remaining</div>
+            <div style={sh}>Attributes � {ATTR_BUDGET - attrCDPSpent} CDP remaining</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#242424', borderRadius: '3px', padding: '8px 12px', marginBottom: '10px', border: '1px solid #2e2e2e' }}>
               <div style={{ display: 'flex', gap: '3px' }}>
                 {Array.from({ length: ATTR_BUDGET }).map((_, i) => (
@@ -227,13 +227,13 @@ export default function QuickCharacterPage() {
                 const canDec = val > 0
                 return (
                   <div key={k} style={{ background: val > 0 ? '#2a1210' : '#242424', border: `1px solid ${val > 0 ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', padding: '8px 4px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '10px', color: '#b0aaa4', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-                    <div style={{ fontSize: '7px', color: '#b0aaa4', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
+                    <div style={{ fontSize: '10px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                    <div style={{ fontSize: '7px', color: '#d4cfc9', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                      <button onClick={() => changeAttr(k, -1)} disabled={!canDec} style={skBtn(!canDec)}>−</button>
+                      <button onClick={() => changeAttr(k, -1)} disabled={!canDec} style={skBtn(!canDec)}>-</button>
                       <div>
                         <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee' }}>{val >= 0 ? `+${val}` : val}</div>
-                        <div style={{ fontSize: '7px', color: val > 0 ? '#f5a89a' : '#b0aaa4', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
+                        <div style={{ fontSize: '7px', color: val > 0 ? '#f5a89a' : '#d4cfc9', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
                       </div>
                       <button onClick={() => changeAttr(k, 1)} disabled={!canInc} style={skBtn(!canInc)}>+</button>
                     </div>
@@ -243,7 +243,7 @@ export default function QuickCharacterPage() {
             </div>
 
             {/* Skill spend */}
-            <div style={sh}>Skills — {SKILL_BUDGET - skillCDPSpent} CDP remaining</div>
+            <div style={sh}>Skills � {SKILL_BUDGET - skillCDPSpent} CDP remaining</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#242424', borderRadius: '3px', padding: '8px 12px', marginBottom: '10px', border: '1px solid #2e2e2e' }}>
               <div style={{ display: 'flex', gap: '3px' }}>
                 {Array.from({ length: SKILL_BUDGET }).map((_, i) => (
@@ -270,12 +270,12 @@ export default function QuickCharacterPage() {
                   <div key={sk.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', border: `1px ${sk.vocational ? 'dashed' : 'solid'} ${isVoc ? '#7a1f16' : '#2e2e2e'}`, borderRadius: '3px', padding: '5px 7px', background: isVoc ? '#1a0f0f' : '#242424' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '11.5px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: deltaThisStep > 0 ? '#f5a89a' : '#f5f2ee' }}>
-                        {sk.name}{sk.vocational ? '*' : ''}{isVoc ? ' ◆' : ''}
+                        {sk.name}{sk.vocational ? '*' : ''}{isVoc ? ' ?' : ''}
                       </div>
-                      <div style={{ fontSize: '9.5px', color: '#b0aaa4' }}>{sk.attribute} — {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}</div>
+                      <div style={{ fontSize: '9.5px', color: '#d4cfc9' }}>{sk.attribute} � {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
-                      <button onClick={() => changeSkill(sk.name, -1)} disabled={!canDec} style={skBtn(!canDec)}>−</button>
+                      <button onClick={() => changeSkill(sk.name, -1)} disabled={!canDec} style={skBtn(!canDec)}>-</button>
                       <span style={{ fontSize: '12px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Barlow Condensed, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>{disp}</span>
                       <button onClick={() => changeSkill(sk.name, 1)} disabled={!canInc} style={skBtn(!canInc)}>+</button>
                     </div>
@@ -298,7 +298,7 @@ export default function QuickCharacterPage() {
         <div style={{ textAlign: 'center' }}>
           {saveError && <div style={{ fontSize: '11px', color: '#f5a89a', marginBottom: '2px' }}>{saveError}</div>}
           {saved && <div style={{ fontSize: '11px', color: '#7fc458', marginBottom: '2px' }}>Character saved!</div>}
-          <div style={{ fontSize: '11px', color: '#b0aaa4', letterSpacing: '.05em', textTransform: 'uppercase' }}>Step {step} of 5</div>
+          <div style={{ fontSize: '11px', color: '#d4cfc9', letterSpacing: '.05em', textTransform: 'uppercase' }}>Step {step} of 5</div>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {step === 5 && (
@@ -306,7 +306,7 @@ export default function QuickCharacterPage() {
           )}
           {step < 5
             ? <button onClick={() => { setStep(s => Math.min(5, s + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={navBtn(true)}>Advance</button>
-            : <button onClick={handleSave} disabled={saving || saved} style={{ ...navBtn(true), opacity: saving || saved ? 0.6 : 1 }}>{saving ? 'Saving...' : saved ? 'Saved ✓' : 'Save Character'}</button>
+            : <button onClick={handleSave} disabled={saving || saved} style={{ ...navBtn(true), opacity: saving || saved ? 0.6 : 1 }}>{saving ? 'Saving...' : saved ? 'Saved ?' : 'Save Character'}</button>
           }
         </div>
       </div>

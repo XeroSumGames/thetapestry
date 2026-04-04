@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 
@@ -71,7 +71,7 @@ export default function Sidebar() {
 <a href="/campaigns" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Stories</a>
 <a href="#" style={soonStyle}>The Campfire <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span></a>
 
-      {/* Moderation — thrivers only */}
+      {/* Moderation � thrivers only */}
       {userRole === 'thriver' && (
         <a href="/moderate" style={{ ...linkStyle('#EF9F27'), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
           Moderation Queue

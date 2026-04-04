@@ -125,7 +125,7 @@ async function handleSuspend(id: string, suspended: boolean) {
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Moderation
         </div>
-        <div style={{ fontSize: '11px', color: '#b0aaa4', letterSpacing: '.1em', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: '11px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase' }}>
           Thriver Console
         </div>
         <div style={{ flex: 1 }} />
@@ -139,7 +139,7 @@ async function handleSuspend(id: string, suspended: boolean) {
             style={{
               padding: '7px 16px', border: `1px solid ${section === s ? '#c0392b' : '#3a3a3a'}`,
               background: section === s ? '#2a1210' : '#242424',
-              color: section === s ? '#f5a89a' : '#b0aaa4',
+              color: section === s ? '#f5a89a' : '#d4cfc9',
               borderRadius: '3px', cursor: 'pointer',
               fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif',
               letterSpacing: '.06em', textTransform: 'uppercase',
@@ -159,7 +159,7 @@ async function handleSuspend(id: string, suspended: boolean) {
                 style={{
                   padding: '7px 16px', border: `1px solid ${filter === f ? '#c0392b' : '#3a3a3a'}`,
                   background: filter === f ? '#2a1210' : '#242424',
-                  color: filter === f ? '#f5a89a' : '#b0aaa4',
+                  color: filter === f ? '#f5a89a' : '#d4cfc9',
                   borderRadius: '3px', cursor: 'pointer',
                   fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif',
                   letterSpacing: '.06em', textTransform: 'uppercase',
@@ -169,7 +169,7 @@ async function handleSuspend(id: string, suspended: boolean) {
             ))}
           </div>
 
-          {loading && <div style={{ color: '#b0aaa4', fontSize: '13px' }}>Loading...</div>}
+          {loading && <div style={{ color: '#d4cfc9', fontSize: '13px' }}>Loading...</div>}
 
           {!loading && pins.length === 0 && (
             <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '3rem', textAlign: 'center', fontSize: '13px', color: '#5a5550' }}>
@@ -189,12 +189,12 @@ async function handleSuspend(id: string, suspended: boolean) {
                       Submitted by {p.profiles?.username ?? 'unknown'} · {formatDate(p.created_at)}
                     </div>
                   </div>
-                  <div style={{ fontSize: '10px', color: '#b0aaa4', fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: '10px', color: '#d4cfc9', fontFamily: 'monospace' }}>
                     {p.lat.toFixed(4)}, {p.lng.toFixed(4)}
                   </div>
                 </div>
                 {p.notes && (
-                  <div style={{ fontSize: '13px', color: '#b0aaa4', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a' }}>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a' }}>
                     {p.notes}
                   </div>
                 )}
@@ -240,7 +240,7 @@ async function handleSuspend(id: string, suspended: boolean) {
             {users.length} registered user{users.length !== 1 ? 's' : ''}
           </div>
 
-          {usersLoading && <div style={{ color: '#b0aaa4', fontSize: '13px' }}>Loading...</div>}
+          {usersLoading && <div style={{ color: '#d4cfc9', fontSize: '13px' }}>Loading...</div>}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {users.map(u => (
@@ -250,7 +250,7 @@ async function handleSuspend(id: string, suspended: boolean) {
   {u.username}
 </div>
 <div style={{ fontSize: '10px', color: '#5a5550', marginTop: '2px' }}>
-  {(u as any).email && <span style={{ color: '#b0aaa4', marginRight: '8px' }}>{(u as any).email}</span>}
+  {(u as any).email && <span style={{ color: '#d4cfc9', marginRight: '8px' }}>{(u as any).email}</span>}
   Joined {formatDate(u.created_at)}
 </div>
                 </div>
@@ -271,7 +271,7 @@ async function handleSuspend(id: string, suspended: boolean) {
                   </span>
                   {u.role === 'Thriver' ? (
                     <button onClick={() => handleRoleChange(u.id, 'Survivor')} disabled={acting === u.id}
-                      style={actionBtn('#3a3a3a', '#b0aaa4')}>
+                      style={actionBtn('#3a3a3a', '#d4cfc9')}>
                       Make Survivor
                     </button>
                   ) : (

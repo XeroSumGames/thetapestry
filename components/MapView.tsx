@@ -1,28 +1,28 @@
-﻿'use client'
+'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 
 const PIN_CATEGORIES = [
-  { value: 'rumor',      label: 'Rumor',      emoji: '❓' },
-  { value: 'location',   label: 'Location',   emoji: '📍' },
-  { value: 'residence',  label: 'Residence',  emoji: '🏠' },
-  { value: 'business',   label: 'Business',   emoji: '🎪' },
-  { value: 'church',     label: 'Church',     emoji: '⛪' },
-  { value: 'government', label: 'Government', emoji: '🏛️' },
-  { value: 'airport',    label: 'Transport',  emoji: '✈️' },
-  { value: 'hospital',   label: 'Hospital',   emoji: '🏥' },
-  { value: 'military',   label: 'Military',   emoji: '⚔️' },
-  { value: 'person',     label: 'Person',     emoji: '👤' },
-  { value: 'danger',     label: 'Danger',     emoji: '☠️' },
-  { value: 'resource',   label: 'Resource',   emoji: '🎒' },
-  { value: 'medical',    label: 'Medical',    emoji: '🩺' },
-  { value: 'group',      label: 'Group',      emoji: '👥' },
-  { value: 'animals',    label: 'Animals',    emoji: '🐾' },
-  { value: 'community',  label: 'Community',  emoji: '🏘️' },
+  { value: 'rumor',      label: 'Rumor',      emoji: '?' },
+  { value: 'location',   label: 'Location',   emoji: '??' },
+  { value: 'residence',  label: 'Residence',  emoji: '??' },
+  { value: 'business',   label: 'Business',   emoji: '??' },
+  { value: 'church',     label: 'Church',     emoji: '?' },
+  { value: 'government', label: 'Government', emoji: '???' },
+  { value: 'airport',    label: 'Transport',  emoji: '??' },
+  { value: 'hospital',   label: 'Hospital',   emoji: '??' },
+  { value: 'military',   label: 'Military',   emoji: '??' },
+  { value: 'person',     label: 'Person',     emoji: '??' },
+  { value: 'danger',     label: 'Danger',     emoji: '??' },
+  { value: 'resource',   label: 'Resource',   emoji: '??' },
+  { value: 'medical',    label: 'Medical',    emoji: '??' },
+  { value: 'group',      label: 'Group',      emoji: '??' },
+  { value: 'animals',    label: 'Animals',    emoji: '??' },
+  { value: 'community',  label: 'Community',  emoji: '???' },
 ]
 
 function getCategoryEmoji(category: string): string {
-  return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '📍'
+  return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '??'
 }
 
 interface Pin {
@@ -99,7 +99,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
       const map = L.map(mapRef.current, { center: [44.97, -103.77], zoom: 4, zoomControl: true })
 
       tileLayerRef.current = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
       }).addTo(map)
 
@@ -197,9 +197,9 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
     if (!map) return
     if (tileLayerRef.current) tileLayerRef.current.remove()
     const tiles: Record<string, { url: string, attribution: string }> = {
-      street: { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
-      satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attribution: 'Â© <a href="https://www.esri.com">Esri</a>' },
-      dark: { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attribution: 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> Â© <a href="https://carto.com">CARTO</a>' },
+      street: { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
+      satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attribution: '© <a href="https://www.esri.com">Esri</a>' },
+      dark: { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com">CARTO</a>' },
     }
     tileLayerRef.current = L.tileLayer(tiles[layer].url, { attribution: tiles[layer].attribution, maxZoom: 19 }).addTo(map)
     setMapLayer(layer)
@@ -270,10 +270,10 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
   const displayedPins = sidebarTab === 'mine' ? myPins : sidebarTab === 'public' ? publicPins : allPins
 
   function pinTypeLabel(p: Pin) {
-    if (p.pin_type === 'gm' && p.status === 'approved') return 'GM -” public'
-    if (p.pin_type === 'gm') return 'GM -” pending'
-    if (p.pin_type === 'rumor' && p.status === 'approved') return 'Rumor -” public'
-    if (p.pin_type === 'rumor' && p.status === 'pending') return 'Submitted -” awaiting review'
+    if (p.pin_type === 'gm' && p.status === 'approved') return 'GM -� public'
+    if (p.pin_type === 'gm') return 'GM -� pending'
+    if (p.pin_type === 'rumor' && p.status === 'approved') return 'Rumor -� public'
+    if (p.pin_type === 'rumor' && p.status === 'pending') return 'Submitted -� awaiting review'
     if (p.pin_type === 'rumor' && p.status === 'rejected') return 'Rejected'
     return 'Private'
   }
@@ -295,7 +295,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
       {!embedded && showHeader && (
         <div style={{ flexShrink: 0, zIndex: 1000, background: '#0f0f0f', borderBottom: '1px solid #c0392b', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>The Tapestry</div>
-          <div style={{ fontSize: '13px', color: '#b0aaa4', letterSpacing: '.08em', textTransform: 'uppercase' }}>World Map</div>
+          <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.08em', textTransform: 'uppercase' }}>World Map</div>
           <div style={{ flex: 1 }} />
           <button onClick={() => setSidebarOpen(p => !p)} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             {sidebarOpen ? 'Hide Pins' : 'Show Pins'}
@@ -313,7 +313,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
             <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e' }}>
               {tabs.map(([tab, label]) => (
                 <button key={tab} onClick={() => setSidebarTab(tab)}
-                  style={{ flex: 1, padding: '10px', background: sidebarTab === tab ? '#242424' : 'transparent', border: 'none', borderBottom: `2px solid ${sidebarTab === tab ? '#c0392b' : 'transparent'}`, color: sidebarTab === tab ? '#f5f2ee' : '#b0aaa4', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                  style={{ flex: 1, padding: '10px', background: sidebarTab === tab ? '#242424' : 'transparent', border: 'none', borderBottom: `2px solid ${sidebarTab === tab ? '#c0392b' : 'transparent'}`, color: sidebarTab === tab ? '#f5f2ee' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                   {label}
                 </button>
               ))}
@@ -332,7 +332,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
                       <div style={{ fontSize: '15px', fontWeight: 600, color: '#f5f2ee', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {getCategoryEmoji(p.category ?? 'location')} {p.title}
                       </div>
-                      {p.notes && <div style={{ fontSize: '13px', color: '#b0aaa4', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.notes}</div>}
+                      {p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.notes}</div>}
                       <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '3px', textTransform: 'uppercase', letterSpacing: '.06em' }}>{pinTypeLabel(p)}</div>
                     </div>
                     {(p.user_id === userId || userRole === 'thriver') && (
@@ -344,12 +344,12 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
                           </button>
                         )}
                         <button onClick={e => { e.stopPropagation(); startEdit(p) }}
-                          style={{ background: 'none', border: 'none', color: '#b0aaa4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                          style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '13px', padding: '0 2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
                           Edit
                         </button>
                         <button onClick={e => { e.stopPropagation(); if (confirm('Delete this pin?')) handleDeletePin(p.id) }} disabled={deletingId === p.id}
   style={{ background: 'none', border: 'none', color: '#f5a89a', cursor: 'pointer', fontSize: '16px', padding: '0 4px', opacity: deletingId === p.id ? 0.4 : 1 }}>
-  ×
+  �
 </button>
                       </div>
                     )}
@@ -361,7 +361,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
         )}
 
         {!embedded && showHeader && (
-          <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'rgba(15,15,15,.85)', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px 14px', fontSize: '13px', color: '#b0aaa4', fontFamily: 'Barlow, sans-serif', pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'rgba(15,15,15,.85)', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px 14px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', pointerEvents: 'none' }}>
             Click anywhere on the map to place a pin
           </div>
         )}
@@ -373,7 +373,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
           <div style={{ position: 'absolute', top: '6px', right: sidebarOpen ? '306px' : '6px', zIndex: 1000, display: 'flex', gap: '4px', transition: 'right .2s' }}>
             {([['street', 'Street'], ['satellite', 'Satellite'], ['dark', 'Dark']] as const).map(([layer, label]) => (
               <button key={layer} onClick={() => switchLayer(layer)}
-                style={{ padding: '5px 10px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#b0aaa4' }}>
+                style={{ padding: '5px 10px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#d4cfc9' }}>
                 {label}
               </button>
             ))}
@@ -416,22 +416,22 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
             </div>
             <div style={{ marginBottom: '10px' }}>
               <label style={lbl}>Attachments</label>
-              <label style={{ display: 'block', padding: '8px 10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: '#b0aaa4' }}>
+              <label style={{ display: 'block', padding: '8px 10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: '#d4cfc9' }}>
                 {attachments.length > 0 ? `${attachments.length} file${attachments.length > 1 ? 's' : ''} selected` : 'Click to attach files'}
                 <input type="file" multiple style={{ display: 'none' }} onChange={e => { if (e.target.files) setAttachments(Array.from(e.target.files)) }} />
               </label>
               {attachments.length > 0 && (
                 <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
                   {attachments.map((f, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#b0aaa4', padding: '3px 6px', background: '#0f0f0f', borderRadius: '2px' }}>
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#d4cfc9', padding: '3px 6px', background: '#0f0f0f', borderRadius: '2px' }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{f.name}</span>
-                      <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '14px', padding: '0 2px', flexShrink: 0 }}>×</button>
+                      <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '14px', padding: '0 2px', flexShrink: 0 }}>�</button>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-            <div style={{ marginBottom: '10px', fontSize: '13px', padding: '6px 8px', borderRadius: '3px', background: userRole === 'thriver' ? '#1a2e10' : '#1a1a2e', border: `1px solid ${userRole === 'thriver' ? '#2d5a1b' : '#2e2e5a'}`, color: userRole === 'thriver' ? '#7fc458' : '#b0aaa4', lineHeight: 1.5 }}>
+            <div style={{ marginBottom: '10px', fontSize: '13px', padding: '6px 8px', borderRadius: '3px', background: userRole === 'thriver' ? '#1a2e10' : '#1a1a2e', border: `1px solid ${userRole === 'thriver' ? '#2d5a1b' : '#2e2e5a'}`, color: userRole === 'thriver' ? '#7fc458' : '#d4cfc9', lineHeight: 1.5 }}>
               {userRole === 'thriver' ? 'As a Thriver, your pins are immediately public on the map.' : 'Your pin will be visible to you and submitted to the Thriver queue. If approved, it will appear as a Rumor for all players.'}
             </div>
             <div style={{ display: 'flex', gap: '6px' }}>
@@ -440,7 +440,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
                 {uploading ? 'Uploading...' : saving ? 'Saving...' : 'Save Pin'}
               </button>
               <button onClick={() => { setShowForm(false); setAttachments([]) }}
-                style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 Cancel
               </button>
             </div>
@@ -465,7 +465,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
           <button key={cat.value} onClick={() => setEditForm(p => ({ ...p, category: cat.value }))}
             style={{ padding: '6px 4px', border: `1px solid ${editForm.category === cat.value ? '#7ab3d4' : '#3a3a3a'}`, background: editForm.category === cat.value ? '#0f2035' : '#242424', borderRadius: '3px', cursor: 'pointer', textAlign: 'center' }}>
             <div style={{ fontSize: '16px', marginBottom: '2px' }}>{cat.emoji}</div>
-            <div style={{ fontSize: '8px', color: editForm.category === cat.value ? '#7ab3d4' : '#b0aaa4', lineHeight: 1.2 }}>{cat.label.split('/')[0].trim()}</div>
+            <div style={{ fontSize: '8px', color: editForm.category === cat.value ? '#7ab3d4' : '#d4cfc9', lineHeight: 1.2 }}>{cat.label.split('/')[0].trim()}</div>
           </button>
         ))}
       </div>
@@ -480,7 +480,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
         Delete
       </button>
       <button onClick={() => setEditingPin(null)}
-        style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+        style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
         Cancel
       </button>
     </div>

@@ -73,7 +73,7 @@ function outcomeColor(outcome: string): string {
     case 'Failure': return '#EF9F27'
     case 'Dire Failure': return '#c0392b'
     case 'Low Insight': return '#c0392b'
-    default: return '#b0aaa4'
+    default: return '#d4cfc9'
   }
 }
 
@@ -315,7 +315,7 @@ export default function TablePage() {
           </div>
         </div>
         <div style={{ flex: 1 }} />
-        <a href={`/campaigns/${id}`} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <a href={`/campaigns/${id}`} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           Back
         </a>
       </div>
@@ -343,8 +343,8 @@ export default function TablePage() {
                     <span style={{ fontSize: '11px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.character_name}</span>
                     <span style={{ fontSize: '9px', color: '#5a5550' }}>{formatTime(r.created_at)}</span>
                   </div>
-                  <div style={{ fontSize: '10px', color: '#b0aaa4', marginBottom: '4px' }}>{r.label}</div>
-                  <div style={{ fontSize: '11px', color: '#b0aaa4', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
+                  <div style={{ fontSize: '10px', color: '#d4cfc9', marginBottom: '4px' }}>{r.label}</div>
+                  <div style={{ fontSize: '11px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
                     [{r.die1}+{r.die2}]
                     {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
                     {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
@@ -363,7 +363,7 @@ export default function TablePage() {
             <div style={{ padding: '8px', borderTop: '1px solid #2e2e2e' }}>
               <button
                 onClick={() => setSelectedEntry(myEntry)}
-                style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+                style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
               >
                 Open My Sheet to Roll
               </button>
@@ -377,7 +377,7 @@ export default function TablePage() {
           <div style={{ fontSize: '13px', color: '#3a3a3a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase' }}>Tactical Map — Coming Soon</div>
           {!entriesLoading && entries.length === 0 && (
             <div style={{ marginTop: '1rem', background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.5rem', textAlign: 'center' }}>
-              <div style={{ fontSize: '13px', color: '#b0aaa4', marginBottom: '4px' }}>No character sheets yet.</div>
+              <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>No character sheets yet.</div>
               <div style={{ fontSize: '11px', color: '#5a5550' }}>Players need to assign a character before entering the table.</div>
             </div>
           )}
@@ -444,7 +444,7 @@ export default function TablePage() {
               onStatUpdate={handleStatUpdate}
               onRoll={syncedSelectedEntry.userId === userId || isGM ? (label, amod, smod) => { setSelectedEntry(null); handleRollRequest(label, amod, smod) } : undefined}
             />
-            <button onClick={() => setSelectedEntry(null)} style={{ marginTop: '8px', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            <button onClick={() => setSelectedEntry(null)} style={{ marginTop: '8px', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Close
             </button>
           </div>
@@ -457,7 +457,7 @@ export default function TablePage() {
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
             <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Rolling</div>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>{pendingRoll.label}</div>
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '1rem', fontSize: '12px', color: '#b0aaa4', fontFamily: 'Barlow Condensed, sans-serif' }}>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '1rem', fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
               <span>2d6</span>
               {pendingRoll.amod !== 0 && <span style={{ color: pendingRoll.amod > 0 ? '#7fc458' : '#c0392b' }}>{pendingRoll.amod > 0 ? '+' : ''}{pendingRoll.amod} AMod</span>}
               {pendingRoll.smod !== 0 && <span style={{ color: pendingRoll.smod > 0 ? '#7fc458' : '#c0392b' }}>{pendingRoll.smod > 0 ? '+' : ''}{pendingRoll.smod} SMod</span>}
@@ -474,7 +474,7 @@ export default function TablePage() {
               />
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => setPendingRoll(null)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b0aaa4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setPendingRoll(null)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               <button onClick={executeRoll} disabled={rolling} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer', opacity: rolling ? 0.6 : 1 }}>
                 {rolling ? 'Rolling...' : '🎲 Roll'}
               </button>

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
@@ -37,7 +37,7 @@ export default function NavBar() {
       <a href="/dashboard" style={{ fontSize: '28px', fontFamily: 'Distemper, sans-serif', textTransform: 'uppercase', color: '#f5f2ee', textDecoration: 'none', flexShrink: 0, lineHeight: 0.85 }}>
   The Tapestry
 </a>
-      <span style={{ fontSize: '13px', color: '#b0aaa4', letterSpacing: '.08em', textTransform: 'uppercase', flexShrink: 0 }}>
+      <span style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.08em', textTransform: 'uppercase', flexShrink: 0 }}>
         DistemperVerse v1.0
       </span>
       <div style={{ flex: 1 }} />

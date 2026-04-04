@@ -103,7 +103,7 @@ export default function StepXero({ state, onChange }: Props) {
 
       {/* Three words */}
       <div style={sh}>Three words</div>
-      <p style={{ fontSize: '12px', color: '#b0aaa4', lineHeight: 1.6, marginBottom: '8px' }}>
+      <p style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px' }}>
         Type freely or pick from the list. Specific words beat broad ones.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '1rem' }}>
@@ -121,7 +121,7 @@ export default function StepXero({ state, onChange }: Props) {
                 placeholder={['e.g. Determined', 'e.g. Loyal', 'e.g. Ruthless'][i]} />
               {state.threeWords[i] && (
                 <button onClick={() => clearWord(i)}
-                  style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#b0aaa4', cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: 0 }}>
+                  style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: 0 }}>
                   x
                 </button>
               )}

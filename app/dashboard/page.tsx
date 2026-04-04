@@ -103,7 +103,7 @@ export default function DashboardPage() {
                   {p.profiles?.username ?? 'unknown'} · {p.lat.toFixed(3)}, {p.lng.toFixed(3)}
                 </div>
                 {p.notes && (
-                  <div style={{ fontSize: '13px', color: '#b0aaa4', marginBottom: '6px', lineHeight: 1.5 }}>{p.notes}</div>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '6px', lineHeight: 1.5 }}>{p.notes}</div>
                 )}
                 {p.attachments && p.attachments.length > 0 && (
                   <div style={{ marginBottom: '8px' }}>
@@ -129,7 +129,7 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          <div style={{ padding: '12px 14px', borderTop: '1px solid #2e2e2e', borderBottom: '1px solid #2e2e2e', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 600, color: '#b0aaa4', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: 'auto' }}>
+          <div style={{ padding: '12px 14px', borderTop: '1px solid #2e2e2e', borderBottom: '1px solid #2e2e2e', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 600, color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: 'auto' }}>
             The Campfire
           </div>
           <div style={{ padding: '1rem', fontSize: '14px', color: '#5a5550', lineHeight: 1.6 }}>

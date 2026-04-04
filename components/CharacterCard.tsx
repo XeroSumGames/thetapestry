@@ -149,7 +149,7 @@ export default function CharacterCard({
     return (
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-          <span style={{ fontSize: '9px', color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>{label}</span>
+          <span style={{ fontSize: '9px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>{label}</span>
           <span style={{ fontSize: '11px', color, fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{current} / {max}</span>
         </div>
         <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
@@ -179,7 +179,7 @@ export default function CharacterCard({
     if (!liveState) return null
     return (
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '9px', color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>{label}</div>
+        <div style={{ fontSize: '9px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>{label}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
           <button disabled={!canEdit || value <= 0}
             onClick={() => canEdit && value > 0 && liveState && updateStat(liveState.id, field, value - 1)}
@@ -211,7 +211,7 @@ export default function CharacterCard({
             <a href={`/characters/${c.id}`} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', textDecoration: 'none', display: 'block' }}>
               {c.name}
             </a>
-            <div style={{ fontSize: '11px', color: '#b0aaa4', marginTop: '2px' }}>
+            <div style={{ fontSize: '11px', color: '#d4cfc9', marginTop: '2px' }}>
               {profession || 'No profession'} &middot; Created {formatDate(c.created_at)}
             </div>
           </div>
@@ -220,7 +220,7 @@ export default function CharacterCard({
               <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={btn('#c0392b', '#f5a89a')}>Edit</button>
               <button onClick={handlePrint} disabled={printing} style={btn('#2d5a1b', '#7fc458')}>Print</button>
               <button onClick={handleDuplicate} disabled={duplicating} style={btn('#1a3a5c', '#7ab3d4')}>{duplicating ? '...' : 'Duplicate'}</button>
-              <button onClick={handleDelete} disabled={deleting} style={btn('#2e2e2e', '#b0aaa4')}>{deleting ? '...' : 'Delete'}</button>
+              <button onClick={handleDelete} disabled={deleting} style={btn('#2e2e2e', '#d4cfc9')}>{deleting ? '...' : 'Delete'}</button>
             </div>
           )}
         </div>
@@ -243,8 +243,8 @@ export default function CharacterCard({
                 onMouseEnter={e => { if (clickable) { (e.currentTarget as HTMLElement).style.borderColor = '#7fc458'; (e.currentTarget as HTMLElement).style.background = v > 0 ? '#243e14' : '#2e2e2e' } }}
                 onMouseLeave={e => { if (clickable) { (e.currentTarget as HTMLElement).style.borderColor = v > 0 ? '#2d5a1b' : '#3a3a3a'; (e.currentTarget as HTMLElement).style.background = v > 0 ? '#1a2e10' : '#242424' } }}
               >
-                <div style={{ fontSize: '8px', color: '#b0aaa4', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-                <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: v > 0 ? '#7fc458' : '#b0aaa4' }}>{sgn(v)}</div>
+                <div style={{ fontSize: '8px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: v > 0 ? '#7fc458' : '#d4cfc9' }}>{sgn(v)}</div>
                 {clickable && <div style={{ fontSize: '7px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>ROLL</div>}
               </div>
             )
@@ -253,7 +253,7 @@ export default function CharacterCard({
 
         {/* Complication / Motivation / Concept / Description */}
         {(complication || motivation || c.data?.notes || c.data?.physdesc) && (
-          <div style={{ fontSize: '11px', color: '#b0aaa4', marginBottom: '8px', lineHeight: 1.6 }}>
+          <div style={{ fontSize: '11px', color: '#d4cfc9', marginBottom: '8px', lineHeight: 1.6 }}>
             {(complication || motivation) && (
               <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
                 {complication && <span><span style={{ color: '#5a5550' }}>Complication:</span> {complication}</span>}
@@ -285,7 +285,7 @@ export default function CharacterCard({
               <Counter label="Stress" value={liveState.stress} field="stress" max={5} color="#EF9F27" />
               <Counter label="Insight" value={liveState.insight_dice} field="insight_dice" max={9} color="#7fc458" />
               <Counter label="CDP" value={liveState.cdp} field="cdp" max={20} color="#7ab3d4" />
-              <Counter label="Morality" value={liveState.morality} field="morality" max={5} color="#b0aaa4" />
+              <Counter label="Morality" value={liveState.morality} field="morality" max={5} color="#d4cfc9" />
             </div>
           </div>
         )}

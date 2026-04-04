@@ -42,12 +42,12 @@ export default function StepSeven({ state }: Props) {
               border: `1px solid ${val > 0 ? '#c0392b' : '#3a3a3a'}`,
               borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
             }}>
-              <div style={{ fontSize: '10px', color: '#b0aaa4', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-              <div style={{ fontSize: '7px', color: '#b0aaa4', marginBottom: '5px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
+              <div style={{ fontSize: '10px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+              <div style={{ fontSize: '7px', color: '#d4cfc9', marginBottom: '5px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
               <div style={{ fontSize: '17px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee', margin: '4px 0' }}>
                 {sgn(val)}
               </div>
-              <div style={{ fontSize: '7px', color: val > 0 ? '#f5a89a' : '#b0aaa4' }}>{ATTRIBUTE_LABELS[val]}</div>
+              <div style={{ fontSize: '7px', color: val > 0 ? '#f5a89a' : '#d4cfc9' }}>{ATTRIBUTE_LABELS[val]}</div>
             </div>
           )
         })}
@@ -61,7 +61,7 @@ export default function StepSeven({ state }: Props) {
             background: '#242424', border: `1px solid ${hi ? '#7a1f16' : '#2e2e2e'}`,
             borderRadius: '3px', padding: '8px 10px',
           }}>
-            <div style={{ fontSize: '9.5px', color: '#b0aaa4', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '1px' }}>
+            <div style={{ fontSize: '9.5px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '1px' }}>
               {label}
             </div>
             <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: hi ? '#f5a89a' : '#f5f2ee' }}>
@@ -71,7 +71,7 @@ export default function StepSeven({ state }: Props) {
         ))}
       </div>
 
-      <p style={{ fontSize: '12px', color: '#b0aaa4', lineHeight: 1.6 }}>
+      <p style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.6 }}>
         All values auto-calculated from RAPID attributes.
       </p>
 
