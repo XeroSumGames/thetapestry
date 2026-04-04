@@ -52,31 +52,57 @@ export default function TablePage() {
   const [selectedEntry, setSelectedEntry] = useState<TableEntry | null>(null)
 
   async function loadEntries(campaignId: string) {
-    const { data: rawStates } = await supabase.from('character_states').select('*').eq('campaign_id', campaignId)
-    if (!rawStates || rawStates.length === 0) { setEntries([]); return }
+  // Get current character assignments from campaign_members
+  const { data: members } = await supabase
+    .from('campaign_members')
+    .select('user_id, character_id')
+    .eq('campaign_id', campaignId)
+    .not('character_id', 'is', null)
 
-    const charIds = rawStates.map((s: any) => s.character_id)
-    const userIds = rawStates.map((s: any) => s.user_id)
+  if (!members || members.length === 0) { setEntries([]); return }
 
-    const { data: chars } = await supabase.from('characters').select('id, name, created_at, data').in('id', charIds)
-    const { data: profiles } = await supabase.from('profiles').select('id, username').in('id', userIds)
-
-    const charMap = Object.fromEntries((chars ?? []).map((c: any) => [c.id, c]))
-    const profileMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.id, p.username]))
-
-    setEntries(rawStates.map((s: any) => ({
-      stateId: s.id,
-      userId: s.user_id,
-      username: profileMap[s.user_id] ?? 'Unknown',
-      character: charMap[s.character_id] ?? { id: s.character_id, name: 'Unknown', created_at: '', data: {} },
-      liveState: {
-        id: s.id,
-        wp_current: s.wp_current, wp_max: s.wp_max,
-        rp_current: s.rp_current, rp_max: s.rp_max,
-        stress: s.stress, insight_dice: s.insight_dice, morality: s.morality, cdp: s.cdp ?? 0,
-      },
-    })))
+  // Build a map of user_id → currently assigned character_id
+  const currentAssignment: Record<string, string> = {}
+  for (const m of members) {
+    currentAssignment[m.user_id] = m.character_id
   }
+
+  const { data: rawStates } = await supabase
+    .from('character_states')
+    .select('*')
+    .eq('campaign_id', campaignId)
+
+  if (!rawStates || rawStates.length === 0) { setEntries([]); return }
+
+  // Only keep the state that matches the current assignment for each user
+  const filteredStates = rawStates.filter(
+    (s: any) => currentAssignment[s.user_id] === s.character_id
+  )
+
+  if (filteredStates.length === 0) { setEntries([]); return }
+
+  const charIds = filteredStates.map((s: any) => s.character_id)
+  const userIds = filteredStates.map((s: any) => s.user_id)
+
+  const { data: chars } = await supabase.from('characters').select('id, name, created_at, data').in('id', charIds)
+  const { data: profiles } = await supabase.from('profiles').select('id, username').in('id', userIds)
+
+  const charMap = Object.fromEntries((chars ?? []).map((c: any) => [c.id, c]))
+  const profileMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.id, p.username]))
+
+  setEntries(filteredStates.map((s: any) => ({
+    stateId: s.id,
+    userId: s.user_id,
+    username: profileMap[s.user_id] ?? 'Unknown',
+    character: charMap[s.character_id] ?? { id: s.character_id, name: 'Unknown', created_at: '', data: {} },
+    liveState: {
+      id: s.id,
+      wp_current: s.wp_current, wp_max: s.wp_max,
+      rp_current: s.rp_current, rp_max: s.rp_max,
+      stress: s.stress, insight_dice: s.insight_dice, morality: s.morality, cdp: s.cdp ?? 0,
+    },
+  })))
+}
 
   useEffect(() => {
     async function load() {
