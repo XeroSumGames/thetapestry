@@ -1,7 +1,16 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase-browser'
-import { generateRandomNpc } from '../lib/npc-generator'
+import { generateRandomNpc, ALL_SKILLS, SkillEntry } from '../lib/npc-generator'
+
+function parseSkillText(text: string): SkillEntry[] {
+  if (!text.trim()) return []
+  return text.split(',').map(s => {
+    const match = s.trim().match(/^(.+?)\s+(-?\d+)$/)
+    if (match) return { name: match[1], level: parseInt(match[2]) }
+    return null
+  }).filter(Boolean) as SkillEntry[]
+}
 
 const RAPID_LABELS: Record<number, string> = {
   [-2]: 'Diminished', [-1]: 'Weak', 0: 'Average', 1: 'Good',
@@ -15,12 +24,42 @@ const TYPE_COLORS: Record<string, { bg: string; border: string; color: string }>
   antagonist: { bg: '#2a102a', border: '#8b2e8b', color: '#d48bd4' },
 }
 
-const ROLE_COLORS: Record<string, { bg: string; border: string; color: string }> = {
-  cohort: { bg: '#1a2e10', border: '#2d5a1b', color: '#7fc458' },
-  conscript: { bg: '#2a2010', border: '#5a4a1b', color: '#EF9F27' },
-  convert: { bg: '#1a1a2e', border: '#2e2e5a', color: '#7ab3d4' },
-  apprentice: { bg: '#1a2e2e', border: '#1b5a5a', color: '#58c4c4' },
-}
+const PORTRAIT_BANK = [
+  { label: 'M1', bg: '#2a1210', color: '#c0392b' },
+  { label: 'M2', bg: '#1a2e10', color: '#7fc458' },
+  { label: 'F1', bg: '#1a1a2e', color: '#7ab3d4' },
+  { label: 'F2', bg: '#2a2010', color: '#EF9F27' },
+  { label: 'N1', bg: '#2a102a', color: '#d48bd4' },
+  { label: 'N2', bg: '#1a2e2e', color: '#58c4c4' },
+  { label: 'X1', bg: '#2e2e2e', color: '#d4cfc9' },
+  { label: 'X2', bg: '#1a1a1a', color: '#f5f2ee' },
+].map((p, i) => ({
+  ...p,
+  url: `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="${p.bg}"/><circle cx="32" cy="24" r="12" fill="${p.color}" opacity="0.6"/><ellipse cx="32" cy="52" rx="18" ry="14" fill="${p.color}" opacity="0.4"/></svg>`)}`,
+}))
+
+const COMPLICATIONS = [
+  'Addiction', 'Betrayed', 'Code of Honor', 'Criminal Past', 'Daredevil', 'Dark Secret',
+  'Family Obligation', 'Famous', 'Loss', 'Outstanding Debt', 'Personal Enemy',
+]
+
+const MOTIVATIONS = [
+  'Accumulate', 'Build', 'Find Safety', 'Hedonism', 'Make Amends', 'Preach',
+  'Protect', 'Reunite', 'Revenge', 'Stay Alive', 'Take Advantage',
+]
+
+const PERSONALITY_WORDS = [
+  'Calculating', 'Reckless', 'Stoic', 'Paranoid', 'Loyal', 'Bitter',
+  'Resourceful', 'Haunted', 'Ruthless', 'Idealistic', 'Cynical', 'Protective',
+  'Quiet', 'Volatile', 'Generous', 'Suspicious', 'Stubborn', 'Cunning',
+  'Hopeful', 'Pragmatic', 'Vengeful', 'Patient', 'Impulsive', 'Sardonic',
+  'Devout', 'Desperate', 'Defiant', 'Weary', 'Fierce', 'Compassionate',
+  'Cold', 'Charming', 'Blunt', 'Cautious', 'Driven', 'Melancholy',
+  'Jovial', 'Fearless', 'Guarded', 'Gruff', 'Tender', 'Obsessive',
+  'Resigned', 'Ambitious', 'Humble', 'Secretive', 'Brash', 'Methodical',
+  'Sentimental', 'Detached', 'Restless', 'Territorial', 'Adaptable', 'Wry',
+  'Earnest', 'Sullen', 'Scrappy', 'Unflinching', 'Pensive', 'Gregarious',
+]
 
 const TYPE_PRESETS: Record<string, { reason: number; acumen: number; physicality: number; influence: number; dexterity: number }> = {
   friendly: { reason: 0, acumen: 0, physicality: 0, influence: 0, dexterity: 0 },
@@ -96,8 +135,8 @@ interface Props {
 const emptyForm = {
   name: '', portrait_url: null as string | null,
   reason: 0, acumen: 0, physicality: 0, influence: 0, dexterity: 0,
-  skills: '', notes: '', status: 'active',
-  npc_type: '' as string, recruitment_role: '' as string,
+  skillEntries: [] as SkillEntry[], notes: '', status: 'active',
+  npc_type: '' as string, motivation: '', complication: '', threeWords: ['', '', ''] as string[],
 }
 
 export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, onAddToCombat, pcEntries }: Props) {
@@ -143,11 +182,13 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       physicality: npc.physicality,
       influence: npc.influence,
       dexterity: npc.dexterity,
-      skills: typeof npc.skills === 'string' ? npc.skills : (npc.skills?.text ?? ''),
+      skillEntries: Array.isArray(npc.skills?.entries) ? npc.skills.entries : (typeof npc.skills?.text === 'string' ? parseSkillText(npc.skills.text) : []),
       notes: npc.notes ?? '',
       status: npc.status,
       npc_type: npc.npc_type ?? '',
-      recruitment_role: npc.recruitment_role ?? '',
+      motivation: (npc as any).motivation ?? '',
+      complication: (npc as any).complication ?? '',
+      threeWords: (npc as any).three_words ?? ['', '', ''],
     })
     setEditingId(npc.id)
     setShowForm(true)
@@ -184,11 +225,13 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       physicality: form.physicality,
       influence: form.influence,
       dexterity: form.dexterity,
-      skills: { text: form.skills },
+      skills: { entries: form.skillEntries, text: form.skillEntries.map(s => `${s.name} ${s.level}`).join(', ') },
       notes: form.notes.trim() || null,
       status: form.status,
       npc_type: form.npc_type || null,
-      recruitment_role: form.recruitment_role || null,
+      motivation: form.motivation || null,
+      complication: form.complication || null,
+      three_words: form.threeWords.filter(w => w),
     }
     if (editingId) {
       await supabase.from('campaign_npcs').update(row).eq('id', editingId)
@@ -270,8 +313,9 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
 
   // Generate
   const [generatedSummary, setGeneratedSummary] = useState<string>('')
+  const [showGenerateTypePicker, setShowGenerateTypePicker] = useState(false)
 
-  function applyGenerated(typeOverride?: string) {
+  function applyGenerated(typeOverride: string) {
     const npc = generateRandomNpc(typeOverride)
     setForm(f => ({
       ...f,
@@ -282,10 +326,14 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       physicality: npc.physicality,
       influence: npc.influence,
       dexterity: npc.dexterity,
-      skills: npc.skills,
+      skillEntries: npc.skillEntries,
       notes: npc.notes,
+      motivation: npc.motivation,
+      complication: npc.complication,
+      threeWords: npc.words,
     }))
     setGeneratedSummary(`Generated as ${npc.profession} — ${npc.motivation} / ${npc.complication}`)
+    setShowGenerateTypePicker(false)
   }
 
   // Publish to World
@@ -432,10 +480,6 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                         const tc = TYPE_COLORS[npc.npc_type] ?? TYPE_COLORS.goon
                         return <span style={{ fontSize: '7px', padding: '0 4px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.npc_type}</span>
                       })()}
-                      {npc.recruitment_role && (() => {
-                        const rc = ROLE_COLORS[npc.recruitment_role] ?? ROLE_COLORS.cohort
-                        return <span style={{ fontSize: '7px', padding: '0 4px', borderRadius: '2px', background: rc.bg, border: `1px solid ${rc.border}`, color: rc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.recruitment_role}</span>
-                      })()}
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end', flexShrink: 0 }}>
@@ -459,22 +503,30 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
               {form.name || 'New NPC'}
             </div>
 
-            {/* Generate buttons */}
+            {/* Generate button */}
             {!editingId && (
               <div style={{ marginBottom: '1rem' }}>
-                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
-                  <button onClick={() => { applyGenerated(); }} type="button"
-                    style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    ⚄ Quick Generate
+                {!showGenerateTypePicker ? (
+                  <button onClick={() => setShowGenerateTypePicker(true)} type="button"
+                    style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    ⚄ Generate NPC
                   </button>
-                  <button onClick={() => { if (!form.npc_type) return; applyGenerated(form.npc_type); }} type="button"
-                    title={!form.npc_type ? 'Select an NPC Type first' : undefined}
-                    style={{ flex: 1, padding: '8px', background: form.npc_type ? '#242424' : '#1a1a1a', border: `1px solid ${form.npc_type ? '#3a3a3a' : '#2e2e2e'}`, borderRadius: '3px', color: form.npc_type ? '#d4cfc9' : '#3a3a3a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: form.npc_type ? 'pointer' : 'not-allowed' }}>
-                    ⚄ Guided Generate
-                  </button>
-                </div>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>Select NPC type to generate:</div>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      {['friendly', 'goon', 'foe', 'antagonist'].map(t => {
+                        const tc = TYPE_COLORS[t]
+                        return <button key={t} onClick={() => applyGenerated(t)} type="button"
+                          style={{ flex: 1, padding: '6px 4px', background: tc.bg, border: `1px solid ${tc.border}`, borderRadius: '3px', color: tc.color, fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                          {t}
+                        </button>
+                      })}
+                    </div>
+                  </div>
+                )}
                 {generatedSummary && (
-                  <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', fontStyle: 'italic' }}>
+                  <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', fontStyle: 'italic', marginTop: '6px' }}>
                     {generatedSummary}
                   </div>
                 )}
@@ -501,6 +553,15 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                 )}
               </div>
             </div>
+            {/* Portrait bank */}
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '1rem', flexWrap: 'wrap' }}>
+              {PORTRAIT_BANK.map((p, i) => (
+                <button key={i} onClick={() => setForm(f => ({ ...f, portrait_url: p.url }))} type="button"
+                  style={{ width: '28px', height: '28px', borderRadius: '50%', border: form.portrait_url === p.url ? '2px solid #c0392b' : '1px solid #3a3a3a', overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none' }}>
+                  <img src={p.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </button>
+              ))}
+            </div>
 
             {/* Name */}
             <div style={{ marginBottom: '1rem' }}>
@@ -519,19 +580,6 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                 <option value="goon">Goon</option>
                 <option value="foe">Foe</option>
                 <option value="antagonist">Antagonist</option>
-              </select>
-            </div>
-
-            {/* Recruitment Role */}
-            <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Recruitment Role</div>
-              <select value={form.recruitment_role} onChange={e => setForm(f => ({ ...f, recruitment_role: e.target.value }))}
-                style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
-                <option value="">None</option>
-                <option value="cohort">Cohort</option>
-                <option value="conscript">Conscript</option>
-                <option value="convert">Convert</option>
-                <option value="apprentice">Apprentice</option>
               </select>
             </div>
 
@@ -555,15 +603,64 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
             {/* Skills */}
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Skills</div>
-              <textarea value={form.skills} onChange={e => setForm(f => ({ ...f, skills: e.target.value }))}
-                placeholder="e.g. Ranged Combat 2, Stealth 1, Melee Combat 3"
-                rows={2}
-                style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.5 }} />
+              {form.skillEntries.map((s, i) => (
+                <div key={i} style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+                  <select value={s.name} onChange={e => setForm(f => ({ ...f, skillEntries: f.skillEntries.map((sk, j) => j === i ? { ...sk, name: e.target.value } : sk) }))}
+                    style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                    <option value="">Select skill...</option>
+                    {ALL_SKILLS.map(sk => <option key={sk} value={sk}>{sk}</option>)}
+                  </select>
+                  <select value={s.level} onChange={e => setForm(f => ({ ...f, skillEntries: f.skillEntries.map((sk, j) => j === i ? { ...sk, level: parseInt(e.target.value) } : sk) }))}
+                    style={{ width: '60px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', appearance: 'none' }}>
+                    {[-3, -2, -1, 0, 1, 2, 3, 4].map(v => <option key={v} value={v}>{v > 0 ? `+${v}` : v}</option>)}
+                  </select>
+                  <button onClick={() => setForm(f => ({ ...f, skillEntries: f.skillEntries.filter((_, j) => j !== i) }))} type="button"
+                    style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '14px', padding: '0 4px' }}>×</button>
+                </div>
+              ))}
+              <button onClick={() => setForm(f => ({ ...f, skillEntries: [...f.skillEntries, { name: '', level: 1 }] }))} type="button"
+                style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginTop: '4px' }}>
+                + Add Skill
+              </button>
               {form.npc_type && SKILL_HINTS[form.npc_type] && (
-                <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px', fontStyle: 'italic' }}>
+                <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '6px', fontStyle: 'italic' }}>
                   {SKILL_HINTS[form.npc_type]}
                 </div>
               )}
+            </div>
+
+            {/* Motivation & Complication */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Motivation</div>
+                <select value={form.motivation} onChange={e => setForm(f => ({ ...f, motivation: e.target.value }))}
+                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                  <option value="">None</option>
+                  {MOTIVATIONS.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Complication</div>
+                <select value={form.complication} onChange={e => setForm(f => ({ ...f, complication: e.target.value }))}
+                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                  <option value="">None</option>
+                  {COMPLICATIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Three Words */}
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Three Words</div>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {[0, 1, 2].map(i => (
+                  <select key={i} value={form.threeWords[i] || ''} onChange={e => setForm(f => ({ ...f, threeWords: f.threeWords.map((w, j) => j === i ? e.target.value : w) }))}
+                    style={{ flex: 1, padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                    <option value="">-</option>
+                    {PERSONALITY_WORDS.map(w => <option key={w} value={w}>{w}</option>)}
+                  </select>
+                ))}
+              </div>
             </div>
 
             {/* Notes */}

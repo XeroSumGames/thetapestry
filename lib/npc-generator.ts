@@ -116,6 +116,17 @@ function chance(pct: number): boolean {
 
 // ── Generator ──
 
+export const ALL_SKILLS = [
+  'Animal Handling', 'Athletics', 'Barter', 'Demolitions*', 'Driving',
+  'Entertainment', 'Farming', 'Gambling', 'Heavy Weapons*', 'Inspiration',
+  'Lock-Picking*', 'Manipulation', 'Mechanic*', 'Medicine*', 'Melee Combat',
+  'Navigation', 'Psychology*', 'Ranged Combat', 'Research', 'Scavenging',
+  'Sleight of Hand', 'Specific Knowledge', 'Stealth', 'Streetwise', 'Survival',
+  'Tactics*', 'Tinkerer', 'Unarmed Combat', 'Weaponsmith*',
+]
+
+export interface SkillEntry { name: string; level: number }
+
 export interface GeneratedNpc {
   name: string
   npc_type: string
@@ -124,7 +135,7 @@ export interface GeneratedNpc {
   physicality: number
   influence: number
   dexterity: number
-  skills: string
+  skillEntries: SkillEntry[]
   notes: string
   profession: string
   motivation: string
@@ -224,8 +235,6 @@ export function generateRandomNpc(typeOverride?: string): GeneratedNpc {
     skillEntries = allSkills.map((s, i) => ({ name: s, level: levels[i] ?? 1 }))
   }
 
-  const skills = skillEntries.map(s => `${s.name} ${s.level}`).join(', ')
-
   // Complication & Motivation
   const complication = pick(COMPLICATIONS)
   const motivation = pick(MOTIVATIONS)
@@ -234,11 +243,11 @@ export function generateRandomNpc(typeOverride?: string): GeneratedNpc {
   const words = pickN(PERSONALITY_WORDS, 3)
 
   // GM Notes
-  const notes = `Generated as ${profession}.\nMotivation: ${motivation}. Complication: ${complication}.\nWords: ${words.join(', ')}`
+  const notes = `Generated as ${profession}.`
 
   return {
     name, npc_type: npcType,
     reason, acumen, physicality, influence, dexterity,
-    skills, notes, profession, motivation, complication, words,
+    skillEntries, notes, profession, motivation, complication, words,
   }
 }
