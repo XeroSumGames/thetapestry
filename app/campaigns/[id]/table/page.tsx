@@ -443,11 +443,14 @@ export default function TablePage() {
 
   // ── Roll functions ──
 
+  const [preRollInsight, setPreRollInsight] = useState<'none' | '3d6' | '+3cmod'>('none')
+
   function handleRollRequest(label: string, amod: number, smod: number) {
     setPendingRoll({ label, amod, smod })
     setRollResult(null)
     setCmod('0')
     setTargetName('')
+    setPreRollInsight('none')
   }
 
   async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false, target: string | null = null) {
@@ -468,22 +471,43 @@ export default function TablePage() {
   async function executeRoll() {
     if (!pendingRoll || !userId) return
     setRolling(true)
-    const die1 = rollD6()
-    const die2 = rollD6()
-    const cmodVal = parseInt(cmod) || 0
     const myEntry = entries.find(e => e.userId === userId)
     const characterName = myEntry?.character.name ?? 'Unknown'
+    let cmodVal = parseInt(cmod) || 0
+    let die1: number, die2: number
+    let preRollSpent = false
+
+    if (preRollInsight === '3d6' && myEntry?.liveState && myEntry.liveState.insight_dice >= 1) {
+      // Roll 3d6, keep best 2
+      const rolls = [rollD6(), rollD6(), rollD6()].sort((a, b) => b - a)
+      die1 = rolls[0]
+      die2 = rolls[1]
+      const newInsight = myEntry.liveState.insight_dice - 1
+      await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
+      preRollSpent = true
+    } else if (preRollInsight === '+3cmod' && myEntry?.liveState && myEntry.liveState.insight_dice >= 1) {
+      die1 = rollD6()
+      die2 = rollD6()
+      cmodVal += 3
+      const newInsight = myEntry.liveState.insight_dice - 1
+      await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
+      preRollSpent = true
+    } else {
+      die1 = rollD6()
+      die2 = rollD6()
+    }
 
     const { total, outcome, insightAwarded } = await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null)
 
     if (insightAwarded && myEntry?.liveState) {
-      const newInsight = myEntry.liveState.insight_dice + 1
+      const currentInsight = preRollSpent ? myEntry.liveState.insight_dice - 1 : myEntry.liveState.insight_dice
+      const newInsight = currentInsight + 1
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
     }
 
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
-      total, outcome, label: pendingRoll.label, insightAwarded, spent: false,
+      total, outcome, label: pendingRoll.label, insightAwarded, spent: preRollSpent,
     })
 
     setRolling(false)
@@ -847,10 +871,27 @@ export default function TablePage() {
                   <input type="number" value={cmod} onChange={e => setCmod(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') executeRoll() }} autoFocus
                     style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '16px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
                 </div>
+                {myInsightDice > 0 && (
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <div style={{ fontSize: '10px', color: '#7fc458', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>
+                      Spend Insight Die ({myInsightDice} available)
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button onClick={() => setPreRollInsight(preRollInsight === '3d6' ? 'none' : '3d6')}
+                        style={{ flex: 1, padding: '8px 4px', background: preRollInsight === '3d6' ? '#2d5a1b' : '#1a2e10', border: `1px solid ${preRollInsight === '3d6' ? '#7fc458' : '#2d5a1b'}`, borderRadius: '3px', color: '#7fc458', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        Roll 3d6<br /><span style={{ fontSize: '9px', color: preRollInsight === '3d6' ? '#7fc458' : '#5a5550' }}>Keep best 2</span>
+                      </button>
+                      <button onClick={() => setPreRollInsight(preRollInsight === '+3cmod' ? 'none' : '+3cmod')}
+                        style={{ flex: 1, padding: '8px 4px', background: preRollInsight === '+3cmod' ? '#2d5a1b' : '#1a2e10', border: `1px solid ${preRollInsight === '+3cmod' ? '#7fc458' : '#2d5a1b'}`, borderRadius: '3px', color: '#7fc458', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        +3 CMod<br /><span style={{ fontSize: '9px', color: preRollInsight === '+3cmod' ? '#7fc458' : '#5a5550' }}>Added to roll</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={closeRollModal} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                   <button onClick={executeRoll} disabled={rolling} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer', opacity: rolling ? 0.6 : 1 }}>
-                    {rolling ? 'Rolling...' : '🎲 Roll'}
+                    {rolling ? 'Rolling...' : preRollInsight === '3d6' ? '🎲 Roll 3d6' : '🎲 Roll'}
                   </button>
                 </div>
               </>
