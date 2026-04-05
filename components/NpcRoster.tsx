@@ -195,16 +195,13 @@ export default function NpcRoster({ campaignId, isGM }: Props) {
 
   return (
     <>
-      {/* NPC List */}
-      <div style={{ width: '240px', flexShrink: 0, borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
-        <div style={{ padding: '10px 14px', borderBottom: '1px solid #2e2e2e', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: '10px', fontWeight: 600, color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Barlow Condensed, sans-serif' }}>NPC Roster</span>
-          <button onClick={openAdd}
-            style={{ padding: '2px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            + Add
-          </button>
-        </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '4px' }}>
+      <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+        <button onClick={openAdd}
+          style={{ padding: '2px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          + Add NPC
+        </button>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '4px' }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '1rem', color: '#5a5550', fontSize: '11px' }}>Loading...</div>
           ) : npcs.length === 0 ? (
@@ -245,7 +242,6 @@ export default function NpcRoster({ campaignId, isGM }: Props) {
               )
             })
           )}
-        </div>
       </div>
 
       {/* Add/Edit NPC Modal */}
