@@ -46,13 +46,15 @@ const navLink: React.CSSProperties = {
 }
 
 export default function ModerationPage() {
-  const [section, setSection] = useState<'rumors' | 'users'>('rumors')
+  const [section, setSection] = useState<'rumors' | 'users' | 'npcs'>('rumors')
   const [pins, setPins] = useState<Pin[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending')
   const [acting, setActing] = useState<string | null>(null)
   const [users, setUsers] = useState<Profile[]>([])
   const [usersLoading, setUsersLoading] = useState(false)
+  const [worldNpcs, setWorldNpcs] = useState<any[]>([])
+  const [npcsLoading, setNpcsLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -67,7 +69,23 @@ export default function ModerationPage() {
 
   useEffect(() => {
     if (section === 'users') loadUsers()
+    if (section === 'npcs') loadWorldNpcs()
   }, [section])
+
+  async function loadWorldNpcs() {
+    setNpcsLoading(true)
+    const { data } = await supabase.from('world_npcs').select('*, profiles:created_by(username)').eq('status', 'pending').order('created_at', { ascending: false })
+    setWorldNpcs(data ?? [])
+    setNpcsLoading(false)
+  }
+
+  async function handleNpcAction(id: string, status: 'approved' | 'rejected') {
+    setActing(id)
+    const { data: { user } } = await supabase.auth.getUser()
+    await supabase.from('world_npcs').update({ status, approved_by: user?.id ?? null, approved_at: new Date().toISOString() }).eq('id', id)
+    setWorldNpcs(prev => prev.filter(n => n.id !== id))
+    setActing(null)
+  }
 
   async function load() {
     setLoading(true)
@@ -158,7 +176,7 @@ export default function ModerationPage() {
 
       {/* Section tabs */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem' }}>
-        {(['rumors', 'users'] as const).map(s => (
+        {(['rumors', 'users', 'npcs'] as const).map(s => (
           <button key={s} onClick={() => setSection(s)} style={{
             padding: '7px 16px',
             border: `1px solid ${section === s ? '#c0392b' : '#3a3a3a'}`,
@@ -168,7 +186,7 @@ export default function ModerationPage() {
             fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif',
             letterSpacing: '.06em', textTransform: 'uppercase',
           }}>
-            {s === 'rumors' ? 'Rumor Queue' : 'Users'}
+            {s === 'rumors' ? 'Rumor Queue' : s === 'users' ? 'Users' : 'NPCs'}
           </button>
         ))}
       </div>
@@ -321,6 +339,49 @@ export default function ModerationPage() {
                   <button onClick={() => handleDeleteUser(u.id)} disabled={acting === u.id} style={actionBtn('#7a1f16', '#f5a89a')}>
                     Delete
                   </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* World NPCs moderation */}
+      {section === 'npcs' && (
+        <>
+          <div style={{ fontSize: '12px', color: '#5a5550', marginBottom: '1rem' }}>
+            {npcsLoading ? 'Loading...' : `${worldNpcs.length} pending NPC${worldNpcs.length !== 1 ? 's' : ''}`}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {worldNpcs.map(npc => (
+              <div key={npc.id} style={{ padding: '12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                    {npc.portrait_url ? <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '12px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
+                    <div style={{ fontSize: '10px', color: '#5a5550' }}>
+                      by {(npc.profiles as any)?.username ?? 'Unknown'} &middot; {formatDate(npc.created_at)}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                    {npc.npc_type && <span style={{ fontSize: '8px', padding: '1px 5px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
+                    {npc.setting && <span style={{ fontSize: '8px', padding: '1px 5px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.setting === 'district_zero' ? 'District Zero' : npc.setting === 'chased' ? 'Chased' : 'Custom'}</span>}
+                  </div>
+                </div>
+                {npc.public_description && (
+                  <div style={{ fontSize: '12px', color: '#d4cfc9', marginBottom: '8px', lineHeight: 1.5 }}>{npc.public_description}</div>
+                )}
+                <div style={{ display: 'flex', gap: '6px', fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>
+                  {['RSN', 'ACU', 'PHY', 'INF', 'DEX'].map((attr, i) => {
+                    const vals = [npc.reason, npc.acumen, npc.physicality, npc.influence, npc.dexterity]
+                    return <span key={attr}>{attr} {vals[i] > 0 ? `+${vals[i]}` : vals[i]}</span>
+                  })}
+                </div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={() => handleNpcAction(npc.id, 'approved')} disabled={acting === npc.id} style={actionBtn('#2d5a1b', '#7fc458')}>Approve</button>
+                  <button onClick={() => handleNpcAction(npc.id, 'rejected')} disabled={acting === npc.id} style={actionBtn('#7a1f16', '#f5a89a')}>Reject</button>
                 </div>
               </div>
             ))}

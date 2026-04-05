@@ -53,6 +53,7 @@ export interface CampaignNpc {
   notes: string | null
   npc_type: string | null
   recruitment_role: string | null
+  world_npc_id: string | null
   status: string
   created_at: string
 }
@@ -265,6 +266,80 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     setShowReveal(true)
   }
 
+  // Publish to World
+  const [showPublish, setShowPublish] = useState(false)
+  const [publishDesc, setPublishDesc] = useState('')
+  const [publishSetting, setPublishSetting] = useState('custom')
+  const [publishing, setPublishing] = useState(false)
+  const [publishedNpcIds, setPublishedNpcIds] = useState<Set<string>>(new Set())
+
+  // Browse Library
+  const [showLibrary, setShowLibrary] = useState(false)
+  const [libraryNpcs, setLibraryNpcs] = useState<any[]>([])
+  const [libraryLoading, setLibraryLoading] = useState(false)
+  const [importing, setImporting] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Check which NPCs have been published
+    async function checkPublished() {
+      const { data } = await supabase.from('world_npcs').select('source_campaign_npc_id').not('source_campaign_npc_id', 'is', null)
+      if (data) setPublishedNpcIds(new Set(data.map(d => d.source_campaign_npc_id!)))
+    }
+    if (isGM) checkPublished()
+  }, [npcs])
+
+  async function handlePublish() {
+    if (!editingId) return
+    setPublishing(true)
+    const npc = npcs.find(n => n.id === editingId)
+    if (!npc) { setPublishing(false); return }
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setPublishing(false); return }
+    await supabase.from('world_npcs').insert({
+      source_campaign_npc_id: npc.id,
+      created_by: user.id,
+      name: npc.name,
+      portrait_url: npc.portrait_url,
+      reason: npc.reason, acumen: npc.acumen, physicality: npc.physicality,
+      influence: npc.influence, dexterity: npc.dexterity,
+      skills: npc.skills,
+      npc_type: npc.npc_type,
+      public_description: publishDesc.trim() || null,
+      setting: publishSetting,
+      status: 'pending',
+    })
+    setPublishedNpcIds(prev => new Set([...prev, npc.id]))
+    setShowPublish(false)
+    setPublishing(false)
+    setPublishDesc('')
+  }
+
+  async function openLibrary() {
+    setShowLibrary(true)
+    setLibraryLoading(true)
+    const { data } = await supabase.from('world_npcs').select('*').eq('status', 'approved').order('import_count', { ascending: false })
+    setLibraryNpcs(data ?? [])
+    setLibraryLoading(false)
+  }
+
+  async function handleImport(worldNpc: any) {
+    setImporting(worldNpc.id)
+    await supabase.from('campaign_npcs').insert({
+      campaign_id: campaignId,
+      name: worldNpc.name,
+      portrait_url: worldNpc.portrait_url,
+      reason: worldNpc.reason, acumen: worldNpc.acumen, physicality: worldNpc.physicality,
+      influence: worldNpc.influence, dexterity: worldNpc.dexterity,
+      skills: worldNpc.skills,
+      npc_type: worldNpc.npc_type,
+      world_npc_id: worldNpc.id,
+      status: 'active',
+    })
+    await supabase.from('world_npcs').update({ import_count: (worldNpc.import_count ?? 0) + 1 }).eq('id', worldNpc.id)
+    setImporting(null)
+    await loadNpcs()
+  }
+
   function handleTypeChange(type: string) {
     setForm(f => {
       const preset = TYPE_PRESETS[type]
@@ -289,7 +364,11 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
 
   return (
     <>
-      <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+      <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+        <button onClick={openLibrary}
+          style={{ padding: '2px 8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          Library
+        </button>
         {combatActive && availableForCombat.length > 0 && (
           <button onClick={() => { setCombatPickerIds(new Set()); setShowCombatPicker(true) }}
             style={{ padding: '2px 8px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
@@ -337,7 +416,10 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       })()}
                     </div>
                   </div>
-                  <span style={{ fontSize: '8px', padding: '1px 5px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', flexShrink: 0 }}>{npc.status}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end', flexShrink: 0 }}>
+                    <span style={{ fontSize: '8px', padding: '1px 5px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.status}</span>
+                    {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '7px', padding: '0 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>}
+                  </div>
                 </div>
               )
             })
@@ -512,6 +594,43 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
               </div>
             )}
 
+            {/* Publish to World */}
+            {editingId && !publishedNpcIds.has(editingId) && (
+              <div style={{ marginBottom: '1rem' }}>
+                {!showPublish ? (
+                  <button onClick={() => setShowPublish(true)}
+                    style={{ width: '100%', padding: '8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Publish to World Library
+                  </button>
+                ) : (
+                  <div style={{ padding: '10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                    <div style={{ fontSize: '10px', color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Publish to World</div>
+                    <textarea value={publishDesc} onChange={e => setPublishDesc(e.target.value)}
+                      placeholder="Public description — what other GMs will see"
+                      rows={2}
+                      style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', marginBottom: '6px' }} />
+                    <select value={publishSetting} onChange={e => setPublishSetting(e.target.value)}
+                      style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none', marginBottom: '8px' }}>
+                      <option value="custom">Custom Setting</option>
+                      <option value="district_zero">District Zero</option>
+                      <option value="chased">Chased</option>
+                    </select>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button onClick={() => setShowPublish(false)} style={{ flex: 1, padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                      <button onClick={handlePublish} disabled={publishing} style={{ flex: 1, padding: '6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: publishing ? 'not-allowed' : 'pointer', opacity: publishing ? 0.5 : 1 }}>
+                        {publishing ? 'Publishing...' : 'Submit for Review'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {editingId && publishedNpcIds.has(editingId) && (
+              <div style={{ marginBottom: '1rem', padding: '6px 10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', fontSize: '10px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: 'center' }}>
+                Submitted to World Library
+              </div>
+            )}
+
             {/* Status */}
             <div style={{ marginBottom: '1.25rem' }}>
               <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Status</div>
@@ -570,6 +689,48 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                 Add {combatPickerIds.size > 0 ? `(${combatPickerIds.size})` : ''}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Browse Library modal */}
+      {showLibrary && (
+        <div onClick={() => setShowLibrary(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '500px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: '10px', color: '#7ab3d4', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>World NPC Library</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>Browse &amp; Import</div>
+            <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
+              {libraryLoading ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#5a5550', fontSize: '12px' }}>Loading...</div>
+              ) : libraryNpcs.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#3a3a3a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif' }}>No approved NPCs in the library yet.</div>
+              ) : (
+                libraryNpcs.map((npc: any) => (
+                  <div key={npc.id} style={{ padding: '10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                        {npc.portrait_url ? <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '10px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
+                        <div style={{ display: 'flex', gap: '4px', marginTop: '2px' }}>
+                          {npc.npc_type && <span style={{ fontSize: '8px', padding: '0 4px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
+                          {npc.setting && <span style={{ fontSize: '8px', padding: '0 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.setting === 'district_zero' ? 'District Zero' : npc.setting === 'chased' ? 'Chased' : 'Custom'}</span>}
+                        </div>
+                      </div>
+                      <button onClick={() => handleImport(npc)} disabled={importing === npc.id}
+                        style={{ padding: '4px 10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: importing === npc.id ? 'not-allowed' : 'pointer', opacity: importing === npc.id ? 0.5 : 1, flexShrink: 0 }}>
+                        {importing === npc.id ? '...' : 'Import'}
+                      </button>
+                    </div>
+                    {npc.public_description && (
+                      <div style={{ fontSize: '11px', color: '#d4cfc9', lineHeight: 1.5 }}>{npc.public_description}</div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+            <button onClick={() => setShowLibrary(false)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Close</button>
           </div>
         </div>
       )}
