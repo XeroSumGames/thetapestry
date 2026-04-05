@@ -268,7 +268,7 @@ export default function TablePage() {
     })
 
     if (insightAwarded && myEntry?.liveState) {
-      const newInsight = Math.min(myEntry.liveState.insight_dice + 1, 9)
+      const newInsight = myEntry.liveState.insight_dice + 1
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
     }
 
