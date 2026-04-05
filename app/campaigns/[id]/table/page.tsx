@@ -45,6 +45,19 @@ interface PendingRoll {
   smod: number
 }
 
+interface RollResult {
+  die1: number
+  die2: number
+  amod: number
+  smod: number
+  cmod: number
+  total: number
+  outcome: string
+  label: string
+  insightAwarded: boolean
+  spent: boolean
+}
+
 const SETTINGS: Record<string, string> = {
   custom: 'New Setting',
   district0: 'District Zero',
@@ -77,6 +90,8 @@ function outcomeColor(outcome: string): string {
   }
 }
 
+function rollD6() { return Math.floor(Math.random() * 6) + 1 }
+
 export default function TablePage() {
   const params = useParams()
   const id = params.id as string
@@ -96,6 +111,7 @@ export default function TablePage() {
   const [selectedEntry, setSelectedEntry] = useState<TableEntry | null>(null)
   const [rolls, setRolls] = useState<RollEntry[]>([])
   const [pendingRoll, setPendingRoll] = useState<PendingRoll | null>(null)
+  const [rollResult, setRollResult] = useState<RollResult | null>(null)
   const [cmod, setCmod] = useState('0')
   const [rolling, setRolling] = useState(false)
 
@@ -120,13 +136,11 @@ export default function TablePage() {
     const charIds = filteredStates.map((s: any) => s.character_id)
     const userIds = filteredStates.map((s: any) => s.user_id)
 
-    // Parallel: characters (no photo) + profiles
     const [{ data: chars }, { data: profiles }] = await Promise.all([
       supabase.from('characters').select('id, name, created_at, data').in('id', charIds),
       supabase.from('profiles').select('id, username').in('id', userIds),
     ])
 
-    // Strip photo from bulk load — fetch separately below for portrait strip
     const charMap = Object.fromEntries((chars ?? []).map((c: any) => {
       const { photoDataUrl, ...dataWithoutPhoto } = c.data ?? {}
       return [c.id, { ...c, data: dataWithoutPhoto }]
@@ -149,7 +163,6 @@ export default function TablePage() {
     setEntries(newEntries)
     setEntriesLoading(false)
 
-    // Fetch photos separately and merge in — lightweight after main data is shown
     const { data: photoRows } = await supabase
       .from('characters')
       .select('id, data->photoDataUrl')
@@ -245,36 +258,83 @@ export default function TablePage() {
 
   function handleRollRequest(label: string, amod: number, smod: number) {
     setPendingRoll({ label, amod, smod })
+    setRollResult(null)
     setCmod('0')
+  }
+
+  async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false) {
+    const total = die1 + die2 + amod + smod + cmodVal
+    const outcome = getOutcome(total, die1, die2)
+    const insightAwarded = outcome === 'Low Insight' || outcome === 'High Insight'
+
+    await supabase.from('roll_log').insert({
+      campaign_id: id, user_id: userId, character_name: characterName,
+      label: isReroll ? `${label} (Re-roll)` : label,
+      die1, die2, amod, smod, cmod: cmodVal, total, outcome, insight_awarded: insightAwarded,
+    })
+
+    return { total, outcome, insightAwarded }
   }
 
   async function executeRoll() {
     if (!pendingRoll || !userId) return
     setRolling(true)
-    const die1 = Math.floor(Math.random() * 6) + 1
-    const die2 = Math.floor(Math.random() * 6) + 1
+    const die1 = rollD6()
+    const die2 = rollD6()
     const cmodVal = parseInt(cmod) || 0
-    const total = die1 + die2 + pendingRoll.amod + pendingRoll.smod + cmodVal
-    const outcome = getOutcome(total, die1, die2)
-    const insightAwarded = outcome === 'Low Insight' || outcome === 'High Insight'
     const myEntry = entries.find(e => e.userId === userId)
     const characterName = myEntry?.character.name ?? 'Unknown'
 
-    await supabase.from('roll_log').insert({
-      campaign_id: id, user_id: userId, character_name: characterName,
-      label: pendingRoll.label, die1, die2,
-      amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
-      total, outcome, insight_awarded: insightAwarded,
-    })
+    const { total, outcome, insightAwarded } = await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName)
 
     if (insightAwarded && myEntry?.liveState) {
       const newInsight = myEntry.liveState.insight_dice + 1
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
     }
 
-    setPendingRoll(null)
+    setRollResult({
+      die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
+      total, outcome, label: pendingRoll.label, insightAwarded, spent: false,
+    })
+
     setRolling(false)
     await Promise.all([loadEntries(id), loadRolls(id)])
+  }
+
+  async function spendInsightDie(rerollDie: 'die1' | 'die2' | 'both') {
+    if (!rollResult || !userId) return
+    const myEntry = entries.find(e => e.userId === userId)
+    if (!myEntry?.liveState) return
+
+    const cost = rerollDie === 'both' ? 2 : 1
+    if (myEntry.liveState.insight_dice < cost) return
+
+    setRolling(true)
+
+    // Decrement insight dice
+    const newInsight = myEntry.liveState.insight_dice - cost
+    await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
+
+    // Re-roll the selected dice
+    const newDie1 = rerollDie === 'die2' ? rollResult.die1 : rollD6()
+    const newDie2 = rerollDie === 'die1' ? rollResult.die2 : rollD6()
+    const characterName = myEntry.character.name ?? 'Unknown'
+
+    const { total, outcome, insightAwarded } = await saveRollToLog(newDie1, newDie2, rollResult.amod, rollResult.smod, rollResult.cmod, rollResult.label, characterName, true)
+
+    // Award insight die if re-roll produces a Moment of Insight
+    if (insightAwarded) {
+      await supabase.from('character_states').update({ insight_dice: newInsight + 1, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
+    }
+
+    setRollResult({ ...rollResult, die1: newDie1, die2: newDie2, total, outcome, insightAwarded, spent: true })
+    setRolling(false)
+    await Promise.all([loadEntries(id), loadRolls(id)])
+  }
+
+  function closeRollModal() {
+    setPendingRoll(null)
+    setRollResult(null)
   }
 
   function getInitials(name: string) {
@@ -299,6 +359,7 @@ export default function TablePage() {
   const playerEntries = entries.filter(e => e.userId !== campaign.gm_user_id)
   const syncedSelectedEntry = selectedEntry ? entries.find(e => e.stateId === selectedEntry.stateId) ?? selectedEntry : null
   const myEntry = entries.find(e => e.userId === userId) ?? null
+  const myInsightDice = myEntry?.liveState?.insight_dice ?? 0
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 74px)', overflow: 'hidden', fontFamily: 'Barlow, sans-serif', background: '#0f0f0f' }}>
@@ -450,34 +511,102 @@ export default function TablePage() {
         </div>
       )}
 
-      {/* CMod / Roll modal */}
+      {/* Roll modal — CMod input phase OR result + Insight Dice spend phase */}
       {pendingRoll && (
-        <div onClick={() => setPendingRoll(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
-            <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Rolling</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>{pendingRoll.label}</div>
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '1rem', fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
-              <span>2d6</span>
-              {pendingRoll.amod !== 0 && <span style={{ color: pendingRoll.amod > 0 ? '#7fc458' : '#c0392b' }}>{pendingRoll.amod > 0 ? '+' : ''}{pendingRoll.amod} AMod</span>}
-              {pendingRoll.smod !== 0 && <span style={{ color: pendingRoll.smod > 0 ? '#7fc458' : '#c0392b' }}>{pendingRoll.smod > 0 ? '+' : ''}{pendingRoll.smod} SMod</span>}
-            </div>
-            <div style={{ marginBottom: '1.25rem' }}>
-              <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>CMod (Relationship / Situational)</div>
-              <input
-                type="number"
-                value={cmod}
-                onChange={e => setCmod(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') executeRoll() }}
-                autoFocus
-                style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '16px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }}
-              />
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => setPendingRoll(null)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={executeRoll} disabled={rolling} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer', opacity: rolling ? 0.6 : 1 }}>
-                {rolling ? 'Rolling...' : '🎲 Roll'}
-              </button>
-            </div>
+        <div onClick={closeRollModal} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '340px' }}>
+
+            {/* Phase 1 — CMod input */}
+            {!rollResult && (
+              <>
+                <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Rolling</div>
+                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>{pendingRoll.label}</div>
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '1rem', fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  <span>2d6</span>
+                  {pendingRoll.amod !== 0 && <span style={{ color: pendingRoll.amod > 0 ? '#7fc458' : '#c0392b' }}>{pendingRoll.amod > 0 ? '+' : ''}{pendingRoll.amod} AMod</span>}
+                  {pendingRoll.smod !== 0 && <span style={{ color: pendingRoll.smod > 0 ? '#7fc458' : '#c0392b' }}>{pendingRoll.smod > 0 ? '+' : ''}{pendingRoll.smod} SMod</span>}
+                </div>
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>CMod (Relationship / Situational)</div>
+                  <input
+                    type="number"
+                    value={cmod}
+                    onChange={e => setCmod(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') executeRoll() }}
+                    autoFocus
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '16px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={closeRollModal} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={executeRoll} disabled={rolling} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer', opacity: rolling ? 0.6 : 1 }}>
+                    {rolling ? 'Rolling...' : '🎲 Roll'}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Phase 2 — Result + Insight Dice spend */}
+            {rollResult && (
+              <>
+                <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>{rollResult.label}</div>
+
+                {/* Dice display */}
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', margin: '1rem 0' }}>
+                  {[rollResult.die1, rollResult.die2].map((d, i) => (
+                    <div key={i} style={{ width: '52px', height: '52px', background: '#242424', border: '2px solid #3a3a3a', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, color: '#f5f2ee' }}>{d}</div>
+                  ))}
+                </div>
+
+                {/* Breakdown */}
+                <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', marginBottom: '8px' }}>
+                  [{rollResult.die1}+{rollResult.die2}]
+                  {rollResult.amod !== 0 && <span style={{ color: rollResult.amod > 0 ? '#7fc458' : '#c0392b' }}> {rollResult.amod > 0 ? '+' : ''}{rollResult.amod}</span>}
+                  {rollResult.smod !== 0 && <span style={{ color: rollResult.smod > 0 ? '#7fc458' : '#c0392b' }}> {rollResult.smod > 0 ? '+' : ''}{rollResult.smod}</span>}
+                  {rollResult.cmod !== 0 && <span style={{ color: rollResult.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {rollResult.cmod > 0 ? '+' : ''}{rollResult.cmod}</span>}
+                  <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {rollResult.total}</span>
+                </div>
+
+                {/* Outcome */}
+                <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                  <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: outcomeColor(rollResult.outcome) }}>{rollResult.outcome}</div>
+                  {rollResult.insightAwarded && (
+                    <div style={{ fontSize: '11px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '3px 8px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', display: 'inline-block', marginTop: '6px' }}>+1 Insight Die</div>
+                  )}
+                </div>
+
+                {/* Insight Dice spend — only show if player has dice and hasn't spent yet */}
+                {!rollResult.spent && myInsightDice > 0 && (
+                  <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ fontSize: '10px', color: '#7fc458', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', textAlign: 'center' }}>
+                      Spend Insight Dice ({myInsightDice} available)
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button onClick={() => spendInsightDie('die1')} disabled={rolling} style={{ flex: 1, padding: '8px 4px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer', opacity: rolling ? 0.5 : 1 }}>
+                        Re-roll<br />Die 1
+                      </button>
+                      <button onClick={() => spendInsightDie('die2')} disabled={rolling} style={{ flex: 1, padding: '8px 4px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer', opacity: rolling ? 0.5 : 1 }}>
+                        Re-roll<br />Die 2
+                      </button>
+                      <button onClick={() => spendInsightDie('both')} disabled={rolling || myInsightDice < 2} style={{ flex: 1, padding: '8px 4px', background: myInsightDice >= 2 ? '#1a2e10' : '#1a1a1a', border: `1px solid ${myInsightDice >= 2 ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: myInsightDice >= 2 ? '#7fc458' : '#3a3a3a', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: rolling || myInsightDice < 2 ? 'not-allowed' : 'pointer', opacity: rolling ? 0.5 : 1 }}>
+                        Re-roll<br />Both (2)
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {rollResult.spent && (
+                  <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '1rem', marginBottom: '1rem', textAlign: 'center', fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                    Insight Die spent
+                  </div>
+                )}
+
+                <button onClick={closeRollModal} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Done
+                </button>
+              </>
+            )}
+
           </div>
         </div>
       )}
