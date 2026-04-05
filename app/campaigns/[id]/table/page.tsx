@@ -152,6 +152,8 @@ export default function TablePage() {
   const [sessionCount, setSessionCount] = useState(0)
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
   const [sessionSummary, setSessionSummary] = useState('')
+  const [nextSessionNotes, setNextSessionNotes] = useState('')
+  const [sessionFiles, setSessionFiles] = useState<File[]>([])
   const [sessionActing, setSessionActing] = useState(false)
   const [gmTab, setGmTab] = useState<'npcs' | 'notes'>('npcs')
   const campaignChannelRef = useRef<any>(null)
@@ -527,13 +529,44 @@ export default function TablePage() {
       session_status: 'idle',
       session_started_at: null,
     }).eq('id', id)
-    await supabase.from('sessions').update({
-      ended_at: now,
-      gm_summary: sessionSummary.trim() || null,
-    }).eq('campaign_id', id).eq('session_number', sessionCount).is('ended_at', null)
+
+    // Find the current session row
+    const { data: sessionRow } = await supabase.from('sessions')
+      .select('id')
+      .eq('campaign_id', id).eq('session_number', sessionCount).is('ended_at', null)
+      .single()
+
+    if (sessionRow) {
+      await supabase.from('sessions').update({
+        ended_at: now,
+        gm_summary: sessionSummary.trim() || null,
+        next_session_notes: nextSessionNotes.trim() || null,
+      }).eq('id', sessionRow.id)
+
+      // Upload attachments
+      if (sessionFiles.length > 0 && userId) {
+        for (const file of sessionFiles) {
+          const path = `${sessionRow.id}/${file.name}`
+          const { error: upErr } = await supabase.storage.from('session-attachments').upload(path, file)
+          if (!upErr) {
+            const { data: urlData } = supabase.storage.from('session-attachments').getPublicUrl(path)
+            await supabase.from('session_attachments').insert({
+              session_id: sessionRow.id,
+              file_url: urlData.publicUrl,
+              file_name: file.name,
+              file_type: file.type,
+              uploaded_by: userId,
+            })
+          }
+        }
+      }
+    }
+
     setSessionStatus('idle')
     setShowEndSessionModal(false)
     setSessionSummary('')
+    setNextSessionNotes('')
+    setSessionFiles([])
     setSessionActing(false)
   }
 
@@ -1138,18 +1171,69 @@ export default function TablePage() {
       {/* End Session modal */}
       {showEndSessionModal && (
         <div onClick={() => setShowEndSessionModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '400px' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '520px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>End Session</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>Session {sessionCount} Summary</div>
-            <textarea
-              value={sessionSummary}
-              onChange={e => setSessionSummary(e.target.value)}
-              placeholder="What happened this session? (optional)"
-              autoFocus
-              rows={5}
-              style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
-            />
-            <div style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1.25rem' }}>Session {sessionCount} Summary</div>
+
+            {/* What happened */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>What happened this session?</div>
+              <textarea
+                value={sessionSummary}
+                onChange={e => setSessionSummary(e.target.value)}
+                placeholder="Summarise the session — key events, decisions, outcomes."
+                autoFocus
+                rows={6}
+                style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
+              />
+            </div>
+
+            {/* Notes for next session */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Notes for next session</div>
+              <textarea
+                value={nextSessionNotes}
+                onChange={e => setNextSessionNotes(e.target.value)}
+                placeholder="Prep notes, loose threads, things to follow up on."
+                rows={4}
+                style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
+              />
+            </div>
+
+            {/* File upload */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Attach files (optional)</div>
+              <div
+                onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#c0392b' }}
+                onDragLeave={e => { e.currentTarget.style.borderColor = '#3a3a3a' }}
+                onDrop={e => {
+                  e.preventDefault()
+                  e.currentTarget.style.borderColor = '#3a3a3a'
+                  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/') || f.type === 'application/pdf')
+                  if (files.length > 0) setSessionFiles(prev => [...prev, ...files])
+                }}
+                style={{ border: '2px dashed #3a3a3a', borderRadius: '4px', padding: '1.25rem', textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
+                onClick={() => { const input = document.createElement('input'); input.type = 'file'; input.multiple = true; input.accept = 'image/*,.pdf'; input.onchange = () => { const files = Array.from(input.files ?? []).filter(f => f.type.startsWith('image/') || f.type === 'application/pdf'); if (files.length > 0) setSessionFiles(prev => [...prev, ...files]) }; input.click() }}
+              >
+                <div style={{ fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                  Drop files here or click to browse
+                </div>
+                <div style={{ fontSize: '10px', color: '#3a3a3a', marginTop: '4px' }}>Maps, handouts, references — images and PDFs only</div>
+              </div>
+              {sessionFiles.length > 0 && (
+                <div style={{ marginTop: '8px' }}>
+                  {sessionFiles.map((f, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '11px', color: '#d4cfc9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+                      <button onClick={() => setSessionFiles(prev => prev.filter((_, j) => j !== i))}
+                        style={{ background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '14px', padding: '0 4px' }}>×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setShowEndSessionModal(false)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               <button onClick={endSession} disabled={sessionActing} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.6 : 1 }}>
                 {sessionActing ? 'Ending...' : 'End Session'}
