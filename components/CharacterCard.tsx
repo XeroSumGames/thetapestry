@@ -324,9 +324,11 @@ export default function CharacterCard({
       </div>
 
       {/* Hidden print sheet */}
-      <div id={`print-container-${c.id}`} style={{ display: printing ? 'block' : 'none' }}>
-        <PrintSheet state={toWizardState(c.data)} />
-      </div>
+      {printing && (
+        <div className="print-sheet-container">
+          <PrintSheet state={toWizardState(c.data)} />
+        </div>
+      )}
     </div>
   )
 }

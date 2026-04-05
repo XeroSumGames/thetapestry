@@ -186,7 +186,7 @@ export default function NewCharacterPage() {
       </div>
 
       {/* Print sheet - hidden on screen, visible on print */}
-      <div id="print-sheet-container" style={{ display: 'none' }}>
+      <div className="print-sheet-container">
         <PrintSheet state={state} />
       </div>
 

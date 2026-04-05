@@ -6,6 +6,7 @@ import {
   createWizardState, WizardState, buildCharacter,
   skillStepUp, getCumulativeSkills
 } from '../../../lib/xse-engine'
+import PrintSheet from '../../../components/wizard/PrintSheet'
 import {
   SKILLS, ATTRIBUTE_LABELS, SKILL_LABELS,
   AttributeName, SkillValue, PROFESSIONS
@@ -141,10 +142,7 @@ export default function QuickCharacterPage() {
   }
 
   function handlePrint() {
-    const el = document.getElementById('print-sheet-container')
-    if (el) el.style.display = 'block'
     window.print()
-    if (el) el.style.display = 'none'
   }
 
   const allSkills = getCumulativeSkills(state.steps)
@@ -309,6 +307,9 @@ export default function QuickCharacterPage() {
             : <button onClick={handleSave} disabled={saving || saved} style={{ ...navBtn(true), opacity: saving || saved ? 0.6 : 1 }}>{saving ? 'Saving...' : saved ? 'Saved ?' : 'Save Character'}</button>
           }
         </div>
+      </div>
+      <div className="print-sheet-container">
+        <PrintSheet state={state} />
       </div>
     </div>
   )

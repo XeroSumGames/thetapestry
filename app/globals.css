@@ -5,6 +5,7 @@
   src: url('/fonts/Distemper.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 *, *::before, *::after {
@@ -67,7 +68,7 @@ textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
 @media screen {
-  #print-sheet-container {
+  .print-sheet-container {
     position: absolute;
     left: -9999px;
     top: 0;
@@ -81,22 +82,22 @@ textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
     size: Letter portrait;
     margin: 0.4in 0.4in 0.4in 0.4in;
   }
-  body > * {
-    display: none !important;
+  body * {
+    visibility: hidden;
   }
-  #print-sheet-container {
-    display: block !important;
+  .print-sheet-container,
+  .print-sheet-container * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .print-sheet-container {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;
-    visibility: visible !important;
     background: #fff !important;
     color: #111 !important;
-  }
-  #print-sheet-container * {
-    visibility: visible !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+    z-index: 99999 !important;
   }
 }

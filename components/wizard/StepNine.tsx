@@ -206,7 +206,7 @@ export default function StepNine({ state, onChange }: Props) {
       </div>
 
       {/* Hidden print sheet — revealed only during print */}
-      <div id="print-sheet-container" style={{ display: 'none' }}>
+      <div className="print-sheet-container">
         <PrintSheet state={state} />
       </div>
 
