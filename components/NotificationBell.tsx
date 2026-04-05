@@ -102,7 +102,7 @@ export default function NotificationBell() {
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button onClick={() => setOpen(prev => !prev)}
-        style={{ position: 'relative', background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '18px', padding: '4px 8px', lineHeight: 1 }}>
+        style={{ position: 'relative', background: 'none', border: 'none', color: unreadCount > 0 ? '#EF9F27' : '#3a3a3a', cursor: 'pointer', fontSize: '18px', padding: '4px 8px', lineHeight: 1 }}>
         🔔
         {unreadCount > 0 && (
           <span style={{

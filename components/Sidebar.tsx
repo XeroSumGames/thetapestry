@@ -75,7 +75,9 @@ export default function Sidebar() {
 <a href="/campaigns" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Stories</a>
 <a href="#" style={soonStyle}>The Campfire <span style={{ fontSize: '9px', color: '#cce0f5' }}>&mdash; soon</span></a>
 
-      {/* Moderation � thrivers only */}
+      {divider}
+
+      {/* Moderation — thrivers only */}
       {userRole === 'thriver' && (
         <a href="/moderate" style={{ ...linkStyle('#EF9F27'), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
           Moderation Queue
