@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { generateRandomNpc } from '../lib/npc-generator'
 
 const RAPID_LABELS: Record<number, string> = {
   [-2]: 'Diminished', [-1]: 'Weak', 0: 'Average', 1: 'Good',
@@ -129,6 +130,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   function openAdd() {
     setForm(emptyForm)
     setEditingId(null)
+    setGeneratedSummary('')
     setShowForm(true)
   }
 
@@ -264,6 +266,26 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     const firstLevel = relationships.find(r => r.revealed)?.reveal_level
     setRevealLevel((firstLevel as any) ?? 'name_portrait')
     setShowReveal(true)
+  }
+
+  // Generate
+  const [generatedSummary, setGeneratedSummary] = useState<string>('')
+
+  function applyGenerated(typeOverride?: string) {
+    const npc = generateRandomNpc(typeOverride)
+    setForm(f => ({
+      ...f,
+      name: npc.name,
+      npc_type: npc.npc_type,
+      reason: npc.reason,
+      acumen: npc.acumen,
+      physicality: npc.physicality,
+      influence: npc.influence,
+      dexterity: npc.dexterity,
+      skills: npc.skills,
+      notes: npc.notes,
+    }))
+    setGeneratedSummary(`Generated as ${npc.profession} — ${npc.motivation} / ${npc.complication}`)
   }
 
   // Publish to World
@@ -436,6 +458,28 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>
               {form.name || 'New NPC'}
             </div>
+
+            {/* Generate buttons */}
+            {!editingId && (
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+                  <button onClick={() => { applyGenerated(); }} type="button"
+                    style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    ⚄ Quick Generate
+                  </button>
+                  <button onClick={() => { if (!form.npc_type) return; applyGenerated(form.npc_type); }} type="button"
+                    title={!form.npc_type ? 'Select an NPC Type first' : undefined}
+                    style={{ flex: 1, padding: '8px', background: form.npc_type ? '#242424' : '#1a1a1a', border: `1px solid ${form.npc_type ? '#3a3a3a' : '#2e2e2e'}`, borderRadius: '3px', color: form.npc_type ? '#d4cfc9' : '#3a3a3a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: form.npc_type ? 'pointer' : 'not-allowed' }}>
+                    ⚄ Guided Generate
+                  </button>
+                </div>
+                {generatedSummary && (
+                  <div style={{ fontSize: '10px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', fontStyle: 'italic' }}>
+                    {generatedSummary}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Portrait */}
             <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
