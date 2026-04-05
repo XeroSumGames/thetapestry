@@ -68,6 +68,9 @@ interface InitiativeEntry {
   character_name: string
   character_id: string | null
   user_id: string | null
+  npc_id: string | null
+  portrait_url: string | null
+  npc_type: string | null
   roll: number
   is_active: boolean
   is_npc: boolean
@@ -138,6 +141,9 @@ export default function TablePage() {
   const [showAddNPC, setShowAddNPC] = useState(false)
   const [npcName, setNpcName] = useState('')
   const [startingCombat, setStartingCombat] = useState(false)
+  const [showNpcPicker, setShowNpcPicker] = useState(false)
+  const [selectedNpcIds, setSelectedNpcIds] = useState<Set<string>>(new Set())
+  const [rosterNpcs, setRosterNpcs] = useState<any[]>([])
 
   // Session
   const [sessionStatus, setSessionStatus] = useState<'idle' | 'active'>('idle')
@@ -335,13 +341,27 @@ export default function TablePage() {
 
   async function startCombat() {
     if (!isGM) return
+    // Load roster NPCs for picker
+    const { data: roster } = await supabase
+      .from('campaign_npcs')
+      .select('*')
+      .eq('campaign_id', id)
+      .eq('status', 'active')
+      .order('name')
+    setRosterNpcs(roster ?? [])
+    setSelectedNpcIds(new Set())
+    setShowNpcPicker(true)
+  }
+
+  async function confirmStartCombat() {
     setStartingCombat(true)
+    setShowNpcPicker(false)
 
     // Clear any existing initiative
     await supabase.from('initiative_order').delete().eq('campaign_id', id)
 
     // Roll initiative for all PCs: 2d6 + ACU AMod + DEX AMod
-    const toInsert = entries.map(e => {
+    const pcRows = entries.map(e => {
       const rapid = e.character.data?.rapid ?? {}
       const acu = rapid.ACU ?? 0
       const dex = rapid.DEX ?? 0
@@ -351,12 +371,32 @@ export default function TablePage() {
         character_name: e.character.name,
         character_id: e.character.id,
         user_id: e.userId,
+        npc_id: null,
+        portrait_url: null,
+        npc_type: null,
         roll,
         is_active: false,
         is_npc: false,
       }
     })
 
+    // Roll initiative for selected NPCs: 2d6 + ACU AMod + DEX AMod
+    const npcRows = rosterNpcs
+      .filter(n => selectedNpcIds.has(n.id))
+      .map(n => ({
+        campaign_id: id,
+        character_name: n.name,
+        character_id: null,
+        user_id: null,
+        npc_id: n.id,
+        portrait_url: n.portrait_url,
+        npc_type: n.npc_type,
+        roll: rollD6() + rollD6() + (n.acumen ?? 0) + (n.dexterity ?? 0),
+        is_active: false,
+        is_npc: true,
+      }))
+
+    const toInsert = [...pcRows, ...npcRows]
     if (toInsert.length > 0) {
       await supabase.from('initiative_order').insert(toInsert)
     }
@@ -410,6 +450,25 @@ export default function TablePage() {
     setNpcName('')
     setShowAddNPC(false)
     await loadInitiative(id)
+  }
+
+  async function addNpcsToCombat(npcsToAdd: any[]) {
+    const rows = npcsToAdd.map(n => ({
+      campaign_id: id,
+      character_name: n.name,
+      character_id: null,
+      user_id: null,
+      npc_id: n.id,
+      portrait_url: n.portrait_url,
+      npc_type: n.npc_type,
+      roll: rollD6() + rollD6() + (n.acumen ?? 0) + (n.dexterity ?? 0),
+      is_active: false,
+      is_npc: true,
+    }))
+    if (rows.length > 0) {
+      await supabase.from('initiative_order').insert(rows)
+      await loadInitiative(id)
+    }
   }
 
   async function removeFromInitiative(entryId: string) {
@@ -670,10 +729,22 @@ export default function TablePage() {
                 {entry.is_active && (
                   <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#c0392b', flexShrink: 0 }} />
                 )}
+                {entry.is_npc && (
+                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                    {entry.portrait_url ? (
+                      <img src={entry.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <span style={{ fontSize: '7px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{entry.character_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}</span>
+                    )}
+                  </div>
+                )}
                 <span style={{ fontSize: '11px', fontWeight: entry.is_active ? 700 : 400, color: entry.is_active ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                   {entry.character_name}
                 </span>
-                {entry.is_npc && (
+                {entry.is_npc && entry.npc_type && (
+                  <span style={{ fontSize: '8px', color: entry.npc_type === 'friendly' ? '#7fc458' : entry.npc_type === 'antagonist' ? '#d48bd4' : entry.npc_type === 'foe' ? '#f5a89a' : '#EF9F27', background: entry.npc_type === 'friendly' ? '#1a2e10' : entry.npc_type === 'antagonist' ? '#2a102a' : entry.npc_type === 'foe' ? '#2a1210' : '#2a2010', border: `1px solid ${entry.npc_type === 'friendly' ? '#2d5a1b' : entry.npc_type === 'antagonist' ? '#8b2e8b' : entry.npc_type === 'foe' ? '#c0392b' : '#5a4a1b'}`, padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>{entry.npc_type}</span>
+                )}
+                {entry.is_npc && !entry.npc_type && (
                   <span style={{ fontSize: '8px', color: '#EF9F27', background: '#2a2010', border: '1px solid #EF9F27', padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>NPC</span>
                 )}
                 <span style={{ fontSize: '11px', color: entry.is_active ? '#c0392b' : '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
@@ -797,7 +868,7 @@ export default function TablePage() {
               ))}
             </div>
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              {gmTab === 'npcs' && <NpcRoster campaignId={id} isGM={isGM} />}
+              {gmTab === 'npcs' && <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} onAddToCombat={addNpcsToCombat} />}
               {gmTab === 'notes' && (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3a3a3a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                   Coming Soon
@@ -997,6 +1068,52 @@ export default function TablePage() {
               <button onClick={() => setShowEndSessionModal(false)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               <button onClick={endSession} disabled={sessionActing} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.6 : 1 }}>
                 {sessionActing ? 'Ending...' : 'End Session'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* NPC Picker for Start Combat */}
+      {showNpcPicker && (
+        <div onClick={() => setShowNpcPicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '400px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Start Combat</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>Select NPCs for this encounter</div>
+            <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
+              {rosterNpcs.length === 0 ? (
+                <div style={{ color: '#5a5550', fontSize: '12px', textAlign: 'center', padding: '1rem' }}>No active NPCs in roster. You can add them during combat.</div>
+              ) : (
+                rosterNpcs.map(npc => (
+                  <label key={npc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', background: selectedNpcIds.has(npc.id) ? '#2a1210' : '#1a1a1a', border: `1px solid ${selectedNpcIds.has(npc.id) ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={selectedNpcIds.has(npc.id)} onChange={() => {
+                      setSelectedNpcIds(prev => {
+                        const next = new Set(prev)
+                        if (next.has(npc.id)) next.delete(npc.id)
+                        else next.add(npc.id)
+                        return next
+                      })
+                    }} style={{ accentColor: '#c0392b' }} />
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                      {npc.portrait_url ? (
+                        <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ fontSize: '9px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
+                      {npc.npc_type && <span style={{ fontSize: '9px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
+                    </div>
+                  </label>
+                ))
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => setShowNpcPicker(false)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={confirmStartCombat} disabled={startingCombat}
+                style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: startingCombat ? 'not-allowed' : 'pointer', opacity: startingCombat ? 0.6 : 1 }}>
+                {startingCombat ? 'Rolling...' : `⚔️ Start Combat${selectedNpcIds.size > 0 ? ` (${selectedNpcIds.size} NPCs)` : ''}`}
               </button>
             </div>
           </div>

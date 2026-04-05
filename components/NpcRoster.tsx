@@ -60,6 +60,9 @@ export interface CampaignNpc {
 interface Props {
   campaignId: string
   isGM: boolean
+  combatActive?: boolean
+  initiativeNpcIds?: Set<string>
+  onAddToCombat?: (npcs: CampaignNpc[]) => void
 }
 
 const emptyForm = {
@@ -69,7 +72,7 @@ const emptyForm = {
   npc_type: '' as string, recruitment_role: '' as string,
 }
 
-export default function NpcRoster({ campaignId, isGM }: Props) {
+export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, onAddToCombat }: Props) {
   const supabase = createClient()
   const [npcs, setNpcs] = useState<CampaignNpc[]>([])
   const [loading, setLoading] = useState(true)
@@ -171,6 +174,18 @@ export default function NpcRoster({ campaignId, isGM }: Props) {
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
   }
 
+  const [showCombatPicker, setShowCombatPicker] = useState(false)
+  const [combatPickerIds, setCombatPickerIds] = useState<Set<string>>(new Set())
+
+  const availableForCombat = npcs.filter(n => n.status === 'active' && !initiativeNpcIds?.has(n.id))
+
+  function handleAddToCombat() {
+    const selected = npcs.filter(n => combatPickerIds.has(n.id))
+    if (selected.length > 0 && onAddToCombat) onAddToCombat(selected)
+    setShowCombatPicker(false)
+    setCombatPickerIds(new Set())
+  }
+
   function handleTypeChange(type: string) {
     setForm(f => {
       const preset = TYPE_PRESETS[type]
@@ -195,7 +210,13 @@ export default function NpcRoster({ campaignId, isGM }: Props) {
 
   return (
     <>
-      <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+      <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+        {combatActive && availableForCombat.length > 0 && (
+          <button onClick={() => { setCombatPickerIds(new Set()); setShowCombatPicker(true) }}
+            style={{ padding: '2px 8px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            + Combat
+          </button>
+        )}
         <button onClick={openAdd}
           style={{ padding: '2px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
           + Add NPC
@@ -370,6 +391,41 @@ export default function NpcRoster({ campaignId, isGM }: Props) {
               <button onClick={handleSave} disabled={saving || !form.name.trim()}
                 style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving || !form.name.trim() ? 0.6 : 1 }}>
                 {saving ? 'Saving...' : editingId ? 'Save' : 'Add NPC'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add to Combat picker */}
+      {showCombatPicker && (
+        <div onClick={() => setShowCombatPicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '360px', maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Add to Combat</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>Select NPCs</div>
+            <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
+              {availableForCombat.map(npc => (
+                <label key={npc.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: combatPickerIds.has(npc.id) ? '#2a1210' : '#1a1a1a', border: `1px solid ${combatPickerIds.has(npc.id) ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={combatPickerIds.has(npc.id)} onChange={() => {
+                    setCombatPickerIds(prev => {
+                      const next = new Set(prev)
+                      if (next.has(npc.id)) next.delete(npc.id)
+                      else next.add(npc.id)
+                      return next
+                    })
+                  }} style={{ accentColor: '#c0392b' }} />
+                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                    {npc.portrait_url ? <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '8px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(npc.name)}</span>}
+                  </div>
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</span>
+                </label>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => setShowCombatPicker(false)} style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleAddToCombat} disabled={combatPickerIds.size === 0}
+                style={{ flex: 2, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: combatPickerIds.size === 0 ? 'not-allowed' : 'pointer', opacity: combatPickerIds.size === 0 ? 0.5 : 1 }}>
+                Add {combatPickerIds.size > 0 ? `(${combatPickerIds.size})` : ''}
               </button>
             </div>
           </div>
