@@ -110,6 +110,8 @@ function outcomeColor(outcome: string): string {
 
 function rollD6() { return Math.floor(Math.random() * 6) + 1 }
 
+const SOCIAL_SKILLS = ['Manipulation', 'Inspiration', 'Barter', 'Psychology', 'INF Check']
+
 export default function TablePage() {
   const params = useParams()
   const id = params.id as string
@@ -288,6 +290,25 @@ export default function TablePage() {
 
       if (members && members.length > 0) ensureCharacterStates(id, members as any[])
       await Promise.all([loadEntries(id), loadRolls(id), loadInitiative(id)])
+
+      // Load campaign NPCs for social skill rolls (all users need this)
+      const { data: cnpcs } = await supabase.from('campaign_npcs').select('id, name, portrait_url, npc_type, recruitment_role').eq('campaign_id', id)
+      setCampaignNpcs(cnpcs ?? [])
+
+      // Load revealed NPCs for this player
+      if (camp.gm_user_id !== user.id) {
+        const myMember = (members ?? []).find((m: any) => m.user_id === user.id)
+        if (myMember?.character_id) {
+          const { data: rels } = await supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('character_id', myMember.character_id).eq('revealed', true)
+          if (rels && rels.length > 0 && cnpcs) {
+            const revealed = rels.map(r => {
+              const npc = cnpcs.find((n: any) => n.id === r.npc_id)
+              return npc ? { ...npc, relationship_cmod: r.relationship_cmod, reveal_level: r.reveal_level } : null
+            }).filter(Boolean)
+            setRevealedNpcs(revealed)
+          }
+        }
+      }
 
       channelRef.current = supabase.channel(`table_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'character_states', filter: `campaign_id=eq.${id}` }, () => loadEntries(id))
@@ -519,6 +540,10 @@ export default function TablePage() {
   // ── Roll functions ──
 
   const [preRollInsight, setPreRollInsight] = useState<'none' | '3d6' | '+3cmod'>('none')
+  const [socialNpcId, setSocialNpcId] = useState<string>('')
+  const [socialCmod, setSocialCmod] = useState<{ npcName: string; cmod: number } | null>(null)
+  const [campaignNpcs, setCampaignNpcs] = useState<any[]>([])
+  const [revealedNpcs, setRevealedNpcs] = useState<any[]>([])
 
   function handleRollRequest(label: string, amod: number, smod: number) {
     setPendingRoll({ label, amod, smod })
@@ -526,6 +551,8 @@ export default function TablePage() {
     setCmod('0')
     setTargetName('')
     setPreRollInsight('none')
+    setSocialNpcId('')
+    setSocialCmod(null)
   }
 
   async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false, target: string | null = null) {
@@ -674,8 +701,13 @@ export default function TablePage() {
           </div>
         </div>
         {sessionStatus === 'active' && (
+          <div style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#7fc458' }}>
+            Game Session {sessionCount}
+          </div>
+        )}
+        {combatActive && (
           <div style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5a89a' }}>
-            Combat Session {sessionCount}
+            ⚔️ In Combat
           </div>
         )}
         <div style={{ flex: 1 }} />
@@ -845,13 +877,35 @@ export default function TablePage() {
         </div>
 
         {/* Center — Tactical Map */}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1a1a1a', flexDirection: 'column', gap: '12px', overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1a1a1a', flexDirection: 'column', gap: '12px', overflow: 'hidden', position: 'relative' }}>
           <div style={{ fontSize: '48px', opacity: 0.3 }}>🗺</div>
           <div style={{ fontSize: '13px', color: '#3a3a3a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase' }}>Tactical Map — Coming Soon</div>
           {!entriesLoading && entries.length === 0 && (
             <div style={{ marginTop: '1rem', background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.5rem', textAlign: 'center' }}>
               <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>No character sheets yet.</div>
               <div style={{ fontSize: '11px', color: '#5a5550' }}>Players need to assign a character before entering the table.</div>
+            </div>
+          )}
+          {!isGM && revealedNpcs.length > 0 && (
+            <div style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {revealedNpcs.map((npc: any) => (
+                <div key={npc.id} style={{ padding: '6px 10px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '8px', minWidth: '120px' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                    {npc.portrait_url ? <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '9px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
+                    {npc.reveal_level === 'name_portrait_role' && npc.recruitment_role && (
+                      <div style={{ fontSize: '9px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.recruitment_role}</div>
+                    )}
+                    {npc.relationship_cmod !== 0 && (
+                      <div style={{ fontSize: '9px', color: npc.relationship_cmod > 0 ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        Your relationship: {npc.relationship_cmod > 0 ? `+${npc.relationship_cmod}` : npc.relationship_cmod}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -868,7 +922,7 @@ export default function TablePage() {
               ))}
             </div>
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              {gmTab === 'npcs' && <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} onAddToCombat={addNpcsToCombat} />}
+              {gmTab === 'npcs' && <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} />}
               {gmTab === 'notes' && (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3a3a3a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                   Coming Soon
@@ -973,6 +1027,37 @@ export default function TablePage() {
                         </option>
                       ))}
                     </select>
+                  </div>
+                )}
+                {SOCIAL_SKILLS.some(s => pendingRoll.label.includes(s)) && campaignNpcs.length > 0 && (
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Interacting with an NPC?</div>
+                    <select value={socialNpcId} onChange={async e => {
+                      const npcId = e.target.value
+                      setSocialNpcId(npcId)
+                      if (!npcId) { setSocialCmod(null); return }
+                      const npc = campaignNpcs.find((n: any) => n.id === npcId)
+                      const myChar = entries.find(en => en.userId === userId)
+                      if (!myChar) { setSocialCmod(null); return }
+                      const { data: rel } = await supabase.from('npc_relationships').select('relationship_cmod').eq('npc_id', npcId).eq('character_id', myChar.character.id).single()
+                      if (rel) {
+                        setSocialCmod({ npcName: npc?.name ?? '', cmod: rel.relationship_cmod })
+                        setCmod(String(rel.relationship_cmod))
+                      } else {
+                        setSocialCmod({ npcName: npc?.name ?? '', cmod: 0 })
+                      }
+                    }}
+                      style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
+                      <option value="">No NPC</option>
+                      {campaignNpcs.map((n: any) => (
+                        <option key={n.id} value={n.id}>{n.name}</option>
+                      ))}
+                    </select>
+                    {socialCmod && (
+                      <div style={{ fontSize: '10px', color: socialCmod.cmod > 0 ? '#7fc458' : socialCmod.cmod < 0 ? '#f5a89a' : '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
+                        Relationship CMod with {socialCmod.npcName}: {socialCmod.cmod > 0 ? `+${socialCmod.cmod}` : socialCmod.cmod}
+                      </div>
+                    )}
                   </div>
                 )}
                 <div style={{ marginBottom: '1.25rem' }}>

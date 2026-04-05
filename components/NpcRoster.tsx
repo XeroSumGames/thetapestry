@@ -57,12 +57,38 @@ export interface CampaignNpc {
   created_at: string
 }
 
+interface Relationship {
+  id: string
+  npc_id: string
+  character_id: string
+  relationship_cmod: number
+  notes: string | null
+  revealed: boolean
+  reveal_level: string | null
+}
+
+interface PCEntry {
+  characterId: string
+  characterName: string
+  userId: string
+}
+
+const FIRST_IMPRESSIONS = [
+  { label: 'High Insight (6+6)', value: 3 },
+  { label: 'Wild Success (14+)', value: 2 },
+  { label: 'Success (9-13)', value: 0 },
+  { label: 'Failure (4-8)', value: -1 },
+  { label: 'Dire Failure (0-3)', value: -2 },
+  { label: 'Low Insight (1+1)', value: -3 },
+]
+
 interface Props {
   campaignId: string
   isGM: boolean
   combatActive?: boolean
   initiativeNpcIds?: Set<string>
   onAddToCombat?: (npcs: CampaignNpc[]) => void
+  pcEntries?: PCEntry[]
 }
 
 const emptyForm = {
@@ -72,7 +98,7 @@ const emptyForm = {
   npc_type: '' as string, recruitment_role: '' as string,
 }
 
-export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, onAddToCombat }: Props) {
+export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, onAddToCombat, pcEntries }: Props) {
   const supabase = createClient()
   const [npcs, setNpcs] = useState<CampaignNpc[]>([])
   const [loading, setLoading] = useState(true)
@@ -105,7 +131,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     setShowForm(true)
   }
 
-  function openEdit(npc: CampaignNpc) {
+  async function openEdit(npc: CampaignNpc) {
     setForm({
       name: npc.name,
       portrait_url: npc.portrait_url,
@@ -122,6 +148,13 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     })
     setEditingId(npc.id)
     setShowForm(true)
+    setShowReveal(false)
+    // Load relationships for this NPC
+    const { data: rels } = await supabase
+      .from('npc_relationships')
+      .select('*')
+      .eq('npc_id', npc.id)
+    setRelationships(rels ?? [])
   }
 
   async function handlePortraitUpload(file: File) {
@@ -176,6 +209,10 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
 
   const [showCombatPicker, setShowCombatPicker] = useState(false)
   const [combatPickerIds, setCombatPickerIds] = useState<Set<string>>(new Set())
+  const [relationships, setRelationships] = useState<Relationship[]>([])
+  const [showReveal, setShowReveal] = useState(false)
+  const [revealIds, setRevealIds] = useState<Set<string>>(new Set())
+  const [revealLevel, setRevealLevel] = useState<'name_portrait' | 'name_portrait_role'>('name_portrait')
 
   const availableForCombat = npcs.filter(n => n.status === 'active' && !initiativeNpcIds?.has(n.id))
 
@@ -184,6 +221,48 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     if (selected.length > 0 && onAddToCombat) onAddToCombat(selected)
     setShowCombatPicker(false)
     setCombatPickerIds(new Set())
+  }
+
+  async function handleRelationshipChange(characterId: string, cmod: number) {
+    if (!editingId) return
+    const existing = relationships.find(r => r.character_id === characterId)
+    if (existing) {
+      await supabase.from('npc_relationships').update({ relationship_cmod: cmod }).eq('id', existing.id)
+      setRelationships(prev => prev.map(r => r.id === existing.id ? { ...r, relationship_cmod: cmod } : r))
+    } else {
+      const { data } = await supabase.from('npc_relationships').insert({
+        npc_id: editingId, character_id: characterId, relationship_cmod: cmod,
+      }).select().single()
+      if (data) setRelationships(prev => [...prev, data])
+    }
+  }
+
+  async function handleRevealSave() {
+    if (!editingId) return
+    const pcs = pcEntries ?? []
+    for (const pc of pcs) {
+      const isRevealed = revealIds.has(pc.characterId)
+      const existing = relationships.find(r => r.character_id === pc.characterId)
+      if (existing) {
+        await supabase.from('npc_relationships').update({ revealed: isRevealed, reveal_level: isRevealed ? revealLevel : null }).eq('id', existing.id)
+      } else if (isRevealed) {
+        await supabase.from('npc_relationships').insert({
+          npc_id: editingId, character_id: pc.characterId, relationship_cmod: 0, revealed: true, reveal_level: revealLevel,
+        })
+      }
+    }
+    // Reload
+    const { data: rels } = await supabase.from('npc_relationships').select('*').eq('npc_id', editingId)
+    setRelationships(rels ?? [])
+    setShowReveal(false)
+  }
+
+  function openReveal() {
+    const revealed = new Set(relationships.filter(r => r.revealed).map(r => r.character_id))
+    setRevealIds(revealed)
+    const firstLevel = relationships.find(r => r.revealed)?.reveal_level
+    setRevealLevel((firstLevel as any) ?? 'name_portrait')
+    setShowReveal(true)
   }
 
   function handleTypeChange(type: string) {
@@ -369,6 +448,69 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                 rows={3}
                 style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.5 }} />
             </div>
+
+            {/* Relationships (edit only) */}
+            {editingId && pcEntries && pcEntries.length > 0 && (
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Relationships — First Impressions</div>
+                {pcEntries.map(pc => {
+                  const rel = relationships.find(r => r.character_id === pc.characterId)
+                  const cmod = rel?.relationship_cmod ?? 0
+                  return (
+                    <div key={pc.characterId} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '11px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: '80px' }}>{pc.characterName}</span>
+                      <select value={cmod} onChange={e => handleRelationshipChange(pc.characterId, parseInt(e.target.value))}
+                        style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: cmod > 0 ? '#7fc458' : cmod < 0 ? '#f5a89a' : '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                        {FIRST_IMPRESSIONS.map(fi => (
+                          <option key={fi.value} value={fi.value}>{fi.value > 0 ? `+${fi.value}` : fi.value} — {fi.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Reveal to Players (edit only) */}
+            {editingId && pcEntries && pcEntries.length > 0 && (
+              <div style={{ marginBottom: '1rem' }}>
+                {!showReveal ? (
+                  <button onClick={openReveal}
+                    style={{ width: '100%', padding: '8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Reveal to Players
+                  </button>
+                ) : (
+                  <div style={{ padding: '10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                    <div style={{ fontSize: '10px', color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Reveal to Players</div>
+                    <div style={{ marginBottom: '8px' }}>
+                      {pcEntries.map(pc => (
+                        <label key={pc.characterId} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', cursor: 'pointer', fontSize: '11px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                          <input type="checkbox" checked={revealIds.has(pc.characterId)} onChange={() => {
+                            setRevealIds(prev => { const n = new Set(prev); if (n.has(pc.characterId)) n.delete(pc.characterId); else n.add(pc.characterId); return n })
+                          }} style={{ accentColor: '#7ab3d4' }} />
+                          {pc.characterName}
+                        </label>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: '10px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>What to reveal:</div>
+                    <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>
+                        <input type="radio" checked={revealLevel === 'name_portrait'} onChange={() => setRevealLevel('name_portrait')} style={{ accentColor: '#7ab3d4' }} />
+                        Name + Portrait
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>
+                        <input type="radio" checked={revealLevel === 'name_portrait_role'} onChange={() => setRevealLevel('name_portrait_role')} style={{ accentColor: '#7ab3d4' }} />
+                        Name + Portrait + Role
+                      </label>
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button onClick={() => setShowReveal(false)} style={{ flex: 1, padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                      <button onClick={handleRevealSave} style={{ flex: 1, padding: '6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Save Reveal</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Status */}
             <div style={{ marginBottom: '1.25rem' }}>
