@@ -111,7 +111,7 @@ export default function SessionHistoryPage() {
   )
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <a href={`/campaigns/${id}/table`}
