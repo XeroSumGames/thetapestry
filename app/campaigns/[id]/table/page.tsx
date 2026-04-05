@@ -544,19 +544,22 @@ export default function TablePage() {
       }).eq('id', sessionRow.id)
 
       // Upload attachments
+      console.log('[EndSession] files to upload:', sessionFiles.length)
       if (sessionFiles.length > 0 && userId) {
         for (const file of sessionFiles) {
           const path = `${sessionRow.id}/${file.name}`
           const { error: upErr } = await supabase.storage.from('session-attachments').upload(path, file)
+          console.log('[EndSession] upload', file.name, 'error:', upErr?.message)
           if (!upErr) {
             const { data: urlData } = supabase.storage.from('session-attachments').getPublicUrl(path)
-            await supabase.from('session_attachments').insert({
+            const { error: insErr } = await supabase.from('session_attachments').insert({
               session_id: sessionRow.id,
               file_url: urlData.publicUrl,
               file_name: file.name,
               file_type: file.type,
               uploaded_by: userId,
             })
+            console.log('[EndSession] insert attachment error:', insErr?.message)
           }
         }
       }
@@ -733,6 +736,18 @@ export default function TablePage() {
             {campaign.name}
           </div>
         </div>
+        {isGM && sessionStatus === 'idle' && (
+          <button onClick={startSession} disabled={sessionActing}
+            style={{ padding: '6px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.5 : 1 }}>
+            {sessionActing ? 'Starting...' : 'Start Session'}
+          </button>
+        )}
+        {isGM && sessionStatus === 'active' && (
+          <button onClick={() => setShowEndSessionModal(true)}
+            style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            End Session
+          </button>
+        )}
         {sessionStatus === 'active' && (
           <div style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#7fc458' }}>
             Game Session {sessionCount}
@@ -749,18 +764,6 @@ export default function TablePage() {
             style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
             Previous Sessions
           </a>
-        )}
-        {isGM && sessionStatus === 'idle' && (
-          <button onClick={startSession} disabled={sessionActing}
-            style={{ padding: '6px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.5 : 1 }}>
-            {sessionActing ? 'Starting...' : 'Start Session'}
-          </button>
-        )}
-        {isGM && sessionStatus === 'active' && (
-          <button onClick={() => setShowEndSessionModal(true)}
-            style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            End Session
-          </button>
         )}
         {isGM && sessionStatus === 'active' && !combatActive && (
           <button onClick={startCombat} disabled={startingCombat || entries.length === 0}

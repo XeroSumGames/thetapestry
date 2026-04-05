@@ -102,8 +102,10 @@ export default function NotificationBell() {
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button onClick={() => setOpen(prev => !prev)}
-        style={{ position: 'relative', background: 'none', border: 'none', color: unreadCount > 0 ? '#EF9F27' : '#3a3a3a', cursor: 'pointer', fontSize: '18px', padding: '4px 8px', lineHeight: 1 }}>
-        🔔
+        style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill={unreadCount > 0 ? '#EF9F27' : '#3a3a3a'} xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C10.9 2 10 2.9 10 4C10 4.1 10 4.2 10 4.3C7.7 5.1 6 7.3 6 10V16L4 18V19H20V18L18 16V10C18 7.3 16.3 5.1 14 4.3C14 4.2 14 4.1 14 4C14 2.9 13.1 2 12 2ZM12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22Z"/>
+        </svg>
         {unreadCount > 0 && (
           <span style={{
             position: 'absolute', top: '-2px', right: '0',
