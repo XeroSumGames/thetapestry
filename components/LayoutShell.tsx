@@ -12,7 +12,8 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   const [checked, setChecked] = useState(false)
   const [onboarded, setOnboarded] = useState(false)
 
-  const hideSidebar = pathname === '/login' || pathname === '/signup' || (pathname === '/welcome' && !onboarded)
+  const isWelcome = pathname === '/welcome'
+  const hideSidebar = pathname === '/login' || pathname === '/signup' || (isWelcome && !onboarded)
 
   useEffect(() => {
     async function checkSession() {
@@ -44,7 +45,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
     checkSession()
   }, [pathname])
 
-  if (!checked) return null
+  if (!checked) return <div style={{ flex: 1, background: '#0f0f0f' }} />
 
   if (suspended) {
     return (

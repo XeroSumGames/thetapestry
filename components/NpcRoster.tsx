@@ -435,9 +435,9 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   return (
     <>
       <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-        <button onClick={openLibrary}
-          style={{ padding: '2px 8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-          Library
+        <button onClick={openAdd}
+          style={{ padding: '2px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          + Add NPC
         </button>
         {combatActive && availableForCombat.length > 0 && (
           <button onClick={() => { setCombatPickerIds(new Set()); setShowCombatPicker(true) }}
@@ -445,9 +445,10 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
             + Combat
           </button>
         )}
-        <button onClick={openAdd}
-          style={{ padding: '2px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-          + Add NPC
+        <div style={{ flex: 1 }} />
+        <button onClick={openLibrary}
+          style={{ padding: '2px 8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          Library
         </button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '4px' }}>
