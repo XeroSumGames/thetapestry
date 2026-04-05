@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import NotificationBell from './NotificationBell'
 
 export default function Sidebar() {
   const [username, setUsername] = useState('')
@@ -56,12 +57,15 @@ export default function Sidebar() {
     <div style={{ width: '220px', flexShrink: 0, background: '#1a1a1a', borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
 
       {/* User header */}
-      <div style={{ padding: '16px 14px 8px', fontSize: '13px', color: '#f5f2ee', letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', borderBottom: '1px solid #2e2e2e', marginBottom: '8px' }}>
-        {username}
-        {userRole === 'thriver'
-          ? <span style={{ marginLeft: '6px', background: '#c0392b', color: '#fff', fontSize: '10px', padding: '1px 5px', borderRadius: '2px' }}>thriver</span>
-          : <span style={{ marginLeft: '6px', background: '#2d5a1b', color: '#7fc458', fontSize: '10px', padding: '1px 5px', borderRadius: '2px' }}>Survivor</span>
-        }
+      <div style={{ padding: '16px 14px 8px', fontSize: '13px', color: '#f5f2ee', letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', borderBottom: '1px solid #2e2e2e', marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
+        <span style={{ flex: 1 }}>
+          {username}
+          {userRole === 'thriver'
+            ? <span style={{ marginLeft: '6px', background: '#c0392b', color: '#fff', fontSize: '10px', padding: '1px 5px', borderRadius: '2px' }}>thriver</span>
+            : <span style={{ marginLeft: '6px', background: '#2d5a1b', color: '#7fc458', fontSize: '10px', padding: '1px 5px', borderRadius: '2px' }}>Survivor</span>
+          }
+        </span>
+        <NotificationBell />
       </div>
 
 {/* The Tapestry section */}

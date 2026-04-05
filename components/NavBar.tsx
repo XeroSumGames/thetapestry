@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
-import NotificationBell from './NotificationBell'
 export default function NavBar() {
   const [userRole, setUserRole] = useState<'survivor' | 'thriver' | null>(null)
   const router = useRouter()
@@ -52,7 +51,6 @@ export default function NavBar() {
           <a href="/moderate" style={{ ...navLink, borderColor: '#EF9F27', color: '#EF9F27' }}>Moderation</a>
         </>
       )}
-      {userRole && <NotificationBell />}
       <button onClick={handleLogout} style={{ ...navLink, border: '1px solid #c0392b', color: '#f5a89a', cursor: 'pointer', background: '#242424' }}>
         Log Out
       </button>
