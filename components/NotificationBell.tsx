@@ -1,0 +1,170 @@
+'use client'
+import { useEffect, useState, useRef } from 'react'
+import { createClient } from '../lib/supabase-browser'
+
+interface Notification {
+  id: string
+  type: string
+  title: string
+  body: string
+  link: string | null
+  read: boolean
+  created_at: string
+}
+
+function timeAgo(iso: string): string {
+  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+  if (seconds < 60) return 'just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
+
+export default function NotificationBell() {
+  const supabase = createClient()
+  const [userId, setUserId] = useState<string | null>(null)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const channelRef = useRef<any>(null)
+
+  useEffect(() => {
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      setUserId(user.id)
+
+      // Fetch recent notifications
+      const { data } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10)
+      const items = data ?? []
+      setNotifications(items)
+      setUnreadCount(items.filter(n => !n.read).length)
+
+      // Subscribe to new notifications
+      channelRef.current = supabase.channel(`notif_${user.id}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        }, (payload: any) => {
+          const newNotif = payload.new as Notification
+          setNotifications(prev => [newNotif, ...prev].slice(0, 10))
+          setUnreadCount(prev => prev + 1)
+        })
+        .subscribe()
+    }
+    init()
+    return () => {
+      if (channelRef.current) supabase.removeChannel(channelRef.current)
+    }
+  }, [])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    if (open) document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  async function markAsRead(id: string) {
+    await supabase.from('notifications').update({ read: true }).eq('id', id)
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+    setUnreadCount(prev => Math.max(0, prev - 1))
+  }
+
+  async function markAllAsRead() {
+    if (!userId) return
+    await supabase.from('notifications').update({ read: true }).eq('user_id', userId).eq('read', false)
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    setUnreadCount(0)
+  }
+
+  function handleNotifClick(n: Notification) {
+    if (!n.read) markAsRead(n.id)
+    if (n.link) window.location.href = n.link
+    setOpen(false)
+  }
+
+  if (!userId) return null
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button onClick={() => setOpen(prev => !prev)}
+        style={{ position: 'relative', background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '18px', padding: '4px 8px', lineHeight: 1 }}>
+        🔔
+        {unreadCount > 0 && (
+          <span style={{
+            position: 'absolute', top: '-2px', right: '0',
+            background: '#c0392b', color: '#fff', fontSize: '9px',
+            fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700,
+            minWidth: '16px', height: '16px', borderRadius: '8px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '0 4px',
+          }}>
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', right: 0, marginTop: '8px',
+          width: '320px', maxHeight: '400px', overflowY: 'auto',
+          background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.6)', zIndex: 9999,
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #2e2e2e' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>Notifications</span>
+            {unreadCount > 0 && (
+              <button onClick={markAllAsRead}
+                style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                Mark all read
+              </button>
+            )}
+          </div>
+
+          {/* List */}
+          {notifications.length === 0 ? (
+            <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#3a3a3a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              No notifications yet
+            </div>
+          ) : (
+            notifications.map(n => (
+              <div key={n.id} onClick={() => handleNotifClick(n)}
+                style={{
+                  padding: '10px 12px',
+                  background: n.read ? 'transparent' : '#111',
+                  borderBottom: '1px solid #2e2e2e',
+                  cursor: n.link ? 'pointer' : 'default',
+                  borderLeft: n.read ? '3px solid transparent' : '3px solid #c0392b',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                onMouseLeave={e => (e.currentTarget.style.background = n.read ? 'transparent' : '#111')}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{n.title}</span>
+                  <span style={{ fontSize: '9px', color: '#5a5550', flexShrink: 0, marginLeft: '8px' }}>{timeAgo(n.created_at)}</span>
+                </div>
+                <div style={{ fontSize: '11px', color: '#d4cfc9', lineHeight: 1.4 }}>{n.body}</div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
