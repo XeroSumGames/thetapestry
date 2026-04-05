@@ -47,7 +47,10 @@ export default function NavBar() {
       <a href="/map" style={navLink}>The World</a>
       <a href="#" style={navLink}>The Campfire</a>
       {userRole === 'thriver' && (
-        <a href="/moderate" style={{ ...navLink, borderColor: '#EF9F27', color: '#EF9F27' }}>Moderation</a>
+        <>
+          <a href="/admin/dashboard" style={{ ...navLink, borderColor: '#EF9F27', color: '#EF9F27' }}>Dashboard</a>
+          <a href="/moderate" style={{ ...navLink, borderColor: '#EF9F27', color: '#EF9F27' }}>Moderation</a>
+        </>
       )}
       {userRole && <NotificationBell />}
       <button onClick={handleLogout} style={{ ...navLink, border: '1px solid #c0392b', color: '#f5a89a', cursor: 'pointer', background: '#242424' }}>
