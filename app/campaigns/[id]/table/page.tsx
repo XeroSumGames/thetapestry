@@ -311,8 +311,22 @@ export default function TablePage() {
     }
   }, [id])
 
+  useEffect(() => {
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        if (pendingRoll) { closeRollModal(); return }
+        if (selectedEntry) { setSelectedEntry(null); return }
+        if (showEndSessionModal) { setShowEndSessionModal(false); return }
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [pendingRoll, selectedEntry, showEndSessionModal])
+
   async function handleStatUpdate(stateId: string, field: string, value: number) {
-    supabase.from('character_states').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', stateId)
+    await supabase.from('character_states').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', stateId)
+    // Update the entries in-place so the value persists immediately
+    setEntries(prev => prev.map(e => e.stateId === stateId ? { ...e, liveState: { ...e.liveState, [field]: value } } : e))
   }
 
   // ── Initiative functions ──
@@ -599,8 +613,8 @@ export default function TablePage() {
           </div>
         </div>
         {sessionStatus === 'active' && (
-          <div style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#7fc458' }}>
-            Session {sessionCount}
+          <div style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5a89a' }}>
+            Combat Session {sessionCount}
           </div>
         )}
         <div style={{ flex: 1 }} />
