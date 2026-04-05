@@ -9,6 +9,9 @@ interface Campaign {
   name: string
   setting: string
   gm_user_id: string
+  session_status: string
+  session_count: number
+  session_started_at: string | null
 }
 
 interface TableEntry {
@@ -135,6 +138,14 @@ export default function TablePage() {
   const [npcName, setNpcName] = useState('')
   const [startingCombat, setStartingCombat] = useState(false)
 
+  // Session
+  const [sessionStatus, setSessionStatus] = useState<'idle' | 'active'>('idle')
+  const [sessionCount, setSessionCount] = useState(0)
+  const [showEndSessionModal, setShowEndSessionModal] = useState(false)
+  const [sessionSummary, setSessionSummary] = useState('')
+  const [sessionActing, setSessionActing] = useState(false)
+  const campaignChannelRef = useRef<any>(null)
+
   async function loadEntries(campaignId: string) {
     const [{ data: members }, { data: rawStates }] = await Promise.all([
       supabase.from('campaign_members').select('user_id, character_id').eq('campaign_id', campaignId).not('character_id', 'is', null),
@@ -253,6 +264,8 @@ export default function TablePage() {
       if (!camp) { router.push('/campaigns'); return }
       setCampaign(camp)
       setIsGM(camp.gm_user_id === user.id)
+      setSessionStatus(camp.session_status === 'active' ? 'active' : 'idle')
+      setSessionCount(camp.session_count ?? 0)
       setLoading(false)
 
       const [{ data: gmProfile }, { data: members }] = await Promise.all([
@@ -279,12 +292,22 @@ export default function TablePage() {
       initChannelRef.current = supabase.channel(`initiative_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
         .subscribe()
+
+      campaignChannelRef.current = supabase.channel(`campaign_${id}`)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'campaigns', filter: `id=eq.${id}` }, (payload: any) => {
+          const row = payload.new
+          setSessionStatus(row.session_status === 'active' ? 'active' : 'idle')
+          setSessionCount(row.session_count ?? 0)
+          setCampaign((prev: Campaign | null) => prev ? { ...prev, session_status: row.session_status, session_count: row.session_count, session_started_at: row.session_started_at } : prev)
+        })
+        .subscribe()
     }
     load()
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current)
       if (rollChannelRef.current) supabase.removeChannel(rollChannelRef.current)
       if (initChannelRef.current) supabase.removeChannel(initChannelRef.current)
+      if (campaignChannelRef.current) supabase.removeChannel(campaignChannelRef.current)
     }
   }, [id])
 
@@ -377,6 +400,45 @@ export default function TablePage() {
     if (!isGM) return
     await supabase.from('initiative_order').delete().eq('id', entryId)
     await loadInitiative(id)
+  }
+
+  // ── Session functions ──
+
+  async function startSession() {
+    if (!isGM) return
+    setSessionActing(true)
+    const newCount = sessionCount + 1
+    await supabase.from('campaigns').update({
+      session_status: 'active',
+      session_count: newCount,
+      session_started_at: new Date().toISOString(),
+    }).eq('id', id)
+    await supabase.from('sessions').insert({
+      campaign_id: id,
+      session_number: newCount,
+      started_at: new Date().toISOString(),
+    })
+    setSessionStatus('active')
+    setSessionCount(newCount)
+    setSessionActing(false)
+  }
+
+  async function endSession() {
+    if (!isGM) return
+    setSessionActing(true)
+    const now = new Date().toISOString()
+    await supabase.from('campaigns').update({
+      session_status: 'idle',
+      session_started_at: null,
+    }).eq('id', id)
+    await supabase.from('sessions').update({
+      ended_at: now,
+      gm_summary: sessionSummary.trim() || null,
+    }).eq('campaign_id', id).eq('session_number', sessionCount).is('ended_at', null)
+    setSessionStatus('idle')
+    setShowEndSessionModal(false)
+    setSessionSummary('')
+    setSessionActing(false)
   }
 
   // ── Roll functions ──
@@ -512,8 +574,25 @@ export default function TablePage() {
             {campaign.name}
           </div>
         </div>
+        {sessionStatus === 'active' && (
+          <div style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#7fc458' }}>
+            Session {sessionCount}
+          </div>
+        )}
         <div style={{ flex: 1 }} />
-        {isGM && !combatActive && (
+        {isGM && sessionStatus === 'idle' && (
+          <button onClick={startSession} disabled={sessionActing}
+            style={{ padding: '6px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.5 : 1 }}>
+            {sessionActing ? 'Starting...' : 'Start Session'}
+          </button>
+        )}
+        {isGM && sessionStatus === 'active' && (
+          <button onClick={() => setShowEndSessionModal(true)}
+            style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            End Session
+          </button>
+        )}
+        {isGM && sessionStatus === 'active' && !combatActive && (
           <button onClick={startCombat} disabled={startingCombat || entries.length === 0}
             style={{ padding: '6px 14px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: startingCombat || entries.length === 0 ? 'not-allowed' : 'pointer', opacity: startingCombat || entries.length === 0 ? 0.5 : 1 }}>
             {startingCombat ? 'Rolling...' : '⚔️ Start Combat'}
@@ -607,9 +686,9 @@ export default function TablePage() {
           <div ref={rollFeedRef} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
             {rolls.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a' }}>
-                <div style={{ fontSize: '24px', marginBottom: '8px' }}>🎲</div>
+                <div style={{ fontSize: '24px', marginBottom: '8px' }}>{sessionStatus === 'idle' ? '⏸' : '🎲'}</div>
                 <div style={{ fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                  Click a skill or attribute on your sheet to roll
+                  {sessionStatus === 'idle' ? 'Session not active' : 'Click a skill or attribute on your sheet to roll'}
                 </div>
               </div>
             ) : (
@@ -638,16 +717,20 @@ export default function TablePage() {
               ))
             )}
           </div>
-          {myEntry && (
-            <div style={{ padding: '8px', borderTop: '1px solid #2e2e2e' }}>
+          <div style={{ padding: '8px', borderTop: '1px solid #2e2e2e' }}>
+            {sessionStatus === 'idle' ? (
+              <div style={{ textAlign: 'center', padding: '6px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#5a5550' }}>
+                Waiting for GM to open the session
+              </div>
+            ) : myEntry ? (
               <button
                 onClick={() => setSelectedEntry(myEntry)}
                 style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
               >
                 Open My Sheet to Roll
               </button>
-            </div>
-          )}
+            ) : null}
+          </div>
         </div>
 
         {/* Center — Tactical Map */}
@@ -722,7 +805,7 @@ export default function TablePage() {
               showButtons={true}
               isMySheet={syncedSelectedEntry.userId === userId}
               onStatUpdate={handleStatUpdate}
-              onRoll={syncedSelectedEntry.userId === userId || isGM ? (label, amod, smod) => { setSelectedEntry(null); handleRollRequest(label, amod, smod) } : undefined}
+              onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod) => { setSelectedEntry(null); handleRollRequest(label, amod, smod) } : undefined}
             />
             <button onClick={() => setSelectedEntry(null)} style={{ marginTop: '8px', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Close
@@ -813,6 +896,30 @@ export default function TablePage() {
               </>
             )}
 
+          </div>
+        </div>
+      )}
+
+      {/* End Session modal */}
+      {showEndSessionModal && (
+        <div onClick={() => setShowEndSessionModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '400px' }}>
+            <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>End Session</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>Session {sessionCount} Summary</div>
+            <textarea
+              value={sessionSummary}
+              onChange={e => setSessionSummary(e.target.value)}
+              placeholder="What happened this session? (optional)"
+              autoFocus
+              rows={5}
+              style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
+            />
+            <div style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
+              <button onClick={() => setShowEndSessionModal(false)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={endSession} disabled={sessionActing} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.6 : 1 }}>
+                {sessionActing ? 'Ending...' : 'End Session'}
+              </button>
+            </div>
           </div>
         </div>
       )}
