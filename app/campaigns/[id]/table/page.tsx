@@ -28,6 +28,7 @@ interface RollEntry {
   id: string
   character_name: string
   label: string
+  target_name: string | null
   die1: number
   die2: number
   amod: number
@@ -125,6 +126,7 @@ export default function TablePage() {
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
   const [cmod, setCmod] = useState('0')
   const [rolling, setRolling] = useState(false)
+  const [targetName, setTargetName] = useState<string>('')
 
   // Initiative
   const [initiativeOrder, setInitiativeOrder] = useState<InitiativeEntry[]>([])
@@ -383,9 +385,10 @@ export default function TablePage() {
     setPendingRoll({ label, amod, smod })
     setRollResult(null)
     setCmod('0')
+    setTargetName('')
   }
 
-  async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false) {
+  async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false, target: string | null = null) {
     const total = die1 + die2 + amod + smod + cmodVal
     const outcome = getOutcome(total, die1, die2)
     const insightAwarded = outcome === 'Low Insight' || outcome === 'High Insight'
@@ -394,6 +397,7 @@ export default function TablePage() {
       campaign_id: id, user_id: userId, character_name: characterName,
       label: isReroll ? `${label} (Re-roll)` : label,
       die1, die2, amod, smod, cmod: cmodVal, total, outcome, insight_awarded: insightAwarded,
+      target_name: target || null,
     })
 
     return { total, outcome, insightAwarded }
@@ -408,7 +412,7 @@ export default function TablePage() {
     const myEntry = entries.find(e => e.userId === userId)
     const characterName = myEntry?.character.name ?? 'Unknown'
 
-    const { total, outcome, insightAwarded } = await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName)
+    const { total, outcome, insightAwarded } = await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null)
 
     if (insightAwarded && myEntry?.liveState) {
       const newInsight = myEntry.liveState.insight_dice + 1
@@ -441,7 +445,7 @@ export default function TablePage() {
     const newDie2 = rerollDie === 'die1' ? rollResult.die2 : rollD6()
     const characterName = myEntry.character.name ?? 'Unknown'
 
-    const { total, outcome, insightAwarded } = await saveRollToLog(newDie1, newDie2, rollResult.amod, rollResult.smod, rollResult.cmod, rollResult.label, characterName, true)
+    const { total, outcome, insightAwarded } = await saveRollToLog(newDie1, newDie2, rollResult.amod, rollResult.smod, rollResult.cmod, rollResult.label, characterName, true, targetName || null)
 
     if (insightAwarded) {
       await supabase.from('character_states').update({ insight_dice: newInsight + 1, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
@@ -601,7 +605,10 @@ export default function TablePage() {
                     <span style={{ fontSize: '11px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.character_name}</span>
                     <span style={{ fontSize: '9px', color: '#5a5550' }}>{formatTime(r.created_at)}</span>
                   </div>
-                  <div style={{ fontSize: '10px', color: '#d4cfc9', marginBottom: '4px' }}>{r.label}</div>
+                  <div style={{ fontSize: '10px', color: '#d4cfc9', marginBottom: '4px' }}>
+                    {r.label}
+                    {r.target_name && <span style={{ color: '#EF9F27' }}> → {r.target_name}</span>}
+                  </div>
                   <div style={{ fontSize: '11px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
                     [{r.die1}+{r.die2}]
                     {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
@@ -724,6 +731,20 @@ export default function TablePage() {
                   {pendingRoll.amod !== 0 && <span style={{ color: pendingRoll.amod > 0 ? '#7fc458' : '#c0392b' }}>{pendingRoll.amod > 0 ? '+' : ''}{pendingRoll.amod} AMod</span>}
                   {pendingRoll.smod !== 0 && <span style={{ color: pendingRoll.smod > 0 ? '#7fc458' : '#c0392b' }}>{pendingRoll.smod > 0 ? '+' : ''}{pendingRoll.smod} SMod</span>}
                 </div>
+                {combatActive && initiativeOrder.length > 0 && (
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Target</div>
+                    <select value={targetName} onChange={e => setTargetName(e.target.value)}
+                      style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
+                      <option value="" style={{ color: '#5a5550' }}>No target</option>
+                      {initiativeOrder.map(entry => (
+                        <option key={entry.id} value={entry.character_name} style={{ color: entry.is_npc ? '#7fc458' : '#c0392b' }}>
+                          {entry.character_name}{entry.is_npc ? ' (NPC)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div style={{ marginBottom: '1.25rem' }}>
                   <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>CMod (Relationship / Situational)</div>
                   <input type="number" value={cmod} onChange={e => setCmod(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') executeRoll() }} autoFocus
