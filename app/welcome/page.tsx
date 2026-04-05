@@ -56,7 +56,7 @@ export default function WelcomePage() {
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '52px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1, marginBottom: '8px' }}>
           The Tapestry
         </div>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', letterSpacing: '.15em', textTransform: 'uppercase', color: '#5a5550', marginBottom: '1.5rem' }}>
+        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', letterSpacing: '.15em', textTransform: 'uppercase', color: '#cce0f5', marginBottom: '1.5rem' }}>
           DistemperVerse v1.0
         </div>
         {username && (

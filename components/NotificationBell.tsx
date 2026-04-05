@@ -127,7 +127,7 @@ export default function NotificationBell() {
         }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #2e2e2e' }}>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>Notifications</span>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>Notifications</span>
             {unreadCount > 0 && (
               <button onClick={markAllAsRead}
                 style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
@@ -157,7 +157,7 @@ export default function NotificationBell() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
                   <span style={{ fontSize: '11px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{n.title}</span>
-                  <span style={{ fontSize: '9px', color: '#5a5550', flexShrink: 0, marginLeft: '8px' }}>{timeAgo(n.created_at)}</span>
+                  <span style={{ fontSize: '9px', color: '#cce0f5', flexShrink: 0, marginLeft: '8px' }}>{timeAgo(n.created_at)}</span>
                 </div>
                 <div style={{ fontSize: '11px', color: '#d4cfc9', lineHeight: 1.4 }}>{n.body}</div>
               </div>

@@ -60,10 +60,10 @@ export default function CreatingACharacterPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                 <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>{label}</div>
                 <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '2px', background: tagColor, color: tagText, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{tag}</span>
-                <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#5a5550' }}>{time}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#cce0f5' }}>{time}</span>
               </div>
               <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.7, margin: '0 0 8px' }}>{desc}</p>
-              <p style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.6, margin: '0 0 14px' }}><span style={{ color: '#5a5550' }}>Best for:</span> {bestFor}</p>
+              <p style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.6, margin: '0 0 14px' }}><span style={{ color: '#cce0f5' }}>Best for:</span> {bestFor}</p>
               <a href={href} style={{ display: 'inline-block', padding: '8px 20px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
                 {label} →
               </a>

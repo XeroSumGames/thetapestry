@@ -56,7 +56,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
           <div style={{ fontSize: '15px', color: '#d4cfc9', lineHeight: 1.7, marginBottom: '1.5rem' }}>
             Your account has been suspended by a Thriver. You are unable to interact with The Tapestry at this time.
           </div>
-          <div style={{ fontSize: '13px', color: '#5a5550' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5' }}>
             If you believe this is in error, contact a Thriver directly.
           </div>
           <button onClick={() => supabase.auth.signOut().then(() => router.push('/login'))}

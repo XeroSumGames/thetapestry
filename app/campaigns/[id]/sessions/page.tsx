@@ -107,7 +107,7 @@ export default function SessionHistoryPage() {
   }
 
   if (loading) return (
-    <div style={{ padding: '2rem', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>Loading sessions...</div>
+    <div style={{ padding: '2rem', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>Loading sessions...</div>
   )
 
   return (
@@ -122,12 +122,12 @@ export default function SessionHistoryPage() {
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
             Session History
           </div>
-          <div style={{ fontSize: '14px', color: '#5a5550' }}>{campaignName} — {sessions.length} session{sessions.length !== 1 ? 's' : ''}</div>
+          <div style={{ fontSize: '14px', color: '#cce0f5' }}>{campaignName} — {sessions.length} session{sessions.length !== 1 ? 's' : ''}</div>
         </div>
       </div>
 
       {sessions.length === 0 ? (
-        <div style={{ color: '#5a5550', fontSize: '14px', textAlign: 'center', padding: '2rem' }}>No sessions recorded yet.</div>
+        <div style={{ color: '#cce0f5', fontSize: '14px', textAlign: 'center', padding: '2rem' }}>No sessions recorded yet.</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
           {sessions.map(s => {
@@ -156,13 +156,13 @@ export default function SessionHistoryPage() {
                     <span style={{ fontSize: '10px', padding: '1px 5px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', flexShrink: 0 }}>Active</span>
                   )}
                   {sessAttachments.length > 0 && (
-                    <span style={{ fontSize: '11px', color: '#5a5550', flexShrink: 0 }}>📎{sessAttachments.length}</span>
+                    <span style={{ fontSize: '11px', color: '#cce0f5', flexShrink: 0 }}>📎{sessAttachments.length}</span>
                   )}
                 </div>
 
                 {/* Summary preview */}
                 {s.gm_summary && (
-                  <div style={{ padding: '0 12px 8px', fontSize: '13px', color: '#5a5550', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: isExpanded ? 999 : 2, WebkitBoxOrient: 'vertical' as const }}>
+                  <div style={{ padding: '0 12px 8px', fontSize: '13px', color: '#cce0f5', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: isExpanded ? 999 : 2, WebkitBoxOrient: 'vertical' as const }}>
                     {s.gm_summary}
                   </div>
                 )}
@@ -192,19 +192,19 @@ export default function SessionHistoryPage() {
                   <div style={{ padding: '0 12px 12px', borderTop: '1px solid #2e2e2e' }}>
                     {s.gm_summary && (
                       <div style={{ marginTop: '10px' }}>
-                        <div style={{ fontSize: '11px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>What Happened</div>
+                        <div style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>What Happened</div>
                         <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.gm_summary}</div>
                       </div>
                     )}
                     {s.next_session_notes && (
                       <div style={{ marginTop: '10px' }}>
-                        <div style={{ fontSize: '11px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>Notes for Next Session</div>
+                        <div style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>Notes for Next Session</div>
                         <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.next_session_notes}</div>
                       </div>
                     )}
                     {sessAttachments.length > 0 && (
                       <div style={{ marginTop: '10px' }}>
-                        <div style={{ fontSize: '11px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Attachments</div>
+                        <div style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Attachments</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                           {sessAttachments.map(a => (
                             <a key={a.id} href={a.file_url} target="_blank" rel="noreferrer"
@@ -214,7 +214,7 @@ export default function SessionHistoryPage() {
                             >
                               <span>{getFileIcon(a.file_type)}</span>
                               <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.file_name}</span>
-                              <span style={{ fontSize: '11px', color: '#5a5550', flexShrink: 0 }}>Open ↗</span>
+                              <span style={{ fontSize: '11px', color: '#cce0f5', flexShrink: 0 }}>Open ↗</span>
                             </a>
                           ))}
                         </div>

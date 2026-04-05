@@ -250,7 +250,7 @@ export default function CharacterCard({
               >
                 <div style={{ fontSize: '8px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
                 <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: v > 0 ? '#7fc458' : '#d4cfc9' }}>{sgn(v)}</div>
-                {clickable && <div style={{ fontSize: '7px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>ROLL</div>}
+                {clickable && <div style={{ fontSize: '7px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>ROLL</div>}
               </div>
             )
           })}
@@ -261,15 +261,15 @@ export default function CharacterCard({
           <div style={{ fontSize: '11px', color: '#d4cfc9', marginBottom: '8px', lineHeight: 1.6 }}>
             {(complication || motivation) && (
               <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
-                {complication && <span><span style={{ color: '#5a5550' }}>Complication:</span> {complication}</span>}
-                {motivation && <span><span style={{ color: '#5a5550' }}>Motivation:</span> {motivation}</span>}
+                {complication && <span><span style={{ color: '#cce0f5' }}>Complication:</span> {complication}</span>}
+                {motivation && <span><span style={{ color: '#cce0f5' }}>Motivation:</span> {motivation}</span>}
               </div>
             )}
             {(c.data?.notes || c.data?.physdesc) && (
               <div>
-                {c.data?.notes && <span><span style={{ color: '#5a5550' }}>Concept:</span> {c.data.notes}</span>}
-                {c.data?.notes && c.data?.physdesc && <span style={{ color: '#5a5550' }}> &middot; </span>}
-                {c.data?.physdesc && <span><span style={{ color: '#5a5550' }}>Description:</span> {c.data.physdesc}</span>}
+                {c.data?.notes && <span><span style={{ color: '#cce0f5' }}>Concept:</span> {c.data.notes}</span>}
+                {c.data?.notes && c.data?.physdesc && <span style={{ color: '#cce0f5' }}> &middot; </span>}
+                {c.data?.physdesc && <span><span style={{ color: '#cce0f5' }}>Description:</span> {c.data.physdesc}</span>}
               </div>
             )}
           </div>

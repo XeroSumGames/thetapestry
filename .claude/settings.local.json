@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx next:*)",
+      "Bash(npx tsc:*)",
+      "Bash(grep -A 30 \"from\\('roll_log'\\)\" /c/TheTapestry/app/campaigns/[id]/table/page.tsx)",
+      "Bash(grep -A 30 \"from\\('initiative_order'\\)\" /c/TheTapestry/app/campaigns/[id]/table/page.tsx)",
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(curl -s http://localhost:3000/characters/test-id)",
+      "Bash(curl -s http://localhost:3000/moderate/users/4c3e2c3f-f366-4c37-9b48-3685ad29f8d7/characters)",
+      "Bash(powershell:*)",
+      "Bash(curl:*)",
+      "Bash(git push:*)",
+      "Bash(pip install:*)",
+      "Bash(python3 -c \" import fitz doc = fitz.open\\(r'C:\\\\Users\\\\tony_\\\\OneDrive\\\\Xero Sum Engine\\\\XSE SRD 1.1\\\\XSE SRD v1.1.17 \\(Small\\).pdf'\\) print\\(f'Pages: {len\\(doc\\)}'\\) for i in range\\(min\\(5, len\\(doc\\)\\)\\): print\\(f'--- Page {i+1} ---'\\) print\\(doc[i].get_text\\(\\)[:500]\\) \")",
+      "Bash(py --version)",
+      "Bash(py -m pip install pymupdf)",
+      "Bash(py:*)"
+    ]
+  }
+}

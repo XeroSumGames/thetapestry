@@ -118,7 +118,7 @@ export default function StepEight({ state, onChange }: Props) {
               ? <span style={{ fontSize: '13px', fontWeight: 600, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   {ammo} reload{ammo > 1 ? 's' : ''}
                 </span>
-              : <span style={{ fontSize: '12px', color: '#5a5550' }}>Not yet rolled</span>
+              : <span style={{ fontSize: '12px', color: '#cce0f5' }}>Not yet rolled</span>
             }
           </div>
         )}

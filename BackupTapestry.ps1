@@ -8,7 +8,7 @@ if (-not (Test-Path $dest)) {
     New-Item -ItemType Directory -Path $dest | Out-Null
 }
 
-# Remove old zip if it exists
+# Remove existing zip for today if it exists
 if (Test-Path $zip) {
     Remove-Item $zip -Force
 }
@@ -20,7 +20,6 @@ $tempDir = "$env:TEMP\tapestry_backup_temp"
 if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force }
 New-Item -ItemType Directory -Path $tempDir | Out-Null
 
-# Copy files excluding heavy folders
 Get-ChildItem -Path $source | Where-Object { $_.Name -notin $exclude } | ForEach-Object {
     Copy-Item -Path $_.FullName -Destination $tempDir -Recurse -Force
 }

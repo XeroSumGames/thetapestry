@@ -92,7 +92,7 @@ export default function StepXero({ state, onChange }: Props) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
         {state.photoDataUrl
           ? <img src={state.photoDataUrl} alt="Character" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #3a3a3a' }} />
-          : <div style={{ width: '80px', height: '80px', border: '1px dashed #3a3a3a', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#5a5550' }}>No photo</div>
+          : <div style={{ width: '80px', height: '80px', border: '1px dashed #3a3a3a', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#cce0f5' }}>No photo</div>
         }
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <button onClick={() => fileRef.current?.click()} style={nbtn}>Upload photo</button>
@@ -139,7 +139,7 @@ export default function StepXero({ state, onChange }: Props) {
         {filtered.map(word => (
           <button key={word} onClick={() => pickWord(word)} style={chip}>{word}</button>
         ))}
-        {filtered.length === 0 && <span style={{ fontSize: '12px', color: '#5a5550' }}>No matches</span>}
+        {filtered.length === 0 && <span style={{ fontSize: '12px', color: '#cce0f5' }}>No matches</span>}
       </div>
 
     </div>

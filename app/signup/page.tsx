@@ -41,7 +41,7 @@ export default function SignupPage() {
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
             Create Account
           </div>
-          <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '4px' }}>
             Join the DistemperVerse
           </div>
         </div>
@@ -63,7 +63,7 @@ export default function SignupPage() {
           </button>
         </form>
 
-        <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '13px', color: '#5a5550' }}>
+        <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>
           Already have an account?{' '}
           <a href="/login" style={{ color: '#d4cfc9', textDecoration: 'none' }}>Log in</a>
         </p>

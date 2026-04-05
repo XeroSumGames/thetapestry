@@ -34,7 +34,7 @@ export default function Sidebar() {
   })
 
   const soonStyle = {
-    display: 'block' as const, padding: '10px 14px', color: '#5a5550',
+    display: 'block' as const, padding: '10px 14px', color: '#cce0f5',
     textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif',
     letterSpacing: '.04em', textTransform: 'uppercase' as const,
     borderLeft: '3px solid transparent', marginBottom: '2px',
@@ -69,7 +69,7 @@ export default function Sidebar() {
       <a href="/welcome" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Welcome to the Tapestry</a>
 <a href="/map" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The World</a>
 <a href="/campaigns" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Stories</a>
-<a href="#" style={soonStyle}>The Campfire <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span></a>
+<a href="#" style={soonStyle}>The Campfire <span style={{ fontSize: '9px', color: '#cce0f5' }}>&mdash; soon</span></a>
 
       {/* Moderation � thrivers only */}
       {userRole === 'thriver' && (
@@ -88,7 +88,7 @@ export default function Sidebar() {
       <a href="/characters/new" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</a>
       <a href="/characters/quick" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Character</a>
       <a href="/characters/random" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</a>
-      <a href="#" style={soonStyle}>Paradigms <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span></a>
+      <a href="#" style={soonStyle}>Paradigms <span style={{ fontSize: '9px', color: '#cce0f5' }}>&mdash; soon</span></a>
 
       {divider}
 
@@ -100,7 +100,7 @@ export default function Sidebar() {
         { href: '#', label: 'Looking for Group' },
       ].map(({ href, label }) => (
         <a key={label} href={href} style={soonStyle}>
-          {label} <span style={{ fontSize: '9px', color: '#5a5550' }}>&mdash; soon</span>
+          {label} <span style={{ fontSize: '9px', color: '#cce0f5' }}>&mdash; soon</span>
         </a>
       ))}
 

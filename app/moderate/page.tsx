@@ -213,7 +213,7 @@ export default function ModerationPage() {
           {loading && <div style={{ color: '#d4cfc9', fontSize: '13px' }}>Loading...</div>}
 
           {!loading && pins.length === 0 && (
-            <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '3rem', textAlign: 'center', fontSize: '13px', color: '#5a5550' }}>
+            <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '3rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>
               No {filter} rumors.
             </div>
           )}
@@ -226,7 +226,7 @@ export default function ModerationPage() {
                     <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                       {p.title}
                     </div>
-                    <div style={{ fontSize: '10px', color: '#5a5550', marginTop: '2px' }}>
+                    <div style={{ fontSize: '10px', color: '#cce0f5', marginTop: '2px' }}>
                       Submitted by {p.profiles?.username ?? 'unknown'} &mdash; {formatDate(p.created_at)}
                     </div>
                   </div>
@@ -265,7 +265,7 @@ export default function ModerationPage() {
                   {filter === 'rejected' && (
                     <button onClick={() => handleAction(p.id, 'approved')} disabled={acting === p.id} style={actionBtn('#2d5a1b', '#7fc458')}>Approve</button>
                   )}
-                  <button onClick={() => handleDelete(p.id)} disabled={acting === p.id} style={actionBtn('#2e2e2e', '#5a5550')}>Delete</button>
+                  <button onClick={() => handleDelete(p.id)} disabled={acting === p.id} style={actionBtn('#2e2e2e', '#cce0f5')}>Delete</button>
                   <a href={`https://www.openstreetmap.org/#map=15/${p.lat}/${p.lng}`} target="_blank" rel="noreferrer"
                     style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', display: 'inline-block' }}>
                     View on map
@@ -280,7 +280,7 @@ export default function ModerationPage() {
       {/* ── USERS ── */}
       {section === 'users' && (
         <>
-          <div style={{ fontSize: '12px', color: '#5a5550', marginBottom: '1rem', letterSpacing: '.04em' }}>
+          <div style={{ fontSize: '12px', color: '#cce0f5', marginBottom: '1rem', letterSpacing: '.04em' }}>
             {users.length} registered user{users.length !== 1 ? 's' : ''}
           </div>
 
@@ -298,7 +298,7 @@ export default function ModerationPage() {
                   <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em' }}>
                     {u.username}
                   </div>
-                  <div style={{ fontSize: '10px', color: '#5a5550', marginTop: '2px' }}>
+                  <div style={{ fontSize: '10px', color: '#cce0f5', marginTop: '2px' }}>
                     {u.email && <span style={{ color: '#d4cfc9', marginRight: '8px' }}>{u.email}</span>}
                     Joined {formatDate(u.created_at)}
                   </div>
@@ -349,7 +349,7 @@ export default function ModerationPage() {
       {/* World NPCs moderation */}
       {section === 'npcs' && (
         <>
-          <div style={{ fontSize: '12px', color: '#5a5550', marginBottom: '1rem' }}>
+          <div style={{ fontSize: '12px', color: '#cce0f5', marginBottom: '1rem' }}>
             {npcsLoading ? 'Loading...' : `${worldNpcs.length} pending NPC${worldNpcs.length !== 1 ? 's' : ''}`}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -361,7 +361,7 @@ export default function ModerationPage() {
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
-                    <div style={{ fontSize: '10px', color: '#5a5550' }}>
+                    <div style={{ fontSize: '10px', color: '#cce0f5' }}>
                       by {(npc.profiles as any)?.username ?? 'Unknown'} &middot; {formatDate(npc.created_at)}
                     </div>
                   </div>
@@ -373,7 +373,7 @@ export default function ModerationPage() {
                 {npc.public_description && (
                   <div style={{ fontSize: '12px', color: '#d4cfc9', marginBottom: '8px', lineHeight: 1.5 }}>{npc.public_description}</div>
                 )}
-                <div style={{ display: 'flex', gap: '6px', fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', gap: '6px', fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>
                   {['RSN', 'ACU', 'PHY', 'INF', 'DEX'].map((attr, i) => {
                     const vals = [npc.reason, npc.acumen, npc.physicality, npc.influence, npc.dexterity]
                     return <span key={attr}>{attr} {vals[i] > 0 ? `+${vals[i]}` : vals[i]}</span>

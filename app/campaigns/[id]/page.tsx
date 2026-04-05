@@ -221,7 +221,7 @@ export default function CampaignPage() {
 
       {/* Invite link — both views */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-        <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Invite Link</div>
+        <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Invite Link</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ flex: 1, fontSize: '13px', color: '#7ab3d4', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', padding: '8px 10px', fontFamily: 'Barlow, sans-serif', wordBreak: 'break-all' }}>
             {inviteLink}
@@ -231,7 +231,7 @@ export default function CampaignPage() {
             {copied ? 'Copied!' : 'Copy Link'}
           </button>
         </div>
-        <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '6px' }}>
+        <div style={{ fontSize: '11px', color: '#cce0f5', marginTop: '6px' }}>
           Code: <span style={{ color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', fontWeight: 700 }}>{campaign.invite_code}</span>
         </div>
       </div>
@@ -248,7 +248,7 @@ export default function CampaignPage() {
             </div>
           )}
           {myCharacters.length === 0 ? (
-            <div style={{ fontSize: '13px', color: '#5a5550' }}>
+            <div style={{ fontSize: '13px', color: '#cce0f5' }}>
               You have no characters. <a href="/characters/new" style={{ color: '#7ab3d4', textDecoration: 'none' }}>Create one first.</a>
             </div>
           ) : (
@@ -275,7 +275,7 @@ export default function CampaignPage() {
           Members ({members.length})
         </div>
         {members.length === 0 ? (
-          <div style={{ fontSize: '13px', color: '#5a5550', textAlign: 'center', padding: '1rem' }}>No players yet. Share the invite link above.</div>
+          <div style={{ fontSize: '13px', color: '#cce0f5', textAlign: 'center', padding: '1rem' }}>No players yet. Share the invite link above.</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {members.map(m => {
@@ -289,10 +289,10 @@ export default function CampaignPage() {
                       <div style={{ fontSize: '11px', color: '#d4cfc9', marginTop: '2px' }}>Playing: {(m.characters as any).name}</div>
                     )}
                     {!(m.characters as any)?.name && !isThisGM && (
-                      <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '2px' }}>No character assigned</div>
+                      <div style={{ fontSize: '11px', color: '#cce0f5', marginTop: '2px' }}>No character assigned</div>
                     )}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#5a5550' }}>Joined {formatDate(m.joined_at)}</div>
+                  <div style={{ fontSize: '11px', color: '#cce0f5' }}>Joined {formatDate(m.joined_at)}</div>
                 </div>
               )
             })}

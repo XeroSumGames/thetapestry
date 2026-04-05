@@ -115,7 +115,7 @@ export default function CampaignsPage() {
                     {c.description && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '6px', lineHeight: 1.5 }}>{c.description}</div>}
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '12px' }}>
-                    <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>Invite Code</div>
+                    <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>Invite Code</div>
                     <div style={{ fontSize: '16px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em' }}>{c.invite_code}</div>
                   </div>
                 </div>

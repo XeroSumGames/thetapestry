@@ -101,13 +101,13 @@ export default function ThriverDashboard() {
   }, [])
 
   if (loading || !stats) return (
-    <div style={{ padding: '2rem', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>Loading dashboard...</div>
+    <div style={{ padding: '2rem', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>Loading dashboard...</div>
   )
 
   const statCard = (label: string, value: number | string, accent?: string) => (
     <div style={{ flex: 1, minWidth: '140px', padding: '16px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', textAlign: 'center' }}>
       <div style={{ fontSize: '28px', fontWeight: 700, color: accent ?? '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>{value}</div>
-      <div style={{ fontSize: '10px', color: '#5a5550', letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>{label}</div>
+      <div style={{ fontSize: '10px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>{label}</div>
     </div>
   )
 
@@ -134,18 +134,18 @@ export default function ThriverDashboard() {
       <div style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem' }}>
         <a href="/moderate" style={{ flex: 1, padding: '12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: '11px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Pending Pins</span>
-          <span style={{ fontSize: '18px', fontWeight: 700, color: stats.pendingPins > 0 ? '#EF9F27' : '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{stats.pendingPins}</span>
+          <span style={{ fontSize: '18px', fontWeight: 700, color: stats.pendingPins > 0 ? '#EF9F27' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>{stats.pendingPins}</span>
         </a>
         <a href="/moderate" style={{ flex: 1, padding: '12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: '11px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Pending NPCs</span>
-          <span style={{ fontSize: '18px', fontWeight: 700, color: stats.pendingNpcs > 0 ? '#EF9F27' : '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{stats.pendingNpcs}</span>
+          <span style={{ fontSize: '18px', fontWeight: 700, color: stats.pendingNpcs > 0 ? '#EF9F27' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>{stats.pendingNpcs}</span>
         </a>
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
         {/* Top Pages */}
         <div style={{ flex: 1, minWidth: '280px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 600, color: '#5a5550', letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Top Pages (7d)</div>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Top Pages (7d)</div>
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
             {stats.topPages.length === 0 ? (
               <div style={{ padding: '1rem', textAlign: 'center', color: '#3a3a3a', fontSize: '11px' }}>No visit data yet</div>
@@ -162,7 +162,7 @@ export default function ThriverDashboard() {
 
         {/* Recent Events */}
         <div style={{ flex: 1, minWidth: '280px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 600, color: '#5a5550', letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Recent Events</div>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Recent Events</div>
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', maxHeight: '400px', overflowY: 'auto' }}>
             {stats.recentEvents.length === 0 ? (
               <div style={{ padding: '1rem', textAlign: 'center', color: '#3a3a3a', fontSize: '11px' }}>No events yet</div>
@@ -171,7 +171,7 @@ export default function ThriverDashboard() {
                 <div key={e.id} style={{ padding: '8px 12px', borderBottom: '1px solid #2e2e2e', display: 'flex', alignItems: 'baseline', gap: '8px' }}>
                   <span style={{ fontSize: '11px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{e.username}</span>
                   <span style={{ fontSize: '10px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{e.event_type.replace(/_/g, ' ')}</span>
-                  <span style={{ fontSize: '9px', color: '#5a5550', marginLeft: 'auto', flexShrink: 0 }}>{timeAgo(e.created_at)}</span>
+                  <span style={{ fontSize: '9px', color: '#cce0f5', marginLeft: 'auto', flexShrink: 0 }}>{timeAgo(e.created_at)}</span>
                 </div>
               ))
             )}

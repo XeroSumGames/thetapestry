@@ -90,7 +90,7 @@ export default function DashboardPage() {
           </div>
 
           {pendingPins.length === 0 && (
-            <div style={{ padding: '2rem 1rem', textAlign: 'center', fontSize: '14px', color: '#5a5550' }}>
+            <div style={{ padding: '2rem 1rem', textAlign: 'center', fontSize: '14px', color: '#cce0f5' }}>
               No pending rumors.
             </div>
           )}
@@ -99,7 +99,7 @@ export default function DashboardPage() {
             {pendingPins.map(p => (
               <div key={p.id} style={{ background: '#242424', border: '1px solid #2e2e2e', borderLeft: '3px solid #EF9F27', borderRadius: '3px', padding: '10px', marginBottom: '6px' }}>
                 <div style={{ fontSize: '15px', fontWeight: 600, color: '#f5f2ee', marginBottom: '2px' }}>{p.title}</div>
-                <div style={{ fontSize: '12px', color: '#5a5550', marginBottom: '6px' }}>
+                <div style={{ fontSize: '12px', color: '#cce0f5', marginBottom: '6px' }}>
                   {p.profiles?.username ?? 'unknown'} · {p.lat.toFixed(3)}, {p.lng.toFixed(3)}
                 </div>
                 {p.notes && (
@@ -132,7 +132,7 @@ export default function DashboardPage() {
           <div style={{ padding: '12px 14px', borderTop: '1px solid #2e2e2e', borderBottom: '1px solid #2e2e2e', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 600, color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: 'auto' }}>
             The Campfire
           </div>
-          <div style={{ padding: '1rem', fontSize: '14px', color: '#5a5550', lineHeight: 1.6 }}>
+          <div style={{ padding: '1rem', fontSize: '14px', color: '#cce0f5', lineHeight: 1.6 }}>
             Forums, session announcements, and community news coming soon.
           </div>
         </div>

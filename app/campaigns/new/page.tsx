@@ -86,7 +86,7 @@ export default function NewCampaignPage() {
         </div>
 
         <div style={{ marginBottom: '20px' }}>
-          <label style={lbl}>Description <span style={{ color: '#5a5550', fontWeight: 400 }}>(optional)</span></label>
+          <label style={lbl}>Description <span style={{ color: '#cce0f5', fontWeight: 400 }}>(optional)</span></label>
           <textarea style={{ ...inp, minHeight: '80px', resize: 'vertical' }} value={description} onChange={e => setDescription(e.target.value)} placeholder="A brief description of your campaign..." />
         </div>
 

@@ -324,7 +324,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
               {displayedPins.length === 0 && (
-                <div style={{ padding: '2rem', textAlign: 'center', fontSize: '13px', color: '#5a5550' }}>
+                <div style={{ padding: '2rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>
                   {sidebarTab === 'mine' ? 'Click anywhere on the map to place your first pin.' : 'No pins here yet.'}
                 </div>
               )}
@@ -337,13 +337,13 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
                         {getCategoryEmoji(p.category ?? 'location')} {p.title}
                       </div>
                       {p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.notes}</div>}
-                      <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '3px', textTransform: 'uppercase', letterSpacing: '.06em' }}>{pinTypeLabel(p)}</div>
+                      <div style={{ fontSize: '11px', color: '#cce0f5', marginTop: '3px', textTransform: 'uppercase', letterSpacing: '.06em' }}>{pinTypeLabel(p)}</div>
                     </div>
                     {(p.user_id === userId || userRole === 'thriver') && (
                       <div style={{ display: 'flex', gap: '4px', marginLeft: '8px', flexShrink: 0 }}>
                         {userRole === 'thriver' && (
                           <button onClick={e => { e.stopPropagation(); handleTogglePublic(p) }}
-                            style={{ background: 'none', border: 'none', color: p.status === 'approved' ? '#7fc458' : '#5a5550', cursor: 'pointer', fontSize: '12px', padding: '0 2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                            style={{ background: 'none', border: 'none', color: p.status === 'approved' ? '#7fc458' : '#cce0f5', cursor: 'pointer', fontSize: '12px', padding: '0 2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
                             {p.status === 'approved' ? 'Public' : 'Private'}
                           </button>
                         )}
@@ -372,7 +372,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
 
           <form onSubmit={handleSearch} style={{ position: 'absolute', top: '6px', right: sidebarOpen ? '550px' : '244px', zIndex: 1000, display: 'flex', gap: '4px', transition: 'right .2s' }}>
             <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search address..." style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', width: '200px', outline: 'none' }} />
-            <button type="submit" disabled={searching} style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: searching ? '#5a5550' : '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching ? 'not-allowed' : 'pointer' }}>{searching ? '...' : 'Go'}</button>
+            <button type="submit" disabled={searching} style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: searching ? '#cce0f5' : '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching ? 'not-allowed' : 'pointer' }}>{searching ? '...' : 'Go'}</button>
           </form>
           <div style={{ position: 'absolute', top: '6px', right: sidebarOpen ? '306px' : '6px', zIndex: 1000, display: 'flex', gap: '4px', transition: 'right .2s' }}>
             {([['street', 'Street'], ['satellite', 'Satellite'], ['dark', 'Dark']] as const).map(([layer, label]) => (
@@ -429,7 +429,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
                   {attachments.map((f, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#d4cfc9', padding: '3px 6px', background: '#0f0f0f', borderRadius: '2px' }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{f.name}</span>
-                      <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '14px', padding: '0 2px', flexShrink: 0 }}>×</button>
+                      <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '14px', padding: '0 2px', flexShrink: 0 }}>×</button>
                     </div>
                   ))}
                 </div>

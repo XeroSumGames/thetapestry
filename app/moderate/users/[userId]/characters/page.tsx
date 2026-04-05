@@ -61,7 +61,7 @@ export default function UserCharactersPage() {
   }
 
   if (loading) return (
-    <div style={{ padding: '2rem', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>Loading...</div>
+    <div style={{ padding: '2rem', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>Loading...</div>
   )
 
   return (
@@ -75,10 +75,10 @@ export default function UserCharactersPage() {
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
             {username}&apos;s Characters
           </div>
-          <div style={{ fontSize: '12px', color: '#5a5550', marginBottom: '2px' }}>
+          <div style={{ fontSize: '12px', color: '#cce0f5', marginBottom: '2px' }}>
             {email}{joinDate && <> &middot; Joined {new Date(joinDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</>}
           </div>
-          <div style={{ fontSize: '12px', color: '#5a5550' }}>
+          <div style={{ fontSize: '12px', color: '#cce0f5' }}>
             {characters.length} character{characters.length !== 1 ? 's' : ''}
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function UserCharactersPage() {
       </div>
 
       {characters.length === 0 ? (
-        <div style={{ color: '#5a5550', fontSize: '14px' }}>No characters found.</div>
+        <div style={{ color: '#cce0f5', fontSize: '14px' }}>No characters found.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {characters.map(c => (
