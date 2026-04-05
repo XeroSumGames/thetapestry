@@ -120,9 +120,9 @@ export default function SessionHistoryPage() {
         </a>
         <div>
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
-            Session History
+            {campaignName}
           </div>
-          <div style={{ fontSize: '14px', color: '#cce0f5' }}>{campaignName} — {sessions.length} session{sessions.length !== 1 ? 's' : ''}</div>
+          <div style={{ fontSize: '14px', color: '#cce0f5' }}>Session History — {sessions.length} session{sessions.length !== 1 ? 's' : ''}</div>
         </div>
       </div>
 
