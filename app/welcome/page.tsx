@@ -47,6 +47,16 @@ export default function WelcomePage() {
   return (
     <div style={{ minHeight: '100vh', background: '#0f0f0f', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', overflowY: 'auto' }}>
 
+      {/* Returning user nav */}
+      {onboarded && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '12px 1rem', borderBottom: '1px solid #2e2e2e' }}>
+          <a href="/dashboard" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Dashboard</a>
+          <a href="/characters" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Characters</a>
+          <a href="/map" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>The World</a>
+          <a href="/campaigns" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>My Stories</a>
+        </div>
+      )}
+
       {/* Hero */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem 1rem 2rem', textAlign: 'center' }}>
         <img src="/distemper-logo.png" alt="Distemper" style={{ width: '220px', height: '220px', objectFit: 'contain', marginBottom: '2rem' }} />
