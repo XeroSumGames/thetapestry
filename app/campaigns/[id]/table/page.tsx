@@ -744,6 +744,12 @@ export default function TablePage() {
           </div>
         )}
         <div style={{ flex: 1 }} />
+        {isGM && sessionCount > 0 && (
+          <a href={`/campaigns/${id}/sessions`}
+            style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            Previous Sessions
+          </a>
+        )}
         {isGM && sessionStatus === 'idle' && (
           <button onClick={startSession} disabled={sessionActing}
             style={{ padding: '6px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.5 : 1 }}>
