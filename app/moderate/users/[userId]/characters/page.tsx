@@ -1,0 +1,122 @@
+'use client'
+import { useEffect, useState } from 'react'
+import { createClient } from '../../../../../lib/supabase-browser'
+import { useRouter, useParams } from 'next/navigation'
+import CharacterCard from '../../../../../components/CharacterCard'
+
+interface CharacterRow {
+  id: string
+  name: string
+  created_at: string
+  data: any
+}
+
+export default function UserCharactersPage() {
+  const params = useParams()
+  const userId = params.userId as string
+  const router = useRouter()
+  const supabase = createClient()
+  const [characters, setCharacters] = useState<CharacterRow[]>([])
+  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
+  const [joinDate, setJoinDate] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [deletingAll, setDeletingAll] = useState(false)
+
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/login'); return }
+
+      const { data: myProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      if (myProfile?.role?.toLowerCase() !== 'thriver') { router.push('/dashboard'); return }
+
+      const { data: profile } = await supabase.from('profiles').select('username, email, created_at').eq('id', userId).single()
+      setUsername(profile?.username ?? 'Unknown')
+      setEmail(profile?.email ?? '')
+      setJoinDate(profile?.created_at ?? '')
+
+      const { data } = await supabase
+        .from('characters')
+        .select('id, name, created_at, data')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+      setCharacters(data ?? [])
+      setLoading(false)
+    }
+    load()
+  }, [userId])
+
+  async function handleDelete(id: string) {
+    await supabase.from('characters').delete().eq('id', id)
+    setCharacters(prev => prev.filter(c => c.id !== id))
+  }
+
+  async function handleDeleteAll() {
+    if (!confirm(`Delete all ${characters.length} characters for ${username}? This cannot be undone.`)) return
+    setDeletingAll(true)
+    await supabase.from('characters').delete().eq('user_id', userId)
+    setCharacters([])
+    setDeletingAll(false)
+  }
+
+  if (loading) return (
+    <div style={{ padding: '2rem', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>Loading...</div>
+  )
+
+  return (
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
+        <a href="/moderate" style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', marginTop: '4px' }}>
+          Back
+        </a>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+            {username}&apos;s Characters
+          </div>
+          <div style={{ fontSize: '12px', color: '#5a5550', marginBottom: '2px' }}>
+            {email}{joinDate && <> &middot; Joined {new Date(joinDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</>}
+          </div>
+          <div style={{ fontSize: '12px', color: '#5a5550' }}>
+            {characters.length} character{characters.length !== 1 ? 's' : ''}
+          </div>
+        </div>
+        {characters.length > 0 && (
+          <button onClick={handleDeleteAll} disabled={deletingAll}
+            style={{ padding: '5px 12px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '11px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '4px', opacity: deletingAll ? 0.5 : 1 }}>
+            {deletingAll ? 'Deleting...' : 'Delete All Characters'}
+          </button>
+        )}
+      </div>
+
+      {characters.length === 0 ? (
+        <div style={{ color: '#5a5550', fontSize: '14px' }}>No characters found.</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {characters.map(c => (
+            <CharacterCard
+              key={c.id}
+              character={c}
+              liveState={{
+                id: c.id,
+                wp_current: c.data?.secondary?.woundPoints ?? 10,
+                wp_max: c.data?.secondary?.woundPoints ?? 10,
+                rp_current: c.data?.secondary?.resiliencePoints ?? 6,
+                rp_max: c.data?.secondary?.resiliencePoints ?? 6,
+                stress: c.data?.stressLevel ?? 0,
+                insight_dice: c.data?.insightDice ?? 2,
+                morality: c.data?.secondary?.morality ?? 3,
+                cdp: c.data?.cdp ?? 0,
+              }}
+              showButtons={true}
+              canEdit={false}
+              isMySheet={false}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

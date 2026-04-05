@@ -21,12 +21,11 @@ export default function CharacterViewPage() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
-      const { data: row, error } = await supabase
-        .from('characters')
-        .select('id, name, data')
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .single()
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      const isThriver = profile?.role?.toLowerCase() === 'thriver'
+      let query = supabase.from('characters').select('id, name, data').eq('id', id)
+      if (!isThriver) query = query.eq('user_id', user.id)
+      const { data: row, error } = await query.single()
       if (error || !row) { router.push('/characters'); return }
       setCharacter(row)
       setLoading(false)

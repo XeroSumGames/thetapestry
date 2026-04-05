@@ -311,6 +311,9 @@ export default function ModerationPage() {
                       Make Thriver
                     </button>
                   )}
+                  <a href={`/moderate/users/${u.id}/characters`} style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', textAlign: 'center' }}>
+                    Characters
+                  </a>
                   <button onClick={() => handleSuspend(u.id, !u.suspended)} disabled={acting === u.id}
                     style={actionBtn(u.suspended ? '#2d5a1b' : '#5a3a00', u.suspended ? '#7fc458' : '#EF9F27')}>
                     {u.suspended ? 'Unsuspend' : 'Suspend'}

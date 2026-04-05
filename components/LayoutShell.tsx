@@ -10,8 +10,9 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   const supabase = createClient()
   const [suspended, setSuspended] = useState(false)
   const [checked, setChecked] = useState(false)
+  const [onboarded, setOnboarded] = useState(false)
 
-  const hideSidebar = pathname === '/login' || pathname === '/signup' || pathname === '/welcome'
+  const hideSidebar = pathname === '/login' || pathname === '/signup' || (pathname === '/welcome' && !onboarded)
 
   useEffect(() => {
     async function checkSession() {
@@ -27,11 +28,12 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
         const { data: profile } = await supabase
           .from('profiles')
-          .select('suspended')
+          .select('suspended, onboarded')
           .eq('id', user.id)
           .single()
 
         if (profile?.suspended) setSuspended(true)
+        if (profile?.onboarded) setOnboarded(true)
         setChecked(true)
       } catch (e) {
         // Any auth error — clear session and continue

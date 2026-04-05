@@ -32,12 +32,12 @@ export default function NavBar() {
     }}>
       {/* Logo + title grouped together */}
       <a href="https://www.xerosumgames.com" target="_blank" rel="noreferrer" style={{ flexShrink: 0, paddingBottom: '4px' }}>
-        <img src="/XeroSumGamesLogoV13.png" alt="Xero Sum Games" style={{ height: '32px', objectFit: 'contain', opacity: 0.85, display: 'block' }} />
+        <img src="/XeroSumGamesLogoV13.png" alt="Xero Sum Games" style={{ height: '24px', objectFit: 'contain', opacity: 0.85, display: 'block' }} />
       </a>
-      <a href="/dashboard" style={{ fontSize: '28px', fontFamily: 'Distemper, sans-serif', textTransform: 'uppercase', color: '#f5f2ee', textDecoration: 'none', flexShrink: 0, lineHeight: 0.85 }}>
+      <a href="/dashboard" style={{ fontSize: '28px', fontFamily: 'Distemper, sans-serif', textTransform: 'uppercase', color: '#f5f2ee', textDecoration: 'none', flexShrink: 0, lineHeight: 0.85, marginLeft: '24px' }}>
   The Tapestry
 </a>
-      <span style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.08em', textTransform: 'uppercase', flexShrink: 0 }}>
+      <span style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.08em', textTransform: 'uppercase', flexShrink: 0, marginLeft: '8px' }}>
         DistemperVerse v1.0
       </span>
       <div style={{ flex: 1 }} />

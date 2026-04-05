@@ -8,6 +8,7 @@ export default function WelcomePage() {
   const supabase = createClient()
   const [username, setUsername] = useState('')
   const [marking, setMarking] = useState(false)
+  const [onboarded, setOnboarded] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -16,6 +17,7 @@ export default function WelcomePage() {
       const { data: profile } = await supabase.from('profiles').select('username, onboarded').eq('id', user.id).single()
       if (!profile) return
       setUsername(profile.username)
+      if (profile.onboarded) setOnboarded(true)
     }
     load()
   }, [])
@@ -149,10 +151,17 @@ export default function WelcomePage() {
 
         {/* CTA */}
         <div style={{ textAlign: 'center', paddingBottom: '4rem' }}>
-          <button onClick={handleGetStarted} disabled={marking}
-            style={{ padding: '14px 48px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '16px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', opacity: marking ? 0.6 : 1 }}>
-            {marking ? 'Loading...' : 'Welcome to the DistemperVerse'}
-          </button>
+          {!onboarded ? (
+            <button onClick={handleGetStarted} disabled={marking}
+              style={{ padding: '14px 48px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '16px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', opacity: marking ? 0.6 : 1 }}>
+              {marking ? 'Loading...' : 'Welcome to the DistemperVerse'}
+            </button>
+          ) : (
+            <button onClick={() => router.push('/dashboard')}
+              style={{ padding: '14px 48px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '16px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              Back to Dashboard
+            </button>
+          )}
         </div>
 
       </div>
