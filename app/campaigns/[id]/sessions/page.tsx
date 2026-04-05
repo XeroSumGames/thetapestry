@@ -147,7 +147,7 @@ export default function SessionHistoryPage() {
                     <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '15px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
                       Session {s.session_number}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#5a5550' }}>
+                    <div style={{ fontSize: '11px', color: '#d4cfc9' }}>
                       {formatDate(s.started_at)} {formatTime(s.started_at)}
                       {s.ended_at && <> — {duration(s.started_at, s.ended_at)}</>}
                     </div>
