@@ -115,14 +115,14 @@ export default function SessionHistoryPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <a href={`/campaigns/${id}/table`}
-          style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+          style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           Back to Table
         </a>
         <div>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
             Session History
           </div>
-          <div style={{ fontSize: '12px', color: '#5a5550' }}>{campaignName} — {sessions.length} session{sessions.length !== 1 ? 's' : ''}</div>
+          <div style={{ fontSize: '14px', color: '#5a5550' }}>{campaignName} — {sessions.length} session{sessions.length !== 1 ? 's' : ''}</div>
         </div>
       </div>
 
@@ -141,28 +141,28 @@ export default function SessionHistoryPage() {
                 {/* Card header */}
                 <div style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: isActive ? '#2a1210' : '#1a2e10', border: `2px solid ${isActive ? '#c0392b' : '#2d5a1b'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: isActive ? '#c0392b' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif' }}>{s.session_number}</span>
+                    <span style={{ fontSize: '15px', fontWeight: 700, color: isActive ? '#c0392b' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif' }}>{s.session_number}</span>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+                    <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '15px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
                       Session {s.session_number}
                     </div>
-                    <div style={{ fontSize: '9px', color: '#5a5550' }}>
+                    <div style={{ fontSize: '11px', color: '#5a5550' }}>
                       {formatDate(s.started_at)} {formatTime(s.started_at)}
                       {s.ended_at && <> — {duration(s.started_at, s.ended_at)}</>}
                     </div>
                   </div>
                   {isActive && (
-                    <span style={{ fontSize: '8px', padding: '1px 5px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', flexShrink: 0 }}>Active</span>
+                    <span style={{ fontSize: '10px', padding: '1px 5px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', flexShrink: 0 }}>Active</span>
                   )}
                   {sessAttachments.length > 0 && (
-                    <span style={{ fontSize: '9px', color: '#5a5550', flexShrink: 0 }}>📎{sessAttachments.length}</span>
+                    <span style={{ fontSize: '11px', color: '#5a5550', flexShrink: 0 }}>📎{sessAttachments.length}</span>
                   )}
                 </div>
 
                 {/* Summary preview */}
                 {s.gm_summary && (
-                  <div style={{ padding: '0 12px 8px', fontSize: '11px', color: '#5a5550', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: isExpanded ? 999 : 2, WebkitBoxOrient: 'vertical' as const }}>
+                  <div style={{ padding: '0 12px 8px', fontSize: '13px', color: '#5a5550', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: isExpanded ? 999 : 2, WebkitBoxOrient: 'vertical' as const }}>
                     {s.gm_summary}
                   </div>
                 )}
@@ -171,18 +171,18 @@ export default function SessionHistoryPage() {
                 <div style={{ marginTop: 'auto', padding: '0 12px 10px', display: 'flex', gap: '4px' }}>
                   {hasContent && (
                     <button onClick={() => setExpandedId(isExpanded ? null : s.id)}
-                      style={{ flex: 1, padding: '5px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ flex: 1, padding: '5px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       {isExpanded ? 'Collapse' : 'Expand'}
                     </button>
                   )}
                   {isActive && (
                     <button onClick={() => deactivateSession(s.id)} disabled={deactivating === s.id}
-                      style={{ padding: '5px 10px', background: 'none', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: deactivating === s.id ? 'not-allowed' : 'pointer', opacity: deactivating === s.id ? 0.5 : 1 }}>
+                      style={{ padding: '5px 10px', background: 'none', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: deactivating === s.id ? 'not-allowed' : 'pointer', opacity: deactivating === s.id ? 0.5 : 1 }}>
                       {deactivating === s.id ? '...' : 'Deactivate'}
                     </button>
                   )}
                   <button onClick={() => deleteSession(s.id)} disabled={deleting === s.id}
-                    style={{ padding: '5px 10px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: deleting === s.id ? 'not-allowed' : 'pointer', opacity: deleting === s.id ? 0.5 : 1 }}>
+                    style={{ padding: '5px 10px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: deleting === s.id ? 'not-allowed' : 'pointer', opacity: deleting === s.id ? 0.5 : 1 }}>
                     {deleting === s.id ? '...' : 'Delete'}
                   </button>
                 </div>
@@ -192,29 +192,29 @@ export default function SessionHistoryPage() {
                   <div style={{ padding: '0 12px 12px', borderTop: '1px solid #2e2e2e' }}>
                     {s.gm_summary && (
                       <div style={{ marginTop: '10px' }}>
-                        <div style={{ fontSize: '9px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>What Happened</div>
-                        <div style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.gm_summary}</div>
+                        <div style={{ fontSize: '11px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>What Happened</div>
+                        <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.gm_summary}</div>
                       </div>
                     )}
                     {s.next_session_notes && (
                       <div style={{ marginTop: '10px' }}>
-                        <div style={{ fontSize: '9px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>Notes for Next Session</div>
-                        <div style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.next_session_notes}</div>
+                        <div style={{ fontSize: '11px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>Notes for Next Session</div>
+                        <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.next_session_notes}</div>
                       </div>
                     )}
                     {sessAttachments.length > 0 && (
                       <div style={{ marginTop: '10px' }}>
-                        <div style={{ fontSize: '9px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Attachments</div>
+                        <div style={{ fontSize: '11px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Attachments</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                           {sessAttachments.map(a => (
                             <a key={a.id} href={a.file_url} target="_blank" rel="noreferrer"
-                              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', textDecoration: 'none', color: '#7ab3d4', fontSize: '11px', transition: 'background 0.15s' }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', textDecoration: 'none', color: '#7ab3d4', fontSize: '13px', transition: 'background 0.15s' }}
                               onMouseEnter={e => (e.currentTarget.style.background = '#2e2e2e')}
                               onMouseLeave={e => (e.currentTarget.style.background = '#242424')}
                             >
                               <span>{getFileIcon(a.file_type)}</span>
                               <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.file_name}</span>
-                              <span style={{ fontSize: '9px', color: '#5a5550', flexShrink: 0 }}>Open ↗</span>
+                              <span style={{ fontSize: '11px', color: '#5a5550', flexShrink: 0 }}>Open ↗</span>
                             </a>
                           ))}
                         </div>
