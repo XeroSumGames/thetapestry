@@ -129,7 +129,7 @@ export default function SessionHistoryPage() {
       {sessions.length === 0 ? (
         <div style={{ color: '#5a5550', fontSize: '14px', textAlign: 'center', padding: '2rem' }}>No sessions recorded yet.</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
           {sessions.map(s => {
             const isExpanded = expandedId === s.id
             const sessAttachments = attachments.filter(a => a.session_id === s.id)
