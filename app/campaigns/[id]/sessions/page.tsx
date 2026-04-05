@@ -31,6 +31,7 @@ export default function SessionHistoryPage() {
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [deactivating, setDeactivating] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -71,6 +72,16 @@ export default function SessionHistoryPage() {
     setDeactivating(null)
   }
 
+  async function deleteSession(sessionId: string) {
+    if (!confirm('Delete this session record? This cannot be undone.')) return
+    setDeleting(sessionId)
+    await supabase.from('session_attachments').delete().eq('session_id', sessionId)
+    await supabase.from('sessions').delete().eq('id', sessionId)
+    setSessions(prev => prev.filter(s => s.id !== sessionId))
+    setAttachments(prev => prev.filter(a => a.session_id !== sessionId))
+    setDeleting(null)
+  }
+
   function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
@@ -100,7 +111,7 @@ export default function SessionHistoryPage() {
   )
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <a href={`/campaigns/${id}/table`}
@@ -170,6 +181,10 @@ export default function SessionHistoryPage() {
                       {deactivating === s.id ? '...' : 'Deactivate'}
                     </button>
                   )}
+                  <button onClick={() => deleteSession(s.id)} disabled={deleting === s.id}
+                    style={{ padding: '5px 10px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: deleting === s.id ? 'not-allowed' : 'pointer', opacity: deleting === s.id ? 0.5 : 1 }}>
+                    {deleting === s.id ? '...' : 'Delete'}
+                  </button>
                 </div>
 
                 {/* Expanded content */}

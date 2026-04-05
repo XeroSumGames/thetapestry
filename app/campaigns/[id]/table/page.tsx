@@ -85,7 +85,7 @@ const SETTINGS: Record<string, string> = {
   therock: 'The Rock',
 }
 
-const PLAYER_SLOTS = 5
+const MAX_PLAYER_SLOTS = 9
 
 function getOutcome(total: number, die1: number, die2: number): string {
   if (die1 === 1 && die2 === 1) return 'Low Insight'
@@ -992,32 +992,31 @@ export default function TablePage() {
           </div>
         </button>
 
-        {Array.from({ length: PLAYER_SLOTS }).map((_, i) => {
-          const entry = playerEntries[i] ?? null
-          const photo = entry ? getCharPhoto(entry) : null
-          const isActive = combatActive && initiativeOrder.some(o => o.is_active && o.character_id === entry?.character.id)
-          return (
-            <button key={i} onClick={() => (isGM || entry?.userId === userId) && entry && setSelectedEntry(entry)}
-              style={{ flex: 1, background: isActive ? '#1a0f0f' : entry ? '#1a1a1a' : '#0d0d0d', borderTop: isActive ? '2px solid #c0392b' : 'none', borderBottom: 'none', borderLeft: 'none', borderRight: i < PLAYER_SLOTS - 1 ? '1px solid #2e2e2e' : 'none', cursor: entry && (isGM || entry.userId === userId) ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px', transition: 'background 0.15s' }}
-              onMouseEnter={e => { if (entry) (e.currentTarget as HTMLElement).style.background = '#242424' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isActive ? '#1a0f0f' : entry ? '#1a1a1a' : '#0d0d0d' }}
-            >
-              {entry ? (
-                <>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1a3a5c', border: `2px solid ${isActive ? '#c0392b' : '#7ab3d4'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                    {photo ? <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '11px', fontWeight: 700, color: isActive ? '#c0392b' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(entry.character.name)}</span>}
-                  </div>
-                  <div style={{ fontSize: '11px', color: isActive ? '#f5a89a' : '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.character.name}</div>
-                  <div style={{ fontSize: '9px', color: '#5a5550', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center' }}>{entry.username}</div>
-                </>
-              ) : (
-                <div style={{ fontSize: '9px', color: '#2e2e2e', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                  {entriesLoading ? '' : `Player ${i + 1}`}
+        {(() => {
+          const slotCount = Math.max(playerEntries.length, 3)
+          const isCompact = slotCount > 5
+          const avatarSize = isCompact ? '28px' : '36px'
+          const nameSize = isCompact ? '9px' : '11px'
+          const subSize = isCompact ? '8px' : '9px'
+          const pad = isCompact ? '4px' : '8px'
+          return playerEntries.map((entry, i) => {
+            const photo = getCharPhoto(entry)
+            const isActive = combatActive && initiativeOrder.some(o => o.is_active && o.character_id === entry.character.id)
+            return (
+              <button key={entry.stateId} onClick={() => (isGM || entry.userId === userId) && setSelectedEntry(entry)}
+                style={{ flex: 1, minWidth: 0, background: isActive ? '#1a0f0f' : '#1a1a1a', borderTop: isActive ? '2px solid #c0392b' : 'none', borderBottom: 'none', borderLeft: 'none', borderRight: i < playerEntries.length - 1 ? '1px solid #2e2e2e' : 'none', cursor: (isGM || entry.userId === userId) ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: isCompact ? '2px' : '4px', padding: pad, transition: 'background 0.15s' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                onMouseLeave={e => (e.currentTarget.style.background = isActive ? '#1a0f0f' : '#1a1a1a')}
+              >
+                <div style={{ width: avatarSize, height: avatarSize, borderRadius: '50%', background: '#1a3a5c', border: `2px solid ${isActive ? '#c0392b' : '#7ab3d4'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                  {photo ? <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: isCompact ? '9px' : '11px', fontWeight: 700, color: isActive ? '#c0392b' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(entry.character.name)}</span>}
                 </div>
-              )}
-            </button>
-          )
-        })}
+                <div style={{ fontSize: nameSize, color: isActive ? '#f5a89a' : '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.character.name}</div>
+                {!isCompact && <div style={{ fontSize: subSize, color: '#5a5550', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center' }}>{entry.username}</div>}
+              </button>
+            )
+          })
+        })()}
       </div>
 
       {/* Character sheet overlay */}
