@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
+import { logFirstEvent } from '../../../lib/events'
 
 export default function JoinCampaignPage() {
   const [code, setCode] = useState('')
@@ -45,6 +46,7 @@ export default function JoinCampaignPage() {
       return
     }
 
+    logFirstEvent('first_campaign_joined', { campaign_id: campaign.id })
     router.push(`/campaigns/${campaign.id}`)
   }
 

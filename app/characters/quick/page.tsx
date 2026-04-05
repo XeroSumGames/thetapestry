@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
+import { logFirstEvent } from '../../../lib/events'
 import {
   createWizardState, WizardState, buildCharacter,
   skillStepUp, getCumulativeSkills
@@ -137,6 +138,7 @@ export default function QuickCharacterPage() {
       data: character,
     })
     if (error) { setSaveError(error.message); setSaving(false); return }
+    logFirstEvent('first_character_created', { name: character.name })
     setSaved(true)
     setSaving(false)
   }

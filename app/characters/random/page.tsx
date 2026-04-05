@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
+import { logFirstEvent } from '../../../lib/events'
 import {
   createWizardState, buildCharacter, roll2d6, roll1d3,
   rollComplication, rollMotivation
@@ -158,6 +159,7 @@ export default function RandomCharacterPage() {
         return
       }
 
+      logFirstEvent('first_character_created', { name: character.name })
       router.push(`/characters/${newChar.id}/edit?step=4`)
     }
 

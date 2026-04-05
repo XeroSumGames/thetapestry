@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { createWizardState, WizardState, buildCharacter } from '../../../lib/xse-engine'
 import { createClient } from '../../../lib/supabase-browser'
+import { logFirstEvent } from '../../../lib/events'
 import StepXero from '../../../components/wizard/StepXero'
 import StepAttr from '../../../components/wizard/StepAttr'
 import StepFour from '../../../components/wizard/StepFour'
@@ -75,6 +76,7 @@ export default function NewCharacterPage() {
       data: character,
     })
     if (error) { setSaveError(error.message); setSaving(false); return }
+    logFirstEvent('first_character_created', { name: character.name })
     setSaved(true)
     setSaving(false)
   }

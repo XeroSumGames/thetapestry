@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
+import { logFirstEvent } from '../../lib/events'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -15,6 +16,7 @@ export default function LoginPage() {
     setError('')
     const { error: loginError } = await supabase.auth.signInWithPassword({ email, password })
     if (loginError) { setError(loginError.message); return }
+    logFirstEvent('first_login')
     router.push('/dashboard')
   }
 

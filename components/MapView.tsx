@@ -1,6 +1,7 @@
 ﻿'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { logFirstEvent } from '../lib/events'
 
 const PIN_CATEGORIES = [
   { value: 'rumor',      label: 'Rumor',      emoji: '🎒' },
@@ -224,6 +225,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
       category: form.category,
     }).select().single()
     if (error) { alert('Error: ' + error.message); setSaving(false); return }
+    logFirstEvent('first_pin_placed', { pin_id: data.id, title: form.title })
 
     if (attachments.length > 0 && data) {
       setUploading(true)
@@ -237,6 +239,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
     setAttachments([])
     setShowForm(false)
     setSaving(false)
+    await loadPins()
   }
 
   async function handleDeletePin(id: string) {
@@ -249,6 +252,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
   async function handleTogglePublic(pin: Pin) {
     const newStatus = pin.status === 'approved' ? 'active' : 'approved'
     await supabase.from('map_pins').update({ status: newStatus }).eq('id', pin.id)
+    await loadPins()
   }
 
   function startEdit(pin: Pin) {
@@ -260,7 +264,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
   async function handleSaveEdit() {
   if (!editingPin || !editForm.title.trim()) return
   const { error } = await supabase.from('map_pins').update({ title: editForm.title, notes: editForm.notes, category: editForm.category }).eq('id', editingPin.id)
-  if (!error) setEditingPin(null)
+  if (!error) { setEditingPin(null); await loadPins() }
   else alert('Error: ' + error.message)
 }
 

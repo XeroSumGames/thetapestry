@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { useRouter, useParams } from 'next/navigation'
+import { logFirstEvent } from '../../../lib/events'
 
 export default function JoinByCodePage() {
   const params = useParams()
@@ -27,6 +28,7 @@ export default function JoinByCodePage() {
     if (!user) { router.push(`/login?redirect=/join/${code}`); return }
     const { error } = await supabase.from('campaign_members').insert({ campaign_id: campaign.id, user_id: user.id })
     if (error && error.code !== '23505') { setStatus('error'); return }
+    if (!error) logFirstEvent('first_campaign_joined', { campaign_id: campaign.id })
     router.push(`/campaigns/${campaign.id}`)
   }
 

@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
+import { logEvent } from '../../lib/events'
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -20,6 +21,7 @@ export default function SignupPage() {
       options: { data: { username } }
     })
     if (signUpError) { setError(signUpError.message); return }
+    logEvent('signup', { username })
     router.push('/welcome')
   }
 
