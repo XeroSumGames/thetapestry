@@ -20,9 +20,29 @@ interface Pin {
 interface Profile {
   id: string
   username: string
+  email: string
   role: string
   created_at: string
   suspended: boolean
+}
+
+function actionBtn(borderColor: string, color: string): React.CSSProperties {
+  return {
+    padding: '6px 14px', background: 'none',
+    border: `1px solid ${borderColor}`, borderRadius: '3px',
+    color, fontSize: '11px', cursor: 'pointer',
+    fontFamily: 'Barlow Condensed, sans-serif',
+    letterSpacing: '.04em', textTransform: 'uppercase',
+  }
+}
+
+const navLink: React.CSSProperties = {
+  padding: '5px 12px', background: '#242424',
+  border: '1px solid #3a3a3a', borderRadius: '3px',
+  color: '#f5f2ee', fontSize: '11px',
+  fontFamily: 'Barlow Condensed, sans-serif',
+  letterSpacing: '.06em', textTransform: 'uppercase',
+  textDecoration: 'none',
 }
 
 export default function ModerationPage() {
@@ -78,13 +98,14 @@ export default function ModerationPage() {
     setUsersLoading(false)
   }
 
-  async function handleRoleChange(id: string, newRole: 'Survivor' | 'Thriver') {
+  async function handleRoleChange(id: string, newRole: 'survivor' | 'thriver') {
     setActing(id)
     await supabase.from('profiles').update({ role: newRole }).eq('id', id)
     setUsers(prev => prev.map(u => u.id === id ? { ...u, role: newRole } : u))
     setActing(null)
   }
-async function handleSuspend(id: string, suspended: boolean) {
+
+  async function handleSuspend(id: string, suspended: boolean) {
     setActing(id)
     await supabase.from('profiles').update({ suspended }).eq('id', id)
     setUsers(prev => prev.map(u => u.id === id ? { ...u, suspended } : u))
@@ -114,7 +135,10 @@ async function handleSuspend(id: string, suspended: boolean) {
   }
 
   function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    return new Date(iso).toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    })
   }
 
   return (
@@ -135,35 +159,34 @@ async function handleSuspend(id: string, suspended: boolean) {
       {/* Section tabs */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem' }}>
         {(['rumors', 'users'] as const).map(s => (
-          <button key={s} onClick={() => setSection(s)}
-            style={{
-              padding: '7px 16px', border: `1px solid ${section === s ? '#c0392b' : '#3a3a3a'}`,
-              background: section === s ? '#2a1210' : '#242424',
-              color: section === s ? '#f5a89a' : '#d4cfc9',
-              borderRadius: '3px', cursor: 'pointer',
-              fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif',
-              letterSpacing: '.06em', textTransform: 'uppercase',
-            }}>
+          <button key={s} onClick={() => setSection(s)} style={{
+            padding: '7px 16px',
+            border: `1px solid ${section === s ? '#c0392b' : '#3a3a3a'}`,
+            background: section === s ? '#2a1210' : '#242424',
+            color: section === s ? '#f5a89a' : '#d4cfc9',
+            borderRadius: '3px', cursor: 'pointer',
+            fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif',
+            letterSpacing: '.06em', textTransform: 'uppercase',
+          }}>
             {s === 'rumors' ? 'Rumor Queue' : 'Users'}
           </button>
         ))}
       </div>
 
-      {/* RUMORS SECTION */}
+      {/* ── RUMORS ── */}
       {section === 'rumors' && (
         <>
-          {/* Filter tabs */}
           <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem' }}>
             {(['pending', 'approved', 'rejected'] as const).map(f => (
-              <button key={f} onClick={() => setFilter(f)}
-                style={{
-                  padding: '7px 16px', border: `1px solid ${filter === f ? '#c0392b' : '#3a3a3a'}`,
-                  background: filter === f ? '#2a1210' : '#242424',
-                  color: filter === f ? '#f5a89a' : '#d4cfc9',
-                  borderRadius: '3px', cursor: 'pointer',
-                  fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif',
-                  letterSpacing: '.06em', textTransform: 'uppercase',
-                }}>
+              <button key={f} onClick={() => setFilter(f)} style={{
+                padding: '7px 16px',
+                border: `1px solid ${filter === f ? '#c0392b' : '#3a3a3a'}`,
+                background: filter === f ? '#2a1210' : '#242424',
+                color: filter === f ? '#f5a89a' : '#d4cfc9',
+                borderRadius: '3px', cursor: 'pointer',
+                fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif',
+                letterSpacing: '.06em', textTransform: 'uppercase',
+              }}>
                 {f}
               </button>
             ))}
@@ -186,18 +209,20 @@ async function handleSuspend(id: string, suspended: boolean) {
                       {p.title}
                     </div>
                     <div style={{ fontSize: '10px', color: '#5a5550', marginTop: '2px' }}>
-                      Submitted by {p.profiles?.username ?? 'unknown'} · {formatDate(p.created_at)}
+                      Submitted by {p.profiles?.username ?? 'unknown'} &mdash; {formatDate(p.created_at)}
                     </div>
                   </div>
                   <div style={{ fontSize: '10px', color: '#d4cfc9', fontFamily: 'monospace' }}>
                     {p.lat.toFixed(4)}, {p.lng.toFixed(4)}
                   </div>
                 </div>
+
                 {p.notes && (
                   <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a' }}>
                     {p.notes}
                   </div>
                 )}
+
                 {p.attachments && p.attachments.length > 0 && (
                   <div style={{ marginBottom: '8px' }}>
                     {p.attachments.map((name: string) => (
@@ -208,6 +233,7 @@ async function handleSuspend(id: string, suspended: boolean) {
                     ))}
                   </div>
                 )}
+
                 <div style={{ display: 'flex', gap: '6px' }}>
                   {filter === 'pending' && (
                     <>
@@ -233,7 +259,7 @@ async function handleSuspend(id: string, suspended: boolean) {
         </>
       )}
 
-      {/* USERS SECTION */}
+      {/* ── USERS ── */}
       {section === 'users' && (
         <>
           <div style={{ fontSize: '12px', color: '#5a5550', marginBottom: '1rem', letterSpacing: '.04em' }}>
@@ -244,39 +270,44 @@ async function handleSuspend(id: string, suspended: boolean) {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {users.map(u => (
-              <div key={u.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${u.role === 'Thriver' ? '#c0392b' : '#3a3a3a'}`, borderRadius: '4px', padding: '10px 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div key={u.id} style={{
+                background: '#1a1a1a', border: '1px solid #2e2e2e',
+                borderLeft: `3px solid ${u.role === 'thriver' ? '#c0392b' : '#3a3a3a'}`,
+                borderRadius: '4px', padding: '10px 1.25rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}>
                 <div>
                   <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em' }}>
-  {u.username}
-</div>
-<div style={{ fontSize: '10px', color: '#5a5550', marginTop: '2px' }}>
-  {(u as any).email && <span style={{ color: '#d4cfc9', marginRight: '8px' }}>{(u as any).email}</span>}
-  Joined {formatDate(u.created_at)}
-</div>
+                    {u.username}
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#5a5550', marginTop: '2px' }}>
+                    {u.email && <span style={{ color: '#d4cfc9', marginRight: '8px' }}>{u.email}</span>}
+                    Joined {formatDate(u.created_at)}
+                  </div>
                 </div>
-                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   {u.suspended && (
                     <span style={{ fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px', background: '#2a1a00', color: '#EF9F27', border: '1px solid #EF9F27' }}>
                       Suspended
                     </span>
                   )}
                   <span style={{
-                    fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em',
-                    textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px',
-                    background: u.role === 'Thriver' ? '#2a1210' : '#1a1a2e',
-                    color: u.role === 'Thriver' ? '#f5a89a' : '#7ab3d4',
-                    border: `1px solid ${u.role === 'Thriver' ? '#c0392b' : '#2e2e5a'}`,
+                    fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif',
+                    letterSpacing: '.08em', textTransform: 'uppercase',
+                    padding: '3px 8px', borderRadius: '2px',
+                    background: u.role === 'thriver' ? '#2a1210' : '#1a1a2e',
+                    color: u.role === 'thriver' ? '#f5a89a' : '#7ab3d4',
+                    border: `1px solid ${u.role === 'thriver' ? '#c0392b' : '#2e2e5a'}`,
                   }}>
                     {u.role}
                   </span>
-                  {u.role === 'Thriver' ? (
-                    <button onClick={() => handleRoleChange(u.id, 'Survivor')} disabled={acting === u.id}
-                      style={actionBtn('#3a3a3a', '#d4cfc9')}>
+                  {u.role === 'thriver' ? (
+                    <button onClick={() => handleRoleChange(u.id, 'survivor')} disabled={acting === u.id} style={actionBtn('#3a3a3a', '#d4cfc9')}>
                       Make Survivor
                     </button>
                   ) : (
-                    <button onClick={() => handleRoleChange(u.id, 'Thriver')} disabled={acting === u.id}
-                      style={actionBtn('#c0392b', '#f5a89a')}>
+                    <button onClick={() => handleRoleChange(u.id, 'thriver')} disabled={acting === u.id} style={actionBtn('#c0392b', '#f5a89a')}>
                       Make Thriver
                     </button>
                   )}
@@ -284,8 +315,7 @@ async function handleSuspend(id: string, suspended: boolean) {
                     style={actionBtn(u.suspended ? '#2d5a1b' : '#5a3a00', u.suspended ? '#7fc458' : '#EF9F27')}>
                     {u.suspended ? 'Unsuspend' : 'Suspend'}
                   </button>
-                  <button onClick={() => handleDeleteUser(u.id)} disabled={acting === u.id}
-                    style={actionBtn('#7a1f16', '#f5a89a')}>
+                  <button onClick={() => handleDeleteUser(u.id)} disabled={acting === u.id} style={actionBtn('#7a1f16', '#f5a89a')}>
                     Delete
                   </button>
                 </div>
@@ -297,23 +327,4 @@ async function handleSuspend(id: string, suspended: boolean) {
 
     </div>
   )
-}
-
-function actionBtn(borderColor: string, color: string): React.CSSProperties {
-  return {
-    padding: '6px 14px', background: 'none',
-    border: `1px solid ${borderColor}`,
-    borderRadius: '3px', color, fontSize: '11px',
-    cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif',
-    letterSpacing: '.04em', textTransform: 'uppercase',
-  }
-}
-
-const navLink: React.CSSProperties = {
-  padding: '5px 12px', background: '#242424',
-  border: '1px solid #3a3a3a', borderRadius: '3px',
-  color: '#f5f2ee', fontSize: '11px',
-  fontFamily: 'Barlow Condensed, sans-serif',
-  letterSpacing: '.06em', textTransform: 'uppercase',
-  textDecoration: 'none',
 }

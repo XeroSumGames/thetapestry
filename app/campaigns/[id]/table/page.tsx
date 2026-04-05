@@ -58,6 +58,16 @@ interface RollResult {
   spent: boolean
 }
 
+interface InitiativeEntry {
+  id: string
+  character_name: string
+  character_id: string | null
+  user_id: string | null
+  roll: number
+  is_active: boolean
+  is_npc: boolean
+}
+
 const SETTINGS: Record<string, string> = {
   custom: 'New Setting',
   district0: 'District Zero',
@@ -99,6 +109,7 @@ export default function TablePage() {
   const supabase = createClient()
   const channelRef = useRef<any>(null)
   const rollChannelRef = useRef<any>(null)
+  const initChannelRef = useRef<any>(null)
   const rollFeedRef = useRef<HTMLDivElement>(null)
 
   const [campaign, setCampaign] = useState<Campaign | null>(null)
@@ -114,6 +125,13 @@ export default function TablePage() {
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
   const [cmod, setCmod] = useState('0')
   const [rolling, setRolling] = useState(false)
+
+  // Initiative
+  const [initiativeOrder, setInitiativeOrder] = useState<InitiativeEntry[]>([])
+  const [combatActive, setCombatActive] = useState(false)
+  const [showAddNPC, setShowAddNPC] = useState(false)
+  const [npcName, setNpcName] = useState('')
+  const [startingCombat, setStartingCombat] = useState(false)
 
   async function loadEntries(campaignId: string) {
     const [{ data: members }, { data: rawStates }] = await Promise.all([
@@ -194,6 +212,17 @@ export default function TablePage() {
     setTimeout(() => { rollFeedRef.current?.scrollTo(0, rollFeedRef.current.scrollHeight) }, 50)
   }
 
+  async function loadInitiative(campaignId: string) {
+    const { data } = await supabase
+      .from('initiative_order')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('roll', { ascending: false })
+    const order = data ?? []
+    setInitiativeOrder(order)
+    setCombatActive(order.length > 0)
+  }
+
   async function ensureCharacterStates(campaignId: string, members: any[]) {
     const charIds = members.map((m: any) => m.character_id).filter(Boolean)
     if (charIds.length === 0) return
@@ -235,7 +264,7 @@ export default function TablePage() {
       setGmInfo({ userId: camp.gm_user_id, username: (gmProfile as any)?.username ?? 'GM' })
 
       if (members && members.length > 0) ensureCharacterStates(id, members as any[])
-      await Promise.all([loadEntries(id), loadRolls(id)])
+      await Promise.all([loadEntries(id), loadRolls(id), loadInitiative(id)])
 
       channelRef.current = supabase.channel(`table_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'character_states', filter: `campaign_id=eq.${id}` }, () => loadEntries(id))
@@ -244,17 +273,111 @@ export default function TablePage() {
       rollChannelRef.current = supabase.channel(`rolls_${id}`)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'roll_log', filter: `campaign_id=eq.${id}` }, () => loadRolls(id))
         .subscribe()
+
+      initChannelRef.current = supabase.channel(`initiative_${id}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
+        .subscribe()
     }
     load()
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current)
       if (rollChannelRef.current) supabase.removeChannel(rollChannelRef.current)
+      if (initChannelRef.current) supabase.removeChannel(initChannelRef.current)
     }
   }, [id])
 
   async function handleStatUpdate(stateId: string, field: string, value: number) {
     supabase.from('character_states').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', stateId)
   }
+
+  // ── Initiative functions ──
+
+  async function startCombat() {
+    if (!isGM) return
+    setStartingCombat(true)
+
+    // Clear any existing initiative
+    await supabase.from('initiative_order').delete().eq('campaign_id', id)
+
+    // Roll initiative for all PCs: 2d6 + ACU AMod + DEX AMod
+    const toInsert = entries.map(e => {
+      const rapid = e.character.data?.rapid ?? {}
+      const acu = rapid.ACU ?? 0
+      const dex = rapid.DEX ?? 0
+      const roll = rollD6() + rollD6() + acu + dex
+      return {
+        campaign_id: id,
+        character_name: e.character.name,
+        character_id: e.character.id,
+        user_id: e.userId,
+        roll,
+        is_active: false,
+        is_npc: false,
+      }
+    })
+
+    if (toInsert.length > 0) {
+      await supabase.from('initiative_order').insert(toInsert)
+    }
+
+    // Set first combatant as active
+    const { data: order } = await supabase
+      .from('initiative_order')
+      .select('*')
+      .eq('campaign_id', id)
+      .order('roll', { ascending: false })
+
+    if (order && order.length > 0) {
+      await supabase.from('initiative_order').update({ is_active: true }).eq('id', order[0].id)
+    }
+
+    setStartingCombat(false)
+    await loadInitiative(id)
+  }
+
+  async function nextTurn() {
+    if (!isGM || initiativeOrder.length === 0) return
+    const currentIdx = initiativeOrder.findIndex(e => e.is_active)
+    const nextIdx = (currentIdx + 1) % initiativeOrder.length
+
+    await Promise.all([
+      supabase.from('initiative_order').update({ is_active: false }).eq('campaign_id', id),
+    ])
+    await supabase.from('initiative_order').update({ is_active: true }).eq('id', initiativeOrder[nextIdx].id)
+    await loadInitiative(id)
+  }
+
+  async function endCombat() {
+    if (!isGM) return
+    await supabase.from('initiative_order').delete().eq('campaign_id', id)
+    setInitiativeOrder([])
+    setCombatActive(false)
+  }
+
+  async function addNPC() {
+    if (!isGM || !npcName.trim()) return
+    const roll = rollD6() + rollD6()
+    await supabase.from('initiative_order').insert({
+      campaign_id: id,
+      character_name: npcName.trim(),
+      character_id: null,
+      user_id: null,
+      roll,
+      is_active: false,
+      is_npc: true,
+    })
+    setNpcName('')
+    setShowAddNPC(false)
+    await loadInitiative(id)
+  }
+
+  async function removeFromInitiative(entryId: string) {
+    if (!isGM) return
+    await supabase.from('initiative_order').delete().eq('id', entryId)
+    await loadInitiative(id)
+  }
+
+  // ── Roll functions ──
 
   function handleRollRequest(label: string, amod: number, smod: number) {
     setPendingRoll({ label, amod, smod })
@@ -311,18 +434,15 @@ export default function TablePage() {
 
     setRolling(true)
 
-    // Decrement insight dice
     const newInsight = myEntry.liveState.insight_dice - cost
     await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
 
-    // Re-roll the selected dice
     const newDie1 = rerollDie === 'die2' ? rollResult.die1 : rollD6()
     const newDie2 = rerollDie === 'die1' ? rollResult.die2 : rollD6()
     const characterName = myEntry.character.name ?? 'Unknown'
 
     const { total, outcome, insightAwarded } = await saveRollToLog(newDie1, newDie2, rollResult.amod, rollResult.smod, rollResult.cmod, rollResult.label, characterName, true)
 
-    // Award insight die if re-roll produces a Moment of Insight
     if (insightAwarded) {
       await supabase.from('character_states').update({ insight_dice: newInsight + 1, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
     }
@@ -375,10 +495,88 @@ export default function TablePage() {
           </div>
         </div>
         <div style={{ flex: 1 }} />
+        {isGM && !combatActive && (
+          <button onClick={startCombat} disabled={startingCombat || entries.length === 0}
+            style={{ padding: '6px 14px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: startingCombat || entries.length === 0 ? 'not-allowed' : 'pointer', opacity: startingCombat || entries.length === 0 ? 0.5 : 1 }}>
+            {startingCombat ? 'Rolling...' : '⚔️ Start Combat'}
+          </button>
+        )}
+        {isGM && combatActive && (
+          <button onClick={endCombat}
+            style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            End Combat
+          </button>
+        )}
         <a href={`/campaigns/${id}`} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           Back
         </a>
       </div>
+
+      {/* Initiative Tracker — shown when combat is active */}
+      {combatActive && (
+        <div style={{ borderBottom: '1px solid #2e2e2e', background: '#0d0d0d', padding: '8px 12px', flexShrink: 0, overflowX: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 'max-content' }}>
+            <div style={{ fontSize: '9px', color: '#c0392b', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginRight: '4px', flexShrink: 0 }}>
+              ⚔️ Initiative
+            </div>
+
+            {initiativeOrder.map((entry, idx) => (
+              <div key={entry.id} style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '4px 10px',
+                background: entry.is_active ? '#2a1210' : '#1a1a1a',
+                border: `1px solid ${entry.is_active ? '#c0392b' : '#2e2e2e'}`,
+                borderRadius: '3px',
+                flexShrink: 0,
+                position: 'relative',
+              }}>
+                {entry.is_active && (
+                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#c0392b', flexShrink: 0 }} />
+                )}
+                <span style={{ fontSize: '11px', fontWeight: entry.is_active ? 700 : 400, color: entry.is_active ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                  {entry.character_name}
+                </span>
+                {entry.is_npc && (
+                  <span style={{ fontSize: '8px', color: '#EF9F27', background: '#2a2010', border: '1px solid #EF9F27', padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>NPC</span>
+                )}
+                <span style={{ fontSize: '11px', color: entry.is_active ? '#c0392b' : '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
+                {isGM && (
+                  <button onClick={() => removeFromInitiative(entry.id)}
+                    style={{ background: 'none', border: 'none', color: '#5a5550', cursor: 'pointer', fontSize: '12px', padding: '0 0 0 2px', lineHeight: 1 }}>×</button>
+                )}
+              </div>
+            ))}
+
+            {isGM && (
+              <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                {!showAddNPC ? (
+                  <button onClick={() => setShowAddNPC(true)}
+                    style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    + NPC
+                  </button>
+                ) : (
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    <input
+                      autoFocus
+                      value={npcName}
+                      onChange={e => setNpcName(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') addNPC(); if (e.key === 'Escape') { setShowAddNPC(false); setNpcName('') } }}
+                      placeholder="NPC name..."
+                      style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow, sans-serif', width: '120px' }}
+                    />
+                    <button onClick={addNPC} style={{ padding: '4px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>Add</button>
+                    <button onClick={() => { setShowAddNPC(false); setNpcName('') }} style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>✕</button>
+                  </div>
+                )}
+                <button onClick={nextTurn}
+                  style={{ padding: '4px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Next →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main area */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
@@ -467,18 +665,19 @@ export default function TablePage() {
         {Array.from({ length: PLAYER_SLOTS }).map((_, i) => {
           const entry = playerEntries[i] ?? null
           const photo = entry ? getCharPhoto(entry) : null
+          const isActive = combatActive && initiativeOrder.some(o => o.is_active && o.character_id === entry?.character.id)
           return (
             <button key={i} onClick={() => (isGM || entry?.userId === userId) && entry && setSelectedEntry(entry)}
-              style={{ flex: 1, background: entry ? '#1a1a1a' : '#0d0d0d', borderTop: 'none', borderBottom: 'none', borderLeft: 'none', borderRight: i < PLAYER_SLOTS - 1 ? '1px solid #2e2e2e' : 'none', cursor: entry && (isGM || entry.userId === userId) ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px', transition: 'background 0.15s' }}
+              style={{ flex: 1, background: isActive ? '#1a0f0f' : entry ? '#1a1a1a' : '#0d0d0d', borderTop: isActive ? '2px solid #c0392b' : 'none', borderBottom: 'none', borderLeft: 'none', borderRight: i < PLAYER_SLOTS - 1 ? '1px solid #2e2e2e' : 'none', cursor: entry && (isGM || entry.userId === userId) ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px', transition: 'background 0.15s' }}
               onMouseEnter={e => { if (entry) (e.currentTarget as HTMLElement).style.background = '#242424' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = entry ? '#1a1a1a' : '#0d0d0d' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isActive ? '#1a0f0f' : entry ? '#1a1a1a' : '#0d0d0d' }}
             >
               {entry ? (
                 <>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1a3a5c', border: '2px solid #7ab3d4', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                    {photo ? <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '11px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(entry.character.name)}</span>}
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1a3a5c', border: `2px solid ${isActive ? '#c0392b' : '#7ab3d4'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                    {photo ? <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '11px', fontWeight: 700, color: isActive ? '#c0392b' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(entry.character.name)}</span>}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.character.name}</div>
+                  <div style={{ fontSize: '11px', color: isActive ? '#f5a89a' : '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.character.name}</div>
                   <div style={{ fontSize: '9px', color: '#5a5550', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center' }}>{entry.username}</div>
                 </>
               ) : (
@@ -511,12 +710,11 @@ export default function TablePage() {
         </div>
       )}
 
-      {/* Roll modal — CMod input phase OR result + Insight Dice spend phase */}
+      {/* Roll modal */}
       {pendingRoll && (
         <div onClick={closeRollModal} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '340px' }}>
 
-            {/* Phase 1 — CMod input */}
             {!rollResult && (
               <>
                 <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Rolling</div>
@@ -528,14 +726,8 @@ export default function TablePage() {
                 </div>
                 <div style={{ marginBottom: '1.25rem' }}>
                   <div style={{ fontSize: '10px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>CMod (Relationship / Situational)</div>
-                  <input
-                    type="number"
-                    value={cmod}
-                    onChange={e => setCmod(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') executeRoll() }}
-                    autoFocus
-                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '16px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }}
-                  />
+                  <input type="number" value={cmod} onChange={e => setCmod(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') executeRoll() }} autoFocus
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '16px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={closeRollModal} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
@@ -546,19 +738,14 @@ export default function TablePage() {
               </>
             )}
 
-            {/* Phase 2 — Result + Insight Dice spend */}
             {rollResult && (
               <>
                 <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>{rollResult.label}</div>
-
-                {/* Dice display */}
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', margin: '1rem 0' }}>
                   {[rollResult.die1, rollResult.die2].map((d, i) => (
                     <div key={i} style={{ width: '52px', height: '52px', background: '#242424', border: '2px solid #3a3a3a', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, color: '#f5f2ee' }}>{d}</div>
                   ))}
                 </div>
-
-                {/* Breakdown */}
                 <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', marginBottom: '8px' }}>
                   [{rollResult.die1}+{rollResult.die2}]
                   {rollResult.amod !== 0 && <span style={{ color: rollResult.amod > 0 ? '#7fc458' : '#c0392b' }}> {rollResult.amod > 0 ? '+' : ''}{rollResult.amod}</span>}
@@ -566,44 +753,28 @@ export default function TablePage() {
                   {rollResult.cmod !== 0 && <span style={{ color: rollResult.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {rollResult.cmod > 0 ? '+' : ''}{rollResult.cmod}</span>}
                   <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {rollResult.total}</span>
                 </div>
-
-                {/* Outcome */}
                 <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
                   <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: outcomeColor(rollResult.outcome) }}>{rollResult.outcome}</div>
                   {rollResult.insightAwarded && (
                     <div style={{ fontSize: '11px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '3px 8px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', display: 'inline-block', marginTop: '6px' }}>+1 Insight Die</div>
                   )}
                 </div>
-
-                {/* Insight Dice spend — only show if player has dice and hasn't spent yet */}
                 {!rollResult.spent && myInsightDice > 0 && (
                   <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '1rem', marginBottom: '1rem' }}>
                     <div style={{ fontSize: '10px', color: '#7fc458', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', textAlign: 'center' }}>
                       Spend Insight Dice ({myInsightDice} available)
                     </div>
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <button onClick={() => spendInsightDie('die1')} disabled={rolling} style={{ flex: 1, padding: '8px 4px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer', opacity: rolling ? 0.5 : 1 }}>
-                        Re-roll<br />Die 1
-                      </button>
-                      <button onClick={() => spendInsightDie('die2')} disabled={rolling} style={{ flex: 1, padding: '8px 4px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer', opacity: rolling ? 0.5 : 1 }}>
-                        Re-roll<br />Die 2
-                      </button>
-                      <button onClick={() => spendInsightDie('both')} disabled={rolling || myInsightDice < 2} style={{ flex: 1, padding: '8px 4px', background: myInsightDice >= 2 ? '#1a2e10' : '#1a1a1a', border: `1px solid ${myInsightDice >= 2 ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: myInsightDice >= 2 ? '#7fc458' : '#3a3a3a', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: rolling || myInsightDice < 2 ? 'not-allowed' : 'pointer', opacity: rolling ? 0.5 : 1 }}>
-                        Re-roll<br />Both (2)
-                      </button>
+                      <button onClick={() => spendInsightDie('die1')} disabled={rolling} style={{ flex: 1, padding: '8px 4px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer', opacity: rolling ? 0.5 : 1 }}>Re-roll<br />Die 1</button>
+                      <button onClick={() => spendInsightDie('die2')} disabled={rolling} style={{ flex: 1, padding: '8px 4px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer', opacity: rolling ? 0.5 : 1 }}>Re-roll<br />Die 2</button>
+                      <button onClick={() => spendInsightDie('both')} disabled={rolling || myInsightDice < 2} style={{ flex: 1, padding: '8px 4px', background: myInsightDice >= 2 ? '#1a2e10' : '#1a1a1a', border: `1px solid ${myInsightDice >= 2 ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: myInsightDice >= 2 ? '#7fc458' : '#3a3a3a', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: rolling || myInsightDice < 2 ? 'not-allowed' : 'pointer', opacity: rolling ? 0.5 : 1 }}>Re-roll<br />Both (2)</button>
                     </div>
                   </div>
                 )}
-
                 {rollResult.spent && (
-                  <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '1rem', marginBottom: '1rem', textAlign: 'center', fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                    Insight Die spent
-                  </div>
+                  <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '1rem', marginBottom: '1rem', textAlign: 'center', fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>Insight Die spent</div>
                 )}
-
-                <button onClick={closeRollModal} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  Done
-                </button>
+                <button onClick={closeRollModal} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Done</button>
               </>
             )}
 
