@@ -91,7 +91,7 @@ export default function WelcomePage() {
 
         {/* Create Your Survivor */}
         <div style={sectionWrap}>
-          <div style={emoji}>??</div>
+          <div style={emoji}>🧬</div>
           <div>
             <div style={sectionTitle}>Create Your Survivor</div>
             <div style={sectionBody}>
@@ -104,7 +104,7 @@ export default function WelcomePage() {
 
         {/* The World Map */}
         <div style={sectionWrap}>
-          <div style={emoji}>???</div>
+          <div style={emoji}>🗺️</div>
           <div>
             <div style={sectionTitle}>The World Map</div>
             <div style={sectionBody}>
@@ -116,7 +116,7 @@ export default function WelcomePage() {
 
         {/* The Campfire */}
         <div style={sectionWrap}>
-          <div style={emoji}>??</div>
+          <div style={emoji}>🔥</div>
           <div>
             <div style={sectionTitle}>The Campfire</div>
             <div style={sectionBody}>
@@ -133,7 +133,7 @@ export default function WelcomePage() {
 
         {/* Play at The Table */}
         <div style={sectionWrap}>
-          <div style={emoji}>??</div>
+          <div style={emoji}>🎲</div>
           <div>
             <div style={sectionTitle}>Play at The Table</div>
             <div style={sectionBody}>
@@ -147,15 +147,15 @@ export default function WelcomePage() {
         <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '2rem', marginBottom: '2rem', display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
           <a href="https://www.distemperverse.com" target="_blank" rel="noreferrer"
             style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
-            DistemperVerse.com ?
+            DistemperVerse.com 🔗
           </a>
           <a href="https://www.xerosumgames.com" target="_blank" rel="noreferrer"
             style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
-            XeroSumGames.com ?
+            XeroSumGames.com 🔗
           </a>
           <a href="https://www.xerosumstudio.com" target="_blank" rel="noreferrer"
             style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
-            XeroSumStudio.com ?
+            XeroSumStudio.com 🔗
           </a>
         </div>
 
