@@ -727,7 +727,7 @@ export default function TablePage() {
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 74px)', overflow: 'hidden', fontFamily: 'Barlow, sans-serif', background: '#0f0f0f' }}>
 
       {/* Header */}
-      <div style={{ borderBottom: '1px solid #c0392b', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, background: '#0f0f0f' }}>
+      <div style={{ borderBottom: '1px solid #c0392b', padding: '8px 16px', display: 'flex', alignItems: 'stretch', gap: '12px', flexShrink: 0, background: '#0f0f0f' }}>
         <div>
           <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>
             {SETTINGS[campaign.setting] ?? campaign.setting} &mdash; {isGM ? 'GM View' : 'Player View'}
@@ -738,23 +738,23 @@ export default function TablePage() {
         </div>
         {isGM && sessionStatus === 'idle' && (
           <button onClick={startSession} disabled={sessionActing}
-            style={{ padding: '6px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.5 : 1 }}>
+            style={{ padding: '0 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.5 : 1, display: 'flex', alignItems: 'center' }}>
             {sessionActing ? 'Starting...' : 'Start Session'}
           </button>
         )}
         {isGM && sessionStatus === 'active' && (
           <button onClick={() => setShowEndSessionModal(true)}
-            style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '0 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
             End Session
           </button>
         )}
         {sessionStatus === 'active' && (
-          <div style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#7fc458' }}>
+          <div style={{ padding: '0 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#7fc458', display: 'flex', alignItems: 'center' }}>
             Game Session {sessionCount}
           </div>
         )}
         {combatActive && (
-          <div style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5a89a' }}>
+          <div style={{ padding: '0 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5a89a', display: 'flex', alignItems: 'center' }}>
             ⚔️ In Combat
           </div>
         )}
