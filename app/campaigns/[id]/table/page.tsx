@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
+import NpcRoster from '../../../../components/NpcRoster'
 
 interface Campaign {
   id: string
@@ -782,6 +783,9 @@ export default function TablePage() {
             </div>
           )}
         </div>
+
+        {/* Right — NPC Roster (GM only) */}
+        {isGM && <NpcRoster campaignId={id} isGM={isGM} />}
 
       </div>
 
