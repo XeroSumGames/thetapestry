@@ -120,9 +120,13 @@ export default function NotificationBell() {
       if (match) return <><span style={{ color: '#7fc458' }}>{match[1]}</span> submitted: <span style={{ color: '#EF9F27' }}>{match[2]}</span></>
     }
     // "Your pin "X" has been approved/rejected"
-    if (type === 'rumor_approved' || type === 'rumor_rejected') {
-      const match = body.match(/"(.+?)"/)
-      if (match) return <>{body.replace(`"${match[1]}"`, '')}<span style={{ color: '#EF9F27' }}>{match[1]}</span></>
+    if (type === 'rumor_approved') {
+      const match = body.match(/Your pin [""]?(.+?)[""]? has been approved/)
+      if (match) return <>Your pin <span style={{ color: '#EF9F27' }}>{match[1]}</span> has been approved and is now visible on the world map</>
+    }
+    if (type === 'rumor_rejected') {
+      const match = body.match(/Your pin [""]?(.+?)[""]? has been reviewed/)
+      if (match) return <>Your pin <span style={{ color: '#EF9F27' }}>{match[1]}</span> has been reviewed and was not approved</>
     }
     return body
   }
