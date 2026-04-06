@@ -45,10 +45,18 @@ interface RollEntry {
   created_at: string
 }
 
+interface WeaponContext {
+  weaponName: string
+  damage: string
+  rpPercent: number
+  conditionCmod: number
+}
+
 interface PendingRoll {
   label: string
   amod: number
   smod: number
+  weapon?: WeaponContext
 }
 
 interface RollResult {
@@ -602,10 +610,10 @@ export default function TablePage() {
   const [campaignNpcs, setCampaignNpcs] = useState<any[]>([])
   const [revealedNpcs, setRevealedNpcs] = useState<any[]>([])
 
-  function handleRollRequest(label: string, amod: number, smod: number) {
-    setPendingRoll({ label, amod, smod })
+  function handleRollRequest(label: string, amod: number, smod: number, weapon?: WeaponContext) {
+    setPendingRoll({ label, amod, smod, weapon })
     setRollResult(null)
-    setCmod('0')
+    setCmod(weapon?.conditionCmod ? String(weapon.conditionCmod) : '0')
     setTargetName('')
     setPreRollInsight('none')
     setSocialNpcId('')
@@ -956,7 +964,7 @@ export default function TablePage() {
                 showButtons={true}
                 isMySheet={syncedSelectedEntry.userId === userId}
                 onStatUpdate={handleStatUpdate}
-                onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod) => { handleRollRequest(label, amod, smod) } : undefined}
+                onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
                 onClose={() => setSelectedEntry(null)}
                 inline={true}
               />
@@ -1081,7 +1089,7 @@ export default function TablePage() {
               showButtons={true}
               isMySheet={syncedSelectedEntry.userId === userId}
               onStatUpdate={handleStatUpdate}
-              onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod) => { setSelectedEntry(null); handleRollRequest(label, amod, smod) } : undefined}
+              onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod, weapon) => { setSelectedEntry(null); handleRollRequest(label, amod, smod, weapon) } : undefined}
             />
             <button onClick={() => setSelectedEntry(null)} style={{ marginTop: '8px', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Close
@@ -1099,12 +1107,21 @@ export default function TablePage() {
               <>
                 <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Rolling</div>
                 <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>{pendingRoll.label}</div>
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '1rem', fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <div style={{ display: 'flex', gap: '12px', marginBottom: pendingRoll.weapon ? '6px' : '1rem', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   <span>2d6</span>
                   {pendingRoll.amod !== 0 && <span style={{ color: pendingRoll.amod > 0 ? '#7fc458' : '#c0392b' }}>{pendingRoll.amod > 0 ? '+' : ''}{pendingRoll.amod} AMod</span>}
                   {pendingRoll.smod !== 0 && <span style={{ color: pendingRoll.smod > 0 ? '#7fc458' : '#c0392b' }}>{pendingRoll.smod > 0 ? '+' : ''}{pendingRoll.smod} SMod</span>}
                 </div>
-                {combatActive && initiativeOrder.length > 0 && (
+                {pendingRoll.weapon && (
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '1rem', padding: '6px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                    <span style={{ color: '#cce0f5' }}>WP Damage:</span> <span style={{ color: '#c0392b', fontWeight: 700 }}>{pendingRoll.weapon.damage}</span>
+                    &nbsp;&nbsp;<span style={{ color: '#cce0f5' }}>RP:</span> <span style={{ color: '#7ab3d4' }}>{pendingRoll.weapon.rpPercent}%</span>
+                    {pendingRoll.weapon.conditionCmod !== 0 && (
+                      <span>&nbsp;&nbsp;<span style={{ color: '#cce0f5' }}>Condition:</span> <span style={{ color: pendingRoll.weapon.conditionCmod > 0 ? '#7fc458' : '#EF9F27' }}>{pendingRoll.weapon.conditionCmod > 0 ? '+' : ''}{pendingRoll.weapon.conditionCmod} CMod</span></span>
+                    )}
+                  </div>
+                )}
+                {(combatActive || pendingRoll.weapon) && initiativeOrder.length > 0 && (
                   <div style={{ marginBottom: '1.25rem' }}>
                     <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Target</div>
                     <select value={targetName} onChange={e => setTargetName(e.target.value)}

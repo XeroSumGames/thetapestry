@@ -80,7 +80,7 @@ interface Props {
   onStatUpdate?: (stateId: string, field: string, value: number) => void
   onDelete?: (id: string) => void
   onDuplicate?: (c: any) => void
-  onRoll?: (label: string, amod: number, smod: number) => void
+  onRoll?: (label: string, amod: number, smod: number, weaponContext?: { weaponName: string; damage: string; rpPercent: number; conditionCmod: number }) => void
   onClose?: () => void
   inline?: boolean
 }
@@ -558,6 +558,22 @@ export default function CharacterCard({
                             <span key={t} style={{ fontSize: '13px', padding: '0 4px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>{t}</span>
                           ))}
                         </div>
+                      )}
+                      {/* Attack button */}
+                      {onRoll && (
+                        <button onClick={() => {
+                          const skillDef = SKILLS.find(s => s.name === w.skill)
+                          const attrKey = skillDef?.attribute ?? (w.category === 'melee' ? 'PHY' : 'DEX')
+                          const amod = rapid[attrKey] ?? 0
+                          const skillEntry = skills.find(s => s.skillName === w.skill)
+                          const smod = skillEntry?.level ?? 0
+                          const condCmod = CONDITION_CMOD[cond]
+                          onRoll(`Attack — ${w.name}`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: condCmod !== -99 ? condCmod : 0 })
+                        }}
+                          style={{ marginTop: '6px', width: '100%', padding: '6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: cond === 'Broken' ? 'not-allowed' : 'pointer', opacity: cond === 'Broken' ? 0.4 : 1 }}
+                          disabled={cond === 'Broken'}>
+                          {cond === 'Broken' ? 'Weapon Broken' : `Attack with ${w.name}`}
+                        </button>
                       )}
                     </>
                   )}
