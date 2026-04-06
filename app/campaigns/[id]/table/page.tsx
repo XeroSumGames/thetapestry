@@ -359,6 +359,7 @@ export default function TablePage() {
 
       channelRef.current = supabase.channel(`table_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'character_states', filter: `campaign_id=eq.${id}` }, () => loadEntries(id))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_members', filter: `campaign_id=eq.${id}` }, () => loadEntries(id))
         .subscribe()
 
       rollChannelRef.current = supabase.channel(`rolls_${id}`)
