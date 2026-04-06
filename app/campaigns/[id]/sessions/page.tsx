@@ -9,6 +9,7 @@ interface Session {
   started_at: string
   ended_at: string | null
   gm_summary: string | null
+  cliffhanger: string | null
   next_session_notes: string | null
 }
 
@@ -134,7 +135,7 @@ export default function SessionHistoryPage() {
           {sessions.map(s => {
             const isExpanded = expandedId === s.id
             const sessAttachments = attachments.filter(a => a.session_id === s.id)
-            const hasContent = s.gm_summary || s.next_session_notes || sessAttachments.length > 0
+            const hasContent = s.gm_summary || s.cliffhanger || s.next_session_notes || sessAttachments.length > 0
             const isActive = !s.ended_at
 
             return (
@@ -195,6 +196,12 @@ export default function SessionHistoryPage() {
                       <div style={{ marginTop: '10px' }}>
                         <div style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>What Happened</div>
                         <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.gm_summary}</div>
+                      </div>
+                    )}
+                    {s.cliffhanger && (
+                      <div style={{ marginTop: '10px' }}>
+                        <div style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>How Did It End?</div>
+                        <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.cliffhanger}</div>
                       </div>
                     )}
                     {s.next_session_notes && (
