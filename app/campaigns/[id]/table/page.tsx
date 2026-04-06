@@ -185,7 +185,7 @@ export default function TablePage() {
   const [sessionCliffhanger, setSessionCliffhanger] = useState('')
   const [sessionFiles, setSessionFiles] = useState<File[]>([])
   const [sessionActing, setSessionActing] = useState(false)
-  const [gmTab, setGmTab] = useState<'npcs' | 'notes'>('npcs')
+  const [gmTab, setGmTab] = useState<'npcs' | 'assets' | 'notes'>('npcs')
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
   const [viewingNpcs, setViewingNpcs] = useState<CampaignNpc[]>([])
   const campaignChannelRef = useRef<any>(null)
@@ -1126,15 +1126,21 @@ export default function TablePage() {
         {isGM && (
           <div style={{ width: '240px', flexShrink: 0, borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
             <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
-              {(['npcs', 'notes'] as const).map(tab => (
+              {(['npcs', 'assets', 'notes'] as const).map(tab => (
                 <button key={tab} onClick={() => setGmTab(tab)}
                   style={{ flex: 1, padding: '8px 0', background: gmTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: gmTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: gmTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '12px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  {tab === 'npcs' ? 'NPC Roster' : 'GM Notes'}
+                  {tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : 'GM Notes'}
                 </button>
               ))}
             </div>
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
               {gmTab === 'npcs' && <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev : [...prev, npc]); setSelectedEntry(null) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} />}
+              {gmTab === 'assets' && (
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px', color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: '24px' }}>🗺</div>
+                  Tokens & Maps — Coming Soon
+                </div>
+              )}
               {gmTab === 'notes' && (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3a3a3a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                   Coming Soon
