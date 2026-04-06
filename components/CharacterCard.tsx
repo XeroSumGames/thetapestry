@@ -11,6 +11,48 @@ const ATTR_KEYS = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 
 function sgn(v: number) { return v > 0 ? `+${v}` : String(v) }
 
+const BREAKING_POINT_TABLE: { name: string; effect: string }[] = [
+  { name: 'Catatonia', effect: '-1 on Dexterity checks' },           // 2
+  { name: 'Compulsive Fixation', effect: '-2 Reason' },               // 3
+  { name: 'Blind Rage', effect: '-1 Dexterity' },                     // 4
+  { name: 'Dissociation', effect: '-1 max Resilience Points' },       // 5
+  { name: 'Overwhelm', effect: '-1 max Wound Points' },               // 6
+  { name: 'Panic Surge', effect: '-1 Initiative Modifier' },          // 7
+  { name: 'Fatalism', effect: '-1 Influence' },                       // 8
+  { name: 'Reckless Abandon', effect: '-1 Physicality' },             // 9
+  { name: 'Self-Harm', effect: '-1 Acumen' },                         // 10
+  { name: 'Self-Destructive Urges', effect: '-1 Perception, -1 Acumen' }, // 11
+  { name: 'Irrational Outburst', effect: '-2 Dexterity' },            // 12
+]
+
+const LASTING_WOUNDS_TABLE: { name: string; effect: string }[] = [
+  { name: 'Lost Eye', effect: '-1 on Dexterity checks' },             // 2
+  { name: 'Brain Injury', effect: '-2 Reason' },                       // 3
+  { name: 'Diminished', effect: '-1 Dexterity' },                     // 4
+  { name: 'Shaken', effect: '-1 max Resilience Points' },             // 5
+  { name: 'Weakened', effect: '-1 max Wound Points' },                // 6
+  { name: 'Skittish', effect: '-1 Initiative Modifier' },             // 7
+  { name: 'Scarring', effect: '-1 Influence' },                       // 8
+  { name: 'Fragile', effect: '-1 Physicality' },                      // 9
+  { name: 'Hearing Loss', effect: '-1 Acumen' },                      // 10
+  { name: 'Crippled', effect: '-1 Perception, -1 Acumen' },           // 11
+  { name: 'Shell Shock', effect: '-2 Dexterity' },                    // 12
+]
+
+function rollOnTable(table: { name: string; effect: string }[]): { roll: number; result: typeof table[0] } {
+  const die1 = Math.floor(Math.random() * 6) + 1
+  const die2 = Math.floor(Math.random() * 6) + 1
+  const roll = die1 + die2
+  return { roll, result: table[roll - 2] }
+}
+
+function stressColor(level: number): string {
+  if (level <= 1) return '#7fc458'
+  if (level <= 2) return '#EF9F27'
+  if (level <= 3) return '#EF9F27'
+  return '#c0392b'
+}
+
 export interface LiveState {
   id: string
   wp_current: number
@@ -56,6 +98,8 @@ export default function CharacterCard({
   const [deleting, setDeleting] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [printing, setPrinting] = useState(false)
+  const [breakingPointResult, setBreakingPointResult] = useState<{ roll: number; result: { name: string; effect: string } } | null>(null)
+  const [lastingWoundResult, setLastingWoundResult] = useState<{ roll: number; result: { name: string; effect: string } } | null>(null)
 
   // Local optimistic state — mirrors liveState, updates instantly on click
   const [localState, setLocalState] = useState<LiveState | null>(liveState ?? null)
@@ -158,8 +202,8 @@ export default function CharacterCard({
     return (
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-          <span style={{ fontSize: '9px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>{label}</span>
-          <span style={{ fontSize: '11px', color, fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{current} / {max}</span>
+          <span style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>{label}</span>
+          <span style={{ fontSize: '13px', color, fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{current} / {max}</span>
         </div>
         <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
           {Array.from({ length: max }).map((_, i) => {
@@ -284,13 +328,55 @@ export default function CharacterCard({
             <div style={{ display: 'flex', gap: '24px', marginBottom: '10px' }}>
               <div style={{ flex: 1 }}>
                 <DotTracker label="Wound Points" current={localState.wp_current} max={localState.wp_max} field="wp_current" color="#c0392b" />
+                {localState.wp_current === 0 && (
+                  <div style={{ marginTop: '4px' }}>
+                    <div style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Mortally Wounded</div>
+                    <button onClick={() => setLastingWoundResult(rollOnTable(LASTING_WOUNDS_TABLE))}
+                      style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      Roll Lasting Wound
+                    </button>
+                  </div>
+                )}
               </div>
               <div style={{ flex: 1 }}>
                 <DotTracker label="Resilience Points" current={localState.rp_current} max={localState.rp_max} field="rp_current" color="#7ab3d4" />
               </div>
             </div>
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'space-around' }}>
-              <Counter label="Stress" value={localState.stress} field="stress" max={5} color="#EF9F27" />
+              {/* Stress bar with Breaking Point trigger */}
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '3px' }}>
+                  <span style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>Stress</span>
+                  {onRoll && (
+                    <button onClick={() => { const sm = (rapid.RSN ?? 0) + (rapid.ACU ?? 0); onRoll('Stress Check', sm, 0) }}
+                      style={{ padding: '1px 6px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '2px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Check</button>
+                  )}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
+                  <button disabled={!canEdit || localState.stress <= 0}
+                    onClick={() => canEdit && localState.stress > 0 && updateStat(localState.id, 'stress', localState.stress - 1)}
+                    style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.stress > 0 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.stress > 0 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>-</button>
+                  <div style={{ display: 'flex', gap: '2px' }}>
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <div key={i} style={{ width: '10px', height: '16px', borderRadius: '2px', background: i <= localState.stress ? stressColor(localState.stress) : '#242424', border: `1px solid ${i <= localState.stress ? stressColor(localState.stress) : '#3a3a3a'}`, transition: 'background 0.2s' }} />
+                    ))}
+                  </div>
+                  <button disabled={!canEdit || localState.stress >= 5}
+                    onClick={() => {
+                      if (!canEdit || localState.stress >= 5) return
+                      const newStress = localState.stress + 1
+                      updateStat(localState.id, 'stress', newStress)
+                      if (newStress >= 5) {
+                        // Trigger Breaking Point
+                        const bp = rollOnTable(BREAKING_POINT_TABLE)
+                        setBreakingPointResult(bp)
+                        // Reset stress to 0 after breaking point
+                        setTimeout(() => updateStat(localState.id, 'stress', 0), 100)
+                      }
+                    }}
+                    style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.stress < 5 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.stress < 5 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>+</button>
+                </div>
+              </div>
               <Counter label="Insight" value={localState.insight_dice} field="insight_dice" max={99} color="#7fc458" />
               <Counter label="CDP" value={localState.cdp} field="cdp" max={20} color="#7ab3d4" />
               <Counter label="Morality" value={localState.morality} field="morality" max={5} color="#d4cfc9" />
@@ -330,6 +416,34 @@ export default function CharacterCard({
       {printing && (
         <div className="print-sheet-container">
           <PrintSheet state={toWizardState(c.data)} />
+        </div>
+      )}
+
+      {/* Breaking Point modal */}
+      {breakingPointResult && (
+        <div onClick={() => setBreakingPointResult(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '2px solid #c0392b', borderRadius: '4px', padding: '1.5rem', width: '360px', textAlign: 'center' }}>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Breaking Point</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px' }}>{breakingPointResult.result.name}</div>
+            <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '8px' }}>Rolled: {breakingPointResult.roll}</div>
+            <div style={{ fontSize: '15px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '1.5rem', padding: '10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px' }}>{breakingPointResult.result.effect}</div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem' }}>Stress has been reset to 0.</div>
+            <button onClick={() => setBreakingPointResult(null)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Acknowledge</button>
+          </div>
+        </div>
+      )}
+
+      {/* Lasting Wound modal */}
+      {lastingWoundResult && (
+        <div onClick={() => setLastingWoundResult(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '2px solid #c0392b', borderRadius: '4px', padding: '1.5rem', width: '360px', textAlign: 'center' }}>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Lasting Wound</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px' }}>{lastingWoundResult.result.name}</div>
+            <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '8px' }}>Rolled: {lastingWoundResult.roll}</div>
+            <div style={{ fontSize: '15px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '1.5rem', padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px' }}>{lastingWoundResult.result.effect}</div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem' }}>This wound is permanent and cannot be healed.</div>
+            <button onClick={() => setLastingWoundResult(null)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Acknowledge</button>
+          </div>
         </div>
       )}
     </div>
