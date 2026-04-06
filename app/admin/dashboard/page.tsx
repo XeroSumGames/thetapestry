@@ -38,6 +38,7 @@ export default function ThriverDashboard() {
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       if (profile?.role?.toLowerCase() !== 'thriver') { router.push('/dashboard'); return }
 
+      try {
       const now = new Date()
       const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
       const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -95,6 +96,9 @@ export default function ThriverDashboard() {
         pendingPins: pendingPins ?? 0,
         pendingNpcs: pendingNpcs ?? 0,
       })
+      } catch (err) {
+        console.error('[Dashboard] load error:', err)
+      }
       setLoading(false)
     }
     load()

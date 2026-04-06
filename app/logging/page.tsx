@@ -1,0 +1,185 @@
+'use client'
+import { useEffect, useState } from 'react'
+import { createClient } from '../../lib/supabase-browser'
+import { useRouter } from 'next/navigation'
+
+interface VisitorLog {
+  id: string
+  session_id: string
+  page: string
+  referrer: string | null
+  is_ghost: boolean
+  created_at: string
+}
+
+interface UserEvent {
+  id: string
+  user_id: string
+  event_type: string
+  metadata: any
+  created_at: string
+  username?: string
+}
+
+export default function LoggingPage() {
+  const router = useRouter()
+  const supabase = createClient()
+  const [loading, setLoading] = useState(true)
+  const [tab, setTab] = useState<'visitors' | 'events'>('visitors')
+  const [visitors, setVisitors] = useState<VisitorLog[]>([])
+  const [events, setEvents] = useState<UserEvent[]>([])
+  const [visitorCount, setVisitorCount] = useState(0)
+  const [eventCount, setEventCount] = useState(0)
+
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/login'); return }
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      if (profile?.role?.toLowerCase() !== 'thriver') { router.push('/dashboard'); return }
+
+      try {
+        const [{ data: vData, count: vCount }, { data: eData, count: eCount }] = await Promise.all([
+          supabase.from('visitor_logs').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(100),
+          supabase.from('user_events').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(100),
+        ])
+        setVisitors(vData ?? [])
+        setVisitorCount(vCount ?? 0)
+
+        // Get usernames for events
+        const rawEvents = eData ?? []
+        if (rawEvents.length > 0) {
+          const userIds = [...new Set(rawEvents.map((e: any) => e.user_id))]
+          const { data: profiles } = await supabase.from('profiles').select('id, username').in('id', userIds)
+          const nameMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.id, p.username]))
+          setEvents(rawEvents.map((e: any) => ({ ...e, username: nameMap[e.user_id] ?? 'Unknown' })))
+        }
+        setEventCount(eCount ?? 0)
+      } catch (err) {
+        console.error('[Logging] load error:', err)
+      }
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  function formatDateTime(iso: string) {
+    return new Date(iso).toLocaleString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: 'numeric', minute: '2-digit', second: '2-digit',
+    })
+  }
+
+  function timeAgo(iso: string): string {
+    const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+    if (seconds < 60) return 'just now'
+    const minutes = Math.floor(seconds / 60)
+    if (minutes < 60) return `${minutes}m ago`
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours}h ago`
+    const days = Math.floor(hours / 24)
+    return `${days}d ago`
+  }
+
+  if (loading) return (
+    <div style={{ padding: '2rem', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>Loading logs...</div>
+  )
+
+  const tabStyle = (active: boolean) => ({
+    padding: '7px 16px',
+    border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`,
+    background: active ? '#2a1210' : '#242424',
+    color: active ? '#f5a89a' : '#d4cfc9',
+    borderRadius: '3px', cursor: 'pointer' as const,
+    fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
+    letterSpacing: '.06em', textTransform: 'uppercase' as const,
+  })
+
+  return (
+    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
+        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+          Activity Log
+        </div>
+        <div style={{ flex: 1 }} />
+        <a href="/admin/dashboard" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Dashboard</a>
+        <a href="/moderate" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Moderation</a>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem' }}>
+        <button onClick={() => setTab('visitors')} style={tabStyle(tab === 'visitors')}>
+          Page Visits ({visitorCount})
+        </button>
+        <button onClick={() => setTab('events')} style={tabStyle(tab === 'events')}>
+          User Events ({eventCount})
+        </button>
+      </div>
+
+      {/* Visitors tab */}
+      {tab === 'visitors' && (
+        <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', overflow: 'hidden' }}>
+          {/* Table header */}
+          <div style={{ display: 'flex', padding: '8px 12px', borderBottom: '1px solid #2e2e2e', background: '#111' }}>
+            <div style={{ flex: 2, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Page</div>
+            <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Type</div>
+            <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>When</div>
+            <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Session</div>
+          </div>
+          {visitors.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#cce0f5', fontSize: '13px' }}>No visitor logs yet.</div>
+          ) : (
+            <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+              {visitors.map(v => (
+                <div key={v.id} style={{ display: 'flex', padding: '6px 12px', borderBottom: '1px solid #2e2e2e', alignItems: 'center' }}>
+                  <div style={{ flex: 2, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.page}</div>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: v.is_ghost ? '#1a1a2e' : '#1a2e10', border: `1px solid ${v.is_ghost ? '#2e2e5a' : '#2d5a1b'}`, color: v.is_ghost ? '#7ab3d4' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
+                      {v.is_ghost ? 'Ghost' : 'User'}
+                    </span>
+                  </div>
+                  <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5' }}>{timeAgo(v.created_at)}</div>
+                  <div style={{ flex: 1, fontSize: '13px', color: '#3a3a3a', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.session_id.slice(0, 8)}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Events tab */}
+      {tab === 'events' && (
+        <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', overflow: 'hidden' }}>
+          {/* Table header */}
+          <div style={{ display: 'flex', padding: '8px 12px', borderBottom: '1px solid #2e2e2e', background: '#111' }}>
+            <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>User</div>
+            <div style={{ flex: 2, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Event</div>
+            <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>When</div>
+            <div style={{ flex: 2, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Details</div>
+          </div>
+          {events.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#cce0f5', fontSize: '13px' }}>No user events yet.</div>
+          ) : (
+            <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+              {events.map(e => (
+                <div key={e.id} style={{ display: 'flex', padding: '6px 12px', borderBottom: '1px solid #2e2e2e', alignItems: 'center' }}>
+                  <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{e.username}</div>
+                  <div style={{ flex: 2 }}>
+                    <span style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
+                      {e.event_type.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                  <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5' }}>{timeAgo(e.created_at)}</div>
+                  <div style={{ flex: 2, fontSize: '13px', color: '#cce0f5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {e.metadata ? JSON.stringify(e.metadata) : '—'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
