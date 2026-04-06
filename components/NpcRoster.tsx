@@ -338,6 +338,37 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     setShowGenerateTypePicker(false)
   }
 
+  // Reveal tracking
+  const [revealedNpcIds, setRevealedNpcIds] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    async function loadRevealed() {
+      if (!isGM || !pcEntries || pcEntries.length === 0) return
+      const { data } = await supabase.from('npc_relationships').select('npc_id').eq('revealed', true)
+      if (data) setRevealedNpcIds(new Set(data.map(r => r.npc_id)))
+    }
+    loadRevealed()
+  }, [npcs, pcEntries])
+
+  async function quickReveal(npcId: string, e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!pcEntries || pcEntries.length === 0) return
+    const isRevealed = revealedNpcIds.has(npcId)
+    for (const pc of pcEntries) {
+      const { data: existing } = await supabase.from('npc_relationships').select('id').eq('npc_id', npcId).eq('character_id', pc.characterId).single()
+      if (existing) {
+        await supabase.from('npc_relationships').update({ revealed: !isRevealed, reveal_level: isRevealed ? null : 'name_portrait' }).eq('id', existing.id)
+      } else if (!isRevealed) {
+        await supabase.from('npc_relationships').insert({ npc_id: npcId, character_id: pc.characterId, relationship_cmod: 0, revealed: true, reveal_level: 'name_portrait' })
+      }
+    }
+    setRevealedNpcIds(prev => {
+      const next = new Set(prev)
+      if (isRevealed) next.delete(npcId); else next.add(npcId)
+      return next
+    })
+  }
+
   // Publish to World
   const [showPublish, setShowPublish] = useState(false)
   const [publishDesc, setPublishDesc] = useState('')
@@ -487,6 +518,10 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end', flexShrink: 0 }}>
                     <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.status}</span>
+                    <button onClick={e => quickReveal(npc.id, e)}
+                      style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: revealedNpcIds.has(npc.id) ? '#1a2e10' : '#1a1a1a', border: `1px solid ${revealedNpcIds.has(npc.id) ? '#2d5a1b' : '#3a3a3a'}`, color: revealedNpcIds.has(npc.id) ? '#7fc458' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      {revealedNpcIds.has(npc.id) ? 'Visible' : 'Reveal'}
+                    </button>
                     {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>}
                   </div>
                 </div>
