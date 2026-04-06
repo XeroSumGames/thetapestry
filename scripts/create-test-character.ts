@@ -17,7 +17,7 @@ const TEST_CHARACTER = {
   height: '5\'10"',
   weight: '175 lbs',
   profession: 'Military',
-  concept: 'A battle-hardened former soldier trying to find purpose in the aftermath. Likes ice cream',
+  notes: 'A battle-hardened former soldier trying to find purpose in the aftermath. Likes ice cream',
   physdesc: 'Weathered face, close-cropped dark hair, a jagged scar running from his left ear to his jaw. Has a weird tic',
   photoDataUrl: '',
   threeWords: ['Stoic', 'Resourceful', 'Haunted'],
@@ -64,7 +64,6 @@ const TEST_CHARACTER = {
   stressLevel: 0,
   breakingPoint: 0,
   lastingWounds: [],
-  notes: '',
 }
 
 export async function createTestCharacter(supabase: any) {
