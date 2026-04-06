@@ -97,6 +97,15 @@
 - [ ] NPC card view — abbreviated character card for NPCs (RAPID, skills, weapons, notes)
 - [ ] NPCs linked to world map pins
 
+### Campaign Pins (separate from world map)
+- [ ] campaign_pins table — id, campaign_id, name, lat, lng, notes, category, revealed (bool), created_at
+- [ ] Setting seed pins insert into campaign_pins (not map_pins)
+- [ ] GM sees all campaign pins in Assets tab — list with Reveal/Hide per pin
+- [ ] GM can edit pin name, notes, category
+- [ ] Revealed pins show on a campaign-specific map layer at the table
+- [ ] GM can promote a campaign pin to the world map (copies to map_pins as approved)
+- [ ] Players only see revealed campaign pins
+
 ### GM Assets Panel — Tab Structure
 - [x] NPC Roster tab
 - [x] GM Notes tab (placeholder)
