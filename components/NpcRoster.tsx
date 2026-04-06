@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { generateRandomNpc, ALL_SKILLS, SkillEntry } from '../lib/npc-generator'
+import { resizeImage } from '../lib/image-utils'
 
 function parseSkillText(text: string): SkillEntry[] {
   if (!text.trim()) return []
@@ -203,9 +204,10 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
 
   async function handlePortraitUpload(file: File) {
     setUploading(true)
-    const ext = file.name.split('.').pop()
-    const path = `${campaignId}/${crypto.randomUUID()}.${ext}`
-    const { error } = await supabase.storage.from('campaign-npcs').upload(path, file)
+    const resized = await resizeImage(file, 256)
+    const blob = await fetch(resized).then(r => r.blob())
+    const path = `${campaignId}/${crypto.randomUUID()}.jpg`
+    const { error } = await supabase.storage.from('campaign-npcs').upload(path, blob, { contentType: 'image/jpeg' })
     if (!error) {
       const { data: urlData } = supabase.storage.from('campaign-npcs').getPublicUrl(path)
       setForm(f => ({ ...f, portrait_url: urlData.publicUrl }))
