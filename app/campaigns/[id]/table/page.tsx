@@ -414,7 +414,7 @@ export default function TablePage() {
       .eq('status', 'active')
       .order('name')
     setRosterNpcs(roster ?? [])
-    setSelectedNpcIds(new Set())
+    setSelectedNpcIds(new Set((roster ?? []).map((n: any) => n.id)))
     setShowNpcPicker(true)
   }
 
