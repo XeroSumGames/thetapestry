@@ -4,7 +4,7 @@
 - [x] Print character sheet renders blank
 - [x] Distemper font not applying on mobile navbar
 - [ ] Print sheet missing data — Relationships/CMod, Lasting Wounds/Notes, Tracking (Insight/CDP) not populated from character data
-- [ ] Signup page shows hardcoded "check your email" message
+- [x] Signup page shows hardcoded "check your email" message — confirmed not a bug
 
 ---
 
@@ -19,13 +19,16 @@
 - [x] Session history table in Supabase
 - [x] Lobby state when session is idle
 - [x] End session modal with summary, next-session notes, and file attachments
+- [x] Session history page with grid layout, deactivate, delete
+- [x] Previous Sessions button in table header
 
 ### Stress & Breaking Point (SRD Core Mechanic)
-- [ ] Stress Check roll type in dice roller — uses Stress Modifier (RSN + ACU AMods)
-- [ ] Failed Stress Check increments Stress Level by 1
-- [ ] Breaking Point trigger when Stress Level reaches 5 — roll 2d6 on Breaking Point table
-- [ ] Breaking Point table modal (Freeze, Flee, Fight, Shutdown, etc.)
-- [ ] Visual stress indicator on character card (0-5 scale with warning at 4+)
+- [x] Stress bar tracker on character card (5 segments, color-coded green→yellow→red)
+- [x] Stress Check button triggers roll using Stress Modifier (RSN + ACU AMods)
+- [x] Breaking Point auto-triggers when stress reaches 5 — rolls 2d6 on Table 13
+- [x] Breaking Point modal shows result name, effect, and resets stress to 0
+- [x] Lasting Wounds — "Roll Lasting Wound" button when WP reaches 0, rolls Table 12
+- [x] Insight, CDP, Morality converted to bar trackers (10/10/7 blocks)
 
 ### Combat Actions — 5 Passes
 - [ ] Pass 1 — Action slots UI only (actions_used, action_log on initiative_order, 2 slot UI, full action list, Rapid Fire/Sprint/Charge auto-fill both slots, Done state, reset on Next)
@@ -46,7 +49,6 @@
 - [ ] WP reaches 0 → Mortally Wounded state, dies in 4 + PHY AMod rounds unless Stabilized
 - [ ] Stabilize mechanic — Medicine* check or Wild Success Reason check
 - [ ] Healing rates — 1 WP/day resting, 1 WP/2 days if mortally wounded
-- [ ] Lasting Wounds table (Table 12) — rolled when mortally wounded, permanent injuries
 - [ ] Death prevention — spend Insight Die to survive with 1 WP/1 RP
 - [ ] Unconscious/Mortally Wounded/Dead status badges on character cards and initiative tracker
 
@@ -64,13 +66,15 @@
 - [ ] Gut Instinct Checks — reading NPCs, uses Perception modifier or Psychology/Streetwise/Tactics
 - [ ] First Impressions as actual rolls — player rolls to determine relationship CMod rather than GM-set only
 
-### NPC Roster — 5 Passes
+### NPC Roster
 - [x] Pass 1 — Basic NPC creation (campaign_npcs table, GM roster panel, CRUD)
 - [x] Pass 2 — NPC Type & Recruitment Role (auto-populate RAPID, type/role badges)
 - [x] Pass 3 — Combat integration (NPCs in initiative tracker, auto-roll, Add to Combat mid-fight)
 - [x] Pass 4 — Relationship CMods & GM Reveal (First Impressions, social skill auto-load, player NPC cards)
 - [x] Pass 5 — World NPC Library (Publish, Browse, Import, moderation tab)
-- [x] Random NPC Generator (Quick Generate + Guided Generate)
+- [x] Random NPC Generator (Quick/Guided Generate, type picker, skill dropdowns)
+- [x] Quick Reveal/Hide button on roster list with Realtime sync to players
+- [x] NPC form overhaul — portrait bank, structured skills, motivation/complication/words fields
 
 ### GM Assets Panel — Tab Structure
 - [x] NPC Roster tab
@@ -83,12 +87,37 @@
 - [ ] NPC browsing/filtering — search by name, filter by type/status/role, sort, card grid vs list toggle
 
 ### Campaign Management
+- [x] Launch button on campaign cards (direct to table, new tab)
+- [x] Leave button on player campaign cards
+- [x] Share button on campaign cards (copies invite link)
 - [ ] Roll Feed tabs — Rolls only, Chat only, All (requires chat_messages table + Realtime)
 - [ ] GM private notes (full implementation)
 - [ ] Player kick/management
 - [ ] CDP award system per session
 - [ ] Character progression log
 - [ ] Transfer GM role to another player
+
+### Character Creation
+- [x] Clickable step indicators on all character creation pages
+- [x] Portrait on Final Review (clickable to upload)
+- [x] Character concept shown in Final Review header
+- [x] Auto-resize uploaded photos to 256x256
+- [x] Test character button for Thrivers
+- [ ] CDP tracker boxes match actual CDP budget (partially fixed — attribute box done)
+
+### UI Polish (Completed)
+- [x] Global color change #5a5550 → #cce0f5
+- [x] 13px minimum font size enforced across NPC Roster
+- [x] Roll feed font sizes bumped +2px
+- [x] Navbar buttons uniform height (32px)
+- [x] Header buttons match campaign name text height
+- [x] Dynamic player strip sizing for 6+ players
+- [x] Green border on player's own character in portrait strip
+- [x] Notification bell SVG with dynamic color (orange/gray)
+- [x] Notification body colorized (names green, campaigns red, characters blue)
+- [x] Mark All Read closes notification dropdown
+- [x] Welcome page split — /firsttimers for onboarding, /welcome for returning users
+- [x] Welcome page broken emojis fixed
 
 ---
 
@@ -102,12 +131,14 @@
 ---
 
 ## 🟠 Logging & Notifications
-- [x] Pass 1 — Database & event logging (visitor_logs, user_events, notifications tables, logVisit/logEvent utilities)
-- [x] Pass 2 — Notification creation via DB triggers (new signup, new pin, session opened, player joined, pin approved)
-- [x] Pass 3 — Notification bell UI (bell icon, unread count, Realtime, dropdown, mark as read)
-- [x] Pass 4 — Thriver dashboard & email alerts (signup stats, active campaigns, moderation counts, Resend email alerts)
-- [x] Pass 5 — IP capture via Edge Function, /logging page, stat cards
+- [x] Pass 1 — Database & event logging
+- [x] Pass 2 — Notification creation via DB triggers (+ pin rejection trigger)
+- [x] Pass 3 — Notification bell UI
+- [x] Pass 4 — Thriver dashboard & email alerts
+- [x] Pass 5 — IP capture via Edge Function, /logging page with stat cards + top pages
 - [x] Core event logging — login, logout, roll, session start/end, character delete/duplicate, campaign create
+- [x] Consolidated /logging page (replaced /admin/dashboard)
+- [x] Player joined notification includes character name
 
 ### Remaining Event Instrumentation
 - [ ] Character edited/saved
@@ -174,7 +205,8 @@
 ---
 
 ## 📝 Technical Debt
-- [ ] Migrate character photos from base64 to Supabase Storage
+- [x] Auto-resize uploaded photos to 256x256 (fixes save timeout)
+- [ ] Migrate character photos from base64 to Supabase Storage (full migration)
 - [ ] Embed Distemper videos on landing page
 - [x] Welcome page dual-mode (first-time vs returning)
 - [x] Thriver Console — examine user page
