@@ -1191,7 +1191,7 @@ export default function TablePage() {
 
       {/* Character sheet overlay — only in overlay mode */}
       {syncedSelectedEntry && sheetMode === 'overlay' && (
-        <div onClick={() => setSelectedEntry(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+        <div onClick={() => setSelectedEntry(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ maxWidth: '780px', width: '100%', maxHeight: '90vh', overflow: 'auto', borderRadius: '4px' }}>
             <CharacterCard
               character={syncedSelectedEntry.character}
