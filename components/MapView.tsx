@@ -107,6 +107,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
       mapInstanceRef.current = map
 
       map.on('click', (e: any) => {
+        if (!user) return // Ghost mode — read only
         setForm({ lat: e.latlng.lat, lng: e.latlng.lng, title: '', notes: '', pin_type: 'private', category: 'location' })
         setAttachments([])
         setShowForm(true)
