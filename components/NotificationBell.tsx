@@ -110,6 +110,11 @@ export default function NotificationBell() {
       const match = body.match(/^(.+?) joined (.+)$/)
       if (match) return <><span style={{ color: '#7fc458' }}>{match[1]}</span> joined <span style={{ color: '#c0392b' }}>{match[2]}</span></>
     }
+    // "X has left Y"
+    if (type === 'player_left') {
+      const match = body.match(/^(.+?) has left (.+)$/)
+      if (match) return <><span style={{ color: '#f5a89a' }}>{match[1]}</span> has left <span style={{ color: '#c0392b' }}>{match[2]}</span></>
+    }
     // "Your GM has opened Session N in Y"
     if (type === 'session_opened') {
       const match = body.match(/^(.+? Session \d+) in (.+)$/)
