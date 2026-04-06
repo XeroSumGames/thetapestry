@@ -45,7 +45,7 @@ export default function StepNine({ state, onChange }: Props) {
 
       {/* Character header — portrait + name + details */}
       <div style={section}>
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', marginBottom: '12px' }}>
           <label style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#1a3a5c', border: `2px solid ${state.photoDataUrl ? '#7ab3d4' : '#3a3a3a'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, cursor: 'pointer', position: 'relative' }}>
             {state.photoDataUrl ? (
               <img src={state.photoDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
