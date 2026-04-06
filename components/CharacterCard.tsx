@@ -485,7 +485,7 @@ export default function CharacterCard({
               const cond = (weapon.condition as Condition) ?? 'Used'
               const cmodVal = CONDITION_CMOD[cond]
               return (
-                <div key={label} style={{ flex: 1, minWidth: '200px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px' }}>
+                <div key={label} style={{ flex: 1, minWidth: '200px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px', display: 'flex', flexDirection: 'column' }}>
                   {/* Weapon selector — inline with label */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', flexShrink: 0 }}>{label}</span>
@@ -559,7 +559,8 @@ export default function CharacterCard({
                           ))}
                         </div>
                       )}
-                      {/* Attack button */}
+                      {/* Attack button — pushed to bottom */}
+                      <div style={{ flex: 1 }} />
                       {onRoll && (
                         <button onClick={() => {
                           const skillDef = SKILLS.find(s => s.name === w.skill)

@@ -1206,7 +1206,7 @@ export default function TablePage() {
                     }}
                       style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
                       <option value="" style={{ color: '#cce0f5' }}>No target</option>
-                      {initiativeOrder.map(entry => (
+                      {[...initiativeOrder].sort((a, b) => (a.is_npc === b.is_npc ? 0 : a.is_npc ? -1 : 1)).map(entry => (
                         <option key={entry.id} value={entry.character_name} style={{ color: entry.is_npc ? '#7fc458' : '#c0392b' }}>
                           {entry.character_name}{entry.is_npc ? ' (NPC)' : ''}
                         </option>
