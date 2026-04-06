@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { generateRandomNpc, ALL_SKILLS, SkillEntry } from '../lib/npc-generator'
 import { resizeImage } from '../lib/image-utils'
+import { MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getWeaponByName } from '../lib/weapons'
 
 function parseSkillText(text: string): SkillEntry[] {
   if (!text.trim()) return []
@@ -139,6 +140,7 @@ const emptyForm = {
   reason: 0, acumen: 0, physicality: 0, influence: 0, dexterity: 0,
   skillEntries: [] as SkillEntry[], notes: '', status: 'active',
   npc_type: '' as string, motivation: '', complication: '', threeWords: ['', '', ''] as string[],
+  weapon: null as any,
 }
 
 export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, onAddToCombat, pcEntries, onViewNpc }: Props) {
@@ -191,6 +193,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       motivation: (npc as any).motivation ?? '',
       complication: (npc as any).complication ?? '',
       threeWords: (npc as any).three_words ?? ['', '', ''],
+      weapon: npc.skills?.weapon ?? null,
     })
     setEditingId(npc.id)
     setShowForm(true)
@@ -709,6 +712,32 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                   </select>
                 ))}
               </div>
+            </div>
+
+            {/* Weapon */}
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Weapon</div>
+              <select value={(form as any).weapon?.weaponName ?? ''} onChange={e => {
+                const weaponName = e.target.value
+                if (!weaponName) { setForm(f => ({ ...f, weapon: null } as any)); return }
+                const w = getWeaponByName(weaponName)
+                setForm(f => ({ ...f, weapon: { weaponName, condition: 'Used', ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? 2 : 0 } } as any))
+              }}
+                style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                <option value="">— None —</option>
+                <optgroup label="Melee">{MELEE_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
+                <optgroup label="Ranged">{RANGED_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
+                <optgroup label="Explosive">{EXPLOSIVE_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
+                <optgroup label="Heavy">{HEAVY_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
+              </select>
+              {(form as any).weapon?.weaponName && (() => {
+                const w = getWeaponByName((form as any).weapon.weaponName)
+                return w ? (
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
+                    {w.skill} · {w.range} · DMG <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span> · RP <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span>
+                  </div>
+                ) : null
+              })()}
             </div>
 
             {/* Notes */}
