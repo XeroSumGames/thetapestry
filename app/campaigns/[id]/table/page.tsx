@@ -542,6 +542,19 @@ export default function TablePage() {
     await loadInitiative(id)
   }
 
+  async function deferInitiative(entryId: string) {
+    const idx = initiativeOrder.findIndex(e => e.id === entryId)
+    if (idx < 0 || idx >= initiativeOrder.length - 1) return
+    const current = initiativeOrder[idx]
+    const next = initiativeOrder[idx + 1]
+    // Set current's roll to 1 below next, and bump next up to current's old roll
+    await Promise.all([
+      supabase.from('initiative_order').update({ roll: next.roll - 1 }).eq('id', current.id),
+      supabase.from('initiative_order').update({ roll: current.roll }).eq('id', next.id),
+    ])
+    await loadInitiative(id)
+  }
+
   // ── Session functions ──
 
   async function startSession() {
@@ -905,8 +918,14 @@ export default function TablePage() {
                 )}
                 <span style={{ fontSize: '11px', color: entry.is_active ? '#c0392b' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
                 {isGM && (
-                  <button onClick={() => removeFromInitiative(entry.id)}
-                    style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '12px', padding: '0 0 0 2px', lineHeight: 1 }}>×</button>
+                  <>
+                    {idx < initiativeOrder.length - 1 && (
+                      <button onClick={() => deferInitiative(entry.id)}
+                        style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Defer">↓</button>
+                    )}
+                    <button onClick={() => removeFromInitiative(entry.id)}
+                      style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '12px', padding: '0 0 0 2px', lineHeight: 1 }}>×</button>
+                  </>
                 )}
               </div>
             ))}
