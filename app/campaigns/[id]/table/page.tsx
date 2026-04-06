@@ -1026,11 +1026,12 @@ export default function TablePage() {
           return playerEntries.map((entry, i) => {
             const photo = getCharPhoto(entry)
             const isActive = combatActive && initiativeOrder.some(o => o.is_active && o.character_id === entry.character.id)
+            const isMe = entry.userId === userId
             return (
-              <button key={entry.stateId} onClick={() => (isGM || entry.userId === userId) && setSelectedEntry(entry)}
-                style={{ flex: 1, minWidth: 0, background: isActive ? '#1a0f0f' : '#1a1a1a', borderTop: isActive ? '2px solid #c0392b' : 'none', borderBottom: 'none', borderLeft: 'none', borderRight: i < playerEntries.length - 1 ? '1px solid #2e2e2e' : 'none', cursor: (isGM || entry.userId === userId) ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: isCompact ? '2px' : '4px', padding: pad, transition: 'background 0.15s' }}
+              <button key={entry.stateId} onClick={() => (isGM || isMe) && setSelectedEntry(entry)}
+                style={{ flex: 1, minWidth: 0, background: isActive ? '#1a0f0f' : isMe ? '#0f1a0f' : '#1a1a1a', borderTop: isActive ? '2px solid #c0392b' : isMe ? '2px solid #2d5a1b' : 'none', borderBottom: isMe && !isActive ? '2px solid #2d5a1b' : 'none', borderLeft: 'none', borderRight: i < playerEntries.length - 1 ? '1px solid #2e2e2e' : 'none', cursor: (isGM || isMe) ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: isCompact ? '2px' : '4px', padding: pad, transition: 'background 0.15s' }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-                onMouseLeave={e => (e.currentTarget.style.background = isActive ? '#1a0f0f' : '#1a1a1a')}
+                onMouseLeave={e => (e.currentTarget.style.background = isActive ? '#1a0f0f' : isMe ? '#0f1a0f' : '#1a1a1a')}
               >
                 <div style={{ width: avatarSize, height: avatarSize, borderRadius: '50%', background: '#1a3a5c', border: `2px solid ${isActive ? '#c0392b' : '#7ab3d4'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                   {photo ? <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: isCompact ? '9px' : '11px', fontWeight: 700, color: isActive ? '#c0392b' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(entry.character.name)}</span>}
