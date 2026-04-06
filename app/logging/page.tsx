@@ -30,6 +30,12 @@ export default function LoggingPage() {
   const [events, setEvents] = useState<UserEvent[]>([])
   const [visitorCount, setVisitorCount] = useState(0)
   const [eventCount, setEventCount] = useState(0)
+  const [signups7d, setSignups7d] = useState(0)
+  const [signups30d, setSignups30d] = useState(0)
+  const [activeSessions, setActiveSessions] = useState(0)
+  const [ghostVisits7d, setGhostVisits7d] = useState(0)
+  const [pendingPins, setPendingPins] = useState(0)
+  const [pendingNpcs, setPendingNpcs] = useState(0)
 
   useEffect(() => {
     async function load() {
@@ -39,10 +45,35 @@ export default function LoggingPage() {
       if (profile?.role?.toLowerCase() !== 'thriver') { router.push('/dashboard'); return }
 
       try {
-        const [{ data: vData, count: vCount }, { data: eData, count: eCount }] = await Promise.all([
+        const now = new Date()
+        const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+        const [
+          { data: vData, count: vCount },
+          { data: eData, count: eCount },
+          { count: s7 },
+          { count: s30 },
+          { count: ac },
+          { count: gv },
+          { count: pp },
+          { count: pn },
+        ] = await Promise.all([
           supabase.from('visitor_logs').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(100),
           supabase.from('user_events').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(100),
+          supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', d7),
+          supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', d30),
+          supabase.from('campaigns').select('*', { count: 'exact', head: true }).eq('session_status', 'active'),
+          supabase.from('visitor_logs').select('*', { count: 'exact', head: true }).eq('is_ghost', true).gte('created_at', d7),
+          supabase.from('map_pins').select('*', { count: 'exact', head: true }).eq('pin_type', 'rumor').eq('status', 'pending'),
+          supabase.from('world_npcs').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
         ])
+        setSignups7d(s7 ?? 0)
+        setSignups30d(s30 ?? 0)
+        setActiveSessions(ac ?? 0)
+        setGhostVisits7d(gv ?? 0)
+        setPendingPins(pp ?? 0)
+        setPendingNpcs(pn ?? 0)
         setVisitors(vData ?? [])
         setVisitorCount(vCount ?? 0)
 
@@ -105,6 +136,33 @@ export default function LoggingPage() {
         <div style={{ flex: 1 }} />
         <a href="/admin/dashboard" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Dashboard</a>
         <a href="/moderate" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Moderation</a>
+      </div>
+
+      {/* Stat cards */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        {[
+          { label: 'Signups (7d)', value: signups7d, color: '#7fc458' },
+          { label: 'Signups (30d)', value: signups30d, color: '#7fc458' },
+          { label: 'Active Sessions', value: activeSessions, color: '#c0392b' },
+          { label: 'Ghost Visits (7d)', value: ghostVisits7d, color: '#7ab3d4' },
+        ].map(s => (
+          <div key={s.label} style={{ flex: 1, minWidth: '120px', padding: '14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', textAlign: 'center' }}>
+            <div style={{ fontSize: '26px', fontWeight: 700, color: s.color, fontFamily: 'Barlow Condensed, sans-serif' }}>{s.value}</div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Moderation queue */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem' }}>
+        <a href="/moderate" style={{ flex: 1, padding: '10px 14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Pending Pins</span>
+          <span style={{ fontSize: '18px', fontWeight: 700, color: pendingPins > 0 ? '#EF9F27' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>{pendingPins}</span>
+        </a>
+        <a href="/moderate" style={{ flex: 1, padding: '10px 14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Pending NPCs</span>
+          <span style={{ fontSize: '18px', fontWeight: 700, color: pendingNpcs > 0 ? '#EF9F27' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>{pendingNpcs}</span>
+        </a>
       </div>
 
       {/* Tabs */}
