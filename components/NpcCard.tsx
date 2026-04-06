@@ -1,10 +1,6 @@
 'use client'
 import { CampaignNpc } from './NpcRoster'
-
-const RAPID_LABELS: Record<number, string> = {
-  [-2]: 'Diminished', [-1]: 'Weak', 0: 'Average', 1: 'Good',
-  2: 'Strong', 3: 'Exceptional', 4: 'Human Peak',
-}
+import { getWeaponByName, conditionColor, CONDITION_CMOD, Condition } from '../lib/weapons'
 
 const TYPE_COLORS: Record<string, { bg: string; border: string; color: string }> = {
   friendly: { bg: '#1a2e10', border: '#2d5a1b', color: '#7fc458' },
@@ -29,141 +25,131 @@ interface Props {
 }
 
 export default function NpcCard({ npc, onClose, onEdit, onRoll }: Props) {
-  const rapid = { RSN: npc.reason, ACU: npc.acumen, PHY: npc.physicality, INF: npc.influence, DEX: npc.dexterity }
+  const rapid: Record<string, number> = { RSN: npc.reason, ACU: npc.acumen, PHY: npc.physicality, INF: npc.influence, DEX: npc.dexterity }
   const tc = TYPE_COLORS[npc.npc_type ?? ''] ?? TYPE_COLORS.goon
   const sc = STATUS_COLORS[npc.status] ?? STATUS_COLORS.active
 
-  // Parse skills from stored data
   const skillEntries: { name: string; level: number }[] = Array.isArray(npc.skills?.entries) ? npc.skills.entries : []
-  const skillText: string = npc.skills?.text ?? ''
-
-  // Check if NPC has combat skills
-  const hasRanged = skillEntries.some(s => s.name === 'Ranged Combat' && s.level > 0)
-  const hasMelee = skillEntries.some(s => s.name === 'Melee Combat' && s.level > 0)
-  const hasUnarmed = skillEntries.some(s => s.name === 'Unarmed Combat' && s.level > 0)
+  const weapon = npc.skills?.weapon ?? null
+  const w = weapon ? getWeaponByName(weapon.weaponName) : null
 
   function getSkillLevel(skillName: string): number {
     return skillEntries.find(s => s.name === skillName)?.level ?? 0
   }
 
-  function handleCombatRoll(skillName: string, attrKey: 'PHY' | 'DEX' | 'ACU', weaponContext?: { weaponName: string; damage: string; rpPercent: number; conditionCmod: number }) {
-    if (!onRoll) return
-    const amod = rapid[attrKey] ?? 0
-    const smod = getSkillLevel(skillName)
-    onRoll(`${npc.name} — ${skillName}`, amod, smod, weaponContext)
+  // Skill-to-attribute mapping
+  const SKILL_ATTR: Record<string, string> = {
+    'Animal Handling': 'INF', 'Athletics': 'PHY', 'Barter': 'INF', 'Demolitions': 'PHY',
+    'Driving': 'DEX', 'Entertainment': 'INF', 'Farming': 'ACU', 'Gambling': 'ACU',
+    'Heavy Weapons': 'PHY', 'Inspiration': 'INF', 'Lock-Picking': 'ACU', 'Manipulation': 'INF',
+    'Mechanic': 'RSN', 'Medicine': 'RSN', 'Melee Combat': 'PHY', 'Navigation': 'RSN',
+    'Psychology': 'RSN', 'Ranged Combat': 'DEX', 'Research': 'RSN', 'Scavenging': 'ACU',
+    'Sleight of Hand': 'DEX', 'Specific Knowledge': 'RSN', 'Stealth': 'PHY', 'Streetwise': 'ACU',
+    'Survival': 'ACU', 'Tactics': 'RSN', 'Tinkerer': 'DEX', 'Unarmed Combat': 'PHY', 'Weaponsmith': 'DEX',
   }
 
-  const btnStyle = (bg: string, border: string, color: string) => ({
-    padding: '6px 10px', background: bg, border: `1px solid ${border}`,
-    borderRadius: '3px', color, fontSize: '14px', cursor: 'pointer' as const,
-    fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
-    textTransform: 'uppercase' as const, flex: 1, textAlign: 'center' as const,
-  })
+  function handleSkillRoll(skillName: string, level: number) {
+    if (!onRoll) return
+    const attrKey = SKILL_ATTR[skillName] ?? 'RSN'
+    const amod = rapid[attrKey] ?? 0
+    onRoll(`${npc.name} — ${skillName} (${attrKey})`, amod, level)
+  }
+
+  function handleAttrRoll(attrKey: string) {
+    if (!onRoll) return
+    const amod = rapid[attrKey] ?? 0
+    onRoll(`${npc.name} — ${attrKey} Check`, amod, 0)
+  }
+
+  function handleWeaponAttack() {
+    if (!onRoll || !w || !weapon) return
+    const isMelee = w.category === 'melee'
+    const attrKey = isMelee ? 'PHY' : 'DEX'
+    const skillName = w.skill
+    const amod = rapid[attrKey] ?? 0
+    const smod = getSkillLevel(skillName)
+    const cond = (weapon.condition as Condition) ?? 'Used'
+    const condCmod = CONDITION_CMOD[cond]
+    onRoll(`${npc.name} — Attack (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: condCmod !== -99 ? condCmod : 0 })
+  }
 
   return (
-    <div style={{ padding: '1rem' }}>
-      <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '1rem 1.25rem' }}>
+    <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '10px 12px', marginBottom: '8px' }}>
 
-        {/* Header: portrait + name + type + status + buttons */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '10px' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-            {npc.portrait_url ? (
-              <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <span style={{ fontSize: '18px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                {npc.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}
-              </span>
-            )}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>{npc.name}</div>
-            <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
-              {npc.npc_type && <span style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
-              <span style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.status}</span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-            <button onClick={onEdit} style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Edit</button>
-            <button onClick={onClose} style={{ padding: '5px 12px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Close</button>
-          </div>
-        </div>
-
-        {/* Motivation / Complication / Words */}
-        <div style={{ display: 'flex', fontSize: '13px', marginBottom: '8px' }}>
-          <div style={{ flex: 1 }}>
-            {(npc as any).motivation && <span><span style={{ color: '#7fc458' }}>Motivation:</span> {(npc as any).motivation} &nbsp;</span>}
-            {(npc as any).complication && <span><span style={{ color: '#c0392b' }}>Complication:</span> {(npc as any).complication}</span>}
-          </div>
-          {(npc as any).three_words?.length > 0 && (
-            <div style={{ color: '#EF9F27', flexShrink: 0 }}>{(npc as any).three_words.filter(Boolean).join(' · ')}</div>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+        <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+          {npc.portrait_url ? (
+            <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <span style={{ fontSize: '16px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              {npc.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}
+            </span>
           )}
         </div>
-
-        {/* RAPID */}
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '8px' }}>
-          {(['RSN', 'ACU', 'PHY', 'INF', 'DEX'] as const).map(k => {
-            const v = rapid[k] ?? 0
-            return (
-              <div key={k} style={{ flex: 1, background: v > 0 ? '#1a2e10' : '#242424', border: `1px solid ${v > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', padding: '4px 2px', textAlign: 'center' }}>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-                <div style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: v > 0 ? '#7fc458' : '#d4cfc9' }}>{sgn(v)}</div>
-              </div>
-            )
-          })}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>{npc.name}</div>
+          <div style={{ display: 'flex', gap: '4px', marginTop: '2px' }}>
+            {npc.npc_type && <span style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
+            <span style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.status}</span>
+          </div>
         </div>
-
-        {/* Skills */}
-        {(skillEntries.length > 0 || skillText) && (
-          <div style={{ marginBottom: '8px' }}>
-            {skillEntries.length > 0 ? (
-              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                {skillEntries.filter(s => s.level > 0 || s.name).map((s, i) => (
-                  <span key={i} style={{ fontSize: '13px', padding: '2px 6px', background: s.level > 0 ? '#1a2e10' : '#242424', border: `1px solid ${s.level > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: s.level > 0 ? '#7fc458' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                    {s.name} {sgn(s.level)}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <div style={{ fontSize: '13px', color: '#d4cfc9' }}>{skillText}</div>
-            )}
-          </div>
-        )}
-
-        {/* GM Notes */}
-        {npc.notes && (
-          <div style={{ fontSize: '13px', color: '#cce0f5', fontStyle: 'italic', marginBottom: '8px', padding: '6px 8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-            {npc.notes}
-          </div>
-        )}
-
-        {/* Combat buttons */}
-        {onRoll && (
-          <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '8px' }}>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {/* Unarmed — always available */}
-              <button onClick={() => handleCombatRoll('Unarmed Combat', 'PHY', { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })}
-                style={btnStyle('#242424', '#3a3a3a', '#d4cfc9')}>
-                👊 Unarmed
-              </button>
-              {/* Melee — if they have it */}
-              {hasMelee && (
-                <button onClick={() => handleCombatRoll('Melee Combat', 'PHY')}
-                  style={btnStyle('#2a1210', '#c0392b', '#f5a89a')}>
-                  ⚔️ Melee ({sgn(getSkillLevel('Melee Combat'))})
-                </button>
-              )}
-              {/* Ranged — if they have it */}
-              {hasRanged && (
-                <button onClick={() => handleCombatRoll('Ranged Combat', 'DEX')}
-                  style={btnStyle('#7a1f16', '#c0392b', '#f5a89a')}>
-                  🎯 Ranged ({sgn(getSkillLevel('Ranged Combat'))})
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
+        <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+          <button onClick={onEdit} style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Edit</button>
+          <button onClick={onClose} style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Close</button>
+        </div>
       </div>
+
+      {/* RAPID — clickable */}
+      <div style={{ display: 'flex', gap: '3px', marginBottom: '6px' }}>
+        {(['RSN', 'ACU', 'PHY', 'INF', 'DEX'] as const).map(k => {
+          const v = rapid[k] ?? 0
+          return (
+            <div key={k} onClick={() => handleAttrRoll(k)}
+              style={{ flex: 1, background: v > 0 ? '#1a2e10' : '#242424', border: `1px solid ${v > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', padding: '3px 2px', textAlign: 'center', cursor: onRoll ? 'pointer' : 'default' }}>
+              <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: v > 0 ? '#7fc458' : '#d4cfc9' }}>{sgn(v)}</div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Skills — clickable */}
+      {skillEntries.length > 0 && (
+        <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '6px' }}>
+          {skillEntries.filter(s => s.name).map((s, i) => (
+            <span key={i} onClick={() => handleSkillRoll(s.name, s.level)}
+              style={{ fontSize: '13px', padding: '1px 5px', background: s.level > 0 ? '#1a2e10' : '#242424', border: `1px solid ${s.level > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: s.level > 0 ? '#7fc458' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: onRoll ? 'pointer' : 'default' }}>
+              {s.name} {sgn(s.level)}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* GM Notes */}
+      {npc.notes && (
+        <div style={{ fontSize: '13px', color: '#cce0f5', fontStyle: 'italic', marginBottom: '6px' }}>{npc.notes}</div>
+      )}
+
+      {/* Combat: weapon + unarmed */}
+      {onRoll && (
+        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+          <button onClick={() => {
+            const phyAmod = rapid.PHY ?? 0
+            const smod = getSkillLevel('Unarmed Combat')
+            onRoll(`${npc.name} — Unarmed`, phyAmod, smod, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
+          }}
+            style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+            👊 Unarmed
+          </button>
+          {w && (
+            <button onClick={handleWeaponAttack}
+              style={{ padding: '4px 8px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', flex: 1 }}>
+              ⚔️ {w.name} ({w.damage})
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }

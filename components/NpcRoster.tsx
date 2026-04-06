@@ -228,7 +228,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       physicality: form.physicality,
       influence: form.influence,
       dexterity: form.dexterity,
-      skills: { entries: form.skillEntries, text: form.skillEntries.map(s => `${s.name} ${s.level}`).join(', ') },
+      skills: { entries: form.skillEntries, text: form.skillEntries.map(s => `${s.name} ${s.level}`).join(', '), weapon: (form as any).weapon ?? null },
       notes: form.notes.trim() || null,
       status: form.status,
       npc_type: form.npc_type || null,
@@ -336,7 +336,8 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       motivation: npc.motivation,
       complication: npc.complication,
       threeWords: npc.words,
-    }))
+      weapon: npc.weapon ?? null,
+    } as any))
     setGeneratedSummary(`Generated as ${npc.profession} — ${npc.motivation} / ${npc.complication}`)
     setShowGenerateTypePicker(false)
   }

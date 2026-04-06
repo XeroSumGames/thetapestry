@@ -1,3 +1,5 @@
+import { MELEE_WEAPONS, RANGED_WEAPONS, Weapon } from './weapons'
+
 // ── Name Lists ──
 
 const MALE_NAMES = [
@@ -141,6 +143,7 @@ export interface GeneratedNpc {
   motivation: string
   complication: string
   words: string[]
+  weapon?: { weaponName: string; condition: string; ammoCurrent: number; ammoMax: number; reloads: number }
 }
 
 export function generateRandomNpc(typeOverride?: string): GeneratedNpc {
@@ -245,9 +248,35 @@ export function generateRandomNpc(typeOverride?: string): GeneratedNpc {
   // GM Notes
   const notes = `Generated as ${profession}.`
 
+  // Weapon assignment by type
+  let weapon: GeneratedNpc['weapon'] = undefined
+  if (npcType === 'goon') {
+    // Common melee or common ranged
+    const commonMelee = MELEE_WEAPONS.filter(w => w.rarity === 'Common')
+    const commonRanged = RANGED_WEAPONS.filter(w => w.rarity === 'Common')
+    const pool = [...commonMelee, ...commonRanged]
+    const w = pick(pool)
+    weapon = { weaponName: w.name, condition: 'Used', ammoCurrent: w.clip ?? 0, ammoMax: w.clip ?? 0, reloads: w.ammo ? 1 : 0 }
+  } else if (npcType === 'foe') {
+    // Uncommon weapons
+    const uncommonMelee = MELEE_WEAPONS.filter(w => w.rarity === 'Uncommon')
+    const uncommonRanged = RANGED_WEAPONS.filter(w => w.rarity === 'Uncommon')
+    const pool = [...uncommonMelee, ...uncommonRanged]
+    const w = pick(pool)
+    weapon = { weaponName: w.name, condition: 'Used', ammoCurrent: w.clip ?? 0, ammoMax: w.clip ?? 0, reloads: w.ammo ? 2 : 0 }
+  } else if (npcType === 'antagonist') {
+    // Uncommon or rare — favour ranged
+    const goodRanged = RANGED_WEAPONS.filter(w => w.rarity === 'Uncommon' || w.rarity === 'Rare')
+    const goodMelee = MELEE_WEAPONS.filter(w => w.rarity === 'Uncommon')
+    const pool = [...goodRanged, ...goodRanged, ...goodMelee] // double weight ranged
+    const w = pick(pool)
+    weapon = { weaponName: w.name, condition: 'Used', ammoCurrent: w.clip ?? 0, ammoMax: w.clip ?? 0, reloads: w.ammo ? 3 : 0 }
+  }
+  // Friendly: no weapon assigned by default
+
   return {
     name, npc_type: npcType,
     reason, acumen, physicality, influence, dexterity,
-    skillEntries, notes, profession, motivation, complication, words,
+    skillEntries, notes, profession, motivation, complication, words, weapon,
   }
 }
