@@ -804,7 +804,7 @@ export default function TablePage() {
 
   if (loading || !campaign) return (
     <div style={{ height: 'calc(100vh - 74px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow, sans-serif', color: '#cce0f5', background: '#0f0f0f' }}>
-      Loading table...
+      Loading The Table...
     </div>
   )
 

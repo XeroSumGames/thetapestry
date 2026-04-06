@@ -117,7 +117,7 @@ export default function SessionHistoryPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <a href={`/campaigns/${id}/table`}
           style={{ padding: '12px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-          Back to Table
+          Back to The Table
         </a>
         <div>
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
