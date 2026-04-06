@@ -79,11 +79,30 @@ export default function LoggingPage() {
         setPendingPins(pp ?? 0)
         setPendingNpcs(pn ?? 0)
 
-        // Top pages
+        // Top pages — resolve campaign UUIDs to names
         const { data: visitRows } = await supabase.from('visitor_logs').select('page').gte('created_at', d7)
         const pageCounts: Record<string, number> = {}
         for (const row of visitRows ?? []) pageCounts[row.page] = (pageCounts[row.page] ?? 0) + 1
-        setTopPages(Object.entries(pageCounts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([page, count]) => ({ page, count })))
+        const topRaw = Object.entries(pageCounts).sort((a, b) => b[1] - a[1]).slice(0, 10)
+
+        // Extract campaign IDs from paths like /campaigns/UUID/...
+        const campaignIds = new Set<string>()
+        for (const [page] of topRaw) {
+          const match = page.match(/\/campaigns\/([a-f0-9-]{36})/)
+          if (match) campaignIds.add(match[1])
+        }
+        let campaignNames: Record<string, string> = {}
+        if (campaignIds.size > 0) {
+          const { data: camps } = await supabase.from('campaigns').select('id, name').in('id', [...campaignIds])
+          campaignNames = Object.fromEntries((camps ?? []).map((c: any) => [c.id, c.name]))
+        }
+        setTopPages(topRaw.map(([page, count]) => {
+          let displayPage = page
+          for (const [id, name] of Object.entries(campaignNames)) {
+            displayPage = displayPage.replace(id, name)
+          }
+          return { page: displayPage, count }
+        }))
         const rawVisitors = vData ?? []
         if (rawVisitors.length > 0) {
           const vUserIds = [...new Set(rawVisitors.filter((v: any) => v.user_id).map((v: any) => v.user_id))]
