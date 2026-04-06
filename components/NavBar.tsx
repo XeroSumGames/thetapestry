@@ -61,9 +61,11 @@ export default function NavBar() {
   )
 }
 const navLink: React.CSSProperties = {
-  padding: '6px 14px', background: '#242424',
+  padding: '6px 18px', background: '#242424',
   border: '1px solid #3a3a3a', borderRadius: '3px',
   color: '#f5f2ee', fontSize: '13px',
   letterSpacing: '.06em', textTransform: 'uppercase',
+  height: '32px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  boxSizing: 'border-box',
   textDecoration: 'none', fontFamily: 'Barlow Condensed, sans-serif',
 }
