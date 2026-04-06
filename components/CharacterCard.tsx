@@ -325,24 +325,14 @@ export default function CharacterCard({
           })}
         </div>
 
-        {/* Complication / Motivation / Concept / Description */}
-        {(complication || motivation || c.data?.notes || c.data?.physdesc) && (
-          <div style={{ fontSize: '11px', color: '#d4cfc9', marginBottom: '8px', lineHeight: 1.6 }}>
-            {(complication || motivation) && (
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
-                {complication && <span><span style={{ color: '#cce0f5' }}>Complication:</span> {complication}</span>}
-                {motivation && <span><span style={{ color: '#cce0f5' }}>Motivation:</span> {motivation}</span>}
-              </div>
-            )}
-            {(c.data?.notes || c.data?.physdesc) && (
-              <div>
-                {c.data?.notes && <span><span style={{ color: '#cce0f5' }}>Concept:</span> {c.data.notes}</span>}
-                {c.data?.notes && c.data?.physdesc && <span style={{ color: '#cce0f5' }}> &middot; </span>}
-                {c.data?.physdesc && <span><span style={{ color: '#cce0f5' }}>Description:</span> {c.data.physdesc}</span>}
-              </div>
-            )}
+        {/* Complication / Motivation / Concept */}
+        <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '8px', lineHeight: 1.6 }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {complication && <span><span style={{ color: '#cce0f5' }}>Complication:</span> {complication}</span>}
+            {motivation && <span><span style={{ color: '#cce0f5' }}>Motivation:</span> {motivation}</span>}
+            <span><span style={{ color: '#cce0f5' }}>Concept:</span> <span style={{ fontStyle: 'italic' }}>{c.data?.notes || 'A survivor, just trying to get by.'}</span></span>
           </div>
-        )}
+        </div>
 
         {/* Live trackers */}
         {localState && (
