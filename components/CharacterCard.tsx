@@ -284,19 +284,33 @@ export default function CharacterCard({
             <a href={`/characters/${c.id}`} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', textDecoration: 'none', display: 'block' }}>
               {c.name}
             </a>
-            <div style={{ fontSize: '11px', color: '#d4cfc9', marginTop: '2px' }}>
+            <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px' }}>
               {profession || 'No profession'} &middot; Created {formatDate(c.created_at)}
             </div>
-          </div>
-          {showButtons && (
-            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-              <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={btn('#c0392b', '#f5a89a')}>Edit</button>
-              <button onClick={handlePrint} disabled={printing} style={btn('#2d5a1b', '#7fc458')}>Print</button>
-              {!inline && <button onClick={handleDuplicate} disabled={duplicating} style={btn('#1a3a5c', '#7ab3d4')}>{duplicating ? '...' : 'Duplicate'}</button>}
-              {!inline && <button onClick={handleDelete} disabled={deleting} style={btn('#2e2e2e', '#d4cfc9')}>{deleting ? '...' : 'Delete'}</button>}
-              {inline && onClose && <button onClick={onClose} style={btn('#c0392b', '#f5a89a')}>Close</button>}
+            <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '3px', fontStyle: 'italic' }}>
+              Concept: {c.data?.notes || 'A survivor, just trying to get by.'}
             </div>
-          )}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
+            {showButtons && (
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={btn('#c0392b', '#f5a89a')}>Edit</button>
+                <button onClick={handlePrint} disabled={printing} style={btn('#2d5a1b', '#7fc458')}>Print</button>
+                {!inline && <button onClick={handleDuplicate} disabled={duplicating} style={btn('#1a3a5c', '#7ab3d4')}>{duplicating ? '...' : 'Duplicate'}</button>}
+                {!inline && <button onClick={handleDelete} disabled={deleting} style={btn('#2e2e2e', '#d4cfc9')}>{deleting ? '...' : 'Delete'}</button>}
+                {inline && onClose && <button onClick={onClose} style={btn('#c0392b', '#f5a89a')}>Close</button>}
+              </div>
+            )}
+            <div style={{ fontSize: '13px', color: '#d4cfc9', textAlign: 'right' }}>
+              {complication && <span><span style={{ color: '#c0392b' }}>Complication:</span> {complication} &nbsp;</span>}
+              {motivation && <span><span style={{ color: '#7fc458' }}>Motivation:</span> {motivation}</span>}
+            </div>
+            {c.data?.threeWords?.some((w: string) => w) && (
+              <div style={{ fontSize: '13px', color: '#EF9F27', textAlign: 'right' }}>
+                {c.data.threeWords.filter((w: string) => w).join(' · ')}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* RAPID Attributes */}
@@ -323,15 +337,6 @@ export default function CharacterCard({
               </div>
             )
           })}
-        </div>
-
-        {/* Complication / Motivation / Concept */}
-        <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '8px', lineHeight: 1.6 }}>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {complication && <span><span style={{ color: '#cce0f5' }}>Complication:</span> {complication}</span>}
-            {motivation && <span><span style={{ color: '#cce0f5' }}>Motivation:</span> {motivation}</span>}
-            <span><span style={{ color: '#cce0f5' }}>Concept:</span> <span style={{ fontStyle: 'italic' }}>{c.data?.notes || 'A survivor, just trying to get by.'}</span></span>
-          </div>
         </div>
 
         {/* Live trackers */}
