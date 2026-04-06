@@ -533,15 +533,27 @@ export default function CharacterCard({
                             ))}
                           </div>
                           <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, flexShrink: 0 }}>{weapon.ammoCurrent}/{w.clip}</span>
-                          {weapon.reloads > 0 && (
+                          {weapon.reloads > 0 ? (
                             <button onClick={() => { if (!canEdit) return; setWeapon({ ...weapon, ammoCurrent: w.clip, reloads: weapon.reloads - 1 }) }}
                               style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: canEdit ? 'pointer' : 'default' }}>
-                              Reload ({weapon.reloads} left)
+                              Reload
                             </button>
-                          )}
-                          {weapon.reloads === 0 && weapon.ammoCurrent === 0 && (
-                            <span style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>EMPTY — NO RELOADS</span>
-                          )}
+                          ) : weapon.ammoCurrent === 0 ? (
+                            <span style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>EMPTY</span>
+                          ) : null}
+                          {/* Reload tracker — 5 pips */}
+                          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', flexShrink: 0 }}>Clips</span>
+                          <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
+                            <button disabled={!canEdit || weapon.reloads <= 0}
+                              onClick={() => canEdit && weapon.reloads > 0 && setWeapon({ ...weapon, reloads: weapon.reloads - 1 })}
+                              style={{ width: '14px', height: '14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && weapon.reloads > 0 ? 'pointer' : 'not-allowed', opacity: canEdit && weapon.reloads > 0 ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0 }}>-</button>
+                            {[0, 1, 2, 3, 4].map(i => (
+                              <div key={i} style={{ width: '10px', height: '14px', borderRadius: '2px', background: i < weapon.reloads ? '#7fc458' : '#242424', border: `1px solid ${i < weapon.reloads ? '#7fc458' : '#3a3a3a'}`, transition: 'background 0.2s' }} />
+                            ))}
+                            <button disabled={!canEdit || weapon.reloads >= 5}
+                              onClick={() => canEdit && weapon.reloads < 5 && setWeapon({ ...weapon, reloads: weapon.reloads + 1 })}
+                              style={{ width: '14px', height: '14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && weapon.reloads < 5 ? 'pointer' : 'not-allowed', opacity: canEdit && weapon.reloads < 5 ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0 }}>+</button>
+                          </div>
                         </div>
                       )}
                       {/* Traits */}
