@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { WizardState, getCumulativeAttributes, getCumulativeSkills } from '../../lib/xse-engine'
 import { ATTRIBUTE_LABELS, COMPLICATIONS, MOTIVATIONS, deriveSecondaryStats, AttributeName } from '../../lib/xse-schema'
+import { resizeImage } from '../../lib/image-utils'
 import PrintSheet from './PrintSheet'
 
 const ATTR_KEYS: AttributeName[] = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
@@ -45,15 +46,24 @@ export default function StepNine({ state, onChange }: Props) {
       {/* Character header — portrait + name + details */}
       <div style={section}>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '12px' }}>
-          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#1a3a5c', border: '2px solid #7ab3d4', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+          <label style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#1a3a5c', border: `2px solid ${state.photoDataUrl ? '#7ab3d4' : '#3a3a3a'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, cursor: 'pointer', position: 'relative' }}>
             {state.photoDataUrl ? (
               <img src={state.photoDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <span style={{ fontSize: '24px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                {state.name ? state.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?'}
-              </span>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '20px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  {state.name ? state.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?'}
+                </div>
+                <div style={{ fontSize: '9px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '2px' }}>Upload</div>
+              </div>
             )}
-          </div>
+            <input type="file" accept="image/*" hidden onChange={async e => {
+              const file = e.target.files?.[0]
+              if (!file) return
+              const resized = await resizeImage(file, 256)
+              onChange({ photoDataUrl: resized })
+            }} />
+          </label>
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1 }}>
               {state.name || 'Unnamed Character'}
