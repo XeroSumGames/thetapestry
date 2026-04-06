@@ -146,6 +146,7 @@ export default function TablePage() {
   const channelRef = useRef<any>(null)
   const rollChannelRef = useRef<any>(null)
   const initChannelRef = useRef<any>(null)
+  const membersChannelRef = useRef<any>(null)
   const rollFeedRef = useRef<HTMLDivElement>(null)
   const revealChannelRef = useRef<any>(null)
   const myCharIdRef = useRef<string | null>(null)
@@ -359,7 +360,12 @@ export default function TablePage() {
 
       channelRef.current = supabase.channel(`table_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'character_states', filter: `campaign_id=eq.${id}` }, () => loadEntries(id))
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_members', filter: `campaign_id=eq.${id}` }, () => loadEntries(id))
+        .subscribe()
+
+      membersChannelRef.current = supabase.channel(`members_${id}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_members' }, (payload: any) => {
+          if (payload.new?.campaign_id === id || payload.old?.campaign_id === id) loadEntries(id)
+        })
         .subscribe()
 
       rollChannelRef.current = supabase.channel(`rolls_${id}`)
@@ -382,6 +388,7 @@ export default function TablePage() {
     load()
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current)
+      if (membersChannelRef.current) supabase.removeChannel(membersChannelRef.current)
       if (rollChannelRef.current) supabase.removeChannel(rollChannelRef.current)
       if (initChannelRef.current) supabase.removeChannel(initChannelRef.current)
       if (campaignChannelRef.current) supabase.removeChannel(campaignChannelRef.current)
