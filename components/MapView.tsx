@@ -287,7 +287,9 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
     return p.pin_type === 'rumor' ? '#EF9F27' : p.pin_type === 'gm' ? '#c0392b' : '#7ab3d4'
   }
 
-  const tabs: ['mine' | 'public' | 'all', string][] = userRole === 'thriver'
+  const tabs: ['mine' | 'public' | 'all', string][] = !userId
+    ? [['public', 'Public']]
+    : userRole === 'thriver'
     ? [['mine', 'Mine'], ['public', 'Public'], ['all', 'All']]
     : [['mine', 'My Pins'], ['public', 'Public']]
 
