@@ -181,6 +181,7 @@ export default function TablePage() {
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
   const [sessionSummary, setSessionSummary] = useState('')
   const [nextSessionNotes, setNextSessionNotes] = useState('')
+  const [sessionCliffhanger, setSessionCliffhanger] = useState('')
   const [sessionFiles, setSessionFiles] = useState<File[]>([])
   const [sessionActing, setSessionActing] = useState(false)
   const [gmTab, setGmTab] = useState<'npcs' | 'notes'>('npcs')
@@ -600,6 +601,7 @@ export default function TablePage() {
         ended_at: now,
         gm_summary: sessionSummary.trim() || null,
         next_session_notes: nextSessionNotes.trim() || null,
+        cliffhanger: sessionCliffhanger.trim() || null,
       }).eq('id', sessionRow.id)
 
       // Upload attachments
@@ -628,6 +630,7 @@ export default function TablePage() {
     setShowEndSessionModal(false)
     setSessionSummary('')
     setNextSessionNotes('')
+    setSessionCliffhanger('')
     setSessionFiles([])
     logEvent('session_ended', { campaign_id: id, session_number: sessionCount })
     setSessionActing(false)
@@ -1384,9 +1387,21 @@ export default function TablePage() {
               />
             </div>
 
+            {/* How did the session end */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>How did the session end?</div>
+              <textarea
+                value={sessionCliffhanger}
+                onChange={e => setSessionCliffhanger(e.target.value)}
+                placeholder="What do you need to remember? What was the cliffhanger? Who had the last word?"
+                rows={3}
+                style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
+              />
+            </div>
+
             {/* Notes for next session */}
             <div style={{ marginBottom: '1.25rem' }}>
-              <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Notes for next session</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Notes for next session</div>
               <textarea
                 value={nextSessionNotes}
                 onChange={e => setNextSessionNotes(e.target.value)}
