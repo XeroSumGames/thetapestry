@@ -522,8 +522,14 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                     <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.status}</span>
                     <button onClick={e => quickReveal(npc.id, e)}
                       style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: revealedNpcIds.has(npc.id) ? '#2a1210' : '#1a2e10', border: `1px solid ${revealedNpcIds.has(npc.id) ? '#c0392b' : '#2d5a1b'}`, color: revealedNpcIds.has(npc.id) ? '#f5a89a' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
-                      {revealedNpcIds.has(npc.id) ? 'Hide' : 'Reveal'}
+                      {revealedNpcIds.has(npc.id) ? 'Hide' : 'Show'}
                     </button>
+                    {combatActive && !initiativeNpcIds?.has(npc.id) && (
+                      <button onClick={e => { e.stopPropagation(); onAddToCombat?.([npc]) }}
+                        style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: '#7a1f16', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        Fight
+                      </button>
+                    )}
                     {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>}
                   </div>
                 </div>
