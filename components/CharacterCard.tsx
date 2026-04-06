@@ -474,17 +474,32 @@ export default function CharacterCard({
           })}
         </div>
 
-        {/* Unarmed Attack — full width above weapons */}
+        {/* Combat skill buttons */}
         {onRoll && (
-          <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginTop: '10px' }}>
+          <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginTop: '10px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
             <button onClick={() => {
-              const phyAmod = rapid.PHY ?? 0
-              const unarmedSkill = skills.find(s => s.skillName === 'Unarmed Combat')
-              const smod = unarmedSkill?.level ?? 0
-              onRoll('Unarmed Attack', phyAmod, smod, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
+              onRoll('Unarmed Attack', rapid.PHY ?? 0, skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
             }}
-              style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-              👊 Unarmed Attack <span style={{ color: '#cce0f5', fontWeight: 400 }}>(1d3 + PHY + Unarmed Combat)</span>
+              style={{ flex: 1, minWidth: '100px', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              👊 Unarmed
+            </button>
+            <button onClick={() => {
+              onRoll('Melee Combat', rapid.PHY ?? 0, skills.find(s => s.skillName === 'Melee Combat')?.level ?? 0)
+            }}
+              style={{ flex: 1, minWidth: '100px', padding: '6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              ⚔️ Melee
+            </button>
+            <button onClick={() => {
+              onRoll('Ranged Combat', rapid.DEX ?? 0, skills.find(s => s.skillName === 'Ranged Combat')?.level ?? 0)
+            }}
+              style={{ flex: 1, minWidth: '100px', padding: '6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              🎯 Ranged
+            </button>
+            <button onClick={() => {
+              onRoll('Demolitions*', rapid.PHY ?? 0, skills.find(s => s.skillName === 'Demolitions*')?.level ?? -3)
+            }}
+              style={{ flex: 1, minWidth: '100px', padding: '6px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              💥 Demolitions
             </button>
           </div>
         )}
