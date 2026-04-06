@@ -21,6 +21,7 @@
 - [x] End session modal with summary, next-session notes, and file attachments
 - [x] Session history page with grid layout, deactivate, delete
 - [x] Previous Sessions button in table header
+- [ ] War Stories — players post memorable moments from sessions
 
 ### Stress & Breaking Point (SRD Core Mechanic)
 - [x] Stress bar tracker on character card (5 segments, color-coded green→yellow→red)
@@ -75,6 +76,7 @@
 - [x] Random NPC Generator (Quick/Guided Generate, type picker, skill dropdowns)
 - [x] Quick Reveal/Hide button on roster list with Realtime sync to players
 - [x] NPC form overhaul — portrait bank, structured skills, motivation/complication/words fields
+- [ ] NPCs linked to world map pins
 
 ### GM Assets Panel — Tab Structure
 - [x] NPC Roster tab
@@ -85,6 +87,8 @@
 - [ ] Roll Tables — custom tables GM can roll on during play (loot, encounters, complications)
 - [ ] Notes — GM private scratchpad, session prep, secrets (full implementation)
 - [ ] NPC browsing/filtering — search by name, filter by type/status/role, sort, card grid vs list toggle
+- [ ] GM screen — GM sees all stats and hidden notes, players see only what is revealed
+- [ ] GM quick-reference panel — outcomes table, CMod table, range bands, combat actions
 
 ### Campaign Management
 - [x] Launch button on campaign cards (direct to table, new tab)
@@ -94,8 +98,11 @@
 - [ ] GM private notes (full implementation)
 - [ ] Player kick/management
 - [ ] CDP award system per session
-- [ ] Character progression log
+- [ ] CDP spending between sessions
+- [ ] Character progression log — what was earned, when, what was spent
 - [ ] Transfer GM role to another player
+- [ ] Session scheduling — GM proposes times, players confirm
+- [ ] Real-time calendar of upcoming sessions
 
 ### Character Creation
 - [x] Clickable step indicators on all character creation pages
@@ -122,11 +129,15 @@
 ---
 
 ## 🟠 Phase 3 — Map
-- [ ] Pin clustering (markercluster plugin)
+- [ ] Pin clustering — nearby pins collapse into numbered badge at low zoom
 - [ ] Layer toggles — Canon / Community / Campaign / Mine
-- [ ] Temporal filter
-- [ ] Pin cards — richer click experience
-- [ ] Setting regions
+- [ ] Temporal filter — show pins from last week/month/all time
+- [ ] Pin cards — richer click experience with related pins, visit count
+- [ ] Setting regions — zoom to District Zero, Chased, etc.
+- [ ] Pin hierarchy — visual weight by type (Landmark/Location/Event/Personal)
+- [ ] Pin search — keyword search highlights matching pins on map
+- [ ] Parent/child pin structure — rumor about a specific building within a location
+- [ ] Immutable canon layer — Thriver-set pins only
 
 ---
 
@@ -154,28 +165,84 @@
 ---
 
 ## 🟡 Phase 4 — The Living World
-- [ ] The Campfire — three levels (Global / Setting / Campaign)
-- [ ] Promotion flow — Campaign → Setting → Global
-- [ ] District Zero canonical content + canon layer
-- [ ] Tactical Map — scene image upload, draggable tokens, Realtime sync
-- [ ] Token status badges, range ruler, GM ping
+
+### The Campfire
+- [ ] Three levels — Global, Setting (District Zero etc.), Campaign (private)
+- [ ] Approved Rumors feed from world map
+- [ ] World Events — Thriver authored announcements
+- [ ] Session summaries posted by GMs
+- [ ] War Stories from players
+- [ ] LFG posts — players and GMs finding each other
+- [ ] Filtering by setting, campaign, date
+- [ ] Promotion flow — Campaign feed → Setting feed → Global feed
+- [ ] Featured items — Thriver promoted
+- [ ] Reactions and comments
+- [ ] "What happened since you were last here" feed on dashboard
+
+### District Zero
+- [ ] Pre-populate with canonical landmarks (immutable)
+- [ ] Canon layer — only Thrivers can edit
+- [ ] Community layer — approved player Rumors
+- [ ] District Zero Campfire feed
+- [ ] District Zero timeline — chronological view of events
+- [ ] Setting region on world map
+- [ ] Campaign creation option — Run in District Zero
+
+### Tactical Map
+- [ ] GM uploads scene image (stored in Supabase Storage)
+- [ ] Auto-generated player tokens — portrait photo or initials
+- [ ] NPC tokens — GM placed and managed
+- [ ] Drag to move, Realtime sync across all clients
+- [ ] Zoom and pan for everyone
+- [ ] Click token → opens character sheet
+- [ ] WP and stress visible under each token
+- [ ] Range ruler — click and drag, shows Engaged/Close/Medium/Long/Distant
+- [ ] Token status badges — Wounded, Stressed, Down
+- [ ] GM ping — click to flash a location for all players
+- [ ] Hidden tokens — GM reveals NPC tokens when discovered
+- [ ] Multiple scene slots per campaign
+- [ ] Initiative order shown as numbered badges on tokens
 
 ---
 
 ## 🔵 Phase 5 — Module System
-- [ ] Module data structure
-- [ ] Module builder (Thriver only)
+- [ ] Module data structure — scenes, NPCs, pins, handouts, roll tables
+- [ ] Module builder UI (Thriver only)
+- [ ] Three permission tiers: Module Creator, Licensed GM, Player
 - [ ] Campaign creation picker — Custom / Setting / Module
-- [ ] GM toolkit — scene switcher, handouts panel, roll tables
-- [ ] Empty (first module)
+- [ ] Module versioning — campaigns notified when module updates
+- [ ] Module play stats — how many groups ran it, average session count
+- [ ] GM toolkit — in-session scene switcher, handouts panel, roll tables
+- [ ] Empty (first module) — single scene, pre-placed NPCs, player briefing, GM notes
 - [ ] Module library — browsable by GMs
 
 ---
 
-## 🔵 Phase 6 — Community
-- [ ] LFG system
-- [ ] The Gazette
-- [ ] Subscriber tiers (Free / Paid / Premium)
+## 🔵 Phase 6 — Community & Retention
+
+### Looking for Group
+- [ ] LFG listings with availability, playstyle, experience level, setting preference
+- [ ] GM posts open campaigns with session log visible
+- [ ] Players post looking for game
+- [ ] Integrates with campaign creation flow
+
+### The Gazette
+- [ ] Auto-generated campaign newsletter after each session
+- [ ] Pulls from roll log highlights, session summary, GM notes
+- [ ] Shareable public link — non-members can read
+- [ ] Feeds into Global Campfire as a World Event
+
+### Subscriber Tiers
+- [ ] Free — core features, limited campaigns
+- [ ] Paid — full access, priority LFG
+- [ ] Premium — early access, module library, exclusive content
+
+### Between Sessions
+- [ ] CDP spending between sessions
+- [ ] Character development log
+- [ ] War Story submission
+- [ ] Session prep tools for GMs
+- [ ] World map browsing with setting context
 
 ---
 
@@ -191,16 +258,39 @@
 ---
 
 ## 🔵 Phase 8 — Physical Products
-- [ ] Chased QR integration
-- [ ] Anonymous preview for non-account holders
+- [ ] Chased QR integration — fold-out map QR codes deep-link to correct map region
+- [ ] Anonymous preview for non-account holders — scan, see the world, prompted to sign up
+- [ ] Dedicated onboarding flow for physical product purchasers
+- [ ] Chased setting region on world map with canonical pins
+- [ ] Chased module in module library
 - [ ] Minnie & The Magnificent Mongrels setting
+- [ ] Each physical product gets own setting region, module, and QR integration
 
 ---
 
 ## 🔵 Phase 9 — Maturity
-- [ ] Rules reference (XSE SRD in-platform)
-- [ ] Mobile optimization
-- [ ] Global search
+
+### Rules Reference
+- [ ] Full XSE SRD searchable and browsable within The Tapestry
+- [ ] Contextual links from character sheet and dice roller to relevant rules
+- [ ] GM quick-reference panel — outcomes table, CMod table, range bands, combat actions
+
+### Mobile
+- [ ] Responsive layout — dashboard, map, character wizard, table view
+- [ ] Mobile dice roller for rolling at a physical table
+- [ ] Distemper font on mobile navbar
+
+### Search
+- [ ] Global search across pins, Campfire, characters, campaigns
+- [ ] Setting-scoped search
+- [ ] Full text on session logs and War Stories
+
+---
+
+## 🔵 Phase 10 — Future Platforms
+- [ ] Displaced — space setting, separate platform, same XSE engine
+- [ ] Extract shared pieces into @xse/core monorepo library
+- [ ] Each setting gets own domain, branding, and map layer
 
 ---
 
