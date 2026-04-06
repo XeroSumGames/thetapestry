@@ -123,7 +123,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
           <div style={sh}>Attribute — raise one (max +{maxAttr} {ATTRIBUTE_LABELS[maxAttr]})</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#242424', borderRadius: '3px', padding: '8px 12px', marginBottom: '10px', border: '1px solid #2e2e2e' }}>
             <div style={{ display: 'flex', gap: '3px' }}>
-              {[0, 1].map(i => (
+              {[0].map(i => (
                 <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', border: `1px solid ${i < (stepData.attrKey ? 1 : 0) ? '#c0392b' : '#3a3a3a'}`, background: i < (stepData.attrKey ? 1 : 0) ? '#c0392b' : '#0f0f0f' }} />
               ))}
             </div>
