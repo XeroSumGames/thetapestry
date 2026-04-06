@@ -506,42 +506,41 @@ export default function CharacterCard({
                   </div>
                   {w && (
                     <>
-                      {/* Stats */}
-                      <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px', lineHeight: 1.6 }}>
-                        <span style={{ color: '#cce0f5' }}>Skill:</span> {w.skill} &nbsp; <span style={{ color: '#cce0f5' }}>Range:</span> {w.range}<br />
-                        <span style={{ color: '#cce0f5' }}>WP Damage:</span> <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span> &nbsp; <span style={{ color: '#cce0f5' }}>RP:</span> <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span>
+                      {/* Stats + Condition on one line */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px', flexWrap: 'wrap' }}>
+                        <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>Skill:</span> {w.skill}</span>
+                        <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>Range:</span> {w.range}</span>
+                        <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>WP Damage:</span> <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span></span>
+                        <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>RP:</span> <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span></span>
+                        <div style={{ flex: 1 }} />
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                          <span style={{ color: '#cce0f5' }}>Condition:</span>
+                          <select value={cond} onChange={e => setWeapon({ ...weapon, condition: e.target.value })} disabled={!canEdit}
+                            style={{ padding: '2px 4px', background: '#1a1a1a', border: `1px solid ${conditionColor(cond)}`, borderRadius: '3px', color: conditionColor(cond), fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', cursor: canEdit ? 'pointer' : 'default', width: '110px' }}>
+                            {CONDITIONS.map(co => <option key={co} value={co}>{co} ({CONDITION_CMOD[co] > 0 ? '+' : ''}{CONDITION_CMOD[co]})</option>)}
+                          </select>
+                        </span>
                       </div>
-                      {/* Condition selector */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>Condition:</span>
-                        <select value={cond} onChange={e => setWeapon({ ...weapon, condition: e.target.value })} disabled={!canEdit}
-                          style={{ padding: '2px 4px', background: '#1a1a1a', border: `1px solid ${conditionColor(cond)}`, borderRadius: '3px', color: conditionColor(cond), fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', cursor: canEdit ? 'pointer' : 'default', width: '120px' }}>
-                          {CONDITIONS.map(co => <option key={co} value={co}>{co} ({CONDITION_CMOD[co] > 0 ? '+' : ''}{CONDITION_CMOD[co]})</option>)}
-                        </select>
-                      </div>
-                      {/* Ammo pips */}
+                      {/* Ammo pips + reload on one line */}
                       {w.clip && w.clip > 0 && (
-                        <div style={{ marginBottom: '4px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', flexShrink: 0 }}>Ammo</span>
-                            <div style={{ display: 'flex', gap: '1px', flexWrap: 'wrap' }}>
-                              {Array.from({ length: w.clip }).map((_, i) => (
-                                <div key={i}
-                                  onClick={() => { if (!canEdit) return; const newAmmo = i < weapon.ammoCurrent ? i : i + 1; setWeapon({ ...weapon, ammoCurrent: newAmmo }) }}
-                                  style={{ width: '8px', height: '12px', borderRadius: '1px', background: i < weapon.ammoCurrent ? '#EF9F27' : '#242424', border: `1px solid ${i < weapon.ammoCurrent ? '#EF9F27' : '#3a3a3a'}`, cursor: canEdit ? 'pointer' : 'default', transition: 'background 0.1s' }} />
-                              ))}
-                            </div>
-                            <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, flexShrink: 0 }}>{weapon.ammoCurrent}/{w.clip}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', flexShrink: 0 }}>Ammo</span>
+                          <div style={{ display: 'flex', gap: '1px', flexWrap: 'wrap' }}>
+                            {Array.from({ length: w.clip }).map((_, i) => (
+                              <div key={i}
+                                onClick={() => { if (!canEdit) return; const newAmmo = i < weapon.ammoCurrent ? i : i + 1; setWeapon({ ...weapon, ammoCurrent: newAmmo }) }}
+                                style={{ width: '8px', height: '12px', borderRadius: '1px', background: i < weapon.ammoCurrent ? '#EF9F27' : '#242424', border: `1px solid ${i < weapon.ammoCurrent ? '#EF9F27' : '#3a3a3a'}`, cursor: canEdit ? 'pointer' : 'default', transition: 'background 0.1s' }} />
+                            ))}
                           </div>
-                          {/* Reload button */}
+                          <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, flexShrink: 0 }}>{weapon.ammoCurrent}/{w.clip}</span>
                           {weapon.reloads > 0 && (
                             <button onClick={() => { if (!canEdit) return; setWeapon({ ...weapon, ammoCurrent: w.clip, reloads: weapon.reloads - 1 }) }}
-                              style={{ marginTop: '4px', padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: canEdit ? 'pointer' : 'default' }}>
+                              style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: canEdit ? 'pointer' : 'default' }}>
                               Reload ({weapon.reloads} left)
                             </button>
                           )}
                           {weapon.reloads === 0 && weapon.ammoCurrent === 0 && (
-                            <div style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px', fontWeight: 700 }}>EMPTY — NO RELOADS</div>
+                            <span style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>EMPTY — NO RELOADS</span>
                           )}
                         </div>
                       )}
