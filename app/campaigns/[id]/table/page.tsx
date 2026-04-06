@@ -844,6 +844,18 @@ export default function TablePage() {
             Game Session {sessionCount}
           </div>
         )}
+        {isGM && sessionStatus === 'active' && !combatActive && (
+          <button onClick={startCombat} disabled={startingCombat || entries.length === 0}
+            style={{ padding: '0 14px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: startingCombat || entries.length === 0 ? 'not-allowed' : 'pointer', opacity: startingCombat || entries.length === 0 ? 0.5 : 1, display: 'flex', alignItems: 'center' }}>
+            {startingCombat ? 'Rolling...' : '⚔️ Start Combat'}
+          </button>
+        )}
+        {isGM && combatActive && (
+          <button onClick={endCombat}
+            style={{ padding: '0 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+            End Combat
+          </button>
+        )}
         {combatActive && (
           <div style={{ padding: '0 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5a89a', display: 'flex', alignItems: 'center' }}>
             ⚔️ In Combat
@@ -855,18 +867,6 @@ export default function TablePage() {
             style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
             Previous Sessions
           </a>
-        )}
-        {isGM && sessionStatus === 'active' && !combatActive && (
-          <button onClick={startCombat} disabled={startingCombat || entries.length === 0}
-            style={{ padding: '6px 14px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: startingCombat || entries.length === 0 ? 'not-allowed' : 'pointer', opacity: startingCombat || entries.length === 0 ? 0.5 : 1 }}>
-            {startingCombat ? 'Rolling...' : '⚔️ Start Combat'}
-          </button>
-        )}
-        {isGM && combatActive && (
-          <button onClick={endCombat}
-            style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            End Combat
-          </button>
         )}
         <button onClick={() => setSheetMode(m => m === 'inline' ? 'overlay' : 'inline')}
           style={{ padding: '0 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
