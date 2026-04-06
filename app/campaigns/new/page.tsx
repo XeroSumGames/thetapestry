@@ -49,15 +49,15 @@ export default function NewCampaignPage() {
       campaign_id: data.id,
       user_id: user.id,
     })
-    // Seed setting pins if applicable
+    // Seed setting pins into campaign_pins (not world map)
     const settingPins = SETTING_PINS[setting]
     if (settingPins && settingPins.length > 0) {
       const pinRows = settingPins.map(p => ({
-        user_id: user.id, lat: p.lat, lng: p.lng,
-        title: p.title, notes: p.notes ?? '', pin_type: 'gm',
-        status: 'approved', category: p.category ?? 'location',
+        campaign_id: data.id, name: p.title, lat: p.lat, lng: p.lng,
+        notes: p.notes ?? '', category: p.category ?? 'location',
+        revealed: false,
       }))
-      await supabase.from('map_pins').insert(pinRows)
+      await supabase.from('campaign_pins').insert(pinRows)
     }
     logEvent('campaign_created', { id: data.id, name })
     router.push(`/campaigns/${data.id}`)
