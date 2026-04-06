@@ -22,7 +22,7 @@ export default function SignupPage() {
     })
     if (signUpError) { setError(signUpError.message); return }
     logEvent('signup', { username })
-    router.push('/welcome')
+    router.push('/firsttimers')
   }
 
   const inp: React.CSSProperties = {
