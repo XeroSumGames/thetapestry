@@ -120,6 +120,7 @@
 - [ ] CDP spending between sessions
 - [ ] Character progression log — what was earned, when, what was spent
 - [ ] Transfer GM role to another player
+- [ ] Allow characters to be in multiple campaigns simultaneously
 - [ ] Session scheduling — GM proposes times, players confirm
 - [ ] Real-time calendar of upcoming sessions
 

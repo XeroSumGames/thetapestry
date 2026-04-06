@@ -131,6 +131,7 @@ interface Props {
   initiativeNpcIds?: Set<string>
   onAddToCombat?: (npcs: CampaignNpc[]) => void
   pcEntries?: PCEntry[]
+  onViewNpc?: (npc: CampaignNpc) => void
 }
 
 const emptyForm = {
@@ -140,7 +141,7 @@ const emptyForm = {
   npc_type: '' as string, motivation: '', complication: '', threeWords: ['', '', ''] as string[],
 }
 
-export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, onAddToCombat, pcEntries }: Props) {
+export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, onAddToCombat, pcEntries, onViewNpc }: Props) {
   const supabase = createClient()
   const [npcs, setNpcs] = useState<CampaignNpc[]>([])
   const [loading, setLoading] = useState(true)
@@ -497,7 +498,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
             npcs.map(npc => {
               const sc = STATUS_COLORS[npc.status] ?? STATUS_COLORS.active
               return (
-                <div key={npc.id} onClick={() => openEdit(npc)}
+                <div key={npc.id} onClick={() => onViewNpc ? onViewNpc(npc) : openEdit(npc)}
                   style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s' }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                   onMouseLeave={e => (e.currentTarget.style.background = '#1a1a1a')}

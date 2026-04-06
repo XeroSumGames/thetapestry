@@ -4,6 +4,8 @@ import { createClient } from '../../../../lib/supabase-browser'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
 import NpcRoster from '../../../../components/NpcRoster'
+import NpcCard from '../../../../components/NpcCard'
+import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { logEvent } from '../../../../lib/events'
 import { rollDamage, calculateDamage } from '../../../../lib/damage'
 import { getWeaponByName } from '../../../../lib/weapons'
@@ -183,6 +185,7 @@ export default function TablePage() {
   const [sessionActing, setSessionActing] = useState(false)
   const [gmTab, setGmTab] = useState<'npcs' | 'notes'>('npcs')
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
+  const [viewingNpc, setViewingNpc] = useState<CampaignNpc | null>(null)
   const campaignChannelRef = useRef<any>(null)
 
   async function loadEntries(campaignId: string) {
@@ -1010,7 +1013,7 @@ export default function TablePage() {
               </div>
             ) : myEntry ? (
               <button
-                onClick={() => setSelectedEntry(myEntry)}
+                onClick={() => { setSelectedEntry(myEntry); setViewingNpc(null) }}
                 style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
               >
                 Open My Sheet to Roll
@@ -1021,7 +1024,17 @@ export default function TablePage() {
 
         {/* Center — Character Sheet or Tactical Map */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
-          {syncedSelectedEntry && sheetMode === 'inline' ? (
+          {viewingNpc ? (
+            /* NPC Card view */
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              <NpcCard
+                npc={viewingNpc}
+                onClose={() => setViewingNpc(null)}
+                onEdit={() => { setViewingNpc(null); /* edit handled by roster */ }}
+                onRoll={sessionStatus === 'active' ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
+              />
+            </div>
+          ) : syncedSelectedEntry && sheetMode === 'inline' ? (
             /* Inline character sheet */
             <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', paddingBottom: revealedNpcs.length > 0 ? '60px' : '1rem' }}>
               <CharacterCard
@@ -1086,7 +1099,7 @@ export default function TablePage() {
               ))}
             </div>
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              {gmTab === 'npcs' && <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} />}
+              {gmTab === 'npcs' && <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpc(npc); setSelectedEntry(null) }} />}
               {gmTab === 'notes' && (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3a3a3a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                   Coming Soon
@@ -1101,7 +1114,7 @@ export default function TablePage() {
       {/* Bottom portrait strip */}
       <div style={{ borderTop: '1px solid #2e2e2e', display: 'flex', flexShrink: 0, background: '#0f0f0f', height: '80px' }}>
         <button
-          onClick={() => gmEntry && setSelectedEntry(gmEntry)}
+          onClick={() => { if (gmEntry) { setSelectedEntry(gmEntry); setViewingNpc(null) } }}
           style={{ width: '120px', flexShrink: 0, background: gmEntry ? '#1a1a1a' : '#111', borderTop: 'none', borderBottom: 'none', borderLeft: 'none', borderRight: '1px solid #2e2e2e', cursor: gmEntry ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px', transition: 'background 0.15s' }}
           onMouseEnter={e => { if (gmEntry) (e.currentTarget as HTMLElement).style.background = '#242424' }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = gmEntry ? '#1a1a1a' : '#111' }}
@@ -1129,7 +1142,7 @@ export default function TablePage() {
             const isActive = combatActive && initiativeOrder.some(o => o.is_active && o.character_id === entry.character.id)
             const isMe = entry.userId === userId
             return (
-              <button key={entry.stateId} onClick={() => (isGM || isMe) && setSelectedEntry(entry)}
+              <button key={entry.stateId} onClick={() => { if (isGM || isMe) { setSelectedEntry(entry); setViewingNpc(null) } }}
                 style={{ flex: 1, minWidth: 0, background: isActive ? '#1a0f0f' : '#1a1a1a', borderTop: isActive ? '2px solid #c0392b' : isMe ? '2px solid #2d5a1b' : 'none', borderBottom: 'none', borderLeft: 'none', borderRight: i < playerEntries.length - 1 ? '1px solid #2e2e2e' : 'none', cursor: (isGM || isMe) ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: isCompact ? '2px' : '4px', padding: pad, transition: 'background 0.15s' }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                 onMouseLeave={e => (e.currentTarget.style.background = isActive ? '#1a0f0f' : '#1a1a1a')}
