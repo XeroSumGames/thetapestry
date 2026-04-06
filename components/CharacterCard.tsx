@@ -582,6 +582,18 @@ export default function CharacterCard({
               )
             })}
           </div>
+          {/* Unarmed Attack — full width */}
+          {onRoll && (
+            <button onClick={() => {
+              const phyAmod = rapid.PHY ?? 0
+              const unarmedSkill = skills.find(s => s.skillName === 'Unarmed Combat')
+              const smod = unarmedSkill?.level ?? 0
+              onRoll('Unarmed Attack', phyAmod, smod, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
+            }}
+              style={{ width: '100%', marginTop: '6px', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              👊 Unarmed Attack <span style={{ color: '#cce0f5', fontWeight: 400 }}>(1d3 + PHY + Unarmed Combat)</span>
+            </button>
+          )}
         </div>
 
       </div>
