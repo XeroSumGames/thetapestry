@@ -44,8 +44,22 @@ export default function StepNine({ state, onChange }: Props) {
 
       {/* Identity */}
       <div style={section}>
-        <div style={sectionTitle}>Identity</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+          {/* Portrait */}
+          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#1a3a5c', border: '2px solid #7ab3d4', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+            {state.photoDataUrl ? (
+              <img src={state.photoDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <span style={{ fontSize: '24px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                {state.name ? state.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?'}
+              </span>
+            )}
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={sectionTitle}>Identity</div>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
           {[
             ['Name', state.name],
             ['Age', state.age],
