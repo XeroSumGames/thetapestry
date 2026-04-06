@@ -101,20 +101,19 @@ export default function NewCharacterPage() {
       {/* Progress dots */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
         {STEPS.map((s, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{
+          <button key={i} onClick={() => { setState(p => ({ ...p, currentStep: i })); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            style={{
               width: '28px', height: '28px', borderRadius: '50%',
               border: `1px solid ${i === step ? '#c0392b' : '#3a3a3a'}`,
               background: i < step ? '#c0392b' : i === step ? '#2a1210' : '#1a1a1a',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontFamily: 'Barlow Condensed, sans-serif',
-              fontSize: '9px', fontWeight: 700,
+              fontSize: '13px', fontWeight: 700,
               color: i < step ? '#fff' : i === step ? '#c0392b' : '#d4cfc9',
-              transition: 'all .2s', flexShrink: 0,
+              transition: 'all .2s', flexShrink: 0, cursor: 'pointer', padding: 0,
             }}>
               {i}
-            </div>
-          </div>
+          </button>
         ))}
       </div>
 

@@ -137,9 +137,9 @@ export default function EditCharacterPage() {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginBottom: '1.25rem' }}>
         {STEPS.map((s, i) => (
-          <div key={i} style={{ width: '28px', height: '28px', borderRadius: '50%', border: `1px solid ${i === step ? '#c0392b' : '#3a3a3a'}`, background: i < step ? '#c0392b' : i === step ? '#2a1210' : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '9px', fontWeight: 700, color: i < step ? '#fff' : i === step ? '#c0392b' : '#d4cfc9', flexShrink: 0 }}>
+          <button key={i} onClick={() => { setStep(i); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={{ width: '28px', height: '28px', borderRadius: '50%', border: `1px solid ${i === step ? '#c0392b' : '#3a3a3a'}`, background: i < step ? '#c0392b' : i === step ? '#2a1210' : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 700, color: i < step ? '#fff' : i === step ? '#c0392b' : '#d4cfc9', flexShrink: 0, cursor: 'pointer', padding: 0 }}>
             {i}
-          </div>
+          </button>
         ))}
       </div>
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1.25rem', marginBottom: '1rem', borderLeft: '3px solid #c0392b' }}>
