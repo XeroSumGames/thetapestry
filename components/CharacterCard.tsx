@@ -482,7 +482,7 @@ export default function CharacterCard({
 
         {/* Weapons */}
         <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginTop: '10px' }}>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {([
               { label: 'Primary', slot: 'weaponPrimary' as const, weapon: weaponPrimary, setWeapon: (d: any) => saveWeapon('weaponPrimary', d) },
               { label: 'Secondary', slot: 'weaponSecondary' as const, weapon: weaponSecondary, setWeapon: (d: any) => saveWeapon('weaponSecondary', d) },
