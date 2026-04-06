@@ -1104,7 +1104,7 @@ export default function TablePage() {
               ))}
             </div>
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              {gmTab === 'npcs' && <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev : [...prev, npc]); setSelectedEntry(null) }} />}
+              {gmTab === 'npcs' && <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev : [...prev, npc]); setSelectedEntry(null) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} />}
               {gmTab === 'notes' && (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3a3a3a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                   Coming Soon

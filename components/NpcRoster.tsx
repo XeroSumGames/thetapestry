@@ -133,6 +133,7 @@ interface Props {
   onAddToCombat?: (npcs: CampaignNpc[]) => void
   pcEntries?: PCEntry[]
   onViewNpc?: (npc: CampaignNpc) => void
+  viewingNpcIds?: Set<string>
 }
 
 const emptyForm = {
@@ -143,7 +144,7 @@ const emptyForm = {
   weapon: null as any,
 }
 
-export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, onAddToCombat, pcEntries, onViewNpc }: Props) {
+export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds }: Props) {
   const supabase = createClient()
   const [npcs, setNpcs] = useState<CampaignNpc[]>([])
   const [loading, setLoading] = useState(true)
@@ -485,6 +486,17 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
             + Combat
           </button>
         )}
+        {npcs.length > 0 && pcEntries && pcEntries.length > 0 && (
+          <button onClick={async () => {
+            for (const npc of npcs) {
+              if (revealedNpcIds.has(npc.id)) continue
+              await quickReveal(npc.id, { stopPropagation: () => {} } as any)
+            }
+          }}
+            style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            Show All
+          </button>
+        )}
         <div style={{ flex: 1 }} />
         <button onClick={openLibrary}
           style={{ padding: '2px 8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
@@ -503,7 +515,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
               const sc = STATUS_COLORS[npc.status] ?? STATUS_COLORS.active
               return (
                 <div key={npc.id} onClick={() => onViewNpc ? onViewNpc(npc) : openEdit(npc)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: viewingNpcIds?.has(npc.id) ? '#2a1210' : '#1a1a1a', border: `1px solid ${viewingNpcIds?.has(npc.id) ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s' }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                   onMouseLeave={e => (e.currentTarget.style.background = '#1a1a1a')}
                 >
