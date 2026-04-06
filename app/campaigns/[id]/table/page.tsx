@@ -122,6 +122,8 @@ export default function TablePage() {
   const rollChannelRef = useRef<any>(null)
   const initChannelRef = useRef<any>(null)
   const rollFeedRef = useRef<HTMLDivElement>(null)
+  const revealChannelRef = useRef<any>(null)
+  const myCharIdRef = useRef<string | null>(null)
 
   const [campaign, setCampaign] = useState<Campaign | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
@@ -238,6 +240,19 @@ export default function TablePage() {
     setTimeout(() => { rollFeedRef.current?.scrollTo(0, rollFeedRef.current.scrollHeight) }, 50)
   }
 
+  async function loadRevealedNpcs(characterId: string, cnpcs: any[]) {
+    const { data: rels } = await supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('character_id', characterId).eq('revealed', true)
+    if (rels && rels.length > 0 && cnpcs.length > 0) {
+      const revealed = rels.map(r => {
+        const npc = cnpcs.find((n: any) => n.id === r.npc_id)
+        return npc ? { ...npc, relationship_cmod: r.relationship_cmod, reveal_level: r.reveal_level } : null
+      }).filter(Boolean)
+      setRevealedNpcs(revealed)
+    } else {
+      setRevealedNpcs([])
+    }
+  }
+
   async function loadInitiative(campaignId: string) {
     const { data } = await supabase
       .from('initiative_order')
@@ -302,14 +317,15 @@ export default function TablePage() {
       if (camp.gm_user_id !== user.id) {
         const myMember = (members ?? []).find((m: any) => m.user_id === user.id)
         if (myMember?.character_id) {
-          const { data: rels } = await supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('character_id', myMember.character_id).eq('revealed', true)
-          if (rels && rels.length > 0 && cnpcs) {
-            const revealed = rels.map(r => {
-              const npc = cnpcs.find((n: any) => n.id === r.npc_id)
-              return npc ? { ...npc, relationship_cmod: r.relationship_cmod, reveal_level: r.reveal_level } : null
-            }).filter(Boolean)
-            setRevealedNpcs(revealed)
-          }
+          myCharIdRef.current = myMember.character_id
+          await loadRevealedNpcs(myMember.character_id, cnpcs ?? [])
+
+          // Realtime subscription for reveal changes
+          revealChannelRef.current = supabase.channel(`reveals_${id}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'npc_relationships' }, () => {
+              if (myCharIdRef.current) loadRevealedNpcs(myCharIdRef.current, cnpcs ?? [])
+            })
+            .subscribe()
         }
       }
 
@@ -340,6 +356,7 @@ export default function TablePage() {
       if (rollChannelRef.current) supabase.removeChannel(rollChannelRef.current)
       if (initChannelRef.current) supabase.removeChannel(initChannelRef.current)
       if (campaignChannelRef.current) supabase.removeChannel(campaignChannelRef.current)
+      if (revealChannelRef.current) supabase.removeChannel(revealChannelRef.current)
     }
   }, [id])
 
