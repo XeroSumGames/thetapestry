@@ -15,7 +15,7 @@
 
 ## Styling
 - **`#5a5550` is too dim**: This color was used as secondary text throughout the app but is nearly invisible on dark backgrounds. Replaced globally with `#cce0f5` (light blue).
-- **Font sizes tend to be too small**: Multiple rounds of +2px bumps were needed on roll feed, session history, NPC roster. Start with slightly larger sizes.
+- **Minimum font size is 13px**: Never use font sizes below 13px anywhere in the UI. The dark background makes small text unreadable. Badges/tags: 13-14px. Body text: 14-15px. Headings scale up from there. Multiple rounds of +2px bumps were needed across roll feed, session history, and NPC roster because initial sizes were too small.
 - **`appearance: 'none'` on selects**: Required for consistent cross-browser styling of dropdowns.
 - **Grid needs enough container width**: `auto-fill` grids won't show multiple columns if the parent container is too narrow (e.g., constrained by sidebar). Use fixed column count (`repeat(5, 1fr)`) when you know the layout.
 
