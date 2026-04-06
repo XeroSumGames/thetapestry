@@ -71,6 +71,9 @@ export default function StepNine({ state, onChange }: Props) {
             <div style={{ fontSize: '14px', color: '#d4cfc9', marginTop: '4px' }}>
               {[step4.profession, state.gender, state.age ? `Age ${state.age}` : '', state.height, state.weight].filter(Boolean).join(' · ')}
             </div>
+            {state.concept && (
+              <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '4px' }}>{state.concept}</div>
+            )}
             {state.physdesc && (
               <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '4px', fontStyle: 'italic' }}>{state.physdesc}</div>
             )}
