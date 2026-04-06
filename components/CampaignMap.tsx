@@ -31,7 +31,7 @@ export default function CampaignMap({ campaignId, isGM }: Props) {
   const debounceRef = useRef<any>(null)
   const supabase = createClient()
   const [pins, setPins] = useState<CampaignPin[]>([])
-  const [mapLayer, setMapLayer] = useState<'street' | 'satellite' | 'dark'>('dark')
+  const [mapLayer, setMapLayer] = useState<'street' | 'satellite' | 'dark'>('street')
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
   const [suggestions, setSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
