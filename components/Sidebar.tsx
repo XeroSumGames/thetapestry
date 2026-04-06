@@ -74,7 +74,7 @@ export default function Sidebar() {
       {/* User header */}
       <div style={{ padding: '10px 14px 8px', fontSize: '13px', color: '#f5f2ee', letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', borderBottom: '1px solid #2e2e2e', marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
         {isGuest ? (
-          <span style={{ flex: 1, color: '#cce0f5' }}>Guest <span style={{ fontSize: '13px', color: '#3a3a3a' }}>— read only</span></span>
+          <span style={{ flex: 1, color: '#cce0f5' }}>Ghost <span style={{ fontSize: '13px', color: '#3a3a3a' }}>— You Don&apos;t Exist</span></span>
         ) : (
           <>
             <span style={{ flex: 1 }}>

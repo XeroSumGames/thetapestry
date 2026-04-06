@@ -22,7 +22,7 @@ export default function CharactersPage() {
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
+      if (!user) { setLoading(false); return }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       if (profile?.role?.toLowerCase() === 'thriver') setIsThriver(true)
       const { data } = await supabase

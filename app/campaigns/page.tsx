@@ -34,7 +34,7 @@ export default function CampaignsPage() {
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
+      if (!user) { setLoading(false); return }
       setUserId(user.id)
 
       const { data: gm } = await supabase
