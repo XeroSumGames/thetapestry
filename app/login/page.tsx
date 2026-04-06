@@ -34,7 +34,7 @@ export default function LoginPage() {
       <div style={{ width: '100%', maxWidth: '380px', padding: '2rem' }}>
 
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <img src="/distemper-logo.png" alt="Distemper" style={{ width: '100px', height: '100px', objectFit: 'contain', marginBottom: '1.5rem' }} />
+          <img src="/distemper-dogsign-logo.png" alt="Distemper" style={{ width: '100px', height: '100px', objectFit: 'contain', marginBottom: '1.5rem' }} />
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
             The Tapestry
           </div>
