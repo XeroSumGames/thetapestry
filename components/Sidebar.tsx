@@ -11,23 +11,27 @@ export default function Sidebar() {
   const router = useRouter()
   const supabase = createClient()
 
+  const [loaded, setLoaded] = useState(false)
+
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) { setLoaded(true); return }
       const { data: profile } = await supabase.from('profiles').select('username, role').eq('id', user.id).single()
-      if (!profile) return
+      if (!profile) { setLoaded(true); return }
       setUsername(profile.username)
       setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
       if (profile.role === 'thriver') {
         const { count } = await supabase.from('map_pins').select('*', { count: 'exact', head: true }).eq('pin_type', 'rumor').eq('status', 'pending')
         setPendingCount(count ?? 0)
       }
+      setLoaded(true)
     }
     load()
   }, [])
 
-  if (userRole === null) return null
+  if (!loaded) return null
+  const isGuest = !username
 
   const linkStyle = (accent: string) => ({
     display: 'block' as const, padding: '10px 14px', color: '#f5f2ee',
@@ -69,14 +73,20 @@ export default function Sidebar() {
 
       {/* User header */}
       <div style={{ padding: '10px 14px 8px', fontSize: '13px', color: '#f5f2ee', letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', borderBottom: '1px solid #2e2e2e', marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
-        <span style={{ flex: 1 }}>
-          {username}
-          {userRole === 'thriver'
-            ? <span style={{ marginLeft: '6px', background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 5px', borderRadius: '2px' }}>thriver</span>
-            : <span style={{ marginLeft: '6px', background: '#2d5a1b', color: '#7fc458', fontSize: '13px', padding: '1px 5px', borderRadius: '2px' }}>Survivor</span>
-          }
-        </span>
-        <NotificationBell />
+        {isGuest ? (
+          <span style={{ flex: 1, color: '#cce0f5' }}>Guest <span style={{ fontSize: '13px', color: '#3a3a3a' }}>— read only</span></span>
+        ) : (
+          <>
+            <span style={{ flex: 1 }}>
+              {username}
+              {userRole === 'thriver'
+                ? <span style={{ marginLeft: '6px', background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 5px', borderRadius: '2px' }}>thriver</span>
+                : <span style={{ marginLeft: '6px', background: '#2d5a1b', color: '#7fc458', fontSize: '13px', padding: '1px 5px', borderRadius: '2px' }}>Survivor</span>
+              }
+            </span>
+            <NotificationBell />
+          </>
+        )}
       </div>
 
 {/* The Tapestry section */}
@@ -127,11 +137,22 @@ export default function Sidebar() {
       {/* Spacer + bottom section */}
       <div style={{ flex: 1 }} />
 
-      <div style={{ padding: '8px 14px', borderTop: '1px solid #2e2e2e' }}>
-        <button onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
-          style={{ width: '100%', padding: '8px', background: 'none', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-          Log Out
-        </button>
+      <div style={{ padding: '8px 14px', borderTop: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {isGuest ? (
+          <>
+            <a href="/signup" style={{ display: 'block', width: '100%', padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}>
+              Create Account
+            </a>
+            <a href="/login" style={{ display: 'block', width: '100%', padding: '8px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}>
+              Sign In
+            </a>
+          </>
+        ) : (
+          <button onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
+            style={{ width: '100%', padding: '8px', background: 'none', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            Log Out
+          </button>
+        )}
       </div>
 
       <div style={{ padding: '8px 14px 12px', textAlign: 'center' }}>

@@ -82,28 +82,10 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
     )
   }
 
-  const hideSidebar = NO_SIDEBAR_PAGES.includes(pathname) || !isAuthenticated
+  const hideSidebar = NO_SIDEBAR_PAGES.includes(pathname)
 
   if (hideSidebar) {
-    return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
-        {/* Ghost bar for unauthenticated users on public pages */}
-        {!isAuthenticated && isPublicPage && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: '#111', borderBottom: '1px solid #c0392b', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <img src="/DistemperLogoRedv5.png" alt="Distemper" style={{ height: '20px', objectFit: 'contain' }} />
-              <span style={{ fontFamily: 'Distemper, sans-serif', fontSize: '16px', textTransform: 'uppercase', color: '#f5f2ee' }}>The Tapestry</span>
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <a href="/map" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>The World</a>
-              <a href="/login" style={{ padding: '5px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Sign In</a>
-              <a href="/signup" style={{ padding: '5px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Create Account</a>
-            </div>
-          </div>
-        )}
-        {children}
-      </div>
-    )
+    return <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>{children}</div>
   }
 
   return (
