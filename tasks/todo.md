@@ -38,6 +38,13 @@
 - [ ] Pass 4 — Two-action actions (Charge both slots forces Melee/Unarmed, Sprint both slots Athletics check at round end fail = Winded)
 - [ ] Pass 5 — Social and contested actions (Coordinate, Cover Fire, Distract, Inspire — chained rolls, target selection, pending_cmod, inspired flag)
 
+### Combat UI
+- [x] Defer button on initiative tracker — GM can defer anyone, players can defer their own
+- [x] All NPCs pre-selected when starting combat
+- [x] NPCs sorted first in target dropdown
+- [x] Attack Roll label for weapon attacks, Rolling for skill checks
+- [x] Conditional Modifier label (was CMod Relationship/Situational)
+
 ### Combat Rules — Advanced (SRD)
 - [ ] Getting The Drop — one character acts before initiative, single action, -2 CMod on next initiative roll
 - [ ] Range Bands — Engaged, Close, Medium, Long, Extreme tracking per combatant pair
@@ -54,10 +61,20 @@
 - [ ] Unconscious/Mortally Wounded/Dead status badges on character cards and initiative tracker
 
 ### Weapons & Equipment (SRD)
-- [ ] Weapon traits — Automatic Burst, Blast Radius, Bulky, Cumbersome, Compact, Stun, Tracking, Unwieldy
-- [ ] Item Condition tracking — Pristine (+1 CMod), Used (0), Worn (-1), Damaged (-2), Broken (unusable)
+- [x] Full weapon database — 35+ weapons from SRD (Melee, Ranged, Explosive, Heavy)
+- [x] Weapon dropdowns on character card — select primary/secondary from all SRD weapons
+- [x] Item Condition tracking — Pristine (+1 CMod), Used (0), Worn (-1), Damaged (-2), Broken (unusable)
+- [x] Ammo pip tracker — clickable pips matching clip size per weapon
+- [x] Reload system — 5-pip clip tracker with +/- buttons, Reload button
+- [x] Weapon traits displayed as badges (Automatic Burst, Blast Radius, etc.)
+- [x] Attack button per weapon — opens dice roller with correct skill/AMod/SMod
+- [x] Unarmed Attack button — 1d3 + PHY + Unarmed Combat, 100% RP
+- [x] Weapon condition CMod auto-applied to attack rolls
+- [x] Auto-damage on successful attacks — rolls weapon damage, applies DMM/DMR defense, auto-deducts WP/RP from target
+- [x] Target defensive modifier (DMM/DMR) auto-applied to attack CMod when target selected
+- [x] Damage breakdown in roll modal — raw WP, defense mitigation, final WP/RP
+- [ ] Weapon trait mechanical effects (Automatic Burst fire, Blast Radius area, Stun incapacitate, etc.)
 - [ ] Upkeep Checks — Mechanic/Tinkerer/weapon skill checks to maintain condition
-- [ ] Ammo tracking — weapons start with 1d3 reloads, decrement on use
 - [ ] Encumbrance — carrying capacity (6 + PHY), warn when exceeded
 
 ### Additional Check Types (SRD)
@@ -76,6 +93,8 @@
 - [x] Random NPC Generator (Quick/Guided Generate, type picker, skill dropdowns)
 - [x] Quick Reveal/Hide button on roster list with Realtime sync to players
 - [x] NPC form overhaul — portrait bank, structured skills, motivation/complication/words fields
+- [x] Show/Hide button renamed, Fight button to add NPC to combat from roster
+- [ ] NPC card view — abbreviated character card for NPCs (RAPID, skills, weapons, notes)
 - [ ] NPCs linked to world map pins
 
 ### GM Assets Panel — Tab Structure
@@ -116,15 +135,22 @@
 - [x] Global color change #5a5550 → #cce0f5
 - [x] 13px minimum font size enforced across NPC Roster
 - [x] Roll feed font sizes bumped +2px
-- [x] Navbar buttons uniform height (32px)
+- [x] Roll modal font sizes bumped +2px
+- [x] Navbar removed — all navigation moved to sidebar
+- [x] Sidebar branding — Distemper logo, The Tapestry title, Log Out button
 - [x] Header buttons match campaign name text height
 - [x] Dynamic player strip sizing for 6+ players
-- [x] Green border on player's own character in portrait strip
+- [x] Green top border on player's own character in portrait strip
+- [x] Portrait strip names on one line: "Character Name (Player)"
+- [x] Table page uses full viewport height (removed navbar offset)
 - [x] Notification bell SVG with dynamic color (orange/gray)
 - [x] Notification body colorized (names green, campaigns red, characters blue)
 - [x] Mark All Read closes notification dropdown
 - [x] Welcome page split — /firsttimers for onboarding, /welcome for returning users
 - [x] Welcome page broken emojis fixed
+- [x] Character card: concept/complication/motivation/words moved above RAPID
+- [x] Weapon stats layout — aligned side-by-side with consistent rows
+- [x] Auto-resize uploaded photos to 256x256
 
 ---
 
