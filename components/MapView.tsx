@@ -73,6 +73,8 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
   const [editForm, setEditForm] = useState({ title: '', notes: '', category: 'location' })
   const [mapLayer, setMapLayer] = useState<'street' | 'satellite' | 'dark'>('street')
   const [searchQuery, setSearchQuery] = useState('')
+  const [suggestions, setSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
+  const debounceRef = useRef<any>(null)
   const [searching, setSearching] = useState(false)
   const supabase = createClient()
 
@@ -374,8 +376,40 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
         )}
 
           <form onSubmit={handleSearch} style={{ position: 'absolute', top: '6px', right: sidebarOpen ? '550px' : '244px', zIndex: 1000, display: 'flex', gap: '4px', transition: 'right .2s' }}>
-            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search address..." style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', width: '200px', outline: 'none' }} />
-            <button type="submit" disabled={searching} style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: searching ? '#cce0f5' : '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching ? 'not-allowed' : 'pointer' }}>{searching ? '...' : 'Go'}</button>
+            <div style={{ position: 'relative' }}>
+              <input value={searchQuery} onChange={e => {
+                setSearchQuery(e.target.value)
+                if (debounceRef.current) clearTimeout(debounceRef.current)
+                if (e.target.value.length >= 3) {
+                  debounceRef.current = setTimeout(async () => {
+                    try {
+                      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(e.target.value)}&limit=5`)
+                      const data = await res.json()
+                      setSuggestions(data)
+                    } catch { setSuggestions([]) }
+                  }, 300)
+                } else { setSuggestions([]) }
+              }} placeholder="Search address..." style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', width: '250px', outline: 'none' }} />
+              {suggestions.length > 0 && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '0 0 3px 3px', maxHeight: '200px', overflowY: 'auto', zIndex: 1001 }}>
+                  {suggestions.map((s, i) => (
+                    <div key={i} onClick={() => {
+                      const lat = parseFloat(s.lat)
+                      const lon = parseFloat(s.lon)
+                      mapInstanceRef.current?.flyTo([lat, lon], 14)
+                      setSearchQuery(s.display_name.split(',')[0])
+                      setSuggestions([])
+                    }}
+                      style={{ padding: '6px 10px', fontSize: '13px', color: '#d4cfc9', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      {s.display_name.length > 60 ? s.display_name.slice(0, 60) + '...' : s.display_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button type="submit" disabled={searching} style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: searching ? '#cce0f5' : '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching ? 'not-allowed' : 'pointer' }}>{searching ? '...' : 'Go'}</button>
           </form>
           <div style={{ position: 'absolute', top: '6px', right: sidebarOpen ? '306px' : '6px', zIndex: 1000, display: 'flex', gap: '4px', transition: 'right .2s' }}>
             {([['street', 'Street'], ['satellite', 'Satellite'], ['dark', 'Dark']] as const).map(([layer, label]) => (

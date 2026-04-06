@@ -88,7 +88,7 @@ export default function RandomCharacterPage() {
     async function generate() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
+      if (!user) { setStatus('ready'); return }
 
       // Pick a random paradigm
       const paradigm = pick(PARADIGMS)
