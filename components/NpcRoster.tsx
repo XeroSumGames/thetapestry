@@ -96,6 +96,10 @@ export interface CampaignNpc {
   npc_type: string | null
   recruitment_role: string | null
   world_npc_id: string | null
+  wp_current: number | null
+  wp_max: number | null
+  rp_current: number | null
+  rp_max: number | null
   status: string
   created_at: string
 }
@@ -239,6 +243,9 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       motivation: form.motivation || null,
       complication: form.complication || null,
       three_words: form.threeWords.filter(w => w),
+      wp_max: 10 + form.physicality + form.dexterity,
+      rp_max: 6 + form.physicality,
+      ...(!editingId ? { wp_current: 10 + form.physicality + form.dexterity, rp_current: 6 + form.physicality } : {}),
     }
     if (editingId) {
       await supabase.from('campaign_npcs').update(row).eq('id', editingId)

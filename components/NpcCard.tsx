@@ -1,6 +1,8 @@
 'use client'
+import { useState } from 'react'
 import { CampaignNpc } from './NpcRoster'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, Condition } from '../lib/weapons'
+import { createClient } from '../lib/supabase-browser'
 
 const TYPE_COLORS: Record<string, { bg: string; border: string; color: string }> = {
   friendly: { bg: '#1a2e10', border: '#2d5a1b', color: '#7fc458' },
@@ -25,9 +27,21 @@ interface Props {
 }
 
 export default function NpcCard({ npc, onClose, onEdit, onRoll }: Props) {
+  const supabase = createClient()
   const rapid: Record<string, number> = { RSN: npc.reason, ACU: npc.acumen, PHY: npc.physicality, INF: npc.influence, DEX: npc.dexterity }
   const tc = TYPE_COLORS[npc.npc_type ?? ''] ?? TYPE_COLORS.goon
   const sc = STATUS_COLORS[npc.status] ?? STATUS_COLORS.active
+
+  const wpMax = npc.wp_max ?? (10 + npc.physicality + npc.dexterity)
+  const rpMax = npc.rp_max ?? (6 + npc.physicality)
+  const [wpCurrent, setWpCurrent] = useState(npc.wp_current ?? wpMax)
+  const [rpCurrent, setRpCurrent] = useState(npc.rp_current ?? rpMax)
+
+  async function updateHealth(field: 'wp_current' | 'rp_current', value: number) {
+    if (field === 'wp_current') setWpCurrent(value)
+    else setRpCurrent(value)
+    await supabase.from('campaign_npcs').update({ [field]: value }).eq('id', npc.id)
+  }
 
   const skillEntries: { name: string; level: number }[] = Array.isArray(npc.skills?.entries) ? npc.skills.entries : []
   const weapon = npc.skills?.weapon ?? null
@@ -113,6 +127,36 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll }: Props) {
           )
         })}
       </div>
+
+        {/* WP / RP trackers */}
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '6px' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+              <span style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>WP</span>
+              <span style={{ fontSize: '13px', color: '#c0392b', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{wpCurrent}/{wpMax}</span>
+            </div>
+            <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap' }}>
+              {Array.from({ length: wpMax }).map((_, i) => (
+                <div key={i} onClick={() => updateHealth('wp_current', i < wpCurrent ? i : i + 1)}
+                  style={{ width: '12px', height: '12px', borderRadius: '50%', border: `2px solid ${i < wpCurrent ? '#c0392b' : '#3a3a3a'}`, background: i < wpCurrent ? '#c0392b' : 'transparent', cursor: 'pointer', transition: 'all .1s' }} />
+              ))}
+            </div>
+            {wpCurrent === 0 && <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', marginTop: '2px' }}>MORTALLY WOUNDED</div>}
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+              <span style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>RP</span>
+              <span style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{rpCurrent}/{rpMax}</span>
+            </div>
+            <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap' }}>
+              {Array.from({ length: rpMax }).map((_, i) => (
+                <div key={i} onClick={() => updateHealth('rp_current', i < rpCurrent ? i : i + 1)}
+                  style={{ width: '12px', height: '12px', borderRadius: '50%', border: `2px solid ${i < rpCurrent ? '#7ab3d4' : '#3a3a3a'}`, background: i < rpCurrent ? '#7ab3d4' : 'transparent', cursor: 'pointer', transition: 'all .1s' }} />
+              ))}
+            </div>
+            {rpCurrent === 0 && wpCurrent > 0 && <div style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', marginTop: '2px' }}>UNCONSCIOUS</div>}
+          </div>
+        </div>
 
       {/* Skills — clickable */}
       {skillEntries.length > 0 && (
