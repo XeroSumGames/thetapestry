@@ -89,12 +89,42 @@ export default function NotificationBell() {
     await supabase.from('notifications').update({ read: true }).eq('user_id', userId).eq('read', false)
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
     setUnreadCount(0)
+    setOpen(false)
   }
 
   function handleNotifClick(n: Notification) {
     if (!n.read) markAsRead(n.id)
     if (n.link) window.location.href = n.link
     setOpen(false)
+  }
+
+  function colorizeBody(body: string, type: string): React.ReactNode {
+    // "X joined Y" — X green, Y red
+    if (type === 'player_joined') {
+      const match = body.match(/^(.+?) joined (.+)$/)
+      if (match) return <><span style={{ color: '#7fc458' }}>{match[1]}</span> joined <span style={{ color: '#c0392b' }}>{match[2]}</span></>
+    }
+    // "Your GM has opened Session N in Y"
+    if (type === 'session_opened') {
+      const match = body.match(/^(.+? Session \d+) in (.+)$/)
+      if (match) return <>{match[1]} in <span style={{ color: '#c0392b' }}>{match[2]}</span></>
+    }
+    // "X just signed up"
+    if (type === 'new_survivor') {
+      const match = body.match(/^(.+?) just signed up$/)
+      if (match) return <><span style={{ color: '#7fc458' }}>{match[1]}</span> just signed up</>
+    }
+    // "X submitted a pin: Y" or "X submitted an NPC: Y"
+    if (type === 'moderation_pin' || type === 'moderation_npc') {
+      const match = body.match(/^(.+?) submitted (?:a pin|an NPC): (.+)$/)
+      if (match) return <><span style={{ color: '#7fc458' }}>{match[1]}</span> submitted: <span style={{ color: '#EF9F27' }}>{match[2]}</span></>
+    }
+    // "Your pin "X" has been approved/rejected"
+    if (type === 'rumor_approved' || type === 'rumor_rejected') {
+      const match = body.match(/"(.+?)"/)
+      if (match) return <>{body.replace(`"${match[1]}"`, '')}<span style={{ color: '#EF9F27' }}>{match[1]}</span></>
+    }
+    return body
   }
 
   if (!userId) return null
@@ -158,10 +188,10 @@ export default function NotificationBell() {
                 onMouseLeave={e => (e.currentTarget.style.background = n.read ? 'transparent' : '#111')}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{n.title}</span>
-                  <span style={{ fontSize: '9px', color: '#cce0f5', flexShrink: 0, marginLeft: '8px' }}>{timeAgo(n.created_at)}</span>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{n.title}</span>
+                  <span style={{ fontSize: '13px', color: '#cce0f5', flexShrink: 0, marginLeft: '8px' }}>{timeAgo(n.created_at)}</span>
                 </div>
-                <div style={{ fontSize: '11px', color: '#d4cfc9', lineHeight: 1.4 }}>{n.body}</div>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.4 }}>{colorizeBody(n.body, n.type)}</div>
               </div>
             ))
           )}
