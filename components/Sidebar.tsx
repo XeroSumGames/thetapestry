@@ -1,12 +1,14 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { useRouter } from 'next/navigation'
 import NotificationBell from './NotificationBell'
 
 export default function Sidebar() {
   const [username, setUsername] = useState('')
   const [userRole, setUserRole] = useState<'survivor' | 'thriver' | null>(null)
   const [pendingCount, setPendingCount] = useState(0)
+  const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
@@ -56,13 +58,21 @@ export default function Sidebar() {
   return (
     <div style={{ width: '220px', flexShrink: 0, background: '#1a1a1a', borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
 
+      {/* Branding */}
+      <div style={{ padding: '12px 14px 8px', borderBottom: '1px solid #c0392b' }}>
+        <a href="/dashboard" style={{ textDecoration: 'none' }}>
+          <div style={{ fontFamily: 'Distemper, sans-serif', fontSize: '20px', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1 }}>The Tapestry</div>
+        </a>
+        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginTop: '2px' }}>DistemperVerse v1.0</div>
+      </div>
+
       {/* User header */}
-      <div style={{ padding: '16px 14px 8px', fontSize: '13px', color: '#f5f2ee', letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', borderBottom: '1px solid #2e2e2e', marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
+      <div style={{ padding: '10px 14px 8px', fontSize: '13px', color: '#f5f2ee', letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', borderBottom: '1px solid #2e2e2e', marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
         <span style={{ flex: 1 }}>
           {username}
           {userRole === 'thriver'
-            ? <span style={{ marginLeft: '6px', background: '#c0392b', color: '#fff', fontSize: '10px', padding: '1px 5px', borderRadius: '2px' }}>thriver</span>
-            : <span style={{ marginLeft: '6px', background: '#2d5a1b', color: '#7fc458', fontSize: '10px', padding: '1px 5px', borderRadius: '2px' }}>Survivor</span>
+            ? <span style={{ marginLeft: '6px', background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 5px', borderRadius: '2px' }}>thriver</span>
+            : <span style={{ marginLeft: '6px', background: '#2d5a1b', color: '#7fc458', fontSize: '13px', padding: '1px 5px', borderRadius: '2px' }}>Survivor</span>
           }
         </span>
         <NotificationBell />
@@ -77,12 +87,15 @@ export default function Sidebar() {
 
       {divider}
 
-      {/* Moderation — thrivers only */}
+      {/* Thriver tools */}
       {userRole === 'thriver' && (
-        <a href="/moderate" style={{ ...linkStyle('#EF9F27'), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
-          Moderation Queue
-          {pendingCount > 0 && <span style={{ background: '#c0392b', color: '#fff', fontSize: '10px', padding: '1px 6px', borderRadius: '3px' }}>{pendingCount}</span>}
-        </a>
+        <>
+          <a href="/moderate" style={{ ...linkStyle('#EF9F27'), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
+            Moderation Queue
+            {pendingCount > 0 && <span style={{ background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 6px', borderRadius: '3px' }}>{pendingCount}</span>}
+          </a>
+          <a href="/logging" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Logs</a>
+        </>
       )}
 
       {divider}
@@ -106,9 +119,25 @@ export default function Sidebar() {
         { href: '#', label: 'Looking for Group' },
       ].map(({ href, label }) => (
         <a key={label} href={href} style={soonStyle}>
-          {label} <span style={{ fontSize: '9px', color: '#cce0f5' }}>&mdash; soon</span>
+          {label} <span style={{ fontSize: '13px', color: '#cce0f5' }}>&mdash; soon</span>
         </a>
       ))}
+
+      {/* Spacer + bottom section */}
+      <div style={{ flex: 1 }} />
+
+      <div style={{ padding: '8px 14px', borderTop: '1px solid #2e2e2e' }}>
+        <button onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
+          style={{ width: '100%', padding: '8px', background: 'none', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          Log Out
+        </button>
+      </div>
+
+      <div style={{ padding: '8px 14px 12px', textAlign: 'center' }}>
+        <a href="https://www.xerosumgames.com" target="_blank" rel="noreferrer">
+          <img src="/XeroSumGamesLogoV13.png" alt="Xero Sum Games" style={{ height: '18px', objectFit: 'contain', opacity: 0.6 }} />
+        </a>
+      </div>
 
     </div>
   )

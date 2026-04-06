@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import NavBar from "../components/NavBar";
 import LayoutShell from "../components/LayoutShell";
 import VisitLogger from "../components/VisitLogger";
 
@@ -23,7 +22,6 @@ export default function RootLayout({
         <link rel="preload" href="/fonts/Distemper.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
       </head>
       <body style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', background: '#0f0f0f', margin: 0, padding: 0, fontFamily: 'Barlow, sans-serif', fontSize: '15px' }}>
-        <NavBar />
         <VisitLogger />
         <LayoutShell>{children}</LayoutShell>
       </body>
