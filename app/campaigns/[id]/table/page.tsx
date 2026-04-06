@@ -6,6 +6,8 @@ import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
 import NpcRoster from '../../../../components/NpcRoster'
 import NpcCard from '../../../../components/NpcCard'
 import CampaignPins from '../../../../components/CampaignPins'
+import dynamic from 'next/dynamic'
+const CampaignMap = dynamic(() => import('../../../../components/CampaignMap'), { ssr: false })
 import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { logEvent } from '../../../../lib/events'
 import { rollDamage, calculateDamage } from '../../../../lib/damage'
@@ -1086,17 +1088,8 @@ export default function TablePage() {
               />
             </div>
           ) : (
-            /* Tactical Map placeholder */
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ fontSize: '48px', opacity: 0.3 }}>🗺</div>
-              <div style={{ fontSize: '13px', color: '#3a3a3a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase' }}>Tactical Map — Coming Soon</div>
-              {!entriesLoading && entries.length === 0 && (
-                <div style={{ marginTop: '1rem', background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.5rem', textAlign: 'center' }}>
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>No character sheets yet.</div>
-                  <div style={{ fontSize: '13px', color: '#cce0f5' }}>Players need to assign a character before entering the table.</div>
-                </div>
-              )}
-            </div>
+            /* Campaign Map */
+            <CampaignMap campaignId={id} isGM={isGM} />
           )}
           {/* Revealed NPCs — always visible at bottom */}
           {!isGM && revealedNpcs.length > 0 && (
