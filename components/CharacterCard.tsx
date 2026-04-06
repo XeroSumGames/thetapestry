@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
 import { logEvent } from '../lib/events'
-import { getWeaponByName, conditionColor, CONDITION_CMOD, Condition } from '../lib/weapons'
+import { getWeaponByName, conditionColor, CONDITION_CMOD, CONDITIONS, Condition, ALL_WEAPONS, MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS } from '../lib/weapons'
 import PrintSheet from './wizard/PrintSheet'
 import { WizardState, createWizardState } from '../lib/xse-engine'
 import { SKILLS } from '../lib/xse-schema'
@@ -105,6 +105,22 @@ export default function CharacterCard({
   const [printing, setPrinting] = useState(false)
   const [breakingPointResult, setBreakingPointResult] = useState<{ roll: number; result: { name: string; effect: string } } | null>(null)
   const [lastingWoundResult, setLastingWoundResult] = useState<{ roll: number; result: { name: string; effect: string } } | null>(null)
+
+  // Weapon local state
+  const [weaponPrimary, setWeaponPrimary] = useState(c.data?.weaponPrimary ?? { weaponName: '', condition: 'Used', ammoCurrent: 0, ammoMax: 0, reloads: 0 })
+  const [weaponSecondary, setWeaponSecondary] = useState(c.data?.weaponSecondary ?? { weaponName: '', condition: 'Used', ammoCurrent: 0, ammoMax: 0, reloads: 0 })
+
+  async function saveWeapon(slot: 'weaponPrimary' | 'weaponSecondary', data: any) {
+    if (slot === 'weaponPrimary') setWeaponPrimary(data)
+    else setWeaponSecondary(data)
+    await supabase.from('characters').update({ data: { ...c.data, [slot]: data } }).eq('id', c.id)
+  }
+
+  function changeWeapon(slot: 'weaponPrimary' | 'weaponSecondary', weaponName: string) {
+    const w = getWeaponByName(weaponName)
+    const newData = { weaponName, condition: 'Used' as Condition, ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? Math.floor(Math.random() * 3) + 1 : 0 }
+    saveWeapon(slot, newData)
+  }
 
   // Local optimistic state — mirrors liveState, updates instantly on click
   const [localState, setLocalState] = useState<LiveState | null>(liveState ?? null)
@@ -465,46 +481,86 @@ export default function CharacterCard({
         </div>
 
         {/* Weapons */}
-        {(c.data?.weaponPrimary?.weaponName || c.data?.weaponSecondary?.weaponName) && (
-          <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginTop: '10px' }}>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {[
-                { label: 'Primary', weapon: c.data?.weaponPrimary },
-                { label: 'Secondary', weapon: c.data?.weaponSecondary },
-              ].filter(w => w.weapon?.weaponName).map(({ label, weapon }) => {
-                const w = getWeaponByName(weapon.weaponName)
-                const cond = (weapon.condition as Condition) ?? 'Used'
-                const cmodVal = CONDITION_CMOD[cond]
-                return (
-                  <div key={label} style={{ flex: 1, minWidth: '200px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{weapon.weaponName}</span>
-                      <span style={{ fontSize: '13px', color: conditionColor(cond), fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{cond}{cmodVal !== 0 ? ` (${cmodVal > 0 ? '+' : ''}${cmodVal})` : ''}</span>
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>
-                      {label} · {w?.skill ?? 'Unknown'} · {w?.range ?? '?'}
-                    </div>
-                    {w && (
-                      <div style={{ display: 'flex', gap: '8px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                        <span>DMG <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span></span>
-                        <span>RP <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span></span>
-                        {w.clip && <span>Ammo <span style={{ color: '#EF9F27' }}>{weapon.ammoCurrent ?? w.clip}/{w.clip}</span></span>}
-                        {weapon.reloads > 0 && <span>Reloads <span style={{ color: '#7fc458' }}>{weapon.reloads}</span></span>}
-                      </div>
-                    )}
-                    {w?.traits && w.traits.length > 0 && (
-                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
-                        {w.traits.map(t => (
-                          <span key={t} style={{ fontSize: '13px', padding: '0 4px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>{t}</span>
-                        ))}
-                      </div>
-                    )}
+        <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginTop: '10px' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {([
+              { label: 'Primary', slot: 'weaponPrimary' as const, weapon: weaponPrimary, setWeapon: (d: any) => saveWeapon('weaponPrimary', d) },
+              { label: 'Secondary', slot: 'weaponSecondary' as const, weapon: weaponSecondary, setWeapon: (d: any) => saveWeapon('weaponSecondary', d) },
+            ]).map(({ label, slot, weapon, setWeapon }) => {
+              const w = getWeaponByName(weapon.weaponName)
+              const cond = (weapon.condition as Condition) ?? 'Used'
+              const cmodVal = CONDITION_CMOD[cond]
+              return (
+                <div key={label} style={{ flex: 1, minWidth: '200px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px' }}>
+                  {/* Weapon selector */}
+                  <div style={{ marginBottom: '6px' }}>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '3px' }}>{label}</div>
+                    <select value={weapon.weaponName} onChange={e => changeWeapon(slot, e.target.value)} disabled={!canEdit}
+                      style={{ width: '100%', padding: '4px 6px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', cursor: canEdit ? 'pointer' : 'default' }}>
+                      <option value="">— None —</option>
+                      <optgroup label="Melee">{MELEE_WEAPONS.map(mw => <option key={mw.name} value={mw.name}>{mw.name}</option>)}</optgroup>
+                      <optgroup label="Ranged">{RANGED_WEAPONS.map(rw => <option key={rw.name} value={rw.name}>{rw.name}</option>)}</optgroup>
+                      <optgroup label="Explosive">{EXPLOSIVE_WEAPONS.map(ew => <option key={ew.name} value={ew.name}>{ew.name}</option>)}</optgroup>
+                      <optgroup label="Heavy">{HEAVY_WEAPONS.map(hw => <option key={hw.name} value={hw.name}>{hw.name}</option>)}</optgroup>
+                    </select>
                   </div>
-                )
-              })}
-            </div>
+                  {w && (
+                    <>
+                      {/* Condition + stats */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                          {w.skill} · {w.range} · DMG <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span> · RP <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span>
+                        </div>
+                      </div>
+                      {/* Condition selector */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>Condition:</span>
+                        <select value={cond} onChange={e => setWeapon({ ...weapon, condition: e.target.value })} disabled={!canEdit}
+                          style={{ padding: '2px 4px', background: '#1a1a1a', border: `1px solid ${conditionColor(cond)}`, borderRadius: '3px', color: conditionColor(cond), fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', cursor: canEdit ? 'pointer' : 'default' }}>
+                          {CONDITIONS.map(co => <option key={co} value={co}>{co} ({CONDITION_CMOD[co] > 0 ? '+' : ''}{CONDITION_CMOD[co]})</option>)}
+                        </select>
+                      </div>
+                      {/* Ammo pips */}
+                      {w.clip && w.clip > 0 && (
+                        <div style={{ marginBottom: '4px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', flexShrink: 0 }}>Ammo</span>
+                            <div style={{ display: 'flex', gap: '1px', flexWrap: 'wrap' }}>
+                              {Array.from({ length: w.clip }).map((_, i) => (
+                                <div key={i}
+                                  onClick={() => { if (!canEdit) return; const newAmmo = i < weapon.ammoCurrent ? i : i + 1; setWeapon({ ...weapon, ammoCurrent: newAmmo }) }}
+                                  style={{ width: '8px', height: '12px', borderRadius: '1px', background: i < weapon.ammoCurrent ? '#EF9F27' : '#242424', border: `1px solid ${i < weapon.ammoCurrent ? '#EF9F27' : '#3a3a3a'}`, cursor: canEdit ? 'pointer' : 'default', transition: 'background 0.1s' }} />
+                              ))}
+                            </div>
+                            <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, flexShrink: 0 }}>{weapon.ammoCurrent}/{w.clip}</span>
+                          </div>
+                          {/* Reload button */}
+                          {weapon.reloads > 0 && (
+                            <button onClick={() => { if (!canEdit) return; setWeapon({ ...weapon, ammoCurrent: w.clip, reloads: weapon.reloads - 1 }) }}
+                              style={{ marginTop: '4px', padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: canEdit ? 'pointer' : 'default' }}>
+                              Reload ({weapon.reloads} left)
+                            </button>
+                          )}
+                          {weapon.reloads === 0 && weapon.ammoCurrent === 0 && (
+                            <div style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px', fontWeight: 700 }}>EMPTY — NO RELOADS</div>
+                          )}
+                        </div>
+                      )}
+                      {/* Traits */}
+                      {w.traits.length > 0 && (
+                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
+                          {w.traits.map(t => (
+                            <span key={t} style={{ fontSize: '13px', padding: '0 4px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>{t}</span>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )
+            })}
           </div>
-        )}
+        </div>
 
       </div>
 
