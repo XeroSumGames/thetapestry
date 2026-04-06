@@ -149,6 +149,7 @@ export default function CampaignsPage() {
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <a href={`/campaigns/${c.id}`} style={{ padding: '5px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Enter</a>
                   <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/join/${c.invite_code}`); alert('Invite link copied to clipboard!') }} style={{ padding: '5px 14px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Share</button>
+                  <button onClick={async () => { if (!confirm(`Leave ${c.name}?`)) return; await supabase.from('campaign_members').delete().eq('campaign_id', c.id).eq('user_id', userId!); setPlayerCampaigns(prev => prev.filter(x => x.id !== c.id)) }} style={{ padding: '5px 14px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Leave</button>
                 </div>
               </div>
             ))}
