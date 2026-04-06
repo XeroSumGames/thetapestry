@@ -39,6 +39,7 @@ export default function LoggingPage() {
   const [ghostVisits7d, setGhostVisits7d] = useState(0)
   const [pendingPins, setPendingPins] = useState(0)
   const [pendingNpcs, setPendingNpcs] = useState(0)
+  const [topPages, setTopPages] = useState<{ page: string; count: number }[]>([])
 
   useEffect(() => {
     async function load() {
@@ -77,6 +78,12 @@ export default function LoggingPage() {
         setGhostVisits7d(gv ?? 0)
         setPendingPins(pp ?? 0)
         setPendingNpcs(pn ?? 0)
+
+        // Top pages
+        const { data: visitRows } = await supabase.from('visitor_logs').select('page').gte('created_at', d7)
+        const pageCounts: Record<string, number> = {}
+        for (const row of visitRows ?? []) pageCounts[row.page] = (pageCounts[row.page] ?? 0) + 1
+        setTopPages(Object.entries(pageCounts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([page, count]) => ({ page, count })))
         const rawVisitors = vData ?? []
         if (rawVisitors.length > 0) {
           const vUserIds = [...new Set(rawVisitors.filter((v: any) => v.user_id).map((v: any) => v.user_id))]
@@ -147,7 +154,6 @@ export default function LoggingPage() {
           Activity Log
         </div>
         <div style={{ flex: 1 }} />
-        <a href="/admin/dashboard" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Dashboard</a>
         <a href="/moderate" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Moderation</a>
       </div>
 
@@ -177,6 +183,21 @@ export default function LoggingPage() {
           <span style={{ fontSize: '18px', fontWeight: 700, color: pendingNpcs > 0 ? '#EF9F27' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>{pendingNpcs}</span>
         </a>
       </div>
+
+      {/* Top Pages */}
+      {topPages.length > 0 && (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Top Pages (7d)</div>
+          <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
+            {topPages.map((p, i) => (
+              <div key={p.page} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: i < topPages.length - 1 ? '1px solid #2e2e2e' : 'none' }}>
+                <span style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif' }}>{p.page}</span>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>{p.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem' }}>

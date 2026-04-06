@@ -51,10 +51,11 @@ export default function SessionHistoryPage() {
 
       const sessIds = (sessData ?? []).map(s => s.id)
       if (sessIds.length > 0) {
-        const { data: attData } = await supabase
+        const { data: attData, error: attErr } = await supabase
           .from('session_attachments')
           .select('*')
           .in('session_id', sessIds)
+        console.log('[Sessions] attachments:', attData?.length, 'error:', attErr?.message)
         setAttachments(attData ?? [])
       }
 
@@ -113,9 +114,9 @@ export default function SessionHistoryPage() {
   return (
     <div style={{ padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <a href={`/campaigns/${id}/table`}
-          style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+          style={{ padding: '12px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
           Back to Table
         </a>
         <div>
