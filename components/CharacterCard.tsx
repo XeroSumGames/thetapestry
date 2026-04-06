@@ -533,14 +533,11 @@ export default function CharacterCard({
                             ))}
                           </div>
                           <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, flexShrink: 0 }}>{weapon.ammoCurrent}/{w.clip}</span>
-                          {weapon.reloads > 0 ? (
-                            <button onClick={() => { if (!canEdit) return; setWeapon({ ...weapon, ammoCurrent: w.clip, reloads: weapon.reloads - 1 }) }}
-                              style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: canEdit ? 'pointer' : 'default' }}>
-                              Reload
-                            </button>
-                          ) : weapon.ammoCurrent === 0 ? (
-                            <span style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>EMPTY</span>
-                          ) : null}
+                          <button onClick={() => { if (!canEdit || weapon.reloads <= 0) return; setWeapon({ ...weapon, ammoCurrent: w.clip, reloads: weapon.reloads - 1 }) }}
+                            disabled={!canEdit || weapon.reloads <= 0}
+                            style={{ padding: '2px 8px', background: weapon.reloads > 0 ? '#1a2e10' : '#2a1210', border: `1px solid ${weapon.reloads > 0 ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', color: weapon.reloads > 0 ? '#7fc458' : '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: canEdit && weapon.reloads > 0 ? 'pointer' : 'not-allowed', opacity: canEdit ? 1 : 0.5 }}>
+                            Reload
+                          </button>
                           {/* Reload tracker — 5 pips */}
                           <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', flexShrink: 0 }}>Clips</span>
                           <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
