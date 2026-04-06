@@ -507,7 +507,7 @@ export default function CharacterCard({
                   {w && (
                     <>
                       {/* Stats + Condition on one line */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px', flexWrap: 'wrap' }}>
                         <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>Skill:</span> {w.skill}</span>
                         <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>Range:</span> {w.range}</span>
                         <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>WP Damage:</span> <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span></span>
