@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
+import { logEvent } from '../lib/events'
 export default function NavBar() {
   const [userRole, setUserRole] = useState<'survivor' | 'thriver' | null>(null)
   const router = useRouter()
@@ -20,6 +21,7 @@ export default function NavBar() {
     load()
   }, [])
   async function handleLogout() {
+    await logEvent('logout')
     await supabase.auth.signOut()
     router.push('/login')
   }

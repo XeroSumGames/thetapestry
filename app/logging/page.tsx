@@ -9,7 +9,10 @@ interface VisitorLog {
   page: string
   referrer: string | null
   is_ghost: boolean
+  ip_address: string | null
+  user_id: string | null
   created_at: string
+  username?: string
 }
 
 interface UserEvent {
@@ -74,7 +77,17 @@ export default function LoggingPage() {
         setGhostVisits7d(gv ?? 0)
         setPendingPins(pp ?? 0)
         setPendingNpcs(pn ?? 0)
-        setVisitors(vData ?? [])
+        const rawVisitors = vData ?? []
+        if (rawVisitors.length > 0) {
+          const vUserIds = [...new Set(rawVisitors.filter((v: any) => v.user_id).map((v: any) => v.user_id))]
+          if (vUserIds.length > 0) {
+            const { data: vProfiles } = await supabase.from('profiles').select('id, username').in('id', vUserIds)
+            const vNameMap = Object.fromEntries((vProfiles ?? []).map((p: any) => [p.id, p.username]))
+            setVisitors(rawVisitors.map((v: any) => ({ ...v, username: v.user_id ? vNameMap[v.user_id] : undefined })))
+          } else {
+            setVisitors(rawVisitors)
+          }
+        }
         setVisitorCount(vCount ?? 0)
 
         // Get usernames for events
@@ -181,9 +194,9 @@ export default function LoggingPage() {
           {/* Table header */}
           <div style={{ display: 'flex', padding: '8px 12px', borderBottom: '1px solid #2e2e2e', background: '#111' }}>
             <div style={{ flex: 2, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Page</div>
-            <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Type</div>
+            <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>User</div>
+            <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>IP</div>
             <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>When</div>
-            <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Session</div>
           </div>
           {visitors.length === 0 ? (
             <div style={{ padding: '2rem', textAlign: 'center', color: '#cce0f5', fontSize: '13px' }}>No visitor logs yet.</div>
@@ -192,13 +205,11 @@ export default function LoggingPage() {
               {visitors.map(v => (
                 <div key={v.id} style={{ display: 'flex', padding: '6px 12px', borderBottom: '1px solid #2e2e2e', alignItems: 'center' }}>
                   <div style={{ flex: 2, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.page}</div>
-                  <div style={{ flex: 1 }}>
-                    <span style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: v.is_ghost ? '#1a1a2e' : '#1a2e10', border: `1px solid ${v.is_ghost ? '#2e2e5a' : '#2d5a1b'}`, color: v.is_ghost ? '#7ab3d4' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
-                      {v.is_ghost ? 'Ghost' : 'User'}
-                    </span>
+                  <div style={{ flex: 1, fontSize: '13px', color: v.username ? '#7fc458' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {v.username ?? (v.is_ghost ? 'Ghost' : 'User')}
                   </div>
+                  <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.ip_address ?? '—'}</div>
                   <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5' }}>{timeAgo(v.created_at)}</div>
-                  <div style={{ flex: 1, fontSize: '13px', color: '#3a3a3a', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.session_id.slice(0, 8)}</div>
                 </div>
               ))}
             </div>

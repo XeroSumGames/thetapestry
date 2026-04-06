@@ -4,6 +4,7 @@ import { createClient } from '../../../../lib/supabase-browser'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
 import NpcRoster from '../../../../components/NpcRoster'
+import { logEvent } from '../../../../lib/events'
 
 interface Campaign {
   id: string
@@ -518,6 +519,7 @@ export default function TablePage() {
     })
     setSessionStatus('active')
     setSessionCount(newCount)
+    logEvent('session_started', { campaign_id: id, session_number: newCount })
     setSessionActing(false)
   }
 
@@ -570,6 +572,7 @@ export default function TablePage() {
     setSessionSummary('')
     setNextSessionNotes('')
     setSessionFiles([])
+    logEvent('session_ended', { campaign_id: id, session_number: sessionCount })
     setSessionActing(false)
   }
 
@@ -602,6 +605,7 @@ export default function TablePage() {
       die1, die2, amod, smod, cmod: cmodVal, total, outcome, insight_awarded: insightAwarded,
       target_name: target || null,
     })
+    logEvent('roll', { campaign_id: id, label, total, outcome, target, character: characterName })
 
     return { total, outcome, insightAwarded }
   }

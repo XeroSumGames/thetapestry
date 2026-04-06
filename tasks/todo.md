@@ -101,11 +101,24 @@
 
 ---
 
-## 🟠 Logging & Notifications — 4 Passes
+## 🟠 Logging & Notifications
 - [x] Pass 1 — Database & event logging (visitor_logs, user_events, notifications tables, logVisit/logEvent utilities)
 - [x] Pass 2 — Notification creation via DB triggers (new signup, new pin, session opened, player joined, pin approved)
 - [x] Pass 3 — Notification bell UI (bell icon, unread count, Realtime, dropdown, mark as read)
 - [x] Pass 4 — Thriver dashboard & email alerts (signup stats, active campaigns, moderation counts, Resend email alerts)
+- [x] Pass 5 — IP capture via Edge Function, /logging page, stat cards
+- [x] Core event logging — login, logout, roll, session start/end, character delete/duplicate, campaign create
+
+### Remaining Event Instrumentation
+- [ ] Character edited/saved
+- [ ] Campaign left by player
+- [ ] Campaign deleted by GM
+- [ ] NPC created/edited/deleted
+- [ ] Map pin edited/deleted
+- [ ] Profile updated
+- [ ] Password changed
+- [ ] Combat started/ended
+- [ ] Initiative actions logged
 
 ---
 

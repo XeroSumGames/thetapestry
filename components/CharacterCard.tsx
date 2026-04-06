@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
+import { logEvent } from '../lib/events'
 import PrintSheet from './wizard/PrintSheet'
 import { WizardState, createWizardState } from '../lib/xse-engine'
 import { SKILLS } from '../lib/xse-schema'
@@ -107,6 +108,7 @@ export default function CharacterCard({
 
   async function handleDelete() {
     setDeleting(true)
+    logEvent('character_deleted', { id: c.id, name: c.name })
     if (onDelete) { onDelete(c.id); setDeleting(false); return }
     await supabase.from('characters').delete().eq('id', c.id)
     setDeleting(false)
@@ -115,6 +117,7 @@ export default function CharacterCard({
 
   async function handleDuplicate() {
     setDuplicating(true)
+    logEvent('character_duplicated', { id: c.id, name: c.name })
     if (onDuplicate) { onDuplicate(c); setDuplicating(false); return }
     const { data: { user } } = await supabase.auth.getUser()
     if (user) await supabase.from('characters').insert({ user_id: user.id, name: `Copy of ${c.name}`, data: c.data })

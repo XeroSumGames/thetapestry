@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
+import { logEvent } from '../../../lib/events'
 
 const SETTINGS = [
   { value: 'custom', label: 'New Setting' },
@@ -47,6 +48,7 @@ export default function NewCampaignPage() {
       campaign_id: data.id,
       user_id: user.id,
     })
+    logEvent('campaign_created', { id: data.id, name })
     router.push(`/campaigns/${data.id}`)
   }
 
