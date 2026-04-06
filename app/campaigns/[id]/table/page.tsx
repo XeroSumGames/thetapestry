@@ -159,6 +159,7 @@ export default function TablePage() {
   const [sessionFiles, setSessionFiles] = useState<File[]>([])
   const [sessionActing, setSessionActing] = useState(false)
   const [gmTab, setGmTab] = useState<'npcs' | 'notes'>('npcs')
+  const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
   const campaignChannelRef = useRef<any>(null)
 
   async function loadEntries(campaignId: string) {
@@ -798,6 +799,10 @@ export default function TablePage() {
             End Combat
           </button>
         )}
+        <button onClick={() => setSheetMode(m => m === 'inline' ? 'overlay' : 'inline')}
+          style={{ padding: '0 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          {sheetMode === 'inline' ? 'Overlay' : 'Inline'}
+        </button>
         <a href={`/campaigns/${id}`} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           Back
         </a>
@@ -939,30 +944,51 @@ export default function TablePage() {
           </div>
         </div>
 
-        {/* Center — Tactical Map */}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1a1a1a', flexDirection: 'column', gap: '12px', overflow: 'hidden', position: 'relative' }}>
-          <div style={{ fontSize: '48px', opacity: 0.3 }}>🗺</div>
-          <div style={{ fontSize: '13px', color: '#3a3a3a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase' }}>Tactical Map — Coming Soon</div>
-          {!entriesLoading && entries.length === 0 && (
-            <div style={{ marginTop: '1rem', background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.5rem', textAlign: 'center' }}>
-              <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>No character sheets yet.</div>
-              <div style={{ fontSize: '11px', color: '#cce0f5' }}>Players need to assign a character before entering the table.</div>
+        {/* Center — Character Sheet or Tactical Map */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
+          {syncedSelectedEntry && sheetMode === 'inline' ? (
+            /* Inline character sheet */
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
+              <CharacterCard
+                character={syncedSelectedEntry.character}
+                liveState={syncedSelectedEntry.liveState}
+                canEdit={isGM || syncedSelectedEntry.userId === userId}
+                showButtons={true}
+                isMySheet={syncedSelectedEntry.userId === userId}
+                onStatUpdate={handleStatUpdate}
+                onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod) => { handleRollRequest(label, amod, smod) } : undefined}
+                onClose={() => setSelectedEntry(null)}
+                inline={true}
+              />
+            </div>
+          ) : (
+            /* Tactical Map placeholder */
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ fontSize: '48px', opacity: 0.3 }}>🗺</div>
+              <div style={{ fontSize: '13px', color: '#3a3a3a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase' }}>Tactical Map — Coming Soon</div>
+              {!entriesLoading && entries.length === 0 && (
+                <div style={{ marginTop: '1rem', background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.5rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>No character sheets yet.</div>
+                  <div style={{ fontSize: '13px', color: '#cce0f5' }}>Players need to assign a character before entering the table.</div>
+                </div>
+              )}
             </div>
           )}
+          {/* Revealed NPCs — always visible at bottom */}
           {!isGM && revealedNpcs.length > 0 && (
-            <div style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center', pointerEvents: 'none' }}>
               {revealedNpcs.map((npc: any) => (
-                <div key={npc.id} style={{ padding: '6px 10px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '8px', minWidth: '120px' }}>
+                <div key={npc.id} style={{ padding: '6px 10px', background: 'rgba(26,26,26,0.9)', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '8px', minWidth: '120px', pointerEvents: 'auto' }}>
                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                    {npc.portrait_url ? <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '9px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>}
+                    {npc.portrait_url ? <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>}
                   </div>
                   <div>
-                    <div style={{ fontSize: '11px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
                     {npc.reveal_level === 'name_portrait_role' && npc.recruitment_role && (
-                      <div style={{ fontSize: '9px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.recruitment_role}</div>
+                      <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.recruitment_role}</div>
                     )}
                     {npc.relationship_cmod !== 0 && (
-                      <div style={{ fontSize: '9px', color: npc.relationship_cmod > 0 ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      <div style={{ fontSize: '13px', color: npc.relationship_cmod > 0 ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>
                         Your relationship: {npc.relationship_cmod > 0 ? `+${npc.relationship_cmod}` : npc.relationship_cmod}
                       </div>
                     )}
@@ -1044,8 +1070,8 @@ export default function TablePage() {
         })()}
       </div>
 
-      {/* Character sheet overlay */}
-      {syncedSelectedEntry && (
+      {/* Character sheet overlay — only in overlay mode */}
+      {syncedSelectedEntry && sheetMode === 'overlay' && (
         <div onClick={() => setSelectedEntry(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ maxWidth: '780px', width: '100%', maxHeight: '90vh', overflow: 'auto', borderRadius: '4px' }}>
             <CharacterCard
@@ -1057,7 +1083,7 @@ export default function TablePage() {
               onStatUpdate={handleStatUpdate}
               onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod) => { setSelectedEntry(null); handleRollRequest(label, amod, smod) } : undefined}
             />
-            <button onClick={() => setSelectedEntry(null)} style={{ marginTop: '8px', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            <button onClick={() => setSelectedEntry(null)} style={{ marginTop: '8px', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Close
             </button>
           </div>
