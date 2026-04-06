@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import CharacterCard from '../../components/CharacterCard'
+import { createTestCharacter } from '../../scripts/create-test-character'
 
 interface CharacterRow {
   id: string
@@ -14,6 +15,7 @@ interface CharacterRow {
 export default function CharactersPage() {
   const [characters, setCharacters] = useState<CharacterRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [isThriver, setIsThriver] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -21,6 +23,8 @@ export default function CharactersPage() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      if (profile?.role?.toLowerCase() === 'thriver') setIsThriver(true)
       const { data } = await supabase
         .from('characters')
         .select('id, name, created_at, data')
@@ -58,7 +62,19 @@ export default function CharactersPage() {
           My Survivors
         </div>
         <div style={{ flex: 1 }} />
-        <a href='/characters/new' style={{ padding: '7px 18px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        {isThriver && (
+          <button onClick={async () => {
+            const result = await createTestCharacter(supabase)
+            if (result) {
+              const { data } = await supabase.from('characters').select('id, name, created_at, data').eq('user_id', result.user_id).order('created_at', { ascending: false })
+              setCharacters(data ?? [])
+            }
+          }}
+            style={{ padding: '7px 18px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            + Test Character
+          </button>
+        )}
+        <a href='/characters/new' style={{ padding: '7px 18px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           New Character
         </a>
       </div>

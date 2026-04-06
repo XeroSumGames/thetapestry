@@ -17,8 +17,8 @@ const TEST_CHARACTER = {
   height: '5\'10"',
   weight: '175 lbs',
   profession: 'Military',
-  concept: 'A battle-hardened former soldier trying to find purpose in the aftermath.',
-  physdesc: 'Weathered face, close-cropped dark hair, a jagged scar running from his left ear to his jaw.',
+  concept: 'A battle-hardened former soldier trying to find purpose in the aftermath. Likes ice cream',
+  physdesc: 'Weathered face, close-cropped dark hair, a jagged scar running from his left ear to his jaw. Has a weird tic',
   photoDataUrl: '',
   threeWords: ['Stoic', 'Resourceful', 'Haunted'],
   creationMethod: 'backstory' as const,
@@ -27,13 +27,14 @@ const TEST_CHARACTER = {
 
   skills: [
     { skillName: 'Ranged Combat', level: 3 },
-    { skillName: 'Athletics', level: 2 },
+    { skillName: 'Athletics', level: 3 },
     { skillName: 'Melee Combat', level: 2 },
     { skillName: 'Tactics', level: 1 },
     { skillName: 'Stealth', level: 1 },
     { skillName: 'Survival', level: 1 },
     { skillName: 'Navigation', level: 1 },
     { skillName: 'Heavy Weapons', level: 1 },
+    { skillName: 'Scavenger', level: 1 },
   ],
 
   secondary: {
