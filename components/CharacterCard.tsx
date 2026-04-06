@@ -500,9 +500,14 @@ export default function CharacterCard({
                   </div>
                   {w && (
                     <>
-                      {/* Line 1: Skill, Range, Condition */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>
+                      {/* Line 1: Skill, WP Damage, RP */}
+                      <div style={{ display: 'flex', gap: '8px', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>
                         <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>Skill:</span> {w.skill}</span>
+                        <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>WP Damage:</span> <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span></span>
+                        <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>RP:</span> <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span></span>
+                      </div>
+                      {/* Line 2: Range, Condition */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
                         <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>Range:</span> {w.range}</span>
                         <div style={{ flex: 1 }} />
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
@@ -512,11 +517,6 @@ export default function CharacterCard({
                             {CONDITIONS.map(co => <option key={co} value={co}>{co} ({CONDITION_CMOD[co] > 0 ? '+' : ''}{CONDITION_CMOD[co]})</option>)}
                           </select>
                         </span>
-                      </div>
-                      {/* Line 2: WP Damage, RP */}
-                      <div style={{ display: 'flex', gap: '8px', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
-                        <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>WP Damage:</span> <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span></span>
-                        <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>RP:</span> <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span></span>
                       </div>
                       {/* Ammo pips + reload on one line */}
                       {w.clip && w.clip > 0 && (
