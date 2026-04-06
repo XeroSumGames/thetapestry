@@ -99,10 +99,14 @@ export default function NotificationBell() {
   }
 
   function colorizeBody(body: string, type: string): React.ReactNode {
-    // "X joined Y with Z" — X green, Y red, Z blue
+    // "X joined Y as Z" or "X is now playing as Z in Y"
     if (type === 'player_joined') {
+      const matchAs = body.match(/^(.+?) joined (.+?) as (.+)$/)
+      if (matchAs) return <><span style={{ color: '#7fc458' }}>{matchAs[1]}</span> joined <span style={{ color: '#c0392b' }}>{matchAs[2]}</span> as <span style={{ color: '#7ab3d4' }}>{matchAs[3]}</span></>
+      const matchPlaying = body.match(/^(.+?) is now playing as (.+?) in (.+)$/)
+      if (matchPlaying) return <><span style={{ color: '#7fc458' }}>{matchPlaying[1]}</span> is now playing as <span style={{ color: '#7ab3d4' }}>{matchPlaying[2]}</span> in <span style={{ color: '#c0392b' }}>{matchPlaying[3]}</span></>
       const matchWith = body.match(/^(.+?) joined (.+?) with (.+)$/)
-      if (matchWith) return <><span style={{ color: '#7fc458' }}>{matchWith[1]}</span> joined <span style={{ color: '#c0392b' }}>{matchWith[2]}</span> with <span style={{ color: '#7ab3d4' }}>{matchWith[3]}</span></>
+      if (matchWith) return <><span style={{ color: '#7fc458' }}>{matchWith[1]}</span> joined <span style={{ color: '#c0392b' }}>{matchWith[2]}</span> as <span style={{ color: '#7ab3d4' }}>{matchWith[3]}</span></>
       const match = body.match(/^(.+?) joined (.+)$/)
       if (match) return <><span style={{ color: '#7fc458' }}>{match[1]}</span> joined <span style={{ color: '#c0392b' }}>{match[2]}</span></>
     }
