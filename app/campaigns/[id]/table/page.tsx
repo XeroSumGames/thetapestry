@@ -917,15 +917,15 @@ export default function TablePage() {
                   <span style={{ fontSize: '8px', color: '#EF9F27', background: '#2a2010', border: '1px solid #EF9F27', padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>NPC</span>
                 )}
                 <span style={{ fontSize: '11px', color: entry.is_active ? '#c0392b' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
+                {/* Defer — GM can defer anyone, players can defer their own */}
+                {(isGM || entry.user_id === userId) && idx < initiativeOrder.length - 1 && (
+                  <button onClick={() => deferInitiative(entry.id)}
+                    style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Defer">↓</button>
+                )}
+                {/* Remove — GM only */}
                 {isGM && (
-                  <>
-                    {idx < initiativeOrder.length - 1 && (
-                      <button onClick={() => deferInitiative(entry.id)}
-                        style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Defer">↓</button>
-                    )}
-                    <button onClick={() => removeFromInitiative(entry.id)}
-                      style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '12px', padding: '0 0 0 2px', lineHeight: 1 }}>×</button>
-                  </>
+                  <button onClick={() => removeFromInitiative(entry.id)}
+                    style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '12px', padding: '0 0 0 2px', lineHeight: 1 }}>×</button>
                 )}
               </div>
             ))}
