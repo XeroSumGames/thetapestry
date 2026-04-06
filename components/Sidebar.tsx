@@ -59,9 +59,10 @@ export default function Sidebar() {
     <div style={{ width: '220px', flexShrink: 0, background: '#1a1a1a', borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
 
       {/* Branding */}
-      <div style={{ padding: '12px 14px 8px', borderBottom: '1px solid #c0392b' }}>
+      <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid #c0392b', textAlign: 'center' }}>
         <a href="/dashboard" style={{ textDecoration: 'none' }}>
-          <div style={{ fontFamily: 'Distemper, sans-serif', fontSize: '20px', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1 }}>The Tapestry</div>
+          <img src="/DistemperLogoRedv5.png" alt="Distemper" style={{ height: '28px', objectFit: 'contain', marginBottom: '4px' }} />
+          <div style={{ fontFamily: 'Distemper, sans-serif', fontSize: '18px', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1 }}>The Tapestry</div>
         </a>
         <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginTop: '2px' }}>DistemperVerse v1.0</div>
       </div>
