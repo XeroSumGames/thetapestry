@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { logEvent } from '../../../lib/events'
+import { SETTING_PINS } from '../../../lib/setting-pins'
 
 const SETTINGS = [
   { value: 'custom', label: 'New Setting' },
@@ -48,6 +49,16 @@ export default function NewCampaignPage() {
       campaign_id: data.id,
       user_id: user.id,
     })
+    // Seed setting pins if applicable
+    const settingPins = SETTING_PINS[setting]
+    if (settingPins && settingPins.length > 0) {
+      const pinRows = settingPins.map(p => ({
+        user_id: user.id, lat: p.lat, lng: p.lng,
+        title: p.title, notes: p.notes ?? '', pin_type: 'gm',
+        status: 'approved', category: p.category ?? 'location',
+      }))
+      await supabase.from('map_pins').insert(pinRows)
+    }
     logEvent('campaign_created', { id: data.id, name })
     router.push(`/campaigns/${data.id}`)
   }
