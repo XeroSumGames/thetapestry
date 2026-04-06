@@ -739,11 +739,33 @@ export default function TablePage() {
       }
     }
 
+    // Weapon jam/break on Low Insight
+    let weaponJammed = false
+    if (pendingRoll.weapon && pendingRoll.weapon.weaponName !== 'Unarmed' && outcome === 'Low Insight') {
+      weaponJammed = true
+      // Degrade the weapon condition on the character's data
+      if (myEntry) {
+        const charData = myEntry.character.data ?? {}
+        const slots = ['weaponPrimary', 'weaponSecondary'] as const
+        for (const slot of slots) {
+          if (charData[slot]?.weaponName === pendingRoll.weapon.weaponName) {
+            const conditions = ['Pristine', 'Used', 'Worn', 'Damaged', 'Broken']
+            const currentIdx = conditions.indexOf(charData[slot].condition ?? 'Used')
+            const newCondition = conditions[Math.min(currentIdx + 1, conditions.length - 1)]
+            await supabase.from('characters').update({
+              data: { ...charData, [slot]: { ...charData[slot], condition: newCondition } }
+            }).eq('id', myEntry.character.id)
+            break
+          }
+        }
+      }
+    }
+
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, spent: preRollSpent,
-      damage: damageResult,
-    })
+      damage: damageResult, weaponJammed,
+    } as any)
 
     setRolling(false)
     await Promise.all([loadEntries(id), loadRolls(id)])
@@ -1314,6 +1336,11 @@ export default function TablePage() {
                   <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: outcomeColor(rollResult.outcome) }}>{rollResult.outcome}</div>
                   {rollResult.insightAwarded && (
                     <div style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '3px 8px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', display: 'inline-block', marginTop: '6px' }}>+1 Insight Die</div>
+                  )}
+                  {(rollResult as any).weaponJammed && (
+                    <div style={{ fontSize: '14px', color: '#c0392b', background: '#2a1210', border: '1px solid #c0392b', padding: '6px 10px', borderRadius: '3px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginTop: '8px' }}>
+                      ⚠️ Weapon Jammed! Condition degraded. Requires Ready Weapon action to unjam.
+                    </div>
                   )}
                 </div>
                 {/* Damage result */}
