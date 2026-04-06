@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
 import { logFirstEvent } from '../../../lib/events'
@@ -39,8 +39,13 @@ const QUICK_STEPS = [
 
 export default function QuickCharacterPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [state, setState] = useState<WizardState>(createWizardState)
   const [step, setStep] = useState(0)
+  const [isAuth, setIsAuth] = useState<boolean | null>(null)
+
+  useEffect(() => { supabase.auth.getUser().then(({ data: { user } }) => setIsAuth(!!user)) }, [])
+  function requireAuth() { if (isAuth === false) { router.push('/login'); return true } return false }
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -171,7 +176,7 @@ export default function QuickCharacterPage() {
       {/* Progress */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginBottom: '1.25rem' }}>
         {QUICK_STEPS.map((s, i) => (
-          <button key={i} onClick={() => { setStep(i); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={{ width: '28px', height: '28px', borderRadius: '50%', border: `1px solid ${i === step ? '#c0392b' : '#3a3a3a'}`, background: i < step ? '#c0392b' : i === step ? '#2a1210' : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 700, color: i < step ? '#fff' : i === step ? '#c0392b' : '#d4cfc9', flexShrink: 0, cursor: 'pointer', padding: 0 }}>
+          <button key={i} onClick={() => { if (requireAuth()) return; setStep(i); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={{ width: '28px', height: '28px', borderRadius: '50%', border: `1px solid ${i === step ? '#c0392b' : '#3a3a3a'}`, background: i < step ? '#c0392b' : i === step ? '#2a1210' : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 700, color: i < step ? '#fff' : i === step ? '#c0392b' : '#d4cfc9', flexShrink: 0, cursor: 'pointer', padding: 0 }}>
             {i}
           </button>
         ))}
@@ -294,7 +299,7 @@ export default function QuickCharacterPage() {
 
       {/* Nav */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #2e2e2e' }}>
-        <button onClick={() => { setStep(s => Math.max(0, s - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }} disabled={step === 0} style={navBtn(false)}>Back</button>
+        <button onClick={() => { if (requireAuth()) return; setStep(s => Math.max(0, s - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }} disabled={step === 0} style={navBtn(false)}>Back</button>
         <div style={{ textAlign: 'center' }}>
           {saveError && <div style={{ fontSize: '11px', color: '#f5a89a', marginBottom: '2px' }}>{saveError}</div>}
           {saved && <div style={{ fontSize: '11px', color: '#7fc458', marginBottom: '2px' }}>Character saved!</div>}
@@ -305,7 +310,7 @@ export default function QuickCharacterPage() {
             <button onClick={handlePrint} style={{ ...navBtn(false), borderColor: '#2d5a1b', color: '#7fc458' }}>Print Character</button>
           )}
           {step < 5
-            ? <button onClick={() => { setStep(s => Math.min(5, s + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={navBtn(true)}>Advance</button>
+            ? <button onClick={() => { if (requireAuth()) return; setStep(s => Math.min(5, s + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={navBtn(true)}>Advance</button>
             : <button onClick={handleSave} disabled={saving || saved} style={{ ...navBtn(true), opacity: saving || saved ? 0.6 : 1 }}>{saving ? 'Saving...' : saved ? 'Saved ?' : 'Save Character'}</button>
           }
         </div>

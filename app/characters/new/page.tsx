@@ -1,7 +1,8 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createWizardState, WizardState, buildCharacter } from '../../../lib/xse-engine'
 import { createClient } from '../../../lib/supabase-browser'
+import { useRouter } from 'next/navigation'
 import { logFirstEvent } from '../../../lib/events'
 import StepXero from '../../../components/wizard/StepXero'
 import StepAttr from '../../../components/wizard/StepAttr'
@@ -52,14 +53,27 @@ const STEP_INSTRUCTIONS: (string | null)[] = [
 ]
 
 export default function NewCharacterPage() {
+  const router = useRouter()
+  const supabase = createClient()
   const [state, setState] = useState<WizardState>(createWizardState)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [isAuth, setIsAuth] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setIsAuth(!!user))
+  }, [])
 
   const step = state.currentStep
 
+  function requireAuth() {
+    if (isAuth === false) { router.push('/login'); return true }
+    return false
+  }
+
   function handleChange(updated: Partial<WizardState>) {
+    if (requireAuth()) return
     setState(prev => ({ ...prev, ...updated }))
   }
 
@@ -101,7 +115,7 @@ export default function NewCharacterPage() {
       {/* Progress dots */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
         {STEPS.map((s, i) => (
-          <button key={i} onClick={() => { setState(p => ({ ...p, currentStep: i })); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+          <button key={i} onClick={() => { if (requireAuth()) return; setState(p => ({ ...p, currentStep: i })); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
             style={{
               width: '28px', height: '28px', borderRadius: '50%',
               border: `1px solid ${i === step ? '#c0392b' : '#3a3a3a'}`,
@@ -157,7 +171,7 @@ export default function NewCharacterPage() {
       {/* Nav */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #2e2e2e' }}>
         <button
-          onClick={() => { setState(p => ({ ...p, currentStep: Math.max(0, p.currentStep - 1) })); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onClick={() => { if (requireAuth()) return; setState(p => ({ ...p, currentStep: Math.max(0, p.currentStep - 1) })); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           disabled={step === 0}
           style={navBtn(false)}>
           Back
@@ -176,7 +190,7 @@ export default function NewCharacterPage() {
             </button>
           )}
           {step < 9
-            ? <button onClick={() => { setState(p => ({ ...p, currentStep: Math.min(9, p.currentStep + 1) })); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={navBtn(true)}>
+            ? <button onClick={() => { if (requireAuth()) return; setState(p => ({ ...p, currentStep: Math.min(9, p.currentStep + 1) })); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={navBtn(true)}>
                 Advance
               </button>
             : <button onClick={handleSave} disabled={saving || saved} style={{ ...navBtn(true), opacity: saving || saved ? 0.6 : 1 }}>
