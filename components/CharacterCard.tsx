@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
 import { logEvent } from '../lib/events'
+import { getWeaponByName, conditionColor, CONDITION_CMOD, Condition } from '../lib/weapons'
 import PrintSheet from './wizard/PrintSheet'
 import { WizardState, createWizardState } from '../lib/xse-engine'
 import { SKILLS } from '../lib/xse-schema'
@@ -462,6 +463,48 @@ export default function CharacterCard({
             )
           })}
         </div>
+
+        {/* Weapons */}
+        {(c.data?.weaponPrimary?.weaponName || c.data?.weaponSecondary?.weaponName) && (
+          <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginTop: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {[
+                { label: 'Primary', weapon: c.data?.weaponPrimary },
+                { label: 'Secondary', weapon: c.data?.weaponSecondary },
+              ].filter(w => w.weapon?.weaponName).map(({ label, weapon }) => {
+                const w = getWeaponByName(weapon.weaponName)
+                const cond = (weapon.condition as Condition) ?? 'Used'
+                const cmodVal = CONDITION_CMOD[cond]
+                return (
+                  <div key={label} style={{ flex: 1, minWidth: '200px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{weapon.weaponName}</span>
+                      <span style={{ fontSize: '13px', color: conditionColor(cond), fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{cond}{cmodVal !== 0 ? ` (${cmodVal > 0 ? '+' : ''}${cmodVal})` : ''}</span>
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>
+                      {label} · {w?.skill ?? 'Unknown'} · {w?.range ?? '?'}
+                    </div>
+                    {w && (
+                      <div style={{ display: 'flex', gap: '8px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        <span>DMG <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span></span>
+                        <span>RP <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span></span>
+                        {w.clip && <span>Ammo <span style={{ color: '#EF9F27' }}>{weapon.ammoCurrent ?? w.clip}/{w.clip}</span></span>}
+                        {weapon.reloads > 0 && <span>Reloads <span style={{ color: '#7fc458' }}>{weapon.reloads}</span></span>}
+                      </div>
+                    )}
+                    {w?.traits && w.traits.length > 0 && (
+                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
+                        {w.traits.map(t => (
+                          <span key={t} style={{ fontSize: '13px', padding: '0 4px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>{t}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
       </div>
 

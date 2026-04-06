@@ -52,8 +52,8 @@ const TEST_CHARACTER = {
   complication: 'Loss',
   motivation: 'Protect',
 
-  weaponPrimary: { weaponName: 'Assault Rifle', skill: 'Ranged Combat', range: 'Long', rarity: 'Uncommon', damage: '5+2d6', rpPercent: '50%', enc: 2, ammo: 'Uncommon', ammoCount: 30, traits: 'Automatic Burst (3)' },
-  weaponSecondary: { weaponName: 'Combat Knife', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '3+1d3', rpPercent: '50%', enc: 1, traits: '' },
+  weaponPrimary: { weaponName: 'Assault Rifle', condition: 'Used', ammoCurrent: 30, ammoMax: 30, reloads: 2 },
+  weaponSecondary: { weaponName: 'Hunting Knife', condition: 'Used', ammoCurrent: 0, ammoMax: 0, reloads: 0 },
 
   equipment: ['Backpack'],
   incidentalItem: 'Dog tags from his unit',
