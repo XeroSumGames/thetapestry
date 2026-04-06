@@ -377,9 +377,57 @@ export default function CharacterCard({
                     style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.stress < 5 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.stress < 5 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>+</button>
                 </div>
               </div>
-              <Counter label="Insight" value={localState.insight_dice} field="insight_dice" max={99} color="#7fc458" />
-              <Counter label="CDP" value={localState.cdp} field="cdp" max={20} color="#7ab3d4" />
-              <Counter label="Morality" value={localState.morality} field="morality" max={5} color="#d4cfc9" />
+              {/* Insight bar — 10 blocks */}
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>Insight</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
+                  <button disabled={!canEdit || localState.insight_dice <= 0}
+                    onClick={() => canEdit && localState.insight_dice > 0 && updateStat(localState.id, 'insight_dice', localState.insight_dice - 1)}
+                    style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.insight_dice > 0 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.insight_dice > 0 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>-</button>
+                  <div style={{ display: 'flex', gap: '2px' }}>
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <div key={i} style={{ width: '10px', height: '16px', borderRadius: '2px', background: i < localState.insight_dice ? '#7fc458' : '#242424', border: `1px solid ${i < localState.insight_dice ? '#7fc458' : '#3a3a3a'}`, transition: 'background 0.2s' }} />
+                    ))}
+                  </div>
+                  <button disabled={!canEdit || localState.insight_dice >= 10}
+                    onClick={() => canEdit && localState.insight_dice < 10 && updateStat(localState.id, 'insight_dice', localState.insight_dice + 1)}
+                    style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.insight_dice < 10 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.insight_dice < 10 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>+</button>
+                </div>
+              </div>
+              {/* CDP bar — 10 blocks */}
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>CDP</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
+                  <button disabled={!canEdit || localState.cdp <= 0}
+                    onClick={() => canEdit && localState.cdp > 0 && updateStat(localState.id, 'cdp', localState.cdp - 1)}
+                    style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.cdp > 0 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.cdp > 0 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>-</button>
+                  <div style={{ display: 'flex', gap: '2px' }}>
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <div key={i} style={{ width: '10px', height: '16px', borderRadius: '2px', background: i < localState.cdp ? '#7ab3d4' : '#242424', border: `1px solid ${i < localState.cdp ? '#7ab3d4' : '#3a3a3a'}`, transition: 'background 0.2s' }} />
+                    ))}
+                  </div>
+                  <button disabled={!canEdit || localState.cdp >= 10}
+                    onClick={() => canEdit && localState.cdp < 10 && updateStat(localState.id, 'cdp', localState.cdp + 1)}
+                    style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.cdp < 10 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.cdp < 10 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>+</button>
+                </div>
+              </div>
+              {/* Morality bar — 7 blocks */}
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>Morality</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
+                  <button disabled={!canEdit || localState.morality <= 0}
+                    onClick={() => canEdit && localState.morality > 0 && updateStat(localState.id, 'morality', localState.morality - 1)}
+                    style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.morality > 0 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.morality > 0 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>-</button>
+                  <div style={{ display: 'flex', gap: '2px' }}>
+                    {Array.from({ length: 7 }).map((_, i) => (
+                      <div key={i} style={{ width: '10px', height: '16px', borderRadius: '2px', background: i < localState.morality ? '#d4cfc9' : '#242424', border: `1px solid ${i < localState.morality ? '#d4cfc9' : '#3a3a3a'}`, transition: 'background 0.2s' }} />
+                    ))}
+                  </div>
+                  <button disabled={!canEdit || localState.morality >= 7}
+                    onClick={() => canEdit && localState.morality < 7 && updateStat(localState.id, 'morality', localState.morality + 1)}
+                    style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.morality < 7 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.morality < 7 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>+</button>
+                </div>
+              </div>
             </div>
           </div>
         )}
