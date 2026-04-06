@@ -109,8 +109,8 @@ export default function CampaignMap({ campaignId, isGM }: Props) {
     <div style={{ flex: 1, position: 'relative' }}>
       <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 
-      {/* Search bar */}
-      <form onSubmit={handleSearch} style={{ position: 'absolute', top: '6px', left: '6px', zIndex: 1000, display: 'flex', gap: '4px' }}>
+      {/* Search bar — positioned left of layer switcher */}
+      <form onSubmit={handleSearch} style={{ position: 'absolute', top: '6px', right: '220px', zIndex: 1000, display: 'flex', gap: '4px' }}>
         <div style={{ position: 'relative' }}>
           <input value={searchQuery} onChange={e => {
             setSearchQuery(e.target.value)
