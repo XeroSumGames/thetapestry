@@ -306,7 +306,9 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   }
 
   function openReveal() {
-    const revealed = new Set(relationships.filter(r => r.revealed).map(r => r.character_id))
+    const alreadyRevealed = relationships.filter(r => r.revealed).map(r => r.character_id)
+    const allPcIds = (pcEntries ?? []).map(pc => pc.characterId)
+    const revealed = new Set(alreadyRevealed.length > 0 ? alreadyRevealed : allPcIds)
     setRevealIds(revealed)
     const firstLevel = relationships.find(r => r.revealed)?.reveal_level
     setRevealLevel((firstLevel as any) ?? 'name_portrait')
