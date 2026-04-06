@@ -486,17 +486,20 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
             + Combat
           </button>
         )}
-        {npcs.length > 0 && pcEntries && pcEntries.length > 0 && (
-          <button onClick={async () => {
-            for (const npc of npcs) {
-              if (revealedNpcIds.has(npc.id)) continue
-              await quickReveal(npc.id, { stopPropagation: () => {} } as any)
-            }
-          }}
-            style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            Show All
-          </button>
-        )}
+        {npcs.length > 0 && pcEntries && pcEntries.length > 0 && (() => {
+          const allRevealed = npcs.every(n => revealedNpcIds.has(n.id))
+          return (
+            <button onClick={async () => {
+              for (const npc of npcs) {
+                if (allRevealed ? !revealedNpcIds.has(npc.id) : revealedNpcIds.has(npc.id)) continue
+                await quickReveal(npc.id, { stopPropagation: () => {} } as any)
+              }
+            }}
+              style={{ padding: '2px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              {allRevealed ? 'Hide All' : 'Show All'}
+            </button>
+          )
+        })()}
         <div style={{ flex: 1 }} />
         <button onClick={openLibrary}
           style={{ padding: '2px 8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
