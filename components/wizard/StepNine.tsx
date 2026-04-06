@@ -42,10 +42,9 @@ export default function StepNine({ state, onChange }: Props) {
         Review everything below before saving your character.
       </p>
 
-      {/* Identity */}
+      {/* Character header — portrait + name + details */}
       <div style={section}>
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-          {/* Portrait */}
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '12px' }}>
           <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#1a3a5c', border: '2px solid #7ab3d4', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
             {state.photoDataUrl ? (
               <img src={state.photoDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -56,10 +55,25 @@ export default function StepNine({ state, onChange }: Props) {
             )}
           </div>
           <div style={{ flex: 1 }}>
-            <div style={sectionTitle}>Identity</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1 }}>
+              {state.name || 'Unnamed Character'}
+            </div>
+            <div style={{ fontSize: '14px', color: '#d4cfc9', marginTop: '4px' }}>
+              {[step4.profession, state.gender, state.age ? `Age ${state.age}` : '', state.height, state.weight].filter(Boolean).join(' · ')}
+            </div>
+            {state.physdesc && (
+              <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '4px', fontStyle: 'italic' }}>{state.physdesc}</div>
+            )}
+            {state.threeWords?.some((w: string) => w) && (
+              <div style={{ fontSize: '13px', color: '#EF9F27', marginTop: '4px' }}>
+                {state.threeWords.filter((w: string) => w).join(' · ')}
+              </div>
+            )}
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
+
+        {/* Details grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
           {[
             ['Name', state.name],
             ['Age', state.age],
