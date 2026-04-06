@@ -5,6 +5,8 @@ import { useRouter, useParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
 import NpcRoster from '../../../../components/NpcRoster'
 import { logEvent } from '../../../../lib/events'
+import { rollDamage, calculateDamage } from '../../../../lib/damage'
+import { getWeaponByName } from '../../../../lib/weapons'
 
 interface Campaign {
   id: string
@@ -59,6 +61,18 @@ interface PendingRoll {
   weapon?: WeaponContext
 }
 
+interface DamageResult {
+  base: number
+  diceRoll: number
+  diceDesc: string
+  phyBonus: number
+  totalWP: number
+  finalWP: number
+  finalRP: number
+  mitigated: number
+  targetName: string
+}
+
 interface RollResult {
   die1: number
   die2: number
@@ -70,6 +84,7 @@ interface RollResult {
   label: string
   insightAwarded: boolean
   spent: boolean
+  damage?: DamageResult
 }
 
 interface InitiativeEntry {
@@ -673,9 +688,42 @@ export default function TablePage() {
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
     }
 
+    // Calculate and apply damage for successful weapon attacks
+    let damageResult: DamageResult | undefined
+    if (pendingRoll.weapon && targetName && (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight')) {
+      const weapon = pendingRoll.weapon
+      const w = getWeaponByName(weapon.weaponName)
+      const isMelee = w?.category === 'melee'
+      const attackerPhy = myEntry?.character.data?.rapid?.PHY ?? 0
+
+      const dmg = rollDamage(weapon.damage, attackerPhy, !!isMelee)
+
+      // Find target's defensive modifier (DMR for ranged, DMM for melee)
+      const targetEntry = entries.find(e => e.character.name === targetName)
+      const targetRapid = targetEntry?.character.data?.rapid ?? {}
+      const defensiveMod = isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)
+
+      const { finalWP, finalRP, mitigated } = calculateDamage(dmg.totalWP, weapon.rpPercent, defensiveMod)
+
+      damageResult = { ...dmg, finalWP, finalRP, mitigated, targetName }
+
+      // Auto-apply damage to target
+      if (targetEntry?.liveState) {
+        const newWP = Math.max(0, targetEntry.liveState.wp_current - finalWP)
+        const newRP = Math.max(0, targetEntry.liveState.rp_current - finalRP)
+        await supabase.from('character_states').update({
+          wp_current: newWP,
+          rp_current: newRP,
+          updated_at: new Date().toISOString(),
+        }).eq('id', targetEntry.stateId)
+        setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, wp_current: newWP, rp_current: newRP } } : e))
+      }
+    }
+
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, spent: preRollSpent,
+      damage: damageResult,
     })
 
     setRolling(false)
@@ -1124,7 +1172,19 @@ export default function TablePage() {
                 {(combatActive || pendingRoll.weapon) && initiativeOrder.length > 0 && (
                   <div style={{ marginBottom: '1.25rem' }}>
                     <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Target</div>
-                    <select value={targetName} onChange={e => setTargetName(e.target.value)}
+                    <select value={targetName} onChange={e => {
+                      setTargetName(e.target.value)
+                      // Auto-apply target's defensive modifier for weapon attacks
+                      if (pendingRoll.weapon && e.target.value) {
+                        const w = getWeaponByName(pendingRoll.weapon.weaponName)
+                        const isMelee = w?.category === 'melee'
+                        const targetEntry = entries.find(en => en.character.name === e.target.value)
+                        const targetRapid = targetEntry?.character.data?.rapid ?? {}
+                        const defensiveMod = isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)
+                        const baseCmod = pendingRoll.weapon.conditionCmod ?? 0
+                        setCmod(String(baseCmod - defensiveMod))
+                      }
+                    }}
                       style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
                       <option value="" style={{ color: '#cce0f5' }}>No target</option>
                       {initiativeOrder.map(entry => (
@@ -1215,9 +1275,39 @@ export default function TablePage() {
                 <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
                   <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: outcomeColor(rollResult.outcome) }}>{rollResult.outcome}</div>
                   {rollResult.insightAwarded && (
-                    <div style={{ fontSize: '11px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '3px 8px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', display: 'inline-block', marginTop: '6px' }}>+1 Insight Die</div>
+                    <div style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '3px 8px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', display: 'inline-block', marginTop: '6px' }}>+1 Insight Die</div>
                   )}
                 </div>
+                {/* Damage result */}
+                {rollResult.damage && (
+                  <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '1rem', marginBottom: '1rem', textAlign: 'center' }}>
+                    <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>
+                      Damage to {rollResult.damage.targetName}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
+                      {rollResult.damage.base > 0 && <span>{rollResult.damage.base}</span>}
+                      {rollResult.damage.diceDesc && <span>{rollResult.damage.base > 0 ? '+' : ''}{rollResult.damage.diceDesc} ({rollResult.damage.diceRoll})</span>}
+                      {rollResult.damage.phyBonus > 0 && <span> +{rollResult.damage.phyBonus} PHY</span>}
+                      <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {rollResult.damage.totalWP} raw WP</span>
+                    </div>
+                    {rollResult.damage.mitigated > 0 && (
+                      <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
+                        Defense mitigates {rollResult.damage.mitigated} WP
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '6px' }}>
+                      <div style={{ padding: '6px 12px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px' }}>
+                        <div style={{ fontSize: '20px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{rollResult.damage.finalWP}</div>
+                        <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>WP</div>
+                      </div>
+                      <div style={{ padding: '6px 12px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px' }}>
+                        <div style={{ fontSize: '20px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>{rollResult.damage.finalRP}</div>
+                        <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>RP</div>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '6px' }}>Applied automatically</div>
+                  </div>
+                )}
                 {!rollResult.spent && myInsightDice > 0 && rollResult.outcome !== 'High Insight' && rollResult.outcome !== 'Low Insight' && (
                   <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '1rem', marginBottom: '1rem' }}>
                     <div style={{ fontSize: '10px', color: '#7fc458', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', textAlign: 'center' }}>
