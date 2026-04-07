@@ -197,7 +197,6 @@ export default function TablePage() {
   const [viewingNpcs, setViewingNpcs] = useState<CampaignNpc[]>([])
   const [sheetPos, setSheetPos] = useState<{ x: number; y: number } | null>(null)
   const sheetDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
-  const prevMyStressRef = useRef(-1)
   const campaignChannelRef = useRef<any>(null)
 
   async function loadEntries(campaignId: string) {
@@ -443,22 +442,6 @@ export default function TablePage() {
     window.addEventListener('keydown', handleEsc)
     return () => window.removeEventListener('keydown', handleEsc)
   }, [pendingRoll, selectedEntry, showEndSessionModal])
-
-  // Auto-open player's sheet when their stress reaches 5 (GM added stress via Realtime)
-  const myStress = entries.find(e => e.userId === userId)?.liveState?.stress ?? 0
-  useEffect(() => {
-    const prev = prevMyStressRef.current
-    prevMyStressRef.current = myStress
-    if (isGM || prev === -1) return
-    if (myStress >= 5 && prev < 5) {
-      const me = entries.find(e => e.userId === userId)
-      if (me) {
-        setSelectedEntry(me)
-        setViewingNpcs([])
-        setSheetPos(null)
-      }
-    }
-  }, [myStress])
 
   async function handleStatUpdate(stateId: string, field: string, value: number) {
     await supabase.from('character_states').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', stateId)
