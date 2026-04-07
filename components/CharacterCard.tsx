@@ -612,7 +612,7 @@ export default function CharacterCard({
 
       {/* Hidden print sheet */}
       {printing && (
-        <div className="print-sheet-container">
+        <div className="print-sheet-container print-sheet-active">
           <PrintSheet state={toWizardState(c.data)} />
         </div>
       )}

@@ -4,6 +4,7 @@ import { createWizardState, WizardState, buildCharacter } from '../../../lib/xse
 import { createClient } from '../../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { logFirstEvent } from '../../../lib/events'
+import GhostWall from '../../../components/GhostWall'
 import StepXero from '../../../components/wizard/StepXero'
 import StepAttr from '../../../components/wizard/StepAttr'
 import StepFour from '../../../components/wizard/StepFour'
@@ -60,6 +61,7 @@ export default function NewCharacterPage() {
   const [saveError, setSaveError] = useState('')
   const [saved, setSaved] = useState(false)
   const [isAuth, setIsAuth] = useState<boolean | null>(null)
+  const [showGhostWall, setShowGhostWall] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setIsAuth(!!user))
@@ -68,7 +70,7 @@ export default function NewCharacterPage() {
   const step = state.currentStep
 
   function requireAuth() {
-    if (isAuth === false) { router.push('/login'); return true }
+    if (isAuth === false) { setShowGhostWall(true); return true }
     return false
   }
 
@@ -205,6 +207,7 @@ export default function NewCharacterPage() {
         <PrintSheet state={state} />
       </div>
 
+      <GhostWall show={showGhostWall} onClose={() => setShowGhostWall(false)} message="Create an account to save your character and join campaigns." />
     </div>
   )
 }
