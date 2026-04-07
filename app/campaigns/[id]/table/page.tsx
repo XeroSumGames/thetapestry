@@ -194,6 +194,7 @@ export default function TablePage() {
   const chatChannelRef = useRef<any>(null)
   const [viewingNpcs, setViewingNpcs] = useState<CampaignNpc[]>([])
   const [publishedNpcIds, setPublishedNpcIds] = useState<Set<string>>(new Set())
+  const [pendingEditNpcId, setPendingEditNpcId] = useState<string | null>(null)
   const [sheetPos, setSheetPos] = useState<{ x: number; y: number } | null>(null)
   const sheetDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
   const campaignChannelRef = useRef<any>(null)
@@ -684,6 +685,7 @@ export default function TablePage() {
   // ── Roll functions ──
 
   const [preRollInsight, setPreRollInsight] = useState<'none' | '3d6' | '+3cmod'>('none')
+  const [useBurst, setUseBurst] = useState(false)
   const [socialNpcId, setSocialNpcId] = useState<string>('')
   const [socialCmod, setSocialCmod] = useState<{ npcName: string; cmod: number } | null>(null)
   const [campaignNpcs, setCampaignNpcs] = useState<any[]>([])
@@ -714,6 +716,7 @@ export default function TablePage() {
     setCmod(weapon?.conditionCmod ? String(weapon.conditionCmod) : '0')
     setTargetName('')
     setPreRollInsight('none')
+    setUseBurst(false)
     setSocialNpcId('')
     setSocialCmod(null)
   }
@@ -789,8 +792,8 @@ export default function TablePage() {
       const hasCloseUp = getTraitValue(traits, 'Close-Up') !== null
       const hasConeUp = getTraitValue(traits, 'Cone-Up') !== null
 
-      // Automatic Burst: roll damage multiple times
-      const rolls = (burstCount !== null && burstCount > 0) ? burstCount : 1
+      // Automatic Burst: roll damage multiple times (only if player opted in)
+      const rolls = (useBurst && burstCount !== null && burstCount > 0) ? burstCount : 1
       let totalBase = 0, totalDice = 0, totalPhy = 0
       let diceDesc = ''
       for (let i = 0; i < rolls; i++) {
@@ -824,7 +827,7 @@ export default function TablePage() {
       }
 
       // Burst note
-      if (rolls > 1) {
+      if (useBurst && rolls > 1) {
         traitNotes.push(`Automatic Burst — ${rolls} rounds fired`)
       }
 
@@ -1211,7 +1214,7 @@ export default function TablePage() {
         {/* Center — Map always rendered, sheets float on top */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
           {/* Campaign Map — always rendered */}
-          <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} />
+          <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} />
 
           {/* NPC Card(s) grid — floats over map */}
           {viewingNpcs.length > 0 && (
@@ -1220,7 +1223,7 @@ export default function TablePage() {
                 <NpcCard key={npc.id}
                   npc={npc}
                   onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
-                  onEdit={() => { setViewingNpcs(prev => prev.filter(n => n.id !== npc.id)) }}
+                  onEdit={() => { setViewingNpcs(prev => prev.filter(n => n.id !== npc.id)); setGmTab('npcs'); setPendingEditNpcId(npc.id) }}
                   onRoll={sessionStatus === 'active' ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
                   onPublish={isGM ? () => handlePublishNpc(npc) : undefined}
                   isPublished={publishedNpcIds.has(npc.id)}
@@ -1289,7 +1292,7 @@ export default function TablePage() {
               ))}
             </div>
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              {gmTab === 'npcs' && <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev : [...prev, npc]); setSelectedEntry(null) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} />}
+              {gmTab === 'npcs' && <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev : [...prev, npc]); setSelectedEntry(null) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} />}
               {gmTab === 'assets' && <CampaignPins campaignId={id} isGM={isGM} />}
               {gmTab === 'notes' && (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3a3a3a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
@@ -1435,6 +1438,14 @@ export default function TablePage() {
                         )}
                       </div>
                     )}
+                  </div>
+                )}
+                {pendingRoll.weapon?.traits && getTraitValue(pendingRoll.weapon.traits, 'Automatic Burst') !== null && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <button onClick={() => setUseBurst(prev => !prev)}
+                      style={{ width: '100%', padding: '6px', background: useBurst ? '#2d5a1b' : '#242424', border: `1px solid ${useBurst ? '#7fc458' : '#3a3a3a'}`, borderRadius: '3px', color: useBurst ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      {useBurst ? `✓ Automatic Burst (${getTraitValue(pendingRoll.weapon.traits, 'Automatic Burst') || 3} rounds)` : `Automatic Burst (${getTraitValue(pendingRoll.weapon.traits, 'Automatic Burst') || 3} rounds)`}
+                    </button>
                   </div>
                 )}
                 {(combatActive || pendingRoll.weapon) && initiativeOrder.length > 0 && (

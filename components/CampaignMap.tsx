@@ -16,6 +16,7 @@ interface Props {
   campaignId: string
   isGM: boolean
   setting?: string
+  mapStyle?: string
 }
 
 const SETTING_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
@@ -28,6 +29,13 @@ const TILE_LAYERS: Record<string, { url: string; attr: string }> = {
   street: { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr: '© OpenStreetMap' },
   satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: '© Esri' },
   dark: { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr: '© CARTO' },
+  positron: { url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', attr: '© CARTO' },
+  voyager: { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attr: '© CARTO' },
+  topo: { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attr: '© OpenTopoMap' },
+  watercolor: { url: 'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', attr: '© Stamen' },
+  terrain: { url: 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png', attr: '© Stamen' },
+  toner: { url: 'https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}{r}.png', attr: '© Stamen' },
+  humanitarian: { url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', attr: '© HOT' },
 }
 
 const PIN_CATEGORIES = [
@@ -52,7 +60,7 @@ function getCategoryEmoji(category: string): string {
   return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '📍'
 }
 
-export default function CampaignMap({ campaignId, isGM, setting }: Props) {
+export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defaultMapStyle }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const tileLayerRef = useRef<any>(null)
@@ -62,7 +70,7 @@ export default function CampaignMap({ campaignId, isGM, setting }: Props) {
   const placingRef = useRef(false)
   const supabase = createClient()
   const [pins, setPins] = useState<CampaignPin[]>([])
-  const [mapLayer, setMapLayer] = useState<'street' | 'satellite' | 'dark'>('street')
+  const [mapLayer, setMapLayer] = useState<string>(defaultMapStyle ?? 'street')
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
   const [suggestions, setSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])

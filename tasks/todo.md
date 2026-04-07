@@ -74,8 +74,9 @@
 - [x] Weapon dropdowns, ammo pips, reload system, condition tracking
 - [x] Attack buttons per weapon with auto-damage
 - [x] Weapon jam on Low Insight
-- [ ] Weapon trait mechanical effects — Pass 2 (Automatic Burst, Blast Radius, Stun, Burning, Close-Up, Cone-Up)
 - [x] Weapon trait mechanical effects — Pass 1 (Cumbersome, Unwieldy CMod penalties)
+- [x] Weapon trait mechanical effects — Pass 2 (Stun, Automatic Burst mechanical; Blast Radius, Burning, Close-Up, Cone-Up display)
+- [ ] Weapon trait mechanical effects — Pass 3 (Tracking +1 CMod after Ready Weapon — needs Combat Actions)
 - [ ] Upkeep Checks
 - [ ] Encumbrance
 
@@ -109,6 +110,10 @@
 - [ ] Maps & Objects — scene images, tactical map assets, tokens
 - [ ] Handouts, Communities, Roll Tables
 - [ ] Notes — full implementation
+- [x] NPC card 3-column grid layout over campaign map
+- [x] Publish to Library button on NPC card (GM only)
+- [x] NPC form + card compacted (portrait/bank/status on one row)
+- [x] Renamed Friendly → Bystander NPC type
 - [ ] NPC browsing/filtering
 - [ ] GM screen, GM quick-reference panel
 

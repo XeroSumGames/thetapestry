@@ -16,6 +16,7 @@ export default function NewCampaignPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [setting, setSetting] = useState('district_zero')
+  const [mapStyle, setMapStyle] = useState('street')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -32,6 +33,7 @@ export default function NewCampaignPage() {
       name: name.trim(),
       description: description.trim(),
       setting,
+      map_style: mapStyle,
       gm_user_id: user.id,
       invite_code,
       status: 'active',
@@ -115,9 +117,21 @@ export default function NewCampaignPage() {
           </div>
         </div>
 
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '16px' }}>
           <label style={lbl}>Description <span style={{ color: '#cce0f5', fontWeight: 400 }}>(optional)</span></label>
           <textarea style={{ ...inp, minHeight: '80px', resize: 'vertical' }} value={description} onChange={e => setDescription(e.target.value)} placeholder="A brief description of your campaign..." />
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+          <label style={lbl}>Default Map Style</label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
+            {[['watercolor', 'Watercolor'], ['satellite', 'Satellite'], ['topo', 'Topo'], ['street', 'Street'], ['toner', 'Toner'], ['voyager', 'Voyager'], ['humanitarian', 'Humanitarian'], ['terrain', 'Terrain'], ['positron', 'Positron'], ['dark', 'Dark']].map(([val, label]) => (
+              <button key={val} type="button" onClick={() => setMapStyle(val)}
+                style={{ padding: '6px 4px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapStyle === val ? '#c0392b' : '#3a3a3a'}`, background: mapStyle === val ? '#2a1210' : '#242424', color: mapStyle === val ? '#f5a89a' : '#d4cfc9' }}>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {error && (

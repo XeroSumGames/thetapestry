@@ -89,6 +89,7 @@ export default function NotificationBell() {
     await supabase.from('notifications').update({ read: true }).eq('user_id', userId).eq('read', false)
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
     setUnreadCount(0)
+    setOpen(false)
   }
 
   async function deleteNotification(id: string) {
@@ -105,6 +106,7 @@ export default function NotificationBell() {
     await supabase.from('notifications').delete().eq('user_id', userId)
     setNotifications([])
     setUnreadCount(0)
+    setOpen(false)
   }
 
   function handleNotifClick(n: Notification) {
@@ -182,7 +184,7 @@ export default function NotificationBell() {
 
       {open && (
         <div style={{
-          position: 'fixed', top: '80px', left: '10px',
+          position: 'fixed', top: '110px', left: '10px',
           width: '320px', maxHeight: '400px', overflowY: 'auto',
           background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px',
           boxShadow: '0 8px 24px rgba(0,0,0,0.6)', zIndex: 9999,
