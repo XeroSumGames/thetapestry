@@ -1027,7 +1027,7 @@ export default function TablePage() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', fontFamily: 'Barlow, sans-serif', background: '#0f0f0f' }}>
 
       {/* Header */}
-      <div style={{ borderBottom: '1px solid #c0392b', padding: '8px 16px', display: 'flex', alignItems: 'stretch', gap: '12px', flexShrink: 0, background: '#0f0f0f', position: 'relative', zIndex: 10001 }}>
+      <div style={{ borderBottom: '1px solid #c0392b', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, background: '#0f0f0f', position: 'relative', zIndex: 10001 }}>
         <div>
           <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>
             {SETTINGS[campaign.setting] ?? campaign.setting} &mdash; {isGM ? 'GM View' : 'Player View'}
@@ -1197,63 +1197,67 @@ export default function TablePage() {
               letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer',
             })
 
+            const disabledBtn = (bg: string, color: string, border: string): React.CSSProperties => ({
+              ...actBtn(bg, color, border), opacity: 0.3, cursor: 'not-allowed',
+            })
+
             return (
-              <div style={{ marginTop: '6px' }}>
-                {/* 1-action row */}
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                  <span style={{ fontSize: '9px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>1 Action:</span>
-                  {['Move', 'Take Cover', 'Reload', 'Defend'].map(action => (
-                    <button key={action} onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — ${action}`)}
-                      style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>
-                      {action}
-                    </button>
-                  ))}
-                  <button onClick={() => handleReadyWeapon(activeEntry.id)}
-                    style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>
-                    Ready Weapon
-                  </button>
-                  <button onClick={() => handleAim(activeEntry.id)}
-                    style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
-                    Aim{(activeEntry.aim_bonus ?? 0) > 0 ? ` (+${activeEntry.aim_bonus})` : ''}
-                  </button>
-                </div>
-                {/* 2-action row — only if 2 actions remaining */}
-                {has2Actions && (hasBurst || isMelee) && (
-                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '4px' }}>
-                    <span style={{ fontSize: '9px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>2 Actions:</span>
-                    {hasBurst && w && (
-                      <button onClick={() => {
-                        setUseBurst(true)
-                        const skillName = w.skill
-                        const attrKey = w.category === 'melee' ? 'PHY' : 'DEX'
-                        const rapid = charEntry?.character.data?.rapid ?? {}
-                        const amod = rapid[attrKey] ?? 0
-                        const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === skillName)?.level ?? 0
-                        consumeAction(activeEntry.id, undefined, 2)
-                        handleRollRequest(`${activeEntry.character_name} — Rapid Fire (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: 0, traits: w.traits })
-                      }}
-                        style={actBtn('#7a1f16', '#f5a89a', '#c0392b')}>
-                        Rapid Fire
-                      </button>
-                    )}
-                    {isMelee && w && (
-                      <button onClick={() => {
-                        const rapid = charEntry?.character.data?.rapid ?? {}
-                        const amod = rapid.PHY ?? 0
-                        const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Melee Combat')?.level ?? 0
-                        consumeAction(activeEntry.id, undefined, 2)
-                        handleRollRequest(`${activeEntry.character_name} — Charge (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: 1, traits: w.traits })
-                      }}
-                        style={actBtn('#7a1f16', '#f5a89a', '#c0392b')}>
-                        Charge
-                      </button>
-                    )}
-                    <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Sprint`, 2)}
-                      style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>
-                      Sprint
-                    </button>
-                  </div>
+              <div style={{ display: 'flex', gap: '3px', alignItems: 'center', flexWrap: 'wrap', marginTop: '6px' }}>
+                <button onClick={() => handleAim(activeEntry.id)}
+                  style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
+                  Aim{(activeEntry.aim_bonus ?? 0) > 0 ? ` (+${activeEntry.aim_bonus})` : ''}
+                </button>
+                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Attack`)}
+                  style={actBtn('#7a1f16', '#f5a89a', '#c0392b')}>Attack</button>
+                {isMelee && w ? (
+                  <button onClick={has2Actions ? () => {
+                    const rapid = charEntry?.character.data?.rapid ?? {}
+                    const amod = rapid.PHY ?? 0
+                    const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Melee Combat')?.level ?? 0
+                    consumeAction(activeEntry.id, undefined, 2)
+                    handleRollRequest(`${activeEntry.character_name} — Charge (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: 1, traits: w.traits })
+                  } : undefined} disabled={!has2Actions}
+                    style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Charge</button>
+                ) : (
+                  <button disabled style={disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Charge</button>
                 )}
+                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Coordinate`)}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Coordinate</button>
+                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Cover Fire`)}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Cover Fire</button>
+                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Defend`)}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Defend</button>
+                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Distract`)}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Distract</button>
+                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Inspire`)}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Inspire</button>
+                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Move`)}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Move</button>
+                {hasBurst && w ? (
+                  <button onClick={has2Actions ? () => {
+                    setUseBurst(true)
+                    const skillName = w.skill
+                    const attrKey = w.category === 'melee' ? 'PHY' : 'DEX'
+                    const rapid = charEntry?.character.data?.rapid ?? {}
+                    const amod = rapid[attrKey] ?? 0
+                    const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === skillName)?.level ?? 0
+                    consumeAction(activeEntry.id, undefined, 2)
+                    handleRollRequest(`${activeEntry.character_name} — Rapid Fire (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: 0, traits: w.traits })
+                  } : undefined} disabled={!has2Actions}
+                    style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Rapid Fire</button>
+                ) : (
+                  <button disabled style={disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Rapid Fire</button>
+                )}
+                <button onClick={() => handleReadyWeapon(activeEntry.id)}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Ready Weapon</button>
+                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Reload`)}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Reload</button>
+                <button onClick={has2Actions ? () => consumeAction(activeEntry.id, `${activeEntry.character_name} — Sprint`, 2) : undefined} disabled={!has2Actions}
+                  style={has2Actions ? actBtn('#242424', '#d4cfc9', '#3a3a3a') : disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Sprint</button>
+                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Subdue`)}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Subdue</button>
+                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Take Cover`)}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Take Cover</button>
               </div>
             )
           })()}
