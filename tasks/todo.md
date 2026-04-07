@@ -38,8 +38,9 @@
 
 ### Combat Actions
 - [x] Pass 1 — Action slots (2 per turn), simple actions (Move, Ready Weapon, Take Cover, Reload, Defend), auto-advance
-- [ ] Pass 2 — Aim (+1 CMod carry), Rapid Fire (2-action burst), Charge/Sprint (2-action cost)
-- [ ] Pass 3 — Social/contested actions (Coordinate, Cover Fire, Distract, Inspire — cross-player CMod effects)
+- [x] Pass 2 — Aim (+1 CMod carry), Rapid Fire (2-action burst), Charge/Sprint (2-action), Ready Weapon + Tracking
+- [x] All 15 combat actions listed alphabetically, greyed when unavailable
+- [ ] Pass 3 — Social/contested actions (Coordinate, Cover Fire, Distract, Inspire — wire cross-player CMod effects)
 
 ### Combat UI
 - [x] Defer button on initiative tracker — GM can defer anyone, players can defer their own

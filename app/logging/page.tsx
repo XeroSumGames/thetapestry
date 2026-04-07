@@ -13,6 +13,9 @@ interface VisitorLog {
   user_id: string | null
   created_at: string
   username?: string
+  country_code: string | null
+  region: string | null
+  city: string | null
 }
 
 interface UserEvent {
@@ -248,7 +251,7 @@ export default function LoggingPage() {
                   <div style={{ flex: 1, fontSize: '13px', color: v.username ? '#7fc458' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {v.username ?? (v.is_ghost ? 'Ghost' : 'User')}
                   </div>
-                  <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.ip_address ?? '—'}</div>
+                  <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[v.city, v.region, v.country_code].filter(Boolean).join(', ') || v.ip_address || '—'}</div>
                   <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5' }}>{timeAgo(v.created_at)}</div>
                 </div>
               ))}

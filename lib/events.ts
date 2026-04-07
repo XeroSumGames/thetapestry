@@ -13,10 +13,25 @@ function getSessionId(): string {
   return sessionId
 }
 
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 export async function logVisit(page: string) {
   if (typeof window === 'undefined') return
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  // Read Vercel geo data from cookies (set by middleware)
+  const geo = {
+    country_code: getCookie('geo_country') || null,
+    region: getCookie('geo_region') || null,
+    city: getCookie('geo_city') || null,
+    latitude: getCookie('geo_lat') ? parseFloat(getCookie('geo_lat')!) : null,
+    longitude: getCookie('geo_lng') ? parseFloat(getCookie('geo_lng')!) : null,
+  }
 
   // Try Edge Function for IP capture, fall back to direct insert
   try {
@@ -32,6 +47,7 @@ export async function logVisit(page: string) {
         page,
         referrer: document.referrer || null,
         user_id: user?.id ?? null,
+        ...geo,
       }),
     })
   } catch {
@@ -42,6 +58,7 @@ export async function logVisit(page: string) {
       referrer: document.referrer || null,
       is_ghost: !user,
       user_id: user?.id ?? null,
+      ...geo,
     })
   }
 }
