@@ -51,10 +51,11 @@ interface PinForm {
 
 interface MapViewProps {
   embedded?: boolean
+  showSidebar?: boolean
   showHeader?: boolean
 }
 
-export default function MapView({ embedded = false, showHeader = true }: MapViewProps) {
+export default function MapView({ embedded = false, showHeader = true, showSidebar: showSidebarProp = false }: MapViewProps) {
   const mapRef = useRef<any>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<Record<string, any>>({})
@@ -65,7 +66,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
   const [userId, setUserId] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<'survivor' | 'thriver'>('survivor')
   const [showForm, setShowForm] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(!embedded)
+  const [sidebarOpen, setSidebarOpen] = useState(!embedded || showSidebarProp)
   const [sidebarTab, setSidebarTab] = useState<'mine' | 'public' | 'all'>('mine')
   const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private', category: 'location' })
   const [saving, setSaving] = useState(false)
@@ -342,11 +343,15 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
 
-        <div ref={mapRef} style={{ flex: 1, height: '100%' }} />
+        <div ref={mapRef} style={{ flex: 1, height: '100%', background: '#aad3df' }} />
 
-        {!embedded && sidebarOpen && (
+        {(!embedded || showSidebarProp) && sidebarOpen && (
           <div style={{ width: '300px', flexShrink: 0, background: '#1a1a1a', borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', zIndex: 500 }}>
             <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e' }}>
+              <button onClick={() => setSidebarOpen(false)}
+                style={{ padding: '4px 8px', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '14px', cursor: 'pointer', lineHeight: 1 }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>✕</button>
               {tabs.map(([tab, label]) => (
                 <button key={tab} onClick={() => setSidebarTab(tab)}
                   style={{ flex: 1, padding: '10px', background: sidebarTab === tab ? '#242424' : 'transparent', border: 'none', borderBottom: `2px solid ${sidebarTab === tab ? '#c0392b' : 'transparent'}`, color: sidebarTab === tab ? '#f5f2ee' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
@@ -396,6 +401,12 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
           </div>
         )}
 
+        {(!embedded || showSidebarProp) && !sidebarOpen && (
+          <button onClick={() => setSidebarOpen(true)}
+            style={{ position: 'absolute', top: '6px', left: '6px', zIndex: 1000, padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            Pins ☰
+          </button>
+        )}
         {!embedded && showHeader && (
           <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'rgba(15,15,15,.85)', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px 14px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', pointerEvents: 'none' }}>
             Click anywhere on the map to place a pin
