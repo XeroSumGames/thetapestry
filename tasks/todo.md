@@ -36,12 +36,10 @@
 - [x] Stress Check with CMod when stress hits 5 — success drops to 4, failure triggers Breaking Point
 - [x] Breaking Point modal shows on whichever screen has the sheet open
 
-### Combat Actions — 5 Passes
-- [ ] Pass 1 — Action slots UI (2 actions per turn, auto-advance after both used)
-- [ ] Pass 2 — Attack action + target dropdown
-- [ ] Pass 3 — Simple CMod actions (Aim, Defend, Take Cover, Rapid Fire, Subdue)
-- [ ] Pass 4 — Two-action actions (Charge, Sprint)
-- [ ] Pass 5 — Social and contested actions (Coordinate, Cover Fire, Distract, Inspire)
+### Combat Actions
+- [x] Pass 1 — Action slots (2 per turn), simple actions (Move, Ready Weapon, Take Cover, Reload, Defend), auto-advance
+- [ ] Pass 2 — Aim (+1 CMod carry), Rapid Fire (2-action burst), Charge/Sprint (2-action cost)
+- [ ] Pass 3 — Social/contested actions (Coordinate, Cover Fire, Distract, Inspire — cross-player CMod effects)
 
 ### Combat UI
 - [x] Defer button on initiative tracker — GM can defer anyone, players can defer their own
@@ -170,6 +168,8 @@
 - [x] Custom location search for New Setting campaigns (Nominatim, saves center lat/lng)
 - [x] Unified header button styling (hdrBtn helper, 28px uniform)
 - [ ] Layer toggles, Temporal filter
+- [x] World event pins — 16 Dog Flu timeline + settlement pins on world map
+- [x] New pin categories: world_event (🌍) and settlement (🏚️)
 - [ ] Pin cards, Setting regions, Pin hierarchy
 - [ ] Pin search, Parent/child structure, Canon layer
 
