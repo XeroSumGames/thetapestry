@@ -138,9 +138,9 @@ export default function CharacterCard({
       const prevStress = prevStressRef.current
       prevStressRef.current = liveState.stress
       setLocalState(liveState)
-      // Trigger Stress Check on the player's own screen when stress reaches 5
+      // Trigger Stress Check when stress reaches 5 on whichever screen has the sheet open
       // prevStress === -1 means first mount — also trigger if stress is already at 5
-      if (isMySheet && liveState.stress >= 5 && prevStress < 5 && !stressCheckPending && !breakingPointPending) {
+      if (liveState.stress >= 5 && prevStress < 5 && !stressCheckPending && !breakingPointPending) {
         setStressCheckPending(true)
         setStressCheckCmod('0')
         setStressCheckResult(null)
