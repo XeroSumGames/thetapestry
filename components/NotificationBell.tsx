@@ -89,7 +89,22 @@ export default function NotificationBell() {
     await supabase.from('notifications').update({ read: true }).eq('user_id', userId).eq('read', false)
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
     setUnreadCount(0)
-    setOpen(false)
+  }
+
+  async function deleteNotification(id: string) {
+    await supabase.from('notifications').delete().eq('id', id)
+    setNotifications(prev => {
+      const removed = prev.find(n => n.id === id)
+      if (removed && !removed.read) setUnreadCount(c => Math.max(0, c - 1))
+      return prev.filter(n => n.id !== id)
+    })
+  }
+
+  async function deleteAll() {
+    if (!userId) return
+    await supabase.from('notifications').delete().eq('user_id', userId)
+    setNotifications([])
+    setUnreadCount(0)
   }
 
   function handleNotifClick(n: Notification) {
@@ -175,12 +190,20 @@ export default function NotificationBell() {
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #2e2e2e' }}>
             <span style={{ fontSize: '11px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>Notifications</span>
-            {unreadCount > 0 && (
-              <button onClick={markAllAsRead}
-                style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                Mark all read
-              </button>
-            )}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {unreadCount > 0 && (
+                <button onClick={markAllAsRead}
+                  style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Mark all read
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button onClick={deleteAll}
+                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Delete all
+                </button>
+              )}
+            </div>
           </div>
 
           {/* List */}
@@ -204,7 +227,15 @@ export default function NotificationBell() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
                   <span style={{ fontSize: '13px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{n.title}</span>
-                  <span style={{ fontSize: '13px', color: '#cce0f5', flexShrink: 0, marginLeft: '8px' }}>{timeAgo(n.created_at)}</span>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexShrink: 0, marginLeft: '8px' }}>
+                    <span style={{ fontSize: '13px', color: '#cce0f5' }}>{timeAgo(n.created_at)}</span>
+                    <button onClick={(e) => { e.stopPropagation(); deleteNotification(n.id) }}
+                      style={{ background: 'none', border: 'none', color: '#3a3a3a', fontSize: '14px', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}
+                      onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
+                      onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>
+                      ✕
+                    </button>
+                  </div>
                 </div>
                 <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.4 }}>{colorizeBody(n.body, n.type)}</div>
               </div>

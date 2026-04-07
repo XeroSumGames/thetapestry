@@ -72,7 +72,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
   const [editForm, setEditForm] = useState({ title: '', notes: '', category: 'location' })
-  const [mapLayer, setMapLayer] = useState<'street' | 'satellite' | 'dark'>('street')
+  const [mapLayer, setMapLayer] = useState<string>('street')
   const [searchQuery, setSearchQuery] = useState('')
   const [suggestions, setSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
   const debounceRef = useRef<any>(null)
@@ -215,17 +215,25 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
     setSearching(false)
   }
 
-  async function switchLayer(layer: 'street' | 'satellite' | 'dark') {
+  async function switchLayer(layer: string) {
     const L = (await import('leaflet')).default
     const map = mapInstanceRef.current
     if (!map) return
     if (tileLayerRef.current) tileLayerRef.current.remove()
     const tiles: Record<string, { url: string, attribution: string }> = {
-      street: { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
-      satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attribution: 'Â© <a href="https://www.esri.com">Esri</a>' },
-      dark: { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attribution: 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> Â© <a href="https://carto.com">CARTO</a>' },
+      street: { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
+      satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attribution: '&copy; <a href="https://www.esri.com">Esri</a>' },
+      dark: { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>' },
+      positron: { url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>' },
+      voyager: { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>' },
+      topo: { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attribution: '&copy; <a href="https://opentopomap.org">OpenTopoMap</a>' },
+      watercolor: { url: 'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', attribution: '&copy; <a href="https://stamen.com">Stamen</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' },
+      terrain: { url: 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png', attribution: '&copy; <a href="https://stamen.com">Stamen</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' },
+      toner: { url: 'https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}{r}.png', attribution: '&copy; <a href="https://stamen.com">Stamen</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' },
+      humanitarian: { url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://hot.openstreetmap.org">HOT</a>' },
     }
-    tileLayerRef.current = L.tileLayer(tiles[layer].url, { attribution: tiles[layer].attribution, maxZoom: 19 }).addTo(map)
+    const t = tiles[layer] ?? tiles.street
+    tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attribution, maxZoom: 19 }).addTo(map)
     setMapLayer(layer)
   }
 
@@ -431,8 +439,8 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
             </div>
             <button type="submit" disabled={searching} style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: searching ? '#cce0f5' : '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching ? 'not-allowed' : 'pointer' }}>{searching ? '...' : 'Go'}</button>
           </form>
-          <div style={{ position: 'absolute', top: '6px', right: sidebarOpen ? '306px' : '6px', zIndex: 1000, display: 'flex', gap: '4px', transition: 'right .2s' }}>
-            {([['street', 'Street'], ['satellite', 'Satellite'], ['dark', 'Dark']] as const).map(([layer, label]) => (
+          <div style={{ position: 'absolute', top: '6px', right: sidebarOpen ? '306px' : '6px', zIndex: 1000, display: 'grid', gridTemplateColumns: '1fr', gap: '4px', transition: 'right .2s' }}>
+            {[['watercolor', 'Watercolor'], ['satellite', 'Satellite'], ['topo', 'Topo'], ['street', 'Street'], ['toner', 'Toner'], ['voyager', 'Voyager'], ['humanitarian', 'Humanitarian'], ['terrain', 'Terrain'], ['positron', 'Positron'], ['dark', 'Dark']].map(([layer, label]) => (
               <button key={layer} onClick={() => switchLayer(layer)}
                 style={{ padding: '5px 10px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#d4cfc9' }}>
                 {label}
