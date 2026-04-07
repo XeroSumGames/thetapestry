@@ -193,6 +193,7 @@ export default function TablePage() {
   const [chatInput, setChatInput] = useState('')
   const chatChannelRef = useRef<any>(null)
   const [viewingNpcs, setViewingNpcs] = useState<CampaignNpc[]>([])
+  const [publishedNpcIds, setPublishedNpcIds] = useState<Set<string>>(new Set())
   const [sheetPos, setSheetPos] = useState<{ x: number; y: number } | null>(null)
   const sheetDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
   const campaignChannelRef = useRef<any>(null)
@@ -369,6 +370,9 @@ export default function TablePage() {
       // Load campaign NPCs for social skill rolls (all users need this)
       const { data: cnpcs } = await supabase.from('campaign_npcs').select('id, name, portrait_url, npc_type, recruitment_role').eq('campaign_id', id)
       setCampaignNpcs(cnpcs ?? [])
+      // Check which NPCs are published to world library
+      const { data: pubData } = await supabase.from('world_npcs').select('source_campaign_npc_id').not('source_campaign_npc_id', 'is', null)
+      if (pubData) setPublishedNpcIds(new Set(pubData.map(d => d.source_campaign_npc_id!)))
 
       // Load revealed NPCs for this player
       if (camp.gm_user_id !== user.id) {
@@ -684,6 +688,25 @@ export default function TablePage() {
   const [socialCmod, setSocialCmod] = useState<{ npcName: string; cmod: number } | null>(null)
   const [campaignNpcs, setCampaignNpcs] = useState<any[]>([])
   const [revealedNpcs, setRevealedNpcs] = useState<any[]>([])
+
+  async function handlePublishNpc(npc: CampaignNpc) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { error } = await supabase.from('world_npcs').insert({
+      source_campaign_npc_id: npc.id,
+      created_by: user.id,
+      name: npc.name,
+      portrait_url: npc.portrait_url,
+      reason: npc.reason, acumen: npc.acumen, physicality: npc.physicality,
+      influence: npc.influence, dexterity: npc.dexterity,
+      skills: npc.skills,
+      notes: npc.notes,
+      npc_type: npc.npc_type,
+      status: 'pending',
+    })
+    if (error) { alert(`Publish failed: ${error.message}`); return }
+    setPublishedNpcIds(prev => new Set([...prev, npc.id]))
+  }
 
   function handleRollRequest(label: string, amod: number, smod: number, weapon?: WeaponContext) {
     setPendingRoll({ label, amod, smod, weapon })
@@ -1038,7 +1061,7 @@ export default function TablePage() {
                   {entry.character_name}
                 </span>
                 {entry.is_npc && entry.npc_type && (
-                  <span style={{ fontSize: '8px', color: entry.npc_type === 'friendly' ? '#7fc458' : entry.npc_type === 'antagonist' ? '#d48bd4' : entry.npc_type === 'foe' ? '#f5a89a' : '#EF9F27', background: entry.npc_type === 'friendly' ? '#1a2e10' : entry.npc_type === 'antagonist' ? '#2a102a' : entry.npc_type === 'foe' ? '#2a1210' : '#2a2010', border: `1px solid ${entry.npc_type === 'friendly' ? '#2d5a1b' : entry.npc_type === 'antagonist' ? '#8b2e8b' : entry.npc_type === 'foe' ? '#c0392b' : '#5a4a1b'}`, padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>{entry.npc_type}</span>
+                  <span style={{ fontSize: '8px', color: entry.npc_type === 'bystander' ? '#7fc458' : entry.npc_type === 'antagonist' ? '#d48bd4' : entry.npc_type === 'foe' ? '#f5a89a' : '#EF9F27', background: entry.npc_type === 'bystander' ? '#1a2e10' : entry.npc_type === 'antagonist' ? '#2a102a' : entry.npc_type === 'foe' ? '#2a1210' : '#2a2010', border: `1px solid ${entry.npc_type === 'bystander' ? '#2d5a1b' : entry.npc_type === 'antagonist' ? '#8b2e8b' : entry.npc_type === 'foe' ? '#c0392b' : '#5a4a1b'}`, padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>{entry.npc_type}</span>
                 )}
                 {entry.is_npc && !entry.npc_type && (
                   <span style={{ fontSize: '8px', color: '#EF9F27', background: '#2a2010', border: '1px solid #EF9F27', padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>NPC</span>
@@ -1190,15 +1213,17 @@ export default function TablePage() {
           {/* Campaign Map — always rendered */}
           <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} />
 
-          {/* NPC Card(s) stacked — floats over map */}
+          {/* NPC Card(s) grid — floats over map */}
           {viewingNpcs.length > 0 && (
-            <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '8px', background: 'rgba(26,26,26,0.95)', zIndex: 1100 }}>
+            <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '8px', background: 'rgba(26,26,26,0.95)', zIndex: 1100, display: 'grid', gridTemplateColumns: viewingNpcs.length >= 3 ? 'repeat(3, 1fr)' : viewingNpcs.length === 2 ? 'repeat(2, 1fr)' : '1fr', gap: '6px', alignContent: 'start' }}>
               {viewingNpcs.map(npc => (
                 <NpcCard key={npc.id}
                   npc={npc}
                   onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
                   onEdit={() => { setViewingNpcs(prev => prev.filter(n => n.id !== npc.id)) }}
                   onRoll={sessionStatus === 'active' ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
+                  onPublish={isGM ? () => handlePublishNpc(npc) : undefined}
+                  isPublished={publishedNpcIds.has(npc.id)}
                 />
               ))}
             </div>

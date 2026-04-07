@@ -155,7 +155,7 @@ export function generateRandomNpc(typeOverride?: string): GeneratedNpc {
 
   // Type
   const npcType = typeOverride || weightedPick([
-    ['friendly', 35],
+    ['bystander', 35],
     ['goon', 35],
     ['foe', 20],
     ['antagonist', 10],
@@ -165,7 +165,7 @@ export function generateRandomNpc(typeOverride?: string): GeneratedNpc {
   let reason = 0, acumen = 0, physicality = 0, influence = 0, dexterity = 0
   const attrs: string[] = ['reason', 'acumen', 'physicality', 'influence', 'dexterity']
 
-  if (npcType === 'friendly') {
+  if (npcType === 'bystander') {
     if (chance(40)) {
       const bump = pick(attrs)
       if (bump === 'reason') reason = 1
@@ -216,7 +216,7 @@ export function generateRandomNpc(typeOverride?: string): GeneratedNpc {
   // Skills based on type
   let skillEntries: { name: string; level: number }[] = []
 
-  if (npcType === 'friendly') {
+  if (npcType === 'bystander') {
     const selected = pickN(pool, 2)
     skillEntries = selected.map(s => ({ name: s, level: 1 }))
   } else if (npcType === 'goon') {
