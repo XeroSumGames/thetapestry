@@ -98,7 +98,7 @@
 - [x] Campaign map in center panel with campaign pins
 - [x] Campaign map search bar with autocomplete + layer switcher (Street/Satellite/Dark)
 - [x] Realtime sync — GM reveals pin, player sees it on map instantly
-- [ ] GM can add new campaign pins from the map (click to place)
+- [x] GM can add new campaign pins from the map (click to place)
 
 ### GM Assets Panel
 - [x] NPCs tab (renamed from NPC Roster)
