@@ -715,8 +715,10 @@ export default function TablePage() {
   async function executeRoll() {
     if (!pendingRoll || !userId) return
     setRolling(true)
+    // Determine character name: NPC labels have "NpcName — Action", otherwise use selected entry or own entry
+    const labelParts = pendingRoll.label.split(' — ')
     const myEntry = entries.find(e => e.userId === userId)
-    const characterName = myEntry?.character.name ?? 'Unknown'
+    const characterName = labelParts.length > 1 ? labelParts[0] : (syncedSelectedEntry?.character.name ?? myEntry?.character.name ?? 'Unknown')
     let cmodVal = parseInt(cmod) || 0
     let die1: number, die2: number
     let preRollSpent = false
@@ -828,7 +830,8 @@ export default function TablePage() {
 
     const newDie1 = rerollDie === 'die2' ? rollResult.die1 : rollD6()
     const newDie2 = rerollDie === 'die1' ? rollResult.die2 : rollD6()
-    const characterName = myEntry.character.name ?? 'Unknown'
+    const rerollLabelParts = rollResult.label.split(' — ')
+    const characterName = rerollLabelParts.length > 1 ? rerollLabelParts[0] : (myEntry.character.name ?? 'Unknown')
 
     const { total, outcome, insightAwarded } = await saveRollToLog(newDie1, newDie2, rollResult.amod, rollResult.smod, rollResult.cmod, rollResult.label, characterName, true, targetName || null)
 

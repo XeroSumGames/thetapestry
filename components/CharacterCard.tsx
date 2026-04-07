@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
 import { logEvent } from '../lib/events'
@@ -132,8 +132,20 @@ export default function CharacterCard({
   const [localState, setLocalState] = useState<LiveState | null>(liveState ?? null)
 
   // Sync when liveState changes from outside (Realtime updates)
+  const prevStressRef = useRef(-1)
   useEffect(() => {
-    if (liveState) setLocalState(liveState)
+    if (liveState) {
+      const prevStress = prevStressRef.current
+      prevStressRef.current = liveState.stress
+      setLocalState(liveState)
+      // Trigger Stress Check on the player's own screen when stress reaches 5
+      // prevStress === -1 means first mount — also trigger if stress is already at 5
+      if (isMySheet && liveState.stress >= 5 && prevStress < 5 && !stressCheckPending && !breakingPointPending) {
+        setStressCheckPending(true)
+        setStressCheckCmod('0')
+        setStressCheckResult(null)
+      }
+    }
   }, [liveState])
 
   const rapid = c.data?.rapid ?? {}
@@ -388,12 +400,6 @@ export default function CharacterCard({
                       if (!canEdit || localState.stress >= 5) return
                       const newStress = localState.stress + 1
                       updateStat(localState.id, 'stress', newStress)
-                      if (newStress >= 5) {
-                        // Stress maxed — must make a Stress Check
-                        setStressCheckPending(true)
-                        setStressCheckCmod('0')
-                        setStressCheckResult(null)
-                      }
                     }}
                     style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.stress < 5 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.stress < 5 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>+</button>
                 </div>
