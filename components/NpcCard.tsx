@@ -159,7 +159,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll }: Props) {
         </div>
 
       {/* Skills — clickable */}
-      {skillEntries.length > 0 && (
+      {(skillEntries.length > 0 || onRoll) && (
         <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '6px' }}>
           {skillEntries.filter(s => s.name).map((s, i) => (
             <span key={i} onClick={() => handleSkillRoll(s.name, s.level)}
@@ -167,6 +167,20 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll }: Props) {
               {s.name} {sgn(s.level)}
             </span>
           ))}
+          {onRoll && (() => {
+            const existing = new Set(skillEntries.map(s => s.name))
+            const combatSkills = [
+              { name: 'Melee Combat', label: 'Melee' },
+              { name: 'Ranged Combat', label: 'Ranged' },
+              { name: 'Demolitions', label: 'Demolitions' },
+            ].filter(s => !existing.has(s.name))
+            return combatSkills.map(s => (
+              <span key={s.name} onClick={() => handleSkillRoll(s.name, getSkillLevel(s.name))}
+                style={{ fontSize: '13px', padding: '1px 5px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>
+                {s.label} {sgn(getSkillLevel(s.name))}
+              </span>
+            ))
+          })()}
         </div>
       )}
 

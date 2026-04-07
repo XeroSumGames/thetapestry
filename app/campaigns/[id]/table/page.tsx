@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
@@ -190,7 +190,13 @@ export default function TablePage() {
   const [sessionActing, setSessionActing] = useState(false)
   const [gmTab, setGmTab] = useState<'npcs' | 'assets' | 'notes'>('npcs')
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
+  const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
+  const [chatMessages, setChatMessages] = useState<{ id: string; user_id: string; character_name: string; message: string; created_at: string }[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const chatChannelRef = useRef<any>(null)
   const [viewingNpcs, setViewingNpcs] = useState<CampaignNpc[]>([])
+  const [sheetPos, setSheetPos] = useState<{ x: number; y: number } | null>(null)
+  const sheetDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
   const campaignChannelRef = useRef<any>(null)
 
   async function loadEntries(campaignId: string) {
@@ -272,6 +278,26 @@ export default function TablePage() {
     setTimeout(() => { rollFeedRef.current?.scrollTo(0, rollFeedRef.current.scrollHeight) }, 50)
   }
 
+  async function loadChat(campaignId: string) {
+    const { data } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('created_at', { ascending: false })
+      .limit(50)
+    setChatMessages((data ?? []).reverse())
+  }
+
+  async function sendChat() {
+    if (!chatInput.trim() || !userId) return
+    const myEntry = entries.find(e => e.userId === userId)
+    const characterName = myEntry?.character.name ?? 'Unknown'
+    await supabase.from('chat_messages').insert({
+      campaign_id: id, user_id: userId, character_name: characterName, message: chatInput.trim(),
+    })
+    setChatInput('')
+  }
+
   async function loadRevealedNpcs(characterId: string, cnpcs: any[]) {
     const { data: rels } = await supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('character_id', characterId).eq('revealed', true)
     if (rels && rels.length > 0 && cnpcs.length > 0) {
@@ -339,7 +365,7 @@ export default function TablePage() {
       setGmInfo({ userId: camp.gm_user_id, username: (gmProfile as any)?.username ?? 'GM' })
 
       if (members && members.length > 0) ensureCharacterStates(id, members as any[])
-      await Promise.all([loadEntries(id), loadRolls(id), loadInitiative(id)])
+      await Promise.all([loadEntries(id), loadRolls(id), loadInitiative(id), loadChat(id)])
 
       // Load campaign NPCs for social skill rolls (all users need this)
       const { data: cnpcs } = await supabase.from('campaign_npcs').select('id, name, portrait_url, npc_type, recruitment_role').eq('campaign_id', id)
@@ -375,6 +401,10 @@ export default function TablePage() {
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'roll_log', filter: `campaign_id=eq.${id}` }, () => loadRolls(id))
         .subscribe()
 
+      chatChannelRef.current = supabase.channel(`chat_${id}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `campaign_id=eq.${id}` }, () => loadChat(id))
+        .subscribe()
+
       initChannelRef.current = supabase.channel(`initiative_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
         .subscribe()
@@ -393,6 +423,7 @@ export default function TablePage() {
       if (channelRef.current) supabase.removeChannel(channelRef.current)
       if (membersChannelRef.current) supabase.removeChannel(membersChannelRef.current)
       if (rollChannelRef.current) supabase.removeChannel(rollChannelRef.current)
+      if (chatChannelRef.current) supabase.removeChannel(chatChannelRef.current)
       if (initChannelRef.current) supabase.removeChannel(initChannelRef.current)
       if (campaignChannelRef.current) supabase.removeChannel(campaignChannelRef.current)
       if (revealChannelRef.current) supabase.removeChannel(revealChannelRef.current)
@@ -857,7 +888,7 @@ export default function TablePage() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', fontFamily: 'Barlow, sans-serif', background: '#0f0f0f' }}>
 
       {/* Header */}
-      <div style={{ borderBottom: '1px solid #c0392b', padding: '8px 16px', display: 'flex', alignItems: 'stretch', gap: '12px', flexShrink: 0, background: '#0f0f0f' }}>
+      <div style={{ borderBottom: '1px solid #c0392b', padding: '8px 16px', display: 'flex', alignItems: 'stretch', gap: '12px', flexShrink: 0, background: '#0f0f0f', position: 'relative', zIndex: 10001 }}>
         <div>
           <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>
             {SETTINGS[campaign.setting] ?? campaign.setting} &mdash; {isGM ? 'GM View' : 'Player View'}
@@ -907,7 +938,7 @@ export default function TablePage() {
             Previous Sessions
           </a>
         )}
-        <button onClick={() => setSheetMode(m => m === 'inline' ? 'overlay' : 'inline')}
+        <button onClick={() => { setSheetMode(m => m === 'inline' ? 'overlay' : 'inline'); setSheetPos(null) }}
           style={{ padding: '0 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
           {sheetMode === 'inline' ? 'Overlay' : 'Inline'}
         </button>
@@ -1003,66 +1034,108 @@ export default function TablePage() {
       {/* Main area */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
 
-        {/* Left — Roll Feed */}
+        {/* Left — Game Feed */}
         <div style={{ width: '260px', flexShrink: 0, borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
-          <div style={{ padding: '10px 14px', borderBottom: '1px solid #2e2e2e', fontSize: '12px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Barlow Condensed, sans-serif' }}>
-            Roll Feed
+          <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
+            {(['rolls', 'chat', 'both'] as const).map(tab => (
+              <button key={tab} onClick={() => setFeedTab(tab)}
+                style={{ flex: 1, padding: '8px 0', background: feedTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: feedTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: feedTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '12px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                {tab === 'rolls' ? 'Rolls' : tab === 'chat' ? 'Chat' : 'Both'}
+              </button>
+            ))}
           </div>
           <div ref={rollFeedRef} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-            {rolls.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a' }}>
-                <div style={{ fontSize: '24px', marginBottom: '8px' }}>{sessionStatus === 'idle' ? '⏸' : '🎲'}</div>
-                <div style={{ fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                  {sessionStatus === 'idle' ? 'Session not active' : 'Click a skill or attribute on your sheet to roll'}
-                </div>
-              </div>
-            ) : (
-              rolls.map(r => (
-                <div key={r.id} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: `3px solid ${outcomeColor(r.outcome)}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.character_name}</span>
-                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>
-                    {r.label}
-                    {r.target_name && <span style={{ color: '#EF9F27' }}> → {r.target_name}</span>}
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
-                    [{r.die1}+{r.die2}]
-                    {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
-                    {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
-                    {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
-                    <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: 700, color: outcomeColor(r.outcome), fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.outcome}</span>
-                    {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-          <div style={{ padding: '8px', borderTop: '1px solid #2e2e2e' }}>
-            {sessionStatus === 'idle' ? (
-              <div style={{ textAlign: 'center', padding: '6px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#cce0f5' }}>
+            {sessionStatus === 'idle' && (
+              <div style={{ textAlign: 'center', padding: '8px', marginBottom: '8px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
                 Waiting for GM to open the session
               </div>
-            ) : myEntry ? (
-              <button
-                onClick={() => { setSelectedEntry(myEntry); setViewingNpcs([]) }}
-                style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
-              >
-                Open My Sheet to Roll
-              </button>
-            ) : null}
+            )}
+            {/* Roll entries */}
+            {(feedTab === 'rolls' || feedTab === 'both') && (
+              rolls.length === 0 && feedTab === 'rolls' ? (
+                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>{sessionStatus === 'idle' ? '⏸' : '🎲'}</div>
+                  <div style={{ fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                    {sessionStatus === 'idle' ? 'Session not active' : 'Click a skill or attribute on your sheet to roll'}
+                  </div>
+                </div>
+              ) : (
+                rolls.map(r => (
+                  <div key={r.id} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: `3px solid ${outcomeColor(r.outcome)}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.character_name}</span>
+                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>
+                      {r.label}
+                      {r.target_name && <span style={{ color: '#EF9F27' }}> → {r.target_name}</span>}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
+                      [{r.die1}+{r.die2}]
+                      {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+                      {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+                      {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+                      <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '15px', fontWeight: 700, color: outcomeColor(r.outcome), fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.outcome}</span>
+                      {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
+                    </div>
+                  </div>
+                ))
+              )
+            )}
+            {/* Chat messages */}
+            {(feedTab === 'chat' || feedTab === 'both') && (
+              chatMessages.length === 0 && feedTab === 'chat' ? (
+                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>No messages yet</div>
+              ) : (
+                chatMessages.map(m => (
+                  <div key={m.id} style={{ marginBottom: '6px', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{m.character_name}</span>
+                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(m.created_at)}</span>
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{m.message}</div>
+                  </div>
+                ))
+              )
+            )}
+          </div>
+          {/* Bottom: chat input + sheet button */}
+          <div style={{ borderTop: '1px solid #2e2e2e', flexShrink: 0 }}>
+            {(feedTab === 'chat' || feedTab === 'both') && (
+              <div style={{ display: 'flex', gap: '0', padding: '6px 8px', alignItems: 'stretch' }}>
+                <textarea value={chatInput} onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat() } }}
+                  placeholder="Type a message..."
+                  rows={2}
+                  style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRight: 'none', borderRadius: '3px 0 0 3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', resize: 'none', lineHeight: '1.4' }} />
+                <button onClick={sendChat}
+                  style={{ width: '24px', flexShrink: 0, background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '0 3px 3px 0', color: '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', writingMode: 'vertical-rl', letterSpacing: '.08em', padding: 0, transform: 'rotate(180deg)' }}>Send</button>
+              </div>
+            )}
+            {sessionStatus !== 'idle' && myEntry && (
+              <div style={{ padding: '6px 8px' }}>
+                <button
+                  onClick={() => { setSelectedEntry(myEntry); setViewingNpcs([]); setSheetPos(null) }}
+                  style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+                >
+                  Open My Sheet to Roll
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Center — Character Sheet or Tactical Map */}
+        {/* Center — Map always rendered, sheets float on top */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
-          {viewingNpcs.length > 0 ? (
-            /* NPC Card(s) stacked */
-            <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+          {/* Campaign Map — always rendered */}
+          <CampaignMap campaignId={id} isGM={isGM} />
+
+          {/* NPC Card(s) stacked — floats over map */}
+          {viewingNpcs.length > 0 && (
+            <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '8px', background: 'rgba(26,26,26,0.95)', zIndex: 1100 }}>
               {viewingNpcs.map(npc => (
                 <NpcCard key={npc.id}
                   npc={npc}
@@ -1072,9 +1145,53 @@ export default function TablePage() {
                 />
               ))}
             </div>
-          ) : syncedSelectedEntry && sheetMode === 'inline' ? (
-            /* Inline character sheet */
-            <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', paddingBottom: revealedNpcs.length > 0 ? '60px' : '1rem' }}>
+          )}
+
+          {/* Inline character sheet — draggable, floats over map */}
+          {syncedSelectedEntry && sheetMode === 'inline' && (
+            <div style={{
+              position: 'absolute',
+              left: sheetPos?.x ?? 8,
+              top: sheetPos?.y ?? 8,
+              width: 'calc(100% - 16px)',
+              maxWidth: '780px',
+              maxHeight: 'calc(100% - 16px)',
+              overflowY: 'auto',
+              padding: '1rem',
+              paddingBottom: revealedNpcs.length > 0 ? '60px' : '1rem',
+              background: 'rgba(26,26,26,0.95)',
+              borderRadius: '4px',
+              border: '1px solid #3a3a3a',
+              zIndex: 1100,
+              cursor: 'default',
+            }}>
+              {/* Drag handle */}
+              <div
+                onMouseDown={e => {
+                  const rect = (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect()
+                  sheetDragRef.current = {
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    origX: sheetPos?.x ?? 0,
+                    origY: sheetPos?.y ?? 0,
+                  }
+                  const onMove = (ev: MouseEvent) => {
+                    if (!sheetDragRef.current) return
+                    const dx = ev.clientX - sheetDragRef.current.startX
+                    const dy = ev.clientY - sheetDragRef.current.startY
+                    setSheetPos({ x: sheetDragRef.current.origX + dx, y: sheetDragRef.current.origY + dy })
+                  }
+                  const onUp = () => {
+                    sheetDragRef.current = null
+                    window.removeEventListener('mousemove', onMove)
+                    window.removeEventListener('mouseup', onUp)
+                  }
+                  window.addEventListener('mousemove', onMove)
+                  window.addEventListener('mouseup', onUp)
+                }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', marginBottom: '4px', cursor: 'grab', borderRadius: '3px', background: '#242424', border: '1px solid #3a3a3a', userSelect: 'none' }}>
+                <div style={{ width: '40px', height: '4px', borderRadius: '2px', background: '#5a5a5a' }} />
+              </div>
               <CharacterCard
                 character={syncedSelectedEntry.character}
                 liveState={syncedSelectedEntry.liveState}
@@ -1083,13 +1200,10 @@ export default function TablePage() {
                 isMySheet={syncedSelectedEntry.userId === userId}
                 onStatUpdate={handleStatUpdate}
                 onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
-                onClose={() => setSelectedEntry(null)}
+                onClose={() => { setSelectedEntry(null); setSheetPos(null) }}
                 inline={true}
               />
             </div>
-          ) : (
-            /* Campaign Map */
-            <CampaignMap campaignId={id} isGM={isGM} />
           )}
           {/* Revealed NPCs — always visible at bottom */}
           {!isGM && revealedNpcs.length > 0 && (
@@ -1144,7 +1258,7 @@ export default function TablePage() {
       {/* Bottom portrait strip */}
       <div style={{ borderTop: '1px solid #2e2e2e', display: 'flex', flexShrink: 0, background: '#0f0f0f', height: '80px' }}>
         <button
-          onClick={() => { if (gmEntry) { setSelectedEntry(gmEntry); setViewingNpcs([]) } }}
+          onClick={() => { if (gmEntry) { setSelectedEntry(gmEntry); setViewingNpcs([]); setSheetPos(null) } }}
           style={{ width: '120px', flexShrink: 0, background: gmEntry ? '#1a1a1a' : '#111', borderTop: 'none', borderBottom: 'none', borderLeft: 'none', borderRight: '1px solid #2e2e2e', cursor: gmEntry ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px', transition: 'background 0.15s' }}
           onMouseEnter={e => { if (gmEntry) (e.currentTarget as HTMLElement).style.background = '#242424' }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = gmEntry ? '#1a1a1a' : '#111' }}
@@ -1172,7 +1286,7 @@ export default function TablePage() {
             const isActive = combatActive && initiativeOrder.some(o => o.is_active && o.character_id === entry.character.id)
             const isMe = entry.userId === userId
             return (
-              <button key={entry.stateId} onClick={() => { if (isGM || isMe) { setSelectedEntry(entry); setViewingNpcs([]) } }}
+              <button key={entry.stateId} onClick={() => { if (isGM || isMe) { setSelectedEntry(entry); setViewingNpcs([]); setSheetPos(null) } }}
                 style={{ flex: 1, minWidth: 0, background: isActive ? '#1a0f0f' : '#1a1a1a', borderTop: isActive ? '2px solid #c0392b' : isMe ? '2px solid #2d5a1b' : 'none', borderBottom: 'none', borderLeft: 'none', borderRight: i < playerEntries.length - 1 ? '1px solid #2e2e2e' : 'none', cursor: (isGM || isMe) ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: isCompact ? '2px' : '4px', padding: pad, transition: 'background 0.15s' }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                 onMouseLeave={e => (e.currentTarget.style.background = isActive ? '#1a0f0f' : '#1a1a1a')}
@@ -1191,7 +1305,7 @@ export default function TablePage() {
 
       {/* Character sheet overlay — only in overlay mode */}
       {syncedSelectedEntry && sheetMode === 'overlay' && (
-        <div onClick={() => setSelectedEntry(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+        <div onClick={() => { setSelectedEntry(null); setSheetPos(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ maxWidth: '780px', width: '100%', maxHeight: '90vh', overflow: 'auto', borderRadius: '4px' }}>
             <CharacterCard
               character={syncedSelectedEntry.character}
@@ -1202,7 +1316,7 @@ export default function TablePage() {
               onStatUpdate={handleStatUpdate}
               onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod, weapon) => { setSelectedEntry(null); handleRollRequest(label, amod, smod, weapon) } : undefined}
             />
-            <button onClick={() => setSelectedEntry(null)} style={{ marginTop: '8px', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            <button onClick={() => { setSelectedEntry(null); setSheetPos(null) }} style={{ marginTop: '8px', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Close
             </button>
           </div>

@@ -40,11 +40,12 @@ const LASTING_WOUNDS_TABLE: { name: string; effect: string }[] = [
   { name: 'Shell Shock', effect: '-2 Dexterity' },                    // 12
 ]
 
-function rollOnTable(table: { name: string; effect: string }[]): { roll: number; result: typeof table[0] } {
+function rollOnTable(table: { name: string; effect: string }[], cmod = 0): { roll: number; cmod: number; result: typeof table[0] } {
   const die1 = Math.floor(Math.random() * 6) + 1
   const die2 = Math.floor(Math.random() * 6) + 1
-  const roll = die1 + die2
-  return { roll, result: table[roll - 2] }
+  const raw = die1 + die2
+  const adjusted = Math.max(2, Math.min(12, raw + cmod))
+  return { roll: raw, cmod, result: table[adjusted - 2] }
 }
 
 function stressColor(level: number): string {
@@ -103,8 +104,13 @@ export default function CharacterCard({
   const [deleting, setDeleting] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [printing, setPrinting] = useState(false)
-  const [breakingPointResult, setBreakingPointResult] = useState<{ roll: number; result: { name: string; effect: string } } | null>(null)
-  const [lastingWoundResult, setLastingWoundResult] = useState<{ roll: number; result: { name: string; effect: string } } | null>(null)
+  const [stressCheckPending, setStressCheckPending] = useState(false)
+  const [stressCheckCmod, setStressCheckCmod] = useState('0')
+  const [stressCheckResult, setStressCheckResult] = useState<{ die1: number; die2: number; amod: number; cmod: number; total: number; success: boolean } | null>(null)
+  const [breakingPointPending, setBreakingPointPending] = useState(false)
+  const [breakingPointCmod, setBreakingPointCmod] = useState('0')
+  const [breakingPointResult, setBreakingPointResult] = useState<{ roll: number; cmod: number; result: { name: string; effect: string } } | null>(null)
+  const [lastingWoundResult, setLastingWoundResult] = useState<{ roll: number; cmod: number; result: { name: string; effect: string } } | null>(null)
 
   // Weapon local state
   const [weaponPrimary, setWeaponPrimary] = useState(c.data?.weaponPrimary ?? { weaponName: '', condition: 'Used', ammoCurrent: 0, ammoMax: 0, reloads: 0 })
@@ -383,11 +389,10 @@ export default function CharacterCard({
                       const newStress = localState.stress + 1
                       updateStat(localState.id, 'stress', newStress)
                       if (newStress >= 5) {
-                        // Trigger Breaking Point
-                        const bp = rollOnTable(BREAKING_POINT_TABLE)
-                        setBreakingPointResult(bp)
-                        // Reset stress to 0 after breaking point
-                        setTimeout(() => updateStat(localState.id, 'stress', 0), 100)
+                        // Stress maxed — must make a Stress Check
+                        setStressCheckPending(true)
+                        setStressCheckCmod('0')
+                        setStressCheckResult(null)
                       }
                     }}
                     style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && localState.stress < 5 ? 'pointer' : 'not-allowed', opacity: canEdit && localState.stress < 5 ? 1 : 0.3, fontSize: '14px', lineHeight: 1, padding: 0 }}>+</button>
@@ -474,32 +479,17 @@ export default function CharacterCard({
           })}
         </div>
 
-        {/* Combat skill buttons */}
+        {/* Unarmed attack button */}
         {onRoll && (
-          <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginTop: '10px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+          <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginTop: '10px' }}>
             <button onClick={() => {
               onRoll('Unarmed Attack', rapid.PHY ?? 0, skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
             }}
-              style={{ flex: 1, minWidth: '100px', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-              👊 Unarmed
-            </button>
-            <button onClick={() => {
-              onRoll('Melee Combat', rapid.PHY ?? 0, skills.find(s => s.skillName === 'Melee Combat')?.level ?? 0)
-            }}
-              style={{ flex: 1, minWidth: '100px', padding: '6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-              ⚔️ Melee
-            </button>
-            <button onClick={() => {
-              onRoll('Ranged Combat', rapid.DEX ?? 0, skills.find(s => s.skillName === 'Ranged Combat')?.level ?? 0)
-            }}
-              style={{ flex: 1, minWidth: '100px', padding: '6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-              🎯 Ranged
-            </button>
-            <button onClick={() => {
-              onRoll('Demolitions*', rapid.PHY ?? 0, skills.find(s => s.skillName === 'Demolitions*')?.level ?? -3)
-            }}
-              style={{ flex: 1, minWidth: '100px', padding: '6px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-              💥 Demolitions
+              style={{ width: '100%', padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>👊 Unarmed Attack (PHY)</span>
+              <span style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 400, letterSpacing: 0 }}>
+                WP: <span style={{ color: '#c0392b', fontWeight: 700 }}>1d3</span> &nbsp; RP: 100%
+              </span>
             </button>
           </div>
         )}
@@ -623,13 +613,97 @@ export default function CharacterCard({
         </div>
       )}
 
-      {/* Breaking Point modal */}
+      {/* Stress Check modal — triggers when stress hits 5 */}
+      {stressCheckPending && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '2px solid #EF9F27', borderRadius: '4px', padding: '1.5rem', width: '360px', textAlign: 'center' }}>
+            <div style={{ fontSize: '13px', color: '#EF9F27', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Stress Check</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>Stress has reached maximum</div>
+            <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '4px' }}>Roll 2d6 + RSN ({rapid.RSN ?? 0 >= 0 ? '+' : ''}{rapid.RSN ?? 0}) + ACU ({rapid.ACU ?? 0 >= 0 ? '+' : ''}{rapid.ACU ?? 0})</div>
+            <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '12px' }}>Success = drop to 4 stress. Failure = Breaking Point.</div>
+            {!stressCheckResult ? (
+              <>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Conditional Modifier</label>
+                  <input type="number" value={stressCheckCmod} onChange={e => setStressCheckCmod(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') {
+                      const cmodVal = parseInt(stressCheckCmod) || 0
+                      const amod = (rapid.RSN ?? 0) + (rapid.ACU ?? 0)
+                      const d1 = Math.floor(Math.random() * 6) + 1
+                      const d2 = Math.floor(Math.random() * 6) + 1
+                      const total = d1 + d2 + amod + cmodVal
+                      setStressCheckResult({ die1: d1, die2: d2, amod, cmod: cmodVal, total, success: total >= 7 })
+                    }}}
+                    autoFocus
+                    style={{ display: 'block', width: '80px', margin: '6px auto 0', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '18px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', outline: 'none' }} />
+                </div>
+                <button onClick={() => {
+                  const cmodVal = parseInt(stressCheckCmod) || 0
+                  const amod = (rapid.RSN ?? 0) + (rapid.ACU ?? 0)
+                  const d1 = Math.floor(Math.random() * 6) + 1
+                  const d2 = Math.floor(Math.random() * 6) + 1
+                  const total = d1 + d2 + amod + cmodVal
+                  setStressCheckResult({ die1: d1, die2: d2, amod, cmod: cmodVal, total, success: total >= 7 })
+                }}
+                  style={{ width: '100%', padding: '10px', background: '#EF9F27', border: 'none', borderRadius: '3px', color: '#1a1a1a', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Roll Stress Check</button>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: '#f5f2ee', marginBottom: '4px' }}>
+                  {stressCheckResult.die1} + {stressCheckResult.die2}
+                  <span style={{ color: '#7ab3d4' }}> {stressCheckResult.amod >= 0 ? '+' : ''}{stressCheckResult.amod}</span>
+                  {stressCheckResult.cmod !== 0 && <span style={{ color: '#EF9F27' }}> {stressCheckResult.cmod >= 0 ? '+' : ''}{stressCheckResult.cmod}</span>}
+                  <span style={{ color: '#d4cfc9' }}> = {stressCheckResult.total}</span>
+                </div>
+                <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', color: stressCheckResult.success ? '#7fc458' : '#c0392b', marginBottom: '12px' }}>
+                  {stressCheckResult.success ? 'Success — Held It Together' : 'Failure — Breaking Point'}
+                </div>
+                <button onClick={() => {
+                  if (!localState) return
+                  setStressCheckPending(false)
+                  if (stressCheckResult.success) {
+                    updateStat(localState.id, 'stress', 4)
+                  } else {
+                    updateStat(localState.id, 'stress', 5)
+                    setBreakingPointPending(true)
+                    setBreakingPointCmod('0')
+                  }
+                  setStressCheckResult(null)
+                }}
+                  style={{ width: '100%', padding: '10px', background: stressCheckResult.success ? '#1a2e10' : '#c0392b', border: `1px solid ${stressCheckResult.success ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  {stressCheckResult.success ? 'Continue' : 'Roll on Breaking Point Table'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Breaking Point — CMod prompt */}
+      {breakingPointPending && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '2px solid #c0392b', borderRadius: '4px', padding: '1.5rem', width: '360px', textAlign: 'center' }}>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Breaking Point</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '16px' }}>You have broken</div>
+            <button onClick={() => {
+              if (!localState) return
+              const bp = rollOnTable(BREAKING_POINT_TABLE)
+              setBreakingPointResult(bp)
+              setBreakingPointPending(false)
+              updateStat(localState.id, 'stress', 0)
+            }}
+              style={{ width: '100%', padding: '10px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Roll Breaking Point</button>
+          </div>
+        </div>
+      )}
+
+      {/* Breaking Point result modal */}
       {breakingPointResult && (
         <div onClick={() => setBreakingPointResult(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '2px solid #c0392b', borderRadius: '4px', padding: '1.5rem', width: '360px', textAlign: 'center' }}>
             <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Breaking Point</div>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px' }}>{breakingPointResult.result.name}</div>
-            <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '8px' }}>Rolled: {breakingPointResult.roll}</div>
+            <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '8px' }}>Rolled: {breakingPointResult.roll}{breakingPointResult.cmod !== 0 ? ` (${breakingPointResult.cmod > 0 ? '+' : ''}${breakingPointResult.cmod} CMod = ${Math.max(2, Math.min(12, breakingPointResult.roll + breakingPointResult.cmod))})` : ''}</div>
             <div style={{ fontSize: '15px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '1.5rem', padding: '10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px' }}>{breakingPointResult.result.effect}</div>
             <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem' }}>Stress has been reset to 0.</div>
             <button onClick={() => setBreakingPointResult(null)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Acknowledge</button>
