@@ -32,8 +32,8 @@
 - [x] Breaking Point modal shows result name, effect, and resets stress to 0
 - [x] Lasting Wounds — "Roll Lasting Wound" button when WP reaches 0, rolls Table 12
 - [x] Insight, CDP, Morality converted to bar trackers (10/10/7 blocks)
-- [ ] Breaking Point modal visible to both player AND GM via Realtime
-- [ ] Breaking Point should allow CMod on the check
+- [x] Stress Check with CMod when stress hits 5 — success drops to 4, failure triggers Breaking Point
+- [x] Breaking Point modal shows on whichever screen has the sheet open
 
 ### Combat Actions — 5 Passes
 - [ ] Pass 1 — Action slots UI (2 actions per turn, auto-advance after both used)
@@ -112,7 +112,7 @@
 
 ### Campaign Management
 - [x] Launch, Leave, Share buttons
-- [ ] Roll Feed Chat
+- [x] Game Feed with Rolls/Chat/Both tabs and Realtime chat
 - [ ] GM private notes, Player kick, CDP awards
 - [ ] Character progression log
 - [ ] Allow characters in multiple campaigns
@@ -136,6 +136,9 @@
 - [x] Navbar removed, sidebar branding with Distemper logo
 - [x] Sidebar links open in new tabs
 - [x] Overlay mode 30% opacity — map visible behind character sheet
+- [x] Inline mode: full-screen sheet; Overlay mode: draggable floating window
+- [x] NPC card: Melee/Ranged/Demolitions green skill buttons (no duplicates)
+- [x] PC card: single centered Unarmed Attack button with damage info
 
 ---
 
