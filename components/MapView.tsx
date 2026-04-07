@@ -102,7 +102,7 @@ export default function MapView({ embedded = false, showHeader = true }: MapView
 
       if (!mapRef.current || mapInstanceRef.current) return
 
-      const map = L.map(mapRef.current, { center: [-25, 15], zoom: 3, zoomControl: true, minZoom: 3, maxBounds: [[-85, -180], [85, 180]], maxBoundsViscosity: 1.0 })
+      const map = L.map(mapRef.current, { center: [0, 15], zoom: 3, zoomControl: true, minZoom: 3, maxBounds: [[-85, -180], [85, 180]], maxBoundsViscosity: 1.0 })
 
       tileLayerRef.current = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',

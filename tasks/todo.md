@@ -164,6 +164,7 @@
 - [x] Map autocomplete on search bar (Nominatim)
 - [x] Pin clustering (leaflet.markercluster, both world + campaign maps)
 - [x] 10 map tile styles on both world map and campaign map (unified layout)
+- [x] World map default view: center [-25, 15] zoom 3, no gray space, maxBounds locked
 - [x] Campaign map style selector on New Campaign page
 - [x] Custom location search for New Setting campaigns (Nominatim, saves center lat/lng)
 - [x] Unified header button styling (hdrBtn helper, 28px uniform)

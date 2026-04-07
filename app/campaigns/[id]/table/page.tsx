@@ -110,6 +110,7 @@ interface InitiativeEntry {
   is_active: boolean
   is_npc: boolean
   actions_remaining: number
+  aim_bonus: number
 }
 
 
@@ -537,15 +538,15 @@ export default function TablePage() {
     const currentIdx = initiativeOrder.findIndex(e => e.is_active)
     const nextIdx = (currentIdx + 1) % initiativeOrder.length
 
-    await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0 }).eq('campaign_id', id)
-    await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2 }).eq('id', initiativeOrder[nextIdx].id)
+    await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('campaign_id', id)
+    await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', initiativeOrder[nextIdx].id)
     await loadInitiative(id)
   }
 
-  async function consumeAction(entryId: string, actionLabel?: string) {
+  async function consumeAction(entryId: string, actionLabel?: string, cost = 1) {
     const entry = initiativeOrder.find(e => e.id === entryId)
-    if (!entry || entry.actions_remaining <= 0) return
-    const newRemaining = entry.actions_remaining - 1
+    if (!entry || entry.actions_remaining < cost) return
+    const newRemaining = entry.actions_remaining - cost
 
     // Log the action to game feed
     if (actionLabel) {
@@ -558,12 +559,39 @@ export default function TablePage() {
       })
     }
 
+    // Clear aim bonus after a roll (no actionLabel = called from closeRollModal)
+    const clearAim = !actionLabel && entry.aim_bonus > 0
+
     if (newRemaining <= 0) {
-      // Auto-advance
       await nextTurn()
     } else {
-      await supabase.from('initiative_order').update({ actions_remaining: newRemaining }).eq('id', entryId)
+      await supabase.from('initiative_order').update({ actions_remaining: newRemaining, ...(clearAim ? { aim_bonus: 0 } : {}) }).eq('id', entryId)
       await loadInitiative(id)
+    }
+  }
+
+  async function handleAim(entryId: string) {
+    const entry = initiativeOrder.find(e => e.id === entryId)
+    if (!entry || entry.actions_remaining <= 0) return
+    const newAim = (entry.aim_bonus ?? 0) + 1
+    await supabase.from('initiative_order').update({ aim_bonus: newAim }).eq('id', entryId)
+    await consumeAction(entryId, `${entry.character_name} — Aim (+${newAim} CMod)`)
+  }
+
+  async function handleReadyWeapon(entryId: string) {
+    const entry = initiativeOrder.find(e => e.id === entryId)
+    if (!entry) return
+    // Check if combatant has a Tracking weapon
+    const charEntry = entries.find(e => e.character.name === entry.character_name)
+    const weaponData = charEntry?.character.data?.weaponPrimary ?? null
+    const w = weaponData ? getWeaponByName(weaponData.weaponName) : null
+    const hasTracking = w ? getTraitValue(w.traits, 'Tracking') !== null : false
+    if (hasTracking) {
+      const newAim = (entry.aim_bonus ?? 0) + 1
+      await supabase.from('initiative_order').update({ aim_bonus: newAim }).eq('id', entryId)
+      await consumeAction(entryId, `${entry.character_name} — Ready Weapon (Tracking +${newAim} CMod)`)
+    } else {
+      await consumeAction(entryId, `${entry.character_name} — Ready Weapon`)
     }
   }
 
@@ -737,7 +765,11 @@ export default function TablePage() {
   function handleRollRequest(label: string, amod: number, smod: number, weapon?: WeaponContext) {
     setPendingRoll({ label, amod, smod, weapon })
     setRollResult(null)
-    setCmod(weapon?.conditionCmod ? String(weapon.conditionCmod) : '0')
+    // Include aim bonus from Aim action or Tracking trait
+    const activeEntry = combatActive ? initiativeOrder.find(e => e.is_active) : null
+    const aimBonus = activeEntry?.aim_bonus ?? 0
+    const baseCmod = (weapon?.conditionCmod ?? 0) + aimBonus
+    setCmod(baseCmod ? String(baseCmod) : '0')
     setTargetName('')
     setPreRollInsight('none')
     setUseBurst(false)
@@ -1142,7 +1174,7 @@ export default function TablePage() {
               </div>
             )}
           </div>
-          {/* Simple action buttons — shown for active combatant or GM */}
+          {/* Action buttons — shown for active combatant or GM */}
           {(() => {
             const activeEntry = initiativeOrder.find(e => e.is_active)
             if (!activeEntry || (activeEntry.actions_remaining ?? 0) <= 0) return null
@@ -1150,15 +1182,78 @@ export default function TablePage() {
             const isMyTurn = activeEntry.character_id && myChar && activeEntry.character_id === myChar.character.id
             const canAct = isMyTurn || (isGM && activeEntry.is_npc) || isGM
             if (!canAct) return null
+
+            // Determine combatant's weapon for conditional buttons
+            const charEntry = entries.find(e => e.character.name === activeEntry.character_name)
+            const weaponData = charEntry?.character.data?.weaponPrimary ?? null
+            const w = weaponData ? getWeaponByName(weaponData.weaponName) : null
+            const hasBurst = w ? getTraitValue(w.traits, 'Automatic Burst') !== null : false
+            const isMelee = w?.category === 'melee'
+            const has2Actions = (activeEntry.actions_remaining ?? 0) >= 2
+
+            const actBtn = (bg: string, color: string, border: string): React.CSSProperties => ({
+              padding: '2px 8px', background: bg, border: `1px solid ${border}`, borderRadius: '3px',
+              color, fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif',
+              letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer',
+            })
+
             return (
-              <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
-                <span style={{ fontSize: '9px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', marginRight: '4px' }}>Actions:</span>
-                {['Move', 'Ready Weapon', 'Take Cover', 'Reload', 'Defend'].map(action => (
-                  <button key={action} onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — ${action}`)}
-                    style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    {action}
+              <div style={{ marginTop: '6px' }}>
+                {/* 1-action row */}
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '9px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>1 Action:</span>
+                  {['Move', 'Take Cover', 'Reload', 'Defend'].map(action => (
+                    <button key={action} onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — ${action}`)}
+                      style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>
+                      {action}
+                    </button>
+                  ))}
+                  <button onClick={() => handleReadyWeapon(activeEntry.id)}
+                    style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>
+                    Ready Weapon
                   </button>
-                ))}
+                  <button onClick={() => handleAim(activeEntry.id)}
+                    style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
+                    Aim{(activeEntry.aim_bonus ?? 0) > 0 ? ` (+${activeEntry.aim_bonus})` : ''}
+                  </button>
+                </div>
+                {/* 2-action row — only if 2 actions remaining */}
+                {has2Actions && (hasBurst || isMelee) && (
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '4px' }}>
+                    <span style={{ fontSize: '9px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>2 Actions:</span>
+                    {hasBurst && w && (
+                      <button onClick={() => {
+                        setUseBurst(true)
+                        const skillName = w.skill
+                        const attrKey = w.category === 'melee' ? 'PHY' : 'DEX'
+                        const rapid = charEntry?.character.data?.rapid ?? {}
+                        const amod = rapid[attrKey] ?? 0
+                        const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === skillName)?.level ?? 0
+                        consumeAction(activeEntry.id, undefined, 2)
+                        handleRollRequest(`${activeEntry.character_name} — Rapid Fire (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: 0, traits: w.traits })
+                      }}
+                        style={actBtn('#7a1f16', '#f5a89a', '#c0392b')}>
+                        Rapid Fire
+                      </button>
+                    )}
+                    {isMelee && w && (
+                      <button onClick={() => {
+                        const rapid = charEntry?.character.data?.rapid ?? {}
+                        const amod = rapid.PHY ?? 0
+                        const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Melee Combat')?.level ?? 0
+                        consumeAction(activeEntry.id, undefined, 2)
+                        handleRollRequest(`${activeEntry.character_name} — Charge (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: 1, traits: w.traits })
+                      }}
+                        style={actBtn('#7a1f16', '#f5a89a', '#c0392b')}>
+                        Charge
+                      </button>
+                    )}
+                    <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Sprint`, 2)}
+                      style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>
+                      Sprint
+                    </button>
+                  </div>
+                )}
               </div>
             )
           })()}
