@@ -20,6 +20,8 @@ const PIN_CATEGORIES = [
   { value: 'group',      label: 'Group',      emoji: '👥' },
   { value: 'animals',    label: 'Animals',    emoji: '🐾' },
   { value: 'community',  label: 'Community',  emoji: '🏘️' },
+  { value: 'world_event', label: 'World Event', emoji: '🌍' },
+  { value: 'settlement', label: 'Settlement', emoji: '🏚️' },
 ]
 
 function getCategoryEmoji(category: string): string {

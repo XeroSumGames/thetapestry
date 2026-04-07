@@ -55,6 +55,8 @@ const PIN_CATEGORIES = [
   { value: 'resource',   label: 'Resource',   emoji: '🎒' },
   { value: 'community',  label: 'Community',  emoji: '🏘️' },
   { value: 'animals',    label: 'Animals',    emoji: '🐾' },
+  { value: 'world_event', label: 'World Event', emoji: '🌍' },
+  { value: 'settlement', label: 'Settlement', emoji: '🏚️' },
   { value: 'group',      label: 'Group',      emoji: '👥' },
 ]
 

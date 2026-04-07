@@ -165,6 +165,10 @@
 ## 🟠 Phase 3 — Map
 - [x] Map autocomplete on search bar (Nominatim)
 - [x] Pin clustering (leaflet.markercluster, both world + campaign maps)
+- [x] 10 map tile styles on both world map and campaign map (unified layout)
+- [x] Campaign map style selector on New Campaign page
+- [x] Custom location search for New Setting campaigns (Nominatim, saves center lat/lng)
+- [x] Unified header button styling (hdrBtn helper, 28px uniform)
 - [ ] Layer toggles, Temporal filter
 - [ ] Pin cards, Setting regions, Pin hierarchy
 - [ ] Pin search, Parent/child structure, Canon layer

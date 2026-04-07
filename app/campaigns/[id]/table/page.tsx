@@ -109,6 +109,7 @@ interface InitiativeEntry {
   roll: number
   is_active: boolean
   is_npc: boolean
+  actions_remaining: number
 }
 
 
@@ -524,7 +525,7 @@ export default function TablePage() {
       .order('roll', { ascending: false })
 
     if (order && order.length > 0) {
-      await supabase.from('initiative_order').update({ is_active: true }).eq('id', order[0].id)
+      await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2 }).eq('id', order[0].id)
     }
 
     setStartingCombat(false)
@@ -532,15 +533,38 @@ export default function TablePage() {
   }
 
   async function nextTurn() {
-    if (!isGM || initiativeOrder.length === 0) return
+    if (initiativeOrder.length === 0) return
     const currentIdx = initiativeOrder.findIndex(e => e.is_active)
     const nextIdx = (currentIdx + 1) % initiativeOrder.length
 
-    await Promise.all([
-      supabase.from('initiative_order').update({ is_active: false }).eq('campaign_id', id),
-    ])
-    await supabase.from('initiative_order').update({ is_active: true }).eq('id', initiativeOrder[nextIdx].id)
+    await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0 }).eq('campaign_id', id)
+    await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2 }).eq('id', initiativeOrder[nextIdx].id)
     await loadInitiative(id)
+  }
+
+  async function consumeAction(entryId: string, actionLabel?: string) {
+    const entry = initiativeOrder.find(e => e.id === entryId)
+    if (!entry || entry.actions_remaining <= 0) return
+    const newRemaining = entry.actions_remaining - 1
+
+    // Log the action to game feed
+    if (actionLabel) {
+      await supabase.from('roll_log').insert({
+        campaign_id: id,
+        character_name: entry.character_name,
+        label: actionLabel,
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+        outcome: 'action',
+      })
+    }
+
+    if (newRemaining <= 0) {
+      // Auto-advance
+      await nextTurn()
+    } else {
+      await supabase.from('initiative_order').update({ actions_remaining: newRemaining }).eq('id', entryId)
+      await loadInitiative(id)
+    }
   }
 
   async function endCombat() {
@@ -929,7 +953,7 @@ export default function TablePage() {
     setPendingRoll(null)
     setRollResult(null)
 
-    // Auto-advance initiative if the roller was the active combatant
+    // Consume an action if the roller was the active combatant
     if (rolledResult && combatActive && initiativeOrder.length > 0) {
       const activeEntry = initiativeOrder.find(e => e.is_active)
       if (activeEntry) {
@@ -937,7 +961,7 @@ export default function TablePage() {
         const isMyTurn = activeEntry.character_id && myChar && activeEntry.character_id === myChar.character.id
         const isGMRollingNPC = isGM && activeEntry.is_npc
         if (isMyTurn || isGMRollingNPC) {
-          await nextTurn()
+          await consumeAction(activeEntry.id)
         }
       }
     }
@@ -1070,6 +1094,13 @@ export default function TablePage() {
                   <span style={{ fontSize: '8px', color: '#EF9F27', background: '#2a2010', border: '1px solid #EF9F27', padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>NPC</span>
                 )}
                 <span style={{ fontSize: '11px', color: entry.is_active ? '#c0392b' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
+                {entry.is_active && (
+                  <span style={{ fontSize: '10px', letterSpacing: '2px' }}>
+                    {Array.from({ length: 2 }).map((_, i) => (
+                      <span key={i} style={{ color: i < (entry.actions_remaining ?? 0) ? '#7fc458' : '#3a3a3a' }}>●</span>
+                    ))}
+                  </span>
+                )}
                 {/* Defer — GM can defer anyone, players can defer their own */}
                 {(isGM || entry.user_id === userId) && idx < initiativeOrder.length - 1 && (
                   <button onClick={() => deferInitiative(entry.id)}
@@ -1111,6 +1142,26 @@ export default function TablePage() {
               </div>
             )}
           </div>
+          {/* Simple action buttons — shown for active combatant or GM */}
+          {(() => {
+            const activeEntry = initiativeOrder.find(e => e.is_active)
+            if (!activeEntry || (activeEntry.actions_remaining ?? 0) <= 0) return null
+            const myChar = entries.find(e => e.userId === userId)
+            const isMyTurn = activeEntry.character_id && myChar && activeEntry.character_id === myChar.character.id
+            const canAct = isMyTurn || (isGM && activeEntry.is_npc) || isGM
+            if (!canAct) return null
+            return (
+              <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
+                <span style={{ fontSize: '9px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', marginRight: '4px' }}>Actions:</span>
+                {['Move', 'Ready Weapon', 'Take Cover', 'Reload', 'Defend'].map(action => (
+                  <button key={action} onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — ${action}`)}
+                    style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    {action}
+                  </button>
+                ))}
+              </div>
+            )
+          })()}
         </div>
       )}
 
