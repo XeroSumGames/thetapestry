@@ -1,0 +1,27 @@
+-- Remove Mongrels pins from world map — they should only be campaign-scoped
+DELETE FROM map_pins WHERE title IN (
+  'Hells Hole Spring, AZ',
+  'Canyon Lake Marina & Campground, AZ',
+  'Apache Junction - E Brown/N Ellsworth, AZ',
+  'Payson, AZ',
+  'Upper Lake Mary, AZ',
+  'Lowell Observatory, Flagstaff, AZ',
+  'Flagstaff, AZ',
+  'Cameron, AZ (Navajo Nation)',
+  'Cameron Old Bridge (Tanner''s Crossing)',
+  'Page, AZ',
+  'Glen Canyon Dam, AZ',
+  'Kanab, UT',
+  'Cedar City, UT',
+  'Cedar Breaks National Monument, UT',
+  'Holden, UT',
+  'Provo, UT',
+  'Salt Lake City, UT',
+  'Logan, UT',
+  'Pocatello, ID',
+  'Idaho Falls, ID',
+  'Monida Pass, MT/ID border',
+  'Dillon, MT',
+  'Homestake Pass, MT',
+  'Bozeman, MT'
+);

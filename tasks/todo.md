@@ -4,6 +4,7 @@
 - [x] Print character sheet renders blank
 - [x] Distemper font not applying on mobile navbar
 - [ ] Print sheet missing data — Relationships/CMod, Lasting Wounds/Notes, Tracking (Insight/CDP) not populated from character data
+- [ ] Signup error with no visibility — user got an error creating an account, need better error logging/display on signup + moderation/logging improvements
 - [x] Signup page shows hardcoded "check your email" message — confirmed not a bug
 
 ---
@@ -73,7 +74,8 @@
 - [x] Weapon dropdowns, ammo pips, reload system, condition tracking
 - [x] Attack buttons per weapon with auto-damage
 - [x] Weapon jam on Low Insight
-- [ ] Weapon trait mechanical effects (Automatic Burst, Blast Radius, Stun, etc.)
+- [ ] Weapon trait mechanical effects — Pass 2 (Automatic Burst, Blast Radius, Stun, Burning, Close-Up, Cone-Up)
+- [x] Weapon trait mechanical effects — Pass 1 (Cumbersome, Unwieldy CMod penalties)
 - [ ] Upkeep Checks
 - [ ] Encumbrance
 
@@ -126,9 +128,10 @@
 - [x] Campaign creation auto-seeds NPCs for District Zero and Chased
 - [ ] Pregen storage decision — setting_pregens table or is_pregen flag on campaign_npcs
 - [x] End session modal drop zone text size bumped (11/10px → 13/12px)
-- [x] Chased & Mongrels pins removed from world map (campaign-scoped only)
+- [x] All setting pins campaign-scoped only (District Zero, Chased, Mongrels)
 - [x] Make Thriver button — error feedback on failure
-- [x] District Zero pins remain on world map (canonical public setting)
+- [x] Extracted SETTINGS to shared lib/settings.ts (was duplicated in 5 files)
+- [x] Pin/NPC seed inserts now have error handling + eliminated extra DB round-trip
 
 ### Character Creation
 - [x] Clickable steps, portrait upload, concept display, photo resize, test character

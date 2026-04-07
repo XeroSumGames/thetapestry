@@ -50,6 +50,14 @@ export const TRAIT_DESCRIPTIONS: Record<string, string> = {
   'Close-Up': 'Hits indiscriminately at Engaged range, target sustains 50% damage.',
 }
 
+/** Parse a numeric trait value, e.g. "Cumbersome (2)" → 2, "Stun" → 0, missing → null */
+export function getTraitValue(traits: string[], traitName: string): number | null {
+  const t = traits.find(tr => tr.startsWith(traitName))
+  if (!t) return null
+  const match = t.match(/\((\d+)\)/)
+  return match ? parseInt(match[1]) : 0
+}
+
 // ── MELEE WEAPONS (Table 16) ──
 
 export const MELEE_WEAPONS: Weapon[] = [

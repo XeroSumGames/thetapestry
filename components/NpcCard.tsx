@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { CampaignNpc } from './NpcRoster'
-import { getWeaponByName, conditionColor, CONDITION_CMOD, Condition } from '../lib/weapons'
+import { getWeaponByName, conditionColor, CONDITION_CMOD, Condition, getTraitValue } from '../lib/weapons'
 import { createClient } from '../lib/supabase-browser'
 
 const TYPE_COLORS: Record<string, { bg: string; border: string; color: string }> = {
@@ -23,7 +23,7 @@ interface Props {
   npc: CampaignNpc
   onClose: () => void
   onEdit: () => void
-  onRoll?: (label: string, amod: number, smod: number, weaponContext?: { weaponName: string; damage: string; rpPercent: number; conditionCmod: number }) => void
+  onRoll?: (label: string, amod: number, smod: number, weaponContext?: { weaponName: string; damage: string; rpPercent: number; conditionCmod: number; traitCmod?: number; traitLabel?: string }) => void
 }
 
 export default function NpcCard({ npc, onClose, onEdit, onRoll }: Props) {
@@ -84,7 +84,13 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll }: Props) {
     const smod = getSkillLevel(skillName)
     const cond = (weapon.condition as Condition) ?? 'Used'
     const condCmod = CONDITION_CMOD[cond]
-    onRoll(`${npc.name} — Attack (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: condCmod !== -99 ? condCmod : 0 })
+    let traitCmod = 0
+    let traitLabel = ''
+    const cumbersome = getTraitValue(w.traits, 'Cumbersome')
+    if (cumbersome !== null) { const deficit = cumbersome - (rapid.PHY ?? 0); if (deficit > 0) { traitCmod -= deficit; traitLabel = `Cumbersome -${deficit}` } }
+    const unwieldy = getTraitValue(w.traits, 'Unwieldy')
+    if (unwieldy !== null) { const deficit = unwieldy - (rapid.DEX ?? 0); if (deficit > 0) { traitCmod -= deficit; traitLabel = traitLabel ? `${traitLabel}, Unwieldy -${deficit}` : `Unwieldy -${deficit}` } }
+    onRoll(`${npc.name} — Attack (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: (condCmod !== -99 ? condCmod : 0) + traitCmod, traitCmod, traitLabel })
   }
 
   return (

@@ -58,6 +58,8 @@ interface WeaponContext {
   damage: string
   rpPercent: number
   conditionCmod: number
+  traitCmod?: number
+  traitLabel?: string
 }
 
 interface PendingRoll {
@@ -1341,10 +1343,19 @@ export default function TablePage() {
                 </div>
                 {pendingRoll.weapon && (
                   <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '1rem', padding: '6px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                    <span style={{ color: '#cce0f5' }}>WP Damage:</span> <span style={{ color: '#c0392b', fontWeight: 700 }}>{pendingRoll.weapon.damage}</span>
-                    &nbsp;&nbsp;<span style={{ color: '#cce0f5' }}>RP:</span> <span style={{ color: '#7ab3d4' }}>{pendingRoll.weapon.rpPercent}%</span>
-                    {pendingRoll.weapon.conditionCmod !== 0 && (
-                      <span>&nbsp;&nbsp;<span style={{ color: '#cce0f5' }}>Condition:</span> <span style={{ color: pendingRoll.weapon.conditionCmod > 0 ? '#7fc458' : '#EF9F27' }}>{pendingRoll.weapon.conditionCmod > 0 ? '+' : ''}{pendingRoll.weapon.conditionCmod} CMod</span></span>
+                    <div>
+                      <span style={{ color: '#cce0f5' }}>WP Damage:</span> <span style={{ color: '#c0392b', fontWeight: 700 }}>{pendingRoll.weapon.damage}</span>
+                      &nbsp;&nbsp;<span style={{ color: '#cce0f5' }}>RP:</span> <span style={{ color: '#7ab3d4' }}>{pendingRoll.weapon.rpPercent}%</span>
+                    </div>
+                    {((pendingRoll.weapon.conditionCmod - (pendingRoll.weapon.traitCmod ?? 0)) !== 0 || pendingRoll.weapon.traitLabel) && (
+                      <div style={{ marginTop: '4px' }}>
+                        {(pendingRoll.weapon.conditionCmod - (pendingRoll.weapon.traitCmod ?? 0)) !== 0 && (
+                          <span><span style={{ color: '#cce0f5' }}>Condition:</span> <span style={{ color: (pendingRoll.weapon.conditionCmod - (pendingRoll.weapon.traitCmod ?? 0)) > 0 ? '#7fc458' : '#EF9F27' }}>{(pendingRoll.weapon.conditionCmod - (pendingRoll.weapon.traitCmod ?? 0)) > 0 ? '+' : ''}{pendingRoll.weapon.conditionCmod - (pendingRoll.weapon.traitCmod ?? 0)} CMod</span></span>
+                        )}
+                        {pendingRoll.weapon.traitLabel && (
+                          <span>{(pendingRoll.weapon.conditionCmod - (pendingRoll.weapon.traitCmod ?? 0)) !== 0 && <>&nbsp;&nbsp;</>}<span style={{ color: '#EF9F27' }}>{pendingRoll.weapon.traitLabel.replace(/-(\d+)/, '(-$1 CMod)')}</span></span>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
