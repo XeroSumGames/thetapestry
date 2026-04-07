@@ -4,7 +4,11 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   const response = NextResponse.next()
 
-  // Pass Vercel geo headers as cookies for client-side access
+  // Pass IP and Vercel geo headers as cookies for client-side access
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? request.headers.get('x-real-ip') ?? ''
+  if (ip) response.cookies.set('geo_ip', ip, { path: '/', sameSite: 'lax' })
+
   const country = request.headers.get('x-vercel-ip-country') ?? ''
   const region = request.headers.get('x-vercel-ip-country-region') ?? ''
   const city = request.headers.get('x-vercel-ip-city') ?? ''

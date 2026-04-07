@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { session_id, page, referrer, user_id, country_code, region, city, latitude, longitude } = await req.json()
+    const { session_id, page, referrer, user_id, country_code, region, city, latitude, longitude, ip_hash } = await req.json()
 
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       ?? req.headers.get('x-real-ip')
@@ -41,6 +41,16 @@ Deno.serve(async (req) => {
 
     const isFirstVisit = !existing || existing.length === 0
 
+    // Count prior visits from this IP hash
+    let visitNumber = 1
+    if (ip_hash) {
+      const { count } = await supabase
+        .from('visitor_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('ip_hash', ip_hash)
+      visitNumber = (count ?? 0) + 1
+    }
+
     // Insert the visit log
     await supabase.from('visitor_logs').insert({
       session_id,
@@ -49,6 +59,7 @@ Deno.serve(async (req) => {
       is_ghost: !user_id,
       user_id: user_id || null,
       ip_address: ip,
+      ip_hash: ip_hash || null,
       country_code: country_code || null,
       region: region || null,
       city: city || null,
@@ -59,22 +70,25 @@ Deno.serve(async (req) => {
     // Send email on first visit per session (non-blocking)
     if (isFirstVisit && RESEND_API_KEY && THRIVER_EMAIL) {
       const isGhost = !user_id
+      const locationParts = [city, region, country_code].filter(Boolean)
+      const location = locationParts.length > 0 ? locationParts.join(', ') : 'Unknown'
+
       const subject = isGhost
-        ? '[The Tapestry] New Visitor'
-        : '[The Tapestry] Survivor Active'
+        ? `[The Tapestry] New Visitor${locationParts.length > 0 ? ' — ' + [city, country_code].filter(Boolean).join(', ') : ''}`
+        : `[The Tapestry] Survivor Active${locationParts.length > 0 ? ' — ' + [city, country_code].filter(Boolean).join(', ') : ''}`
 
       const now = new Date().toLocaleString('en-US', {
         weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
         hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
       })
 
-      // Build location string
-      const locationParts = [city, region, country_code].filter(Boolean)
-      const location = locationParts.length > 0 ? locationParts.join(', ') : 'Unknown'
+      const visitLine = ip_hash
+        ? `Visit number: This is their ${visitNumber}${visitNumber === 1 ? 'st' : visitNumber === 2 ? 'nd' : visitNumber === 3 ? 'rd' : 'th'} visit from this location.`
+        : ''
 
       const body = isGhost
-        ? `A visitor just arrived at The Tapestry.\n\nPage: ${page}\nTime: ${now}\nLocation: ${location}\nReferrer: ${referrer || 'Direct'}\nSession: ${session_id?.slice(0, 8) ?? 'unknown'}`
-        : `A survivor is active on The Tapestry.\n\nPage: ${page}\nTime: ${now}\nLocation: ${location}\nReferrer: ${referrer || 'Direct'}\nSession: ${session_id?.slice(0, 8) ?? 'unknown'}`
+        ? `A visitor just arrived at The Tapestry.\n\nPage: ${page}\nLocation: ${location}\nTime: ${now}\nReferrer: ${referrer || 'Direct'}\nSession: ${session_id?.slice(0, 8) ?? 'unknown'}\n${visitLine}`
+        : `A survivor is active on The Tapestry.\n\nPage: ${page}\nLocation: ${location}\nTime: ${now}\nReferrer: ${referrer || 'Direct'}\nSession: ${session_id?.slice(0, 8) ?? 'unknown'}\n${visitLine}`
 
       try {
         await fetch('https://api.resend.com/emails', {

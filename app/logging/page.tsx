@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
@@ -43,6 +43,11 @@ export default function LoggingPage() {
   const [pendingPins, setPendingPins] = useState(0)
   const [pendingNpcs, setPendingNpcs] = useState(0)
   const [topPages, setTopPages] = useState<{ page: string; count: number }[]>([])
+  const [visitorMapData, setVisitorMapData] = useState<{ ip_hash: string; lat: number; lng: number; city: string | null; country_code: string | null; visit_count: number; first_visit: string; last_visit: string; is_ghost: boolean }[]>([])
+  const [uniqueVisitors, setUniqueVisitors] = useState(0)
+  const [uniqueCountries, setUniqueCountries] = useState(0)
+  const mapRef = useRef<HTMLDivElement>(null)
+  const mapInstanceRef = useRef<any>(null)
 
   useEffect(() => {
     async function load() {
@@ -128,6 +133,13 @@ export default function LoggingPage() {
           setEvents(rawEvents.map((e: any) => ({ ...e, username: nameMap[e.user_id] ?? 'Unknown' })))
         }
         setEventCount(eCount ?? 0)
+        // Fetch visitor map data — grouped by ip_hash
+        const { data: mapRows } = await supabase.rpc('get_visitor_map_data')
+        if (mapRows) {
+          setVisitorMapData(mapRows)
+          setUniqueVisitors(mapRows.length)
+          setUniqueCountries(new Set(mapRows.map((r: any) => r.country_code).filter(Boolean)).size)
+        }
       } catch (err) {
         console.error('[Logging] load error:', err)
       }
@@ -135,6 +147,48 @@ export default function LoggingPage() {
     }
     load()
   }, [])
+
+  // Render visitor map
+  useEffect(() => {
+    if (!mapRef.current || mapInstanceRef.current || visitorMapData.length === 0) return
+    async function initMap() {
+      const L = (await import('leaflet')).default
+      await import('leaflet/dist/leaflet.css')
+      if (!mapRef.current || mapInstanceRef.current) return
+
+      const map = L.map(mapRef.current, { center: [20, 0], zoom: 2, zoomControl: true, minZoom: 2 })
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; CARTO', maxZoom: 19,
+      }).addTo(map)
+
+      visitorMapData.forEach(v => {
+        if (!v.lat || !v.lng) return
+        const size = Math.min(20, 6 + Math.floor(v.visit_count / 2))
+        const color = v.is_ghost ? '#c0392b' : '#7fc458'
+        const icon = L.divIcon({
+          html: `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;opacity:0.8;border:1px solid rgba(255,255,255,0.3);"></div>`,
+          className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2],
+        })
+        const marker = L.marker([v.lat, v.lng], { icon })
+        marker.bindPopup(`
+          <div style="font-family:Barlow,sans-serif;min-width:160px;">
+            <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${[v.city, v.country_code].filter(Boolean).join(', ') || 'Unknown'}</div>
+            <div style="font-size:12px;color:#555;">
+              ${v.is_ghost ? 'Ghost' : 'Survivor'}<br/>
+              Visits: ${v.visit_count}<br/>
+              First: ${new Date(v.first_visit).toLocaleDateString()}<br/>
+              Last: ${new Date(v.last_visit).toLocaleDateString()}
+            </div>
+          </div>
+        `)
+        marker.addTo(map)
+      })
+
+      mapInstanceRef.current = map
+      setTimeout(() => map.invalidateSize(), 100)
+    }
+    initMap()
+  }, [visitorMapData])
 
   function formatDateTime(iso: string) {
     return new Date(iso).toLocaleString('en-US', {
@@ -259,6 +313,22 @@ export default function LoggingPage() {
           )}
         </div>
       )}
+
+      {/* Visitor Map */}
+      <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', overflow: 'hidden', marginBottom: '1.5rem' }}>
+        <div style={{ padding: '10px 14px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }}>Visitor Map</span>
+          <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+            {uniqueVisitors} unique visitors from {uniqueCountries} {uniqueCountries === 1 ? 'country' : 'countries'}
+          </span>
+        </div>
+        <div ref={mapRef} style={{ height: '400px', background: '#0d0d0d' }} />
+        <div style={{ padding: '6px 14px', borderTop: '1px solid #2e2e2e', display: 'flex', gap: '16px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', color: '#cce0f5' }}>
+          <span><span style={{ color: '#c0392b', fontSize: '14px' }}>●</span> Ghost</span>
+          <span><span style={{ color: '#7fc458', fontSize: '14px' }}>●</span> Survivor</span>
+          <span style={{ color: '#3a3a3a' }}>Dot size = visit frequency</span>
+        </div>
+      </div>
 
       {/* Events tab */}
       {tab === 'events' && (

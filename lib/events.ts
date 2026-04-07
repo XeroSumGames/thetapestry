@@ -19,18 +19,27 @@ function getCookie(name: string): string | null {
   return match ? decodeURIComponent(match[1]) : null
 }
 
+async function hashIP(ip: string): Promise<string> {
+  const data = new TextEncoder().encode(ip)
+  const hash = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
 export async function logVisit(page: string) {
   if (typeof window === 'undefined') return
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   // Read Vercel geo data from cookies (set by middleware)
+  const rawIP = getCookie('geo_ip') || null
+  const ip_hash = rawIP ? await hashIP(rawIP) : null
   const geo = {
     country_code: getCookie('geo_country') || null,
     region: getCookie('geo_region') || null,
     city: getCookie('geo_city') || null,
     latitude: getCookie('geo_lat') ? parseFloat(getCookie('geo_lat')!) : null,
     longitude: getCookie('geo_lng') ? parseFloat(getCookie('geo_lng')!) : null,
+    ip_hash,
   }
 
   // Try Edge Function for IP capture, fall back to direct insert
