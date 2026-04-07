@@ -159,7 +159,8 @@
 
 ## 🟠 Phase 3 — Map
 - [x] Map autocomplete on search bar (Nominatim)
-- [ ] Pin clustering, Layer toggles, Temporal filter
+- [x] Pin clustering (leaflet.markercluster, both world + campaign maps)
+- [ ] Layer toggles, Temporal filter
 - [ ] Pin cards, Setting regions, Pin hierarchy
 - [ ] Pin search, Parent/child structure, Canon layer
 

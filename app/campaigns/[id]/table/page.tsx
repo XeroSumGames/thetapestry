@@ -12,7 +12,7 @@ const CampaignMap = dynamic(() => import('../../../../components/CampaignMap'), 
 import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { logEvent } from '../../../../lib/events'
 import { rollDamage, calculateDamage } from '../../../../lib/damage'
-import { getWeaponByName } from '../../../../lib/weapons'
+import { getWeaponByName, getTraitValue } from '../../../../lib/weapons'
 
 interface Campaign {
   id: string
@@ -60,6 +60,7 @@ interface WeaponContext {
   conditionCmod: number
   traitCmod?: number
   traitLabel?: string
+  traits?: string[]
 }
 
 interface PendingRoll {
@@ -93,6 +94,8 @@ interface RollResult {
   insightAwarded: boolean
   spent: boolean
   damage?: DamageResult
+  weaponJammed?: boolean
+  traitNotes?: string[]
 }
 
 interface InitiativeEntry {
@@ -749,27 +752,77 @@ export default function TablePage() {
 
     // Calculate and apply damage for successful weapon attacks
     let damageResult: DamageResult | undefined
+    let traitNotes: string[] = []
     if (pendingRoll.weapon && targetName && (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight')) {
       const weapon = pendingRoll.weapon
       const w = getWeaponByName(weapon.weaponName)
       const isMelee = w?.category === 'melee'
       const attackerPhy = myEntry?.character.data?.rapid?.PHY ?? 0
+      const traits = weapon.traits ?? []
+      const isStun = getTraitValue(traits, 'Stun') !== null
+      const burstCount = getTraitValue(traits, 'Automatic Burst')
+      const hasBlast = getTraitValue(traits, 'Blast Radius') !== null
+      const burningVal = getTraitValue(traits, 'Burning')
+      const hasCloseUp = getTraitValue(traits, 'Close-Up') !== null
+      const hasConeUp = getTraitValue(traits, 'Cone-Up') !== null
 
-      const dmg = rollDamage(weapon.damage, attackerPhy, !!isMelee)
-
-      // Unarmed adds SMod to damage per SRD: 1d3 + PHY AMod + Unarmed Combat SMod
-      if (weapon.weaponName === 'Unarmed') {
-        dmg.totalWP += pendingRoll.smod
+      // Automatic Burst: roll damage multiple times
+      const rolls = (burstCount !== null && burstCount > 0) ? burstCount : 1
+      let totalBase = 0, totalDice = 0, totalPhy = 0
+      let diceDesc = ''
+      for (let i = 0; i < rolls; i++) {
+        const dmg = rollDamage(weapon.damage, attackerPhy, !!isMelee)
+        totalBase += dmg.base
+        totalDice += dmg.diceRoll
+        totalPhy += dmg.phyBonus
+        if (i === 0) diceDesc = dmg.diceDesc
       }
+      const totalWP = totalBase + totalDice + totalPhy
 
-      // Find target's defensive modifier (DMR for ranged, DMM for melee)
+      // Unarmed adds SMod to damage
+      const unarmedBonus = weapon.weaponName === 'Unarmed' ? pendingRoll.smod : 0
+
+      // Find target's defensive modifier
       const targetEntry = entries.find(e => e.character.name === targetName)
       const targetRapid = targetEntry?.character.data?.rapid ?? {}
       const defensiveMod = isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)
 
-      const { finalWP, finalRP, mitigated } = calculateDamage(dmg.totalWP, weapon.rpPercent, defensiveMod)
+      let { finalWP, finalRP, mitigated } = calculateDamage(totalWP + unarmedBonus, weapon.rpPercent, defensiveMod)
 
-      damageResult = { ...dmg, finalWP, finalRP, mitigated, targetName }
+      // Stun: zero WP damage
+      if (isStun) {
+        finalWP = 0
+        traitNotes.push('Stun — no WP damage dealt')
+        if (outcome === 'Wild Success' || outcome === 'High Insight') {
+          const targetPhy = targetRapid.PHY ?? 0
+          const stunRounds = Math.max(1, Math.floor(Math.random() * 6) + 1 - targetPhy)
+          traitNotes.push(`Target incapacitated for ${stunRounds} round${stunRounds !== 1 ? 's' : ''}`)
+        }
+      }
+
+      // Burst note
+      if (rolls > 1) {
+        traitNotes.push(`Automatic Burst — ${rolls} rounds fired`)
+      }
+
+      // Blast Radius note
+      if (hasBlast) {
+        const halfWP = Math.floor(finalWP / 2)
+        const quarterWP = Math.floor(finalWP / 4)
+        traitNotes.push(`Blast Radius — Engaged: ${finalWP} WP | Close: ${halfWP} WP | Further: ${quarterWP} WP`)
+      }
+
+      // Burning note
+      if (burningVal !== null && burningVal > 0) {
+        const burnRounds = Math.floor(Math.random() * 3) + 1
+        traitNotes.push(`Burning — ${burningVal} WP/RP per round for ${burnRounds} round${burnRounds !== 1 ? 's' : ''}`)
+      }
+
+      // Close-Up / Cone-Up note
+      if (hasCloseUp) traitNotes.push('Close-Up — at Engaged range, 50% damage to bystanders')
+      if (hasConeUp) traitNotes.push('Cone-Up — at Engaged range, 50% damage to bystanders')
+
+      damageResult = { base: totalBase, diceRoll: totalDice, diceDesc: rolls > 1 ? `${rolls}x ${diceDesc}` : diceDesc, phyBonus: totalPhy, totalWP: totalWP + unarmedBonus, finalWP, finalRP, mitigated, targetName }
 
       // Auto-apply damage to target
       if (targetEntry?.liveState) {
@@ -809,7 +862,7 @@ export default function TablePage() {
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, spent: preRollSpent,
-      damage: damageResult, weaponJammed,
+      damage: damageResult, weaponJammed, traitNotes,
     } as any)
 
     setRolling(false)
@@ -1135,7 +1188,7 @@ export default function TablePage() {
         {/* Center — Map always rendered, sheets float on top */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
           {/* Campaign Map — always rendered */}
-          <CampaignMap campaignId={id} isGM={isGM} />
+          <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} />
 
           {/* NPC Card(s) stacked — floats over map */}
           {viewingNpcs.length > 0 && (
@@ -1501,6 +1554,13 @@ export default function TablePage() {
                       </div>
                     </div>
                     <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '6px' }}>Applied automatically</div>
+                    {(rollResult.traitNotes ?? []).length > 0 && (
+                      <div style={{ marginTop: '8px', padding: '6px 8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px' }}>
+                        {(rollResult.traitNotes ?? []).map((note: string, i: number) => (
+                          <div key={i} style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', marginBottom: i < (rollResult.traitNotes ?? []).length - 1 ? '4px' : 0 }}>{note}</div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 {!rollResult.spent && myInsightDice > 0 && rollResult.outcome !== 'High Insight' && rollResult.outcome !== 'Low Insight' && (

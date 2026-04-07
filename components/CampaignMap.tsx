@@ -15,6 +15,13 @@ interface CampaignPin {
 interface Props {
   campaignId: string
   isGM: boolean
+  setting?: string
+}
+
+const SETTING_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
+  district_zero: { center: [36.052, -95.790], zoom: 15 },
+  chased: { center: [38.710, -75.510], zoom: 12 },
+  mongrels: { center: [38.0, -112.0], zoom: 5 },
 }
 
 const TILE_LAYERS: Record<string, { url: string; attr: string }> = {
@@ -45,7 +52,7 @@ function getCategoryEmoji(category: string): string {
   return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '📍'
 }
 
-export default function CampaignMap({ campaignId, isGM }: Props) {
+export default function CampaignMap({ campaignId, isGM, setting }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const tileLayerRef = useRef<any>(null)
@@ -170,7 +177,8 @@ export default function CampaignMap({ campaignId, isGM }: Props) {
 
       if (!mapRef.current || mapInstanceRef.current) return
 
-      const map = L.map(mapRef.current, { center: [39, -111], zoom: 5, zoomControl: true })
+      const settingView = setting ? SETTING_CENTERS[setting] : undefined
+      const map = L.map(mapRef.current, { center: settingView?.center ?? [39, -111], zoom: settingView?.zoom ?? 5, zoomControl: true })
       const t = TILE_LAYERS[mapLayer]
       tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19 }).addTo(map)
 
