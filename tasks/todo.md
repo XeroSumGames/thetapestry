@@ -128,8 +128,8 @@
 - [x] Map read-only for ghosts (no pin placement)
 - [x] Dashboard landing page for ghosts with Distemper branding
 - [x] Character builders bounce to login on Advance/Back/step clicks
-- [ ] Ghost-to-Survivor conversion tracking
-- [ ] Soft wall modal instead of hard redirect
+- [x] Ghost-to-Survivor conversion tracking
+- [x] Soft wall modal instead of hard redirect
 
 ### UI Polish
 - [x] All items from previous sessions complete

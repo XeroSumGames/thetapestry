@@ -58,6 +58,49 @@ export async function logEvent(eventType: string, metadata?: object) {
   })
 }
 
+/**
+ * Call once after a ghost signs up / logs in for the first time.
+ * Links their anonymous visitor_logs to the new user_id and logs a conversion event.
+ */
+export async function trackGhostConversion() {
+  if (typeof window === 'undefined') return
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const sessionId = getSessionId()
+
+  // Check if already tracked
+  const { data: existing } = await supabase
+    .from('user_events')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('event_type', 'ghost_converted')
+    .limit(1)
+  if (existing && existing.length > 0) return
+
+  // Count ghost pages visited before conversion
+  const { count } = await supabase
+    .from('visitor_logs')
+    .select('*', { count: 'exact', head: true })
+    .eq('session_id', sessionId)
+    .eq('is_ghost', true)
+
+  // Backfill user_id on ghost visit rows
+  await supabase
+    .from('visitor_logs')
+    .update({ user_id: user.id })
+    .eq('session_id', sessionId)
+    .is('user_id', null)
+
+  // Log conversion event
+  await supabase.from('user_events').insert({
+    user_id: user.id,
+    event_type: 'ghost_converted',
+    metadata: { session_id: sessionId, ghost_pages_visited: count ?? 0 },
+  })
+}
+
 export async function logFirstEvent(eventType: string, metadata?: object) {
   if (typeof window === 'undefined') return
   const supabase = createClient()

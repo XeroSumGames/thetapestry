@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
+import { trackGhostConversion } from '../../lib/events'
 
 export default function FirstTimersPage() {
   const router = useRouter()
@@ -13,6 +14,7 @@ export default function FirstTimersPage() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
+      trackGhostConversion()
       const { data: profile } = await supabase.from('profiles').select('username, onboarded').eq('id', user.id).single()
       if (!profile) return
       if (profile.onboarded) { router.push('/dashboard'); return }

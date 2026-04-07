@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
+import { trackGhostConversion } from '../../lib/events'
 import dynamic from 'next/dynamic'
 
 const MapView = dynamic(() => import('../../components/MapView'), { ssr: false })
@@ -33,6 +34,7 @@ export default function DashboardPage() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setLoading(false); return }
+      trackGhostConversion()
       const { data: profile } = await supabase.from('profiles').select('username, role, onboarded').eq('id', user.id).single()
        if (profile) {
         if (!profile.onboarded) { router.push('/welcome'); return }
