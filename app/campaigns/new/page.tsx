@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { logEvent } from '../../../lib/events'
@@ -15,10 +15,14 @@ function generateCode(): string {
 export default function NewCampaignPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [setting, setSetting] = useState('district_zero')
+  const [setting, setSetting] = useState('')
   const [mapStyle, setMapStyle] = useState('street')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [locationQuery, setLocationQuery] = useState('')
+  const [locationSuggestions, setLocationSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
+  const [customCenter, setCustomCenter] = useState<{ lat: number; lng: number } | null>(null)
+  const debounceRef = useRef<any>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -32,8 +36,10 @@ export default function NewCampaignPage() {
     const { data, error: err } = await supabase.from('campaigns').insert({
       name: name.trim(),
       description: description.trim(),
-      setting,
+      setting: setting || 'custom',
       map_style: mapStyle,
+      map_center_lat: customCenter?.lat ?? null,
+      map_center_lng: customCenter?.lng ?? null,
       gm_user_id: user.id,
       invite_code,
       status: 'active',
@@ -116,6 +122,50 @@ export default function NewCampaignPage() {
             ))}
           </div>
         </div>
+
+        {setting === 'custom' && (
+          <div style={{ marginBottom: '16px', position: 'relative' }}>
+            <label style={lbl}>Starting Location</label>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <input value={locationQuery} onChange={e => {
+                  setLocationQuery(e.target.value)
+                  if (debounceRef.current) clearTimeout(debounceRef.current)
+                  if (e.target.value.length >= 3) {
+                    debounceRef.current = setTimeout(async () => {
+                      try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(e.target.value)}&limit=5`)
+                        const data = await res.json()
+                        setLocationSuggestions(data)
+                      } catch { setLocationSuggestions([]) }
+                    }, 300)
+                  } else { setLocationSuggestions([]) }
+                }} placeholder="Search for a location..." style={inp} />
+                {locationSuggestions.length > 0 && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '0 0 3px 3px', maxHeight: '200px', overflowY: 'auto', zIndex: 10 }}>
+                    {locationSuggestions.map((s, i) => (
+                      <div key={i} onClick={() => {
+                        setCustomCenter({ lat: parseFloat(s.lat), lng: parseFloat(s.lon) })
+                        setLocationQuery(s.display_name.split(',').slice(0, 2).join(','))
+                        setLocationSuggestions([])
+                      }}
+                        style={{ padding: '8px 10px', fontSize: '13px', color: '#d4cfc9', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                        {s.display_name.length > 80 ? s.display_name.slice(0, 80) + '...' : s.display_name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            {customCenter && (
+              <div style={{ fontSize: '11px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
+                Map will center on {customCenter.lat.toFixed(4)}, {customCenter.lng.toFixed(4)}
+              </div>
+            )}
+          </div>
+        )}
 
         <div style={{ marginBottom: '16px' }}>
           <label style={lbl}>Description <span style={{ color: '#cce0f5', fontWeight: 400 }}>(optional)</span></label>

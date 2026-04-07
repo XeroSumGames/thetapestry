@@ -17,6 +17,8 @@ interface Props {
   isGM: boolean
   setting?: string
   mapStyle?: string
+  mapCenterLat?: number | null
+  mapCenterLng?: number | null
 }
 
 const SETTING_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
@@ -60,7 +62,7 @@ function getCategoryEmoji(category: string): string {
   return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '📍'
 }
 
-export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defaultMapStyle }: Props) {
+export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defaultMapStyle, mapCenterLat, mapCenterLng }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const tileLayerRef = useRef<any>(null)
@@ -127,13 +129,20 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     clusterGroupRef.current = clusterGroup
   }
 
-  function switchLayer(layer: 'street' | 'satellite' | 'dark') {
+  // React to GM changing map style from header
+  useEffect(() => {
+    if (defaultMapStyle && defaultMapStyle !== mapLayer && mapInstanceRef.current) {
+      switchLayer(defaultMapStyle as any)
+    }
+  }, [defaultMapStyle])
+
+  function switchLayer(layer: string) {
     setMapLayer(layer)
     if (!mapInstanceRef.current || !tileLayerRef.current) return
     const L = (window as any).L
     if (!L) return
     tileLayerRef.current.remove()
-    const t = TILE_LAYERS[layer]
+    const t = TILE_LAYERS[layer] ?? TILE_LAYERS.street
     tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19 }).addTo(mapInstanceRef.current)
   }
 
@@ -186,7 +195,9 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       if (!mapRef.current || mapInstanceRef.current) return
 
       const settingView = setting ? SETTING_CENTERS[setting] : undefined
-      const map = L.map(mapRef.current, { center: settingView?.center ?? [39, -111], zoom: settingView?.zoom ?? 5, zoomControl: true })
+      const customCenter = (mapCenterLat != null && mapCenterLng != null) ? { center: [mapCenterLat, mapCenterLng] as [number, number], zoom: 12 } : undefined
+      const view = customCenter ?? settingView ?? { center: [39, -111] as [number, number], zoom: 5 }
+      const map = L.map(mapRef.current, { center: view.center, zoom: view.zoom, zoomControl: true })
       const t = TILE_LAYERS[mapLayer]
       tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19 }).addTo(map)
 
@@ -212,57 +223,55 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     <div style={{ flex: 1, position: 'relative' }}>
       <div ref={mapRef} style={{ width: '100%', height: '100%', cursor: placing ? 'crosshair' : '' }} />
 
-      {/* Search bar */}
-      <form onSubmit={handleSearch} style={{ position: 'absolute', top: '6px', right: '220px', zIndex: 1000, display: 'flex', gap: '4px' }}>
-        <div style={{ position: 'relative' }}>
-          <input value={searchQuery} onChange={e => {
-            setSearchQuery(e.target.value)
-            if (debounceRef.current) clearTimeout(debounceRef.current)
-            if (e.target.value.length >= 3) {
-              debounceRef.current = setTimeout(async () => {
-                try {
-                  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(e.target.value)}&limit=5`)
-                  setSuggestions(await res.json())
-                } catch { setSuggestions([]) }
-              }, 300)
-            } else { setSuggestions([]) }
-          }} placeholder="Search address..."
-            style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', width: '200px', outline: 'none' }} />
-          {suggestions.length > 0 && (
-            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '0 0 3px 3px', maxHeight: '200px', overflowY: 'auto', zIndex: 1001 }}>
-              {suggestions.map((s, i) => (
-                <div key={i} onClick={() => {
-                  mapInstanceRef.current?.flyTo([parseFloat(s.lat), parseFloat(s.lon)], 14)
-                  setSearchQuery(s.display_name.split(',')[0])
-                  setSuggestions([])
-                }}
-                  style={{ padding: '6px 10px', fontSize: '13px', color: '#d4cfc9', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                  {s.display_name.length > 50 ? s.display_name.slice(0, 50) + '...' : s.display_name}
-                </div>
-              ))}
-            </div>
+      {/* Search + layer switcher — single right column (matches MapView) */}
+      <div style={{ position: 'absolute', top: '6px', right: '6px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '4px' }}>
+          {isGM && (
+            <button type="button" onClick={() => { setPlacing(p => !p); setNewPin(null); setAttachments([]) }}
+              style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${placing ? '#2d5a1b' : '#3a3a3a'}`, background: placing ? '#1a2e10' : 'rgba(15,15,15,.85)', color: placing ? '#7fc458' : '#d4cfc9' }}>
+              {placing ? '✕ Cancel' : '+ Pin'}
+            </button>
           )}
-        </div>
-        <button type="submit" disabled={searching}
-          style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
-          {searching ? '...' : 'Go'}
-        </button>
-      </form>
-
-      {/* Layer switcher + Place Pin button */}
-      <div style={{ position: 'absolute', top: '6px', right: '6px', zIndex: 1000, display: 'flex', gap: '4px' }}>
-        {isGM && (
-          <button onClick={() => { setPlacing(p => !p); setNewPin(null); setAttachments([]) }}
-            style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${placing ? '#2d5a1b' : '#3a3a3a'}`, background: placing ? '#1a2e10' : 'rgba(15,15,15,.85)', color: placing ? '#7fc458' : '#d4cfc9' }}>
-            {placing ? '✕ Cancel' : '+ Pin'}
+          <div style={{ position: 'relative' }}>
+            <input value={searchQuery} onChange={e => {
+              setSearchQuery(e.target.value)
+              if (debounceRef.current) clearTimeout(debounceRef.current)
+              if (e.target.value.length >= 3) {
+                debounceRef.current = setTimeout(async () => {
+                  try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(e.target.value)}&limit=5`)
+                    setSuggestions(await res.json())
+                  } catch { setSuggestions([]) }
+                }, 300)
+              } else { setSuggestions([]) }
+            }} placeholder="Search address..."
+              style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', width: '175px', outline: 'none' }} />
+            {suggestions.length > 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '0 0 3px 3px', maxHeight: '200px', overflowY: 'auto', zIndex: 1001 }}>
+                {suggestions.map((s, i) => (
+                  <div key={i} onClick={() => {
+                    mapInstanceRef.current?.flyTo([parseFloat(s.lat), parseFloat(s.lon)], 14)
+                    setSearchQuery(s.display_name.split(',')[0])
+                    setSuggestions([])
+                  }}
+                    style={{ padding: '6px 10px', fontSize: '13px', color: '#d4cfc9', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                    {s.display_name.length > 60 ? s.display_name.slice(0, 60) + '...' : s.display_name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <button type="submit" disabled={searching}
+            style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+            {searching ? '...' : 'Go'}
           </button>
-        )}
-        {(['street', 'satellite', 'dark'] as const).map(layer => (
+        </form>
+        {[['watercolor', 'Watercolor'], ['satellite', 'Satellite'], ['topo', 'Topo'], ['street', 'Street'], ['toner', 'Toner'], ['voyager', 'Voyager'], ['humanitarian', 'Humanitarian'], ['terrain', 'Terrain'], ['positron', 'Positron'], ['dark', 'Dark']].map(([layer, label]) => (
           <button key={layer} onClick={() => switchLayer(layer)}
-            style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#d4cfc9' }}>
-            {layer === 'street' ? 'Street' : layer === 'satellite' ? 'Satellite' : 'Dark'}
+            style={{ padding: '3px 0', width: '100px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#d4cfc9' }}>
+            {label}
           </button>
         ))}
       </div>

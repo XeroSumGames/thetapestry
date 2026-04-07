@@ -982,50 +982,50 @@ export default function TablePage() {
         </div>
         {isGM && sessionStatus === 'idle' && (
           <button onClick={startSession} disabled={sessionActing}
-            style={{ padding: '0 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.5 : 1, display: 'flex', alignItems: 'center' }}>
+            style={{ ...hdrBtn('#1a2e10', '#7fc458', '#2d5a1b'), opacity: sessionActing ? 0.5 : 1, cursor: sessionActing ? 'not-allowed' : 'pointer' }}>
             {sessionActing ? 'Starting...' : 'Start Session'}
           </button>
         )}
         {isGM && sessionStatus === 'active' && (
           <button onClick={() => setShowEndSessionModal(true)}
-            style={{ padding: '0 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+            style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>
             End Session
           </button>
         )}
         {sessionStatus === 'active' && (
-          <div style={{ padding: '0 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#7fc458', display: 'flex', alignItems: 'center' }}>
-            Game Session {sessionCount}
+          <div style={hdrBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
+            Session {sessionCount}
           </div>
         )}
         {isGM && sessionStatus === 'active' && !combatActive && (
           <button onClick={startCombat} disabled={startingCombat || entries.length === 0}
-            style={{ padding: '0 14px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: startingCombat || entries.length === 0 ? 'not-allowed' : 'pointer', opacity: startingCombat || entries.length === 0 ? 0.5 : 1, display: 'flex', alignItems: 'center' }}>
+            style={{ ...hdrBtn('#7a1f16', '#f5a89a', '#c0392b'), opacity: startingCombat || entries.length === 0 ? 0.5 : 1, cursor: startingCombat || entries.length === 0 ? 'not-allowed' : 'pointer' }}>
             {startingCombat ? 'Rolling...' : '⚔️ Start Combat'}
           </button>
         )}
         {isGM && combatActive && (
           <button onClick={endCombat}
-            style={{ padding: '0 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+            style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>
             End Combat
           </button>
         )}
         {combatActive && (
-          <div style={{ padding: '0 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5a89a', display: 'flex', alignItems: 'center' }}>
-            ⚔️ In Combat
+          <div style={hdrBtn('#2a1210', '#f5a89a', '#c0392b')}>
+            In Combat
           </div>
         )}
         <div style={{ flex: 1 }} />
         {isGM && sessionCount > 0 && (
           <a href={`/campaigns/${id}/sessions`}
-            style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
-            Previous Sessions
+            style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
+            Sessions
           </a>
         )}
         <button onClick={() => { setSheetMode(m => m === 'inline' ? 'overlay' : 'inline'); setSheetPos(null) }}
-          style={{ padding: '0 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          style={hdrBtn('#242424', '#cce0f5', '#3a3a3a')}>
           {sheetMode === 'inline' ? 'Overlay' : 'Inline'}
         </button>
-        <a href={`/campaigns/${id}`} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <a href={`/campaigns/${id}`} style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
           Back
         </a>
       </div>
@@ -1214,7 +1214,7 @@ export default function TablePage() {
         {/* Center — Map always rendered, sheets float on top */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
           {/* Campaign Map — always rendered */}
-          <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} />
+          <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} />
 
           {/* NPC Card(s) grid — floats over map */}
           {viewingNpcs.length > 0 && (
@@ -1758,3 +1758,11 @@ export default function TablePage() {
     </div>
   )
 }
+
+const hdrBtn = (bg: string, color: string, border: string): React.CSSProperties => ({
+  padding: '4px 10px', background: bg, border: `1px solid ${border}`, borderRadius: '3px',
+  color, fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif',
+  letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  height: '28px', boxSizing: 'border-box', appearance: 'none',
+})
