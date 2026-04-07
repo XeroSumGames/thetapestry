@@ -30,23 +30,23 @@ export default function PrintSheet({ state }: Props) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #c0392b', paddingBottom: '4pt', marginBottom: '6pt' }}>
         <div>
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18pt', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#111' }}>{state.name || 'Unnamed'}</div>
-          <div style={{ fontSize: '7pt', color: '#333' }}>
+          <div style={{ fontSize: '7pt', color: '#111' }}>
             {step4.profession ?? ''} · {state.age ? `Age ${state.age}` : ''} {state.gender ? `· ${state.gender}` : ''} {state.height ? `· ${state.height}` : ''} {state.weight ? `· ${state.weight}` : ''}
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '7pt', color: '#c0392b', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>Distemper</div>
-          <div style={{ fontSize: '6pt', color: '#888' }}>www.DistemperVerse.com</div>
+          <div style={{ fontSize: '6pt', color: '#111' }}>www.DistemperVerse.com</div>
         </div>
       </div>
 
       {/* Concept + Details row */}
       <div style={{ display: 'flex', gap: '6pt', marginBottom: '6pt', fontSize: '7pt' }}>
-        {state.concept && <div style={{ flex: 2, color: '#8a6a00', fontStyle: 'italic' }}>{state.concept}</div>}
-        <div style={{ flex: 1, textAlign: 'right', color: '#333' }}>
+        {state.concept && <div style={{ flex: 2, color: '#111', fontStyle: 'italic' }}>{state.concept}</div>}
+        <div style={{ flex: 1, textAlign: 'right', color: '#111' }}>
           {step6.complication && <span>Complication: <strong style={{ color: '#c0392b' }}>{step6.complication}</strong></span>}
           {step6.motivation && <span> · Motivation: <strong style={{ color: '#c0392b' }}>{step6.motivation}</strong></span>}
-          {state.threeWords?.filter(Boolean).length > 0 && <div style={{ color: '#1a5a8a' }}>{state.threeWords.filter(Boolean).join(' · ')}</div>}
+          {state.threeWords?.filter(Boolean).length > 0 && <div style={{ color: '#111' }}>{state.threeWords.filter(Boolean).join(' · ')}</div>}
         </div>
       </div>
 
@@ -56,7 +56,7 @@ export default function PrintSheet({ state }: Props) {
           const v = rapid[k]
           return (
             <div key={k} style={{ flex: 1, background: v > 0 ? '#eef8ee' : '#fff', border: `1px solid ${v > 0 ? '#2d8a2d' : '#ccc'}`, borderRadius: '3pt', padding: '4pt 2pt', textAlign: 'center' }}>
-              <div style={{ fontSize: '6pt', color: '#333', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{k}</div>
+              <div style={{ fontSize: '6pt', color: '#111', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{k}</div>
               <div style={{ fontSize: '14pt', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: v > 0 ? '#7fc458' : '#d4cfc9', lineHeight: 1 }}>{sgn(v)}</div>
             </div>
           )
@@ -67,7 +67,7 @@ export default function PrintSheet({ state }: Props) {
       <div style={{ display: 'flex', gap: '12pt', marginBottom: '6pt' }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2pt' }}>
-            <span style={{ fontSize: '7pt', color: '#333', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>Wound Points</span>
+            <span style={{ fontSize: '7pt', color: '#111', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>Wound Points</span>
             <span style={{ fontSize: '7pt', color: '#c0392b', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{derived.woundPoints}/{derived.woundPoints}</span>
           </div>
           <div style={{ display: 'flex', gap: '2pt', flexWrap: 'wrap' }}>
@@ -78,8 +78,8 @@ export default function PrintSheet({ state }: Props) {
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2pt' }}>
-            <span style={{ fontSize: '7pt', color: '#333', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>Resilience Points</span>
-            <span style={{ fontSize: '7pt', color: '#1a5a8a', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{derived.resiliencePoints}/{derived.resiliencePoints}</span>
+            <span style={{ fontSize: '7pt', color: '#111', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>Resilience Points</span>
+            <span style={{ fontSize: '7pt', color: '#111', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{derived.resiliencePoints}/{derived.resiliencePoints}</span>
           </div>
           <div style={{ display: 'flex', gap: '2pt', flexWrap: 'wrap' }}>
             {Array.from({ length: derived.resiliencePoints }).map((_, i) => (
@@ -92,13 +92,13 @@ export default function PrintSheet({ state }: Props) {
       {/* Trackers row: Stress, Insight, CDP, Morality */}
       <div style={{ display: 'flex', gap: '8pt', marginBottom: '6pt' }}>
         {[
-          { label: 'Stress', count: 5, color: '#8a6a00' },
-          { label: 'Insight', count: 10, color: '#1a6b1a' },
-          { label: 'CDP', count: 10, color: '#1a5a8a' },
-          { label: 'Morality', count: 7, color: '#333' },
+          { label: 'Stress', count: 5, color: '#111' },
+          { label: 'Insight', count: 10, color: '#111' },
+          { label: 'CDP', count: 10, color: '#111' },
+          { label: 'Morality', count: 7, color: '#111' },
         ].map(t => (
           <div key={t.label} style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: '6pt', color: '#333', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2pt' }}>{t.label}</div>
+            <div style={{ fontSize: '6pt', color: '#111', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2pt' }}>{t.label}</div>
             <div style={{ display: 'flex', gap: '1.5pt', justifyContent: 'center' }}>
               {Array.from({ length: t.count }).map((_, i) => (
                 <div key={i} style={{ width: '7pt', height: '7pt', borderRadius: '1pt', border: `0.5pt solid ${t.color}`, background: 'transparent' }} />
@@ -129,8 +129,8 @@ export default function PrintSheet({ state }: Props) {
       <div style={{ display: 'flex', gap: '6pt', marginBottom: '6pt' }}>
         {/* Unarmed Attack */}
         <div style={{ flex: 1, background: '#fff', border: '1px solid #ccc', borderRadius: '3pt', padding: '4pt 6pt', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6pt' }}>
-          <span style={{ fontSize: '7pt', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', color: '#333' }}>👊 Unarmed Attack</span>
-          <span style={{ fontSize: '7pt', color: '#1a5a8a' }}>
+          <span style={{ fontSize: '7pt', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', color: '#111' }}>👊 Unarmed Attack</span>
+          <span style={{ fontSize: '7pt', color: '#111' }}>
             Damage: <span style={{ color: '#c0392b', fontWeight: 700 }}>1d3{unarmedBonus !== 0 ? `+${unarmedBonus}` : ''}</span> (PHY + Unarmed)
           </span>
         </div>
@@ -145,8 +145,8 @@ export default function PrintSheet({ state }: Props) {
             { l: 'DMR', v: sgn(derived.rangedDefense) },
           ].map(s => (
             <div key={s.l} style={{ background: '#fff', border: '1px solid #ccc', borderRadius: '2pt', padding: '2pt 4pt', textAlign: 'center', minWidth: '28pt' }}>
-              <div style={{ fontSize: '5pt', color: '#888', textTransform: 'uppercase' }}>{s.l}</div>
-              <div style={{ fontSize: '9pt', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: '#333' }}>{s.v}</div>
+              <div style={{ fontSize: '5pt', color: '#111', textTransform: 'uppercase' }}>{s.l}</div>
+              <div style={{ fontSize: '9pt', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: '#111' }}>{s.v}</div>
             </div>
           ))}
         </div>
@@ -158,7 +158,7 @@ export default function PrintSheet({ state }: Props) {
           <div key={label} style={{ flex: 1, background: '#fff', border: '1px solid #ccc', borderRadius: '3pt', overflow: 'hidden' }}>
             <div style={{ padding: '3pt 6pt', borderBottom: '1px solid #ccc', display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '7pt', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', color: '#111' }}>{label}</span>
-              <span style={{ fontSize: '7pt', fontWeight: 700, color: '#333' }}>{wep?.name ?? 'None'}</span>
+              <span style={{ fontSize: '7pt', fontWeight: 700, color: '#111' }}>{wep?.name ?? 'None'}</span>
             </div>
             {wep && (
               <>
@@ -171,14 +171,14 @@ export default function PrintSheet({ state }: Props) {
                     { l: 'Cond', v: 'Used' },
                   ].map(({ l, v }) => (
                     <div key={l} style={{ flex: 1 }}>
-                      <div style={{ color: '#888', textTransform: 'uppercase', fontSize: '5pt' }}>{l}</div>
-                      <div style={{ fontWeight: 700, color: '#333', fontSize: '7pt' }}>{v}</div>
+                      <div style={{ color: '#111', textTransform: 'uppercase', fontSize: '5pt' }}>{l}</div>
+                      <div style={{ fontWeight: 700, color: '#111', fontSize: '7pt' }}>{v}</div>
                     </div>
                   ))}
                 </div>
                 {wep.cat === 'ranged' && 'clipSize' in wep && (
                   <div style={{ padding: '2pt 6pt', borderTop: '1px solid #ccc', display: 'flex', alignItems: 'center', gap: '4pt' }}>
-                    <span style={{ fontSize: '5pt', color: '#888' }}>Ammo ({wep.clipSize}):</span>
+                    <span style={{ fontSize: '5pt', color: '#111' }}>Ammo ({wep.clipSize}):</span>
                     <div style={{ display: 'flex', gap: '1.5pt', flexWrap: 'wrap' }}>
                       {Array.from({ length: Math.min(wep.clipSize as number, 30) }).map((_, i) => (
                         <div key={i} style={{ width: '5pt', height: '5pt', border: '0.5pt solid #c0392b', background: 'transparent' }} />
@@ -198,9 +198,9 @@ export default function PrintSheet({ state }: Props) {
         <div style={{ flex: 1, background: '#fff', border: '1px solid #ccc', borderRadius: '3pt', padding: '4pt 6pt' }}>
           <div style={{ fontSize: '6pt', color: '#c0392b', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2pt' }}>Equipment & Gear</div>
           {state.equipment && <div style={{ fontSize: '7pt', fontWeight: 600, color: '#111' }}>{state.equipment}</div>}
-          {state.incidentalItem && <div style={{ fontSize: '6pt', color: '#333' }}>Incidental: {state.incidentalItem}</div>}
-          {state.rations && <div style={{ fontSize: '6pt', color: '#333' }}>Rations: {state.rations}</div>}
-          {!state.equipment && !state.incidentalItem && <div style={{ fontSize: '6pt', color: '#888' }}>None</div>}
+          {state.incidentalItem && <div style={{ fontSize: '6pt', color: '#111' }}>Incidental: {state.incidentalItem}</div>}
+          {state.rations && <div style={{ fontSize: '6pt', color: '#111' }}>Rations: {state.rations}</div>}
+          {!state.equipment && !state.incidentalItem && <div style={{ fontSize: '6pt', color: '#111' }}>None</div>}
         </div>
         {/* Relationships */}
         <div style={{ flex: 1, background: '#fff', border: '1px solid #ccc', borderRadius: '3pt', padding: '4pt 6pt' }}>
@@ -218,7 +218,7 @@ export default function PrintSheet({ state }: Props) {
       {state.concept && (
         <div style={{ background: '#fff', border: '1px solid #ccc', borderRadius: '3pt', padding: '4pt 6pt' }}>
           <div style={{ fontSize: '6pt', color: '#c0392b', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2pt' }}>Backstory</div>
-          <div style={{ fontSize: '7pt', color: '#333', lineHeight: 1.4 }}>
+          <div style={{ fontSize: '7pt', color: '#111', lineHeight: 1.4 }}>
             {[state.steps[0]?.note, state.steps[1]?.note, state.steps[2]?.note, state.steps[3]?.note, state.steps[4]?.note].filter(Boolean).join(' ')}
           </div>
         </div>
