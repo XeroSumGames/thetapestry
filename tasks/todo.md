@@ -4,7 +4,7 @@
 - [x] Print character sheet renders blank
 - [x] Distemper font not applying on mobile navbar
 - [ ] Print sheet missing data — Relationships/CMod, Lasting Wounds/Notes, Tracking (Insight/CDP) not populated from character data
-- [ ] Signup error with no visibility — user got an error creating an account, need better error logging/display on signup + moderation/logging improvements
+- [x] Signup error fixed — handle_new_user trigger had wrong role casing + no EXCEPTION handler + RLS blocking. Added client-side fallback + error visibility
 - [x] Signup page shows hardcoded "check your email" message — confirmed not a bug
 
 ---

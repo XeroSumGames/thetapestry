@@ -29,3 +29,6 @@
 - **Debug logging is essential for remote debugging**: When the user can't see what's happening, add `console.log` with prefixed tags like `[EndSession]`, `[StatUpdate]`, then remove after diagnosis.
 - **Test on the actual deployment**: localhost behavior can differ from deployed behavior (caching, env vars, auth state).
 - **Verify the DB table/column exists before assuming code works**: A 400 error or silent null often means the schema doesn't match the code.
+- **Supabase auth triggers must use EXCEPTION handler**: If a trigger on `auth.users` fails, Supabase rolls back the entire transaction including user creation, showing "Database error saving new user". Always wrap trigger INSERT in EXCEPTION WHEN OTHERS to prevent blocking signup. The client-side fallback code handles profile creation if the trigger fails.
+- **CHECK constraints vs trigger values**: The `handle_new_user` trigger was inserting `'survivor'` (lowercase) but `profiles.role` has a CHECK constraint requiring `'Survivor'` (capitalized). Always match exact casing in trigger functions.
+- **SECURITY DEFINER doesn't always bypass RLS in Supabase**: Despite documentation, trigger functions with SECURITY DEFINER may still be blocked by RLS policies. Add an EXCEPTION handler as a safety net.

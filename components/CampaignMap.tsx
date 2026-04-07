@@ -50,6 +50,7 @@ export default function CampaignMap({ campaignId, isGM }: Props) {
   const mapInstanceRef = useRef<any>(null)
   const tileLayerRef = useRef<any>(null)
   const markersRef = useRef<Record<string, any>>({})
+  const clusterGroupRef = useRef<any>(null)
   const debounceRef = useRef<any>(null)
   const placingRef = useRef(false)
   const supabase = createClient()
@@ -76,9 +77,24 @@ export default function CampaignMap({ campaignId, isGM }: Props) {
     const leaflet = L ?? (await import('leaflet')).default
     const map = mapInstanceRef.current
     if (!map) return
+    await import('leaflet.markercluster')
+    await import('leaflet.markercluster/dist/MarkerCluster.css')
+    await import('leaflet.markercluster/dist/MarkerCluster.Default.css')
 
-    Object.values(markersRef.current).forEach((m: any) => { try { m.remove() } catch {} })
+    if (clusterGroupRef.current) { map.removeLayer(clusterGroupRef.current) }
     markersRef.current = {}
+
+    const clusterGroup = (leaflet as any).markerClusterGroup({
+      maxClusterRadius: 40,
+      iconCreateFunction: (cluster: any) => {
+        const count = cluster.getChildCount()
+        const size = count < 10 ? 32 : count < 50 ? 40 : 48
+        return leaflet.divIcon({
+          html: `<div style="width:${size}px;height:${size}px;background:#1a1a1a;border:2px solid #c0392b;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f5f2ee;font-family:'Barlow Condensed',sans-serif;font-size:${size < 40 ? 13 : 15}px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.5);">${count}</div>`,
+          className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2],
+        })
+      },
+    })
 
     visible.forEach(pin => {
       const emoji = getCategoryEmoji(pin.category)
@@ -86,10 +102,14 @@ export default function CampaignMap({ campaignId, isGM }: Props) {
         html: `<div style="font-size:16px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));cursor:pointer;${!pin.revealed && isGM ? 'opacity:0.4;' : ''}" title="${pin.name}">${emoji}</div>`,
         className: '', iconSize: [20, 20], iconAnchor: [10, 20],
       })
-      const marker = leaflet.marker([pin.lat, pin.lng], { icon }).addTo(map)
-      marker.bindPopup(`<div style="font-family:Barlow Condensed,sans-serif;"><strong style="text-transform:uppercase;letter-spacing:.04em;">${pin.name}</strong>${pin.notes ? `<br/><span style="color:#666;">${pin.notes}</span>` : ''}${!pin.revealed && isGM ? '<br/><em style="color:#c0392b;">Hidden from players</em>' : ''}</div>`)
+      const marker = leaflet.marker([pin.lat, pin.lng], { icon })
+        .bindPopup(`<div style="font-family:Barlow Condensed,sans-serif;"><strong style="text-transform:uppercase;letter-spacing:.04em;">${pin.name}</strong>${pin.notes ? `<br/><span style="color:#666;">${pin.notes}</span>` : ''}${!pin.revealed && isGM ? '<br/><em style="color:#c0392b;">Hidden from players</em>' : ''}</div>`)
+      clusterGroup.addLayer(marker)
       markersRef.current[pin.id] = marker
     })
+
+    clusterGroup.addTo(map)
+    clusterGroupRef.current = clusterGroup
   }
 
   function switchLayer(layer: 'street' | 'satellite' | 'dark') {
