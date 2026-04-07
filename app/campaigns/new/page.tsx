@@ -4,12 +4,13 @@ import { createClient } from '../../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { logEvent } from '../../../lib/events'
 import { SETTING_PINS } from '../../../lib/setting-pins'
+import { SETTING_NPCS } from '../../../lib/setting-npcs'
 
 const SETTINGS = [
   { value: 'custom', label: 'New Setting' },
-  { value: 'district0', label: 'District Zero' },
+  { value: 'district_zero', label: 'District Zero' },
   { value: 'mongrels', label: 'Minnie & The Magnificent Mongrels' },
-  { value: 'chased', label: 'Chased' },
+  { value: 'chased', label: 'Chased — Sussex County, DE' },
   { value: 'empty', label: 'Empty' },
   { value: 'therock', label: 'The Rock' },
 ]
@@ -22,7 +23,7 @@ function generateCode(): string {
 export default function NewCampaignPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [setting, setSetting] = useState('district0')
+  const [setting, setSetting] = useState('district_zero')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -58,6 +59,32 @@ export default function NewCampaignPage() {
         revealed: false,
       }))
       await supabase.from('campaign_pins').insert(pinRows)
+    }
+    // Seed setting NPCs into campaign_npcs
+    const settingNpcs = SETTING_NPCS[setting]
+    if (settingNpcs && settingNpcs.length > 0) {
+      const { data: createdPins } = await supabase
+        .from('campaign_pins')
+        .select('id, name')
+        .eq('campaign_id', data.id)
+      const pinMap: Record<string, string> = {}
+      createdPins?.forEach(p => { pinMap[p.name] = p.id })
+      const npcRows = settingNpcs.map(n => ({
+        campaign_id: data.id,
+        campaign_pin_id: n.pin_title ? (pinMap[n.pin_title] ?? null) : null,
+        name: n.name,
+        rapid_range: n.rapid_range,
+        wp: n.wp, rp: n.rp, dmm: n.dmm, dmr: n.dmr,
+        init: n.init, per: n.per, enc: n.enc, pt: n.pt,
+        skills: n.skills,
+        equipment: n.equipment,
+        role: n.role,
+        description: n.description,
+        how_to_meet: n.how_to_meet,
+        motivation: n.motivation,
+        revealed: false,
+      }))
+      await supabase.from('campaign_npcs').insert(npcRows)
     }
     logEvent('campaign_created', { id: data.id, name })
     router.push(`/campaigns/${data.id}`)

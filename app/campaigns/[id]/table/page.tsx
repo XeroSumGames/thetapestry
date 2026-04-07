@@ -107,7 +107,7 @@ interface InitiativeEntry {
 
 const SETTINGS: Record<string, string> = {
   custom: 'New Setting',
-  district0: 'District Zero',
+  district_zero: 'District Zero',
   mongrels: 'Minnie & The Magnificent Mongrels',
   chased: 'Chased',
   empty: 'Empty',
@@ -1581,10 +1581,10 @@ export default function TablePage() {
                 style={{ border: '2px dashed #3a3a3a', borderRadius: '4px', padding: '1.25rem', textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
                 onClick={() => { const input = document.createElement('input'); input.type = 'file'; input.multiple = true; input.accept = 'image/*,.pdf,.txt,.doc,.docx'; input.onchange = () => { const files = Array.from(input.files ?? []).filter(f => f.type.startsWith('image/') || f.type === 'application/pdf' || f.type === 'text/plain' || f.type === 'application/msword' || f.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'); if (files.length > 0) setSessionFiles(prev => [...prev, ...files]) }; input.click() }}
               >
-                <div style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                   Drop files here or click to browse
                 </div>
-                <div style={{ fontSize: '10px', color: '#3a3a3a', marginTop: '4px' }}>Maps, handouts, references — images, PDFs, text, and Word docs</div>
+                <div style={{ fontSize: '12px', color: '#3a3a3a', marginTop: '4px' }}>Maps, handouts, references — images, PDFs, text, and Word docs</div>
               </div>
               {sessionFiles.length > 0 && (
                 <div style={{ marginTop: '8px' }}>

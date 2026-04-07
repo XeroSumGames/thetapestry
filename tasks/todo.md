@@ -118,6 +118,15 @@
 - [ ] Allow characters in multiple campaigns
 - [ ] Transfer GM role, Session scheduling
 
+### Setting Seeds
+- [x] District Zero — 31 pins seeded to world map, 18 NPCs in setting-npcs.ts
+- [x] Chased — 14 pins seeded to world map, 21 NPCs + 5 pregens in setting-npcs.ts
+- [x] Renamed district0 → district_zero across entire codebase
+- [x] campaign_npcs table created with RLS + Realtime
+- [x] Campaign creation auto-seeds NPCs for District Zero and Chased
+- [ ] Pregen storage decision — setting_pregens table or is_pregen flag on campaign_npcs
+- [x] End session modal drop zone text size bumped (11/10px → 13/12px)
+
 ### Character Creation
 - [x] Clickable steps, portrait upload, concept display, photo resize, test character
 - [ ] CDP tracker boxes (partially fixed)

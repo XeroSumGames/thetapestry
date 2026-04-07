@@ -16,7 +16,7 @@ interface Campaign {
 
 const SETTINGS: Record<string, string> = {
   custom: 'New Setting',
-  district0: 'District Zero',
+  district_zero: 'District Zero',
   mongrels: 'Minnie & The Magnificent Mongrels',
   chased: 'Chased',
   empty: 'Empty',

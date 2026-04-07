@@ -118,8 +118,12 @@ export default function ModerationPage() {
 
   async function handleRoleChange(id: string, newRole: 'Survivor' | 'Thriver') {
     setActing(id)
-    await supabase.from('profiles').update({ role: newRole }).eq('id', id)
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, role: newRole } : u))
+    const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', id)
+    if (error) {
+      alert(`Failed to update role: ${error.message}`)
+    } else {
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, role: newRole } : u))
+    }
     setActing(null)
   }
 
