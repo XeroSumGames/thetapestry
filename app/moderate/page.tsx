@@ -116,7 +116,7 @@ export default function ModerationPage() {
     setUsersLoading(false)
   }
 
-  async function handleRoleChange(id: string, newRole: 'survivor' | 'thriver') {
+  async function handleRoleChange(id: string, newRole: 'Survivor' | 'Thriver') {
     setActing(id)
     await supabase.from('profiles').update({ role: newRole }).eq('id', id)
     setUsers(prev => prev.map(u => u.id === id ? { ...u, role: newRole } : u))
@@ -290,7 +290,7 @@ export default function ModerationPage() {
             {users.map(u => (
               <div key={u.id} style={{
                 background: '#1a1a1a', border: '1px solid #2e2e2e',
-                borderLeft: `3px solid ${u.role === 'thriver' ? '#c0392b' : '#3a3a3a'}`,
+                borderLeft: `3px solid ${u.role?.toLowerCase() === 'thriver' ? '#c0392b' : '#3a3a3a'}`,
                 borderRadius: '4px', padding: '10px 1.25rem',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
@@ -314,18 +314,18 @@ export default function ModerationPage() {
                     fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif',
                     letterSpacing: '.08em', textTransform: 'uppercase',
                     padding: '3px 8px', borderRadius: '2px',
-                    background: u.role === 'thriver' ? '#2a1210' : '#1a1a2e',
-                    color: u.role === 'thriver' ? '#f5a89a' : '#7ab3d4',
-                    border: `1px solid ${u.role === 'thriver' ? '#c0392b' : '#2e2e5a'}`,
+                    background: u.role?.toLowerCase() === 'thriver' ? '#2a1210' : '#1a1a2e',
+                    color: u.role?.toLowerCase() === 'thriver' ? '#f5a89a' : '#7ab3d4',
+                    border: `1px solid ${u.role?.toLowerCase() === 'thriver' ? '#c0392b' : '#2e2e5a'}`,
                   }}>
                     {u.role}
                   </span>
-                  {u.role === 'thriver' ? (
-                    <button onClick={() => handleRoleChange(u.id, 'survivor')} disabled={acting === u.id} style={actionBtn('#3a3a3a', '#d4cfc9')}>
+                  {u.role?.toLowerCase() === 'thriver' ? (
+                    <button onClick={() => handleRoleChange(u.id, 'Survivor')} disabled={acting === u.id} style={actionBtn('#3a3a3a', '#d4cfc9')}>
                       Make Survivor
                     </button>
                   ) : (
-                    <button onClick={() => handleRoleChange(u.id, 'thriver')} disabled={acting === u.id} style={actionBtn('#c0392b', '#f5a89a')}>
+                    <button onClick={() => handleRoleChange(u.id, 'Thriver')} disabled={acting === u.id} style={actionBtn('#c0392b', '#f5a89a')}>
                       Make Thriver
                     </button>
                   )}
