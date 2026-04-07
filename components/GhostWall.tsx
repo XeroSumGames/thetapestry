@@ -15,7 +15,7 @@ export default function GhostWall({ show, onClose, message }: Props) {
         <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Ghost — You Don't Exist</div>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>Become a Survivor</div>
         <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-          {message || 'You need an account to do that. Create one to start building characters, joining campaigns, and surviving the apocalypse.'}
+          {message || "You are a ghost — you don't exist if you don't sign up."}
         </div>
         <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
           <a href="/signup" style={{ display: 'block', padding: '10px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none', textAlign: 'center' }}>
@@ -25,7 +25,7 @@ export default function GhostWall({ show, onClose, message }: Props) {
             Sign In
           </a>
           <button onClick={onClose} style={{ padding: '8px', background: 'none', border: 'none', color: '#666', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            Keep Browsing
+            Go Back to Stalking
           </button>
         </div>
       </div>
