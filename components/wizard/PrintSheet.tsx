@@ -20,258 +20,210 @@ export default function PrintSheet({ state }: Props) {
   function sgn(v: number) { return v > 0 ? `+${v}` : String(v) }
 
   const ATTR_KEYS = ['RSN', 'ACU', 'PHY', 'INF', 'DEX'] as const
-  const ATTR_FULL: Record<string, string> = { RSN: 'Reason', ACU: 'Acumen', PHY: 'Physicality', INF: 'Influence', DEX: 'Dexterity' }
 
-  const backstoryNotes = [
-    { label: 'Step 1', note: state.steps[0]?.note },
-    { label: 'Step 2', note: state.steps[1]?.note },
-    { label: 'Step 3', note: state.steps[2]?.note },
-    { label: 'Step 4', note: state.steps[3]?.note },
-    { label: 'Step 5', note: state.steps[4]?.note },
-  ].filter(b => b.note?.trim())
+  const unarmedBonus = (rapid.PHY ?? 0) + (skills['Unarmed Combat'] ?? 0)
 
-  function wBlock(wep: typeof pWep, ammo: number, label: string, cls: string) {
-    if (!wep) return <div style={{ border: '0.5pt solid #ddd', padding: '5pt 6pt', fontSize: '7pt', color: '#aaa', marginBottom: '3pt', background: '#fafafa' }}>{label}: None</div>
-    const needsAmmo = wep.cat === 'ranged'
-    const clipSize = 'clipSize' in wep ? wep.clipSize : 0
-    return (
-      <div style={{ border: '0.5pt solid #ccc', marginBottom: '3pt' }}>
-        <div style={{ padding: '2pt 4pt', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: cls === 'primary' ? '#1a1a1a' : '#444', color: '#fff' }}>
-          <span style={{ fontSize: '7pt', fontWeight: 700 }}>{label}: {wep.name}</span>
-          <span style={{ fontSize: '6pt', opacity: 0.8 }}>{wep.cat.toUpperCase()}</span>
+  return (
+    <div id="print-sheet-inner" style={{ fontFamily: 'Barlow, Arial, sans-serif', color: '#f5f2ee', background: '#1a1a1a', width: '100%', fontSize: '8pt', padding: '8pt' }}>
+
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #c0392b', paddingBottom: '4pt', marginBottom: '6pt' }}>
+        <div>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18pt', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>{state.name || 'Unnamed'}</div>
+          <div style={{ fontSize: '7pt', color: '#d4cfc9' }}>
+            {step4.profession ?? ''} · {state.age ? `Age ${state.age}` : ''} {state.gender ? `· ${state.gender}` : ''} {state.height ? `· ${state.height}` : ''} {state.weight ? `· ${state.weight}` : ''}
+          </div>
         </div>
-        <div style={{ display: 'flex', padding: '3pt 4pt', gap: 0 }}>
-          {[
-            ['Range', wep.range],
-            ['Damage', 'damageBase' in wep ? `${'damageDice' in wep && wep.damageDice ? `${wep.damageBase}+${wep.damageDice}` : wep.damageBase}` : ''],
-            ['RP%', 'rpPercent' in wep ? `${wep.rpPercent}%` : ''],
-            ['ENC', wep.enc],
-            ['Cond.', 'Used'],
-          ].map(([l, v]) => (
-            <div key={String(l)} style={{ flex: 1, borderRight: '0.3pt solid #eee' }}>
-              <div style={{ fontSize: '5pt', color: '#888', textTransform: 'uppercase' }}>{l}</div>
-              <div style={{ fontSize: '7.5pt', fontWeight: 700 }}>{v}</div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '7pt', color: '#c0392b', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>Distemper</div>
+          <div style={{ fontSize: '6pt', color: '#666' }}>www.DistemperVerse.com</div>
+        </div>
+      </div>
+
+      {/* Concept + Details row */}
+      <div style={{ display: 'flex', gap: '6pt', marginBottom: '6pt', fontSize: '7pt' }}>
+        {state.concept && <div style={{ flex: 2, color: '#EF9F27', fontStyle: 'italic' }}>{state.concept}</div>}
+        <div style={{ flex: 1, textAlign: 'right', color: '#d4cfc9' }}>
+          {step6.complication && <span>Complication: <strong style={{ color: '#c0392b' }}>{step6.complication}</strong></span>}
+          {step6.motivation && <span> · Motivation: <strong style={{ color: '#c0392b' }}>{step6.motivation}</strong></span>}
+          {state.threeWords?.filter(Boolean).length > 0 && <div style={{ color: '#7ab3d4' }}>{state.threeWords.filter(Boolean).join(' · ')}</div>}
+        </div>
+      </div>
+
+      {/* RAPID Attributes */}
+      <div style={{ display: 'flex', gap: '3pt', marginBottom: '6pt' }}>
+        {ATTR_KEYS.map(k => {
+          const v = rapid[k]
+          return (
+            <div key={k} style={{ flex: 1, background: v > 0 ? '#1a2e10' : '#242424', border: `1px solid ${v > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3pt', padding: '4pt 2pt', textAlign: 'center' }}>
+              <div style={{ fontSize: '6pt', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{k}</div>
+              <div style={{ fontSize: '14pt', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: v > 0 ? '#7fc458' : '#d4cfc9', lineHeight: 1 }}>{sgn(v)}</div>
             </div>
-          ))}
+          )
+        })}
+      </div>
+
+      {/* WP / RP */}
+      <div style={{ display: 'flex', gap: '12pt', marginBottom: '6pt' }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2pt' }}>
+            <span style={{ fontSize: '7pt', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>Wound Points</span>
+            <span style={{ fontSize: '7pt', color: '#c0392b', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{derived.woundPoints}/{derived.woundPoints}</span>
+          </div>
+          <div style={{ display: 'flex', gap: '2pt', flexWrap: 'wrap' }}>
+            {Array.from({ length: derived.woundPoints }).map((_, i) => (
+              <div key={i} style={{ width: '8pt', height: '8pt', borderRadius: '50%', border: '1px solid #c0392b', background: 'transparent' }} />
+            ))}
+          </div>
         </div>
-        {needsAmmo && clipSize > 0 && (
-          <div style={{ padding: '2pt 4pt', display: 'flex', alignItems: 'center', gap: '4pt', borderTop: '0.3pt solid #eee' }}>
-            <span style={{ fontSize: '5.5pt', color: '#888' }}>Ammo ({clipSize} rounds):</span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2pt' }}>
-              {Array.from({ length: Math.min(clipSize, 30) }).map((_, i) => (
-                <div key={i} style={{ width: '7pt', height: '7pt', border: '0.5pt solid #333', background: '#fff' }} />
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2pt' }}>
+            <span style={{ fontSize: '7pt', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>Resilience Points</span>
+            <span style={{ fontSize: '7pt', color: '#7ab3d4', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{derived.resiliencePoints}/{derived.resiliencePoints}</span>
+          </div>
+          <div style={{ display: 'flex', gap: '2pt', flexWrap: 'wrap' }}>
+            {Array.from({ length: derived.resiliencePoints }).map((_, i) => (
+              <div key={i} style={{ width: '8pt', height: '8pt', borderRadius: '50%', border: '1px solid #7ab3d4', background: 'transparent' }} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Trackers row: Stress, Insight, CDP, Morality */}
+      <div style={{ display: 'flex', gap: '8pt', marginBottom: '6pt' }}>
+        {[
+          { label: 'Stress', count: 5, color: '#EF9F27' },
+          { label: 'Insight', count: 10, color: '#7fc458' },
+          { label: 'CDP', count: 10, color: '#7ab3d4' },
+          { label: 'Morality', count: 7, color: '#d4cfc9' },
+        ].map(t => (
+          <div key={t.label} style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ fontSize: '6pt', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2pt' }}>{t.label}</div>
+            <div style={{ display: 'flex', gap: '1.5pt', justifyContent: 'center' }}>
+              {Array.from({ length: t.count }).map((_, i) => (
+                <div key={i} style={{ width: '7pt', height: '7pt', borderRadius: '1pt', border: `0.5pt solid ${t.color}`, background: 'transparent' }} />
               ))}
             </div>
           </div>
-        )}
-        {!needsAmmo && (
-          <div style={{ padding: '2pt 4pt', borderTop: '0.3pt solid #eee' }}>
-            <span style={{ fontSize: '5.5pt', color: '#888' }}>Melee — no ammo required</span>
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  return (
-    <div id="print-sheet-inner" style={{ fontFamily: 'Barlow, Arial, sans-serif', color: '#111', width: '100%', fontSize: '8pt' }}>
-
-      {/* Header */}
-      <div style={{ background: '#1a1a1a', color: '#fff', padding: '5pt 8pt', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14pt', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>Distemper</div>
-        <div style={{ fontSize: '6.5pt', color: '#aaa', textAlign: 'right', lineHeight: 1.5 }}>Character Sheet<br />www.DistemperVerse.com</div>
-      </div>
-      <div style={{ height: '3pt', background: '#c0392b', marginBottom: '5pt' }} />
-
-      {/* Personal details */}
-      <div style={{ display: 'flex', gap: '3pt', marginBottom: '4pt' }}>
-        {[
-          { label: 'Name', value: state.name, flex: 3 },
-          { label: 'Age', value: state.age, flex: 1 },
-          { label: 'Gender', value: state.gender, flex: 1 },
-          { label: 'Profession', value: step4.profession ?? '', flex: 2 },
-          { label: 'Height', value: state.height, flex: 1 },
-          { label: 'Weight', value: state.weight, flex: 1 },
-        ].map(({ label, value, flex }) => (
-          <div key={label} style={{ border: '0.5pt solid #ccc', padding: '2pt 3pt', flex }}>
-            <div style={{ fontSize: '5pt', color: '#888', textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</div>
-            <div style={{ fontSize: '8.5pt', fontWeight: 600, minHeight: '10pt' }}>{value}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{ display: 'flex', gap: '3pt', marginBottom: '6pt' }}>
-        {[
-          { label: 'Complication', value: step6.complication ?? '', flex: 2 },
-          { label: 'Motivation', value: step6.motivation ?? '', flex: 2 },
-          { label: 'Word 1', value: state.threeWords[0], flex: 1 },
-          { label: 'Word 2', value: state.threeWords[1], flex: 1 },
-          { label: 'Word 3', value: state.threeWords[2], flex: 1 },
-        ].map(({ label, value, flex }) => (
-          <div key={label} style={{ border: '0.5pt solid #ccc', padding: '2pt 3pt', flex }}>
-            <div style={{ fontSize: '5pt', color: '#888', textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</div>
-            <div style={{ fontSize: '8.5pt', fontWeight: 600, minHeight: '10pt' }}>{value}</div>
-          </div>
         ))}
       </div>
 
-      {/* Body — two columns */}
-      <div style={{ display: 'flex', gap: '8pt', marginTop: '4pt' }}>
-
-        {/* Left column */}
-        <div style={{ width: '38%', flexShrink: 0 }}>
-
-          <div style={secHdr}>RAPID Range Attributes</div>
-          <div style={{ display: 'flex', gap: '2pt', marginBottom: '4pt', marginTop: '2pt' }}>
-            {ATTR_KEYS.map(k => {
-              const v = rapid[k]
-              return (
-                <div key={k} style={{ flex: 1, border: `0.5pt solid ${v > 0 ? '#c0392b' : '#ccc'}`, padding: '3pt 2pt', textAlign: 'center', background: v > 0 ? '#fdf0ee' : '#fff' }}>
-                  <div style={{ fontSize: '7pt', fontWeight: 700, color: '#555', textTransform: 'uppercase' }}>{k}</div>
-                  <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16pt', fontWeight: 700, lineHeight: 1, margin: '2pt 0', color: v > 0 ? '#c0392b' : '#111' }}>{sgn(v)}</div>
-                  <div style={{ fontSize: '5pt', color: '#888', lineHeight: 1.2 }}>{ATTRIBUTE_LABELS[v]}<br />{ATTR_FULL[k]}</div>
-                </div>
-              )
-            })}
-          </div>
-
-          <div style={secHdr}>Secondary Statistics</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2pt', marginBottom: '4pt', marginTop: '2pt' }}>
-            {[
-              { l: 'Wound Points', v: derived.woundPoints, hi: true },
-              { l: 'Resilience Pts', v: derived.resiliencePoints, hi: true },
-              { l: 'Initiative', v: sgn(derived.initiative), hi: false },
-              { l: 'Perception', v: sgn(derived.perception), hi: false },
-              { l: 'Encumbrance', v: derived.encumbrance, hi: false },
-              { l: 'Stress Mod', v: sgn(derived.stressModifier), hi: false },
-              { l: 'Melee Def', v: sgn(derived.meleeDefense), hi: false },
-              { l: 'Ranged Def', v: sgn(derived.rangedDefense), hi: false },
-              { l: 'Morality', v: 3, hi: false },
-            ].map(({ l, v, hi }) => (
-              <div key={l} style={{ width: 'calc(33.33% - 2pt)', border: `0.5pt solid ${hi ? '#c0392b' : '#ccc'}`, padding: '3pt 4pt', textAlign: 'center', background: hi ? '#fdf0ee' : '#fff' }}>
-                <div style={{ fontSize: '5pt', color: '#888', textTransform: 'uppercase', letterSpacing: '.04em' }}>{l}</div>
-                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13pt', fontWeight: 700, lineHeight: 1.1, color: hi ? '#c0392b' : '#111' }}>{v}</div>
+      {/* Skills grid */}
+      <div style={{ background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3pt', padding: '4pt', marginBottom: '6pt' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+          {SKILLS.map(sk => {
+            const val = skills[sk.name]
+            const base = sk.vocational ? -3 : 0
+            const raised = val > base
+            return (
+              <div key={sk.name} style={{ width: '25%', display: 'flex', alignItems: 'center', padding: '1pt 3pt', fontSize: '6.5pt' }}>
+                <span style={{ flex: 1, color: raised ? '#7fc458' : '#d4cfc9', fontWeight: raised ? 600 : 400 }}>{sk.name}{sk.vocational ? '*' : ''}</span>
+                <span style={{ fontSize: '7pt', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: raised ? '#7fc458' : val < 0 ? '#c0392b' : '#d4cfc9', minWidth: '14pt', textAlign: 'right' }}>{sgn(val)}</span>
               </div>
-            ))}
-          </div>
+            )
+          })}
+        </div>
+      </div>
 
-          <div style={secHdr}>Tracking</div>
-          <div style={{ marginTop: '2pt' }}>
-            {[
-              { label: 'Insight Dice (starts at 2)', total: 9, filled: 2 },
-              { label: 'CDP (Character Development Points)', total: 9, filled: 0 },
-            ].map(({ label, total, filled }) => (
-              <div key={label} style={{ border: '0.5pt solid #ccc', padding: '3pt 4pt', display: 'flex', alignItems: 'center', gap: '4pt', marginBottom: '2pt' }}>
-                <span style={{ fontSize: '6pt', color: '#555', flex: 1 }}>{label}</span>
-                <div style={{ display: 'flex', gap: '2pt' }}>
-                  {Array.from({ length: total }).map((_, i) => (
-                    <div key={i} style={{ width: '7pt', height: '7pt', border: '0.5pt solid #333', background: '#fff' }} />
+      {/* Unarmed + Secondary Stats — side by side */}
+      <div style={{ display: 'flex', gap: '6pt', marginBottom: '6pt' }}>
+        {/* Unarmed Attack */}
+        <div style={{ flex: 1, background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3pt', padding: '4pt 6pt', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6pt' }}>
+          <span style={{ fontSize: '7pt', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', color: '#d4cfc9' }}>👊 Unarmed Attack</span>
+          <span style={{ fontSize: '7pt', color: '#7ab3d4' }}>
+            Damage: <span style={{ color: '#c0392b', fontWeight: 700 }}>1d3{unarmedBonus !== 0 ? `+${unarmedBonus}` : ''}</span> (PHY + Unarmed)
+          </span>
+        </div>
+        {/* Secondary stats */}
+        <div style={{ display: 'flex', gap: '2pt' }}>
+          {[
+            { l: 'Init', v: sgn(derived.initiative) },
+            { l: 'Perc', v: sgn(derived.perception) },
+            { l: 'Enc', v: derived.encumbrance },
+            { l: 'Stress Mod', v: sgn(derived.stressModifier) },
+            { l: 'DMM', v: sgn(derived.meleeDefense) },
+            { l: 'DMR', v: sgn(derived.rangedDefense) },
+          ].map(s => (
+            <div key={s.l} style={{ background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2pt', padding: '2pt 4pt', textAlign: 'center', minWidth: '28pt' }}>
+              <div style={{ fontSize: '5pt', color: '#666', textTransform: 'uppercase' }}>{s.l}</div>
+              <div style={{ fontSize: '9pt', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>{s.v}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Weapons — side by side */}
+      <div style={{ display: 'flex', gap: '6pt', marginBottom: '6pt' }}>
+        {[{ wep: pWep, label: 'Primary', ammo: state.primaryAmmo }, { wep: sWep, label: 'Secondary', ammo: state.secondaryAmmo }].map(({ wep, label, ammo }) => (
+          <div key={label} style={{ flex: 1, background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3pt', overflow: 'hidden' }}>
+            <div style={{ padding: '3pt 6pt', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '7pt', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', color: '#f5f2ee' }}>{label}</span>
+              <span style={{ fontSize: '7pt', fontWeight: 700, color: '#d4cfc9' }}>{wep?.name ?? 'None'}</span>
+            </div>
+            {wep && (
+              <>
+                <div style={{ display: 'flex', padding: '3pt 6pt', gap: '4pt', fontSize: '6pt' }}>
+                  {[
+                    { l: 'Range', v: wep.range },
+                    { l: 'Damage', v: 'damageBase' in wep ? `${'damageDice' in wep && wep.damageDice ? `${wep.damageBase}+${wep.damageDice}` : wep.damageBase}` : '' },
+                    { l: 'RP%', v: 'rpPercent' in wep ? `${wep.rpPercent}%` : '' },
+                    { l: 'ENC', v: wep.enc },
+                    { l: 'Cond', v: 'Used' },
+                  ].map(({ l, v }) => (
+                    <div key={l} style={{ flex: 1 }}>
+                      <div style={{ color: '#666', textTransform: 'uppercase', fontSize: '5pt' }}>{l}</div>
+                      <div style={{ fontWeight: 700, color: '#d4cfc9', fontSize: '7pt' }}>{v}</div>
+                    </div>
                   ))}
                 </div>
-              </div>
-            ))}
-            <div style={{ border: '0.5pt solid #ccc', padding: '3pt 4pt', marginBottom: '2pt' }}>
-              <div style={{ fontSize: '6pt', color: '#555', marginBottom: '3pt' }}>Breaking Point (Stress 0–5)</div>
-              <div style={{ display: 'flex', gap: '3pt' }}>
-                {[0, 1, 2, 3, 4, 5].map(i => (
-                  <div key={i} style={{ width: '11pt', height: '11pt', borderRadius: '50%', border: '0.5pt solid #333', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '6pt', fontWeight: 700, color: '#333' }}>{i}</div>
-                ))}
-              </div>
-            </div>
+                {wep.cat === 'ranged' && 'clipSize' in wep && (
+                  <div style={{ padding: '2pt 6pt', borderTop: '1px solid #2e2e2e', display: 'flex', alignItems: 'center', gap: '4pt' }}>
+                    <span style={{ fontSize: '5pt', color: '#666' }}>Ammo ({wep.clipSize}):</span>
+                    <div style={{ display: 'flex', gap: '1.5pt', flexWrap: 'wrap' }}>
+                      {Array.from({ length: Math.min(wep.clipSize as number, 30) }).map((_, i) => (
+                        <div key={i} style={{ width: '5pt', height: '5pt', border: '0.5pt solid #c0392b', background: 'transparent' }} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
+        ))}
+      </div>
 
-          <div style={{ ...secHdr, marginTop: '4pt' }}>Lasting Wounds &amp; Notes</div>
-          <div style={{ border: '0.5pt solid #ccc', minHeight: '40pt', marginTop: '2pt', overflow: 'hidden' }}>
-            {Array.from({ length: 6 }).map((_, i) => <div key={i} style={{ borderBottom: '0.3pt solid #eee', height: '10pt' }} />)}
-          </div>
-
-          {state.physdesc && (
-            <>
-              <div style={{ ...secHdr, marginTop: '4pt' }}>Physical Description</div>
-              <div style={{ border: '0.5pt solid #ccc', padding: '4pt 5pt', marginTop: '2pt', fontSize: '7pt', lineHeight: 1.4 }}>{state.physdesc}</div>
-            </>
-          )}
-
-          {state.photoDataUrl && (
-            <div style={{ marginTop: '4pt', textAlign: 'center' }}>
-              <img src={state.photoDataUrl} style={{ maxWidth: '100%', maxHeight: '80pt', objectFit: 'cover', border: '0.5pt solid #ccc' }} alt="Character" />
-            </div>
-          )}
-
+      {/* Bottom row: Equipment, Relationships, Lasting Wounds */}
+      <div style={{ display: 'flex', gap: '6pt', marginBottom: '6pt' }}>
+        {/* Equipment */}
+        <div style={{ flex: 1, background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3pt', padding: '4pt 6pt' }}>
+          <div style={{ fontSize: '6pt', color: '#c0392b', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2pt' }}>Equipment & Gear</div>
+          {state.equipment && <div style={{ fontSize: '7pt', fontWeight: 600, color: '#f5f2ee' }}>{state.equipment}</div>}
+          {state.incidentalItem && <div style={{ fontSize: '6pt', color: '#d4cfc9' }}>Incidental: {state.incidentalItem}</div>}
+          {state.rations && <div style={{ fontSize: '6pt', color: '#d4cfc9' }}>Rations: {state.rations}</div>}
+          {!state.equipment && !state.incidentalItem && <div style={{ fontSize: '6pt', color: '#666' }}>None</div>}
         </div>
-
-        {/* Right column */}
-        <div style={{ flex: 1 }}>
-
-          <div style={secHdr}>Skills</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', marginTop: '2pt' }}>
-            {SKILLS.map(sk => {
-              const val = skills[sk.name]
-              const base = sk.vocational ? -3 : 0
-              const raised = val > base
-              const dv = val < 0 ? String(val) : val > 0 ? `+${val}` : '0'
-              return (
-                <div key={sk.name} style={{ width: '50%', display: 'flex', alignItems: 'center', padding: '1.5pt 2pt', borderBottom: '0.3pt solid #f0f0f0', fontSize: '6.5pt' }}>
-                  <span style={{ flex: 1, fontWeight: 500, color: '#222' }}>{sk.name}{sk.vocational ? '*' : ''}</span>
-                  <span style={{ fontSize: '5.5pt', color: '#999', marginLeft: '2pt' }}>{sk.attribute}</span>
-                  <div style={{ width: '16pt', height: '10pt', border: `0.4pt solid ${sk.vocational && !raised ? '#e0a090' : raised ? '#1a1a1a' : '#ccc'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '6.5pt', fontWeight: 700, background: sk.vocational && !raised ? '#fdf0ee' : raised ? '#1a1a1a' : '#fff', color: sk.vocational && !raised ? '#c0392b' : raised ? '#fff' : '#111', fontFamily: 'Barlow Condensed, sans-serif', marginLeft: '2pt' }}>{dv}</div>
-                </div>
-              )
-            })}
-          </div>
-          <div style={{ fontSize: '6pt', color: '#666', margin: '2pt 0 4pt' }}>
-            Unarmed: 1d3 + PHY ({sgn(rapid.PHY)}) + Unarmed Combat SMod
-          </div>
-
-          <div style={{ ...secHdr, marginTop: '4pt' }}>Weapons</div>
-          <div style={{ marginTop: '2pt' }}>
-            {wBlock(pWep, state.primaryAmmo, 'Primary', 'primary')}
-            {wBlock(sWep, state.secondaryAmmo, 'Secondary', 'secondary')}
-          </div>
-
-          <div style={{ ...secHdr, marginTop: '4pt' }}>Equipment &amp; Gear</div>
-          <div style={{ border: '0.5pt solid #ccc', padding: '4pt 5pt', marginTop: '2pt' }}>
-            {state.equipment
-              ? <><div style={{ fontSize: '8pt', fontWeight: 700, marginBottom: '2pt' }}>{state.equipment}</div></>
-              : <div style={{ fontSize: '7pt', color: '#aaa' }}>Equipment: None</div>
-            }
-            <div style={{ fontSize: '6.5pt', color: '#444', marginTop: '2pt' }}>Incidental: {state.incidentalItem || 'None'}</div>
-            {state.rations && <div style={{ fontSize: '6.5pt', color: '#444', marginTop: '2pt' }}>Rations: {state.rations}</div>}
-          </div>
-
-          <div style={{ ...secHdr, marginTop: '4pt' }}>Relationships / CMod</div>
-          <div style={{ border: '0.5pt solid #ccc', minHeight: '40pt', marginTop: '2pt', overflow: 'hidden' }}>
-            {Array.from({ length: 6 }).map((_, i) => <div key={i} style={{ borderBottom: '0.3pt solid #eee', height: '10pt' }} />)}
-          </div>
-
+        {/* Relationships */}
+        <div style={{ flex: 1, background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3pt', padding: '4pt 6pt' }}>
+          <div style={{ fontSize: '6pt', color: '#c0392b', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2pt' }}>Relationships / CMod</div>
+          {Array.from({ length: 4 }).map((_, i) => <div key={i} style={{ borderBottom: '0.5pt solid #2e2e2e', height: '10pt' }} />)}
+        </div>
+        {/* Lasting Wounds */}
+        <div style={{ flex: 1, background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3pt', padding: '4pt 6pt' }}>
+          <div style={{ fontSize: '6pt', color: '#c0392b', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2pt' }}>Lasting Wounds & Notes</div>
+          {Array.from({ length: 4 }).map((_, i) => <div key={i} style={{ borderBottom: '0.5pt solid #2e2e2e', height: '10pt' }} />)}
         </div>
       </div>
 
-      {/* Backstory notes */}
-      {backstoryNotes.length > 0 && (
-        <div style={{ marginTop: '4pt' }}>
-          <div style={secHdr}>Backstory</div>
-          <div style={{ border: '0.5pt solid #ccc', padding: '4pt 5pt', marginTop: '2pt' }}>
-            {state.concept && (
-              <p style={{ fontSize: '7pt', lineHeight: 1.5, marginBottom: '4pt', fontStyle: 'italic' }}>{state.concept}</p>
-            )}
-            {state.physdesc && (
-              <p style={{ fontSize: '7pt', lineHeight: 1.5, marginBottom: '4pt', color: '#444' }}>
-                {state.name ? `${state.name} was ` : ''}{state.physdesc}
-              </p>
-            )}
-            <p style={{ fontSize: '7pt', lineHeight: 1.5 }}>
-              {backstoryNotes.map(b => b.note).join(' ')}
-            </p>
+      {/* Backstory */}
+      {state.concept && (
+        <div style={{ background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3pt', padding: '4pt 6pt' }}>
+          <div style={{ fontSize: '6pt', color: '#c0392b', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2pt' }}>Backstory</div>
+          <div style={{ fontSize: '7pt', color: '#d4cfc9', lineHeight: 1.4 }}>
+            {[state.steps[0]?.note, state.steps[1]?.note, state.steps[2]?.note, state.steps[3]?.note, state.steps[4]?.note].filter(Boolean).join(' ')}
           </div>
         </div>
       )}
 
     </div>
   )
-}
-
-const secHdr: React.CSSProperties = {
-  background: '#1a1a1a', color: '#fff',
-  fontSize: '6pt', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase',
-  padding: '2pt 4pt', marginBottom: 0,
 }
