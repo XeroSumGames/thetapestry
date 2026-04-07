@@ -9,14 +9,24 @@ export default function FirstTimersPage() {
   const supabase = createClient()
   const [username, setUsername] = useState('')
   const [marking, setMarking] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       trackGhostConversion()
-      const { data: profile } = await supabase.from('profiles').select('username, onboarded').eq('id', user.id).single()
-      if (!profile) return
+      const { data: profile, error: profileErr } = await supabase.from('profiles').select('username, onboarded').eq('id', user.id).single()
+      if (profileErr) {
+        console.error('[FirstTimers] profile load error:', profileErr.message)
+        setError(`Could not load your profile: ${profileErr.message}`)
+        return
+      }
+      if (!profile) {
+        console.error('[FirstTimers] no profile found for user:', user.id)
+        setError('Your profile was not created. Please contact support.')
+        return
+      }
       if (profile.onboarded) { router.push('/dashboard'); return }
       setUsername(profile.username)
     }
@@ -47,6 +57,12 @@ export default function FirstTimersPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0f0f0f', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', overflowY: 'auto' }}>
+
+      {error && (
+        <div style={{ maxWidth: '500px', margin: '2rem auto', padding: '12px 16px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px', fontSize: '14px', color: '#f5a89a', textAlign: 'center' }}>
+          {error}
+        </div>
+      )}
 
       {/* Hero */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem 1rem 2rem', textAlign: 'center' }}>

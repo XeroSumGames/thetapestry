@@ -15,7 +15,7 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     const { error: loginError } = await supabase.auth.signInWithPassword({ email, password })
-    if (loginError) { setError(loginError.message); return }
+    if (loginError) { console.error('[Login] auth error:', loginError.message); setError(loginError.message); return }
     logEvent('login')
     logFirstEvent('first_login')
     router.push('/dashboard')

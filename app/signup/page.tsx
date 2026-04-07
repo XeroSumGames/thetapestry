@@ -15,12 +15,30 @@ export default function SignupPage() {
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { username } }
     })
-    if (signUpError) { setError(signUpError.message); return }
+    if (signUpError) {
+      console.error('[Signup] auth error:', signUpError.message)
+      setError(signUpError.message)
+      return
+    }
+    // Create profile row if it doesn't already exist (trigger may handle this, but belt-and-suspenders)
+    if (signUpData.user) {
+      const { error: profileError } = await supabase.from('profiles').upsert({
+        id: signUpData.user.id,
+        username,
+        role: 'Survivor',
+        onboarded: false,
+      }, { onConflict: 'id' })
+      if (profileError) {
+        console.error('[Signup] profile creation error:', profileError.message)
+        setError(`Account created but profile setup failed: ${profileError.message}`)
+        return
+      }
+    }
     logEvent('signup', { username })
     router.push('/firsttimers')
   }
