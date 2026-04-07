@@ -286,12 +286,13 @@ export default function TablePage() {
       .order('created_at', { ascending: false })
       .limit(50)
     setChatMessages((data ?? []).reverse())
+    setTimeout(() => { rollFeedRef.current?.scrollTo(0, rollFeedRef.current.scrollHeight) }, 50)
   }
 
   async function sendChat() {
     if (!chatInput.trim() || !userId) return
     const myEntry = entries.find(e => e.userId === userId)
-    const characterName = myEntry?.character.name ?? 'Unknown'
+    const characterName = myEntry?.character.name ?? (isGM ? 'Game Master' : 'Unknown')
     await supabase.from('chat_messages').insert({
       campaign_id: id, user_id: userId, character_name: characterName, message: chatInput.trim(),
     })
@@ -887,6 +888,21 @@ export default function TablePage() {
   const myEntry = entries.find(e => e.userId === userId) ?? null
   const myInsightDice = myEntry?.liveState?.insight_dice ?? 0
 
+  // Auto-open player's sheet when their stress reaches 5 (GM added stress via Realtime)
+  const prevMyStressRef = useRef(-1)
+  useEffect(() => {
+    if (!myEntry || isGM) return
+    const stress = myEntry.liveState?.stress ?? 0
+    const prev = prevMyStressRef.current
+    prevMyStressRef.current = stress
+    if (stress >= 5 && prev < 5 && prev !== -1) {
+      // Force open the player's own sheet so the CharacterCard useEffect triggers the modal
+      setSelectedEntry(myEntry)
+      setViewingNpcs([])
+      setSheetPos(null)
+    }
+  }, [myEntry?.liveState?.stress])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', fontFamily: 'Barlow, sans-serif', background: '#0f0f0f' }}>
 
@@ -1150,51 +1166,16 @@ export default function TablePage() {
             </div>
           )}
 
-          {/* Inline character sheet — draggable, floats over map */}
+          {/* Inline character sheet — full screen over map */}
           {syncedSelectedEntry && sheetMode === 'inline' && (
             <div style={{
-              position: 'absolute',
-              left: sheetPos?.x ?? 8,
-              top: sheetPos?.y ?? 8,
-              width: 'calc(100% - 16px)',
-              maxWidth: '780px',
-              maxHeight: 'calc(100% - 16px)',
+              position: 'absolute', inset: 0,
               overflowY: 'auto',
               padding: '1rem',
               paddingBottom: revealedNpcs.length > 0 ? '60px' : '1rem',
-              background: 'rgba(26,26,26,0.95)',
-              borderRadius: '4px',
-              border: '1px solid #3a3a3a',
+              background: 'rgba(26,26,26,1)',
               zIndex: 1100,
-              cursor: 'default',
             }}>
-              {/* Drag handle */}
-              <div
-                onMouseDown={e => {
-                  const rect = (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect()
-                  sheetDragRef.current = {
-                    startX: e.clientX,
-                    startY: e.clientY,
-                    origX: sheetPos?.x ?? 0,
-                    origY: sheetPos?.y ?? 0,
-                  }
-                  const onMove = (ev: MouseEvent) => {
-                    if (!sheetDragRef.current) return
-                    const dx = ev.clientX - sheetDragRef.current.startX
-                    const dy = ev.clientY - sheetDragRef.current.startY
-                    setSheetPos({ x: sheetDragRef.current.origX + dx, y: sheetDragRef.current.origY + dy })
-                  }
-                  const onUp = () => {
-                    sheetDragRef.current = null
-                    window.removeEventListener('mousemove', onMove)
-                    window.removeEventListener('mouseup', onUp)
-                  }
-                  window.addEventListener('mousemove', onMove)
-                  window.addEventListener('mouseup', onUp)
-                }}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', marginBottom: '4px', cursor: 'grab', borderRadius: '3px', background: '#242424', border: '1px solid #3a3a3a', userSelect: 'none' }}>
-                <div style={{ width: '40px', height: '4px', borderRadius: '2px', background: '#5a5a5a' }} />
-              </div>
               <CharacterCard
                 character={syncedSelectedEntry.character}
                 liveState={syncedSelectedEntry.liveState}
@@ -1306,10 +1287,45 @@ export default function TablePage() {
         })()}
       </div>
 
-      {/* Character sheet overlay — only in overlay mode */}
+      {/* Character sheet overlay — draggable floating window */}
       {syncedSelectedEntry && sheetMode === 'overlay' && (
-        <div onClick={() => { setSelectedEntry(null); setSheetPos(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()} style={{ maxWidth: '780px', width: '100%', maxHeight: '90vh', overflow: 'auto', borderRadius: '4px' }}>
+        <div onClick={() => { setSelectedEntry(null); setSheetPos(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 9999 }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            position: 'absolute',
+            left: sheetPos?.x ?? '50%',
+            top: sheetPos?.y ?? '50%',
+            transform: sheetPos ? 'none' : 'translate(-50%, -50%)',
+            maxWidth: '780px', width: '95%', maxHeight: '90vh', overflow: 'auto', borderRadius: '4px',
+            border: '1px solid #3a3a3a',
+          }}>
+            {/* Drag handle */}
+            <div
+              onMouseDown={e => {
+                const el = e.currentTarget.parentElement as HTMLElement
+                const rect = el.getBoundingClientRect()
+                sheetDragRef.current = {
+                  startX: e.clientX,
+                  startY: e.clientY,
+                  origX: rect.left,
+                  origY: rect.top,
+                }
+                const onMove = (ev: MouseEvent) => {
+                  if (!sheetDragRef.current) return
+                  const dx = ev.clientX - sheetDragRef.current.startX
+                  const dy = ev.clientY - sheetDragRef.current.startY
+                  setSheetPos({ x: sheetDragRef.current.origX + dx, y: sheetDragRef.current.origY + dy })
+                }
+                const onUp = () => {
+                  sheetDragRef.current = null
+                  window.removeEventListener('mousemove', onMove)
+                  window.removeEventListener('mouseup', onUp)
+                }
+                window.addEventListener('mousemove', onMove)
+                window.addEventListener('mouseup', onUp)
+              }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', cursor: 'grab', borderRadius: '4px 4px 0 0', background: '#242424', border: '1px solid #3a3a3a', borderBottom: 'none', userSelect: 'none' }}>
+              <div style={{ width: '40px', height: '4px', borderRadius: '2px', background: '#5a5a5a' }} />
+            </div>
             <CharacterCard
               character={syncedSelectedEntry.character}
               liveState={syncedSelectedEntry.liveState}
@@ -1319,7 +1335,7 @@ export default function TablePage() {
               onStatUpdate={handleStatUpdate}
               onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod, weapon) => { setSelectedEntry(null); handleRollRequest(label, amod, smod, weapon) } : undefined}
             />
-            <button onClick={() => { setSelectedEntry(null); setSheetPos(null) }} style={{ marginTop: '8px', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            <button onClick={() => { setSelectedEntry(null); setSheetPos(null) }} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderTop: 'none', borderRadius: '0 0 4px 4px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Close
             </button>
           </div>
