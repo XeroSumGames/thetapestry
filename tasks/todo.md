@@ -93,7 +93,7 @@
 
 ### Campaign Pins
 - [x] campaign_pins table with reveal/hide per pin
-- [x] Setting seed pins (Mongrels 24 locations) insert into campaign_pins
+- [x] Setting seed pins (Mongrels 24, Chased 14, District Zero 31) insert into campaign_pins
 - [x] Assets tab with pin management — show/hide, edit, delete, promote to world
 - [x] Campaign map in center panel with campaign pins
 - [x] Campaign map search bar with autocomplete + layer switcher (Street/Satellite/Dark)
@@ -120,12 +120,15 @@
 
 ### Setting Seeds
 - [x] District Zero — 31 pins seeded to world map, 18 NPCs in setting-npcs.ts
-- [x] Chased — 14 pins seeded to world map, 21 NPCs + 5 pregens in setting-npcs.ts
+- [x] Chased — 14 pins (campaign-scoped), 21 NPCs + 5 pregens in setting-npcs.ts
 - [x] Renamed district0 → district_zero across entire codebase
 - [x] campaign_npcs table created with RLS + Realtime
 - [x] Campaign creation auto-seeds NPCs for District Zero and Chased
 - [ ] Pregen storage decision — setting_pregens table or is_pregen flag on campaign_npcs
 - [x] End session modal drop zone text size bumped (11/10px → 13/12px)
+- [x] Chased & Mongrels pins removed from world map (campaign-scoped only)
+- [x] Make Thriver button — error feedback on failure
+- [x] District Zero pins remain on world map (canonical public setting)
 
 ### Character Creation
 - [x] Clickable steps, portrait upload, concept display, photo resize, test character
@@ -182,7 +185,7 @@
 
 ## 📝 Technical Debt
 - [x] Auto-resize uploaded photos to 256x256
-- [ ] Migrate character photos from base64 to Supabase Storage
+- [ ] Migrate character photos from base64 to Supabase Storage (low priority — already compressed to 256x256 JPEG)
 - [ ] Embed Distemper videos on landing page
 - [x] Welcome page dual-mode
 - [x] Thriver Console

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { useRouter, useParams } from 'next/navigation'
+import { SETTINGS } from '../../../lib/settings'
 
 interface Campaign {
   id: string
@@ -26,15 +27,6 @@ interface Member {
 interface Character {
   id: string
   name: string
-}
-
-const SETTINGS: Record<string, string> = {
-  custom: 'New Setting',
-  district_zero: 'District Zero',
-  mongrels: 'Minnie & The Magnificent Mongrels',
-  chased: 'Chased',
-  empty: 'Empty',
-  therock: 'The Rock',
 }
 
 async function fetchMembersWithProfiles(supabase: any, campaignId: string): Promise<Member[]> {

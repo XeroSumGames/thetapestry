@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
+import { SETTINGS } from '../../lib/settings'
 
 interface Campaign {
   id: string
@@ -12,15 +13,6 @@ interface Campaign {
   gm_user_id: string
   status: string
   created_at: string
-}
-
-const SETTINGS: Record<string, string> = {
-  custom: 'New Setting',
-  district_zero: 'District Zero',
-  mongrels: 'Minnie & The Magnificent Mongrels',
-  chased: 'Chased',
-  empty: 'Empty',
-  therock: 'The Rock',
 }
 
 export default function CampaignsPage() {

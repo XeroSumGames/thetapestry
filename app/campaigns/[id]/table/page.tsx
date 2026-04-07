@@ -6,6 +6,7 @@ import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
 import NpcRoster from '../../../../components/NpcRoster'
 import NpcCard from '../../../../components/NpcCard'
 import CampaignPins from '../../../../components/CampaignPins'
+import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
 const CampaignMap = dynamic(() => import('../../../../components/CampaignMap'), { ssr: false })
 import type { CampaignNpc } from '../../../../components/NpcRoster'
@@ -105,14 +106,6 @@ interface InitiativeEntry {
   is_npc: boolean
 }
 
-const SETTINGS: Record<string, string> = {
-  custom: 'New Setting',
-  district_zero: 'District Zero',
-  mongrels: 'Minnie & The Magnificent Mongrels',
-  chased: 'Chased',
-  empty: 'Empty',
-  therock: 'The Rock',
-}
 
 const MAX_PLAYER_SLOTS = 9
 

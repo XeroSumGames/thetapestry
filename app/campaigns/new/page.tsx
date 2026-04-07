@@ -5,15 +5,7 @@ import { useRouter } from 'next/navigation'
 import { logEvent } from '../../../lib/events'
 import { SETTING_PINS } from '../../../lib/setting-pins'
 import { SETTING_NPCS } from '../../../lib/setting-npcs'
-
-const SETTINGS = [
-  { value: 'custom', label: 'New Setting' },
-  { value: 'district_zero', label: 'District Zero' },
-  { value: 'mongrels', label: 'Minnie & The Magnificent Mongrels' },
-  { value: 'chased', label: 'Chased — Sussex County, DE' },
-  { value: 'empty', label: 'Empty' },
-  { value: 'therock', label: 'The Rock' },
-]
+import { SETTING_OPTIONS } from '../../../lib/settings'
 
 function generateCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -52,23 +44,20 @@ export default function NewCampaignPage() {
     })
     // Seed setting pins into campaign_pins (not world map)
     const settingPins = SETTING_PINS[setting]
+    let pinMap: Record<string, string> = {}
     if (settingPins && settingPins.length > 0) {
       const pinRows = settingPins.map(p => ({
         campaign_id: data.id, name: p.title, lat: p.lat, lng: p.lng,
         notes: p.notes ?? '', category: p.category ?? 'location',
         revealed: false,
       }))
-      await supabase.from('campaign_pins').insert(pinRows)
+      const { data: createdPins, error: pinErr } = await supabase.from('campaign_pins').insert(pinRows).select('id, name')
+      if (pinErr) { console.error('[CampaignCreate] pin seed error:', pinErr.message) }
+      createdPins?.forEach(p => { pinMap[p.name] = p.id })
     }
     // Seed setting NPCs into campaign_npcs
     const settingNpcs = SETTING_NPCS[setting]
     if (settingNpcs && settingNpcs.length > 0) {
-      const { data: createdPins } = await supabase
-        .from('campaign_pins')
-        .select('id, name')
-        .eq('campaign_id', data.id)
-      const pinMap: Record<string, string> = {}
-      createdPins?.forEach(p => { pinMap[p.name] = p.id })
       const npcRows = settingNpcs.map(n => ({
         campaign_id: data.id,
         campaign_pin_id: n.pin_title ? (pinMap[n.pin_title] ?? null) : null,
@@ -84,7 +73,8 @@ export default function NewCampaignPage() {
         motivation: n.motivation,
         revealed: false,
       }))
-      await supabase.from('campaign_npcs').insert(npcRows)
+      const { error: npcErr } = await supabase.from('campaign_npcs').insert(npcRows)
+      if (npcErr) { console.error('[CampaignCreate] npc seed error:', npcErr.message) }
     }
     logEvent('campaign_created', { id: data.id, name })
     router.push(`/campaigns/${data.id}`)
@@ -116,7 +106,7 @@ export default function NewCampaignPage() {
         <div style={{ marginBottom: '16px' }}>
           <label style={lbl}>Setting</label>
           <div style={{ display: 'flex', gap: '6px' }}>
-            {SETTINGS.map(s => (
+            {SETTING_OPTIONS.map(s => (
               <button key={s.value} onClick={() => setSetting(s.value)}
                 style={{ flex: 1, padding: '8px', border: `1px solid ${setting === s.value ? '#c0392b' : '#3a3a3a'}`, background: setting === s.value ? '#2a1210' : '#242424', borderRadius: '3px', color: setting === s.value ? '#f5a89a' : '#d4cfc9', cursor: 'pointer', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 {s.label}
