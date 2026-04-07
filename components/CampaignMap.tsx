@@ -62,6 +62,7 @@ export default function CampaignMap({ campaignId, isGM }: Props) {
   const [newPin, setNewPin] = useState<{ lat: number; lng: number } | null>(null)
   const [pinForm, setPinForm] = useState({ name: '', notes: '', category: 'location' })
   const [saving, setSaving] = useState(false)
+  const [attachments, setAttachments] = useState<File[]>([])
 
   // Keep ref in sync so the Leaflet click handler sees current state
   useEffect(() => { placingRef.current = placing }, [placing])
@@ -117,7 +118,7 @@ export default function CampaignMap({ campaignId, isGM }: Props) {
   async function savePin() {
     if (!newPin || !pinForm.name.trim()) return
     setSaving(true)
-    await supabase.from('campaign_pins').insert({
+    const { data } = await supabase.from('campaign_pins').insert({
       campaign_id: campaignId,
       name: pinForm.name.trim(),
       lat: newPin.lat,
@@ -125,9 +126,18 @@ export default function CampaignMap({ campaignId, isGM }: Props) {
       notes: pinForm.notes.trim() || null,
       category: pinForm.category,
       revealed: false,
-    })
+    }).select().single()
+
+    if (data && attachments.length > 0) {
+      for (const file of attachments) {
+        const path = `${campaignId}/${data.id}/${file.name}`
+        await supabase.storage.from('pin-attachments').upload(path, file)
+      }
+    }
+
     setNewPin(null)
     setPinForm({ name: '', notes: '', category: 'location' })
+    setAttachments([])
     setPlacing(false)
     setSaving(false)
   }
@@ -208,7 +218,7 @@ export default function CampaignMap({ campaignId, isGM }: Props) {
       {/* Layer switcher + Place Pin button */}
       <div style={{ position: 'absolute', top: '6px', right: '6px', zIndex: 1000, display: 'flex', gap: '4px' }}>
         {isGM && (
-          <button onClick={() => { setPlacing(p => !p); setNewPin(null) }}
+          <button onClick={() => { setPlacing(p => !p); setNewPin(null); setAttachments([]) }}
             style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${placing ? '#2d5a1b' : '#3a3a3a'}`, background: placing ? '#1a2e10' : 'rgba(15,15,15,.85)', color: placing ? '#7fc458' : '#d4cfc9' }}>
             {placing ? '✕ Cancel' : '+ Pin'}
           </button>
@@ -246,8 +256,16 @@ export default function CampaignMap({ campaignId, isGM }: Props) {
               <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>
             ))}
           </select>
+          <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#666', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer', marginBottom: '8px' }}>
+            {attachments.length > 0 ? (
+              <span style={{ color: '#7fc458' }}>{attachments.length} file{attachments.length > 1 ? 's' : ''} selected</span>
+            ) : (
+              'Click to attach files (optional)'
+            )}
+            <input type="file" multiple onChange={e => { if (e.target.files) setAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />
+          </label>
           <div style={{ display: 'flex', gap: '4px' }}>
-            <button onClick={() => { setNewPin(null) }}
+            <button onClick={() => { setNewPin(null); setAttachments([]) }}
               style={{ flex: 1, padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
               Cancel
             </button>
