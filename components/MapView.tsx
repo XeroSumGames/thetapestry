@@ -38,6 +38,7 @@ interface Pin {
   status: string
   user_id: string
   category: string
+  created_at?: string
 }
 
 interface PinForm {
@@ -67,7 +68,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [userRole, setUserRole] = useState<'survivor' | 'thriver'>('survivor')
   const [showForm, setShowForm] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(!embedded || showSidebarProp)
-  const [sidebarTab, setSidebarTab] = useState<'mine' | 'public' | 'all'>('mine')
+  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(['all']))
+  const [sortMode, setSortMode] = useState<'newest' | 'oldest' | 'category' | 'nearest'>('newest')
   const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private', category: 'location' })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -299,10 +301,66 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   else alert('Error: ' + error.message)
 }
 
-  const myPins = pins.filter(p => p.user_id === userId)
-  const publicPins = pins.filter(p => p.status === 'approved')
-  const allPins = userRole === 'thriver' ? pins : []
-  const displayedPins = sidebarTab === 'mine' ? myPins : sidebarTab === 'public' ? publicPins : allPins
+  // Filter chips
+  const FILTER_CHIPS = ['all', 'public', 'mine', 'canon', 'rumors', 'timeline'] as const
+  const allFiltersActive = FILTER_CHIPS.filter(f => f !== 'all').every(f => activeFilters.has(f))
+
+  function toggleFilter(chip: string) {
+    setActiveFilters(prev => {
+      const next = new Set(prev)
+      if (chip === 'all') {
+        // Toggle all on
+        FILTER_CHIPS.forEach(f => next.add(f))
+        return next
+      }
+      if (next.has(chip)) next.delete(chip); else next.add(chip)
+      // Sync 'all' state
+      if (FILTER_CHIPS.filter(f => f !== 'all').every(f => next.has(f))) next.add('all')
+      else next.delete('all')
+      // Persist for authenticated users
+      if (userId) localStorage.setItem('tapestry_pin_filters', JSON.stringify([...next]))
+      return next
+    })
+  }
+
+  function matchesFilter(p: Pin): boolean {
+    if (activeFilters.has('all') || allFiltersActive) return true
+    if (activeFilters.has('public') && p.status === 'approved') return true
+    if (activeFilters.has('mine') && p.user_id === userId) return true
+    if (activeFilters.has('canon') && (p.category === 'world_event' || p.category === 'settlement' || p.pin_type === 'gm')) return true
+    if (activeFilters.has('rumors') && p.pin_type === 'rumor') return true
+    if (activeFilters.has('timeline') && p.category === 'world_event') return true
+    return false
+  }
+
+  function chipCount(chip: string): number {
+    if (chip === 'all') return pins.length
+    return pins.filter(p => {
+      if (chip === 'public') return p.status === 'approved'
+      if (chip === 'mine') return p.user_id === userId
+      if (chip === 'canon') return p.category === 'world_event' || p.category === 'settlement' || p.pin_type === 'gm'
+      if (chip === 'rumors') return p.pin_type === 'rumor'
+      if (chip === 'timeline') return p.category === 'world_event'
+      return false
+    }).length
+  }
+
+  const timelineOnly = activeFilters.has('timeline') && activeFilters.size === 1
+
+  const filteredPins = pins.filter(matchesFilter)
+  const displayedPins = [...filteredPins].sort((a, b) => {
+    if (timelineOnly) return new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime()
+    if (sortMode === 'newest') return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
+    if (sortMode === 'oldest') return new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime()
+    if (sortMode === 'category') return (a.category ?? '').localeCompare(b.category ?? '')
+    if (sortMode === 'nearest' && mapInstanceRef.current) {
+      const center = mapInstanceRef.current.getCenter()
+      const distA = Math.hypot(a.lat - center.lat, a.lng - center.lng)
+      const distB = Math.hypot(b.lat - center.lat, b.lng - center.lng)
+      return distA - distB
+    }
+    return 0
+  })
 
   function pinTypeLabel(p: Pin) {
     if (p.pin_type === 'gm' && p.status === 'approved') return 'GM -” public'
@@ -317,11 +375,16 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     return p.pin_type === 'rumor' ? '#EF9F27' : p.pin_type === 'gm' ? '#c0392b' : '#7ab3d4'
   }
 
-  const tabs: ['mine' | 'public' | 'all', string][] = !userId
-    ? [['public', 'Public']]
-    : userRole === 'thriver'
-    ? [['mine', 'Mine'], ['public', 'Public'], ['all', 'All']]
-    : [['mine', 'My Pins'], ['public', 'Public']]
+  // Load persisted filters for authenticated users, Timeline default for Ghosts
+  useEffect(() => {
+    if (!userId) {
+      setActiveFilters(new Set(['timeline']))
+    } else {
+      const saved = localStorage.getItem('tapestry_pin_filters')
+      if (saved) { try { setActiveFilters(new Set(JSON.parse(saved))) } catch {} }
+      else setActiveFilters(new Set(['all', 'public', 'mine', 'canon', 'rumors', 'timeline']))
+    }
+  }, [userId])
 
   const lbl: React.CSSProperties = { display: 'block', fontSize: '12px', color: '#f5f2ee', letterSpacing: '.05em', textTransform: 'uppercase', marginBottom: '4px' }
   const inp: React.CSSProperties = { width: '100%', padding: '7px 9px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }
@@ -347,22 +410,47 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
         {(!embedded || showSidebarProp) && sidebarOpen && (
           <div style={{ width: '300px', flexShrink: 0, background: '#1a1a1a', borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', zIndex: 500 }}>
-            <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e' }}>
-              <button onClick={() => setSidebarOpen(false)}
-                style={{ padding: '4px 8px', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '14px', cursor: 'pointer', lineHeight: 1 }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>✕</button>
-              {tabs.map(([tab, label]) => (
-                <button key={tab} onClick={() => setSidebarTab(tab)}
-                  style={{ flex: 1, padding: '10px', background: sidebarTab === tab ? '#242424' : 'transparent', border: 'none', borderBottom: `2px solid ${sidebarTab === tab ? '#c0392b' : 'transparent'}`, color: sidebarTab === tab ? '#f5f2ee' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                  {label}
-                </button>
-              ))}
+            {/* Filter chips + sort */}
+            <div style={{ padding: '8px', borderBottom: '1px solid #2e2e2e' }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
+                <button onClick={() => setSidebarOpen(false)}
+                  style={{ padding: '2px 6px', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '14px', cursor: 'pointer', lineHeight: 1, marginRight: '4px' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>✕</button>
+                <span style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Filters</span>
+                {!timelineOnly && (
+                  <select value={sortMode} onChange={e => setSortMode(e.target.value as any)}
+                    style={{ marginLeft: 'auto', padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', cursor: 'pointer' }}>
+                    <option value="newest">Newest</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="category">Category</option>
+                    <option value="nearest">Nearest</option>
+                  </select>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                {FILTER_CHIPS.map(chip => {
+                  const active = chip === 'all' ? allFiltersActive || activeFilters.has('all') : activeFilters.has(chip)
+                  const label = chip === 'timeline' ? '🕐 Timeline' : chip.charAt(0).toUpperCase() + chip.slice(1)
+                  return (
+                    <button key={chip} onClick={() => toggleFilter(chip)}
+                      style={{ padding: '3px 8px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : 'transparent', color: active ? '#f5a89a' : '#d4cfc9' }}>
+                      {label} ({chipCount(chip)})
+                    </button>
+                  )
+                })}
+              </div>
+              {!userId && timelineOnly && (
+                <div onClick={() => { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('tapestry-ghost-wall')) }}
+                  style={{ marginTop: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', cursor: 'pointer', fontStyle: 'italic' }}>
+                  Sign up to add your own story to this world.
+                </div>
+              )}
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
               {displayedPins.length === 0 && (
                 <div style={{ padding: '2rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>
-                  {sidebarTab === 'mine' ? 'Click anywhere on the map to place your first pin.' : 'No pins here yet.'}
+                  No pins match your current filters.
                 </div>
               )}
               {displayedPins.map(p => (
@@ -374,6 +462,11 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                         {getCategoryEmoji(p.category ?? 'location')} {p.title}
                       </div>
                       {p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.notes}</div>}
+                      {timelineOnly && p.created_at && (
+                        <div style={{ fontSize: '11px', color: '#EF9F27', marginTop: '2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                          {new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </div>
+                      )}
                       <div style={{ fontSize: '11px', color: '#cce0f5', marginTop: '3px', textTransform: 'uppercase', letterSpacing: '.06em' }}>{pinTypeLabel(p)}</div>
                     </div>
                     {(p.user_id === userId || userRole === 'thriver') && (
