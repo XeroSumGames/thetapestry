@@ -59,7 +59,7 @@ export default function PrintSheet({ state }: Props) {
             <span style={{ fontSize: '5.5pt', color: '#888' }}>Ammo ({clipSize} rounds):</span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2pt' }}>
               {Array.from({ length: Math.min(clipSize, 30) }).map((_, i) => (
-                <div key={i} style={{ width: '7pt', height: '7pt', border: '0.5pt solid #333', background: i < ammo ? '#1a1a1a' : '#fff' }} />
+                <div key={i} style={{ width: '7pt', height: '7pt', border: '0.5pt solid #333', background: '#fff' }} />
               ))}
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function PrintSheet({ state }: Props) {
                 <span style={{ fontSize: '6pt', color: '#555', flex: 1 }}>{label}</span>
                 <div style={{ display: 'flex', gap: '2pt' }}>
                   {Array.from({ length: total }).map((_, i) => (
-                    <div key={i} style={{ width: '7pt', height: '7pt', border: '0.5pt solid #333', background: i < filled ? '#1a1a1a' : '#fff' }} />
+                    <div key={i} style={{ width: '7pt', height: '7pt', border: '0.5pt solid #333', background: '#fff' }} />
                   ))}
                 </div>
               </div>
@@ -173,7 +173,7 @@ export default function PrintSheet({ state }: Props) {
               <div style={{ fontSize: '6pt', color: '#555', marginBottom: '3pt' }}>Breaking Point (Stress 0–5)</div>
               <div style={{ display: 'flex', gap: '3pt' }}>
                 {[0, 1, 2, 3, 4, 5].map(i => (
-                  <div key={i} style={{ width: '11pt', height: '11pt', borderRadius: '50%', border: '0.5pt solid #333', background: i === 0 ? '#c0392b' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '6pt', fontWeight: 700, color: i === 0 ? '#fff' : '#333' }}>{i}</div>
+                  <div key={i} style={{ width: '11pt', height: '11pt', borderRadius: '50%', border: '0.5pt solid #333', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '6pt', fontWeight: 700, color: '#333' }}>{i}</div>
                 ))}
               </div>
             </div>

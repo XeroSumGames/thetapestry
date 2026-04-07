@@ -492,9 +492,9 @@ export default function CharacterCard({
               onRoll('Unarmed Attack', rapid.PHY ?? 0, skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
             }}
               style={{ width: '100%', padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
-              <span>👊 Unarmed Attack (PHY)</span>
+              <span>👊 Unarmed Attack</span>
               <span style={{ color: '#7ab3d4', fontWeight: 400, letterSpacing: 0 }}>
-                WP: <span style={{ color: '#c0392b', fontWeight: 700 }}>1d3</span> &nbsp; RP: 100%
+                Damage: <span style={{ color: '#c0392b', fontWeight: 700 }}>1d3{((rapid.PHY ?? 0) + (skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0)) !== 0 ? `+${(rapid.PHY ?? 0) + (skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0)}` : ''}</span> (PHY + Unarmed)
               </span>
             </button>
           </div>

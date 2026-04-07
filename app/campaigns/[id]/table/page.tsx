@@ -762,6 +762,11 @@ export default function TablePage() {
 
       const dmg = rollDamage(weapon.damage, attackerPhy, !!isMelee)
 
+      // Unarmed adds SMod to damage per SRD: 1d3 + PHY AMod + Unarmed Combat SMod
+      if (weapon.weaponName === 'Unarmed') {
+        dmg.totalWP += pendingRoll.smod
+      }
+
       // Find target's defensive modifier (DMR for ranged, DMM for melee)
       const targetEntry = entries.find(e => e.character.name === targetName)
       const targetRapid = targetEntry?.character.data?.rapid ?? {}
