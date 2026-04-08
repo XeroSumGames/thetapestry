@@ -1118,8 +1118,8 @@ export default function TablePage() {
       const unarmedBonus = weapon.weaponName === 'Unarmed' ? pendingRoll.smod : 0
 
       // Find target — could be PC (in entries) or NPC (in initiativeOrder + rosterNpcs)
-      const targetEntry = entries.find(e => e.character.name === targetName)
       const targetInitEntry = initiativeOrder.find(e => e.character_name === targetName)
+      const targetEntry = entries.find(e => e.character.name === targetName) ?? (targetInitEntry?.character_id ? entries.find(e => e.character.id === targetInitEntry.character_id) : undefined)
       const targetNpc = targetInitEntry?.is_npc ? rosterNpcs.find(n => n.id === targetInitEntry.npc_id) : null
       const targetRapid = targetEntry?.character.data?.rapid ?? (targetNpc ? { PHY: targetNpc.physicality ?? 0, DEX: targetNpc.dexterity ?? 0 } : {})
       const defensiveMod = isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)
@@ -1525,9 +1525,13 @@ export default function TablePage() {
                   <button onClick={() => deferInitiative(entry.id)}
                     style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Defer">↓</button>
                 )}
-                {/* Remove — GM only */}
-                {isGM && (
-                  <button onClick={() => removeFromInitiative(entry.id)}
+                {/* Done/Remove — player can end own turn, GM can end anyone or remove */}
+                {(isGM || (entry.user_id === userId && entry.is_active)) && (
+                  <button onClick={async () => {
+                    if (isGM && !entry.is_active) { removeFromInitiative(entry.id); return }
+                    await supabase.from('initiative_order').update({ actions_remaining: 0 }).eq('id', entry.id)
+                    await nextTurn()
+                  }}
                     style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '12px', padding: '0 0 0 2px', lineHeight: 1 }}>×</button>
                 )}
               </div>
@@ -2076,7 +2080,19 @@ export default function TablePage() {
                     }}
                       style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
                       <option value="" style={{ color: '#cce0f5' }}>No target</option>
-                      {[...initiativeOrder].sort((a, b) => (a.is_npc === b.is_npc ? 0 : a.is_npc ? -1 : 1)).map(entry => (
+                      {[...initiativeOrder].sort((a, b) => (a.is_npc === b.is_npc ? 0 : a.is_npc ? -1 : 1))
+                        .filter(entry => {
+                          // Filter out dead NPCs
+                          if (entry.is_npc) {
+                            const npc = rosterNpcs.find((n: any) => n.id === entry.npc_id)
+                            if (npc && (npc.wp_current ?? npc.wp_max ?? 10) <= 0) return false
+                          }
+                          // Filter out dead PCs
+                          const pcEntry = entries.find(e => e.character.id === entry.character_id)
+                          if (pcEntry?.liveState && pcEntry.liveState.wp_current === 0 && (pcEntry.liveState as any).death_countdown != null && (pcEntry.liveState as any).death_countdown <= 0) return false
+                          return true
+                        })
+                        .map(entry => (
                         <option key={entry.id} value={entry.character_name} style={{ color: entry.is_npc ? '#7fc458' : '#c0392b' }}>
                           {entry.character_name}{entry.is_npc ? ' (NPC)' : ''}
                         </option>
