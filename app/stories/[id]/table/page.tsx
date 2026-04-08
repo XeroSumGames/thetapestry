@@ -2234,19 +2234,14 @@ export default function TablePage() {
                       <option value="" style={{ color: '#cce0f5' }}>No target</option>
                       {[...initiativeOrder].sort((a, b) => (a.is_npc === b.is_npc ? 0 : a.is_npc ? -1 : 1))
                         .filter(entry => {
-                          // Filter out dead NPCs
+                          // Filter out dead NPCs (only if wp_current has been set and is 0)
                           if (entry.is_npc) {
                             const npc = rosterNpcs.find((n: any) => n.id === entry.npc_id)
-                            if (npc && (npc.wp_current ?? npc.wp_max ?? 10) <= 0) return false
+                            if (npc && npc.wp_current != null && npc.wp_current <= 0) return false
                           }
                           // Filter out dead PCs
                           const pcEntry = entries.find(e => e.character.id === entry.character_id)
                           if (pcEntry?.liveState && pcEntry.liveState.wp_current === 0 && (pcEntry.liveState as any).death_countdown != null && (pcEntry.liveState as any).death_countdown <= 0) return false
-                          // Players: hide own character and bystander NPCs from target list
-                          if (!isGM) {
-                            if (entry.user_id === userId) return false
-                            if (entry.is_npc && entry.npc_type === 'bystander') return false
-                          }
                           return true
                         })
                         .map(entry => (
