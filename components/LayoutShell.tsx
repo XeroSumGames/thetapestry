@@ -15,8 +15,8 @@ function MobileBanner() {
   if (dismissed) return null
   return (
     <div style={{
-      display: 'none', padding: '10px 14px', background: '#2a1210', borderBottom: '1px solid #c0392b',
-      fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow, sans-serif', textAlign: 'center',
+      display: 'none', padding: '16px 20px', background: '#2a1210', borderBottom: '1px solid #c0392b',
+      fontSize: '16px', color: '#f5a89a', fontFamily: 'Barlow, sans-serif', textAlign: 'center',
       position: 'relative',
     }}
     className="mobile-banner">
