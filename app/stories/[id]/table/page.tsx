@@ -436,6 +436,7 @@ export default function TablePage() {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
         .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false) })
         .on('broadcast', { event: 'combat_started' }, () => loadInitiative(id))
+        .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id) })
         .subscribe()
 
       campaignChannelRef.current = supabase.channel(`campaign_${id}`)
@@ -592,17 +593,20 @@ export default function TablePage() {
     setDropCharacter('')
 
     setStartingCombat(false)
-    await loadInitiative(id)
+    await Promise.all([loadInitiative(id), loadRolls(id)])
     // Broadcast combat start to all players
     initChannelRef.current?.send({ type: 'broadcast', event: 'combat_started', payload: {} })
   }
 
   async function nextTurn() {
-    if (initiativeOrder.length === 0) return
-    const currentIdx = initiativeOrder.findIndex(e => e.is_active)
+    // Fetch fresh initiative order from DB to avoid stale state
+    const { data: freshOrder } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false })
+    const order = freshOrder ?? initiativeOrder
+    if (order.length === 0) return
+    const currentIdx = order.findIndex((e: any) => e.is_active)
 
     // New round when wrapping — re-roll initiative + decrement death countdowns
-    if (currentIdx === initiativeOrder.length - 1) {
+    if (currentIdx === order.length - 1) {
       // Decrement death countdown + incapacitation + RP recovery
       for (const e of entries) {
         if (!e.liveState) continue
@@ -633,8 +637,8 @@ export default function TablePage() {
 
       // Re-roll initiative for all combatants
       const rerollDetails: { name: string; d1: number; d2: number; acu: number; dex: number; drop: number; total: number }[] = []
-      for (const entry of initiativeOrder) {
-        const charEntry = entries.find(e => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
+      for (const entry of order) {
+        const charEntry = entries.find((e: any) => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
         const rapid = charEntry?.character.data?.rapid ?? {}
         const acu = entry.is_npc ? (rosterNpcs.find(n => n.id === entry.npc_id)?.acumen ?? 0) : (rapid.ACU ?? 0)
         const dex = entry.is_npc ? (rosterNpcs.find(n => n.id === entry.npc_id)?.dexterity ?? 0) : (rapid.DEX ?? 0)
@@ -660,6 +664,7 @@ export default function TablePage() {
         await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2 }).eq('id', rerolled[0].id)
       }
       await Promise.all([loadInitiative(id), loadEntries(id)])
+      initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       return
     }
 
@@ -677,13 +682,14 @@ export default function TablePage() {
       attempts++
     }
 
-    // Only deactivate current entry and clear their actions — leave others' actions_remaining intact
+    // Deactivate current + activate next in parallel
     const currentEntry = initiativeOrder.find(e => e.is_active)
-    if (currentEntry) {
-      await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('id', currentEntry.id)
-    }
-    await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', initiativeOrder[nextIdx].id)
+    await Promise.all([
+      currentEntry ? supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('id', currentEntry.id) : Promise.resolve(),
+      supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', initiativeOrder[nextIdx].id),
+    ])
     await Promise.all([loadInitiative(id), loadEntries(id)])
+    initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
   }
 
   async function consumeAction(entryId: string, actionLabel?: string, cost = 1) {
@@ -1572,7 +1578,6 @@ export default function TablePage() {
                 {(isGM || (entry.user_id === userId && entry.is_active)) && (
                   <button onClick={async () => {
                     if (isGM && !entry.is_active) { removeFromInitiative(entry.id); return }
-                    await supabase.from('initiative_order').update({ actions_remaining: 0 }).eq('id', entry.id)
                     await nextTurn()
                   }}
                     style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '12px', padding: '0 0 0 2px', lineHeight: 1 }}>×</button>
