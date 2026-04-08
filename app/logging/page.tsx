@@ -309,6 +309,7 @@ export default function LoggingPage() {
             <div style={{ flex: 2, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Page</div>
             <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>User</div>
             <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>IP</div>
+            <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Time</div>
             <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>When</div>
           </div>
           {visitors.length === 0 ? (
@@ -322,6 +323,7 @@ export default function LoggingPage() {
                     {v.username ?? (v.is_ghost ? 'Ghost' : 'User')}
                   </div>
                   <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[v.city, v.region, v.country_code].filter(Boolean).join(', ') || v.ip_address || '—'}</div>
+                  <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>{new Date(v.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</div>
                   <div style={{ flex: 1, fontSize: '13px', color: '#cce0f5' }}>{timeAgo(v.created_at)}</div>
                 </div>
               ))}

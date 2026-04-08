@@ -64,7 +64,7 @@ export default function Sidebar() {
 
       {/* Branding */}
       <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid #c0392b', textAlign: 'center' }}>
-        <a href="/dashboard" target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+        <a href="/dashboard" style={{ textDecoration: 'none' }}>
           <img src="/DistemperLogoRedv5.png" alt="Distemper" style={{ height: '28px', objectFit: 'contain', marginBottom: '4px' }} />
           <div style={{ fontFamily: 'Distemper, sans-serif', fontSize: '18px', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1 }}>The Tapestry</div>
         </a>
@@ -91,7 +91,7 @@ export default function Sidebar() {
 
 {/* The Tapestry section */}
       <div style={sectionHeading}>The Tapestry</div>
-      <a href="/welcome" target="_blank" rel="noreferrer" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Welcome to the Tapestry</a>
+      <a href="/welcome" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Welcome to the Tapestry</a>
 <a href="/map" target="_blank" rel="noreferrer" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The World</a>
 <a href="/campaigns" target="_blank" rel="noreferrer" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Stories</a>
 <a href="#" style={soonStyle}>The Campfire <span style={{ fontSize: '9px', color: '#cce0f5' }}>&mdash; soon</span></a>
@@ -101,11 +101,11 @@ export default function Sidebar() {
       {/* Thriver tools */}
       {userRole === 'thriver' && (
         <>
-          <a href="/moderate" target="_blank" rel="noreferrer" style={{ ...linkStyle('#EF9F27'), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
+          <a href="/moderate" style={{ ...linkStyle('#EF9F27'), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
             Moderation Queue
             {pendingCount > 0 && <span style={{ background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 6px', borderRadius: '3px' }}>{pendingCount}</span>}
           </a>
-          <a href="/logging" target="_blank" rel="noreferrer" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Logs</a>
+          <a href="/logging" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Logs</a>
         </>
       )}
 
@@ -113,11 +113,11 @@ export default function Sidebar() {
 
       {/* Survivors section */}
       <div style={sectionHeading}>Survivors</div>
-      <a href="/creating-a-character" target="_blank" rel="noreferrer" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Creating a Survivor</a>
-      <a href="/characters" target="_blank" rel="noreferrer" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Survivors</a>
-      <a href="/characters/new" target="_blank" rel="noreferrer" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</a>
-      <a href="/characters/quick" target="_blank" rel="noreferrer" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Character</a>
-      <a href="/characters/random" target="_blank" rel="noreferrer" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</a>
+      <a href="/creating-a-character" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Creating a Survivor</a>
+      <a href="/characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Survivors</a>
+      <a href="/characters/new" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</a>
+      <a href="/characters/quick" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Character</a>
+      <a href="/characters/random" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</a>
       <a href="#" style={soonStyle}>Paradigms <span style={{ fontSize: '9px', color: '#cce0f5' }}>&mdash; soon</span></a>
 
       {divider}
