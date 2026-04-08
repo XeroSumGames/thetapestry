@@ -1234,9 +1234,14 @@ export default function TablePage() {
                 )}
                 <span style={{ fontSize: '11px', color: entry.is_active ? '#c0392b' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
                 <span style={{ fontSize: '10px', letterSpacing: '2px' }}>
-                  {Array.from({ length: 2 }).map((_, i) => (
-                    <span key={i} style={{ color: i < (entry.actions_remaining ?? 0) ? '#7fc458' : (entry.actions_remaining ?? 0) === 0 ? '#EF9F27' : '#3a3a3a' }}>●</span>
-                  ))}
+                  {Array.from({ length: 2 }).map((_, i) => {
+                    const remaining = entry.actions_remaining ?? 0
+                    const hasActions = i < remaining
+                    const isActive = entry.is_active
+                    const spent = !hasActions && remaining < 2
+                    const color = isActive && hasActions ? '#7fc458' : spent ? '#3a3a3a' : !isActive && hasActions ? '#EF9F27' : '#3a3a3a'
+                    return <span key={i} style={{ color }}>●</span>
+                  })}
                 </span>
                 {/* Aim/social bonus badge */}
                 {(entry.aim_bonus ?? 0) !== 0 && (
