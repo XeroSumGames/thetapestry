@@ -489,18 +489,26 @@ export default function TablePage() {
     // Getting The Drop: selected character gets -2 on initiative but acts first with 1 action
     const dropPenalty = -2
 
+    // Fetch fresh character data for initiative (entries state may be stale)
+    const { data: freshMembers } = await supabase.from('campaign_members').select('user_id, character_id').eq('campaign_id', id).not('character_id', 'is', null)
+    const charIds = (freshMembers ?? []).map((m: any) => m.character_id)
+    const { data: freshChars } = charIds.length > 0 ? await supabase.from('characters').select('id, name, data').in('id', charIds) : { data: [] }
+    const charMap = Object.fromEntries((freshChars ?? []).map((c: any) => [c.id, c]))
+
     // Roll initiative for all PCs: 2d6 + ACU AMod + DEX AMod
-    const pcRows = entries.map(e => {
-      const rapid = e.character.data?.rapid ?? {}
+    const pcRows = (freshMembers ?? []).map((m: any) => {
+      const char = charMap[m.character_id]
+      const rapid = char?.data?.rapid ?? {}
       const acu = rapid.ACU ?? 0
       const dex = rapid.DEX ?? 0
-      const isDropChar = dropCharacter === e.character.name
+      const charName = char?.name ?? 'Unknown'
+      const isDropChar = dropCharacter === charName
       const roll = rollD6() + rollD6() + acu + dex + (isDropChar ? dropPenalty : 0)
       return {
         campaign_id: id,
-        character_name: e.character.name,
-        character_id: e.character.id,
-        user_id: e.userId,
+        character_name: charName,
+        character_id: m.character_id,
+        user_id: m.user_id,
         npc_id: null,
         portrait_url: null,
         npc_type: null,
@@ -638,7 +646,11 @@ export default function TablePage() {
       attempts++
     }
 
-    await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('campaign_id', id)
+    // Only deactivate current entry and clear their actions — leave others' actions_remaining intact
+    const currentEntry = initiativeOrder.find(e => e.is_active)
+    if (currentEntry) {
+      await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('id', currentEntry.id)
+    }
     await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', initiativeOrder[nextIdx].id)
     await Promise.all([loadInitiative(id), loadEntries(id)])
   }

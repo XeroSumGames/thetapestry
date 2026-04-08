@@ -59,6 +59,7 @@
 - [x] Getting The Drop — GM selects in Start Combat modal, 1 action, -2 init
 - [x] Range Bands — 5-button selector in roll modal with auto CMod
 - [x] Initiative re-roll each round (PCs beat NPCs on ties)
+- [ ] Fix Combat Action buttons — each button should perform its action (Aim: spend action + queue +1 CMod on next attack; Attack: modal for weapon/unarmed selection then roll; Charge: spend actions + perform attack; etc.)
 - [ ] Delayed Actions
 - [ ] Resolution Phase
 
@@ -207,6 +208,12 @@
 - [x] Visitor geo-location — country, region, city, lat/lng from Vercel headers
 - [x] IP hash tracking — SHA-256, no PII stored
 - [x] Visual visitor map on /logging — dark tiles, green/red dots, popup with details
+- [x] Visitor log filter — search by user/IP/page, multi-exclude with chips (type + Enter to exclude, click chip to remove)
+- [x] Visitor log timestamp column — exact time alongside relative "When"
+- [x] Thriver user deletion — edge function with admin API, prevents self-delete
+- [x] Renamed /campaigns → /stories — URLs, text, redirects for backwards compat
+- [x] Singleton Supabase client — fixes auth lock race condition
+- [x] Performance pass — duplicate font removal, next.config, query parallelization, lazy images, unused deps removed
 - [ ] Remaining event instrumentation (9 items)
 - [ ] Switch email FROM address back to `noreply@distemperverse.com` once domain is verified on Resend (currently using `onboarding@resend.dev` workaround due to Wix MX limitation)
 
