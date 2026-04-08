@@ -435,8 +435,8 @@ export default function TablePage() {
       initChannelRef.current = supabase.channel(`initiative_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
         .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false) })
-        .on('broadcast', { event: 'combat_started' }, () => loadInitiative(id))
-        .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id) })
+        .on('broadcast', { event: 'combat_started' }, () => { loadInitiative(id); loadRolls(id) })
+        .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id); loadRolls(id) })
         .subscribe()
 
       campaignChannelRef.current = supabase.channel(`campaign_${id}`)
@@ -663,31 +663,31 @@ export default function TablePage() {
         rerolled.sort((a: any, b: any) => b.roll - a.roll || (a.is_npc ? 1 : 0) - (b.is_npc ? 1 : 0))
         await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2 }).eq('id', rerolled[0].id)
       }
-      await Promise.all([loadInitiative(id), loadEntries(id)])
+      await Promise.all([loadInitiative(id), loadEntries(id), loadRolls(id)])
       initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       return
     }
 
     // Find next non-dead, non-unconscious combatant
-    let nextIdx = (currentIdx + 1) % initiativeOrder.length
+    let nextIdx = (currentIdx + 1) % order.length
     let attempts = 0
-    while (attempts < initiativeOrder.length) {
-      const nextEntry = initiativeOrder[nextIdx]
-      const charEntry = entries.find(ce => nextEntry.character_id ? ce.character.id === nextEntry.character_id : ce.character.name === nextEntry.character_name)
+    while (attempts < order.length) {
+      const nextEntry = order[nextIdx]
+      const charEntry = entries.find((ce: any) => nextEntry.character_id ? ce.character.id === nextEntry.character_id : ce.character.name === nextEntry.character_name)
       const ls = charEntry?.liveState
       const isDead = ls && ls.wp_current === 0 && (ls as any).death_countdown != null && (ls as any).death_countdown <= 0
       const isUnconscious = ls && ls.rp_current === 0 && ls.wp_current > 0
       if (!isDead && !isUnconscious) break
-      nextIdx = (nextIdx + 1) % initiativeOrder.length
+      nextIdx = (nextIdx + 1) % order.length
       attempts++
     }
 
-    // Deactivate current + activate next in parallel
-    const currentEntry = initiativeOrder.find(e => e.is_active)
-    await Promise.all([
-      currentEntry ? supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('id', currentEntry.id) : Promise.resolve(),
-      supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', initiativeOrder[nextIdx].id),
-    ])
+    // Deactivate current + activate next
+    const currentEntry = order.find((e: any) => e.is_active)
+    if (currentEntry) {
+      await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('id', currentEntry.id)
+    }
+    await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', order[nextIdx].id)
     await Promise.all([loadInitiative(id), loadEntries(id)])
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
   }
@@ -1942,7 +1942,7 @@ export default function TablePage() {
             {sessionStatus !== 'idle' && myEntry && (
               <div style={{ padding: '6px 8px' }}>
                 <button
-                  onClick={() => { setSelectedEntry(myEntry); setViewingNpcs([]); setSheetPos(null) }}
+                  onClick={() => { if (selectedEntry?.odCharId === myEntry.odCharId) { setSelectedEntry(null) } else { setSelectedEntry(myEntry); setViewingNpcs([]); setSheetPos(null) } }}
                   style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
                 >
                   Open My Sheet to Roll
@@ -2242,6 +2242,11 @@ export default function TablePage() {
                           // Filter out dead PCs
                           const pcEntry = entries.find(e => e.character.id === entry.character_id)
                           if (pcEntry?.liveState && pcEntry.liveState.wp_current === 0 && (pcEntry.liveState as any).death_countdown != null && (pcEntry.liveState as any).death_countdown <= 0) return false
+                          // Players: hide own character and bystander NPCs from target list
+                          if (!isGM) {
+                            if (entry.user_id === userId) return false
+                            if (entry.is_npc && entry.npc_type === 'bystander') return false
+                          }
                           return true
                         })
                         .map(entry => (
