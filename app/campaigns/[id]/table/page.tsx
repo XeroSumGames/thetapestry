@@ -13,6 +13,7 @@ import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { logEvent } from '../../../../lib/events'
 import { rollDamage, calculateDamage } from '../../../../lib/damage'
 import { getWeaponByName, getTraitValue } from '../../../../lib/weapons'
+import { SKILLS } from '../../../../lib/xse-schema'
 
 interface Campaign {
   id: string
@@ -185,6 +186,10 @@ export default function TablePage() {
   const [sessionStatus, setSessionStatus] = useState<'idle' | 'active'>('idle')
   const [sessionCount, setSessionCount] = useState(0)
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
+  const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | null>(null)
+  const [groupCheckParticipants, setGroupCheckParticipants] = useState<Set<string>>(new Set())
+  const [groupCheckSkill, setGroupCheckSkill] = useState('')
+  const [opposedTarget, setOpposedTarget] = useState('')
   const [sessionSummary, setSessionSummary] = useState('')
   const [nextSessionNotes, setNextSessionNotes] = useState('')
   const [sessionCliffhanger, setSessionCliffhanger] = useState('')
@@ -827,6 +832,65 @@ export default function TablePage() {
     setPublishedNpcIds(prev => new Set([...prev, npc.id]))
   }
 
+  // Special check handlers
+  function triggerPerceptionCheck(characterName: string) {
+    const charEntry = entries.find(e => e.character.name === characterName)
+    if (!charEntry) return
+    const rapid = charEntry.character.data?.rapid ?? {}
+    const perMod = (rapid.RSN ?? 0) + (rapid.ACU ?? 0)
+    handleRollRequest(`${characterName} — Perception Check`, perMod, 0)
+    setShowSpecialCheck(null)
+  }
+
+  function triggerGutInstinct(characterName: string) {
+    const charEntry = entries.find(e => e.character.name === characterName)
+    if (!charEntry) return
+    const rapid = charEntry.character.data?.rapid ?? {}
+    const perMod = (rapid.RSN ?? 0) + (rapid.ACU ?? 0)
+    // Can substitute Psychology, Streetwise, or Tactics
+    const skills = charEntry.character.data?.skills ?? []
+    const subSkills = ['Psychology', 'Streetwise', 'Tactics']
+    const bestSub = skills.filter((s: any) => subSkills.includes(s.skillName)).sort((a: any, b: any) => b.level - a.level)[0]
+    const smod = bestSub?.level ?? 0
+    handleRollRequest(`${characterName} — Gut Instinct`, perMod, smod)
+    setShowSpecialCheck(null)
+  }
+
+  function triggerFirstImpression(characterName: string) {
+    const charEntry = entries.find(e => e.character.name === characterName)
+    if (!charEntry) return
+    const rapid = charEntry.character.data?.rapid ?? {}
+    const infMod = rapid.INF ?? 0
+    const skills = charEntry.character.data?.skills ?? []
+    const socialSkills = ['Manipulation', 'Streetwise', 'Psychology']
+    const bestSkill = skills.filter((s: any) => socialSkills.includes(s.skillName)).sort((a: any, b: any) => b.level - a.level)[0]
+    const smod = bestSkill?.level ?? 0
+    handleRollRequest(`${characterName} — First Impression`, infMod, smod)
+    setShowSpecialCheck(null)
+  }
+
+  function triggerGroupCheck() {
+    if (groupCheckParticipants.size === 0 || !groupCheckSkill) return
+    const participants = entries.filter(e => groupCheckParticipants.has(e.character.id))
+    if (participants.length === 0) return
+    // Find the attribute for this skill
+    const skillDef = SKILLS.find(s => s.name === groupCheckSkill)
+    const attrKey = skillDef?.attribute ?? 'RSN'
+    // Leader = highest AMod + SMod
+    const scored = participants.map(p => {
+      const amod = p.character.data?.rapid?.[attrKey] ?? 0
+      const smod = (p.character.data?.skills ?? []).find((s: any) => s.skillName === groupCheckSkill)?.level ?? 0
+      return { ...p, amod, smod, total: amod + smod }
+    }).sort((a, b) => b.total - a.total)
+    const leader = scored[0]
+    // Others contribute their AMod or SMod (whichever is used)
+    const bonusMods = scored.slice(1).reduce((sum, p) => sum + p.smod, 0)
+    handleRollRequest(`Group Check — ${groupCheckSkill} (led by ${leader.character.name})`, leader.amod, leader.smod + bonusMods)
+    setShowSpecialCheck(null)
+    setGroupCheckParticipants(new Set())
+    setGroupCheckSkill('')
+  }
+
   function getRangeCMod(): number {
     if (!pendingRoll?.weapon) return 0
     const w = getWeaponByName(pendingRoll.weapon.weaponName)
@@ -1251,6 +1315,17 @@ export default function TablePage() {
           </div>
         )}
         <div style={{ flex: 1 }} />
+        {isGM && sessionStatus === 'active' && (
+          <select value="" onChange={e => { if (e.target.value) setShowSpecialCheck(e.target.value as any); e.target.value = '' }}
+            style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a') }}>
+            <option value="">Checks</option>
+            <option value="perception">Perception</option>
+            <option value="gut">Gut Instinct</option>
+            <option value="first_impression">First Impression</option>
+            <option value="group">Group Check</option>
+            <option value="opposed">Opposed Check</option>
+          </select>
+        )}
         {isGM && sessionCount > 0 && (
           <a href={`/campaigns/${id}/sessions`}
             style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
@@ -2183,6 +2258,92 @@ export default function TablePage() {
                 {startingCombat ? 'Rolling...' : `⚔️ Start Combat${selectedNpcIds.size > 0 ? ` (${selectedNpcIds.size} NPCs)` : ''}`}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Special Check Modal */}
+      {showSpecialCheck && (
+        <div onClick={() => setShowSpecialCheck(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '380px' }}>
+            {showSpecialCheck === 'perception' && (
+              <>
+                <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Perception Check</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Uses Perception modifier (RSN + ACU)</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {entries.map(e => (
+                    <button key={e.character.id} onClick={() => triggerPerceptionCheck(e.character.name)}
+                      style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>{e.character.name} (PER {(e.character.data?.rapid?.RSN ?? 0) + (e.character.data?.rapid?.ACU ?? 0)})</button>
+                  ))}
+                </div>
+              </>
+            )}
+            {showSpecialCheck === 'gut' && (
+              <>
+                <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Gut Instinct</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Uses Perception + best of Psychology, Streetwise, Tactics</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {entries.map(e => (
+                    <button key={e.character.id} onClick={() => triggerGutInstinct(e.character.name)}
+                      style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>{e.character.name}</button>
+                  ))}
+                </div>
+              </>
+            )}
+            {showSpecialCheck === 'first_impression' && (
+              <>
+                <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>First Impression</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Uses Influence + best of Manipulation, Streetwise, Psychology. Result sets Relationship CMod.</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {entries.map(e => (
+                    <button key={e.character.id} onClick={() => triggerFirstImpression(e.character.name)}
+                      style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>{e.character.name} (INF {e.character.data?.rapid?.INF ?? 0})</button>
+                  ))}
+                </div>
+              </>
+            )}
+            {showSpecialCheck === 'group' && (
+              <>
+                <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Group Check</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Highest modifier leads. Others contribute their SMod. No Insight Dice.</div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Skill</div>
+                  <select value={groupCheckSkill} onChange={e => setGroupCheckSkill(e.target.value)}
+                    style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                    <option value="">Select skill...</option>
+                    {SKILLS.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
+                  </select>
+                </div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Participants</div>
+                  {entries.map(e => (
+                    <label key={e.character.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={groupCheckParticipants.has(e.character.id)} onChange={() => {
+                        setGroupCheckParticipants(prev => { const next = new Set(prev); if (next.has(e.character.id)) next.delete(e.character.id); else next.add(e.character.id); return next })
+                      }} style={{ accentColor: '#c0392b' }} />
+                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{e.character.name}</span>
+                    </label>
+                  ))}
+                </div>
+                <button onClick={triggerGroupCheck} disabled={groupCheckParticipants.size === 0 || !groupCheckSkill}
+                  style={{ width: '100%', padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: groupCheckParticipants.size === 0 || !groupCheckSkill ? 0.5 : 1 }}>
+                  Roll Group Check
+                </button>
+              </>
+            )}
+            {showSpecialCheck === 'opposed' && (
+              <>
+                <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Opposed Check</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Both sides roll until one succeeds and the other fails. Use standard skill rolls for each side.</div>
+                <div style={{ fontSize: '11px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', padding: '1rem' }}>
+                  Have each participant roll their relevant skill check normally. Compare outcomes — first to get Success while opponent gets Failure wins.
+                </div>
+              </>
+            )}
+            <button onClick={() => setShowSpecialCheck(null)}
+              style={{ marginTop: '1rem', width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              Close
+            </button>
           </div>
         </div>
       )}
