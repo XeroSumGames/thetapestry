@@ -965,10 +965,43 @@ export default function TablePage() {
       }
     }
 
+    // Upkeep Check result — adjust weapon condition
+    let upkeepResult = ''
+    if (pendingRoll.label.startsWith('Upkeep — ') && myEntry) {
+      const weaponName = pendingRoll.label.replace('Upkeep — ', '')
+      const charData = myEntry.character.data ?? {}
+      const conditions = ['Pristine', 'Used', 'Worn', 'Damaged', 'Broken']
+      const slots = ['weaponPrimary', 'weaponSecondary'] as const
+      for (const slot of slots) {
+        if (charData[slot]?.weaponName === weaponName) {
+          const currentIdx = conditions.indexOf(charData[slot].condition ?? 'Used')
+          let newIdx = currentIdx
+          if (outcome === 'Wild Success') { newIdx = Math.max(1, currentIdx - 1); upkeepResult = 'Condition improved by 1 level' }
+          else if (outcome === 'High Insight') { newIdx = Math.max(1, currentIdx - 2); upkeepResult = 'Condition improved by 2 levels' }
+          else if (outcome === 'Failure') { newIdx = Math.min(4, currentIdx + 1); upkeepResult = 'Condition degraded by 1 level' }
+          else if (outcome === 'Dire Failure') { newIdx = 4; upkeepResult = 'Item breaks immediately!' }
+          else if (outcome === 'Low Insight') {
+            newIdx = 4; upkeepResult = 'Item breaks immediately! 1 WP damage.'
+            if (myEntry.liveState) {
+              const newWP = Math.max(0, myEntry.liveState.wp_current - 1)
+              await supabase.from('character_states').update({ wp_current: newWP }).eq('id', myEntry.stateId)
+            }
+          }
+          else { upkeepResult = 'No change to condition' }
+          if (newIdx !== currentIdx) {
+            await supabase.from('characters').update({
+              data: { ...charData, [slot]: { ...charData[slot], condition: conditions[newIdx] } }
+            }).eq('id', myEntry.character.id)
+          }
+          break
+        }
+      }
+    }
+
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, spent: preRollSpent,
-      damage: damageResult, weaponJammed, traitNotes,
+      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : [])],
     } as any)
 
     setRolling(false)

@@ -556,6 +556,27 @@ export default function CharacterCard({
                           </select>
                         </span>
                       </div>
+                      {/* Upkeep Check button */}
+                      {canEdit && cond !== 'Pristine' && (
+                        <button onClick={() => {
+                          if (!onRoll) return
+                          // Upkeep uses Mechanic, Tinkerer, or the weapon's combat skill
+                          const upkeepSkills = ['Mechanic', 'Tinkerer', w.skill]
+                          const bestSkill = skills.reduce((best, s) => {
+                            if (upkeepSkills.includes(s.skillName) && s.level > (best?.level ?? -99)) return s
+                            return best
+                          }, null as any)
+                          const smod = bestSkill?.level ?? 0
+                          const skillName = bestSkill?.skillName ?? 'Mechanic'
+                          const skillDef = SKILLS.find(s => s.name === skillName)
+                          const attrKey = skillDef?.attribute ?? 'RSN'
+                          const amod = rapid[attrKey] ?? 0
+                          onRoll(`Upkeep — ${w.name}`, amod, smod)
+                        }}
+                          style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginBottom: '4px', alignSelf: 'flex-start' }}>
+                          Upkeep Check
+                        </button>
+                      )}
                       {/* Ammo pips + reload on one line */}
                       {w.clip && w.clip > 0 && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
@@ -626,6 +647,21 @@ export default function CharacterCard({
               )
             })}
           </div>
+          {/* Encumbrance tracker */}
+          {(() => {
+            const encLimit = 6 + (rapid.PHY ?? 0)
+            const wp = getWeaponByName(weaponPrimary.weaponName)
+            const ws = getWeaponByName(weaponSecondary.weaponName)
+            const currentEnc = (wp?.enc ?? 0) + (ws?.enc ?? 0)
+            const overloaded = currentEnc > encLimit
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <span style={{ color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.06em' }}>Encumbrance:</span>
+                <span style={{ color: overloaded ? '#c0392b' : '#7fc458', fontWeight: 700 }}>{currentEnc}/{encLimit}</span>
+                {overloaded && <span style={{ color: '#c0392b', fontSize: '11px' }}>OVERLOADED</span>}
+              </div>
+            )
+          })()}
         </div>
 
       </div>
