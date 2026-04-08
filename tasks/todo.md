@@ -181,7 +181,7 @@
 - [x] Pin search — keyword filter on title, notes, category
 - [x] Pin cards — expandable sidebar, enhanced popup, view count, nearby pins, campaign context, username
 - [x] Pin hierarchy — visual weight: Landmark / Location / Event / Personal
-- [ ] Pin card attachments — show images inline and documents as download links
+- [x] Pin card attachments — images inline, documents as download links, public bucket
 - [ ] Parent/child pin structure — rumor about a specific building within a landmark
 - [ ] Immutable canon layer — Thriver-set pins only, cannot be edited by others
 
