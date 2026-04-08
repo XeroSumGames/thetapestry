@@ -1,12 +1,28 @@
-# Revealed NPC Icons — Test Plan
+# Test Plan: Feed Tab & Session Cleanup
 
-## What changed
-Fixed z-index on revealed NPC icons at bottom of center panel so they appear above map overlays and character sheets during combat.
+## Changes Made
+1. **Default tab** — Feed opens on "Logs" instead of "Both"
+2. **Both tab chronological** — Rolls and chat messages are merged and sorted by timestamp
+3. **Realtime subscriptions** — `roll_log` and `chat_messages` channels now listen to all events (`*`), not just `INSERT`, so deletions propagate to players
+4. **Start Session clears logs** — `startSession()` deletes leftover rolls/chat from DB and clears local state
 
-## Steps to test
-1. Open a story table as a **player** (not GM)
-2. The GM should reveal at least one NPC to your character (via the NPC roster Show button)
-3. Verify small NPC icons appear at the bottom of the center panel
-4. Open your character sheet (inline mode) — verify the NPC icons still show above it
-5. Enter combat — verify the icons persist
-6. If no NPCs appear, check that `npc_relationships` has rows with `revealed = true` for your character
+## Steps to Verify
+
+### 1. Default tab
+- Open any story table
+- Confirm the feed panel opens on the **Logs** tab (not Both)
+
+### 2. Both tab chronological order
+- Start a session, make some rolls and send some chat messages
+- Switch to the **Both** tab
+- Confirm entries are interleaved chronologically (not all rolls then all chat)
+
+### 3. Clean start on new session
+- As GM, click **Start Session**
+- Confirm Logs, Chat, and Both tabs are all empty
+- As a **player** on the same campaign, confirm their feed is also empty
+
+### 4. Realtime log clearing
+- Have a player connected to the table
+- As GM, end the session
+- Confirm the player's logs/chat clear without needing to refresh

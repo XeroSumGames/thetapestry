@@ -198,7 +198,7 @@ export default function TablePage() {
   const [sessionActing, setSessionActing] = useState(false)
   const [gmTab, setGmTab] = useState<'npcs' | 'assets' | 'notes'>('npcs')
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
-  const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
+  const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('rolls')
   const [chatMessages, setChatMessages] = useState<{ id: string; user_id: string; character_name: string; message: string; created_at: string }[]>([])
   const [chatInput, setChatInput] = useState('')
   const chatChannelRef = useRef<any>(null)
@@ -425,11 +425,11 @@ export default function TablePage() {
         .subscribe()
 
       rollChannelRef.current = supabase.channel(`rolls_${id}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'roll_log', filter: `campaign_id=eq.${id}` }, () => loadRolls(id))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'roll_log', filter: `campaign_id=eq.${id}` }, () => loadRolls(id))
         .subscribe()
 
       chatChannelRef.current = supabase.channel(`chat_${id}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `campaign_id=eq.${id}` }, () => loadChat(id))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_messages', filter: `campaign_id=eq.${id}` }, () => loadChat(id))
         .subscribe()
 
       initChannelRef.current = supabase.channel(`initiative_${id}`)
@@ -828,6 +828,13 @@ export default function TablePage() {
       session_number: newCount,
       started_at: new Date().toISOString(),
     })
+    // Clear any leftover logs/chat from previous session
+    await Promise.all([
+      supabase.from('roll_log').delete().eq('campaign_id', id),
+      supabase.from('chat_messages').delete().eq('campaign_id', id),
+    ])
+    setRolls([])
+    setChatMessages([])
     setSessionStatus('active')
     setSessionCount(newCount)
     logEvent('session_started', { campaign_id: id, session_number: newCount })
@@ -1479,6 +1486,9 @@ export default function TablePage() {
         <a href={`/stories/${id}`} style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
           Back
         </a>
+        <a href="/stories" style={{ ...hdrBtn('#7a1f16', '#f5a89a', '#c0392b'), textDecoration: 'none' }}>
+          Exit
+        </a>
       </div>
 
       {/* Initiative Tracker — shown when combat is active */}
@@ -1749,9 +1759,9 @@ export default function TablePage() {
                 </div>
               )
             )}
-            {/* Roll entries */}
-            {(feedTab === 'rolls' || feedTab === 'both') && (
-              rolls.length === 0 && feedTab === 'rolls' ? (
+            {/* Roll entries (Logs tab only) */}
+            {feedTab === 'rolls' && (
+              rolls.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a' }}>
                   <div style={{ fontSize: '24px', marginBottom: '8px' }}>{sessionStatus === 'idle' ? '⏸' : '🎲'}</div>
                   <div style={{ fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
@@ -1816,9 +1826,9 @@ export default function TablePage() {
                 ))
               )
             )}
-            {/* Chat messages */}
-            {(feedTab === 'chat' || feedTab === 'both') && (
-              chatMessages.length === 0 && feedTab === 'chat' ? (
+            {/* Chat messages (Chat tab only) */}
+            {feedTab === 'chat' && (
+              chatMessages.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>No messages yet</div>
               ) : (
                 chatMessages.map(m => (
@@ -1832,6 +1842,84 @@ export default function TablePage() {
                 ))
               )
             )}
+            {/* Both tab — merged chronological feed */}
+            {feedTab === 'both' && (() => {
+              const merged: { type: 'roll' | 'chat'; created_at: string; data: any }[] = [
+                ...rolls.map(r => ({ type: 'roll' as const, created_at: r.created_at, data: r })),
+                ...chatMessages.map(m => ({ type: 'chat' as const, created_at: m.created_at, data: m })),
+              ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+              if (merged.length === 0) return (
+                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>{sessionStatus === 'idle' ? '⏸' : '💬'}</div>
+                  <div style={{ fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                    {sessionStatus === 'idle' ? 'Session not active' : 'No activity yet'}
+                  </div>
+                </div>
+              )
+              return merged.map(item => item.type === 'chat' ? (
+                <div key={`chat-${item.data.id}`} style={{ marginBottom: '6px', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{item.data.character_name}</span>
+                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{item.data.message}</div>
+                </div>
+              ) : item.data.outcome === 'initiative' && (item.data.damage_json as any)?.initiative ? (
+                <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Initiative</span>
+                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                  </div>
+                  {((item.data.damage_json as any).initiative as any[]).map((e: any, i: number) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: '6px', padding: '3px 0', borderBottom: i < (item.data.damage_json as any).initiative.length - 1 ? '1px solid #2e2e2e' : 'none' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', minWidth: '80px' }}>{e.name}</span>
+                      <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        [{e.d1}+{e.d2}]
+                        {(e.acu !== 0 || e.dex !== 0) && <span style={{ color: '#7fc458' }}> +{e.acu} ACU +{e.dex} DEX</span>}
+                        {e.drop !== 0 && <span style={{ color: '#f5a89a' }}> {e.drop} Drop</span>}
+                      </span>
+                      <span style={{ marginLeft: 'auto', fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif' }}>{e.total}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: `3px solid ${outcomeColor(item.data.outcome)}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{item.data.character_name}</span>
+                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>
+                    {item.data.label}
+                    {item.data.target_name && <span style={{ color: '#EF9F27' }}> → {item.data.target_name}</span>}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
+                    [{item.data.die1}+{item.data.die2}]
+                    {item.data.amod !== 0 && <span style={{ color: item.data.amod > 0 ? '#7fc458' : '#c0392b' }}> {item.data.amod > 0 ? '+' : ''}{item.data.amod} AMod</span>}
+                    {item.data.smod !== 0 && <span style={{ color: item.data.smod > 0 ? '#7fc458' : '#c0392b' }}> {item.data.smod > 0 ? '+' : ''}{item.data.smod} SMod</span>}
+                    {item.data.cmod !== 0 && <span style={{ color: item.data.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {item.data.cmod > 0 ? '+' : ''}{item.data.cmod} CMod</span>}
+                    <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {item.data.total}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: 700, color: outcomeColor(item.data.outcome), fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{item.data.outcome}</span>
+                    {item.data.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
+                  </div>
+                  {item.data.damage_json && (
+                    <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>
+                      <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '11px' }}>Damage → {item.data.damage_json.targetName}</span>
+                      <div style={{ marginTop: '2px' }}>
+                        {item.data.damage_json.base > 0 && <span>{item.data.damage_json.base}</span>}
+                        {item.data.damage_json.diceDesc && <span>{item.data.damage_json.base > 0 ? '+' : ''}{item.data.damage_json.diceDesc} ({item.data.damage_json.diceRoll})</span>}
+                        {item.data.damage_json.phyBonus > 0 && <span> +{item.data.damage_json.phyBonus} PHY</span>}
+                        <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {item.data.damage_json.totalWP} raw</span>
+                        <span style={{ color: '#c0392b' }}> → {item.data.damage_json.finalWP} WP</span>
+                        <span style={{ color: '#7ab3d4' }}> / {item.data.damage_json.finalRP} RP</span>
+                        {item.data.damage_json.mitigated > 0 && <span style={{ color: '#cce0f5' }}> ({item.data.damage_json.mitigated} mitigated)</span>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            })()}
           </div>
           {/* Bottom: chat input + sheet button */}
           <div style={{ borderTop: '1px solid #2e2e2e', flexShrink: 0 }}>
