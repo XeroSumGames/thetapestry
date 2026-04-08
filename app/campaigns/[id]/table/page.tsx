@@ -1317,7 +1317,7 @@ export default function TablePage() {
         <div style={{ flex: 1 }} />
         {isGM && sessionStatus === 'active' && (
           <select value="" onChange={e => { if (e.target.value) setShowSpecialCheck(e.target.value as any); e.target.value = '' }}
-            style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a') }}>
+            style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), flex: 'none', width: 'auto' }}>
             <option value="">Checks</option>
             <option value="perception">Perception</option>
             <option value="gut">Gut Instinct</option>

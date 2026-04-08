@@ -14,6 +14,8 @@
 - **`return null` during loading causes layout shifts**: Use `return <div style={{ background: '#0f0f0f' }} />` instead to maintain the DOM structure.
 
 ## Styling
+- **Header buttons must all be the same size**: The campaign table header bar uses the `hdrBtn()` helper for uniform 28px height, 11px Barlow Condensed buttons. When adding new buttons to this bar, ALWAYS use `hdrBtn()` — never inline custom styles. This has been broken and fixed before. Check `hdrBtn` usage before adding any button to the header.
+
 - **`#5a5550` is too dim**: This color was used as secondary text throughout the app but is nearly invisible on dark backgrounds. Replaced globally with `#cce0f5` (light blue).
 - **Minimum font size is 13px**: Never use font sizes below 13px anywhere in the UI. The dark background makes small text unreadable. Badges/tags: 13-14px. Body text: 14-15px. Headings scale up from there. Multiple rounds of +2px bumps were needed across roll feed, session history, and NPC roster because initial sizes were too small.
 - **`appearance: 'none'` on selects**: Required for consistent cross-browser styling of dropdowns.
