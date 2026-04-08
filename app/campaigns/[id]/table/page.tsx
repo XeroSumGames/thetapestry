@@ -613,7 +613,9 @@ export default function TablePage() {
   }
 
   async function consumeAction(entryId: string, actionLabel?: string, cost = 1) {
-    const entry = initiativeOrder.find(e => e.id === entryId)
+    // Re-fetch from DB to avoid stale state
+    const { data: freshEntry } = await supabase.from('initiative_order').select('*').eq('id', entryId).single()
+    const entry = freshEntry ?? initiativeOrder.find(e => e.id === entryId)
     if (!entry || entry.actions_remaining < cost) return
     const newRemaining = entry.actions_remaining - cost
 
@@ -1233,8 +1235,10 @@ export default function TablePage() {
     setRollResult(null)
 
     // Consume an action if the roller was the active combatant
-    if (rolledResult && combatActive && initiativeOrder.length > 0) {
-      const activeEntry = initiativeOrder.find(e => e.is_active)
+    if (rolledResult && combatActive) {
+      // Re-fetch active entry from DB to avoid stale closure state
+      const { data: freshOrder } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).eq('is_active', true).limit(1)
+      const activeEntry = freshOrder?.[0]
       if (activeEntry) {
         const myChar = entries.find(e => e.userId === userId)
         const isMyTurn = activeEntry.character_id && myChar && activeEntry.character_id === myChar.character.id
