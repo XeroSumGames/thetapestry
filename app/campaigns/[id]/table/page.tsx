@@ -760,6 +760,7 @@ export default function TablePage() {
 
   const [preRollInsight, setPreRollInsight] = useState<'none' | '3d6' | '+3cmod'>('none')
   const [useBurst, setUseBurst] = useState(false)
+  const [socialTarget, setSocialTarget] = useState<{ action: string } | null>(null)
   const [socialNpcId, setSocialNpcId] = useState<string>('')
   const [socialCmod, setSocialCmod] = useState<{ npcName: string; cmod: number } | null>(null)
   const [campaignNpcs, setCampaignNpcs] = useState<any[]>([])
@@ -784,6 +785,19 @@ export default function TablePage() {
     setPublishedNpcIds(prev => new Set([...prev, npc.id]))
   }
 
+  async function applySocialAction(action: string, targetEntryId: string) {
+    const activeEntry = initiativeOrder.find(e => e.is_active)
+    if (!activeEntry) return
+    const targetEntry = initiativeOrder.find(e => e.id === targetEntryId)
+    if (!targetEntry) return
+    const isBoost = action === 'Coordinate' || action === 'Inspire'
+    const delta = isBoost ? 1 : -1
+    const newBonus = (targetEntry.aim_bonus ?? 0) + delta
+    await supabase.from('initiative_order').update({ aim_bonus: newBonus }).eq('id', targetEntryId)
+    await consumeAction(activeEntry.id, `${activeEntry.character_name} — ${action} → ${targetEntry.character_name}`)
+    setSocialTarget(null)
+  }
+
   function handleRollRequest(label: string, amod: number, smod: number, weapon?: WeaponContext) {
     setPendingRoll({ label, amod, smod, weapon })
     setRollResult(null)
@@ -795,6 +809,7 @@ export default function TablePage() {
     setTargetName('')
     setPreRollInsight('none')
     setUseBurst(false)
+    setSocialTarget(null)
     setSocialNpcId('')
     setSocialCmod(null)
   }
@@ -1190,6 +1205,12 @@ export default function TablePage() {
                     ))}
                   </span>
                 )}
+                {/* Aim/social bonus badge */}
+                {(entry.aim_bonus ?? 0) !== 0 && (
+                  <span style={{ fontSize: '10px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: entry.aim_bonus > 0 ? '#7fc458' : '#c0392b' }}>
+                    {entry.aim_bonus > 0 ? '+' : ''}{entry.aim_bonus}
+                  </span>
+                )}
                 {/* Status badges */}
                 {(() => {
                   const charEntry = entries.find(e => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
@@ -1299,16 +1320,34 @@ export default function TablePage() {
                 ) : (
                   <button disabled style={disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Charge</button>
                 )}
-                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Coordinate`)}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Coordinate</button>
-                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Cover Fire`)}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Cover Fire</button>
+                {['Coordinate', 'Cover Fire', 'Distract', 'Inspire'].map(action => {
+                  const isBoost = action === 'Coordinate' || action === 'Inspire'
+                  const targets = initiativeOrder.filter(e => {
+                    if (e.id === activeEntry.id) return false
+                    return isBoost ? !e.is_npc : e.is_npc
+                  })
+                  const isOpen = socialTarget?.action === action
+                  return (
+                    <span key={action} style={{ position: 'relative' }}>
+                      <button onClick={() => setSocialTarget(isOpen ? null : { action })}
+                        style={actBtn(isOpen ? '#1a2e10' : '#242424', isOpen ? '#7fc458' : '#d4cfc9', isOpen ? '#2d5a1b' : '#3a3a3a')}>{action}</button>
+                      {isOpen && targets.length > 0 && (
+                        <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 100, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', minWidth: '120px', marginTop: '2px' }}>
+                          {targets.map(t => (
+                            <div key={t.id} onClick={() => applySocialAction(action, t.id)}
+                              style={{ padding: '4px 8px', fontSize: '11px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                              {t.character_name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </span>
+                  )
+                })}
                 <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Defend`)}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Defend</button>
-                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Distract`)}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Distract</button>
-                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Inspire`)}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Inspire</button>
                 <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Move`)}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Move</button>
                 {hasBurst && w ? (
