@@ -179,8 +179,9 @@
 - [x] New pin categories: world_event (🌍) and settlement (🏚️)
 - [x] Setting regions — fly-to buttons for District Zero, Chased, Mongrels
 - [x] Pin search — keyword filter on title, notes, category
-- [ ] Pin cards — richer click experience, related pins, visit count, campaign context
-- [ ] Pin hierarchy — visual weight: Landmark / Location / Event / Personal
+- [x] Pin cards — expandable sidebar, enhanced popup, view count, nearby pins, campaign context, username
+- [x] Pin hierarchy — visual weight: Landmark / Location / Event / Personal
+- [ ] Pin card attachments — show images inline and documents as download links
 - [ ] Parent/child pin structure — rumor about a specific building within a landmark
 - [ ] Immutable canon layer — Thriver-set pins only, cannot be edited by others
 
@@ -196,6 +197,7 @@
 - [x] IP hash tracking — SHA-256, no PII stored
 - [x] Visual visitor map on /logging — dark tiles, green/red dots, popup with details
 - [ ] Remaining event instrumentation (9 items)
+- [ ] Switch email FROM address back to `noreply@distemperverse.com` once domain is verified on Resend (currently using `onboarding@resend.dev` workaround due to Wix MX limitation)
 
 ---
 

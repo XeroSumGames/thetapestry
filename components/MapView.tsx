@@ -355,7 +355,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 }
 
   // Filter chips
-  const FILTER_CHIPS = ['all', 'public', 'canon', 'rumors', 'timeline'] as const
+  const FILTER_CHIPS = ['mine', 'all', 'public', 'canon', 'rumors', 'timeline'] as const
   const allFiltersActive = FILTER_CHIPS.filter(f => f !== 'all').every(f => activeFilters.has(f))
 
   function toggleFilter(chip: string) {
@@ -364,7 +364,6 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       if (chip === 'all') {
         // Toggle all on
         FILTER_CHIPS.forEach(f => next.add(f))
-        next.add('mine')
         return next
       }
       if (next.has(chip)) next.delete(chip); else next.add(chip)
@@ -476,10 +475,6 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
                   onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>✕</button>
                 <span style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Filters</span>
-                <button onClick={() => setPinsVisible(v => !v)}
-                  style={{ marginLeft: '8px', padding: '2px 8px', background: pinsVisible ? '#2a1210' : 'transparent', border: `1px solid ${pinsVisible ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: pinsVisible ? '#f5a89a' : '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  {pinsVisible ? 'Hide All' : 'Show All'}
-                </button>
                 <button onClick={() => setSortMode(s => s === 'name' as any ? 'newest' : 'name' as any)}
                   style={{ marginLeft: 'auto', padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Sort: {sortMode === ('name' as any) ? 'A–Z' : 'Date'}
@@ -488,18 +483,18 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               <input value={pinSearch} onChange={e => setPinSearch(e.target.value)} placeholder="Search pins..."
                 style={{ width: '100%', padding: '5px 8px', marginBottom: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
-                {userId && (() => {
-                  const active = activeFilters.size === 1 && activeFilters.has('mine')
-                  return (
-                    <button onClick={() => {
-                      if (active) { setActiveFilters(new Set(['all', 'mine', 'public', 'canon', 'rumors', 'timeline'])) }
-                      else { setActiveFilters(new Set(['mine'])) }
-                    }}
-                      style={{ padding: '3px 8px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : 'transparent', color: active ? '#f5a89a' : '#d4cfc9' }}>
-                      Your Pins
-                    </button>
-                  )
-                })()}
+                <button onClick={() => {
+                  const next = !pinsVisible
+                  setPinsVisible(next)
+                  if (next) {
+                    setActiveFilters(new Set(FILTER_CHIPS))
+                  } else {
+                    setActiveFilters(new Set())
+                  }
+                }}
+                  style={{ padding: '3px 8px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${pinsVisible ? '#3a3a3a' : '#c0392b'}`, background: pinsVisible ? 'transparent' : '#2a1210', color: pinsVisible ? '#d4cfc9' : '#f5a89a' }}>
+                  {pinsVisible ? 'Show' : 'Hidden'}
+                </button>
                 {FILTER_CHIPS.map(chip => {
                   const active = chip === 'all' ? allFiltersActive || activeFilters.has('all') : activeFilters.has(chip)
                   const label = chip === 'timeline' ? '🕐 Timeline' : chip.charAt(0).toUpperCase() + chip.slice(1)
