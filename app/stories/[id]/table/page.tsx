@@ -837,6 +837,7 @@ export default function TablePage() {
   async function endSession() {
     if (!isGM) return
     setSessionActing(true)
+    setShowEndSessionModal(false)
     // Auto-end combat if active
     if (combatActive) await endCombat()
     const now = new Date().toISOString()
@@ -890,7 +891,6 @@ export default function TablePage() {
     setChatMessages([])
 
     setSessionStatus('idle')
-    setShowEndSessionModal(false)
     setSessionSummary('')
     setNextSessionNotes('')
     setSessionCliffhanger('')
@@ -1603,9 +1603,10 @@ export default function TablePage() {
             const activeEntry = initiativeOrder.find(e => e.is_active)
             if (!activeEntry || (activeEntry.actions_remaining ?? 0) <= 0) return null
             const myChar = entries.find(e => e.userId === userId)
-            const isMyTurn = activeEntry.character_id && myChar && activeEntry.character_id === myChar.character.id
-            const canAct = isMyTurn || (isGM && activeEntry.is_npc) || isGM
+            const isMyTurn = !!(activeEntry.character_id && myChar && activeEntry.character_id === myChar.character.id)
+            const canAct = isMyTurn || isGM
             if (!canAct) return null
+            console.log('[CombatActions]', { isMyTurn, isGM, activeChar: activeEntry.character_name, myCharId: myChar?.character.id, activeCharId: activeEntry.character_id, userId })
 
             // Determine combatant's weapon for conditional buttons
             const charEntry = entries.find(e => e.character.name === activeEntry.character_name)
@@ -1737,9 +1738,16 @@ export default function TablePage() {
           </div>
           <div ref={rollFeedRef} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
             {sessionStatus === 'idle' && (
-              <div style={{ textAlign: 'center', padding: '8px', marginBottom: '8px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
-                Waiting for GM to open the session
-              </div>
+              isGM ? (
+                <button onClick={startSession} disabled={sessionActing}
+                  style={{ width: '100%', textAlign: 'center', padding: '8px', marginBottom: '8px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.6 : 1 }}>
+                  {sessionActing ? 'Starting...' : 'Start Session'}
+                </button>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '8px', marginBottom: '8px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
+                  Waiting for GM to open the session
+                </div>
+              )
             )}
             {/* Roll entries */}
             {(feedTab === 'rolls' || feedTab === 'both') && (
