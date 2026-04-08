@@ -811,6 +811,8 @@ export default function TablePage() {
   async function endSession() {
     if (!isGM) return
     setSessionActing(true)
+    // Auto-end combat if active
+    if (combatActive) await endCombat()
     const now = new Date().toISOString()
     await supabase.from('campaigns').update({
       session_status: 'idle',
