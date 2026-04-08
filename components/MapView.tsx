@@ -216,7 +216,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       },
     })
 
-    data.forEach((pin: Pin) => {
+    const visibleData = userId ? data : data.filter((p: Pin) => p.category === 'world_event')
+    visibleData.forEach((pin: Pin) => {
       const emoji = getCategoryEmoji(pin.category ?? 'location')
       const tier = getPinTier(pin)
       const ts = getTierStyles(tier)
@@ -380,6 +381,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   }
 
   function matchesFilter(p: Pin): boolean {
+    // Ghosts can only see Timeline (world_event) pins
+    if (!userId) return p.category === 'world_event'
     if (activeFilters.has('all') || allFiltersActive) return true
     if (activeFilters.has('public') && p.status === 'approved') return true
     if (activeFilters.has('mine') && p.user_id === userId) return true
@@ -806,6 +809,21 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         ))}
       </div>
     </div>
+    {userRole === 'thriver' && editingPin && (
+      <div style={{ marginBottom: '12px' }}>
+        <label style={lbl}>Pin Type</label>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {[['gm', 'GM'], ['rumor', 'Rumor'], ['private', 'Private']].map(([val, label]) => (
+            <button key={val} onClick={() => {
+              supabase.from('map_pins').update({ pin_type: val }).eq('id', editingPin.id)
+            }}
+              style={{ flex: 1, padding: '4px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${editingPin.pin_type === val ? '#c0392b' : '#3a3a3a'}`, background: editingPin.pin_type === val ? '#2a1210' : '#242424', color: editingPin.pin_type === val ? '#f5a89a' : '#d4cfc9' }}>
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
     <div style={{ display: 'flex', gap: '6px' }}>
       <button onClick={handleSaveEdit} disabled={!editForm.title.trim()}
         style={{ flex: 1, padding: '8px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
