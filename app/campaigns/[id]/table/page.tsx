@@ -1049,9 +1049,11 @@ export default function TablePage() {
       // Unarmed adds SMod to damage
       const unarmedBonus = weapon.weaponName === 'Unarmed' ? pendingRoll.smod : 0
 
-      // Find target's defensive modifier
+      // Find target — could be PC (in entries) or NPC (in initiativeOrder + rosterNpcs)
       const targetEntry = entries.find(e => e.character.name === targetName)
-      const targetRapid = targetEntry?.character.data?.rapid ?? {}
+      const targetInitEntry = initiativeOrder.find(e => e.character_name === targetName)
+      const targetNpc = targetInitEntry?.is_npc ? rosterNpcs.find(n => n.id === targetInitEntry.npc_id) : null
+      const targetRapid = targetEntry?.character.data?.rapid ?? (targetNpc ? { PHY: targetNpc.physicality ?? 0, DEX: targetNpc.dexterity ?? 0 } : {})
       const defensiveMod = isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)
 
       let { finalWP, finalRP, mitigated } = calculateDamage(totalWP + unarmedBonus, weapon.rpPercent, defensiveMod)
@@ -1091,14 +1093,13 @@ export default function TablePage() {
 
       damageResult = { base: totalBase, diceRoll: totalDice, diceDesc: rolls > 1 ? `${rolls}x ${diceDesc}` : diceDesc, phyBonus: totalPhy, totalWP: totalWP + unarmedBonus, finalWP, finalRP, mitigated, targetName }
 
-      // Auto-apply damage to target
+      // Auto-apply damage to target (PC or NPC)
       if (targetEntry?.liveState) {
+        // PC target — use character_states
         const newWP = Math.max(0, targetEntry.liveState.wp_current - finalWP)
         const newRP = Math.max(0, targetEntry.liveState.rp_current - finalRP)
 
-        // If WP would drop to 0 and target has Insight Dice, prompt for save
         if (newWP === 0 && targetEntry.liveState.wp_current > 0 && (targetEntry.liveState.insight_dice ?? 0) > 0) {
-          // Apply RP damage immediately but hold WP pending the save decision
           await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId)
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, rp_current: newRP } } : e))
           setInsightSavePrompt({
@@ -1116,6 +1117,13 @@ export default function TablePage() {
           await supabase.from('character_states').update(update).eq('id', targetEntry.stateId)
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
         }
+      } else if (targetNpc) {
+        // NPC target — use campaign_npcs
+        const npcWP = targetNpc.wp_current ?? targetNpc.wp_max ?? 10
+        const npcRP = targetNpc.rp_current ?? targetNpc.rp_max ?? 6
+        const newWP = Math.max(0, npcWP - finalWP)
+        const newRP = Math.max(0, npcRP - finalRP)
+        await supabase.from('campaign_npcs').update({ wp_current: newWP, rp_current: newRP }).eq('id', targetNpc.id)
       }
     }
 
