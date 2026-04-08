@@ -1048,10 +1048,26 @@ export default function TablePage() {
       }
     }
 
+    // Stabilize result — stop death countdown, set WP=1 on success
+    let stabilizeResult = ''
+    if (pendingRoll.label.includes('Stabilize ')) {
+      const targetName = pendingRoll.label.split('Stabilize ')[1]
+      const targetEntry = entries.find(e => e.character.name === targetName)
+      if (targetEntry?.liveState && targetEntry.liveState.wp_current === 0) {
+        if (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight') {
+          await supabase.from('character_states').update({ wp_current: 1, death_countdown: null, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId)
+          setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, wp_current: 1, death_countdown: null } as any } : e))
+          stabilizeResult = `${targetName} stabilized! WP restored to 1.`
+        } else {
+          stabilizeResult = `Failed to stabilize ${targetName}.`
+        }
+      }
+    }
+
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, spent: preRollSpent,
-      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : [])],
+      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(stabilizeResult ? [stabilizeResult] : [])],
     } as any)
 
     setRolling(false)
