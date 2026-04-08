@@ -536,11 +536,33 @@ export default function TablePage() {
   async function nextTurn() {
     if (initiativeOrder.length === 0) return
     const currentIdx = initiativeOrder.findIndex(e => e.is_active)
-    const nextIdx = (currentIdx + 1) % initiativeOrder.length
+
+    // Decrement death countdown for all mortally wounded characters (new round when wrapping)
+    if (currentIdx === initiativeOrder.length - 1) {
+      for (const e of entries) {
+        if (e.liveState && e.liveState.wp_current === 0 && (e.liveState as any).death_countdown != null && (e.liveState as any).death_countdown > 0) {
+          await supabase.from('character_states').update({ death_countdown: (e.liveState as any).death_countdown - 1 }).eq('id', e.stateId)
+        }
+      }
+    }
+
+    // Find next non-dead, non-unconscious combatant
+    let nextIdx = (currentIdx + 1) % initiativeOrder.length
+    let attempts = 0
+    while (attempts < initiativeOrder.length) {
+      const nextEntry = initiativeOrder[nextIdx]
+      const charEntry = entries.find(ce => nextEntry.character_id ? ce.character.id === nextEntry.character_id : ce.character.name === nextEntry.character_name)
+      const ls = charEntry?.liveState
+      const isDead = ls && ls.wp_current === 0 && (ls as any).death_countdown != null && (ls as any).death_countdown <= 0
+      const isUnconscious = ls && ls.rp_current === 0 && ls.wp_current > 0
+      if (!isDead && !isUnconscious) break
+      nextIdx = (nextIdx + 1) % initiativeOrder.length
+      attempts++
+    }
 
     await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('campaign_id', id)
     await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', initiativeOrder[nextIdx].id)
-    await loadInitiative(id)
+    await Promise.all([loadInitiative(id), loadEntries(id)])
   }
 
   async function consumeAction(entryId: string, actionLabel?: string, cost = 1) {
@@ -910,12 +932,14 @@ export default function TablePage() {
       if (targetEntry?.liveState) {
         const newWP = Math.max(0, targetEntry.liveState.wp_current - finalWP)
         const newRP = Math.max(0, targetEntry.liveState.rp_current - finalRP)
-        await supabase.from('character_states').update({
-          wp_current: newWP,
-          rp_current: newRP,
-          updated_at: new Date().toISOString(),
-        }).eq('id', targetEntry.stateId)
-        setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, wp_current: newWP, rp_current: newRP } } : e))
+        const update: any = { wp_current: newWP, rp_current: newRP, updated_at: new Date().toISOString() }
+        // Set death countdown when WP first reaches 0
+        if (newWP === 0 && targetEntry.liveState.wp_current > 0) {
+          const phyAmod = targetEntry.character.data?.rapid?.PHY ?? 0
+          update.death_countdown = Math.max(1, phyAmod + 1)
+        }
+        await supabase.from('character_states').update(update).eq('id', targetEntry.stateId)
+        setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
       }
     }
 
@@ -1133,6 +1157,22 @@ export default function TablePage() {
                     ))}
                   </span>
                 )}
+                {/* Status badges */}
+                {(() => {
+                  const charEntry = entries.find(e => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
+                  if (!charEntry?.liveState) return null
+                  const ls = charEntry.liveState
+                  const isDead = ls.wp_current === 0 && (ls as any).death_countdown != null && (ls as any).death_countdown <= 0
+                  const isMortal = ls.wp_current === 0 && !isDead
+                  const isUnconscious = ls.rp_current === 0 && ls.wp_current > 0
+                  const isStressed = ls.stress >= 3
+                  return <>
+                    {isDead && <span style={{ fontSize: '10px' }} title="Dead">💀</span>}
+                    {isMortal && <span style={{ fontSize: '10px' }} title={`Death in ${(ls as any).death_countdown ?? '?'} rounds`}>🩸</span>}
+                    {isUnconscious && <span style={{ fontSize: '10px' }} title="Unconscious">💤</span>}
+                    {isStressed && !isDead && !isMortal && <span style={{ fontSize: '10px' }} title="Stressed">⚡</span>}
+                  </>
+                })()}
                 {/* Defer — GM can defer anyone, players can defer their own */}
                 {(isGM || entry.user_id === userId) && idx < initiativeOrder.length - 1 && (
                   <button onClick={() => deferInitiative(entry.id)}
@@ -1263,6 +1303,18 @@ export default function TablePage() {
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Subdue</button>
                 <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Take Cover`)}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Take Cover</button>
+                {entries.some(e => e.liveState && e.liveState.wp_current === 0 && ((e.liveState as any).death_countdown == null || (e.liveState as any).death_countdown > 0)) && (
+                  <button onClick={() => {
+                    const wounded = entries.find(e => e.liveState && e.liveState.wp_current === 0 && ((e.liveState as any).death_countdown == null || (e.liveState as any).death_countdown > 0))
+                    if (!wounded) return
+                    const rapid = charEntry?.character.data?.rapid ?? {}
+                    const amod = rapid.RSN ?? 0
+                    const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Medicine')?.level ?? 0
+                    consumeAction(activeEntry.id)
+                    handleRollRequest(`${activeEntry.character_name} — Stabilize ${wounded.character.name}`, amod, smod)
+                  }}
+                    style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>🩸 Stabilize</button>
+                )}
               </div>
             )
           })()}

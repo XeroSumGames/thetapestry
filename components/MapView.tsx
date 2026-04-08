@@ -16,7 +16,7 @@ const PIN_CATEGORIES = [
   { value: 'person',     label: 'Person',     emoji: '👤' },
   { value: 'danger',     label: 'Danger',     emoji: '☠️' },
   { value: 'resource',   label: 'Resource',   emoji: '🎒' },
-  { value: 'medical',    label: 'Medical',    emoji: '🏥' },
+  { value: 'medical',    label: 'Medical',    emoji: '🩸' },
   { value: 'group',      label: 'Group',      emoji: '👥' },
   { value: 'animals',    label: 'Animals',    emoji: '🐾' },
   { value: 'community',  label: 'Community',  emoji: '🏘️' },

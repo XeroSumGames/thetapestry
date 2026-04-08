@@ -65,6 +65,7 @@ export interface LiveState {
   insight_dice: number
   morality: number
   cdp: number
+  death_countdown?: number | null
 }
 
 interface Props {
@@ -364,16 +365,29 @@ export default function CharacterCard({
                 <DotTracker label="Wound Points" current={localState.wp_current} max={localState.wp_max} field="wp_current" color="#c0392b" />
                 {localState.wp_current === 0 && (
                   <div style={{ marginTop: '4px' }}>
-                    <div style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Mortally Wounded</div>
-                    <button onClick={() => setLastingWoundResult(rollOnTable(LASTING_WOUNDS_TABLE))}
-                      style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                      Roll Lasting Wound
-                    </button>
+                    {localState.death_countdown != null && localState.death_countdown <= 0 ? (
+                      <div style={{ fontSize: '13px', color: '#3a3a3a', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>💀 Dead</div>
+                    ) : (
+                      <>
+                        <div style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>
+                          🩸 Mortally Wounded{localState.death_countdown != null ? ` — Death in ${localState.death_countdown} round${localState.death_countdown !== 1 ? 's' : ''}` : ''}
+                        </div>
+                        <button onClick={() => setLastingWoundResult(rollOnTable(LASTING_WOUNDS_TABLE))}
+                          style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                          Roll Lasting Wound
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
               <div style={{ flex: 1 }}>
                 <DotTracker label="Resilience Points" current={localState.rp_current} max={localState.rp_max} field="rp_current" color="#7ab3d4" />
+                {localState.rp_current === 0 && localState.wp_current > 0 && (
+                  <div style={{ marginTop: '4px', fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                    💤 Unconscious
+                  </div>
+                )}
               </div>
             </div>
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'space-around' }}>
