@@ -881,6 +881,14 @@ export default function TablePage() {
       }
     }
 
+    // Clear rolls and chat for a fresh start next session
+    await Promise.all([
+      supabase.from('roll_log').delete().eq('campaign_id', id),
+      supabase.from('chat_messages').delete().eq('campaign_id', id),
+    ])
+    setRolls([])
+    setChatMessages([])
+
     setSessionStatus('idle')
     setShowEndSessionModal(false)
     setSessionSummary('')
