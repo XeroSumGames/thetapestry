@@ -1380,10 +1380,10 @@ export default function TablePage() {
       const { data: freshOrder } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).eq('is_active', true).limit(1)
       const activeEntry = freshOrder?.[0]
       if (activeEntry) {
-        const myChar = entries.find(e => e.userId === userId)
-        const isMyTurn = activeEntry.character_id && myChar && activeEntry.character_id === myChar.character.id
+        const isMyTurn = activeEntry.user_id === userId
         const isGMRollingNPC = isGM && activeEntry.is_npc
-        if (isMyTurn || isGMRollingNPC) {
+        const isGMRollingPC = isGM && !activeEntry.is_npc
+        if (isMyTurn || isGMRollingNPC || isGMRollingPC) {
           await consumeAction(activeEntry.id)
         }
       }
