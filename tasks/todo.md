@@ -177,10 +177,10 @@
 - [x] Filter state persisted in localStorage for authenticated users
 - [x] World event pins — 16 Dog Flu timeline + settlement pins on world map
 - [x] New pin categories: world_event (🌍) and settlement (🏚️)
+- [x] Setting regions — fly-to buttons for District Zero, Chased, Mongrels
+- [x] Pin search — keyword filter on title, notes, category
 - [ ] Pin cards — richer click experience, related pins, visit count, campaign context
-- [ ] Setting regions — zoom to District Zero, Chased, etc.
 - [ ] Pin hierarchy — visual weight: Landmark / Location / Event / Personal
-- [ ] Pin search — keyword search highlights matching pins
 - [ ] Parent/child pin structure — rumor about a specific building within a landmark
 - [ ] Immutable canon layer — Thriver-set pins only, cannot be edited by others
 

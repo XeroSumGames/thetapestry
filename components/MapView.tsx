@@ -24,6 +24,26 @@ const PIN_CATEGORIES = [
   { value: 'settlement', label: 'Settlement', emoji: '🏚️' },
 ]
 
+type PinTier = 'landmark' | 'location' | 'event' | 'personal'
+
+function getPinTier(pin: { category?: string; pin_type?: string }): PinTier {
+  const cat = pin.category ?? ''
+  const type = pin.pin_type ?? ''
+  if (cat === 'settlement' || cat === 'government') return 'landmark'
+  if (cat === 'world_event') return 'event'
+  if (type === 'rumor' || type === 'private') return 'personal'
+  return 'location'
+}
+
+function getTierStyles(tier: PinTier) {
+  switch (tier) {
+    case 'landmark': return { mapSize: 28, fontSize: '26px', shadow: 'drop-shadow(0 0 4px rgba(192,57,43,.5))', sidebarWeight: 700, sidebarSize: '15px' }
+    case 'event': return { mapSize: 26, fontSize: '24px', shadow: 'drop-shadow(0 0 3px rgba(239,159,39,.4))', sidebarWeight: 700, sidebarSize: '14px' }
+    case 'location': return { mapSize: 24, fontSize: '20px', shadow: 'drop-shadow(0 1px 3px rgba(0,0,0,.6))', sidebarWeight: 600, sidebarSize: '14px' }
+    case 'personal': return { mapSize: 20, fontSize: '16px', shadow: 'drop-shadow(0 1px 2px rgba(0,0,0,.4))', sidebarWeight: 400, sidebarSize: '13px' }
+  }
+}
+
 function getCategoryEmoji(category: string): string {
   return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '📍'
 }
@@ -181,9 +201,11 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
     data.forEach((pin: Pin) => {
       const emoji = getCategoryEmoji(pin.category ?? 'location')
+      const tier = getPinTier(pin)
+      const ts = getTierStyles(tier)
       const icon = leaflet.divIcon({
-        html: `<div style="font-size:20px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6));cursor:pointer;" title="${pin.title}">${emoji}</div>`,
-        className: '', iconSize: [24, 24], iconAnchor: [12, 12],
+        html: `<div style="font-size:${ts.fontSize};line-height:1;filter:${ts.shadow};cursor:pointer;" title="${pin.title}">${emoji}</div>`,
+        className: '', iconSize: [ts.mapSize, ts.mapSize], iconAnchor: [ts.mapSize / 2, ts.mapSize / 2],
       })
       const marker = leaflet.marker([pin.lat, pin.lng], { icon })
         .bindPopup(`
@@ -473,10 +495,13 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   {pinSearch.trim() ? 'No pins match your search.' : 'No pins match your current filters.'}
                 </div>
               )}
-              {displayedPins.map(p => (
+              {displayedPins.map(p => {
+                const tier = getPinTier(p)
+                const ts = getTierStyles(tier)
+                return (
                 <div key={p.id} onClick={() => flyToPin(p)}
-                  style={{ padding: '8px 10px', marginBottom: '3px', background: '#242424', border: '1px solid #2e2e2e', borderLeft: `3px solid ${pinColor(p)}`, borderRadius: '3px', cursor: 'pointer' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  style={{ padding: '8px 10px', marginBottom: '3px', background: tier === 'landmark' ? '#1a1a1a' : tier === 'event' ? '#1a1a10' : '#242424', border: '1px solid #2e2e2e', borderLeft: `3px solid ${pinColor(p)}`, borderRadius: '3px', cursor: 'pointer' }}>
+                  <div style={{ fontSize: ts.sidebarSize, fontWeight: ts.sidebarWeight, color: '#f5f2ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {getCategoryEmoji(p.category ?? 'location')} {p.title}
                   </div>
                   {p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{p.notes}</div>}
@@ -502,7 +527,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                     )}
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}
