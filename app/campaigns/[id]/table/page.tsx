@@ -177,6 +177,7 @@ export default function TablePage() {
   const [npcName, setNpcName] = useState('')
   const [startingCombat, setStartingCombat] = useState(false)
   const [showNpcPicker, setShowNpcPicker] = useState(false)
+  const [dropCharacter, setDropCharacter] = useState<string>('')
   const [selectedNpcIds, setSelectedNpcIds] = useState<Set<string>>(new Set())
   const [rosterNpcs, setRosterNpcs] = useState<any[]>([])
 
@@ -478,12 +479,16 @@ export default function TablePage() {
     // Clear any existing initiative
     await supabase.from('initiative_order').delete().eq('campaign_id', id)
 
+    // Getting The Drop: selected character gets -2 on initiative but acts first with 1 action
+    const dropPenalty = -2
+
     // Roll initiative for all PCs: 2d6 + ACU AMod + DEX AMod
     const pcRows = entries.map(e => {
       const rapid = e.character.data?.rapid ?? {}
       const acu = rapid.ACU ?? 0
       const dex = rapid.DEX ?? 0
-      const roll = rollD6() + rollD6() + acu + dex
+      const isDropChar = dropCharacter === e.character.name
+      const roll = rollD6() + rollD6() + acu + dex + (isDropChar ? dropPenalty : 0)
       return {
         campaign_id: id,
         character_name: e.character.name,
@@ -501,18 +506,21 @@ export default function TablePage() {
     // Roll initiative for selected NPCs: 2d6 + ACU AMod + DEX AMod
     const npcRows = rosterNpcs
       .filter(n => selectedNpcIds.has(n.id))
-      .map(n => ({
-        campaign_id: id,
-        character_name: n.name,
-        character_id: null,
-        user_id: null,
-        npc_id: n.id,
-        portrait_url: n.portrait_url,
-        npc_type: n.npc_type,
-        roll: rollD6() + rollD6() + (n.acumen ?? 0) + (n.dexterity ?? 0),
-        is_active: false,
-        is_npc: true,
-      }))
+      .map(n => {
+        const isDropChar = dropCharacter === n.name
+        return {
+          campaign_id: id,
+          character_name: n.name,
+          character_id: null,
+          user_id: null,
+          npc_id: n.id,
+          portrait_url: n.portrait_url,
+          npc_type: n.npc_type,
+          roll: rollD6() + rollD6() + (n.acumen ?? 0) + (n.dexterity ?? 0) + (isDropChar ? dropPenalty : 0),
+          is_active: false,
+          is_npc: true,
+        }
+      })
 
     const toInsert = [...pcRows, ...npcRows]
     if (toInsert.length > 0) {
@@ -527,8 +535,19 @@ export default function TablePage() {
       .order('roll', { ascending: false })
 
     if (order && order.length > 0) {
-      await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2 }).eq('id', order[0].id)
+      if (dropCharacter) {
+        // Getting The Drop: drop character goes first with 1 action
+        const dropEntry = order.find((e: any) => e.character_name === dropCharacter)
+        if (dropEntry) {
+          await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 1 }).eq('id', dropEntry.id)
+        } else {
+          await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2 }).eq('id', order[0].id)
+        }
+      } else {
+        await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2 }).eq('id', order[0].id)
+      }
     }
+    setDropCharacter('')
 
     setStartingCombat(false)
     await loadInitiative(id)
@@ -761,6 +780,7 @@ export default function TablePage() {
 
   const [preRollInsight, setPreRollInsight] = useState<'none' | '3d6' | '+3cmod'>('none')
   const [useBurst, setUseBurst] = useState(false)
+  const [rangeBand, setRangeBand] = useState<'engaged' | 'close' | 'medium' | 'long' | 'distant'>('medium')
   const [socialTarget, setSocialTarget] = useState<{ action: string } | null>(null)
   const [socialNpcId, setSocialNpcId] = useState<string>('')
   const [socialCmod, setSocialCmod] = useState<{ npcName: string; cmod: number } | null>(null)
@@ -784,6 +804,19 @@ export default function TablePage() {
     })
     if (error) { alert(`Publish failed: ${error.message}`); return }
     setPublishedNpcIds(prev => new Set([...prev, npc.id]))
+  }
+
+  function getRangeCMod(): number {
+    if (!pendingRoll?.weapon) return 0
+    const w = getWeaponByName(pendingRoll.weapon.weaponName)
+    if (!w) return 0
+    const isMelee = w.category === 'melee'
+    const isPistol = w.name.toLowerCase().includes('pistol')
+    const isRifle = w.name.toLowerCase().includes('rifle') || w.name.toLowerCase().includes('carbine')
+    if (rangeBand === 'engaged') return isMelee ? 1 : -1
+    if (rangeBand === 'close') return isMelee ? -1 : 1
+    if (rangeBand === 'long') return isPistol ? -5 : isRifle ? 1 : 0
+    return 0
   }
 
   async function handleInsightSave(spend: boolean) {
@@ -831,6 +864,7 @@ export default function TablePage() {
     setTargetName('')
     setPreRollInsight('none')
     setUseBurst(false)
+    setRangeBand('medium')
     setSocialTarget(null)
     setSocialNpcId('')
     setSocialCmod(null)
@@ -860,6 +894,8 @@ export default function TablePage() {
     const myEntry = entries.find(e => e.userId === userId)
     const characterName = labelParts.length > 1 ? labelParts[0] : (syncedSelectedEntry?.character.name ?? myEntry?.character.name ?? 'Unknown')
     let cmodVal = parseInt(cmod) || 0
+    // Add range band CMod for weapon attacks
+    if (pendingRoll.weapon) cmodVal += getRangeCMod()
     let die1: number, die2: number
     let preRollSpent = false
 
@@ -1781,6 +1817,31 @@ export default function TablePage() {
                     </button>
                   </div>
                 )}
+                {pendingRoll.weapon && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Range Band</div>
+                    <div style={{ display: 'flex', gap: '3px' }}>
+                      {([['engaged', 'Engaged'], ['close', 'Close'], ['medium', 'Medium'], ['long', 'Long'], ['distant', 'Distant']] as const).map(([band, label]) => (
+                        <button key={band} onClick={() => setRangeBand(band)}
+                          style={{ flex: 1, padding: '4px 2px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${rangeBand === band ? '#c0392b' : '#3a3a3a'}`, background: rangeBand === band ? '#2a1210' : '#242424', color: rangeBand === band ? '#f5a89a' : '#d4cfc9' }}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    {(() => {
+                      const w = pendingRoll.weapon ? getWeaponByName(pendingRoll.weapon.weaponName) : null
+                      const isMelee = w?.category === 'melee'
+                      const isRanged = w?.category === 'ranged' || w?.category === 'explosive' || w?.category === 'heavy'
+                      let note = ''
+                      if (rangeBand === 'engaged') note = isMelee ? '+1 CMod (Melee)' : isRanged ? '-1 CMod (Ranged)' : ''
+                      if (rangeBand === 'close') note = isMelee ? '-1 CMod (Melee at Close)' : isRanged ? '+1 CMod (Ranged)' : ''
+                      if (rangeBand === 'medium') note = 'No modifiers'
+                      if (rangeBand === 'long') note = 'Pistols: -5 CMod | Rifles: +1 CMod'
+                      if (rangeBand === 'distant') note = 'Hunting/Sniper Rifle only'
+                      return note ? <div style={{ fontSize: '11px', color: '#cce0f5', marginTop: '4px', fontFamily: 'Barlow, sans-serif' }}>{note}</div> : null
+                    })()}
+                  </div>
+                )}
                 {(combatActive || pendingRoll.weapon) && initiativeOrder.length > 0 && (
                   <div style={{ marginBottom: '1.25rem' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Target</div>
@@ -2077,8 +2138,25 @@ export default function TablePage() {
                 ))
               )}
             </div>
+            {/* Getting The Drop */}
+            <div style={{ marginBottom: '1rem', padding: '8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+              <div style={{ fontSize: '11px', color: '#EF9F27', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Getting The Drop (optional)</div>
+              <select value={dropCharacter} onChange={e => setDropCharacter(e.target.value)}
+                style={{ width: '100%', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', cursor: 'pointer' }}>
+                <option value="">No one gets the drop</option>
+                <optgroup label="Players">
+                  {entries.map(e => <option key={e.character.id} value={e.character.name}>{e.character.name}</option>)}
+                </optgroup>
+                {rosterNpcs.filter(n => selectedNpcIds.has(n.id)).length > 0 && (
+                  <optgroup label="NPCs">
+                    {rosterNpcs.filter(n => selectedNpcIds.has(n.id)).map(n => <option key={n.id} value={n.name}>{n.name}</option>)}
+                  </optgroup>
+                )}
+              </select>
+              {dropCharacter && <div style={{ fontSize: '11px', color: '#cce0f5', marginTop: '4px', fontFamily: 'Barlow, sans-serif' }}>{dropCharacter} acts first with 1 action, then takes -2 CMod on initiative roll.</div>}
+            </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => setShowNpcPicker(false)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => { setShowNpcPicker(false); setDropCharacter('') }} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               <button onClick={confirmStartCombat} disabled={startingCombat}
                 style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: startingCombat ? 'not-allowed' : 'pointer', opacity: startingCombat ? 0.6 : 1 }}>
                 {startingCombat ? 'Rolling...' : `⚔️ Start Combat${selectedNpcIds.size > 0 ? ` (${selectedNpcIds.size} NPCs)` : ''}`}
