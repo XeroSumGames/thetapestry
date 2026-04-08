@@ -497,14 +497,14 @@ export default function TablePage() {
     setStartingCombat(true)
     setShowNpcPicker(false)
 
-    // Clear any existing initiative
-    await supabase.from('initiative_order').delete().eq('campaign_id', id)
-
     // Getting The Drop: selected character gets -2 on initiative but acts first with 1 action
     const dropPenalty = -2
 
-    // Fetch fresh character data for initiative (entries state may be stale)
-    const { data: freshMembers } = await supabase.from('campaign_members').select('user_id, character_id').eq('campaign_id', id).not('character_id', 'is', null)
+    // Clear existing initiative + fetch fresh character data in parallel
+    const [, { data: freshMembers }] = await Promise.all([
+      supabase.from('initiative_order').delete().eq('campaign_id', id),
+      supabase.from('campaign_members').select('user_id, character_id').eq('campaign_id', id).not('character_id', 'is', null),
+    ])
     const charIds = (freshMembers ?? []).map((m: any) => m.character_id)
     const { data: freshChars } = charIds.length > 0 ? await supabase.from('characters').select('id, name, data').in('id', charIds) : { data: [] }
     const charMap = Object.fromEntries((freshChars ?? []).map((c: any) => [c.id, c]))
@@ -561,43 +561,35 @@ export default function TablePage() {
         }
       })
 
-    const toInsert = [...pcRows, ...npcRows]
+    // Sort client-side to determine first active combatant (avoids a re-fetch)
+    const allRows = [...pcRows, ...npcRows]
+    const sorted = [...initDetails].sort((a, b) => b.total - a.total)
+
+    // Determine who goes first and mark them active in the insert
+    let firstCharName = sorted[0]?.name
+    let firstActions = 2
+    if (dropCharacter) {
+      const dropExists = allRows.some(r => r.character_name === dropCharacter)
+      if (dropExists) { firstCharName = dropCharacter; firstActions = 1 }
+    }
+    const toInsert = allRows.map(r => r.character_name === firstCharName
+      ? { ...r, is_active: true, actions_remaining: firstActions }
+      : r
+    )
+
+    // Insert initiative rows + log combat start in parallel (no re-fetch needed)
     if (toInsert.length > 0) {
-      await supabase.from('initiative_order').insert(toInsert)
-    }
-
-    // Set first combatant as active
-    const { data: order } = await supabase
-      .from('initiative_order')
-      .select('*')
-      .eq('campaign_id', id)
-      .order('roll', { ascending: false })
-
-    if (order && order.length > 0) {
-      if (dropCharacter) {
-        // Getting The Drop: drop character goes first with 1 action
-        const dropEntry = order.find((e: any) => e.character_name === dropCharacter)
-        if (dropEntry) {
-          await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 1 }).eq('id', dropEntry.id)
-        } else {
-          await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2 }).eq('id', order[0].id)
-        }
-      } else {
-        await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2 }).eq('id', order[0].id)
-      }
-    }
-    setDropCharacter('')
-
-    // Log combat start + initiative results to roll feed
-    if (order && order.length > 0) {
-      const sorted = [...initDetails].sort((a, b) => b.total - a.total)
-      await supabase.from('roll_log').insert([
-        { campaign_id: id, character_name: 'System', label: '⚔️ Combat Started', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' },
-        { campaign_id: id, character_name: 'System', label: 'Initiative',
-          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
-          damage_json: { initiative: sorted } as any },
+      await Promise.all([
+        supabase.from('initiative_order').insert(toInsert),
+        supabase.from('roll_log').insert([
+          { campaign_id: id, character_name: 'System', label: '⚔️ Combat Started', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' },
+          { campaign_id: id, character_name: 'System', label: 'Initiative',
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
+            damage_json: { initiative: sorted } as any },
+        ]),
       ])
     }
+    setDropCharacter('')
 
     setStartingCombat(false)
     await loadInitiative(id)
