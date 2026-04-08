@@ -66,6 +66,7 @@ export interface LiveState {
   morality: number
   cdp: number
   death_countdown?: number | null
+  incap_rounds?: number | null
 }
 
 interface Props {
@@ -110,8 +111,12 @@ export default function CharacterCard({
   const [stressCheckResult, setStressCheckResult] = useState<{ die1: number; die2: number; amod: number; cmod: number; total: number; success: boolean } | null>(null)
   const [breakingPointPending, setBreakingPointPending] = useState(false)
   const [breakingPointCmod, setBreakingPointCmod] = useState('0')
-  const [breakingPointResult, setBreakingPointResult] = useState<{ roll: number; cmod: number; result: { name: string; effect: string } } | null>(null)
+  const [breakingPointResult, setBreakingPointResult] = useState<{ roll: number; cmod: number; result: { name: string; effect: string }; durationHours: number } | null>(null)
   const [lastingWoundResult, setLastingWoundResult] = useState<{ roll: number; cmod: number; result: { name: string; effect: string } } | null>(null)
+  const [showRestModal, setShowRestModal] = useState(false)
+  const [restHours, setRestHours] = useState(0)
+  const [restDays, setRestDays] = useState(0)
+  const [restWeeks, setRestWeeks] = useState(0)
 
   // Weapon local state
   const [weaponPrimary, setWeaponPrimary] = useState(c.data?.weaponPrimary ?? { weaponName: '', condition: 'Used', ammoCurrent: 0, ammoMax: 0, reloads: 0 })
@@ -372,9 +377,20 @@ export default function CharacterCard({
                         <div style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>
                           🩸 Mortally Wounded{localState.death_countdown != null ? ` — Death in ${localState.death_countdown} round${localState.death_countdown !== 1 ? 's' : ''}` : ''}
                         </div>
-                        <button onClick={() => setLastingWoundResult(rollOnTable(LASTING_WOUNDS_TABLE))}
+                        <button onClick={() => {
+                          // PHY check first — success = no lasting wound, failure = roll Table 12
+                          const d1 = Math.floor(Math.random() * 6) + 1
+                          const d2 = Math.floor(Math.random() * 6) + 1
+                          const phyMod = rapid.PHY ?? 0
+                          const total = d1 + d2 + phyMod
+                          if (total >= 9) {
+                            alert(`Physicality Check: ${d1}+${d2}+${phyMod} = ${total} — Success! No lasting wound.`)
+                          } else {
+                            setLastingWoundResult(rollOnTable(LASTING_WOUNDS_TABLE))
+                          }
+                        }}
                           style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                          Roll Lasting Wound
+                          Lasting Wound Check
                         </button>
                       </>
                     )}
@@ -385,7 +401,7 @@ export default function CharacterCard({
                 <DotTracker label="Resilience Points" current={localState.rp_current} max={localState.rp_max} field="rp_current" color="#7ab3d4" />
                 {localState.rp_current === 0 && localState.wp_current > 0 && (
                   <div style={{ marginTop: '4px', fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>
-                    💤 Unconscious
+                    💤 Incapacitated{localState.incap_rounds != null ? ` — ${localState.incap_rounds} round${localState.incap_rounds !== 1 ? 's' : ''} remaining` : ''}
                   </div>
                 )}
               </div>
@@ -662,9 +678,110 @@ export default function CharacterCard({
               </div>
             )
           })()}
+
+          {/* GM Actions: Rest, Stress, Environmental Damage */}
+          {canEdit && localState && (
+            <div style={{ display: 'flex', gap: '4px', marginTop: '8px', flexWrap: 'wrap' }}>
+              <button onClick={() => setShowRestModal(true)}
+                style={{ padding: '3px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                Rest
+              </button>
+              <button onClick={() => {
+                if (!localState || localState.stress <= 0) { alert('Stress is already at 0.'); return }
+                if (confirm('Has this character had 8+ hours of uninterrupted rest doing something they enjoy?')) {
+                  const newStress = Math.max(0, localState.stress - 1)
+                  onStatUpdate?.(localState.id, 'stress', newStress)
+                }
+              }}
+                style={{ padding: '3px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#EF9F27', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                Reduce Stress
+              </button>
+              <button onClick={() => {
+                if (!localState) return
+                const type = prompt('Environmental Damage Type:\n1 = Falling (3 WP+RP per 10ft)\n2 = Drowning (3 WP + 3 RP)\n3 = Subsistence (1 RP/day)')
+                if (type === '1') {
+                  const ft = parseInt(prompt('How many feet fallen?') ?? '0')
+                  const dmg = Math.floor(ft / 10) * 3
+                  if (dmg > 0) {
+                    onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - dmg))
+                    onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - dmg))
+                    alert(`Falling: ${dmg} WP and ${dmg} RP damage`)
+                  }
+                } else if (type === '2') {
+                  onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - 3))
+                  onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - 3))
+                  alert('Drowning: 3 WP and 3 RP damage')
+                } else if (type === '3') {
+                  onStatUpdate?.(localState.id, 'rp_current', Math.max(0, localState.rp_current - 1))
+                  alert('Subsistence: 1 RP damage')
+                }
+              }}
+                style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                Env. Damage
+              </button>
+            </div>
+          )}
         </div>
 
       </div>
+
+      {/* Rest Modal */}
+      {showRestModal && localState && (
+        <div onClick={() => setShowRestModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
+            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Rest & Heal</div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1rem' }}>How much time has passed resting?</div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Hours</div>
+                <input type="number" min={0} value={restHours} onChange={e => setRestHours(parseInt(e.target.value) || 0)}
+                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Days</div>
+                <input type="number" min={0} value={restDays} onChange={e => setRestDays(parseInt(e.target.value) || 0)}
+                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Weeks</div>
+                <input type="number" min={0} value={restWeeks} onChange={e => setRestWeeks(parseInt(e.target.value) || 0)}
+                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
+              </div>
+            </div>
+            {(() => {
+              const totalHours = restHours + (restDays * 24) + (restWeeks * 168)
+              const totalDays = totalHours / 24
+              const wasMortal = localState.wp_current === 0 || (localState as any).death_countdown != null
+              const wpHeal = wasMortal ? Math.floor(totalDays / 2) : Math.floor(totalDays)
+              const rpHeal = totalHours
+              return totalHours > 0 ? (
+                <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', marginBottom: '1rem', padding: '8px', background: '#242424', borderRadius: '3px' }}>
+                  <div>WP healed: <span style={{ color: '#c0392b', fontWeight: 700 }}>+{wpHeal}</span> ({wasMortal ? '1 per 2 days' : '1 per day'})</div>
+                  <div>RP recovered: <span style={{ color: '#7ab3d4', fontWeight: 700 }}>+{rpHeal}</span> (1 per hour)</div>
+                </div>
+              ) : null
+            })()}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => setShowRestModal(false)}
+                style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => {
+                const totalHours = restHours + (restDays * 24) + (restWeeks * 168)
+                const totalDays = totalHours / 24
+                const wasMortal = localState.wp_current === 0 || (localState as any).death_countdown != null
+                const wpHeal = wasMortal ? Math.floor(totalDays / 2) : Math.floor(totalDays)
+                const rpHeal = totalHours
+                const newWP = Math.min(localState.wp_max, localState.wp_current + wpHeal)
+                const newRP = Math.min(localState.rp_max, localState.rp_current + rpHeal)
+                onStatUpdate?.(localState.id, 'wp_current', newWP)
+                onStatUpdate?.(localState.id, 'rp_current', newRP)
+                setShowRestModal(false)
+                setRestHours(0); setRestDays(0); setRestWeeks(0)
+              }}
+                style={{ flex: 2, padding: '8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Apply Healing</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hidden print sheet */}
       {printing && (
@@ -748,7 +865,7 @@ export default function CharacterCard({
             <button onClick={() => {
               if (!localState) return
               const bp = rollOnTable(BREAKING_POINT_TABLE)
-              setBreakingPointResult(bp)
+              setBreakingPointResult({ ...bp, durationHours: Math.floor(Math.random() * 6) + 1 })
               setBreakingPointPending(false)
               updateStat(localState.id, 'stress', 0)
             }}
@@ -765,7 +882,8 @@ export default function CharacterCard({
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px' }}>{breakingPointResult.result.name}</div>
             <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '8px' }}>Rolled: {breakingPointResult.roll}{breakingPointResult.cmod !== 0 ? ` (${breakingPointResult.cmod > 0 ? '+' : ''}${breakingPointResult.cmod} CMod = ${Math.max(2, Math.min(12, breakingPointResult.roll + breakingPointResult.cmod))})` : ''}</div>
             <div style={{ fontSize: '15px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '1.5rem', padding: '10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px' }}>{breakingPointResult.result.effect}</div>
-            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem' }}>Stress has been reset to 0.</div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '4px' }}>Stress has been reset to 0.</div>
+            <div style={{ fontSize: '13px', color: '#EF9F27', marginBottom: '1rem' }}>Duration: {breakingPointResult.durationHours} hour{breakingPointResult.durationHours !== 1 ? 's' : ''}</div>
             <button onClick={() => setBreakingPointResult(null)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Acknowledge</button>
           </div>
         </div>

@@ -565,10 +565,31 @@ export default function TablePage() {
 
     // New round when wrapping — re-roll initiative + decrement death countdowns
     if (currentIdx === initiativeOrder.length - 1) {
-      // Decrement death countdown
+      // Decrement death countdown + incapacitation + RP recovery
       for (const e of entries) {
-        if (e.liveState && e.liveState.wp_current === 0 && (e.liveState as any).death_countdown != null && (e.liveState as any).death_countdown > 0) {
-          await supabase.from('character_states').update({ death_countdown: (e.liveState as any).death_countdown - 1 }).eq('id', e.stateId)
+        if (!e.liveState) continue
+        const ls = e.liveState as any
+        const updates: any = {}
+        // Death countdown
+        if (ls.wp_current === 0 && ls.death_countdown != null && ls.death_countdown > 0) {
+          updates.death_countdown = ls.death_countdown - 1
+        }
+        // Incapacitation countdown
+        if (ls.incap_rounds != null && ls.incap_rounds > 0) {
+          updates.incap_rounds = ls.incap_rounds - 1
+          if (ls.incap_rounds - 1 <= 0) {
+            // Regain consciousness: 1 RP, and 1 WP if was stabilized (WP=0)
+            updates.rp_current = Math.max(1, ls.rp_current)
+            if (ls.wp_current === 0) updates.wp_current = 1
+            updates.incap_rounds = null
+          }
+        }
+        // RP recovery: conscious characters below max RP recover 1 per round
+        if (ls.rp_current > 0 && ls.rp_current < e.liveState.rp_max && ls.wp_current > 0 && (ls.incap_rounds == null || ls.incap_rounds <= 0)) {
+          updates.rp_current = Math.min(e.liveState.rp_max, (updates.rp_current ?? ls.rp_current) + 1)
+        }
+        if (Object.keys(updates).length > 0) {
+          await supabase.from('character_states').update(updates).eq('id', e.stateId)
         }
       }
 
@@ -1093,6 +1114,22 @@ export default function TablePage() {
 
       damageResult = { base: totalBase, diceRoll: totalDice, diceDesc: rolls > 1 ? `${rolls}x ${diceDesc}` : diceDesc, phyBonus: totalPhy, totalWP: totalWP + unarmedBonus, finalWP, finalRP, mitigated, targetName }
 
+      // Auto-decrement ammo for ranged attacks
+      if (w && !isMelee && w.clip && myEntry) {
+        const charData = myEntry.character.data ?? {}
+        const slots = ['weaponPrimary', 'weaponSecondary'] as const
+        for (const slot of slots) {
+          if (charData[slot]?.weaponName === weapon.weaponName && charData[slot]?.ammoCurrent > 0) {
+            const ammoUsed = rolls > 1 ? rolls : 1
+            const newAmmo = Math.max(0, charData[slot].ammoCurrent - ammoUsed)
+            await supabase.from('characters').update({
+              data: { ...charData, [slot]: { ...charData[slot], ammoCurrent: newAmmo } }
+            }).eq('id', myEntry.character.id)
+            break
+          }
+        }
+      }
+
       // Auto-apply damage to target (PC or NPC)
       if (targetEntry?.liveState) {
         // PC target — use character_states
@@ -1113,6 +1150,10 @@ export default function TablePage() {
           const update: any = { wp_current: newWP, rp_current: newRP, updated_at: new Date().toISOString() }
           if (newWP === 0 && targetEntry.liveState.wp_current > 0) {
             update.death_countdown = Math.max(1, 4 + (targetEntry.character.data?.rapid?.PHY ?? 0))
+          }
+          // Set incapacitation when RP first hits 0
+          if (newRP === 0 && targetEntry.liveState.rp_current > 0 && newWP > 0) {
+            update.incap_rounds = Math.max(1, 4 - (targetEntry.character.data?.rapid?.PHY ?? 0))
           }
           await supabase.from('character_states').update(update).eq('id', targetEntry.stateId)
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
@@ -1189,9 +1230,11 @@ export default function TablePage() {
       const targetEntry = entries.find(e => e.character.name === targetName)
       if (targetEntry?.liveState && targetEntry.liveState.wp_current === 0) {
         if (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight') {
-          await supabase.from('character_states').update({ wp_current: 1, death_countdown: null, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId)
-          setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, wp_current: 1, death_countdown: null } as any } : e))
-          stabilizeResult = `${targetName} stabilized! WP restored to 1.`
+          const phyAmod = targetEntry.character.data?.rapid?.PHY ?? 0
+          const incapRounds = Math.max(1, Math.floor(Math.random() * 6) + 1 - phyAmod)
+          await supabase.from('character_states').update({ death_countdown: null, incap_rounds: incapRounds, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId)
+          setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, death_countdown: null, incap_rounds: incapRounds } as any } : e))
+          stabilizeResult = `${targetName} stabilized! Incapacitated for ${incapRounds} round${incapRounds !== 1 ? 's' : ''}, then regains 1 WP + 1 RP.`
         } else {
           stabilizeResult = `Failed to stabilize ${targetName}.`
         }

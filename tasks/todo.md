@@ -37,51 +37,61 @@
 - [x] Breaking Point modal shows on whichever screen has the sheet open
 
 ### Combat Actions
-- [x] Pass 1 — Action slots (2 per turn), simple actions (Move, Ready Weapon, Take Cover, Reload, Defend), auto-advance
-- [x] Pass 2 — Aim (+1 CMod carry), Rapid Fire (2-action burst), Charge/Sprint (2-action), Ready Weapon + Tracking
+- [x] Pass 1 — Action slots (2 per turn), simple actions, auto-advance
+- [x] Pass 2 — Aim (+1 CMod carry), Rapid Fire, Charge/Sprint, Ready Weapon + Tracking
+- [x] Pass 3 — Social/contested actions (Coordinate, Cover Fire, Distract, Inspire — cross-player CMod)
 - [x] All 15 combat actions listed alphabetically, greyed when unavailable
-- [ ] Pass 3 — Social/contested actions (Coordinate, Cover Fire, Distract, Inspire — wire cross-player CMod effects)
+- [x] Action pips on all initiative entries (green active, orange waiting, grey spent)
 
 ### Combat UI
-- [x] Defer button on initiative tracker — GM can defer anyone, players can defer their own
+- [x] Defer button on initiative tracker
 - [x] All NPCs pre-selected when starting combat
 - [x] NPCs sorted first in target dropdown
-- [x] Attack Roll label for weapon attacks, Rolling for skill checks
+- [x] Attack Roll / Rolling labels
 - [x] Conditional Modifier label
-- [x] 4 combat skill buttons on PC card (Unarmed, Melee, Ranged, Demolitions)
+- [x] 4 combat skill buttons on PC card
 - [x] Weapon jam/degrade on Moment of Low Insight
+- [x] Aim/social bonus badges on initiative tracker (+1/-1)
+- [x] Status badges: 💀 Dead, 🩸 Mortally Wounded, 💤 Unconscious, ⚡ Stressed
+- [x] Instant combat end broadcast to players
 
 ### Combat Rules — Advanced (SRD)
-- [ ] Getting The Drop
-- [ ] Range Bands — Engaged, Close, Medium, Long, Extreme
-- [ ] Initiative re-roll each round
+- [x] Getting The Drop — GM selects in Start Combat modal, 1 action, -2 init
+- [x] Range Bands — 5-button selector in roll modal with auto CMod
+- [x] Initiative re-roll each round (PCs beat NPCs on ties)
 - [ ] Delayed Actions
 - [ ] Resolution Phase
 
 ### Damage & Health Automation (SRD)
 - [x] Auto-damage on successful attacks with DMM/DMR defense
 - [x] Damage breakdown in roll modal
-- [ ] RP reaches 0 → unconscious state
-- [ ] WP reaches 0 → Mortally Wounded with death countdown
-- [ ] Stabilize mechanic
+- [x] NPC damage applies to campaign_npcs table
+- [x] RP reaches 0 → Unconscious label + 💤 badge + turn auto-skipped
+- [x] WP reaches 0 → Mortally Wounded with death countdown (PHY+1 rounds)
+- [x] Death countdown decrements each round, reaches 0 → Dead
+- [x] Stabilize mechanic — Medicine roll, success stops countdown + WP=1
+- [x] Death prevention via Insight Die — modal prompt to spend die
 - [ ] Healing rates
-- [ ] Death prevention via Insight Die
-- [ ] Status badges on character cards and initiative tracker
+- [ ] Auto-decrement ammo on ranged attacks
 
 ### Weapons & Equipment (SRD)
-- [x] Full weapon database (35+ weapons)
+- [x] Full weapon database (38 weapons)
 - [x] Weapon dropdowns, ammo pips, reload system, condition tracking
 - [x] Attack buttons per weapon with auto-damage
 - [x] Weapon jam on Low Insight
-- [x] Weapon trait mechanical effects — Pass 1 (Cumbersome, Unwieldy CMod penalties)
-- [x] Weapon trait mechanical effects — Pass 2 (Stun, Automatic Burst mechanical; Blast Radius, Burning, Close-Up, Cone-Up display)
-- [ ] Weapon trait mechanical effects — Pass 3 (Tracking +1 CMod after Ready Weapon — needs Combat Actions)
-- [ ] Upkeep Checks
-- [ ] Encumbrance
+- [x] Traits: Cumbersome, Unwieldy (CMod penalties)
+- [x] Traits: Stun, Automatic Burst (mechanical)
+- [x] Traits: Blast Radius, Burning, Close-Up, Cone-Up (display)
+- [x] Tracking +1 CMod via Ready Weapon action
+- [x] Upkeep Checks (Mechanic/Tinkerer/weapon skill, full SRD outcomes)
+- [x] Encumbrance tracker (6 + PHY AMod, OVERLOADED warning)
 
 ### Additional Check Types (SRD)
-- [ ] Group Checks, Opposed Checks, Perception Checks
-- [ ] Gut Instinct Checks, First Impressions as rolls
+- [x] Perception Check (RSN + ACU)
+- [x] Gut Instinct (Perception + Psychology/Streetwise/Tactics)
+- [x] First Impression (INF + Manipulation/Streetwise/Psychology)
+- [x] Group Check (skill picker, participant selector, combined SMods)
+- [x] Opposed Check (instructions for GM)
 
 ### NPC Roster
 - [x] All 5 passes complete + random generator + form overhaul
