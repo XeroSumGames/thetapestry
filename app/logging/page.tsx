@@ -36,6 +36,8 @@ export default function LoggingPage() {
   const [visitorFilter, setVisitorFilter] = useState('')
   const [excludeTerms, setExcludeTerms] = useState<string[]>([])
   const [events, setEvents] = useState<UserEvent[]>([])
+  const [eventFilter, setEventFilter] = useState('')
+  const [eventExcludeTerms, setEventExcludeTerms] = useState<string[]>([])
   const [visitorCount, setVisitorCount] = useState(0)
   const [eventCount, setEventCount] = useState(0)
   const [signups7d, setSignups7d] = useState(0)
@@ -372,6 +374,36 @@ export default function LoggingPage() {
       {/* Events tab */}
       {tab === 'events' && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', overflow: 'hidden' }}>
+          {/* Filter bar */}
+          <div style={{ padding: '8px 12px', borderBottom: '1px solid #2e2e2e', background: '#111' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input value={eventFilter} onChange={e => setEventFilter(e.target.value)} placeholder="Search..."
+                style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none' }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && eventFilter.trim()) {
+                    const term = eventFilter.trim().toLowerCase()
+                    if (!eventExcludeTerms.includes(term)) setEventExcludeTerms(prev => [...prev, term])
+                    setEventFilter('')
+                  }
+                }} />
+              <span style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Enter = Exclude</span>
+            </div>
+            {eventExcludeTerms.length > 0 && (
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>Excluding:</span>
+                {eventExcludeTerms.map(term => (
+                  <button key={term} onClick={() => setEventExcludeTerms(prev => prev.filter(t => t !== term))}
+                    style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {term} <span style={{ fontSize: '13px' }}>×</span>
+                  </button>
+                ))}
+                <button onClick={() => setEventExcludeTerms([])}
+                  style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
+                  Clear All
+                </button>
+              </div>
+            )}
+          </div>
           {/* Table header */}
           <div style={{ display: 'flex', padding: '8px 12px', borderBottom: '1px solid #2e2e2e', background: '#111' }}>
             <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>User</div>
@@ -383,7 +415,12 @@ export default function LoggingPage() {
             <div style={{ padding: '2rem', textAlign: 'center', color: '#cce0f5', fontSize: '13px' }}>No user events yet.</div>
           ) : (
             <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
-              {events.map(e => (
+              {events.filter(e => {
+                const haystack = [e.username, e.event_type, e.metadata ? JSON.stringify(e.metadata) : ''].filter(Boolean).join(' ').toLowerCase()
+                if (eventExcludeTerms.some(term => haystack.includes(term))) return false
+                if (!eventFilter.trim()) return true
+                return haystack.includes(eventFilter.trim().toLowerCase())
+              }).map(e => (
                 <div key={e.id} style={{ display: 'flex', padding: '6px 12px', borderBottom: '1px solid #2e2e2e', alignItems: 'center' }}>
                   <div style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{e.username}</div>
                   <div style={{ flex: 2 }}>

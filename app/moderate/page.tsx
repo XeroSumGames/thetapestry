@@ -46,7 +46,7 @@ const navLink: React.CSSProperties = {
 }
 
 export default function ModerationPage() {
-  const [section, setSection] = useState<'rumors' | 'users' | 'npcs'>('rumors')
+  const [section, setSection] = useState<'rumors' | 'users' | 'npcs'>('users')
   const [pins, setPins] = useState<Pin[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending')
@@ -151,8 +151,8 @@ export default function ModerationPage() {
       const result = await res.json()
       if (!res.ok) { alert(result.error || 'Failed to delete user'); return }
       setUsers(prev => prev.filter(u => u.id !== id))
-    } catch (err) {
-      alert('Failed to delete user')
+    } catch (err: any) {
+      alert('Failed to delete user: ' + (err?.message || String(err)))
     } finally {
       setActing(null)
     }
@@ -196,7 +196,7 @@ export default function ModerationPage() {
 
       {/* Section tabs */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem' }}>
-        {(['rumors', 'users', 'npcs'] as const).map(s => (
+        {(['users', 'rumors', 'npcs'] as const).map(s => (
           <button key={s} onClick={() => setSection(s)} style={{
             padding: '7px 16px',
             border: `1px solid ${section === s ? '#c0392b' : '#3a3a3a'}`,
@@ -300,8 +300,14 @@ export default function ModerationPage() {
       {/* ── USERS ── */}
       {section === 'users' && (
         <>
-          <div style={{ fontSize: '12px', color: '#cce0f5', marginBottom: '1rem', letterSpacing: '.04em' }}>
-            {users.length} registered user{users.length !== 1 ? 's' : ''}
+          <div style={{ fontSize: '12px', color: '#cce0f5', marginBottom: '1rem', letterSpacing: '.04em', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span>{users.length} registered user{users.length !== 1 ? 's' : ''}</span>
+            {users.length > 0 && (
+              <a href={`mailto:?bcc=${users.map(u => u.email).filter(Boolean).join(',')}`}
+                style={{ padding: '3px 10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer' }}>
+                Email All Users
+              </a>
+            )}
           </div>
 
           {usersLoading && <div style={{ color: '#d4cfc9', fontSize: '13px' }}>Loading...</div>}

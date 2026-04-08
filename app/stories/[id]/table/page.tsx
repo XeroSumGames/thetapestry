@@ -240,6 +240,7 @@ export default function TablePage() {
       return [c.id, { ...c, data: dataWithoutPhoto }]
     }))
     const profileMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.id, p.username]))
+    console.log('[loadEntries] members:', members?.length, 'states:', rawStates?.length, 'chars:', chars?.length, 'charIds:', charIds, 'charMapKeys:', Object.keys(charMap))
 
     const newEntries: TableEntry[] = filteredStates.map((s: any) => ({
       stateId: s.id,
