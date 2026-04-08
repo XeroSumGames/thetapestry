@@ -616,12 +616,12 @@ export default function CharacterCard({
                             <button disabled={!canEdit || weapon.reloads <= 0}
                               onClick={() => canEdit && weapon.reloads > 0 && setWeapon({ ...weapon, reloads: weapon.reloads - 1 })}
                               style={{ width: '14px', height: '14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && weapon.reloads > 0 ? 'pointer' : 'not-allowed', opacity: canEdit && weapon.reloads > 0 ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0 }}>-</button>
-                            {[0, 1, 2, 3, 4].map(i => (
+                            {Array.from({ length: Math.max(5, weapon.reloads + 1) }).map((_, i) => (
                               <div key={i} style={{ width: '10px', height: '14px', borderRadius: '2px', background: i < weapon.reloads ? '#7fc458' : '#242424', border: `1px solid ${i < weapon.reloads ? '#7fc458' : '#3a3a3a'}`, transition: 'background 0.2s' }} />
                             ))}
                             <button disabled={!canEdit || weapon.reloads >= 5}
-                              onClick={() => canEdit && weapon.reloads < 5 && setWeapon({ ...weapon, reloads: weapon.reloads + 1 })}
-                              style={{ width: '14px', height: '14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && weapon.reloads < 5 ? 'pointer' : 'not-allowed', opacity: canEdit && weapon.reloads < 5 ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0 }}>+</button>
+                              onClick={() => canEdit && weapon.reloads < 10 && setWeapon({ ...weapon, reloads: weapon.reloads + 1 })}
+                              style={{ width: '14px', height: '14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && weapon.reloads < 10 ? 'pointer' : 'not-allowed', opacity: canEdit && weapon.reloads < 10 ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0 }}>+</button>
                           </div>
                         </div>
                       )}

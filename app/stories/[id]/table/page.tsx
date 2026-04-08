@@ -309,10 +309,16 @@ export default function TablePage() {
     setChatInput('')
   }
 
-  async function loadRevealedNpcs(characterId: string, cnpcs: any[]) {
-    const { data: rels } = await supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('character_id', characterId).eq('revealed', true)
+  async function loadRevealedNpcs(characterId: string | null, cnpcs: any[]) {
+    const query = characterId
+      ? supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('character_id', characterId).eq('revealed', true)
+      : supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('revealed', true)
+    const { data: rels } = await query
     if (rels && rels.length > 0 && cnpcs.length > 0) {
+      const seen = new Set<string>()
       const revealed = rels.map((r: any) => {
+        if (seen.has(r.npc_id)) return null
+        seen.add(r.npc_id)
         const npc = cnpcs.find((n: any) => n.id === r.npc_id)
         return npc ? { ...npc, relationship_cmod: r.relationship_cmod, reveal_level: r.reveal_level } : null
       }).filter(Boolean)
@@ -386,17 +392,22 @@ export default function TablePage() {
       setRosterNpcs(cnpcs.filter((n: any) => n.status === 'active'))
       if (pubDataResult.data) setPublishedNpcIds(new Set(pubDataResult.data.map((d: any) => d.source_campaign_npc_id!)))
 
-      // Load revealed NPCs for this player
-      if (camp.gm_user_id !== user.id) {
+      // Load revealed NPCs — GM sees all, players see their own
+      if (camp.gm_user_id === user.id) {
+        await loadRevealedNpcs(null, cnpcs)
+        revealChannelRef.current = supabase.channel(`reveals_${id}`)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'npc_relationships' }, () => {
+            loadRevealedNpcs(null, cnpcs)
+          })
+          .subscribe()
+      } else {
         const myMember = (members ?? []).find((m: any) => m.user_id === user.id)
         if (myMember?.character_id) {
           myCharIdRef.current = myMember.character_id
-          await loadRevealedNpcs(myMember.character_id, cnpcs ?? [])
-
-          // Realtime subscription for reveal changes
+          await loadRevealedNpcs(myMember.character_id, cnpcs)
           revealChannelRef.current = supabase.channel(`reveals_${id}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'npc_relationships' }, () => {
-              if (myCharIdRef.current) loadRevealedNpcs(myCharIdRef.current, cnpcs ?? [])
+              if (myCharIdRef.current) loadRevealedNpcs(myCharIdRef.current, cnpcs)
             })
             .subscribe()
         }
@@ -565,13 +576,14 @@ export default function TablePage() {
     }
     setDropCharacter('')
 
-    // Log initiative results to chat feed
+    // Log combat start + initiative results to chat feed
     if (order && order.length > 0) {
       const initLog = order.map((e: any) => `${e.character_name}: ${e.roll}`).join(' | ')
-      await supabase.from('roll_log').insert({
-        campaign_id: id, character_name: 'System', label: `Initiative: ${initLog}`,
-        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action',
-      })
+      await supabase.from('roll_log').insert([
+        { campaign_id: id, character_name: 'System', label: '⚔️ Combat Started', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' },
+        { campaign_id: id, character_name: 'System', label: `Initiative: ${initLog}`,
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' },
+      ])
     }
 
     setStartingCombat(false)
@@ -712,10 +724,10 @@ export default function TablePage() {
 
   async function endCombat() {
     if (!isGM) return
+    await supabase.from('roll_log').insert({ campaign_id: id, character_name: 'System', label: '⚔️ Combat Ended', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' })
     await supabase.from('initiative_order').delete().eq('campaign_id', id)
     setInitiativeOrder([])
     setCombatActive(false)
-    // Broadcast combat end to all players via Realtime channel
     supabase.channel(`initiative_${id}`).send({ type: 'broadcast', event: 'combat_ended', payload: {} })
   }
 
@@ -1058,10 +1070,16 @@ export default function TablePage() {
     const outcome = getOutcome(total, die1, die2)
     const insightAwarded = outcome === 'Low Insight' || outcome === 'High Insight'
 
+    // Award Insight Die — only to PCs, or Antagonist NPCs (Bystanders/Goons/Foes never get Insight Dice)
     if (insightAwarded && myEntry?.liveState) {
-      const currentInsight = preRollSpent ? myEntry.liveState.insight_dice - 1 : myEntry.liveState.insight_dice
-      const newInsight = currentInsight + 1
-      await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
+      const isNPCRoll = pendingRoll.label.includes(' — ') && !entries.some(e => pendingRoll.label.startsWith(e.character.name))
+      const npcType = isNPCRoll ? (rosterNpcs.find((n: any) => pendingRoll.label.includes(n.name))?.npc_type ?? '') : ''
+      const skipInsight = isNPCRoll && npcType !== 'antagonist'
+      if (!skipInsight) {
+        const currentInsight = preRollSpent ? myEntry.liveState.insight_dice - 1 : myEntry.liveState.insight_dice
+        const newInsight = currentInsight + 1
+        await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
+      }
     }
 
     // Calculate and apply damage for successful weapon attacks
@@ -1578,8 +1596,7 @@ export default function TablePage() {
                   style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
                   Aim{(activeEntry.aim_bonus ?? 0) > 0 ? ` (+${activeEntry.aim_bonus})` : ''}
                 </button>
-                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Attack`)}
-                  style={actBtn('#7a1f16', '#f5a89a', '#c0392b')}>Attack</button>
+                <span style={{ ...actBtn('#7a1f16', '#f5a89a', '#c0392b'), cursor: 'default', opacity: 0.7 }} title="Use weapon buttons on character sheet">Attack</span>
                 {isMelee && w ? (
                   <button onClick={has2Actions ? () => {
                     const rapid = charEntry?.character.data?.rapid ?? {}
@@ -1674,7 +1691,7 @@ export default function TablePage() {
             {(['rolls', 'chat', 'both'] as const).map(tab => (
               <button key={tab} onClick={() => setFeedTab(tab)}
                 style={{ flex: 1, padding: '8px 0', background: feedTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: feedTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: feedTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '12px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                {tab === 'rolls' ? 'Rolls' : tab === 'chat' ? 'Chat' : 'Both'}
+                {tab === 'rolls' ? 'Logs' : tab === 'chat' ? 'Chat' : 'Both'}
               </button>
             ))}
           </div>
@@ -1820,9 +1837,9 @@ export default function TablePage() {
               />
             </div>
           )}
-          {/* Revealed NPCs — always visible at bottom */}
-          {!isGM && revealedNpcs.length > 0 && (
-            <div style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center', pointerEvents: 'none' }}>
+          {/* Revealed NPCs — visible at bottom for all users */}
+          {revealedNpcs.length > 0 && (
+            <div style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center', pointerEvents: 'none', zIndex: 1200 }}>
               {revealedNpcs.map((npc: any) => (
                 <div key={npc.id} style={{ padding: '6px 10px', background: 'rgba(26,26,26,0.9)', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '8px', minWidth: '120px', pointerEvents: 'auto' }}>
                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>

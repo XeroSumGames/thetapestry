@@ -38,7 +38,8 @@
       "Bash(sed -i 's|href=\"/campaigns\"|href=\"/stories\"|g' app/welcome/page.tsx)",
       "Bash(sed -i \"s|/campaigns/|/stories/|g; s|'/campaigns'|'/stories'|g\" \"app/join/[code]/page.tsx\")",
       "Bash(git rm:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git status:*)"
     ]
   }
 }

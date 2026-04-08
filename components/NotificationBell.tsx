@@ -79,21 +79,24 @@ export default function NotificationBell() {
   }, [open])
 
   async function markAsRead(id: string) {
-    await supabase.from('notifications').update({ read: true }).eq('id', id)
+    const { error } = await supabase.from('notifications').update({ read: true }).eq('id', id)
+    if (error) { console.error('[NotificationBell] markAsRead error:', error.message); return }
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
     setUnreadCount(prev => Math.max(0, prev - 1))
   }
 
   async function markAllAsRead() {
     if (!userId) return
-    await supabase.from('notifications').update({ read: true }).eq('user_id', userId).eq('read', false)
+    const { error } = await supabase.from('notifications').update({ read: true }).eq('user_id', userId).eq('read', false)
+    if (error) { console.error('[NotificationBell] markAllAsRead error:', error.message); return }
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
     setUnreadCount(0)
     setOpen(false)
   }
 
   async function deleteNotification(id: string) {
-    await supabase.from('notifications').delete().eq('id', id)
+    const { error } = await supabase.from('notifications').delete().eq('id', id)
+    if (error) { console.error('[NotificationBell] delete error:', error.message); return }
     setNotifications(prev => {
       const removed = prev.find(n => n.id === id)
       if (removed && !removed.read) setUnreadCount(c => Math.max(0, c - 1))
@@ -103,7 +106,8 @@ export default function NotificationBell() {
 
   async function deleteAll() {
     if (!userId) return
-    await supabase.from('notifications').delete().eq('user_id', userId)
+    const { error } = await supabase.from('notifications').delete().eq('user_id', userId)
+    if (error) { console.error('[NotificationBell] deleteAll error:', error.message); return }
     setNotifications([])
     setUnreadCount(0)
     setOpen(false)

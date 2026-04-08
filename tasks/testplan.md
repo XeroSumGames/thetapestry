@@ -1,15 +1,12 @@
-# Test Plan: Creating-a-Character links open in new window
+# Revealed NPC Icons — Test Plan
 
 ## What changed
-Added `target="_blank"` and `rel="noopener noreferrer"` to all six character creation links on the `/creating-a-character` page so they open in a new browser tab.
+Fixed z-index on revealed NPC icons at bottom of center panel so they appear above map overlays and character sheets during combat.
 
 ## Steps to test
-1. Navigate to `http://localhost:3000/creating-a-character`
-2. Click the **Backstory Generation →** card button — should open `/characters/new` in a new tab
-3. Click the **Quick Character →** card button — should open `/characters/quick` in a new tab
-4. Click the **Random Character →** card button — should open `/characters/random` in a new tab
-5. Scroll to the bottom CTA section
-6. Click **Start Backstory Generation** — new tab
-7. Click **Quick Character** — new tab
-8. Click **Random Character** — new tab
-9. Confirm the `/creating-a-character` page remains open after each click
+1. Open a story table as a **player** (not GM)
+2. The GM should reveal at least one NPC to your character (via the NPC roster Show button)
+3. Verify small NPC icons appear at the bottom of the center panel
+4. Open your character sheet (inline mode) — verify the NPC icons still show above it
+5. Enter combat — verify the icons persist
+6. If no NPCs appear, check that `npc_relationships` has rows with `revealed = true` for your character
