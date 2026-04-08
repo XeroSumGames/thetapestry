@@ -843,67 +843,75 @@ export default function TablePage() {
 
   async function endSession() {
     if (!isGM) return
-    setSessionActing(true)
+    // Close modal & update local state instantly
     setShowEndSessionModal(false)
-    // Auto-end combat if active
-    if (combatActive) await endCombat()
-    const now = new Date().toISOString()
-    await supabase.from('campaigns').update({
-      session_status: 'idle',
-      session_started_at: null,
-    }).eq('id', id)
-
-    // Find the current session row
-    const { data: sessionRow } = await supabase.from('sessions')
-      .select('id')
-      .eq('campaign_id', id).eq('session_number', sessionCount).is('ended_at', null)
-      .single()
-
-    if (sessionRow) {
-      await supabase.from('sessions').update({
-        ended_at: now,
-        gm_summary: sessionSummary.trim() || null,
-        next_session_notes: nextSessionNotes.trim() || null,
-        cliffhanger: sessionCliffhanger.trim() || null,
-      }).eq('id', sessionRow.id)
-
-      // Upload attachments
-      console.log('[EndSession] files to upload:', sessionFiles.length)
-      if (sessionFiles.length > 0 && userId) {
-        for (const file of sessionFiles) {
-          const path = `${sessionRow.id}/${file.name}`
-          const { error: upErr } = await supabase.storage.from('session-attachments').upload(path, file)
-          console.log('[EndSession] upload', file.name, 'error:', upErr?.message)
-          if (!upErr) {
-            const { data: urlData } = supabase.storage.from('session-attachments').getPublicUrl(path)
-            const { error: insErr } = await supabase.from('session_attachments').insert({
-              session_id: sessionRow.id,
-              file_url: urlData.publicUrl,
-              file_name: file.name,
-              file_type: file.type,
-              uploaded_by: userId,
-            })
-            console.log('[EndSession] insert attachment error:', insErr?.message)
-          }
-        }
-      }
+    setSessionActing(true)
+    if (combatActive) {
+      setInitiativeOrder([])
+      setCombatActive(false)
+      initChannelRef.current?.send({ type: 'broadcast', event: 'combat_ended', payload: {} })
     }
-
-    // Clear rolls and chat for a fresh start next session
-    await Promise.all([
-      supabase.from('roll_log').delete().eq('campaign_id', id),
-      supabase.from('chat_messages').delete().eq('campaign_id', id),
-    ])
     setRolls([])
     setChatMessages([])
-
     setSessionStatus('idle')
+    const endedCount = sessionCount
     setSessionSummary('')
     setNextSessionNotes('')
     setSessionCliffhanger('')
+    const filesToUpload = [...sessionFiles]
     setSessionFiles([])
-    logEvent('session_ended', { campaign_id: id, session_number: sessionCount })
     setSessionActing(false)
+    logEvent('session_ended', { campaign_id: id, session_number: endedCount })
+
+    // Fire all DB work in the background — UI is already updated
+    const now = new Date().toISOString()
+    const bgWork = async () => {
+      try {
+        await Promise.all([
+          supabase.from('campaigns').update({ session_status: 'idle', session_started_at: null }).eq('id', id),
+          supabase.from('roll_log').delete().eq('campaign_id', id),
+          supabase.from('chat_messages').delete().eq('campaign_id', id),
+          combatActive ? Promise.all([
+            supabase.from('roll_log').insert({ campaign_id: id, character_name: 'System', label: '⚔️ Combat Ended', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' }),
+            supabase.from('initiative_order').delete().eq('campaign_id', id),
+          ]) : Promise.resolve(),
+        ])
+
+        const { data: sessionRow } = await supabase.from('sessions')
+          .select('id')
+          .eq('campaign_id', id).eq('session_number', endedCount).is('ended_at', null)
+          .single()
+
+        if (sessionRow) {
+          await supabase.from('sessions').update({
+            ended_at: now,
+            gm_summary: sessionSummary.trim() || null,
+            next_session_notes: nextSessionNotes.trim() || null,
+            cliffhanger: sessionCliffhanger.trim() || null,
+          }).eq('id', sessionRow.id)
+
+          if (filesToUpload.length > 0 && userId) {
+            for (const file of filesToUpload) {
+              const path = `${sessionRow.id}/${file.name}`
+              const { error: upErr } = await supabase.storage.from('session-attachments').upload(path, file)
+              if (!upErr) {
+                const { data: urlData } = supabase.storage.from('session-attachments').getPublicUrl(path)
+                await supabase.from('session_attachments').insert({
+                  session_id: sessionRow.id,
+                  file_url: urlData.publicUrl,
+                  file_name: file.name,
+                  file_type: file.type,
+                  uploaded_by: userId,
+                })
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[EndSession] background save error:', err)
+      }
+    }
+    bgWork()
   }
 
   // ── Roll functions ──
