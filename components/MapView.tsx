@@ -100,6 +100,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [pinSearch, setPinSearch] = useState('')
   const [expandedPinId, setExpandedPinId] = useState<string | null>(null)
   const [usernames, setUsernames] = useState<Record<string, string>>({})
+  const [pinAttachments, setPinAttachments] = useState<Record<string, { name: string; url: string }[]>>({})
   const [pinsVisible, setPinsVisible] = useState(true)
   const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private', category: 'location' })
   const [saving, setSaving] = useState(false)
@@ -541,7 +542,25 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                 return (
                 <div key={p.id} onClick={() => {
                   if (isExpanded) { setExpandedPinId(null) }
-                  else { setExpandedPinId(p.id); flyToPin(p); supabase.from('map_pins').update({ view_count: ((p as any).view_count ?? 0) + 1 }).eq('id', p.id) }
+                  else {
+                    setExpandedPinId(p.id)
+                    flyToPin(p)
+                    supabase.from('map_pins').update({ view_count: ((p as any).view_count ?? 0) + 1 }).eq('id', p.id)
+                    // Fetch attachments if not already loaded
+                    if (!pinAttachments[p.id]) {
+                      supabase.storage.from('pin-attachments').list(`${p.user_id}/${p.id}`).then(({ data: files }) => {
+                        if (files && files.length > 0) {
+                          const atts = files.map(f => {
+                            const { data: urlData } = supabase.storage.from('pin-attachments').getPublicUrl(`${p.user_id}/${p.id}/${f.name}`)
+                            return { name: f.name, url: urlData.publicUrl }
+                          })
+                          setPinAttachments(prev => ({ ...prev, [p.id]: atts }))
+                        } else {
+                          setPinAttachments(prev => ({ ...prev, [p.id]: [] }))
+                        }
+                      })
+                    }
+                  }
                 }}
                   style={{ padding: '8px 10px', marginBottom: '3px', background: tier === 'landmark' ? '#1a1a1a' : tier === 'event' ? '#1a1a10' : '#242424', border: `1px solid ${isExpanded ? '#c0392b' : '#2e2e2e'}`, borderLeft: `3px solid ${pinColor(p)}`, borderRadius: '3px', cursor: 'pointer' }}>
                   <div style={{ fontSize: ts.sidebarSize, fontWeight: ts.sidebarWeight, color: '#f5f2ee', overflow: isExpanded ? 'visible' : 'hidden', textOverflow: isExpanded ? 'unset' : 'ellipsis', whiteSpace: isExpanded ? 'normal' : 'nowrap' }}>
@@ -571,6 +590,25 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                               {getCategoryEmoji(np.category ?? 'location')} {np.title}
                             </div>
                           ))}
+                        </div>
+                      )}
+                      {/* Attachments */}
+                      {pinAttachments[p.id] && pinAttachments[p.id].length > 0 && (
+                        <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #2e2e2e' }}>
+                          <div style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Attachments</div>
+                          {pinAttachments[p.id].map(att => {
+                            const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(att.name)
+                            return isImage ? (
+                              <a key={att.name} href={att.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
+                                <img src={att.url} alt={att.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '3px', marginBottom: '4px', border: '1px solid #2e2e2e' }} />
+                              </a>
+                            ) : (
+                              <a key={att.name} href={att.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
+                                style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#7ab3d4', textDecoration: 'none', marginBottom: '3px' }}>
+                                📎 {att.name}
+                              </a>
+                            )
+                          })}
                         </div>
                       )}
                     </div>
