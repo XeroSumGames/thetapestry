@@ -27,6 +27,8 @@
 - **`SECURITY DEFINER` on trigger functions**: Required for triggers that insert into tables with RLS (like notifications), since triggers run as the invoking user who may not have insert permissions.
 
 ## Process
+- **Always provide SQL upfront**: When a feature requires a DB schema change, provide the ALTER TABLE / CREATE TABLE SQL immediately in the same message — don't wait for the user to ask. The user shouldn't have to chase for it. This is explicitly required in CLAUDE.md: "Always provide the ALTER TABLE SQL alongside the commit."
+
 - **Provide all pending SQL in order**: When multiple features add columns/tables, the user may not have run earlier SQL. Always check and provide the full chain.
 - **Debug logging is essential for remote debugging**: When the user can't see what's happening, add `console.log` with prefixed tags like `[EndSession]`, `[StatUpdate]`, then remove after diagnosis.
 - **Test on the actual deployment**: localhost behavior can differ from deployed behavior (caching, env vars, auth state).

@@ -52,6 +52,7 @@ interface RollEntry {
   outcome: string
   insight_awarded: boolean
   created_at: string
+  damage_json: DamageResult | null
 }
 
 interface WeaponContext {
@@ -1003,7 +1004,7 @@ export default function TablePage() {
     setSocialCmod(null)
   }
 
-  async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false, target: string | null = null) {
+  async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false, target: string | null = null, damageData?: DamageResult) {
     const total = die1 + die2 + amod + smod + cmodVal
     const outcome = getOutcome(total, die1, die2)
     const insightAwarded = outcome === 'Low Insight' || outcome === 'High Insight'
@@ -1013,6 +1014,7 @@ export default function TablePage() {
       label: isReroll ? `${label} (Re-roll)` : label,
       die1, die2, amod, smod, cmod: cmodVal, total, outcome, insight_awarded: insightAwarded,
       target_name: target || null,
+      damage_json: damageData || null,
     })
     logEvent('roll', { campaign_id: id, label, total, outcome, target, character: characterName })
 
@@ -1052,7 +1054,9 @@ export default function TablePage() {
       die2 = rollD6()
     }
 
-    const { total, outcome, insightAwarded } = await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null)
+    const total = die1 + die2 + pendingRoll.amod + pendingRoll.smod + cmodVal
+    const outcome = getOutcome(total, die1, die2)
+    const insightAwarded = outcome === 'Low Insight' || outcome === 'High Insight'
 
     if (insightAwarded && myEntry?.liveState) {
       const currentInsight = preRollSpent ? myEntry.liveState.insight_dice - 1 : myEntry.liveState.insight_dice
@@ -1262,6 +1266,8 @@ export default function TablePage() {
         }
       }
     }
+
+    await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, damageResult)
 
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
@@ -1709,6 +1715,20 @@ export default function TablePage() {
                       <span style={{ fontSize: '15px', fontWeight: 700, color: outcomeColor(r.outcome), fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.outcome}</span>
                       {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
                     </div>
+                    {r.damage_json && (
+                      <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>
+                        <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '11px' }}>Damage → {r.damage_json.targetName}</span>
+                        <div style={{ marginTop: '2px' }}>
+                          {r.damage_json.base > 0 && <span>{r.damage_json.base}</span>}
+                          {r.damage_json.diceDesc && <span>{r.damage_json.base > 0 ? '+' : ''}{r.damage_json.diceDesc} ({r.damage_json.diceRoll})</span>}
+                          {r.damage_json.phyBonus > 0 && <span> +{r.damage_json.phyBonus} PHY</span>}
+                          <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.damage_json.totalWP} raw</span>
+                          <span style={{ color: '#c0392b' }}> → {r.damage_json.finalWP} WP</span>
+                          <span style={{ color: '#7ab3d4' }}> / {r.damage_json.finalRP} RP</span>
+                          {r.damage_json.mitigated > 0 && <span style={{ color: '#cce0f5' }}> ({r.damage_json.mitigated} mitigated)</span>}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))
               )

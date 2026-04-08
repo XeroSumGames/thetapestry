@@ -59,21 +59,27 @@
 - [x] Getting The Drop — GM selects in Start Combat modal, 1 action, -2 init
 - [x] Range Bands — 5-button selector in roll modal with auto CMod
 - [x] Initiative re-roll each round (PCs beat NPCs on ties)
-- [ ] Fix Combat Action buttons — each button should perform its action (Aim: spend action + queue +1 CMod on next attack; Attack: modal for weapon/unarmed selection then roll; Charge: spend actions + perform attack; etc.)
-- [ ] Delayed Actions
-- [ ] Resolution Phase
+- [x] Delayed Actions — handled by Defer button (same mechanic)
+- [x] Resolution Phase — narrative, handled by GM with existing mechanics
+- [x] Initiative fetches fresh character data from DB (fixes "Unknown" name bug)
+- [x] Initiative results logged to Rolls tab in chat feed
 
 ### Damage & Health Automation (SRD)
 - [x] Auto-damage on successful attacks with DMM/DMR defense
 - [x] Damage breakdown in roll modal
 - [x] NPC damage applies to campaign_npcs table
-- [x] RP reaches 0 → Unconscious label + 💤 badge + turn auto-skipped
-- [x] WP reaches 0 → Mortally Wounded with death countdown (PHY+1 rounds)
+- [x] RP reaches 0 → Incapacitated for 4-PHY rounds, then regain 1 RP
+- [x] RP auto-recovery: 1 per round for conscious characters below max
+- [x] WP reaches 0 → Mortally Wounded with death countdown (4+PHY rounds per SRD)
 - [x] Death countdown decrements each round, reaches 0 → Dead
-- [x] Stabilize mechanic — Medicine roll, success stops countdown + WP=1
-- [x] Death prevention via Insight Die — modal prompt to spend die
-- [ ] Healing rates
-- [ ] Auto-decrement ammo on ranged attacks
+- [x] Stabilize mechanic — Medicine roll, success → incapacitated 1d6-PHY rounds, then 1 WP + 1 RP
+- [x] Death prevention via Insight Die — trade ALL dice, regain 1 WP + 1 RP (per SRD)
+- [x] Lasting Wounds — PHY check first, Table 12 only on failure (per SRD)
+- [x] Healing rates — Rest button with hours/days/weeks, SRD rates (1 WP/day, 1 WP/2 days mortally wounded, 1 RP/hour)
+- [x] Auto-decrement ammo on ranged attacks (burst count for Automatic Burst)
+- [x] Environmental Damage buttons — Falling (3 per 10ft), Drowning (3+3), Subsistence (1 RP)
+- [x] Reduce Stress button — 8+ hours narrative downtime
+- [x] Breaking Point shows 1d6 hours duration
 
 ### Weapons & Equipment (SRD)
 - [x] Full weapon database (38 weapons)
@@ -242,19 +248,27 @@
 - [ ] Campaign creation option — Run in District Zero pre-populates setting content
 
 ### Tactical Map
-- [ ] GM uploads scene image for a session location
-- [ ] Auto-generated player tokens from portrait photos or initials
-- [ ] NPC tokens placed and managed by GM
-- [ ] Drag to move tokens, Realtime sync to all players
-- [ ] Zoom and pan for everyone simultaneously
-- [ ] Click token to open character sheet or NPC card
+- [x] Canvas-based tactical map replaces campaign map during combat
+- [x] GM uploads battle map image (tactical-maps storage bucket)
+- [x] Grid overlay with column/row labels (A1, B2, etc.)
+- [x] Token rendering — circles with initials, color-coded (blue PC, red NPC)
+- [x] GM drags tokens to move, saved to DB
+- [x] Realtime sync — token moves broadcast via Supabase Realtime
+- [x] Auto-populate tokens from initiative order (Place Tokens button)
+- [x] Active combatant glow (green) on token
+- [x] Range band visualization on selected token (Engaged/Close/Medium/Long)
+- [x] Hidden tokens — GM can hide/reveal (ambushes)
+- [x] Token info panel — name, type, position, Hide/Remove buttons
+- [x] Scene management — create, name, set grid dimensions
+- [x] Multiple scenes per campaign with dropdown switcher
+- [x] Double-click token opens NPC card
+- [x] Reverts to campaign map when combat ends
+- [ ] Zoom and pan
 - [ ] WP and stress visible beneath each token
-- [ ] Range ruler — click and drag shows Engaged/Close/Medium/Long/Distant
 - [ ] Token status badges — Wounded, Stressed, Incapacitated, Dead
-- [ ] GM ping — click to flash a location on everyone's screen
-- [ ] Hidden tokens — GM places, reveals when discovered by players
-- [ ] Multiple scene slots per campaign — switch between scenes mid-session
-- [ ] Initiative order shown as numbered badges on tokens
+- [ ] GM ping — flash a location on everyone's screen
+- [ ] Initiative order numbered badges on tokens
+- [ ] Range band auto-select from token positions in attack modal
 
 ---
 
