@@ -4,6 +4,9 @@
 - [x] Print character sheet renders blank
 - [x] Distemper font not applying on mobile navbar
 - [ ] Print sheet missing data — Relationships/CMod, Lasting Wounds/Notes, Tracking (Insight/CDP) not populated from character data
+- [ ] Combat actions bar not visible to Survivor-role players — only Thrivers can see it (likely tied to character entry not loading correctly, "Unknown" name bug)
+- [x] Initiative breakdown not appearing in Logs tab — startCombat/nextTurn/broadcast handlers now call loadRolls()
+- [ ] Players show as "Unknown" in player bar and initiative — character data not matching entries
 - [x] Signup error fixed — handle_new_user trigger had wrong role casing + no EXCEPTION handler + RLS blocking. Added client-side fallback + error visibility
 - [x] Signup page shows hardcoded "check your email" message — confirmed not a bug
 
@@ -20,7 +23,8 @@
 - [x] Session history table in Supabase
 - [x] Lobby state when session is idle
 - [x] End session modal with summary, cliffhanger, next-session notes, and file attachments
-- [x] End session modal closes instantly (UI updates immediately, DB writes run in background)
+- [x] End session modal closes instantly (UI updates immediately, DB writes fire-and-forget in background)
+- [x] Exit button in table header — navigates to /stories for GM and players
 - [x] Start session clears rolls/chat from DB + local state (clean slate each session)
 - [x] Realtime subscriptions listen to all events (INSERT + DELETE) for log clearing propagation
 - [x] Session history page with grid layout, deactivate, delete
@@ -61,6 +65,7 @@
 - [x] NPC target dropdown — fix false-dead filter for NPCs with null wp_current
 - [x] Default feed tab opens on Logs (not Both)
 - [x] Both tab merges rolls + chat chronologically (was sequential blocks)
+- [x] "Open My Sheet to Roll" button toggles sheet closed if already open
 
 ### Combat Rules — Advanced (SRD)
 - [x] Getting The Drop — GM selects in Start Combat modal, 1 action, -2 init
