@@ -44,6 +44,13 @@ function getTierStyles(tier: PinTier) {
   }
 }
 
+function getNearSetting(lat: number, lng: number): string | null {
+  if (Math.abs(lat - 36.052) < 0.05 && Math.abs(lng - (-95.790)) < 0.05) return 'District Zero'
+  if (Math.abs(lat - 38.710) < 0.05 && Math.abs(lng - (-75.510)) < 0.05) return 'Chased'
+  if (lat >= 33 && lat <= 46 && lng >= -113 && lng <= -111) return 'Mongrels'
+  return null
+}
+
 function getCategoryEmoji(category: string): string {
   return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '📍'
 }
@@ -91,6 +98,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(['all']))
   const [sortMode, setSortMode] = useState<'newest' | 'name'>('newest')
   const [pinSearch, setPinSearch] = useState('')
+  const [expandedPinId, setExpandedPinId] = useState<string | null>(null)
+  const [usernames, setUsernames] = useState<Record<string, string>>({})
   const [pinsVisible, setPinsVisible] = useState(true)
   const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private', category: 'location' })
   const [saving, setSaving] = useState(false)
@@ -183,6 +192,13 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     if (!data) return
     setPins(data)
 
+    // Resolve usernames
+    const uids = [...new Set(data.map((p: any) => p.user_id).filter(Boolean))]
+    if (uids.length > 0) {
+      const { data: profiles } = await supabase.from('profiles').select('id, username').in('id', uids)
+      if (profiles) setUsernames(Object.fromEntries(profiles.map((p: any) => [p.id, p.username])))
+    }
+
     // Remove old cluster group
     if (clusterGroupRef.current) { mapInst.removeLayer(clusterGroupRef.current) }
     markersRef.current = {}
@@ -207,14 +223,27 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         html: `<div style="font-size:${ts.fontSize};line-height:1;filter:${ts.shadow};cursor:pointer;" title="${pin.title}">${emoji}</div>`,
         className: '', iconSize: [ts.mapSize, ts.mapSize], iconAnchor: [ts.mapSize / 2, ts.mapSize / 2],
       })
+      const nearSetting = getNearSetting(pin.lat, pin.lng)
+      const nearbyCount = data.filter((p: Pin) => p.id !== pin.id && Math.abs(p.lat - pin.lat) < 0.1 && Math.abs(p.lng - pin.lng) < 0.1).length
+      const dateStr = pin.created_at ? new Date(pin.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''
       const marker = leaflet.marker([pin.lat, pin.lng], { icon })
         .bindPopup(`
-          <div style="font-family:Barlow,sans-serif;min-width:180px">
-            <div style="font-weight:700;font-size:14px;margin-bottom:4px">${emoji} ${pin.title}</div>
-            ${pin.notes ? `<div style="font-size:12px;color:#555;margin-bottom:6px">${pin.notes}</div>` : ''}
-            <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.06em">${pin.pin_type === 'rumor' ? 'Rumor' : pin.pin_type === 'gm' ? 'GM Content' : 'Private note'}</div>
+          <div style="font-family:Barlow,sans-serif;min-width:220px;max-width:300px">
+            <div style="font-weight:700;font-size:15px;margin-bottom:4px">${emoji} ${pin.title}</div>
+            ${pin.notes ? `<div style="font-size:13px;color:#555;margin-bottom:6px;line-height:1.4">${pin.notes}</div>` : ''}
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.06em;padding:1px 4px;background:#f0f0f0;border-radius:2px">${pin.category ?? 'location'}</span>
+              <span style="font-size:10px;color:#999;text-transform:uppercase">${pin.pin_type === 'rumor' ? 'Rumor' : pin.pin_type === 'gm' ? 'GM' : 'Private'}</span>
+            </div>
+            ${dateStr ? `<div style="font-size:10px;color:#aaa">${dateStr}</div>` : ''}
+            ${nearSetting ? `<div style="font-size:10px;color:#c0392b;font-weight:700;margin-top:2px">Near ${nearSetting}</div>` : ''}
+            ${nearbyCount > 0 ? `<div style="font-size:10px;color:#7ab3d4;margin-top:2px">${nearbyCount} nearby pin${nearbyCount !== 1 ? 's' : ''}</div>` : ''}
+            ${(pin as any).view_count ? `<div style="font-size:10px;color:#aaa;margin-top:2px">👁 ${(pin as any).view_count} views</div>` : ''}
           </div>
         `)
+      marker.on('popupopen', () => {
+        supabase.from('map_pins').update({ view_count: ((pin as any).view_count ?? 0) + 1 }).eq('id', pin.id)
+      })
       clusterGroup.addLayer(marker)
       markersRef.current[pin.id] = marker
     })
@@ -326,7 +355,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 }
 
   // Filter chips
-  const FILTER_CHIPS = ['all', 'public', 'mine', 'canon', 'rumors', 'timeline'] as const
+  const FILTER_CHIPS = ['all', 'public', 'canon', 'rumors', 'timeline'] as const
   const allFiltersActive = FILTER_CHIPS.filter(f => f !== 'all').every(f => activeFilters.has(f))
 
   function toggleFilter(chip: string) {
@@ -335,6 +364,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       if (chip === 'all') {
         // Toggle all on
         FILTER_CHIPS.forEach(f => next.add(f))
+        next.add('mine')
         return next
       }
       if (next.has(chip)) next.delete(chip); else next.add(chip)
@@ -457,7 +487,19 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               </div>
               <input value={pinSearch} onChange={e => setPinSearch(e.target.value)} placeholder="Search pins..."
                 style={{ width: '100%', padding: '5px 8px', marginBottom: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
-              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+                {userId && (() => {
+                  const active = activeFilters.size === 1 && activeFilters.has('mine')
+                  return (
+                    <button onClick={() => {
+                      if (active) { setActiveFilters(new Set(['all', 'mine', 'public', 'canon', 'rumors', 'timeline'])) }
+                      else { setActiveFilters(new Set(['mine'])) }
+                    }}
+                      style={{ padding: '3px 8px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : 'transparent', color: active ? '#f5a89a' : '#d4cfc9' }}>
+                      Your Pins
+                    </button>
+                  )
+                })()}
                 {FILTER_CHIPS.map(chip => {
                   const active = chip === 'all' ? allFiltersActive || activeFilters.has('all') : activeFilters.has(chip)
                   const label = chip === 'timeline' ? '🕐 Timeline' : chip.charAt(0).toUpperCase() + chip.slice(1)
@@ -498,34 +540,69 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               {displayedPins.map(p => {
                 const tier = getPinTier(p)
                 const ts = getTierStyles(tier)
+                const isExpanded = expandedPinId === p.id
+                const nearSetting = getNearSetting(p.lat, p.lng)
+                const nearbyPins = isExpanded ? pins.filter(np => np.id !== p.id && Math.abs(np.lat - p.lat) < 0.1 && Math.abs(np.lng - p.lng) < 0.1).slice(0, 5) : []
                 return (
-                <div key={p.id} onClick={() => flyToPin(p)}
-                  style={{ padding: '8px 10px', marginBottom: '3px', background: tier === 'landmark' ? '#1a1a1a' : tier === 'event' ? '#1a1a10' : '#242424', border: '1px solid #2e2e2e', borderLeft: `3px solid ${pinColor(p)}`, borderRadius: '3px', cursor: 'pointer' }}>
-                  <div style={{ fontSize: ts.sidebarSize, fontWeight: ts.sidebarWeight, color: '#f5f2ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div key={p.id} onClick={() => {
+                  if (isExpanded) { setExpandedPinId(null) }
+                  else { setExpandedPinId(p.id); flyToPin(p); supabase.from('map_pins').update({ view_count: ((p as any).view_count ?? 0) + 1 }).eq('id', p.id) }
+                }}
+                  style={{ padding: '8px 10px', marginBottom: '3px', background: tier === 'landmark' ? '#1a1a1a' : tier === 'event' ? '#1a1a10' : '#242424', border: `1px solid ${isExpanded ? '#c0392b' : '#2e2e2e'}`, borderLeft: `3px solid ${pinColor(p)}`, borderRadius: '3px', cursor: 'pointer' }}>
+                  <div style={{ fontSize: ts.sidebarSize, fontWeight: ts.sidebarWeight, color: '#f5f2ee', overflow: isExpanded ? 'visible' : 'hidden', textOverflow: isExpanded ? 'unset' : 'ellipsis', whiteSpace: isExpanded ? 'normal' : 'nowrap' }}>
                     {getCategoryEmoji(p.category ?? 'location')} {p.title}
                   </div>
-                  {p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{p.notes}</div>}
-                  <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px', gap: '6px' }}>
-                    {(p.user_id === userId || userRole === 'thriver') && (
-                      <>
-                        <span style={{ flex: 1 }} />
-                        {userRole === 'thriver' && (
-                          <button onClick={e => { e.stopPropagation(); handleTogglePublic(p) }}
-                            style={{ background: 'none', border: 'none', color: p.status === 'approved' ? '#7fc458' : '#cce0f5', cursor: 'pointer', fontSize: '11px', padding: '0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
-                            {p.status === 'approved' ? 'Public' : 'Private'}
+                  {!isExpanded && p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{p.notes}</div>}
+                  {isExpanded && (
+                    <div style={{ marginTop: '6px' }}>
+                      {p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, marginBottom: '8px' }}>{p.notes}</div>}
+                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                        <span style={{ fontSize: '11px', padding: '1px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{p.category ?? 'location'}</span>
+                        <span style={{ fontSize: '11px', padding: '1px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{p.pin_type === 'rumor' ? 'Rumor' : p.pin_type === 'gm' ? 'GM' : 'Private'}</span>
+                        {nearSetting && <span style={{ fontSize: '11px', padding: '1px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>Near {nearSetting}</span>}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
+                        {usernames[p.user_id] ? `Placed by ${usernames[p.user_id]}` : ''}{p.created_at ? ` · ${new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
+                        {(p as any).view_count ? ` · 👁 ${(p as any).view_count} views` : ''}
+                      </div>
+                      {nearbyPins.length > 0 && (
+                        <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #2e2e2e' }}>
+                          <div style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Nearby</div>
+                          {nearbyPins.map(np => (
+                            <div key={np.id} onClick={e => { e.stopPropagation(); setExpandedPinId(np.id); flyToPin(np) }}
+                              style={{ fontSize: '12px', color: '#d4cfc9', padding: '2px 0', cursor: 'pointer' }}
+                              onMouseEnter={e => (e.currentTarget.style.color = '#f5f2ee')}
+                              onMouseLeave={e => (e.currentTarget.style.color = '#d4cfc9')}>
+                              {getCategoryEmoji(np.category ?? 'location')} {np.title}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {!isExpanded && (
+                    <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px', gap: '6px' }}>
+                      {(p.user_id === userId || userRole === 'thriver') && (
+                        <>
+                          <span style={{ flex: 1 }} />
+                          {userRole === 'thriver' && (
+                            <button onClick={e => { e.stopPropagation(); handleTogglePublic(p) }}
+                              style={{ background: 'none', border: 'none', color: p.status === 'approved' ? '#7fc458' : '#cce0f5', cursor: 'pointer', fontSize: '11px', padding: '0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                              {p.status === 'approved' ? 'Public' : 'Private'}
+                            </button>
+                          )}
+                          <button onClick={e => { e.stopPropagation(); startEdit(p) }}
+                            style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '11px', padding: '0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                            Edit
                           </button>
-                        )}
-                        <button onClick={e => { e.stopPropagation(); startEdit(p) }}
-                          style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '11px', padding: '0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
-                          Edit
-                        </button>
-                        <button onClick={e => { e.stopPropagation(); if (confirm('Delete this pin?')) handleDeletePin(p.id) }} disabled={deletingId === p.id}
-                          style={{ background: 'none', border: 'none', color: '#f5a89a', cursor: 'pointer', fontSize: '13px', padding: '0', opacity: deletingId === p.id ? 0.4 : 1 }}>
-                          ×
-                        </button>
-                      </>
-                    )}
-                  </div>
+                          <button onClick={e => { e.stopPropagation(); if (confirm('Delete this pin?')) handleDeletePin(p.id) }} disabled={deletingId === p.id}
+                            style={{ background: 'none', border: 'none', color: '#f5a89a', cursor: 'pointer', fontSize: '13px', padding: '0', opacity: deletingId === p.id ? 0.4 : 1 }}>
+                            ×
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
                 )
               })}
