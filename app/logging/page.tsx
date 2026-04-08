@@ -260,6 +260,22 @@ export default function LoggingPage() {
         </a>
       </div>
 
+      {/* Visitor Map */}
+      <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', overflow: 'hidden', marginBottom: '1.5rem' }}>
+        <div style={{ padding: '10px 14px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }}>Visitor Map</span>
+          <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+            {uniqueVisitors} unique visitors from {uniqueCountries} {uniqueCountries === 1 ? 'country' : 'countries'}
+          </span>
+        </div>
+        <div ref={mapRef} style={{ height: '400px', background: '#0d0d0d' }} />
+        <div style={{ padding: '6px 14px', borderTop: '1px solid #2e2e2e', display: 'flex', gap: '16px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', color: '#cce0f5' }}>
+          <span><span style={{ color: '#c0392b', fontSize: '14px' }}>●</span> Ghost</span>
+          <span><span style={{ color: '#7fc458', fontSize: '14px' }}>●</span> Survivor</span>
+          <span style={{ color: '#3a3a3a' }}>Dot size = visit frequency</span>
+        </div>
+      </div>
+
       {/* Top Pages */}
       {topPages.length > 0 && (
         <div style={{ marginBottom: '1.5rem' }}>
@@ -313,22 +329,6 @@ export default function LoggingPage() {
           )}
         </div>
       )}
-
-      {/* Visitor Map */}
-      <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', overflow: 'hidden', marginBottom: '1.5rem' }}>
-        <div style={{ padding: '10px 14px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }}>Visitor Map</span>
-          <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
-            {uniqueVisitors} unique visitors from {uniqueCountries} {uniqueCountries === 1 ? 'country' : 'countries'}
-          </span>
-        </div>
-        <div ref={mapRef} style={{ height: '400px', background: '#0d0d0d' }} />
-        <div style={{ padding: '6px 14px', borderTop: '1px solid #2e2e2e', display: 'flex', gap: '16px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', color: '#cce0f5' }}>
-          <span><span style={{ color: '#c0392b', fontSize: '14px' }}>●</span> Ghost</span>
-          <span><span style={{ color: '#7fc458', fontSize: '14px' }}>●</span> Survivor</span>
-          <span style={{ color: '#3a3a3a' }}>Dot size = visit frequency</span>
-        </div>
-      </div>
 
       {/* Events tab */}
       {tab === 'events' && (
