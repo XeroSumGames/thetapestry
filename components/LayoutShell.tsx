@@ -10,6 +10,24 @@ const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/campaigns', '/cha
 // Pages that always hide the sidebar
 const NO_SIDEBAR_PAGES = ['/login', '/signup', '/firsttimers', '/welcome']
 
+function MobileBanner() {
+  const [dismissed, setDismissed] = useState(false)
+  if (dismissed) return null
+  return (
+    <div style={{
+      display: 'none', padding: '10px 14px', background: '#2a1210', borderBottom: '1px solid #c0392b',
+      fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow, sans-serif', textAlign: 'center',
+      position: 'relative',
+    }}
+    className="mobile-banner">
+      The Tapestry is best experienced on a desktop or tablet.
+      <button onClick={() => setDismissed(true)}
+        style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#f5a89a', fontSize: '16px', cursor: 'pointer' }}>✕</button>
+      <style>{`@media (max-width: 768px) { .mobile-banner { display: block !important; } }`}</style>
+    </div>
+  )
+}
+
 export default function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -85,14 +103,17 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   const hideSidebar = NO_SIDEBAR_PAGES.includes(pathname)
 
   if (hideSidebar) {
-    return <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>{children}</div>
+    return <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}><MobileBanner />{children}</div>
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-      <Sidebar />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
-        {children}
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <MobileBanner />
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <Sidebar />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+          {children}
+        </div>
       </div>
     </div>
   )
