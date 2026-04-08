@@ -435,6 +435,7 @@ export default function TablePage() {
       initChannelRef.current = supabase.channel(`initiative_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
         .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false) })
+        .on('broadcast', { event: 'combat_started' }, () => loadInitiative(id))
         .subscribe()
 
       campaignChannelRef.current = supabase.channel(`campaign_${id}`)
@@ -600,6 +601,8 @@ export default function TablePage() {
 
     setStartingCombat(false)
     await loadInitiative(id)
+    // Broadcast combat start to all players
+    supabase.channel(`initiative_${id}`).send({ type: 'broadcast', event: 'combat_started', payload: {} })
   }
 
   async function nextTurn() {
