@@ -17,7 +17,28 @@
       "Bash(python3 -c \" import fitz doc = fitz.open\\(r'C:\\\\Users\\\\tony_\\\\OneDrive\\\\Xero Sum Engine\\\\XSE SRD 1.1\\\\XSE SRD v1.1.17 \\(Small\\).pdf'\\) print\\(f'Pages: {len\\(doc\\)}'\\) for i in range\\(min\\(5, len\\(doc\\)\\)\\): print\\(f'--- Page {i+1} ---'\\) print\\(doc[i].get_text\\(\\)[:500]\\) \")",
       "Bash(py --version)",
       "Bash(py -m pip install pymupdf)",
-      "Bash(py:*)"
+      "Bash(py:*)",
+      "Bash(ls:*)",
+      "Bash(git commit -m 'fix: campaign map defaults to Street view:*)",
+      "Bash(git commit:*)",
+      "Bash(find /c/TheTapestry -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) -exec grep -l \"map_pins\\\\|world.*pin\\\\|world.*map\" {} \\\\;)",
+      "Bash(find:*)",
+      "Bash(xargs cat:*)",
+      "Bash(notepad:*)",
+      "Bash(cat C:/TheTapestry/sql/*.sql)",
+      "Bash(npm install:*)",
+      "Bash(git checkout:*)",
+      "Bash(npx supabase:*)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(wc -l /c/TheTapestry/components/*.tsx)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run:*)",
+      "Bash(git mv:*)",
+      "Bash(cp:*)",
+      "Bash(sed -i 's|href=\"/campaigns\"|href=\"/stories\"|g' app/welcome/page.tsx)",
+      "Bash(sed -i \"s|/campaigns/|/stories/|g; s|'/campaigns'|'/stories'|g\" \"app/join/[code]/page.tsx\")",
+      "Bash(git rm:*)",
+      "Bash(git reset:*)"
     ]
   }
 }

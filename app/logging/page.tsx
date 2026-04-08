@@ -33,6 +33,8 @@ export default function LoggingPage() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'visitors' | 'events'>('visitors')
   const [visitors, setVisitors] = useState<VisitorLog[]>([])
+  const [visitorFilter, setVisitorFilter] = useState('')
+  const [visitorExclude, setVisitorExclude] = useState(false)
   const [events, setEvents] = useState<UserEvent[]>([])
   const [visitorCount, setVisitorCount] = useState(0)
   const [eventCount, setEventCount] = useState(0)
@@ -304,6 +306,15 @@ export default function LoggingPage() {
       {/* Visitors tab */}
       {tab === 'visitors' && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', overflow: 'hidden' }}>
+          {/* Filter bar */}
+          <div style={{ display: 'flex', gap: '8px', padding: '8px 12px', borderBottom: '1px solid #2e2e2e', background: '#111', alignItems: 'center' }}>
+            <input value={visitorFilter} onChange={e => setVisitorFilter(e.target.value)} placeholder="Filter by user, IP, or page..."
+              style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none' }} />
+            <button onClick={() => setVisitorExclude(v => !v)}
+              style={{ padding: '4px 10px', background: visitorExclude ? '#2a1210' : 'transparent', border: `1px solid ${visitorExclude ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: visitorExclude ? '#f5a89a' : '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              {visitorExclude ? 'Excluding' : 'Include'}
+            </button>
+          </div>
           {/* Table header */}
           <div style={{ display: 'flex', padding: '8px 12px', borderBottom: '1px solid #2e2e2e', background: '#111' }}>
             <div style={{ flex: 2, fontSize: '13px', fontWeight: 600, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Page</div>
@@ -316,7 +327,12 @@ export default function LoggingPage() {
             <div style={{ padding: '2rem', textAlign: 'center', color: '#cce0f5', fontSize: '13px' }}>No visitor logs yet.</div>
           ) : (
             <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
-              {visitors.map(v => (
+              {visitors.filter(v => {
+                if (!visitorFilter.trim()) return true
+                const q = visitorFilter.trim().toLowerCase()
+                const matches = (v.username?.toLowerCase().includes(q)) || (v.ip_address?.toLowerCase().includes(q)) || (v.page?.toLowerCase().includes(q)) || (v.city?.toLowerCase().includes(q)) || (v.country_code?.toLowerCase().includes(q))
+                return visitorExclude ? !matches : matches
+              }).map(v => (
                 <div key={v.id} style={{ display: 'flex', padding: '6px 12px', borderBottom: '1px solid #2e2e2e', alignItems: 'center' }}>
                   <div style={{ flex: 2, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.page}</div>
                   <div style={{ flex: 1, fontSize: '13px', color: v.username ? '#7fc458' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

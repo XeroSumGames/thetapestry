@@ -369,7 +369,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     async function loadRevealed() {
       if (!isGM || !pcEntries || pcEntries.length === 0) return
       const { data } = await supabase.from('npc_relationships').select('npc_id').eq('revealed', true)
-      if (data) setRevealedNpcIds(new Set(data.map(r => r.npc_id)))
+      if (data) setRevealedNpcIds(new Set(data.map((r: any) => r.npc_id)))
     }
     loadRevealed()
   }, [npcs, pcEntries])
@@ -410,7 +410,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     // Check which NPCs have been published
     async function checkPublished() {
       const { data } = await supabase.from('world_npcs').select('source_campaign_npc_id').not('source_campaign_npc_id', 'is', null)
-      if (data) setPublishedNpcIds(new Set(data.map(d => d.source_campaign_npc_id!)))
+      if (data) setPublishedNpcIds(new Set(data.map((d: any) => d.source_campaign_npc_id!)))
     }
     if (isGM) checkPublished()
   }, [npcs])

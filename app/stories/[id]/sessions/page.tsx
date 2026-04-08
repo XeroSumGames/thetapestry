@@ -50,7 +50,7 @@ export default function SessionHistoryPage() {
         .order('session_number', { ascending: false })
       setSessions(sessData ?? [])
 
-      const sessIds = (sessData ?? []).map(s => s.id)
+      const sessIds = (sessData ?? []).map((s: any) => s.id)
       if (sessIds.length > 0) {
         const { data: attData, error: attErr } = await supabase
           .from('session_attachments')

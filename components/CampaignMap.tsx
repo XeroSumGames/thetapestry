@@ -87,7 +87,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   async function loadPins(L?: any) {
     const { data } = await supabase.from('campaign_pins').select('*').eq('campaign_id', campaignId)
     const allPins = data ?? []
-    const visible = isGM ? allPins : allPins.filter(p => p.revealed)
+    const visible = isGM ? allPins : allPins.filter((p: any) => p.revealed)
     setPins(visible)
 
     const leaflet = L ?? (await import('leaflet')).default
@@ -112,7 +112,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       },
     })
 
-    visible.forEach(pin => {
+    visible.forEach((pin: any) => {
       const emoji = getCategoryEmoji(pin.category)
       const icon = leaflet.divIcon({
         html: `<div style="font-size:16px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));cursor:pointer;${!pin.revealed && isGM ? 'opacity:0.4;' : ''}" title="${pin.name}">${emoji}</div>`,

@@ -1,18 +1,15 @@
-# Show/Hide All Pins Button — Test Plan
+# Test Plan: Creating-a-Character links open in new window
 
 ## What changed
-Added a "Hide All" / "Show All" toggle button in the Pins sidebar header that removes or restores all pin markers on the map.
+Added `target="_blank"` and `rel="noopener noreferrer"` to all six character creation links on the `/creating-a-character` page so they open in a new browser tab.
 
 ## Steps to test
-1. Navigate to the **Map** page with the Pins sidebar open
-2. Verify a **"Hide All"** button appears in the header row, next to the "Filters" label
-3. Click **"Hide All"** — verify:
-   - All pin markers/clusters disappear from the map
-   - The button text changes to **"Show All"**
-   - The pin list in the sidebar remains visible (only map markers are hidden)
-4. Click **"Show All"** — verify:
-   - All pin markers/clusters reappear on the map
-   - The button text changes back to **"Hide All"**
-5. Toggle a few times to confirm it's stable
-6. While pins are hidden, try using filters/search in the sidebar — verify the sidebar list still filters correctly
-7. Click "Show All" after filtering — verify only the filtered pins' markers reappear (note: currently all markers show/hide together via the cluster group)
+1. Navigate to `http://localhost:3000/creating-a-character`
+2. Click the **Backstory Generation →** card button — should open `/characters/new` in a new tab
+3. Click the **Quick Character →** card button — should open `/characters/quick` in a new tab
+4. Click the **Random Character →** card button — should open `/characters/random` in a new tab
+5. Scroll to the bottom CTA section
+6. Click **Start Backstory Generation** — new tab
+7. Click **Quick Character** — new tab
+8. Click **Random Character** — new tab
+9. Confirm the `/creating-a-character` page remains open after each click

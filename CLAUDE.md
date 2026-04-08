@@ -2,9 +2,11 @@
 
 ## Workflow Orchestration
 ### Helping me:
-    – Never make assumptions about my level.
-    – Don't skip steps & be explicit. Give full commands like "notepad app\campaigns\page.tsx" instead of just "app\campaigns\page.tsx"
-    – Give me a testing plan each time to confimr 
+    – Never make assumptions about my ability or confidence level.
+    – Don't skip steps & be explicit. 
+    – Give full commands like "notepad app\campaigns\page.tsx" instead of just "app\campaigns\page.tsx"
+    – Give me a testing plan each time to confirm the changes work. 
+    – Write the testplan to C:\TheTapestry\tasks\testplan.md
     – You are keeping a running TODO list, item for the learn.md file, and a roadmap. I will ask you periodically to export them so I can add them to the project
 
 ### 1. Plan Node Default

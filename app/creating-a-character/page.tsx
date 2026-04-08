@@ -64,7 +64,7 @@ export default function CreatingACharacterPage() {
               </div>
               <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.7, margin: '0 0 8px' }}>{desc}</p>
               <p style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.6, margin: '0 0 14px' }}><span style={{ color: '#cce0f5' }}>Best for:</span> {bestFor}</p>
-              <a href={href} style={{ display: 'inline-block', padding: '8px 20px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
+              <a href={href} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '8px 20px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
                 {label} →
               </a>
             </div>
@@ -179,13 +179,13 @@ export default function CreatingACharacterPage() {
 
         {/* CTA */}
         <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '2rem', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <a href='/characters/new' style={{ padding: '12px 28px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
+          <a href='/characters/new' target="_blank" rel="noopener noreferrer" style={{ padding: '12px 28px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
             Start Backstory Generation
           </a>
-          <a href='/characters/quick' style={{ padding: '12px 28px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
+          <a href='/characters/quick' target="_blank" rel="noopener noreferrer" style={{ padding: '12px 28px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
             Quick Character
           </a>
-          <a href='/characters/random' style={{ padding: '12px 28px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
+          <a href='/characters/random' target="_blank" rel="noopener noreferrer" style={{ padding: '12px 28px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
             Random Character
           </a>
         </div>

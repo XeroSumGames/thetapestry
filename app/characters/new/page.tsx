@@ -64,7 +64,7 @@ export default function NewCharacterPage() {
   const [showGhostWall, setShowGhostWall] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setIsAuth(!!user))
+    supabase.auth.getUser().then(({ data: { user } }: any) => setIsAuth(!!user))
   }, [])
 
   const step = state.currentStep

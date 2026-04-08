@@ -168,6 +168,7 @@
 - [x] Inline mode: full-screen sheet; Overlay mode: draggable floating window
 - [x] NPC card: Melee/Ranged/Demolitions green skill buttons (no duplicates)
 - [x] PC card: single centered Unarmed Attack button with damage info
+- [x] Creating-a-character page — all 6 builder links open in new tab
 
 ---
 

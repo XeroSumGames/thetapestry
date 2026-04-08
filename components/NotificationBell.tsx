@@ -47,7 +47,7 @@ export default function NotificationBell() {
         .limit(10)
       const items = data ?? []
       setNotifications(items)
-      setUnreadCount(items.filter(n => !n.read).length)
+      setUnreadCount(items.filter((n: any) => !n.read).length)
 
       // Subscribe to new notifications
       channelRef.current = supabase.channel(`notif_${user.id}`)

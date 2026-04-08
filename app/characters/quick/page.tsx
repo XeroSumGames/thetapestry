@@ -46,7 +46,7 @@ export default function QuickCharacterPage() {
   const [isAuth, setIsAuth] = useState<boolean | null>(null)
   const [showGhostWall, setShowGhostWall] = useState(false)
 
-  useEffect(() => { supabase.auth.getUser().then(({ data: { user } }) => setIsAuth(!!user)) }, [])
+  useEffect(() => { supabase.auth.getUser().then(({ data: { user } }: any) => setIsAuth(!!user)) }, [])
   function requireAuth() { if (isAuth === false) { setShowGhostWall(true); return true } return false }
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)

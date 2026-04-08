@@ -61,7 +61,7 @@ export default function NewCampaignPage() {
       }))
       const { data: createdPins, error: pinErr } = await supabase.from('campaign_pins').insert(pinRows).select('id, name')
       if (pinErr) { console.error('[CampaignCreate] pin seed error:', pinErr.message) }
-      createdPins?.forEach(p => { pinMap[p.name] = p.id })
+      createdPins?.forEach((p: any) => { pinMap[p.name] = p.id })
     }
     // Seed setting NPCs into campaign_npcs
     const settingNpcs = SETTING_NPCS[setting]

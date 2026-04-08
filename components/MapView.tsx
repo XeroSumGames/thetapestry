@@ -565,9 +565,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                     supabase.from('map_pins').update({ view_count: ((p as any).view_count ?? 0) + 1 }).eq('id', p.id)
                     // Fetch attachments if not already loaded
                     if (!pinAttachments[p.id]) {
-                      supabase.storage.from('pin-attachments').list(`${p.user_id}/${p.id}`).then(({ data: files }) => {
+                      supabase.storage.from('pin-attachments').list(`${p.user_id}/${p.id}`).then(({ data: files }: any) => {
                         if (files && files.length > 0) {
-                          const atts = files.map(f => {
+                          const atts = files.map((f: any) => {
                             const { data: urlData } = supabase.storage.from('pin-attachments').getPublicUrl(`${p.user_id}/${p.id}/${f.name}`)
                             return { name: f.name, url: urlData.publicUrl }
                           })
