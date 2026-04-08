@@ -356,7 +356,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 }
 
   // Filter chips
-  const FILTER_CHIPS = ['mine', 'all', 'public', 'canon', 'rumors', 'timeline'] as const
+  const FILTER_CHIPS_ROW1 = ['mine', 'all', 'public'] as const
+  const FILTER_CHIPS_ROW2 = ['canon', 'rumors', 'timeline'] as const
+  const FILTER_CHIPS = [...FILTER_CHIPS_ROW1, ...FILTER_CHIPS_ROW2] as const
   const allFiltersActive = FILTER_CHIPS.filter(f => f !== 'all').every(f => activeFilters.has(f))
 
   function toggleFilter(chip: string) {
@@ -483,7 +485,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               </div>
               <input value={pinSearch} onChange={e => setPinSearch(e.target.value)} placeholder="Search pins..."
                 style={{ width: '100%', padding: '5px 8px', marginBottom: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
-              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '4px' }}>
                 <button onClick={() => {
                   const next = !pinsVisible
                   setPinsVisible(next)
@@ -493,15 +495,27 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                     setActiveFilters(new Set())
                   }
                 }}
-                  style={{ padding: '3px 8px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${pinsVisible ? '#3a3a3a' : '#c0392b'}`, background: pinsVisible ? 'transparent' : '#2a1210', color: pinsVisible ? '#d4cfc9' : '#f5a89a' }}>
+                  style={{ padding: '3px 8px', flex: 1, fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${pinsVisible ? '#3a3a3a' : '#c0392b'}`, background: pinsVisible ? 'transparent' : '#2a1210', color: pinsVisible ? '#d4cfc9' : '#f5a89a', whiteSpace: 'nowrap' }}>
                   {pinsVisible ? 'Show' : 'Hidden'}
                 </button>
-                {FILTER_CHIPS.map(chip => {
+                {FILTER_CHIPS_ROW1.map(chip => {
                   const active = chip === 'all' ? allFiltersActive || activeFilters.has('all') : activeFilters.has(chip)
+                  const label = chip.charAt(0).toUpperCase() + chip.slice(1)
+                  return (
+                    <button key={chip} onClick={() => toggleFilter(chip)}
+                      style={{ padding: '3px 8px', flex: chip === 'all' ? '0 0 auto' : 1, fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : 'transparent', color: active ? '#f5a89a' : '#d4cfc9', whiteSpace: 'nowrap' }}>
+                      {label} ({chipCount(chip)})
+                    </button>
+                  )
+                })}
+              </div>
+              <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                {FILTER_CHIPS_ROW2.map(chip => {
+                  const active = activeFilters.has(chip)
                   const label = chip === 'timeline' ? '🕐 Timeline' : chip.charAt(0).toUpperCase() + chip.slice(1)
                   return (
                     <button key={chip} onClick={() => toggleFilter(chip)}
-                      style={{ padding: '3px 8px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : 'transparent', color: active ? '#f5a89a' : '#d4cfc9' }}>
+                      style={{ padding: '3px 8px', flex: chip === 'timeline' ? '0 0 auto' : 1, fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : 'transparent', color: active ? '#f5a89a' : '#d4cfc9', whiteSpace: 'nowrap' }}>
                       {label} ({chipCount(chip)})
                     </button>
                   )
