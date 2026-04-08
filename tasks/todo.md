@@ -20,6 +20,9 @@
 - [x] Session history table in Supabase
 - [x] Lobby state when session is idle
 - [x] End session modal with summary, cliffhanger, next-session notes, and file attachments
+- [x] End session modal closes instantly (UI updates immediately, DB writes run in background)
+- [x] Start session clears rolls/chat from DB + local state (clean slate each session)
+- [x] Realtime subscriptions listen to all events (INSERT + DELETE) for log clearing propagation
 - [x] Session history page with grid layout, deactivate, delete
 - [x] Previous Sessions button in table header
 - [x] Cliffhanger field displayed in session history
@@ -54,6 +57,10 @@
 - [x] Aim/social bonus badges on initiative tracker (+1/-1)
 - [x] Status badges: 💀 Dead, 🩸 Mortally Wounded, 💤 Unconscious, ⚡ Stressed
 - [x] Instant combat end broadcast to players
+- [x] Instant turn change broadcast to players (turn_changed event)
+- [x] NPC target dropdown — fix false-dead filter for NPCs with null wp_current
+- [x] Default feed tab opens on Logs (not Both)
+- [x] Both tab merges rolls + chat chronologically (was sequential blocks)
 
 ### Combat Rules — Advanced (SRD)
 - [x] Getting The Drop — GM selects in Start Combat modal, 1 action, -2 init
@@ -63,6 +70,7 @@
 - [x] Resolution Phase — narrative, handled by GM with existing mechanics
 - [x] Initiative fetches fresh character data from DB (fixes "Unknown" name bug)
 - [x] Initiative results logged to Rolls tab in chat feed
+- [x] Combat start parallelized — cut from 8 sequential DB calls to 3 rounds (set active in insert, skip re-fetch)
 
 ### Damage & Health Automation (SRD)
 - [x] Auto-damage on successful attacks with DMM/DMR defense

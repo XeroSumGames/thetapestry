@@ -6,6 +6,9 @@
 - **Supabase Storage buckets must be created manually**: They don't auto-create from code. Each bucket needs INSERT/SELECT/DELETE policies on `storage.objects` filtered by `bucket_id`.
 - **Column must exist before code references it**: Always provide the ALTER TABLE SQL alongside the commit. Don't assume the user has run previous SQL.
 
+- **Null-coalescing chains can create false positives**: `npc.wp_current ?? npc.wp_max ?? 10` evaluates to `0` (and filters as "dead") when both fields are null. Only filter entities as dead when their health field has been explicitly set to 0, not when it's null/uninitialized. Use `npc.wp_current != null && npc.wp_current <= 0` instead.
+- **Realtime subscriptions must match the events you need**: Subscribing to `INSERT` only means `DELETE` events are invisible to other clients. If a feature clears data (like session end deleting logs), use `event: '*'` so all clients see the change.
+
 ## React & Next.js
 - **Emoji icons don't respond to CSS `color`**: Emojis render as images. Use SVG icons if you need color to change dynamically (e.g., notification bell).
 - **`await` your Supabase calls**: Fire-and-forget (`supabase.from(...).update(...)` without `await`) causes race conditions. The Realtime subscription can fire before the write completes, reading stale data.

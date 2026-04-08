@@ -1942,7 +1942,7 @@ export default function TablePage() {
             {sessionStatus !== 'idle' && myEntry && (
               <div style={{ padding: '6px 8px' }}>
                 <button
-                  onClick={() => { if (selectedEntry?.odCharId === myEntry.odCharId) { setSelectedEntry(null) } else { setSelectedEntry(myEntry); setViewingNpcs([]); setSheetPos(null) } }}
+                  onClick={() => { if (selectedEntry?.character.id === myEntry.character.id) { setSelectedEntry(null) } else { setSelectedEntry(myEntry); setViewingNpcs([]); setSheetPos(null) } }}
                   style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
                 >
                   Open My Sheet to Roll
