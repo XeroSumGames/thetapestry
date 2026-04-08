@@ -164,6 +164,7 @@ export default function TablePage() {
   const [selectedEntry, setSelectedEntry] = useState<TableEntry | null>(null)
   const [rolls, setRolls] = useState<RollEntry[]>([])
   const [pendingRoll, setPendingRoll] = useState<PendingRoll | null>(null)
+  const [insightSavePrompt, setInsightSavePrompt] = useState<{ stateId: string; targetName: string; newWP: number; newRP: number; phyAmod: number; insightDice: number } | null>(null)
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
   const [cmod, setCmod] = useState('0')
   const [rolling, setRolling] = useState(false)
@@ -785,6 +786,27 @@ export default function TablePage() {
     setPublishedNpcIds(prev => new Set([...prev, npc.id]))
   }
 
+  async function handleInsightSave(spend: boolean) {
+    if (!insightSavePrompt) return
+    const { stateId, phyAmod, insightDice } = insightSavePrompt
+    if (spend) {
+      // Spend Insight Die, stay at WP=1
+      await supabase.from('character_states').update({
+        wp_current: 1, insight_dice: insightDice - 1, updated_at: new Date().toISOString(),
+      }).eq('id', stateId)
+      setEntries(prev => prev.map(e => e.stateId === stateId ? { ...e, liveState: { ...e.liveState, wp_current: 1, insight_dice: insightDice - 1 } } : e))
+    } else {
+      // Apply full damage — WP=0 with death countdown
+      const deathCountdown = Math.max(1, phyAmod + 1)
+      await supabase.from('character_states').update({
+        wp_current: 0, death_countdown: deathCountdown, updated_at: new Date().toISOString(),
+      }).eq('id', stateId)
+      setEntries(prev => prev.map(e => e.stateId === stateId ? { ...e, liveState: { ...e.liveState, wp_current: 0, death_countdown: deathCountdown } as any } : e))
+    }
+    setInsightSavePrompt(null)
+    await loadEntries(id)
+  }
+
   async function applySocialAction(action: string, targetEntryId: string) {
     const activeEntry = initiativeOrder.find(e => e.is_active)
     if (!activeEntry) return
@@ -947,14 +969,27 @@ export default function TablePage() {
       if (targetEntry?.liveState) {
         const newWP = Math.max(0, targetEntry.liveState.wp_current - finalWP)
         const newRP = Math.max(0, targetEntry.liveState.rp_current - finalRP)
-        const update: any = { wp_current: newWP, rp_current: newRP, updated_at: new Date().toISOString() }
-        // Set death countdown when WP first reaches 0
-        if (newWP === 0 && targetEntry.liveState.wp_current > 0) {
-          const phyAmod = targetEntry.character.data?.rapid?.PHY ?? 0
-          update.death_countdown = Math.max(1, phyAmod + 1)
+
+        // If WP would drop to 0 and target has Insight Dice, prompt for save
+        if (newWP === 0 && targetEntry.liveState.wp_current > 0 && (targetEntry.liveState.insight_dice ?? 0) > 0) {
+          // Apply RP damage immediately but hold WP pending the save decision
+          await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId)
+          setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, rp_current: newRP } } : e))
+          setInsightSavePrompt({
+            stateId: targetEntry.stateId,
+            targetName: targetEntry.character.name,
+            newWP, newRP,
+            phyAmod: targetEntry.character.data?.rapid?.PHY ?? 0,
+            insightDice: targetEntry.liveState.insight_dice,
+          })
+        } else {
+          const update: any = { wp_current: newWP, rp_current: newRP, updated_at: new Date().toISOString() }
+          if (newWP === 0 && targetEntry.liveState.wp_current > 0) {
+            update.death_countdown = Math.max(1, (targetEntry.character.data?.rapid?.PHY ?? 0) + 1)
+          }
+          await supabase.from('character_states').update(update).eq('id', targetEntry.stateId)
+          setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
         }
-        await supabase.from('character_states').update(update).eq('id', targetEntry.stateId)
-        setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
       }
     }
 
@@ -1198,13 +1233,11 @@ export default function TablePage() {
                   <span style={{ fontSize: '8px', color: '#EF9F27', background: '#2a2010', border: '1px solid #EF9F27', padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>NPC</span>
                 )}
                 <span style={{ fontSize: '11px', color: entry.is_active ? '#c0392b' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
-                {entry.is_active && (
-                  <span style={{ fontSize: '10px', letterSpacing: '2px' }}>
-                    {Array.from({ length: 2 }).map((_, i) => (
-                      <span key={i} style={{ color: i < (entry.actions_remaining ?? 0) ? '#7fc458' : '#3a3a3a' }}>●</span>
-                    ))}
-                  </span>
-                )}
+                <span style={{ fontSize: '10px', letterSpacing: '2px' }}>
+                  {Array.from({ length: 2 }).map((_, i) => (
+                    <span key={i} style={{ color: i < (entry.actions_remaining ?? 0) ? '#7fc458' : (entry.actions_remaining ?? 0) === 0 ? '#EF9F27' : '#3a3a3a' }}>●</span>
+                  ))}
+                </span>
                 {/* Aim/social bonus badge */}
                 {(entry.aim_bonus ?? 0) !== 0 && (
                   <span style={{ fontSize: '10px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: entry.aim_bonus > 0 ? '#7fc458' : '#c0392b' }}>
@@ -2028,6 +2061,35 @@ export default function TablePage() {
               <button onClick={confirmStartCombat} disabled={startingCombat}
                 style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: startingCombat ? 'not-allowed' : 'pointer', opacity: startingCombat ? 0.6 : 1 }}>
                 {startingCombat ? 'Rolling...' : `⚔️ Start Combat${selectedNpcIds.size > 0 ? ` (${selectedNpcIds.size} NPCs)` : ''}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Insight Die Save Modal */}
+      {insightSavePrompt && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ background: '#1a1a1a', border: '1px solid #c0392b', borderRadius: '4px', padding: '1.5rem', width: '340px', textAlign: 'center' }}>
+            <div style={{ fontSize: '20px', marginBottom: '8px' }}>🩸</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#c0392b', marginBottom: '8px' }}>
+              Mortal Injury
+            </div>
+            <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', marginBottom: '6px' }}>
+              <strong>{insightSavePrompt.targetName}</strong> would be mortally wounded!
+            </div>
+            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1.5rem' }}>
+              Spend an Insight Die to stay at 1 WP?
+              <br /><span style={{ fontSize: '13px', color: '#7fc458' }}>({insightSavePrompt.insightDice} Insight {insightSavePrompt.insightDice === 1 ? 'Die' : 'Dice'} available)</span>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => handleInsightSave(true)}
+                style={{ flex: 1, padding: '10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                Spend Die — Survive
+              </button>
+              <button onClick={() => handleInsightSave(false)}
+                style={{ flex: 1, padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                Accept Fate
               </button>
             </div>
           </div>
