@@ -71,14 +71,14 @@ export default function LoggingPage() {
           { count: pp },
           { count: pn },
         ] = await Promise.all([
-          supabase.from('visitor_logs').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(100),
-          supabase.from('user_events').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(100),
-          supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', d7),
-          supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', d30),
-          supabase.from('campaigns').select('*', { count: 'exact', head: true }).eq('session_status', 'active'),
-          supabase.from('visitor_logs').select('*', { count: 'exact', head: true }).eq('is_ghost', true).gte('created_at', d7),
-          supabase.from('map_pins').select('*', { count: 'exact', head: true }).eq('pin_type', 'rumor').eq('status', 'pending'),
-          supabase.from('world_npcs').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+          supabase.from('visitor_logs').select('id, page, user_id, is_ghost, ip_address, ip_hash, country_code, region, city, created_at', { count: 'exact' }).order('created_at', { ascending: false }).limit(100),
+          supabase.from('user_events').select('id, user_id, event_type, metadata, created_at', { count: 'exact' }).order('created_at', { ascending: false }).limit(100),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', d7),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', d30),
+          supabase.from('campaigns').select('id', { count: 'exact', head: true }).eq('session_status', 'active'),
+          supabase.from('visitor_logs').select('id', { count: 'exact', head: true }).eq('is_ghost', true).gte('created_at', d7),
+          supabase.from('map_pins').select('id', { count: 'exact', head: true }).eq('pin_type', 'rumor').eq('status', 'pending'),
+          supabase.from('world_npcs').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         ])
         setSignups7d(s7 ?? 0)
         setSignups30d(s30 ?? 0)

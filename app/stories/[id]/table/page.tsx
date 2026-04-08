@@ -311,7 +311,7 @@ export default function TablePage() {
   async function loadRevealedNpcs(characterId: string, cnpcs: any[]) {
     const { data: rels } = await supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('character_id', characterId).eq('revealed', true)
     if (rels && rels.length > 0 && cnpcs.length > 0) {
-      const revealed = rels.map(r => {
+      const revealed = rels.map((r: any) => {
         const npc = cnpcs.find((n: any) => n.id === r.npc_id)
         return npc ? { ...npc, relationship_cmod: r.relationship_cmod, reveal_level: r.reveal_level } : null
       }).filter(Boolean)
@@ -377,12 +377,13 @@ export default function TablePage() {
       if (members && members.length > 0) ensureCharacterStates(id, members as any[])
       const [,,,, cnpcsResult, pubDataResult] = await Promise.all([
         loadEntries(id), loadRolls(id), loadInitiative(id), loadChat(id),
-        supabase.from('campaign_npcs').select('id, name, portrait_url, npc_type, recruitment_role').eq('campaign_id', id),
+        supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
         supabase.from('world_npcs').select('source_campaign_npc_id').not('source_campaign_npc_id', 'is', null),
       ])
       const cnpcs = cnpcsResult.data ?? []
       setCampaignNpcs(cnpcs)
-      if (pubDataResult.data) setPublishedNpcIds(new Set(pubDataResult.data.map(d => d.source_campaign_npc_id!)))
+      setRosterNpcs(cnpcs.filter((n: any) => n.status === 'active'))
+      if (pubDataResult.data) setPublishedNpcIds(new Set(pubDataResult.data.map((d: any) => d.source_campaign_npc_id!)))
 
       // Load revealed NPCs for this player
       if (camp.gm_user_id !== user.id) {
@@ -554,6 +555,15 @@ export default function TablePage() {
       }
     }
     setDropCharacter('')
+
+    // Log initiative results to chat feed
+    if (order && order.length > 0) {
+      const initLog = order.map((e: any) => `${e.character_name}: ${e.roll}`).join(' | ')
+      await supabase.from('roll_log').insert({
+        campaign_id: id, character_name: 'System', label: `Initiative: ${initLog}`,
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action',
+      })
+    }
 
     setStartingCombat(false)
     await loadInitiative(id)
@@ -2229,10 +2239,10 @@ export default function TablePage() {
                 style={{ border: '2px dashed #3a3a3a', borderRadius: '4px', padding: '1.25rem', textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
                 onClick={() => { const input = document.createElement('input'); input.type = 'file'; input.multiple = true; input.accept = 'image/*,.pdf,.txt,.doc,.docx'; input.onchange = () => { const files = Array.from(input.files ?? []).filter(f => f.type.startsWith('image/') || f.type === 'application/pdf' || f.type === 'text/plain' || f.type === 'application/msword' || f.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'); if (files.length > 0) setSessionFiles(prev => [...prev, ...files]) }; input.click() }}
               >
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                   Drop files here or click to browse
                 </div>
-                <div style={{ fontSize: '12px', color: '#3a3a3a', marginTop: '4px' }}>Maps, handouts, references — images, PDFs, text, and Word docs</div>
+                <div style={{ fontSize: '14px', color: '#cce0f5', marginTop: '4px' }}>Maps, handouts, references — images, PDFs, text, and Word docs</div>
               </div>
               {sessionFiles.length > 0 && (
                 <div style={{ marginTop: '8px' }}>

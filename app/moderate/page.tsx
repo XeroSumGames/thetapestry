@@ -137,9 +137,25 @@ export default function ModerationPage() {
   async function handleDeleteUser(id: string) {
     if (!confirm('Permanently delete this account? This cannot be undone.')) return
     setActing(id)
-    await supabase.from('profiles').delete().eq('id', id)
-    setUsers(prev => prev.filter(u => u.id !== id))
-    setActing(null)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ user_id: id, caller_id: user?.id }),
+      })
+      const result = await res.json()
+      if (!res.ok) { alert(result.error || 'Failed to delete user'); return }
+      setUsers(prev => prev.filter(u => u.id !== id))
+    } catch (err) {
+      alert('Failed to delete user')
+    } finally {
+      setActing(null)
+    }
   }
 
   async function handleAction(id: string, action: 'approved' | 'rejected') {
