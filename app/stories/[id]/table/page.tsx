@@ -509,6 +509,7 @@ export default function TablePage() {
     const charMap = Object.fromEntries((freshChars ?? []).map((c: any) => [c.id, c]))
 
     // Roll initiative for all PCs: 2d6 + ACU AMod + DEX AMod
+    const initDetails: { name: string; d1: number; d2: number; acu: number; dex: number; drop: number; total: number }[] = []
     const pcRows = (freshMembers ?? []).map((m: any) => {
       const char = charMap[m.character_id]
       const rapid = char?.data?.rapid ?? {}
@@ -516,7 +517,10 @@ export default function TablePage() {
       const dex = rapid.DEX ?? 0
       const charName = char?.name ?? 'Unknown'
       const isDropChar = dropCharacter === charName
-      const roll = rollD6() + rollD6() + acu + dex + (isDropChar ? dropPenalty : 0)
+      const d1 = rollD6(), d2 = rollD6()
+      const drop = isDropChar ? dropPenalty : 0
+      const roll = d1 + d2 + acu + dex + drop
+      initDetails.push({ name: charName, d1, d2, acu, dex, drop, total: roll })
       return {
         campaign_id: id,
         character_name: charName,
@@ -536,6 +540,12 @@ export default function TablePage() {
       .filter(n => selectedNpcIds.has(n.id))
       .map(n => {
         const isDropChar = dropCharacter === n.name
+        const d1 = rollD6(), d2 = rollD6()
+        const acu = n.acumen ?? 0
+        const dex = n.dexterity ?? 0
+        const drop = isDropChar ? dropPenalty : 0
+        const roll = d1 + d2 + acu + dex + drop
+        initDetails.push({ name: n.name, d1, d2, acu, dex, drop, total: roll })
         return {
           campaign_id: id,
           character_name: n.name,
@@ -544,7 +554,7 @@ export default function TablePage() {
           npc_id: n.id,
           portrait_url: n.portrait_url,
           npc_type: n.npc_type,
-          roll: rollD6() + rollD6() + (n.acumen ?? 0) + (n.dexterity ?? 0) + (isDropChar ? dropPenalty : 0),
+          roll,
           is_active: false,
           is_npc: true,
         }
@@ -577,13 +587,14 @@ export default function TablePage() {
     }
     setDropCharacter('')
 
-    // Log combat start + initiative results to chat feed
+    // Log combat start + initiative results to roll feed
     if (order && order.length > 0) {
-      const initLog = order.map((e: any) => `${e.character_name}: ${e.roll}`).join(' | ')
+      const sorted = [...initDetails].sort((a, b) => b.total - a.total)
       await supabase.from('roll_log').insert([
         { campaign_id: id, character_name: 'System', label: '⚔️ Combat Started', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' },
-        { campaign_id: id, character_name: 'System', label: `Initiative: ${initLog}`,
-        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' },
+        { campaign_id: id, character_name: 'System', label: 'Initiative',
+          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
+          damage_json: { initiative: sorted } as any },
       ])
     }
 
@@ -626,14 +637,25 @@ export default function TablePage() {
       }
 
       // Re-roll initiative for all combatants
+      const rerollDetails: { name: string; d1: number; d2: number; acu: number; dex: number; drop: number; total: number }[] = []
       for (const entry of initiativeOrder) {
         const charEntry = entries.find(e => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
         const rapid = charEntry?.character.data?.rapid ?? {}
         const acu = entry.is_npc ? (rosterNpcs.find(n => n.id === entry.npc_id)?.acumen ?? 0) : (rapid.ACU ?? 0)
         const dex = entry.is_npc ? (rosterNpcs.find(n => n.id === entry.npc_id)?.dexterity ?? 0) : (rapid.DEX ?? 0)
-        const newRoll = rollD6() + rollD6() + acu + dex
+        const d1 = rollD6(), d2 = rollD6()
+        const newRoll = d1 + d2 + acu + dex
+        rerollDetails.push({ name: entry.character_name, d1, d2, acu, dex, drop: 0, total: newRoll })
         await supabase.from('initiative_order').update({ roll: newRoll, actions_remaining: 2, aim_bonus: 0, is_active: false }).eq('id', entry.id)
       }
+
+      // Log new round initiative
+      const sortedReroll = [...rerollDetails].sort((a, b) => b.total - a.total)
+      await supabase.from('roll_log').insert({
+        campaign_id: id, character_name: 'System', label: 'New Round — Initiative',
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
+        damage_json: { initiative: sortedReroll } as any,
+      })
 
       // Re-sort and set first as active (PCs beat NPCs on ties)
       const { data: rerolled } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false })
@@ -1718,7 +1740,25 @@ export default function TablePage() {
                   </div>
                 </div>
               ) : (
-                rolls.map(r => (
+                rolls.map(r => r.outcome === 'initiative' && (r.damage_json as any)?.initiative ? (
+                  <div key={r.id} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Initiative</span>
+                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                    </div>
+                    {((r.damage_json as any).initiative as any[]).map((e: any, i: number) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: '6px', padding: '3px 0', borderBottom: i < (r.damage_json as any).initiative.length - 1 ? '1px solid #2e2e2e' : 'none' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', minWidth: '80px' }}>{e.name}</span>
+                        <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                          [{e.d1}+{e.d2}]
+                          {(e.acu !== 0 || e.dex !== 0) && <span style={{ color: '#7fc458' }}> +{e.acu} ACU +{e.dex} DEX</span>}
+                          {e.drop !== 0 && <span style={{ color: '#f5a89a' }}> {e.drop} Drop</span>}
+                        </span>
+                        <span style={{ marginLeft: 'auto', fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif' }}>{e.total}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: `3px solid ${outcomeColor(r.outcome)}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.character_name}</span>
