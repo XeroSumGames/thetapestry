@@ -455,37 +455,36 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               )}
               {displayedPins.map(p => (
                 <div key={p.id} onClick={() => flyToPin(p)}
-                  style={{ padding: '10px 12px', marginBottom: '4px', background: '#242424', border: '1px solid #2e2e2e', borderLeft: `3px solid ${pinColor(p)}`, borderRadius: '3px', cursor: 'pointer' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '15px', fontWeight: 600, color: '#f5f2ee', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {getCategoryEmoji(p.category ?? 'location')} {p.title}
-                      </div>
-                      {p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.notes}</div>}
-                      {timelineOnly && p.created_at && (
-                        <div style={{ fontSize: '11px', color: '#EF9F27', marginTop: '2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
-                          {new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </div>
-                      )}
-                      <div style={{ fontSize: '11px', color: '#cce0f5', marginTop: '3px', textTransform: 'uppercase', letterSpacing: '.06em' }}>{pinTypeLabel(p)}</div>
+                  style={{ padding: '8px 10px', marginBottom: '3px', background: '#242424', border: '1px solid #2e2e2e', borderLeft: `3px solid ${pinColor(p)}`, borderRadius: '3px', cursor: 'pointer' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {getCategoryEmoji(p.category ?? 'location')} {p.title}
+                  </div>
+                  {p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{p.notes}</div>}
+                  {timelineOnly && p.created_at && (
+                    <div style={{ fontSize: '11px', color: '#EF9F27', marginTop: '2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                      {new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
+                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px', gap: '6px' }}>
+                    <span style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.06em' }}>{pinTypeLabel(p)}</span>
                     {(p.user_id === userId || userRole === 'thriver') && (
-                      <div style={{ display: 'flex', gap: '4px', marginLeft: '8px', flexShrink: 0 }}>
+                      <>
+                        <span style={{ flex: 1 }} />
                         {userRole === 'thriver' && (
                           <button onClick={e => { e.stopPropagation(); handleTogglePublic(p) }}
-                            style={{ background: 'none', border: 'none', color: p.status === 'approved' ? '#7fc458' : '#cce0f5', cursor: 'pointer', fontSize: '12px', padding: '0 2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                            style={{ background: 'none', border: 'none', color: p.status === 'approved' ? '#7fc458' : '#cce0f5', cursor: 'pointer', fontSize: '11px', padding: '0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
                             {p.status === 'approved' ? 'Public' : 'Private'}
                           </button>
                         )}
                         <button onClick={e => { e.stopPropagation(); startEdit(p) }}
-                          style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '13px', padding: '0 2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                          style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '11px', padding: '0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
                           Edit
                         </button>
                         <button onClick={e => { e.stopPropagation(); if (confirm('Delete this pin?')) handleDeletePin(p.id) }} disabled={deletingId === p.id}
-  style={{ background: 'none', border: 'none', color: '#f5a89a', cursor: 'pointer', fontSize: '16px', padding: '0 4px', opacity: deletingId === p.id ? 0.4 : 1 }}>
-  ×
-</button>
-                      </div>
+                          style={{ background: 'none', border: 'none', color: '#f5a89a', cursor: 'pointer', fontSize: '13px', padding: '0', opacity: deletingId === p.id ? 0.4 : 1 }}>
+                          ×
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -494,12 +493,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
           </div>
         )}
 
-        {(!embedded || showSidebarProp) && !sidebarOpen && (
-          <button onClick={() => setSidebarOpen(true)}
-            style={{ position: 'absolute', top: '6px', left: '6px', zIndex: 1000, padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            Pins ☰
-          </button>
-        )}
+        {/* Pins toggle button is rendered inside the search bar row below */}
         {!embedded && showHeader && (
           <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'rgba(15,15,15,.85)', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px 14px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', pointerEvents: 'none' }}>
             Click anywhere on the map to place a pin
@@ -507,7 +501,13 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         )}
 
           <div style={{ position: 'absolute', top: '6px', right: sidebarOpen ? '306px' : '6px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', transition: 'right .2s' }}>
-            <form onSubmit={handleSearch} style={{ display: 'flex', gap: '4px' }}>
+            <form onSubmit={handleSearch} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              {(!embedded || showSidebarProp) && !sidebarOpen && (
+                <button type="button" onClick={() => setSidebarOpen(true)}
+                  style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  Pins ☰
+                </button>
+              )}
               <div style={{ position: 'relative', flex: 1 }}>
                 <input value={searchQuery} onChange={e => {
                   setSearchQuery(e.target.value)
