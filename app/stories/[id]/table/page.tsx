@@ -602,7 +602,7 @@ export default function TablePage() {
     setStartingCombat(false)
     await loadInitiative(id)
     // Broadcast combat start to all players
-    supabase.channel(`initiative_${id}`).send({ type: 'broadcast', event: 'combat_started', payload: {} })
+    initChannelRef.current?.send({ type: 'broadcast', event: 'combat_started', payload: {} })
   }
 
   async function nextTurn() {
@@ -754,7 +754,7 @@ export default function TablePage() {
     await supabase.from('initiative_order').delete().eq('campaign_id', id)
     setInitiativeOrder([])
     setCombatActive(false)
-    supabase.channel(`initiative_${id}`).send({ type: 'broadcast', event: 'combat_ended', payload: {} })
+    initChannelRef.current?.send({ type: 'broadcast', event: 'combat_ended', payload: {} })
   }
 
   async function addNPC() {
