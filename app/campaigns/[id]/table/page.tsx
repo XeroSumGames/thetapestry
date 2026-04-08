@@ -420,6 +420,7 @@ export default function TablePage() {
 
       initChannelRef.current = supabase.channel(`initiative_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
+        .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false) })
         .subscribe()
 
       campaignChannelRef.current = supabase.channel(`campaign_${id}`)
@@ -668,6 +669,8 @@ export default function TablePage() {
     await supabase.from('initiative_order').delete().eq('campaign_id', id)
     setInitiativeOrder([])
     setCombatActive(false)
+    // Broadcast combat end to all players via Realtime channel
+    supabase.channel(`initiative_${id}`).send({ type: 'broadcast', event: 'combat_ended', payload: {} })
   }
 
   async function addNPC() {
