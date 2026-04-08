@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { logEvent } from '../lib/events'
+import Image from 'next/image'
 export default function NavBar() {
   const [userRole, setUserRole] = useState<'survivor' | 'thriver' | null>(null)
   const router = useRouter()
@@ -34,7 +35,7 @@ export default function NavBar() {
     }}>
       {/* Logo + title grouped together */}
       <a href="https://www.xerosumgames.com" target="_blank" rel="noreferrer" style={{ flexShrink: 0, paddingBottom: '4px' }}>
-        <img src="/XeroSumGamesLogoV13.png" alt="Xero Sum Games" style={{ height: '24px', objectFit: 'contain', opacity: 0.85, display: 'block' }} />
+        <Image src="/XeroSumGamesLogoV13.png" alt="Xero Sum Games" width={96} height={24} style={{ objectFit: 'contain', opacity: 0.85, display: 'block' }} />
       </a>
       <a href="/dashboard" style={{ fontSize: '28px', fontFamily: 'Distemper, sans-serif', textTransform: 'uppercase', color: '#f5f2ee', textDecoration: 'none', flexShrink: 0, lineHeight: 0.85, marginLeft: '24px' }}>
   The Tapestry

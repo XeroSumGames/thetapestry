@@ -375,14 +375,14 @@ export default function TablePage() {
       setGmInfo({ userId: camp.gm_user_id, username: (gmProfile as any)?.username ?? 'GM' })
 
       if (members && members.length > 0) ensureCharacterStates(id, members as any[])
-      await Promise.all([loadEntries(id), loadRolls(id), loadInitiative(id), loadChat(id)])
-
-      // Load campaign NPCs for social skill rolls (all users need this)
-      const { data: cnpcs } = await supabase.from('campaign_npcs').select('id, name, portrait_url, npc_type, recruitment_role').eq('campaign_id', id)
-      setCampaignNpcs(cnpcs ?? [])
-      // Check which NPCs are published to world library
-      const { data: pubData } = await supabase.from('world_npcs').select('source_campaign_npc_id').not('source_campaign_npc_id', 'is', null)
-      if (pubData) setPublishedNpcIds(new Set(pubData.map(d => d.source_campaign_npc_id!)))
+      const [,,,, cnpcsResult, pubDataResult] = await Promise.all([
+        loadEntries(id), loadRolls(id), loadInitiative(id), loadChat(id),
+        supabase.from('campaign_npcs').select('id, name, portrait_url, npc_type, recruitment_role').eq('campaign_id', id),
+        supabase.from('world_npcs').select('source_campaign_npc_id').not('source_campaign_npc_id', 'is', null),
+      ])
+      const cnpcs = cnpcsResult.data ?? []
+      setCampaignNpcs(cnpcs)
+      if (pubDataResult.data) setPublishedNpcIds(new Set(pubDataResult.data.map(d => d.source_campaign_npc_id!)))
 
       // Load revealed NPCs for this player
       if (camp.gm_user_id !== user.id) {
@@ -913,14 +913,14 @@ export default function TablePage() {
     if (!insightSavePrompt) return
     const { stateId, phyAmod, insightDice } = insightSavePrompt
     if (spend) {
-      // Spend Insight Die, stay at WP=1
+      // Trade ALL Insight Dice per SRD, regain 1 WP and 1 RP
       await supabase.from('character_states').update({
-        wp_current: 1, insight_dice: insightDice - 1, updated_at: new Date().toISOString(),
+        wp_current: 1, rp_current: 1, insight_dice: 0, updated_at: new Date().toISOString(),
       }).eq('id', stateId)
-      setEntries(prev => prev.map(e => e.stateId === stateId ? { ...e, liveState: { ...e.liveState, wp_current: 1, insight_dice: insightDice - 1 } } : e))
+      setEntries(prev => prev.map(e => e.stateId === stateId ? { ...e, liveState: { ...e.liveState, wp_current: 1, rp_current: 1, insight_dice: 0 } } : e))
     } else {
       // Apply full damage — WP=0 with death countdown
-      const deathCountdown = Math.max(1, phyAmod + 1)
+      const deathCountdown = Math.max(1, 4 + phyAmod)
       await supabase.from('character_states').update({
         wp_current: 0, death_countdown: deathCountdown, updated_at: new Date().toISOString(),
       }).eq('id', stateId)
@@ -1112,7 +1112,7 @@ export default function TablePage() {
         } else {
           const update: any = { wp_current: newWP, rp_current: newRP, updated_at: new Date().toISOString() }
           if (newWP === 0 && targetEntry.liveState.wp_current > 0) {
-            update.death_countdown = Math.max(1, (targetEntry.character.data?.rapid?.PHY ?? 0) + 1)
+            update.death_countdown = Math.max(1, 4 + (targetEntry.character.data?.rapid?.PHY ?? 0))
           }
           await supabase.from('character_states').update(update).eq('id', targetEntry.stateId)
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
@@ -1380,7 +1380,7 @@ export default function TablePage() {
                 {entry.is_npc && (
                   <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                     {entry.portrait_url ? (
-                      <img src={entry.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={entry.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <span style={{ fontSize: '7px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{entry.character_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}</span>
                     )}
@@ -1741,7 +1741,7 @@ export default function TablePage() {
               {revealedNpcs.map((npc: any) => (
                 <div key={npc.id} style={{ padding: '6px 10px', background: 'rgba(26,26,26,0.9)', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '8px', minWidth: '120px', pointerEvents: 'auto' }}>
                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                    {npc.portrait_url ? <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>}
+                    {npc.portrait_url ? <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>}
                   </div>
                   <div>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
@@ -1794,7 +1794,7 @@ export default function TablePage() {
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = gmEntry ? '#1a1a1a' : '#111' }}
         >
           <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-            {gmEntry && getCharPhoto(gmEntry) ? <img src={getCharPhoto(gmEntry)!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '10px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>GM</span>}
+            {gmEntry && getCharPhoto(gmEntry) ? <img src={getCharPhoto(gmEntry)!} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '10px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>GM</span>}
           </div>
           <div style={{ fontSize: '11px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {gmEntry ? gmEntry.character.name : (gmInfo?.username ?? 'GM')}
@@ -1822,7 +1822,7 @@ export default function TablePage() {
                 onMouseLeave={e => (e.currentTarget.style.background = isActive ? '#1a0f0f' : '#1a1a1a')}
               >
                 <div style={{ width: avatarSize, height: avatarSize, borderRadius: '50%', background: '#1a3a5c', border: `2px solid ${isActive ? '#c0392b' : '#7ab3d4'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                  {photo ? <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: isCompact ? '9px' : '11px', fontWeight: 700, color: isActive ? '#c0392b' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(entry.character.name)}</span>}
+                  {photo ? <img src={photo} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: isCompact ? '9px' : '11px', fontWeight: 700, color: isActive ? '#c0392b' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(entry.character.name)}</span>}
                 </div>
                 <div style={{ fontSize: nameSize, color: isActive ? '#f5a89a' : '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {entry.character.name} <span style={{ color: '#cce0f5', fontWeight: 400 }}>({entry.username})</span>
@@ -2236,7 +2236,7 @@ export default function TablePage() {
                     }} style={{ accentColor: '#c0392b' }} />
                     <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                       {npc.portrait_url ? (
-                        <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
                         <span style={{ fontSize: '9px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
                       )}
@@ -2375,13 +2375,13 @@ export default function TablePage() {
               <strong>{insightSavePrompt.targetName}</strong> would be mortally wounded!
             </div>
             <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1.5rem' }}>
-              Spend an Insight Die to stay at 1 WP?
-              <br /><span style={{ fontSize: '13px', color: '#7fc458' }}>({insightSavePrompt.insightDice} Insight {insightSavePrompt.insightDice === 1 ? 'Die' : 'Dice'} available)</span>
+              Trade ALL Insight Dice to survive with 1 WP and 1 RP?
+              <br /><span style={{ fontSize: '13px', color: '#7fc458' }}>({insightSavePrompt.insightDice} Insight {insightSavePrompt.insightDice === 1 ? 'Die' : 'Dice'} will be lost)</span>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => handleInsightSave(true)}
                 style={{ flex: 1, padding: '10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                Spend Die — Survive
+                Trade All Dice — Survive
               </button>
               <button onClick={() => handleInsightSave(false)}
                 style={{ flex: 1, padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
