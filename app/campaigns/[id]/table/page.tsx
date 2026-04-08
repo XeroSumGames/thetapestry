@@ -557,13 +557,34 @@ export default function TablePage() {
     if (initiativeOrder.length === 0) return
     const currentIdx = initiativeOrder.findIndex(e => e.is_active)
 
-    // Decrement death countdown for all mortally wounded characters (new round when wrapping)
+    // New round when wrapping — re-roll initiative + decrement death countdowns
     if (currentIdx === initiativeOrder.length - 1) {
+      // Decrement death countdown
       for (const e of entries) {
         if (e.liveState && e.liveState.wp_current === 0 && (e.liveState as any).death_countdown != null && (e.liveState as any).death_countdown > 0) {
           await supabase.from('character_states').update({ death_countdown: (e.liveState as any).death_countdown - 1 }).eq('id', e.stateId)
         }
       }
+
+      // Re-roll initiative for all combatants
+      for (const entry of initiativeOrder) {
+        const charEntry = entries.find(e => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
+        const rapid = charEntry?.character.data?.rapid ?? {}
+        const acu = entry.is_npc ? (rosterNpcs.find(n => n.id === entry.npc_id)?.acumen ?? 0) : (rapid.ACU ?? 0)
+        const dex = entry.is_npc ? (rosterNpcs.find(n => n.id === entry.npc_id)?.dexterity ?? 0) : (rapid.DEX ?? 0)
+        const newRoll = rollD6() + rollD6() + acu + dex
+        await supabase.from('initiative_order').update({ roll: newRoll, actions_remaining: 2, aim_bonus: 0, is_active: false }).eq('id', entry.id)
+      }
+
+      // Re-sort and set first as active (PCs beat NPCs on ties)
+      const { data: rerolled } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false })
+      if (rerolled && rerolled.length > 0) {
+        // On ties, PCs go first
+        rerolled.sort((a: any, b: any) => b.roll - a.roll || (a.is_npc ? 1 : 0) - (b.is_npc ? 1 : 0))
+        await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2 }).eq('id', rerolled[0].id)
+      }
+      await Promise.all([loadInitiative(id), loadEntries(id)])
+      return
     }
 
     // Find next non-dead, non-unconscious combatant
