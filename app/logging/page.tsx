@@ -93,10 +93,10 @@ export default function LoggingPage() {
         for (const row of visitRows ?? []) pageCounts[row.page] = (pageCounts[row.page] ?? 0) + 1
         const topRaw = Object.entries(pageCounts).sort((a, b) => b[1] - a[1]).slice(0, 10)
 
-        // Extract campaign IDs from paths like /campaigns/UUID/...
+        // Extract campaign IDs from paths like /stories/UUID/...
         const campaignIds = new Set<string>()
         for (const [page] of topRaw) {
-          const match = page.match(/\/campaigns\/([a-f0-9-]{36})/)
+          const match = page.match(/\/(?:campaigns|stories)\/([a-f0-9-]{36})/)
           if (match) campaignIds.add(match[1])
         }
         let campaignNames: Record<string, string> = {}

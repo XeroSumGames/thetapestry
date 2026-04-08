@@ -38,7 +38,7 @@ export default function JoinCampaignPage() {
     if (joinErr) {
       if (joinErr.code === '23505') {
         // Already a member — just redirect
-        router.push(`/campaigns/${campaign.id}`)
+        router.push(`/stories/${campaign.id}`)
         return
       }
       setError(joinErr.message)
@@ -47,7 +47,7 @@ export default function JoinCampaignPage() {
     }
 
     logFirstEvent('first_campaign_joined', { campaign_id: campaign.id })
-    router.push(`/campaigns/${campaign.id}`)
+    router.push(`/stories/${campaign.id}`)
   }
 
   return (
@@ -55,7 +55,7 @@ export default function JoinCampaignPage() {
 
       <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
-          Join a Campaign
+          Join a Story
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export default function JoinCampaignPage() {
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={handleJoin} disabled={joining || code.trim().length < 6}
             style={{ flex: 1, padding: '10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: joining || code.trim().length < 6 ? 0.6 : 1 }}>
-            {joining ? 'Joining...' : 'Join Campaign'}
+            {joining ? 'Joining...' : 'Join Story'}
           </button>
           <button onClick={() => router.back()}
             style={{ padding: '10px 20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>

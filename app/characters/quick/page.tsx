@@ -320,7 +320,7 @@ export default function QuickCharacterPage() {
       <div className="print-sheet-container">
         <PrintSheet state={state} />
       </div>
-      <GhostWall show={showGhostWall} onClose={() => setShowGhostWall(false)} message="Create an account to save your character and join campaigns." />
+      <GhostWall show={showGhostWall} onClose={() => setShowGhostWall(false)} message="Create an account to save your character and join stories." />
     </div>
   )
 }

@@ -207,7 +207,7 @@ export default function NewCharacterPage() {
         <PrintSheet state={state} />
       </div>
 
-      <GhostWall show={showGhostWall} onClose={() => setShowGhostWall(false)} message="Create an account to save your character and join campaigns." />
+      <GhostWall show={showGhostWall} onClose={() => setShowGhostWall(false)} message="Create an account to save your character and join stories." />
     </div>
   )
 }

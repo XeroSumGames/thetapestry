@@ -111,7 +111,7 @@ export default function TablePage() {
       setUserId(user.id)
 
       const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
-      if (!camp) { router.push('/campaigns'); return }
+      if (!camp) { router.push('/stories'); return }
       setCampaign(camp)
       const gm = camp.gm_user_id === user.id
       setIsGM(gm)
@@ -213,7 +213,7 @@ export default function TablePage() {
           </div>
         </div>
         <div style={{ flex: 1 }} />
-        <a href={`/campaigns/${id}`} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <a href={`/stories/${id}`} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           Back
         </a>
       </div>

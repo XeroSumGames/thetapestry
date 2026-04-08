@@ -29,12 +29,12 @@ export default function JoinByCodePage() {
     const { error } = await supabase.from('campaign_members').insert({ campaign_id: campaign.id, user_id: user.id })
     if (error && error.code !== '23505') { setStatus('error'); return }
     if (!error) logFirstEvent('first_campaign_joined', { campaign_id: campaign.id })
-    router.push(`/campaigns/${campaign.id}`)
+    router.push(`/stories/${campaign.id}`)
   }
 
   if (status === 'loading') return (
     <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif' }}>
-      Looking up campaign...
+      Looking up story...
     </div>
   )
 
@@ -42,8 +42,8 @@ export default function JoinByCodePage() {
     <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow, sans-serif' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: '20px', color: '#f5a89a', marginBottom: '8px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Invalid Code</div>
-        <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '16px' }}>That invite code doesn't match any campaign.</div>
-        <a href="/campaigns/join" style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Try Again</a>
+        <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '16px' }}>That invite code doesn't match any story.</div>
+        <a href="/stories/join" style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Try Again</a>
       </div>
     </div>
   )
@@ -56,7 +56,7 @@ export default function JoinByCodePage() {
         {campaign.description && <p style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '16px' }}>{campaign.description}</p>}
         <button onClick={handleJoin} disabled={joining}
           style={{ width: '100%', padding: '12px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: joining ? 0.6 : 1 }}>
-          {joining ? 'Joining...' : 'Join Campaign'}
+          {joining ? 'Joining...' : 'Join Story'}
         </button>
       </div>
     </div>

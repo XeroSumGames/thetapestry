@@ -68,7 +68,6 @@ export default function NewCampaignPage() {
     if (settingNpcs && settingNpcs.length > 0) {
       const npcRows = settingNpcs.map(n => ({
         campaign_id: data.id,
-        campaign_pin_id: n.pin_title ? (pinMap[n.pin_title] ?? null) : null,
         name: n.name,
         rapid_range: n.rapid_range,
         wp: n.wp, rp: n.rp, dmm: n.dmm, dmr: n.dmr,
@@ -85,7 +84,7 @@ export default function NewCampaignPage() {
       if (npcErr) { console.error('[CampaignCreate] npc seed error:', npcErr.message) }
     }
     logEvent('campaign_created', { id: data.id, name })
-    router.push(`/campaigns/${data.id}`)
+    router.push(`/stories/${data.id}`)
   }
 
   const inp: React.CSSProperties = {
@@ -100,14 +99,14 @@ export default function NewCampaignPage() {
 
       <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
-          New Campaign
+          New Story
         </div>
       </div>
 
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1.5rem', borderLeft: '3px solid #c0392b' }}>
 
         <div style={{ marginBottom: '16px' }}>
-          <label style={lbl}>Campaign Name</label>
+          <label style={lbl}>Story Name</label>
           <input style={inp} value={name} onChange={e => setName(e.target.value)} placeholder="e.g. The Kansas City Survivors" />
         </div>
 
@@ -169,7 +168,7 @@ export default function NewCampaignPage() {
 
         <div style={{ marginBottom: '16px' }}>
           <label style={lbl}>Description <span style={{ color: '#cce0f5', fontWeight: 400 }}>(optional)</span></label>
-          <textarea style={{ ...inp, minHeight: '80px', resize: 'vertical' }} value={description} onChange={e => setDescription(e.target.value)} placeholder="A brief description of your campaign..." />
+          <textarea style={{ ...inp, minHeight: '80px', resize: 'vertical' }} value={description} onChange={e => setDescription(e.target.value)} placeholder="A brief description of your story..." />
         </div>
 
         <div style={{ marginBottom: '20px' }}>
@@ -193,7 +192,7 @@ export default function NewCampaignPage() {
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={handleCreate} disabled={saving || !name.trim()}
             style={{ flex: 1, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: saving || !name.trim() ? 0.6 : 1 }}>
-            {saving ? 'Creating...' : 'Create Campaign'}
+            {saving ? 'Creating...' : 'Create Story'}
           </button>
           <button onClick={() => router.back()}
             style={{ padding: '10px 20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>

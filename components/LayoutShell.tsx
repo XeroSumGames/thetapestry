@@ -5,7 +5,7 @@ import { createClient } from '../lib/supabase-browser'
 import Sidebar from './Sidebar'
 
 // Pages that ghosts (unauthenticated users) can view
-const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/campaigns', '/characters', '/creating-a-character', '/characters/new', '/characters/quick', '/characters/random']
+const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/stories', '/campaigns', '/characters', '/creating-a-character', '/characters/new', '/characters/quick', '/characters/random']
 
 // Pages that always hide the sidebar
 const NO_SIDEBAR_PAGES = ['/login', '/signup', '/firsttimers', '/welcome']

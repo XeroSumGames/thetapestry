@@ -357,7 +357,7 @@ export default function TablePage() {
       setUserId(user.id)
 
       const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
-      if (!camp) { router.push('/campaigns'); return }
+      if (!camp) { router.push('/stories'); return }
       setCampaign(camp)
       setIsGM(camp.gm_user_id === user.id)
       setSessionStatus(camp.session_status === 'active' ? 'active' : 'idle')
@@ -1385,7 +1385,7 @@ export default function TablePage() {
           </select>
         )}
         {isGM && sessionCount > 0 && (
-          <a href={`/campaigns/${id}/sessions`}
+          <a href={`/stories/${id}/sessions`}
             style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
             Sessions
           </a>
@@ -1394,7 +1394,7 @@ export default function TablePage() {
           style={hdrBtn('#242424', '#cce0f5', '#3a3a3a')}>
           {sheetMode === 'inline' ? 'Overlay' : 'Inline'}
         </button>
-        <a href={`/campaigns/${id}`} style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
+        <a href={`/stories/${id}`} style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
           Back
         </a>
       </div>

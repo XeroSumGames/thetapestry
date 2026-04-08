@@ -83,8 +83,8 @@ export default function FirstTimersPage() {
         )}
         <div style={{ fontSize: '17px', color: '#f5f2ee', maxWidth: '600px', lineHeight: 1.8 }}>
           <p style={{ marginBottom: '1rem' }}>The Tapestry is the online home of Distemper, a post-apocalyptic comic book &amp; tabletop RPG that take place in the aftermath of the dog flu, a pandemic that wiped out almost 90% of mankind in less than a year. What is left is a dangerous, brutal, and capricious new reality where only the strong survive. There are no zombies, mutants, or aliens - just other, desparate survivors.</p>
-          <p style={{ marginBottom: '1rem' }}>The Tapestry is a one-stop shop with tools for character creation, world building, writing and playing campaign, as well as finding your people in this broken new world.</p>
-          <p style={{ marginBottom: '1rem' }}>Here, players and Game Masters share their stories, settings, and campaigns, allowing them to be curated and shared with the community &mdash; potentially even being worked into future comic book story arcs or game content.</p>
+          <p style={{ marginBottom: '1rem' }}>The Tapestry is a one-stop shop with tools for character creation, world building, writing and playing story, as well as finding your people in this broken new world.</p>
+          <p style={{ marginBottom: '1rem' }}>Here, players and Game Masters share their stories, settings, and storys, allowing them to be curated and shared with the community &mdash; potentially even being worked into future comic book story arcs or game content.</p>
           <p style={{ marginBottom: '1rem' }}>The Tapestry lets the actions of player characters, Game Masters, writers, content creators, and other community members influence the course of human history and define ongoing events in this new world.</p>
           <p>Collectively, the narratives weaved together across various media and via disparate platforms make up The Tapestry of The DistemperVerse.</p>
         </div>
@@ -140,7 +140,7 @@ export default function FirstTimersPage() {
           <div>
             <div style={sectionTitle}>Play at The Table</div>
             <div style={sectionBody}>
-              <p style={{ marginBottom: '0.75rem' }}>Coming soon &mdash; The Campaign Table is The Tapestry&apos;s purpose-built virtual tabletop for Distemper.</p>
+              <p style={{ marginBottom: '0.75rem' }}>Coming soon &mdash; The Story Table is The Tapestry&apos;s purpose-built virtual tabletop for Distemper.</p>
               <p>This is a one-stop shop to run sessions, share artifacts, custom maps, roll dice using your character sheet, and track your characters in real time.</p>
             </div>
           </div>

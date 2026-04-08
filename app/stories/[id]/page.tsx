@@ -72,7 +72,7 @@ export default function CampaignPage() {
       setUserId(user.id)
 
       const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
-      if (!camp) { router.push('/campaigns'); return }
+      if (!camp) { router.push('/stories'); return }
       setCampaign(camp)
 
       const mems = await fetchMembersWithProfiles(supabase, id)
@@ -115,9 +115,9 @@ export default function CampaignPage() {
   async function handleLeave() {
     if (!userId || !campaign) return
     if (campaign.gm_user_id === userId) return
-    if (!confirm('Leave this campaign?')) return
+    if (!confirm('Leave this story?')) return
     await supabase.from('campaign_members').delete().eq('campaign_id', id).eq('user_id', userId)
-    router.push('/campaigns')
+    router.push('/stories')
   }
 
   async function handleClone() {
@@ -135,15 +135,15 @@ export default function CampaignPage() {
     }).select().single()
     if (!error && data) {
       await supabase.from('campaign_members').insert({ campaign_id: data.id, user_id: userId })
-      router.push(`/campaigns/${data.id}`)
+      router.push(`/stories/${data.id}`)
     }
     setCloning(false)
   }
 
   async function handleDelete() {
-    if (!confirm('Permanently delete this campaign? This cannot be undone.')) return
+    if (!confirm('Permanently delete this story? This cannot be undone.')) return
     await supabase.from('campaigns').delete().eq('id', id)
-    router.push('/campaigns')
+    router.push('/stories')
   }
 
   function copyInviteLink() {
@@ -184,8 +184,8 @@ export default function CampaignPage() {
       {/* Action buttons — GM */}
       {isGM && (
         <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
-          <a href={`/campaigns/${id}/table`} style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
-          <a href={`/campaigns/${id}/edit`} style={btn('#242424', '#f5f2ee', '#3a3a3a')}>Edit</a>
+          <a href={`/stories/${id}/table`} style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
+          <a href={`/stories/${id}/edit`} style={btn('#242424', '#f5f2ee', '#3a3a3a')}>Edit</a>
           <button onClick={handleClone} disabled={cloning} style={{ ...btn('#242424', '#d4cfc9', '#3a3a3a'), opacity: cloning ? 0.6 : 1 } as any}>
             {cloning ? 'Cloning...' : 'Clone'}
           </button>
@@ -201,7 +201,7 @@ export default function CampaignPage() {
       {/* Action buttons — Player */}
       {!isGM && (
         <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
-          <a href={`/campaigns/${id}/table`} style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
+          <a href={`/stories/${id}/table`} style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
           <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
             {copied ? 'Copied!' : 'Share'}
           </button>
@@ -294,7 +294,7 @@ export default function CampaignPage() {
 
       {/* Back button */}
       <div style={{ display: 'flex', gap: '8px' }}>
-        <a href="/campaigns" style={{ padding: '9px 22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <a href="/stories" style={{ padding: '9px 22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           Back
         </a>
       </div>
