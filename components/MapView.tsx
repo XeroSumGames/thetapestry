@@ -69,7 +69,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [showForm, setShowForm] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(!embedded || showSidebarProp)
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(['all']))
-  const [sortMode, setSortMode] = useState<'newest' | 'oldest' | 'category' | 'nearest'>('newest')
+  const [sortMode, setSortMode] = useState<'newest' | 'name'>('newest')
+  const [pinSearch, setPinSearch] = useState('')
+  const [pinsVisible, setPinsVisible] = useState(true)
   const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private', category: 'location' })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -347,19 +349,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
   const timelineOnly = activeFilters.has('timeline') && activeFilters.size === 1
 
-  const filteredPins = pins.filter(matchesFilter)
+  const filteredPins = pins.filter(matchesFilter).filter(p => {
+    if (!pinSearch.trim()) return true
+    const q = pinSearch.trim().toLowerCase()
+    return (p.title?.toLowerCase().includes(q)) || (p.notes?.toLowerCase().includes(q)) || (p.category?.toLowerCase().includes(q))
+  })
   const displayedPins = [...filteredPins].sort((a, b) => {
-    if (timelineOnly) return new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime()
-    if (sortMode === 'newest') return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
-    if (sortMode === 'oldest') return new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime()
-    if (sortMode === 'category') return (a.category ?? '').localeCompare(b.category ?? '')
-    if (sortMode === 'nearest' && mapInstanceRef.current) {
-      const center = mapInstanceRef.current.getCenter()
-      const distA = Math.hypot(a.lat - center.lat, a.lng - center.lng)
-      const distB = Math.hypot(b.lat - center.lat, b.lng - center.lng)
-      return distA - distB
-    }
-    return 0
+    if (sortMode === 'name') return (a.title ?? '').localeCompare(b.title ?? '')
+    return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
   })
 
   function pinTypeLabel(p: Pin) {
@@ -374,6 +371,15 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   function pinColor(p: Pin) {
     return p.pin_type === 'rumor' ? '#EF9F27' : p.pin_type === 'gm' ? '#c0392b' : '#7ab3d4'
   }
+
+  // Toggle map pin markers visibility
+  useEffect(() => {
+    const map = mapInstanceRef.current
+    const cluster = clusterGroupRef.current
+    if (!map || !cluster) return
+    if (pinsVisible) { if (!map.hasLayer(cluster)) map.addLayer(cluster) }
+    else { if (map.hasLayer(cluster)) map.removeLayer(cluster) }
+  }, [pinsVisible])
 
   // Load persisted filters for authenticated users, Timeline default for Ghosts
   useEffect(() => {
@@ -418,16 +424,17 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
                   onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>✕</button>
                 <span style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Filters</span>
-                {!timelineOnly && (
-                  <select value={sortMode} onChange={e => setSortMode(e.target.value as any)}
-                    style={{ marginLeft: 'auto', padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', cursor: 'pointer' }}>
-                    <option value="newest">Newest</option>
-                    <option value="oldest">Oldest</option>
-                    <option value="category">Category</option>
-                    <option value="nearest">Nearest</option>
-                  </select>
-                )}
+                <button onClick={() => setPinsVisible(v => !v)}
+                  style={{ marginLeft: '8px', padding: '2px 8px', background: pinsVisible ? '#2a1210' : 'transparent', border: `1px solid ${pinsVisible ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: pinsVisible ? '#f5a89a' : '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  {pinsVisible ? 'Hide All' : 'Show All'}
+                </button>
+                <button onClick={() => setSortMode(s => s === 'name' as any ? 'newest' : 'name' as any)}
+                  style={{ marginLeft: 'auto', padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Sort: {sortMode === ('name' as any) ? 'A–Z' : 'Date'}
+                </button>
               </div>
+              <input value={pinSearch} onChange={e => setPinSearch(e.target.value)} placeholder="Search pins..."
+                style={{ width: '100%', padding: '5px 8px', marginBottom: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                 {FILTER_CHIPS.map(chip => {
                   const active = chip === 'all' ? allFiltersActive || activeFilters.has('all') : activeFilters.has(chip)
@@ -446,11 +453,24 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   Sign up to add your own story to this world.
                 </div>
               )}
+              {/* Setting regions */}
+              <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
+                {[
+                  { label: 'District Zero', lat: 36.052, lng: -95.790, zoom: 15 },
+                  { label: 'Chased', lat: 38.710, lng: -75.510, zoom: 12 },
+                  { label: 'Mongrels', lat: 38.0, lng: -112.0, zoom: 5 },
+                ].map(r => (
+                  <button key={r.label} onClick={() => mapInstanceRef.current?.flyTo([r.lat, r.lng], r.zoom, { duration: 1.2 })}
+                    style={{ flex: 1, padding: '3px 4px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: '1px solid #3a3a3a', background: '#242424', color: '#d4cfc9' }}>
+                    {r.label}
+                  </button>
+                ))}
+              </div>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
               {displayedPins.length === 0 && (
                 <div style={{ padding: '2rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>
-                  No pins match your current filters.
+                  {pinSearch.trim() ? 'No pins match your search.' : 'No pins match your current filters.'}
                 </div>
               )}
               {displayedPins.map(p => (
@@ -460,13 +480,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                     {getCategoryEmoji(p.category ?? 'location')} {p.title}
                   </div>
                   {p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{p.notes}</div>}
-                  {timelineOnly && p.created_at && (
-                    <div style={{ fontSize: '11px', color: '#EF9F27', marginTop: '2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
-                      {new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </div>
-                  )}
                   <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px', gap: '6px' }}>
-                    <span style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.06em' }}>{pinTypeLabel(p)}</span>
                     {(p.user_id === userId || userRole === 'thriver') && (
                       <>
                         <span style={{ flex: 1 }} />
