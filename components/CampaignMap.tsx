@@ -49,6 +49,8 @@ const PIN_CATEGORIES = [
   { value: 'military',   label: 'Military',   emoji: '⚔️' },
   { value: 'person',     label: 'Person',     emoji: '👤' },
   { value: 'danger',     label: 'Danger',     emoji: '☠️' },
+  { value: 'landmark',   label: 'Landmark',   emoji: '🗿' },
+  { value: 'encounter',  label: 'Encounter',  emoji: '⚡' },
   { value: 'resource',   label: 'Resource',   emoji: '🎒' },
   { value: 'community',  label: 'Community',  emoji: '🏘️' },
   { value: 'animals',    label: 'Animals',    emoji: '🐾' },

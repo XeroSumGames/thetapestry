@@ -143,7 +143,7 @@
 
 ### Campaign Pins
 - [x] campaign_pins table with reveal/hide per pin
-- [x] Setting seed pins (Mongrels 24, Chased 14, District Zero 31) insert into campaign_pins
+- [x] Setting seed pins (Mongrels 28, Chased 14, District Zero 31) insert into campaign_pins
 - [x] Assets tab with pin management — show/hide, edit, delete, promote to world
 - [x] Campaign map in center panel with campaign pins
 - [x] Campaign map search bar with autocomplete + layer switcher (Street/Satellite/Dark)
