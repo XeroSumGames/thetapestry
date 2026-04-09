@@ -68,7 +68,10 @@ Deno.serve(async (req) => {
     })
 
     // Send email on first visit per session (non-blocking)
-    if (isFirstVisit && RESEND_API_KEY && THRIVER_EMAIL) {
+    // Skip emails from known bot/cloud locations
+    const suppressedCities = ['san jose', 'ashburn', 'boardman', 'council bluffs']
+    const isSuppressed = city && suppressedCities.includes(city.toLowerCase())
+    if (isFirstVisit && RESEND_API_KEY && THRIVER_EMAIL && !isSuppressed) {
       const isGhost = !user_id
       const locationParts = [city, region, country_code].filter(Boolean)
       const location = locationParts.length > 0 ? locationParts.join(', ') : 'Unknown'
