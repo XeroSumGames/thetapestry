@@ -276,6 +276,7 @@
 - [ ] Community layer — approved player Rumors visible to all District Zero campaigns
 - [ ] District Zero Campfire feed — setting-scoped posts
 - [ ] District Zero timeline — chronological history of events in the setting
+- [ ] Timeline sort_order management — UI for Thrivers to reorder timeline pins (drag-and-drop or number field), GMs can set sort_order on campaign-scoped world_event pins. Currently hardcoded via SQL.
 - [ ] Campaign creation option — Run in District Zero pre-populates setting content
 
 ### Tactical Map

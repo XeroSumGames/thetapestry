@@ -66,6 +66,7 @@ interface Pin {
   user_id: string
   category: string
   created_at?: string
+  sort_order?: number
 }
 
 interface PinForm {
@@ -412,6 +413,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     return (p.title?.toLowerCase().includes(q)) || (p.notes?.toLowerCase().includes(q)) || (p.category?.toLowerCase().includes(q))
   })
   const displayedPins = [...filteredPins].sort((a, b) => {
+    if (timelineOnly) return (a.sort_order ?? 999) - (b.sort_order ?? 999)
     if (sortMode === 'name') return (a.title ?? '').localeCompare(b.title ?? '')
     return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
   })
