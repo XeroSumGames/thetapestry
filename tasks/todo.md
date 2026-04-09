@@ -4,11 +4,29 @@
 - [x] Print character sheet renders blank
 - [x] Distemper font not applying on mobile navbar
 - [ ] Print sheet missing data — Relationships/CMod, Lasting Wounds/Notes, Tracking (Insight/CDP) not populated from character data
-- [ ] Combat actions bar not visible to Survivor-role players — only Thrivers can see it (likely tied to character entry not loading correctly, "Unknown" name bug)
+- [x] Combat actions bar not visible to Survivor-role players — fixed with user_id match
 - [x] Initiative breakdown not appearing in Logs tab — startCombat/nextTurn/broadcast handlers now call loadRolls()
-- [ ] Players show as "Unknown" in player bar and initiative — character data not matching entries
-- [x] Signup error fixed — handle_new_user trigger had wrong role casing + no EXCEPTION handler + RLS blocking. Added client-side fallback + error visibility
-- [x] Signup page shows hardcoded "check your email" message — confirmed not a bug
+- [x] Players show as "Unknown" — initiative now fetches fresh character data from DB
+- [x] Signup error fixed — handle_new_user trigger had wrong role casing + no EXCEPTION handler + RLS blocking
+- [x] NPC damage not applying — rosterNpcs loaded on init, target lookup uses character_id fallback
+- [x] Dead NPCs still attackable — filtered from target dropdown
+- [x] Auto-advance not working after 2 actions — nextTurn uses fresh DB data, closeRollModal uses user_id match
+- [x] Session end now auto-ends combat
+- [x] Combat start broadcast to players — no refresh needed
+- [x] Player X button to end own turn on initiative bar
+- [x] NPC Insight Dice — only Antagonists get them per SRD
+- [x] Clips limit increased to 10 with dynamic pip display
+- [x] Renamed Rolls tab to Logs
+- [x] Combat Start/End messages in Logs tab
+- [x] Attack button on action bar no longer double-consumes actions
+- [x] Visitor email suppression for bot cities (San Jose, Ashburn, etc.)
+
+### Known Issues (needs testing)
+- [ ] NPC action pips not consuming on use — may need fresh DB fetch in NPC action flow
+- [ ] PC damage from NPC attacks — needs verification with latest character_id fallback
+- [ ] Manipulation rolls should auto-include First Impression CMod
+- [ ] Add to Combat modal should filter NPCs already in initiative
+- [ ] Self-attack should apply damage to self
 
 ---
 
