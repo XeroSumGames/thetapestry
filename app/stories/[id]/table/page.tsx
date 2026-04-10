@@ -7,6 +7,7 @@ import NpcRoster from '../../../../components/NpcRoster'
 import NpcCard from '../../../../components/NpcCard'
 import CampaignPins from '../../../../components/CampaignPins'
 import GmNotes from '../../../../components/GmNotes'
+import PlayerNotes from '../../../../components/PlayerNotes'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
 const CampaignMap = dynamic(() => import('../../../../components/CampaignMap'), { ssr: false })
@@ -192,6 +193,7 @@ export default function TablePage() {
   const [sessionStatus, setSessionStatus] = useState<'idle' | 'active'>('idle')
   const [sessionCount, setSessionCount] = useState(0)
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
+  const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null }[]>([])
   const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | null>(null)
   const [groupCheckParticipants, setGroupCheckParticipants] = useState<Set<string>>(new Set())
   const [groupCheckSkill, setGroupCheckSkill] = useState('')
@@ -1568,7 +1570,17 @@ export default function TablePage() {
           </button>
         )}
         {isGM && sessionStatus === 'active' && (
-          <button onClick={() => setShowEndSessionModal(true)}
+          <button onClick={async () => {
+            // Fetch any submitted player notes so the GM sees them in the modal.
+            const { data } = await supabase
+              .from('player_notes')
+              .select('id, user_id, title, content, submitted_at')
+              .eq('campaign_id', id)
+              .eq('submitted_to_summary', true)
+              .order('submitted_at', { ascending: true })
+            setSubmittedPlayerNotes(data ?? [])
+            setShowEndSessionModal(true)
+          }}
             style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>
             End Session
           </button>
@@ -2211,10 +2223,10 @@ export default function TablePage() {
             NPCs (revealed only) and Assets (read-only). */}
         <div style={{ width: '240px', flexShrink: 0, borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
-            {(isGM ? (['npcs', 'assets', 'notes'] as const) : (['npcs', 'assets'] as const)).map(tab => (
+            {(['npcs', 'assets', 'notes'] as const).map(tab => (
               <button key={tab} onClick={() => setGmTab(tab)}
                 style={{ flex: 1, padding: '8px 0', background: gmTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: gmTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: gmTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '12px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                {tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : 'GM Notes'}
+                {tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : isGM ? 'GM Notes' : 'Notes'}
               </button>
             ))}
           </div>
@@ -2272,6 +2284,7 @@ export default function TablePage() {
             )}
             {gmTab === 'assets' && <CampaignPins campaignId={id} isGM={isGM} onPinFocus={p => setFocusPin({ ...p })} />}
             {gmTab === 'notes' && isGM && <GmNotes campaignId={id} />}
+            {gmTab === 'notes' && !isGM && <PlayerNotes campaignId={id} />}
           </div>
         </div>
 
@@ -2637,6 +2650,27 @@ export default function TablePage() {
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '520px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>End Session</div>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1.25rem' }}>Session {sessionCount} Summary</div>
+
+            {/* Player submissions — notes the players flagged "Add to Session Summary". */}
+            {submittedPlayerNotes.length > 0 && (
+              <div style={{ marginBottom: '1.25rem', padding: '10px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px' }}>
+                <div style={{ fontSize: '10px', color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Player Submissions ({submittedPlayerNotes.length})</div>
+                {submittedPlayerNotes.map(n => (
+                  <div key={n.id} style={{ marginBottom: '8px', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                    {n.title && <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '2px' }}>{n.title}</div>}
+                    <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.4, marginBottom: '6px' }}>{n.content}</div>
+                    <button onClick={() => {
+                      const prefix = n.title ? `${n.title}: ` : ''
+                      const block = (sessionSummary.trim() ? '\n\n' : '') + prefix + n.content
+                      setSessionSummary(prev => prev + block)
+                    }}
+                      style={{ padding: '3px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      Append to Summary
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* What happened */}
             <div style={{ marginBottom: '1.25rem' }}>
