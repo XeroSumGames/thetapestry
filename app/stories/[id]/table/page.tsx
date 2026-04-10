@@ -209,6 +209,25 @@ export default function TablePage() {
   const chatChannelRef = useRef<any>(null)
   const [viewingNpcs, setViewingNpcs] = useState<CampaignNpc[]>([])
   const [publishedNpcIds, setPublishedNpcIds] = useState<Set<string>>(new Set())
+
+  // Re-sync any open NpcCards (centered "viewing" cards) whenever the underlying
+  // campaignNpcs list refreshes from realtime — without this, an open card keeps
+  // showing the snapshot HP from when it was first opened, even after damage lands.
+  useEffect(() => {
+    if (viewingNpcs.length === 0 || campaignNpcs.length === 0) return
+    setViewingNpcs(prev => {
+      let changed = false
+      const next = prev.map(vn => {
+        const fresh = campaignNpcs.find((c: any) => c.id === vn.id)
+        if (fresh && fresh !== vn) { changed = true; return fresh as CampaignNpc }
+        return vn
+      })
+      return changed ? next : prev
+    })
+    // viewingNpcs intentionally not in deps to avoid infinite loop — we rebuild
+    // it from campaignNpcs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campaignNpcs])
   const [pendingEditNpcId, setPendingEditNpcId] = useState<string | null>(null)
   const [sheetPos, setSheetPos] = useState<{ x: number; y: number } | null>(null)
   const sheetDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
