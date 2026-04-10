@@ -193,7 +193,7 @@ export default function TablePage() {
   const [sessionStatus, setSessionStatus] = useState<'idle' | 'active'>('idle')
   const [sessionCount, setSessionCount] = useState(0)
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
-  const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null }[]>([])
+  const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null; character_name: string }[]>([])
   const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | null>(null)
   const [groupCheckParticipants, setGroupCheckParticipants] = useState<Set<string>>(new Set())
   const [groupCheckSkill, setGroupCheckSkill] = useState('')
@@ -1347,13 +1347,16 @@ export default function TablePage() {
       }
 
       // Auto-apply damage to target (PC or NPC)
+      console.log('[damage] target lookup:', { targetName, targetEntry: !!targetEntry, hasLiveState: !!targetEntry?.liveState, targetNpc: !!targetNpc, finalWP, finalRP })
       if (targetEntry?.liveState) {
         // PC target — use character_states
         const newWP = Math.max(0, targetEntry.liveState.wp_current - finalWP)
         const newRP = Math.max(0, targetEntry.liveState.rp_current - finalRP)
+        console.log('[damage] PC target', targetEntry.character.name, 'WP:', targetEntry.liveState.wp_current, '→', newWP, 'RP:', targetEntry.liveState.rp_current, '→', newRP)
 
         if (newWP === 0 && targetEntry.liveState.wp_current > 0 && (targetEntry.liveState.insight_dice ?? 0) > 0) {
-          await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId)
+          const { error: csErr } = await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId)
+          if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, rp_current: newRP } } : e))
           setInsightSavePrompt({
             stateId: targetEntry.stateId,
@@ -1371,7 +1374,8 @@ export default function TablePage() {
           if (newRP === 0 && targetEntry.liveState.rp_current > 0 && newWP > 0) {
             update.incap_rounds = Math.max(1, 4 - (targetEntry.character.data?.rapid?.PHY ?? 0))
           }
-          await supabase.from('character_states').update(update).eq('id', targetEntry.stateId)
+          const { error: csErr } = await supabase.from('character_states').update(update).eq('id', targetEntry.stateId)
+          if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
         }
       } else if (targetNpc) {
@@ -1380,7 +1384,22 @@ export default function TablePage() {
         const npcRP = targetNpc.rp_current ?? targetNpc.rp_max ?? 6
         const newWP = Math.max(0, npcWP - finalWP)
         const newRP = Math.max(0, npcRP - finalRP)
-        await supabase.from('campaign_npcs').update({ wp_current: newWP, rp_current: newRP }).eq('id', targetNpc.id)
+        console.log('[damage] NPC target', targetNpc.name, 'id:', targetNpc.id, 'WP:', npcWP, '→', newWP, 'RP:', npcRP, '→', newRP)
+        const { error: npcUpdErr, data: npcUpdData } = await supabase
+          .from('campaign_npcs')
+          .update({ wp_current: newWP, rp_current: newRP })
+          .eq('id', targetNpc.id)
+          .select()
+        if (npcUpdErr) console.error('[damage] campaign_npcs update error:', npcUpdErr.message)
+        else console.log('[damage] campaign_npcs update returned', npcUpdData?.length, 'rows')
+        // Optimistic local update — don't wait for the realtime callback to
+        // refresh rosterNpcs/campaignNpcs/viewingNpcs.
+        const patch = { wp_current: newWP, rp_current: newRP }
+        setRosterNpcs(prev => prev.map(n => n.id === targetNpc.id ? { ...n, ...patch } : n))
+        setCampaignNpcs(prev => prev.map(n => n.id === targetNpc.id ? { ...n, ...patch } : n))
+        setViewingNpcs(prev => prev.map(n => n.id === targetNpc.id ? { ...n, ...patch } as CampaignNpc : n))
+      } else {
+        console.warn('[damage] no target resolved — damage NOT applied. targetName was:', targetName)
       }
     }
 
@@ -1545,7 +1564,14 @@ export default function TablePage() {
   )
 
   const gmEntry = entries.find(e => e.userId === campaign.gm_user_id) ?? null
-  const playerEntries = entries.filter(e => e.userId !== campaign.gm_user_id)
+  const playerEntries = (() => {
+    const filtered = entries.filter(e => e.userId !== campaign.gm_user_id)
+    // Float the current viewer's own character to position 0 (right next to GM).
+    if (!userId) return filtered
+    const meIdx = filtered.findIndex(e => e.userId === userId)
+    if (meIdx <= 0) return filtered
+    return [filtered[meIdx], ...filtered.slice(0, meIdx), ...filtered.slice(meIdx + 1)]
+  })()
   const syncedSelectedEntry = selectedEntry ? entries.find(e => e.stateId === selectedEntry.stateId) ?? selectedEntry : null
   const myEntry = entries.find(e => e.userId === userId) ?? null
   const myInsightDice = myEntry?.liveState?.insight_dice ?? 0
@@ -1578,7 +1604,12 @@ export default function TablePage() {
               .eq('campaign_id', id)
               .eq('submitted_to_summary', true)
               .order('submitted_at', { ascending: true })
-            setSubmittedPlayerNotes(data ?? [])
+            // Resolve character name for each note via the entries table snapshot.
+            const enriched = (data ?? []).map((n: any) => {
+              const entry = entries.find(e => e.userId === n.user_id)
+              return { ...n, character_name: entry?.character.name ?? 'Unknown' }
+            })
+            setSubmittedPlayerNotes(enriched)
             setShowEndSessionModal(true)
           }}
             style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>
@@ -2657,11 +2688,12 @@ export default function TablePage() {
                 <div style={{ fontSize: '10px', color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Player Submissions ({submittedPlayerNotes.length})</div>
                 {submittedPlayerNotes.map(n => (
                   <div key={n.id} style={{ marginBottom: '8px', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '2px' }}>{n.character_name}</div>
                     {n.title && <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '2px' }}>{n.title}</div>}
                     <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.4, marginBottom: '6px' }}>{n.content}</div>
                     <button onClick={() => {
-                      const prefix = n.title ? `${n.title}: ` : ''
-                      const block = (sessionSummary.trim() ? '\n\n' : '') + prefix + n.content
+                      const titlePart = n.title ? ` — ${n.title}` : ''
+                      const block = (sessionSummary.trim() ? '\n\n' : '') + `${n.character_name}${titlePart}: ${n.content}`
                       setSessionSummary(prev => prev + block)
                     }}
                       style={{ padding: '3px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
