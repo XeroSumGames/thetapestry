@@ -421,8 +421,20 @@ export default function TablePage() {
         .subscribe()
 
       membersChannelRef.current = supabase.channel(`members_${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_members' }, (payload: any) => {
-          if (payload.new?.campaign_id === id || payload.old?.campaign_id === id) loadEntries(id)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_members', filter: `campaign_id=eq.${id}` }, async () => {
+          // Refetch members with character data, ensure their character_state exists,
+          // then refresh entries. Without ensureCharacterStates here, a player who
+          // picks a character won't appear in the GM's table until they navigate to
+          // /table themselves and trigger state creation on their own browser.
+          const { data: refreshedMembers } = await supabase
+            .from('campaign_members')
+            .select('user_id, character_id, characters:character_id(id, name, data->rapid)')
+            .eq('campaign_id', id)
+            .not('character_id', 'is', null)
+          if (refreshedMembers && refreshedMembers.length > 0) {
+            await ensureCharacterStates(id, refreshedMembers as any[])
+          }
+          await loadEntries(id)
         })
         .subscribe()
 
@@ -503,23 +515,18 @@ export default function TablePage() {
     // Getting The Drop: selected character gets -2 on initiative but acts first with 1 action
     const dropPenalty = -2
 
-    // Clear existing initiative + fetch fresh character data in parallel
-    const [, { data: freshMembers }] = await Promise.all([
-      supabase.from('initiative_order').delete().eq('campaign_id', id),
-      supabase.from('campaign_members').select('user_id, character_id').eq('campaign_id', id).not('character_id', 'is', null),
-    ])
-    const charIds = (freshMembers ?? []).map((m: any) => m.character_id)
-    const { data: freshChars } = charIds.length > 0 ? await supabase.from('characters').select('id, name, data').in('id', charIds) : { data: [] }
-    const charMap = Object.fromEntries((freshChars ?? []).map((c: any) => [c.id, c]))
+    // Clear existing initiative. We don't need to re-fetch members/characters —
+    // `entries` already has them from loadEntries (refreshed in real time via the
+    // character_states + campaign_members subscriptions).
+    await supabase.from('initiative_order').delete().eq('campaign_id', id)
 
     // Roll initiative for all PCs: 2d6 + ACU AMod + DEX AMod
     const initDetails: { name: string; d1: number; d2: number; acu: number; dex: number; drop: number; total: number }[] = []
-    const pcRows = (freshMembers ?? []).map((m: any) => {
-      const char = charMap[m.character_id]
-      const rapid = char?.data?.rapid ?? {}
+    const pcRows = entries.map(e => {
+      const rapid = (e.character.data?.rapid ?? {}) as any
       const acu = rapid.ACU ?? 0
       const dex = rapid.DEX ?? 0
-      const charName = char?.name ?? 'Unknown'
+      const charName = e.character.name
       const isDropChar = dropCharacter === charName
       const d1 = rollD6(), d2 = rollD6()
       const drop = isDropChar ? dropPenalty : 0
@@ -528,8 +535,8 @@ export default function TablePage() {
       return {
         campaign_id: id,
         character_name: charName,
-        character_id: m.character_id,
-        user_id: m.user_id,
+        character_id: e.character.id,
+        user_id: e.userId,
         npc_id: null,
         portrait_url: null,
         npc_type: null,
@@ -580,10 +587,13 @@ export default function TablePage() {
       : r
     )
 
-    // Insert initiative rows + log combat start in parallel (no re-fetch needed)
+    // Insert initiative rows + log combat start in parallel.
+    // We don't await loadInitiative/loadRolls afterwards — both arrive via the
+    // existing realtime subscriptions, and we set the order optimistically here
+    // so the UI updates the instant the inserts return.
     if (toInsert.length > 0) {
-      await Promise.all([
-        supabase.from('initiative_order').insert(toInsert),
+      const [{ data: insertedInit }] = await Promise.all([
+        supabase.from('initiative_order').insert(toInsert).select(),
         supabase.from('roll_log').insert([
           { campaign_id: id, character_name: 'System', label: '⚔️ Combat Started', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' },
           { campaign_id: id, character_name: 'System', label: 'Initiative',
@@ -591,11 +601,14 @@ export default function TablePage() {
             damage_json: { initiative: sorted } as any },
         ]),
       ])
+      // Optimistic local state — sorted by roll desc to match loadInitiative behavior.
+      const sortedInit = (insertedInit ?? []).slice().sort((a: any, b: any) => b.roll - a.roll)
+      setInitiativeOrder(sortedInit)
+      setCombatActive(sortedInit.length > 0)
     }
     setDropCharacter('')
 
     setStartingCombat(false)
-    await Promise.all([loadInitiative(id), loadRolls(id)])
     // Broadcast combat start to all players
     initChannelRef.current?.send({ type: 'broadcast', event: 'combat_started', payload: {} })
   }
