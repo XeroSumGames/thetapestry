@@ -74,9 +74,14 @@ Deno.serve(async (req) => {
     })
 
     // Send email on first visit per session (non-blocking — runs after response)
-    // Skip emails from known bot/cloud locations
+    // Skip emails from known bot/cloud locations.
     const suppressedCities = ['san jose', 'ashburn', 'boardman', 'council bluffs']
-    const isSuppressed = city && suppressedCities.includes(city.toLowerCase())
+    const isSuppressedCity = city && suppressedCities.includes(city.toLowerCase())
+    // Skip emails for signed-in users after their 5th visit — keeps ongoing
+    // dev/test sessions from spamming the inbox while still alerting on
+    // genuine new survivors. Ghost visitors keep getting emails.
+    const isRepeatSurvivor = !!user_id && visitNumber > 5
+    const isSuppressed = isSuppressedCity || isRepeatSurvivor
     if (isFirstVisit && RESEND_API_KEY && THRIVER_EMAIL && !isSuppressed) {
       const isGhost = !user_id
       const locationParts = [city, region, country_code].filter(Boolean)
