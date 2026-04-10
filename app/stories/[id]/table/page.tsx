@@ -640,7 +640,7 @@ export default function TablePage() {
 
     // Insert initiative rows + log combat start in parallel.
     if (toInsert.length > 0) {
-      const [{ data: insertedInit }] = await Promise.all([
+      const [{ data: insertedInit, error: initInsertErr }, { error: rollInsertErr }] = await Promise.all([
         supabase.from('initiative_order').insert(toInsert).select(),
         supabase.from('roll_log').insert([
           { campaign_id: id, character_name: 'System', label: '⚔️ Combat Started',
@@ -651,6 +651,8 @@ export default function TablePage() {
             damage_json: { initiative: sorted } as any },
         ]),
       ])
+      if (initInsertErr) console.error('[confirmStartCombat] initiative insert error:', initInsertErr.message)
+      if (rollInsertErr) console.error('[confirmStartCombat] roll_log insert error:', rollInsertErr.message)
       // Optimistic local state — sorted by roll desc to match loadInitiative behavior.
       const sortedInit = (insertedInit ?? []).slice().sort((a: any, b: any) => b.roll - a.roll)
       setInitiativeOrder(sortedInit)
@@ -831,12 +833,13 @@ export default function TablePage() {
     if (!isGM) return
     // Snapshot the combatants for the log entry before clearing initiative.
     const combatants = initiativeOrder.map(e => e.character_name)
-    await supabase.from('roll_log').insert({
+    const { error: endLogErr } = await supabase.from('roll_log').insert({
       campaign_id: id, character_name: 'System', label: '⚔️ Combat Ended',
       die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
       outcome: 'combat_end',
       damage_json: { combatants } as any,
     })
+    if (endLogErr) console.error('[endCombat] roll_log insert error:', endLogErr.message)
     await supabase.from('initiative_order').delete().eq('campaign_id', id)
     setInitiativeOrder([])
     setCombatActive(false)
