@@ -139,7 +139,7 @@
 - [x] NPC weapon auto-assignment by type tier (Goon/Foe/Antagonist)
 - [x] Weapon dropdown on NPC edit form
 - [x] Viewed NPCs highlighted in roster, Show All / Hide All toggle
-- [ ] NPCs linked to world map pins
+- [x] NPCs linked to campaign map pins — `campaign_npcs.campaign_pin_id` wired in seed, backfill SQL for existing campaigns, pin popup shows `ALSO HERE` list of linked NPCs (player view filtered by `revealedNpcIds`, dead NPCs struck through, realtime via `campaign_npcs` channel)
 
 ### Campaign Pins
 - [x] campaign_pins table with reveal/hide per pin

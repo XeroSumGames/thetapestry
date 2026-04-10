@@ -19,6 +19,20 @@ interface Props {
   mapStyle?: string
   mapCenterLat?: number | null
   mapCenterLng?: number | null
+  revealedNpcIds?: Set<string>
+  focusPin?: { id: string; lat: number; lng: number } | null
+}
+
+interface PinNpc {
+  id: string
+  name: string
+  campaign_pin_id: string | null
+  npc_type: string | null
+  status: string
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
 }
 
 const SETTING_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
@@ -63,7 +77,7 @@ function getCategoryEmoji(category: string): string {
   return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '📍'
 }
 
-export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defaultMapStyle, mapCenterLat, mapCenterLng }: Props) {
+export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defaultMapStyle, mapCenterLat, mapCenterLng, revealedNpcIds, focusPin }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const tileLayerRef = useRef<any>(null)
@@ -87,10 +101,21 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   useEffect(() => { placingRef.current = placing }, [placing])
 
   async function loadPins(L?: any) {
-    const { data } = await supabase.from('campaign_pins').select('*').eq('campaign_id', campaignId)
-    const allPins = data ?? []
+    const [{ data: pinData }, { data: npcData }] = await Promise.all([
+      supabase.from('campaign_pins').select('*').eq('campaign_id', campaignId),
+      supabase.from('campaign_npcs').select('id, name, campaign_pin_id, npc_type, status').eq('campaign_id', campaignId),
+    ])
+    const allPins = pinData ?? []
     const visible = isGM ? allPins : allPins.filter((p: any) => p.revealed)
     setPins(visible)
+
+    // Group NPCs by pin, filtering out NPCs hidden from non-GM players.
+    const npcsByPin: Record<string, PinNpc[]> = {}
+    ;(npcData ?? []).forEach((n: PinNpc) => {
+      if (!n.campaign_pin_id) return
+      if (!isGM && revealedNpcIds && !revealedNpcIds.has(n.id)) return
+      ;(npcsByPin[n.campaign_pin_id] ??= []).push(n)
+    })
 
     const leaflet = L ?? (await import('leaflet')).default
     const map = mapInstanceRef.current
@@ -117,11 +142,23 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     visible.forEach((pin: any) => {
       const emoji = getCategoryEmoji(pin.category)
       const icon = leaflet.divIcon({
-        html: `<div style="font-size:16px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));cursor:pointer;${!pin.revealed && isGM ? 'opacity:0.4;' : ''}" title="${pin.name}">${emoji}</div>`,
+        html: `<div style="font-size:16px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));cursor:pointer;${!pin.revealed && isGM ? 'opacity:0.4;' : ''}" title="${escapeHtml(pin.name)}">${emoji}</div>`,
         className: '', iconSize: [20, 20], iconAnchor: [10, 20],
       })
-      const marker = leaflet.marker([pin.lat, pin.lng], { icon })
-        .bindPopup(`<div style="font-family:Barlow Condensed,sans-serif;"><strong style="text-transform:uppercase;letter-spacing:.04em;">${pin.name}</strong>${pin.notes ? `<br/><span style="color:#666;">${pin.notes}</span>` : ''}${!pin.revealed && isGM ? '<br/><em style="color:#c0392b;">Hidden from players</em>' : ''}</div>`)
+      const npcsHere = npcsByPin[pin.id] ?? []
+      const npcSection = npcsHere.length === 0 ? '' :
+        `<div style="margin-top:8px;padding-top:6px;border-top:1px solid #2e2e2e;">
+           <div style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:3px;">Also Here</div>
+           ${npcsHere.map(n => `<div style="font-size:15px;color:#d4cfc9;${n.status === 'dead' ? 'text-decoration:line-through;opacity:.6;' : ''}">${escapeHtml(n.name)}${n.npc_type ? ` <span style="color:#888;font-size:13px;">· ${escapeHtml(n.npc_type)}</span>` : ''}</div>`).join('')}
+         </div>`
+      const popupHtml =
+        `<div style="font-family:Barlow Condensed,sans-serif;min-width:180px;">` +
+          `<strong style="text-transform:uppercase;letter-spacing:.04em;">${escapeHtml(pin.name)}</strong>` +
+          `${pin.notes ? `<br/><span style="color:#666;">${escapeHtml(pin.notes)}</span>` : ''}` +
+          `${!pin.revealed && isGM ? '<br/><em style="color:#c0392b;">Hidden from players</em>' : ''}` +
+          npcSection +
+        `</div>`
+      const marker = leaflet.marker([pin.lat, pin.lng], { icon }).bindPopup(popupHtml)
       clusterGroup.addLayer(marker)
       markersRef.current[pin.id] = marker
     })
@@ -163,6 +200,9 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   async function savePin() {
     if (!newPin || !pinForm.name.trim()) return
     setSaving(true)
+    // Append new pins at the end of the existing sort order.
+    const { data: maxRow } = await supabase.from('campaign_pins').select('sort_order').eq('campaign_id', campaignId).order('sort_order', { ascending: false, nullsFirst: false }).limit(1).maybeSingle()
+    const nextSort = ((maxRow as any)?.sort_order ?? 0) + 1
     const { data } = await supabase.from('campaign_pins').insert({
       campaign_id: campaignId,
       name: pinForm.name.trim(),
@@ -171,6 +211,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       notes: pinForm.notes.trim() || null,
       category: pinForm.category,
       revealed: false,
+      sort_order: nextSort,
     }).select().single()
 
     if (data && attachments.length > 0) {
@@ -216,9 +257,33 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       supabase.channel(`campaign_pins_${campaignId}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_pins', filter: `campaign_id=eq.${campaignId}` }, () => loadPins())
         .subscribe()
+
+      supabase.channel(`campaign_npcs_map_${campaignId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${campaignId}` }, () => loadPins())
+        .subscribe()
     }
     init()
   }, [campaignId])
+
+  // Rebuild popups when the player's revealed-NPC set changes.
+  useEffect(() => {
+    if (!mapInstanceRef.current) return
+    loadPins()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealedNpcIds])
+
+  // Fly to and open the popup for an externally requested pin (e.g. Assets tab click).
+  useEffect(() => {
+    if (!focusPin || !mapInstanceRef.current) return
+    const marker = markersRef.current[focusPin.id]
+    const cg = clusterGroupRef.current
+    if (marker && cg && typeof cg.zoomToShowLayer === 'function') {
+      cg.zoomToShowLayer(marker, () => marker.openPopup())
+    } else {
+      mapInstanceRef.current.flyTo([focusPin.lat, focusPin.lng], 17, { duration: 0.8 })
+      if (marker) setTimeout(() => marker.openPopup(), 900)
+    }
+  }, [focusPin])
 
   return (
     <div style={{ flex: 1, position: 'relative' }}>

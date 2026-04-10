@@ -1,8 +1,12 @@
 export interface NpcSeed {
   name: string
-  rapid_range: string
-  wp: number; rp: number; dmm: number; dmr: number
-  init: number; per: number; enc: number; pt: number
+  reason: number
+  acumen: number
+  physicality: number
+  influence: number
+  dexterity: number
+  wp_max: number
+  rp_max: number
   skills: { name: string; level: number; specialized: boolean }[]
   equipment: { name: string; damage?: number; roll?: string; notes?: string }[]
   role: string
@@ -15,8 +19,8 @@ export interface NpcSeed {
 export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   {
     name: 'Lincoln "Linc" Sawyer',
-    rapid_range: '23030',
-    wp: 10, rp: 6, dmm: 0, dmr: 0, init: 3, per: 5, enc: 6, pt: 4,
+    reason: 2, acumen: 3, physicality: 0, influence: 3, dexterity: 0,
+    wp_max: 10, rp_max: 6,
     skills: [
       { name: 'Inspiration', level: 2, specialized: false },
       { name: 'Manipulation', level: 2, specialized: false },
@@ -39,8 +43,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Mitchell "Mitch" Kosinski',
-    rapid_range: '12110',
-    wp: 11, rp: 7, dmm: 1, dmr: 0, init: 2, per: 3, enc: 7, pt: 3,
+    reason: 1, acumen: 2, physicality: 1, influence: 1, dexterity: 0,
+    wp_max: 11, rp_max: 7,
     skills: [
       { name: 'Inspiration', level: 2, specialized: false },
       { name: 'Athletics', level: 1, specialized: false },
@@ -62,8 +66,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'District Deputy',
-    rapid_range: '01101',
-    wp: 12, rp: 7, dmm: 1, dmr: 1, init: 2, per: 1, enc: 7, pt: 3,
+    reason: 0, acumen: 1, physicality: 1, influence: 0, dexterity: 1,
+    wp_max: 12, rp_max: 7,
     skills: [
       { name: 'Athletics', level: 1, specialized: false },
       { name: 'Intimidation', level: 1, specialized: false },
@@ -85,8 +89,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Tom Orchard',
-    rapid_range: '22010',
-    wp: 10, rp: 6, dmm: 0, dmr: 0, init: 2, per: 4, enc: 6, pt: 3,
+    reason: 2, acumen: 2, physicality: 0, influence: 1, dexterity: 0,
+    wp_max: 10, rp_max: 6,
     skills: [
       { name: 'Barter', level: 2, specialized: false },
       { name: 'Animal Handling', level: 1, specialized: false },
@@ -108,8 +112,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Jemimah Sawyer',
-    rapid_range: '02020',
-    wp: 10, rp: 6, dmm: 0, dmr: 0, init: 2, per: 2, enc: 6, pt: 3,
+    reason: 0, acumen: 2, physicality: 0, influence: 2, dexterity: 0,
+    wp_max: 10, rp_max: 6,
     skills: [
       { name: 'Psychology', level: 2, specialized: true },
       { name: 'Barter', level: 1, specialized: false },
@@ -128,8 +132,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Emma Hernandez',
-    rapid_range: '01011',
-    wp: 10, rp: 6, dmm: 0, dmr: 1, init: 2, per: 1, enc: 6, pt: 3,
+    reason: 0, acumen: 1, physicality: 0, influence: 1, dexterity: 1,
+    wp_max: 10, rp_max: 6,
     skills: [
       { name: 'Barter', level: 1, specialized: false },
       { name: 'Mechanic', level: 1, specialized: true },
@@ -149,8 +153,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Morgan Lieu',
-    rapid_range: '22001',
-    wp: 11, rp: 6, dmm: 0, dmr: 0, init: 3, per: 4, enc: 6, pt: 3,
+    reason: 2, acumen: 2, physicality: 0, influence: 0, dexterity: 1,
+    wp_max: 11, rp_max: 6,
     skills: [
       { name: 'Medicine', level: 2, specialized: true },
       { name: 'Research', level: 2, specialized: false },
@@ -171,8 +175,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Nana Welch',
-    rapid_range: '12000',
-    wp: 10, rp: 6, dmm: 0, dmr: 0, init: 2, per: 3, enc: 6, pt: 3,
+    reason: 1, acumen: 2, physicality: 0, influence: 0, dexterity: 0,
+    wp_max: 10, rp_max: 6,
     skills: [
       { name: 'General Knowledge', level: 1, specialized: false },
       { name: 'Research', level: 1, specialized: false },
@@ -192,8 +196,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Carol Philips',
-    rapid_range: '20010',
-    wp: 10, rp: 6, dmm: 0, dmr: 0, init: 0, per: 2, enc: 6, pt: 3,
+    reason: 2, acumen: 0, physicality: 0, influence: 1, dexterity: 0,
+    wp_max: 10, rp_max: 6,
     skills: [
       { name: 'General Knowledge', level: 2, specialized: false },
       { name: 'Inspiration', level: 1, specialized: false },
@@ -212,8 +216,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Nate Landry',
-    rapid_range: '11002',
-    wp: 12, rp: 6, dmm: 0, dmr: 2, init: 3, per: 2, enc: 6, pt: 3,
+    reason: 1, acumen: 1, physicality: 0, influence: 0, dexterity: 2,
+    wp_max: 12, rp_max: 6,
     skills: [
       { name: 'Mechanic', level: 2, specialized: true },
       { name: 'Ranged Combat', level: 2, specialized: false },
@@ -235,8 +239,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Father Donalds',
-    rapid_range: '11010',
-    wp: 10, rp: 6, dmm: 0, dmr: 0, init: 1, per: 2, enc: 6, pt: 3,
+    reason: 1, acumen: 1, physicality: 0, influence: 1, dexterity: 0,
+    wp_max: 10, rp_max: 6,
     skills: [
       { name: 'General Knowledge', level: 1, specialized: false },
       { name: 'Inspiration', level: 1, specialized: false },
@@ -255,8 +259,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Wesley Spencer',
-    rapid_range: '21000',
-    wp: 10, rp: 6, dmm: 0, dmr: 3, init: 1, per: 3, enc: 6, pt: 3,
+    reason: 2, acumen: 1, physicality: 0, influence: 0, dexterity: 0,
+    wp_max: 10, rp_max: 6,
     skills: [
       { name: 'Manipulation', level: 2, specialized: false },
       { name: 'Research', level: 2, specialized: false },
@@ -275,8 +279,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Marcy Cunningham',
-    rapid_range: '01110',
-    wp: 11, rp: 7, dmm: 1, dmr: 0, init: 1, per: 1, enc: 7, pt: 3,
+    reason: 0, acumen: 1, physicality: 1, influence: 1, dexterity: 0,
+    wp_max: 11, rp_max: 7,
     skills: [
       { name: 'Manipulation', level: 2, specialized: false },
       { name: 'Barter', level: 1, specialized: false },
@@ -298,8 +302,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Johnson Walker',
-    rapid_range: '11101',
-    wp: 12, rp: 7, dmm: 1, dmr: 1, init: 2, per: 2, enc: 7, pt: 3,
+    reason: 1, acumen: 1, physicality: 1, influence: 0, dexterity: 1,
+    wp_max: 12, rp_max: 7,
     skills: [
       { name: 'Mechanic', level: 3, specialized: true },
       { name: 'Tinkerer', level: 2, specialized: false },
@@ -320,8 +324,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Milo Cantwell',
-    rapid_range: '01121',
-    wp: 12, rp: 7, dmm: 1, dmr: 1, init: 2, per: 1, enc: 7, pt: 3,
+    reason: 0, acumen: 1, physicality: 1, influence: 2, dexterity: 1,
+    wp_max: 12, rp_max: 7,
     skills: [
       { name: 'Inspiration', level: 2, specialized: false },
       { name: 'Intimidation', level: 2, specialized: false },
@@ -342,8 +346,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Gio Leone',
-    rapid_range: '31000',
-    wp: 10, rp: 6, dmm: 0, dmr: 0, init: 1, per: 4, enc: 6, pt: 3,
+    reason: 3, acumen: 1, physicality: 0, influence: 0, dexterity: 0,
+    wp_max: 10, rp_max: 6,
     skills: [
       { name: 'Demolitions', level: 2, specialized: true },
       { name: 'General Knowledge', level: 2, specialized: false },
@@ -363,8 +367,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'Jeremy Barrow',
-    rapid_range: '21101',
-    wp: 10, rp: 6, dmm: 0, dmr: 0, init: 0, per: 3, enc: 6, pt: 3,
+    reason: 2, acumen: 1, physicality: 1, influence: 0, dexterity: 1,
+    wp_max: 10, rp_max: 6,
     skills: [
       { name: 'Athletics', level: 2, specialized: false },
       { name: 'General Knowledge', level: 2, specialized: false },
@@ -383,8 +387,8 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
   },
   {
     name: 'David Battersby',
-    rapid_range: '22100',
-    wp: 11, rp: 7, dmm: 1, dmr: 0, init: 2, per: 4, enc: 7, pt: 3,
+    reason: 2, acumen: 2, physicality: 1, influence: 0, dexterity: 0,
+    wp_max: 11, rp_max: 7,
     skills: [
       { name: 'Farming', level: 3, specialized: false },
       { name: 'Survival', level: 2, specialized: false },
@@ -409,8 +413,9 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
 export const CHASED_NPCS: NpcSeed[] = [
   // ENCOUNTER NPCs
   {
-    name: 'Maddy Bell', rapid_range: '01011',
-    wp: 11, rp: 6, dmm: 1, dmr: 0, init: 0, per: 0, enc: 0, pt: 0,
+    name: 'Maddy Bell',
+    reason: 0, acumen: 1, physicality: 0, influence: 1, dexterity: 1,
+    wp_max: 11, rp_max: 6,
     skills: [{ name: 'Athletics', level: 1, specialized: false }, { name: 'Manipulation', level: 1, specialized: false }, { name: 'Ranged Combat', level: 1, specialized: false }, { name: 'Stealth', level: 1, specialized: false }],
     equipment: [{ name: 'Shotgun', damage: 6, roll: '5+2d6', notes: 'Taken from Luke Connor' }],
     role: 'Survivor / Mother', pin_title: '01 | Best Nite Motel',
@@ -419,8 +424,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Getting her children Troy and Mark back from the Connor farmhouse. Everything else is secondary.',
   },
   {
-    name: 'Troy & Mark Bell', rapid_range: '-1-1-200',
-    wp: 8, rp: 4, dmm: -2, dmr: 0, init: -1, per: 0, enc: 2, pt: 3,
+    name: 'Troy & Mark Bell',
+    reason: -1, acumen: -1, physicality: -2, influence: 0, dexterity: 0,
+    wp_max: 8, rp_max: 4,
     skills: [{ name: 'Charm', level: 1, specialized: false }],
     equipment: [],
     role: "Maddy's Children", pin_title: 'Connor Boys Farmhouse',
@@ -431,8 +437,9 @@ export const CHASED_NPCS: NpcSeed[] = [
 
   // THE CONNOR BOYS
   {
-    name: 'Luke Connor', rapid_range: '-10302',
-    wp: 15, rp: 9, dmm: 3, dmr: 2, init: 2, per: 0, enc: 9, pt: 4,
+    name: 'Luke Connor',
+    reason: -1, acumen: 0, physicality: 3, influence: 0, dexterity: 2,
+    wp_max: 15, rp_max: 9,
     skills: [{ name: 'Ranged Combat', level: 2, specialized: false }, { name: 'Unarmed Combat', level: 2, specialized: false }, { name: 'Intimidation', level: 1, specialized: false }, { name: 'Hunting', level: 1, specialized: false }, { name: 'Survival', level: 1, specialized: false }],
     equipment: [{ name: 'Hunting Knife', roll: '2+1d3' }, { name: 'Shotgun', damage: 6, roll: '5+2d6' }, { name: 'Flashlight' }],
     role: 'Connor Boy — Middle Brother', pin_title: 'The Encounter — Forest Clearing',
@@ -441,8 +448,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Reclaiming Maddy. Drops his shotgun to wrestle her into submission if he catches her.',
   },
   {
-    name: 'Owen Connor', rapid_range: '01202',
-    wp: 14, rp: 8, dmm: 2, dmr: 2, init: 3, per: 0, enc: 8, pt: 4,
+    name: 'Owen Connor',
+    reason: 0, acumen: 1, physicality: 2, influence: 0, dexterity: 2,
+    wp_max: 14, rp_max: 8,
     skills: [{ name: 'Ranged Combat', level: 2, specialized: false }, { name: 'Survival', level: 2, specialized: false }, { name: 'Hunting', level: 1, specialized: false }, { name: 'Melee Combat', level: 1, specialized: false }, { name: 'Unarmed Combat', level: 1, specialized: false }],
     equipment: [{ name: 'Hunting Knife', roll: '2+1d3' }, { name: 'Shotgun', damage: 8, roll: '5+2d6' }, { name: 'Flashlight' }],
     role: 'Connor Boy', pin_title: "Owen Connor's Ambush Point",
@@ -451,8 +459,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Escorting intruders to Ray for judgment.',
   },
   {
-    name: 'Donnie McHenry', rapid_range: '01301',
-    wp: 14, rp: 9, dmm: 3, dmr: 1, init: 2, per: 0, enc: 9, pt: 4,
+    name: 'Donnie McHenry',
+    reason: 0, acumen: 1, physicality: 3, influence: 0, dexterity: 1,
+    wp_max: 14, rp_max: 9,
     skills: [{ name: 'Unarmed Combat', level: 3, specialized: false }, { name: 'Melee Combat', level: 2, specialized: false }, { name: 'Ranged Combat', level: 2, specialized: false }],
     equipment: [{ name: 'Rolling Pin', roll: '3+1d3', notes: '100% resilience point damage' }, { name: 'Pistol', notes: 'On dining room table' }],
     role: 'Connor Cousin', pin_title: 'Connor Boys Farmhouse',
@@ -461,8 +470,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Defending the farmhouse.',
   },
   {
-    name: 'Junior Connor', rapid_range: '00202',
-    wp: 14, rp: 8, dmm: 2, dmr: 2, init: 2, per: 0, enc: 8, pt: 4,
+    name: 'Junior Connor',
+    reason: 0, acumen: 0, physicality: 2, influence: 0, dexterity: 2,
+    wp_max: 14, rp_max: 8,
     skills: [{ name: 'Ranged Combat', level: 2, specialized: false }, { name: 'Melee Combat', level: 1, specialized: false }, { name: 'Survival', level: 1, specialized: false }, { name: 'Unarmed Combat', level: 1, specialized: false }],
     equipment: [{ name: 'Kitchen Knife', roll: '2+1d3' }, { name: 'Pistol', notes: 'On dining room table' }],
     role: "Connor Boy — Luke's Son", pin_title: 'Connor Boys Farmhouse',
@@ -471,8 +481,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Defending the farmhouse.',
   },
   {
-    name: 'Silas McHenry', rapid_range: '-10302',
-    wp: 15, rp: 9, dmm: 3, dmr: 2, init: 2, per: 0, enc: 9, pt: 4,
+    name: 'Silas McHenry',
+    reason: -1, acumen: 0, physicality: 3, influence: 0, dexterity: 2,
+    wp_max: 15, rp_max: 9,
     skills: [{ name: 'Ranged Combat', level: 2, specialized: false }, { name: 'Melee Combat', level: 3, specialized: false }, { name: 'Unarmed Combat', level: 2, specialized: false }, { name: 'Intimidation', level: 1, specialized: false }],
     equipment: [{ name: 'Machete', roll: '2+2d3' }, { name: 'Light Pistol', damage: 9, roll: '3+1d6' }],
     role: 'Connor Cousin — The Dangerous One', pin_title: 'Connor Boys Farmhouse',
@@ -481,8 +492,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Violence. The most dangerous and unpredictable Connor.',
   },
   {
-    name: 'Ray Connor', rapid_range: '11112',
-    wp: 13, rp: 7, dmm: 1, dmr: 2, init: 3, per: 0, enc: 7, pt: 3,
+    name: 'Ray Connor',
+    reason: 1, acumen: 1, physicality: 1, influence: 1, dexterity: 2,
+    wp_max: 13, rp_max: 7,
     skills: [{ name: 'Hunting', level: 1, specialized: false }, { name: 'Intimidation', level: 2, specialized: false }, { name: 'Ranged Combat', level: 2, specialized: false }, { name: 'Stealth', level: 1, specialized: false }, { name: 'Survival', level: 1, specialized: false }],
     equipment: [{ name: 'Hunting Knife', roll: '2+1d3' }, { name: 'Shotgun', damage: 6, roll: '5+2d6' }, { name: 'Flashlight' }],
     role: 'Connor Patriarch', pin_title: '01 | Best Nite Motel',
@@ -491,8 +503,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Revenge for dead kin. Wants Maddy dead above all else.',
   },
   {
-    name: 'Jackie Connor', rapid_range: '00000',
-    wp: 15, rp: 9, dmm: 3, dmr: 2, init: 2, per: 0, enc: 9, pt: 4,
+    name: 'Jackie Connor',
+    reason: 0, acumen: 0, physicality: 0, influence: 0, dexterity: 0,
+    wp_max: 15, rp_max: 9,
     skills: [{ name: 'Ranged Combat', level: 2, specialized: false }, { name: 'Unarmed Combat', level: 2, specialized: false }, { name: 'Intimidation', level: 1, specialized: false }, { name: 'Hunting', level: 1, specialized: false }, { name: 'Survival', level: 1, specialized: false }],
     equipment: [{ name: 'Hunting Knife', roll: '2+1d3' }, { name: 'Shotgun', damage: 6, roll: '5+2d6' }, { name: 'Flashlight' }],
     role: 'Connor Boy — Brother', pin_title: '01 | Best Nite Motel',
@@ -503,8 +516,9 @@ export const CHASED_NPCS: NpcSeed[] = [
 
   // KING'S CROSSROADS MALL RESIDENTS
   {
-    name: 'William Robertson', rapid_range: '11-12-1',
-    wp: 8, rp: 5, dmm: -1, dmr: -1, init: 0, per: 0, enc: 5, pt: 2,
+    name: 'William Robertson',
+    reason: 1, acumen: 1, physicality: -1, influence: 2, dexterity: -1,
+    wp_max: 8, rp_max: 5,
     skills: [{ name: 'Barter', level: 1, specialized: false }, { name: 'General Knowledge', level: 1, specialized: false }, { name: 'Inspiration', level: 1, specialized: false }, { name: 'Manipulation', level: 1, specialized: false }, { name: 'Tinkerer', level: 1, specialized: false }],
     equipment: [{ name: 'Light Pistol', damage: 9, roll: '3+1d6' }, { name: 'Walkie-Talkie' }],
     role: 'Mall Community Leader', pin_title: '01 | Best Nite Motel',
@@ -513,8 +527,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Keeping his family safe. Building community.',
   },
   {
-    name: 'Caleb Robertson', rapid_range: '10001',
-    wp: 11, rp: 6, dmm: 0, dmr: 1, init: 1, per: 0, enc: 6, pt: 0,
+    name: 'Caleb Robertson',
+    reason: 1, acumen: 0, physicality: 0, influence: 0, dexterity: 1,
+    wp_max: 11, rp_max: 6,
     skills: [{ name: 'Tinkerer', level: 1, specialized: false }, { name: 'Ranged Combat', level: 1, specialized: false }, { name: 'Hunting', level: 1, specialized: false }, { name: 'Survival', level: 1, specialized: false }, { name: 'Scavenging', level: 1, specialized: false }],
     equipment: [{ name: 'Hunting Rifle', damage: 11, roll: '5+1d6' }, { name: 'Hunting Knife', roll: '2+2d3' }, { name: 'Hunting Traps', damage: 3 }, { name: 'Flashlight' }],
     role: "William's Son / Hunter", pin_title: '01 | Best Nite Motel',
@@ -523,8 +538,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Feeding and protecting his family.',
   },
   {
-    name: 'Carol Robertson', rapid_range: '000101',
-    wp: 10, rp: 6, dmm: 0, dmr: 0, init: 0, per: 0, enc: 6, pt: 3,
+    name: 'Carol Robertson',
+    reason: 0, acumen: 0, physicality: 0, influence: 1, dexterity: 0,
+    wp_max: 10, rp_max: 6,
     skills: [{ name: 'Inspiration', level: 1, specialized: false }, { name: 'Manipulation', level: 1, specialized: false }, { name: 'Pharmacology', level: 1, specialized: true }],
     equipment: [],
     role: "Caleb's Wife", pin_title: '01 | Best Nite Motel',
@@ -533,8 +549,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Survival and safety for her children.',
   },
   {
-    name: 'Bobby Robertson', rapid_range: '00101',
-    wp: 12, rp: 7, dmm: 1, dmr: 1, init: 1, per: 0, enc: 7, pt: 3,
+    name: 'Bobby Robertson',
+    reason: 0, acumen: 0, physicality: 1, influence: 0, dexterity: 1,
+    wp_max: 12, rp_max: 7,
     skills: [{ name: 'Athletics', level: 1, specialized: false }, { name: 'Hunting', level: 1, specialized: false }, { name: 'Ranged Combat', level: 1, specialized: false }, { name: 'Survival', level: 1, specialized: false }],
     equipment: [{ name: 'Hunting Rifle', roll: '5+1d6' }, { name: 'Hunting Traps', damage: 1 }, { name: 'Flashlight' }],
     role: "Caleb's Son — Almost 18", pin_title: '01 | Best Nite Motel',
@@ -543,8 +560,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Protecting his family.',
   },
   {
-    name: 'Jemmy Robertson', rapid_range: '00010',
-    wp: 10, rp: 6, dmm: -1, dmr: -1, init: 0, per: 0, enc: 6, pt: 3,
+    name: 'Jemmy Robertson',
+    reason: 0, acumen: 0, physicality: 0, influence: 1, dexterity: 0,
+    wp_max: 10, rp_max: 6,
     skills: [{ name: 'Athletics', level: 1, specialized: false }, { name: 'Entertainment', level: 1, specialized: false }, { name: 'Stealth', level: 1, specialized: false }],
     equipment: [{ name: 'Flashlight' }],
     role: "Caleb's Daughter — 15", pin_title: '01 | Best Nite Motel',
@@ -553,8 +571,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Surviving. Finding some semblance of normality.',
   },
   {
-    name: 'Paula Ortiz', rapid_range: '0000',
-    wp: 10, rp: 6, dmm: 0, dmr: 0, init: 0, per: 0, enc: 6, pt: 3,
+    name: 'Paula Ortiz',
+    reason: 0, acumen: 0, physicality: 0, influence: 0, dexterity: 0,
+    wp_max: 10, rp_max: 6,
     skills: [{ name: 'First Aid', level: 1, specialized: false }, { name: 'Scavenging', level: 1, specialized: false }],
     equipment: [{ name: 'Bible' }],
     role: 'Mall Resident', pin_title: '01 | Best Nite Motel',
@@ -563,8 +582,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Safety and community. Her faith.',
   },
   {
-    name: 'Milton Ortiz', rapid_range: '00100',
-    wp: 11, rp: 7, dmm: 1, dmr: 0, init: 0, per: 0, enc: 7, pt: 3,
+    name: 'Milton Ortiz',
+    reason: 0, acumen: 0, physicality: 1, influence: 0, dexterity: 0,
+    wp_max: 11, rp_max: 7,
     skills: [{ name: 'Ranged Combat', level: 1, specialized: false }, { name: 'Scavenging', level: 1, specialized: false }],
     equipment: [{ name: 'Hunting Rifle', roll: '5+1d6' }, { name: 'Hunting Traps', damage: 1 }, { name: 'Flashlight' }],
     role: 'Mall Resident — Armed', pin_title: '01 | Best Nite Motel',
@@ -573,8 +593,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Protecting Paula. Surviving.',
   },
   {
-    name: 'Nick Manson', rapid_range: '00010',
-    wp: 10, rp: 6, dmm: 0, dmr: 0, init: 0, per: 0, enc: 6, pt: 3,
+    name: 'Nick Manson',
+    reason: 0, acumen: 0, physicality: 0, influence: 1, dexterity: 0,
+    wp_max: 10, rp_max: 6,
     skills: [{ name: 'Inspiration', level: 2, specialized: false }, { name: 'Research', level: 1, specialized: false }, { name: 'Manipulation', level: 1, specialized: false }],
     equipment: [{ name: 'Bible' }],
     role: 'Pastor', pin_title: '01 | Best Nite Motel',
@@ -583,8 +604,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: "Spiritual guidance. Finding God's plan in the apocalypse.",
   },
   {
-    name: 'Eric Rose', rapid_range: '10100',
-    wp: 11, rp: 7, dmm: 1, dmr: 0, init: 0, per: 0, enc: 7, pt: 3,
+    name: 'Eric Rose',
+    reason: 1, acumen: 0, physicality: 1, influence: 0, dexterity: 0,
+    wp_max: 11, rp_max: 7,
     skills: [{ name: 'First Aid', level: 1, specialized: false }, { name: 'Pharmacology', level: 1, specialized: true }],
     equipment: [{ name: 'Light Pistol', roll: '3+1d6' }, { name: 'First Aid Kit' }],
     role: 'EMT', pin_title: '01 | Best Nite Motel',
@@ -593,8 +615,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Keeping people alive. Protecting Macy.',
   },
   {
-    name: 'Macy Stevens', rapid_range: '00000',
-    wp: 8, rp: 5, dmm: -1, dmr: -1, init: 0, per: 0, enc: 5, pt: 2,
+    name: 'Macy Stevens',
+    reason: 0, acumen: 0, physicality: 0, influence: 0, dexterity: 0,
+    wp_max: 8, rp_max: 5,
     skills: [{ name: 'General Knowledge', level: 1, specialized: false }],
     equipment: [{ name: 'Walkie-Talkie' }],
     role: 'Mall Resident', pin_title: '01 | Best Nite Motel',
@@ -603,8 +626,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Safety. Staying close to Eric.',
   },
   {
-    name: 'Mikey Doyle', rapid_range: '00101',
-    wp: 12, rp: 7, dmm: 1, dmr: 1, init: 1, per: 0, enc: 1, pt: 7,
+    name: 'Mikey Doyle',
+    reason: 0, acumen: 0, physicality: 1, influence: 0, dexterity: 1,
+    wp_max: 12, rp_max: 7,
     skills: [{ name: 'Lock-Picking', level: 1, specialized: true }, { name: 'Ranged Combat', level: 1, specialized: false }, { name: 'Stealth', level: 1, specialized: false }, { name: 'Sleight of Hand', level: 1, specialized: false }],
     equipment: [{ name: 'Light Pistol', roll: '3+1d6' }, { name: 'First Aid Kit' }],
     role: 'Professional Safe-Cracker', pin_title: '01 | Best Nite Motel',
@@ -613,8 +637,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: 'Survival. Not going back to anything like a cell.',
   },
   {
-    name: 'Art Buchanan', rapid_range: '21020',
-    wp: 10, rp: 6, dmm: 0, dmr: 0, init: 1, per: 0, enc: 6, pt: 4,
+    name: 'Art Buchanan',
+    reason: 2, acumen: 1, physicality: 0, influence: 2, dexterity: 0,
+    wp_max: 10, rp_max: 6,
     skills: [{ name: 'Inspiration', level: 2, specialized: false }, { name: 'Intimidation', level: 2, specialized: false }, { name: 'Barter', level: 1, specialized: false }, { name: 'Hunting', level: 1, specialized: false }, { name: 'Ranged Combat', level: 1, specialized: false }, { name: 'Survival', level: 1, specialized: false }, { name: 'Tactics', level: 1, specialized: true }],
     equipment: [{ name: 'Heavy Pistol', damage: 27, roll: '3+2d3' }, { name: 'Loudhailer' }],
     role: "King's Crossroads Mall Leader", pin_title: '01 | Best Nite Motel',
@@ -625,8 +650,9 @@ export const CHASED_NPCS: NpcSeed[] = [
 
   // EMPTY ENCOUNTER NPCs
   {
-    name: 'Dylan', rapid_range: '01102',
-    wp: 13, rp: 8, dmm: 3, dmr: 2, init: 5, per: 0, enc: 8, pt: 4,
+    name: 'Dylan',
+    reason: 0, acumen: 1, physicality: 1, influence: 0, dexterity: 2,
+    wp_max: 13, rp_max: 8,
     skills: [
       { name: 'Barter', level: 1, specialized: false }, { name: 'Medicine*', level: 2, specialized: true },
       { name: 'Ranged Combat', level: 1, specialized: false }, { name: 'Scavenging', level: 1, specialized: false },
@@ -646,8 +672,9 @@ export const CHASED_NPCS: NpcSeed[] = [
     motivation: "GM has two modes — PEACEFUL: desperate to join a group, running out of supplies, will offer skills and knowledge to negotiate. HOSTILE: views all survivors as marks. Will attempt to follow the players back to their base to rob them. In both modes, will pull his gun if negotiations fail. Only has 3 bullets. Becky's bag on the counter has more ammo. Truck has a shotgun with 2 shells. Will attempt to grapple the weakest player as a hostage if outnumbered (PHY 1 + Unarmed Combat 2 = +3).",
   },
   {
-    name: 'Becky', rapid_range: '11011',
-    wp: 11, rp: 6, dmm: 0, dmr: 1, init: 2, per: 0, enc: 6, pt: 3,
+    name: 'Becky',
+    reason: 1, acumen: 1, physicality: 0, influence: 1, dexterity: 1,
+    wp_max: 11, rp_max: 6,
     skills: [
       { name: 'Athletics', level: 1, specialized: false }, { name: 'Barter', level: 1, specialized: false },
       { name: 'Medicine*', level: 2, specialized: true }, { name: 'Ranged Combat', level: 1, specialized: false },

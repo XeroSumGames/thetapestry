@@ -56,10 +56,11 @@ export default function NewCampaignPage() {
     const settingPins = SETTING_PINS[setting]
     let pinMap: Record<string, string> = {}
     if (settingPins && settingPins.length > 0) {
-      const pinRows = settingPins.map(p => ({
+      const pinRows = settingPins.map((p, i) => ({
         campaign_id: data.id, name: p.title, lat: p.lat, lng: p.lng,
         notes: p.notes ?? '', category: p.category ?? 'location',
         revealed: false,
+        sort_order: i + 1,
       }))
       const { data: createdPins, error: pinErr } = await supabase.from('campaign_pins').insert(pinRows).select('id, name')
       if (pinErr) { console.error('[CampaignCreate] pin seed error:', pinErr.message) }
@@ -68,20 +69,37 @@ export default function NewCampaignPage() {
     // Seed setting NPCs into campaign_npcs
     const settingNpcs = SETTING_NPCS[setting]
     if (settingNpcs && settingNpcs.length > 0) {
-      const npcRows = settingNpcs.map(n => ({
-        campaign_id: data.id,
-        name: n.name,
-        rapid_range: n.rapid_range,
-        wp: n.wp, rp: n.rp, dmm: n.dmm, dmr: n.dmr,
-        init: n.init, per: n.per, enc: n.enc, pt: n.pt,
-        skills: n.skills,
-        equipment: n.equipment,
-        role: n.role,
-        description: n.description,
-        how_to_meet: n.how_to_meet,
-        motivation: n.motivation,
-        revealed: false,
-      }))
+      const npcRows = settingNpcs.map((n, i) => {
+        // Fold non-column seed fields (role, description, how_to_meet, equipment) into the notes column.
+        const equipmentText = n.equipment.length > 0
+          ? 'Equipment: ' + n.equipment.map(e => e.name + (e.notes ? ` (${e.notes})` : '')).join(', ')
+          : ''
+        const notes = [
+          n.role && `Role: ${n.role}`,
+          n.description,
+          n.how_to_meet && `How to meet: ${n.how_to_meet}`,
+          equipmentText,
+        ].filter(Boolean).join('\n\n')
+        return {
+          campaign_id: data.id,
+          campaign_pin_id: n.pin_title ? (pinMap[n.pin_title] ?? null) : null,
+          name: n.name,
+          reason: n.reason,
+          acumen: n.acumen,
+          physicality: n.physicality,
+          influence: n.influence,
+          dexterity: n.dexterity,
+          skills: { entries: n.skills.map(s => ({ name: s.name, level: s.level })), text: n.skills.map(s => `${s.name} ${s.level}`).join(', '), weapon: null },
+          notes,
+          motivation: n.motivation || null,
+          wp_max: n.wp_max,
+          rp_max: n.rp_max,
+          wp_current: n.wp_max,
+          rp_current: n.rp_max,
+          status: 'active',
+          sort_order: i + 1,
+        }
+      })
       const { error: npcErr } = await supabase.from('campaign_npcs').insert(npcRows)
       if (npcErr) { console.error('[CampaignCreate] npc seed error:', npcErr.message) }
     }

@@ -6,6 +6,15 @@
   font-display: swap;
 }
 
+/* Leaflet popup — site-wide bump so map pin info reads at table distance. */
+.leaflet-popup-content {
+  font-size: 15px;
+  line-height: 1.4;
+}
+.leaflet-popup-content strong {
+  font-size: 16px;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }

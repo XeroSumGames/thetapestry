@@ -12,14 +12,16 @@ interface CampaignPin {
   category: string
   revealed: boolean
   created_at: string
+  sort_order: number | null
 }
 
 interface Props {
   campaignId: string
   isGM: boolean
+  onPinFocus?: (pin: { id: string; lat: number; lng: number }) => void
 }
 
-export default function CampaignPins({ campaignId, isGM }: Props) {
+export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
   const supabase = createClient()
   const [pins, setPins] = useState<CampaignPin[]>([])
   const [loading, setLoading] = useState(true)
@@ -32,9 +34,32 @@ export default function CampaignPins({ campaignId, isGM }: Props) {
       .from('campaign_pins')
       .select('*')
       .eq('campaign_id', campaignId)
+      .order('sort_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true })
     setPins(data ?? [])
     setLoading(false)
+  }
+
+  // Drag and drop reorder
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+
+  async function handleDrop(targetId: string) {
+    if (!dragId || dragId === targetId) { setDragId(null); setDragOverId(null); return }
+    const fromIdx = pins.findIndex(p => p.id === dragId)
+    const toIdx = pins.findIndex(p => p.id === targetId)
+    if (fromIdx < 0 || toIdx < 0) { setDragId(null); setDragOverId(null); return }
+    const next = [...pins]
+    const [moved] = next.splice(fromIdx, 1)
+    next.splice(toIdx, 0, moved)
+    // Renumber 1..N and update DB
+    const renumbered = next.map((p, i) => ({ ...p, sort_order: i + 1 }))
+    setPins(renumbered)
+    setDragId(null)
+    setDragOverId(null)
+    await Promise.all(renumbered.map(p =>
+      supabase.from('campaign_pins').update({ sort_order: p.sort_order }).eq('id', p.id)
+    ))
   }
 
   useEffect(() => { loadPins() }, [campaignId])
@@ -108,7 +133,13 @@ export default function CampaignPins({ campaignId, isGM }: Props) {
           </div>
         ) : (
           pins.map(pin => (
-            <div key={pin.id} style={{ padding: '6px 8px', background: '#1a1a1a', border: `1px solid ${pin.revealed ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px' }}>
+            <div
+              key={pin.id}
+              onDragOver={e => { if (dragId) { e.preventDefault(); setDragOverId(pin.id) } }}
+              onDragLeave={() => { if (dragOverId === pin.id) setDragOverId(null) }}
+              onDrop={() => handleDrop(pin.id)}
+              style={{ padding: '6px 8px', background: dragOverId === pin.id ? '#242424' : '#1a1a1a', border: `1px solid ${dragOverId === pin.id ? '#7fc458' : pin.revealed ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', opacity: dragId === pin.id ? 0.4 : 1 }}
+            >
               {editingId === pin.id ? (
                 /* Edit mode */
                 <div>
@@ -124,7 +155,20 @@ export default function CampaignPins({ campaignId, isGM }: Props) {
               ) : (
                 /* View mode */
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  {isGM && (
+                    <div
+                      draggable
+                      onDragStart={() => setDragId(pin.id)}
+                      onDragEnd={() => { setDragId(null); setDragOverId(null) }}
+                      title="Drag to reorder"
+                      style={{ cursor: 'grab', color: '#3a3a3a', fontSize: '14px', lineHeight: 1, userSelect: 'none', padding: '0 2px' }}
+                    >⠿</div>
+                  )}
+                  <div
+                    style={{ flex: 1, minWidth: 0, cursor: onPinFocus ? 'pointer' : 'default' }}
+                    onClick={() => onPinFocus?.({ id: pin.id, lat: pin.lat, lng: pin.lng })}
+                    title={onPinFocus ? 'Show on map' : undefined}
+                  >
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pin.name}</div>
                     {pin.notes && <div style={{ fontSize: '13px', color: '#cce0f5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pin.notes}</div>}
                   </div>

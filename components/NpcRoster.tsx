@@ -102,6 +102,7 @@ export interface CampaignNpc {
   rp_max: number | null
   status: string
   created_at: string
+  sort_order: number | null
 }
 
 interface Relationship {
@@ -165,9 +166,31 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       .from('campaign_npcs')
       .select('*')
       .eq('campaign_id', campaignId)
+      .order('sort_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true })
     setNpcs(data ?? [])
     setLoading(false)
+  }
+
+  // Drag and drop reorder
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+
+  async function handleNpcDrop(targetId: string) {
+    if (!dragId || dragId === targetId) { setDragId(null); setDragOverId(null); return }
+    const fromIdx = npcs.findIndex(n => n.id === dragId)
+    const toIdx = npcs.findIndex(n => n.id === targetId)
+    if (fromIdx < 0 || toIdx < 0) { setDragId(null); setDragOverId(null); return }
+    const next = [...npcs]
+    const [moved] = next.splice(fromIdx, 1)
+    next.splice(toIdx, 0, moved)
+    const renumbered = next.map((n, i) => ({ ...n, sort_order: i + 1 }))
+    setNpcs(renumbered)
+    setDragId(null)
+    setDragOverId(null)
+    await Promise.all(renumbered.map(n =>
+      supabase.from('campaign_npcs').update({ sort_order: n.sort_order }).eq('id', n.id)
+    ))
   }
 
   useEffect(() => {
@@ -259,7 +282,10 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     if (editingId) {
       await supabase.from('campaign_npcs').update(row).eq('id', editingId)
     } else {
-      await supabase.from('campaign_npcs').insert(row)
+      // Append new NPCs at the end of the existing sort order.
+      const { data: maxRow } = await supabase.from('campaign_npcs').select('sort_order').eq('campaign_id', campaignId).order('sort_order', { ascending: false, nullsFirst: false }).limit(1).maybeSingle()
+      const nextSort = ((maxRow as any)?.sort_order ?? 0) + 1
+      await supabase.from('campaign_npcs').insert({ ...row, sort_order: nextSort })
     }
     setShowForm(false)
     setSaving(false)
@@ -373,6 +399,36 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     }
     loadRevealed()
   }, [npcs, pcEntries])
+
+  async function revealAllNpcs() {
+    if (!pcEntries || pcEntries.length === 0 || npcs.length === 0) return
+    const npcIds = npcs.map(n => n.id)
+    // Fetch existing relationships in one round trip.
+    const { data: existing } = await supabase.from('npc_relationships').select('id, npc_id, character_id').in('npc_id', npcIds)
+    const seen = new Set<string>((existing ?? []).map((r: any) => `${r.npc_id}|${r.character_id}`))
+    const updates = (existing ?? []).map((r: any) => r.id)
+    const inserts: any[] = []
+    for (const npc of npcs) {
+      for (const pc of pcEntries) {
+        const key = `${npc.id}|${pc.characterId}`
+        if (!seen.has(key)) inserts.push({ npc_id: npc.id, character_id: pc.characterId, relationship_cmod: 0, revealed: true, reveal_level: 'name_portrait' })
+      }
+    }
+    if (updates.length > 0) {
+      await supabase.from('npc_relationships').update({ revealed: true, reveal_level: 'name_portrait' }).in('id', updates)
+    }
+    if (inserts.length > 0) {
+      await supabase.from('npc_relationships').insert(inserts)
+    }
+    setRevealedNpcIds(new Set(npcIds))
+  }
+
+  async function hideAllNpcs() {
+    if (npcs.length === 0) return
+    const npcIds = npcs.map(n => n.id)
+    await supabase.from('npc_relationships').update({ revealed: false, reveal_level: null }).in('npc_id', npcIds)
+    setRevealedNpcIds(new Set())
+  }
 
   async function quickReveal(npcId: string, e: React.MouseEvent) {
     e.stopPropagation()
@@ -502,16 +558,15 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
             + Combat
           </button>
         )}
-        {npcs.length > 0 && pcEntries && pcEntries.length > 0 && (() => {
-          const allRevealed = npcs.every(n => revealedNpcIds.has(n.id))
+        {npcs.length > 0 && (() => {
+          const noPlayers = !pcEntries || pcEntries.length === 0
+          const allRevealed = !noPlayers && npcs.every(n => revealedNpcIds.has(n.id))
           return (
-            <button onClick={async () => {
-              for (const npc of npcs) {
-                if (allRevealed ? !revealedNpcIds.has(npc.id) : revealedNpcIds.has(npc.id)) continue
-                await quickReveal(npc.id, { stopPropagation: () => {} } as any)
-              }
-            }}
-              style={{ padding: '2px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            <button
+              onClick={() => allRevealed ? hideAllNpcs() : revealAllNpcs()}
+              disabled={noPlayers}
+              title={noPlayers ? 'Add players to reveal NPCs to' : undefined}
+              style={{ padding: '2px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: noPlayers ? 'not-allowed' : 'pointer', opacity: noPlayers ? 0.5 : 1 }}>
               {allRevealed ? 'Hide All' : 'Show All'}
             </button>
           )
@@ -534,10 +589,21 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
               const sc = STATUS_COLORS[npc.status] ?? STATUS_COLORS.active
               return (
                 <div key={npc.id} onClick={() => onViewNpc ? onViewNpc(npc) : openEdit(npc)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: viewingNpcIds?.has(npc.id) ? '#2a1210' : '#1a1a1a', border: `1px solid ${viewingNpcIds?.has(npc.id) ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '#1a1a1a')}
+                  onDragOver={e => { if (dragId) { e.preventDefault(); setDragOverId(npc.id) } }}
+                  onDragLeave={() => { if (dragOverId === npc.id) setDragOverId(null) }}
+                  onDrop={() => handleNpcDrop(npc.id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: dragOverId === npc.id ? '#242424' : viewingNpcIds?.has(npc.id) ? '#2a1210' : '#1a1a1a', border: `1px solid ${dragOverId === npc.id ? '#7fc458' : viewingNpcIds?.has(npc.id) ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s', opacity: dragId === npc.id ? 0.4 : 1 }}
+                  onMouseEnter={e => { if (!dragId) e.currentTarget.style.background = '#242424' }}
+                  onMouseLeave={e => { if (!dragId && dragOverId !== npc.id) e.currentTarget.style.background = viewingNpcIds?.has(npc.id) ? '#2a1210' : '#1a1a1a' }}
                 >
+                  <div
+                    draggable
+                    onDragStart={e => { e.stopPropagation(); setDragId(npc.id) }}
+                    onDragEnd={() => { setDragId(null); setDragOverId(null) }}
+                    onClick={e => e.stopPropagation()}
+                    title="Drag to reorder"
+                    style={{ cursor: 'grab', color: '#3a3a3a', fontSize: '14px', lineHeight: 1, userSelect: 'none', padding: '0 2px', flexShrink: 0 }}
+                  >⠿</div>
                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                     {npc.portrait_url ? (
                       <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
