@@ -52,7 +52,9 @@ CREATE POLICY "Campaign members read each other's profiles"
   );
 
 -- ── Diagnostic — verify policies are present ─────────────────
-SELECT polname, polrelid::regclass AS table, polcmd AS cmd
+-- Note: avoid aliasing as `table` — it's a reserved word and Supabase
+-- SQL Editor's auto-LIMIT injection breaks on it.
+SELECT polname, polrelid::regclass AS table_name, polcmd AS cmd
 FROM pg_policy
 WHERE polrelid IN ('public.characters'::regclass, 'public.profiles'::regclass)
-ORDER BY table, polname;
+ORDER BY table_name, polname;

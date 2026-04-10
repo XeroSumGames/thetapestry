@@ -27,9 +27,24 @@
 - [ ] Manipulation rolls should auto-include First Impression CMod
 - [ ] Add to Combat modal should filter NPCs already in initiative
 - [ ] Self-attack should apply damage to self
-- [ ] **Auto-advance after 2 actions** — diagnostic logging now in place; instrument-and-retest to find root cause
-- [ ] **Player-facing NPC card on Show All click** — when GM reveals an NPC, players should be able to click the name to open a read-only card
-- [ ] **Player load 20s, combat start 15s, roll modal 55s stuck** — perf investigation needed; likely related to the "Unknown" cascade now that publication is fixed
+- [ ] **Auto-advance after 2 actions** — diagnostic logging in place on `closeRollModal` / `consumeAction` / `nextTurn`. Next test session: make 2 actions, copy console output starting with `[closeRollModal]` etc.
+- [ ] **Damage display still broken** — NPC HP not updating after damage. Diagnostic logging now in place on the damage path (`[damage] target lookup`, `[damage] PC/NPC target ...`, `[damage] update returned N rows`). User reported empty console on last test — likely cached JS. Re-test in incognito with DevTools "Disable cache" on, copy the `[damage]` lines.
+- [ ] **Roll modal stuck "Rolling..." for 55s** + **roll result delayed 30s into Logs** — likely same root cause as damage display. Investigate after damage is fixed.
+- [x] Player join 20s → 1-2s — RLS index fix (`sql/campaign-members-indexes.sql`) and `log-visit` edge function unblock
+- [x] Combat start 15s → fast (verified by user)
+- [x] PCs showing "Unknown" — characters/profiles cross-user RLS (`sql/character-profile-rls-fix.sql`)
+- [x] Combat Started + Initiative boxes missing in Logs — `user_id: userId` on system roll_log inserts (RLS) and explicit timestamps for ordering
+- [x] Combat Started above Initiative
+- [x] Initiative box uses combined Init mod (DEX + ACU) instead of separate ACU/DEX, PC names in blue
+- [x] End Combat blue button + `combat_end` log entry box
+- [x] Show All / Hide All toggle on NPCs tab (always visible, disabled with tooltip when no players)
+- [x] Select All / Deselect All toggle in Start Combat NPC picker
+- [x] NPC tab reorders during combat — active combatant on top, rotating in turn order
+- [x] Players see right-side asset panel with revealed NPCs
+- [x] Players have own Notes tab with "Add to Session Summary" — appended notes prefix with character name in GM's End Session modal
+- [x] Player bar reorders so each viewer sees their own character next to GM portrait
+- [x] Open NpcCard refreshes when underlying NPC HP changes
+- [ ] **Player-facing NPC card on Show All click** — clicking a revealed NPC in the player's NPCs tab opens a read-only card (currently opens the same editable view as GM)
 
 ---
 
