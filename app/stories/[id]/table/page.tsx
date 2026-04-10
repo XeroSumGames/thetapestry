@@ -643,10 +643,10 @@ export default function TablePage() {
       const [{ data: insertedInit, error: initInsertErr }, { error: rollInsertErr }] = await Promise.all([
         supabase.from('initiative_order').insert(toInsert).select(),
         supabase.from('roll_log').insert([
-          { campaign_id: id, character_name: 'System', label: '⚔️ Combat Started',
+          { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Started',
             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'combat_start',
             damage_json: { combatants } as any },
-          { campaign_id: id, character_name: 'System', label: 'Initiative',
+          { campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
             damage_json: { initiative: sorted } as any },
         ]),
@@ -725,7 +725,7 @@ export default function TablePage() {
       // Log new round initiative
       const sortedReroll = [...rerollDetails].sort((a, b) => b.total - a.total)
       await supabase.from('roll_log').insert({
-        campaign_id: id, character_name: 'System', label: 'New Round — Initiative',
+        campaign_id: id, user_id: userId, character_name: 'System', label: 'New Round — Initiative',
         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
         damage_json: { initiative: sortedReroll } as any,
       })
@@ -782,13 +782,15 @@ export default function TablePage() {
 
     // Log the action to game feed
     if (actionLabel) {
-      await supabase.from('roll_log').insert({
+      const { error: actionLogErr } = await supabase.from('roll_log').insert({
         campaign_id: id,
+        user_id: userId,
         character_name: entry.character_name,
         label: actionLabel,
         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
         outcome: 'action',
       })
+      if (actionLogErr) console.error('[consumeAction] action log insert error:', actionLogErr.message)
     }
 
     // Clear aim bonus after a roll (no actionLabel = called from closeRollModal)
@@ -834,7 +836,7 @@ export default function TablePage() {
     // Snapshot the combatants for the log entry before clearing initiative.
     const combatants = initiativeOrder.map(e => e.character_name)
     const { error: endLogErr } = await supabase.from('roll_log').insert({
-      campaign_id: id, character_name: 'System', label: '⚔️ Combat Ended',
+      campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Ended',
       die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
       outcome: 'combat_end',
       damage_json: { combatants } as any,
@@ -962,7 +964,7 @@ export default function TablePage() {
           supabase.from('roll_log').delete().eq('campaign_id', id),
           supabase.from('chat_messages').delete().eq('campaign_id', id),
           combatActive ? Promise.all([
-            supabase.from('roll_log').insert({ campaign_id: id, character_name: 'System', label: '⚔️ Combat Ended', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' }),
+            supabase.from('roll_log').insert({ campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Ended', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' }),
             supabase.from('initiative_order').delete().eq('campaign_id', id),
           ]) : Promise.resolve(),
         ])
