@@ -2189,7 +2189,6 @@ export default function TablePage() {
               position: 'absolute', inset: 0,
               overflowY: 'auto',
               padding: '1rem',
-              paddingBottom: revealedNpcs.length > 0 ? '60px' : '1rem',
               background: 'rgba(26,26,26,1)',
               zIndex: 1100,
             }}>
@@ -2206,59 +2205,75 @@ export default function TablePage() {
               />
             </div>
           )}
-          {/* Revealed NPCs — visible at bottom for all users */}
-          {revealedNpcs.length > 0 && (
-            <div style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center', pointerEvents: 'none', zIndex: 1200 }}>
-              {revealedNpcs.map((npc: any) => (
-                <div key={npc.id} style={{ padding: '6px 10px', background: 'rgba(26,26,26,0.9)', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '8px', minWidth: '120px', pointerEvents: 'auto' }}>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                    {npc.portrait_url ? <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
-                    {npc.reveal_level === 'name_portrait_role' && npc.recruitment_role && (
-                      <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.recruitment_role}</div>
-                    )}
-                    {npc.relationship_cmod !== 0 && (
-                      <div style={{ fontSize: '13px', color: npc.relationship_cmod > 0 ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                        Your relationship: {npc.relationship_cmod > 0 ? `+${npc.relationship_cmod}` : npc.relationship_cmod}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* Right — GM Assets (GM only) */}
-        {isGM && (
-          <div style={{ width: '240px', flexShrink: 0, borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
-              {(['npcs', 'assets', 'notes'] as const).map(tab => (
-                <button key={tab} onClick={() => setGmTab(tab)}
-                  style={{ flex: 1, padding: '8px 0', background: gmTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: gmTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: gmTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '12px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  {tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : 'GM Notes'}
-                </button>
-              ))}
-            </div>
-            <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              {gmTab === 'npcs' && (() => {
-                // Rotate initiative order so the currently-active combatant is first.
-                // NPC tab then sees: active NPC, then everyone after them in turn,
-                // wrapping around to the ones who already went.
-                const activeIdx = initiativeOrder.findIndex(e => e.is_active)
-                const rotated = activeIdx >= 0
-                  ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
-                  : initiativeOrder
-                const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
-                return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc]); setSelectedEntry(null) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} />
-              })()}
-              {gmTab === 'assets' && <CampaignPins campaignId={id} isGM={isGM} onPinFocus={p => setFocusPin({ ...p })} />}
-              {gmTab === 'notes' && <GmNotes campaignId={id} />}
-            </div>
+        {/* Right — Asset panel. GM gets NPCs/Assets/GM Notes; players get
+            NPCs (revealed only) and Assets (read-only). */}
+        <div style={{ width: '240px', flexShrink: 0, borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
+            {(isGM ? (['npcs', 'assets', 'notes'] as const) : (['npcs', 'assets'] as const)).map(tab => (
+              <button key={tab} onClick={() => setGmTab(tab)}
+                style={{ flex: 1, padding: '8px 0', background: gmTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: gmTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: gmTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '12px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                {tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : 'GM Notes'}
+              </button>
+            ))}
           </div>
-        )}
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            {gmTab === 'npcs' && isGM && (() => {
+              // Rotate initiative order so the currently-active combatant is first.
+              const activeIdx = initiativeOrder.findIndex(e => e.is_active)
+              const rotated = activeIdx >= 0
+                ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
+                : initiativeOrder
+              const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
+              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc]); setSelectedEntry(null) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} />
+            })()}
+            {gmTab === 'npcs' && !isGM && (
+              <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+                {revealedNpcs.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                    No NPCs revealed yet
+                  </div>
+                ) : (
+                  revealedNpcs.map((npc: any) => {
+                    const isOpen = viewingNpcs.some(n => n.id === npc.id)
+                    return (
+                      <div
+                        key={npc.id}
+                        onClick={() => {
+                          setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc])
+                          setSelectedEntry(null)
+                        }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: isOpen ? '#2a1210' : '#1a1a1a', border: `1px solid ${isOpen ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s' }}
+                      >
+                        <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                          {npc.portrait_url ? (
+                            <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
+                          )}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.name}</div>
+                          {npc.reveal_level === 'name_portrait_role' && npc.recruitment_role && (
+                            <div style={{ fontSize: '11px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.recruitment_role}</div>
+                          )}
+                          {npc.relationship_cmod !== 0 && npc.relationship_cmod != null && (
+                            <div style={{ fontSize: '11px', color: npc.relationship_cmod > 0 ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                              {npc.relationship_cmod > 0 ? `+${npc.relationship_cmod}` : npc.relationship_cmod} CMod
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            )}
+            {gmTab === 'assets' && <CampaignPins campaignId={id} isGM={isGM} onPinFocus={p => setFocusPin({ ...p })} />}
+            {gmTab === 'notes' && isGM && <GmNotes campaignId={id} />}
+          </div>
+        </div>
 
       </div>
 
