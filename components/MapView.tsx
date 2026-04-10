@@ -51,6 +51,19 @@ function getNearSetting(lat: number, lng: number): string | null {
   return null
 }
 
+const REGION_BOUNDS: Record<string, { label: string; latMin: number; latMax: number; lngMin: number; lngMax: number; lat: number; lng: number; zoom: number }> = {
+  district_zero: { label: 'District Zero', latMin: 36.04, latMax: 36.07, lngMin: -95.81, lngMax: -95.77, lat: 36.052, lng: -95.790, zoom: 15 },
+  chased:        { label: 'Chased',        latMin: 38.65, latMax: 38.78, lngMin: -75.75, lngMax: -75.30, lat: 38.710, lng: -75.510, zoom: 12 },
+  mongrels:      { label: 'Mongrels',      latMin: 33.0,  latMax: 46.0,  lngMin: -113.5, lngMax: -110.5, lat: 38.0,   lng: -112.0,  zoom: 5  },
+}
+const REGION_KEYS = Object.keys(REGION_BOUNDS)
+
+function pinInRegion(p: { lat: number; lng: number }, key: string): boolean {
+  const r = REGION_BOUNDS[key]
+  if (!r) return false
+  return p.lat >= r.latMin && p.lat <= r.latMax && p.lng >= r.lngMin && p.lng <= r.lngMax
+}
+
 function getCategoryEmoji(category: string): string {
   return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '📍'
 }
@@ -97,6 +110,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [showForm, setShowForm] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(!embedded || showSidebarProp)
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(['all']))
+  const [activeRegions, setActiveRegions] = useState<Set<string>>(new Set())
   const [sortMode, setSortMode] = useState<'newest' | 'name'>('newest')
   const [pinSearch, setPinSearch] = useState('')
   const [expandedPinId, setExpandedPinId] = useState<string | null>(null)
@@ -405,9 +419,31 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     }).length
   }
 
+  function regionCount(key: string): number {
+    return pins.filter(p => pinInRegion(p, key)).length
+  }
+
+  function toggleRegion(key: string) {
+    setActiveRegions(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) {
+        next.delete(key)
+      } else {
+        next.add(key)
+        const r = REGION_BOUNDS[key]
+        if (r) mapInstanceRef.current?.flyTo([r.lat, r.lng], r.zoom, { duration: 1.2 })
+      }
+      if (userId) localStorage.setItem('tapestry_pin_regions', JSON.stringify([...next]))
+      return next
+    })
+  }
+
   const timelineOnly = activeFilters.has('timeline') && activeFilters.size === 1
 
   const filteredPins = pins.filter(matchesFilter).filter(p => {
+    if (activeRegions.size === 0) return true
+    return [...activeRegions].some(r => pinInRegion(p, r))
+  }).filter(p => {
     if (!pinSearch.trim()) return true
     const q = pinSearch.trim().toLowerCase()
     return (p.title?.toLowerCase().includes(q)) || (p.notes?.toLowerCase().includes(q)) || (p.category?.toLowerCase().includes(q))
@@ -444,10 +480,13 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   useEffect(() => {
     if (!userId) {
       setActiveFilters(new Set(['timeline']))
+      setActiveRegions(new Set())
     } else {
       const saved = localStorage.getItem('tapestry_pin_filters')
       if (saved) { try { setActiveFilters(new Set(JSON.parse(saved))) } catch {} }
       else setActiveFilters(new Set(['all', 'public', 'mine', 'canon', 'rumors', 'timeline']))
+      const savedRegions = localStorage.getItem('tapestry_pin_regions')
+      if (savedRegions) { try { setActiveRegions(new Set(JSON.parse(savedRegions))) } catch {} }
     }
   }, [userId])
 
@@ -532,18 +571,18 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   Sign up to add your own story to this world.
                 </div>
               )}
-              {/* Setting regions */}
+              {/* Setting regions — toggle filters */}
               <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
-                {[
-                  { label: 'District Zero', lat: 36.052, lng: -95.790, zoom: 15 },
-                  { label: 'Chased', lat: 38.710, lng: -75.510, zoom: 12 },
-                  { label: 'Mongrels', lat: 38.0, lng: -112.0, zoom: 5 },
-                ].map(r => (
-                  <button key={r.label} onClick={() => mapInstanceRef.current?.flyTo([r.lat, r.lng], r.zoom, { duration: 1.2 })}
-                    style={{ flex: 1, padding: '3px 4px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: '1px solid #3a3a3a', background: '#242424', color: '#d4cfc9' }}>
-                    {r.label}
-                  </button>
-                ))}
+                {REGION_KEYS.map(key => {
+                  const r = REGION_BOUNDS[key]
+                  const active = activeRegions.has(key)
+                  return (
+                    <button key={key} onClick={() => toggleRegion(key)}
+                      style={{ flex: 1, padding: '3px 4px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : '#242424', color: active ? '#f5a89a' : '#d4cfc9', whiteSpace: 'nowrap' }}>
+                      {r.label} ({regionCount(key)})
+                    </button>
+                  )
+                })}
               </div>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
