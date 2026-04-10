@@ -145,10 +145,17 @@ export const CHASED_PINS: SettingPin[] = [
   // REFERENCE
   { title: 'Georgetown', lat: 38.6901, lng: -75.3596, category: 'settlement',
     notes: 'A town of around 500 people living in a loose collective to the south. They consider the King\'s Crossroads Mall to be their territory and have not ventured there in a while. They will not be happy to find strangers living there.' },
+
+  // EMPTY ENCOUNTER
+  { title: 'Battersby Farm', lat: 38.7050, lng: -75.7100, category: 'location',
+    notes: "David Battersby's farm near the Maryland and Delaware border. A third-generation working farm where a small group of survivors have been waiting out the pandemic for the last year. One of the tractors recently broke. This is where the characters of Empty begin." },
+  { title: "Stansfield's Gas Station", lat: 38.7281, lng: -75.6089, category: 'encounter',
+    notes: "A small rural garage with a couple of pumps out front, a mini-mart inside, and a workshop attached. Owned and run by Errol and Martina Stansfield for almost 15 years before the Distemper hit. The two died at home within days of each other. The station has remained largely untouched since. The workshop contains an arc welder and a tow truck in good condition. The general store is mostly intact but most contents are expired or rotten. A cheap abandoned car sits outside. An expensive motorbike is connected to one of the pumps." },
 ]
 
 export const SETTING_PINS: Record<string, SettingPin[]> = {
   district_zero: DISTRICT_ZERO_PINS,
   chased: CHASED_PINS,
   mongrels: MONGRELS_PINS,
+  empty: CHASED_PINS,
 }

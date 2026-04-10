@@ -6,6 +6,7 @@ import { logEvent } from '../../../lib/events'
 import { SETTING_PINS } from '../../../lib/setting-pins'
 import { SETTING_NPCS } from '../../../lib/setting-npcs'
 import { SETTING_SCENES } from '../../../lib/setting-scenes'
+import { SETTING_HANDOUTS } from '../../../lib/setting-handouts'
 import { SETTING_OPTIONS } from '../../../lib/settings'
 
 function generateCode(): string {
@@ -96,6 +97,17 @@ export default function NewCampaignPage() {
       }))
       const { error: sceneErr } = await supabase.from('tactical_scenes').insert(sceneRows)
       if (sceneErr) { console.error('[CampaignCreate] scene seed error:', sceneErr.message) }
+    }
+    // Seed GM handouts
+    const settingHandouts = SETTING_HANDOUTS[setting]
+    if (settingHandouts && settingHandouts.length > 0) {
+      const handoutRows = settingHandouts.map(h => ({
+        campaign_id: data.id,
+        title: h.title,
+        content: h.content,
+      }))
+      const { error: handoutErr } = await supabase.from('campaign_notes').insert(handoutRows)
+      if (handoutErr) { console.error('[CampaignCreate] handout seed error:', handoutErr.message) }
     }
     logEvent('campaign_created', { id: data.id, name })
     router.push(`/stories/${data.id}`)

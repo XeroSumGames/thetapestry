@@ -622,6 +622,47 @@ export const CHASED_NPCS: NpcSeed[] = [
     how_to_meet: "At the King's Crossroads Mall.",
     motivation: 'Leading and protecting the mall community.',
   },
+
+  // EMPTY ENCOUNTER NPCs
+  {
+    name: 'Dylan', rapid_range: '01102',
+    wp: 13, rp: 8, dmm: 3, dmr: 2, init: 5, per: 0, enc: 8, pt: 4,
+    skills: [
+      { name: 'Barter', level: 1, specialized: false }, { name: 'Medicine*', level: 2, specialized: true },
+      { name: 'Ranged Combat', level: 1, specialized: false }, { name: 'Scavenging', level: 1, specialized: false },
+      { name: 'Manipulation', level: 2, specialized: false }, { name: 'Stealth', level: 1, specialized: false },
+      { name: 'Streetwise', level: 1, specialized: false }, { name: 'Unarmed Combat', level: 1, specialized: false },
+      { name: 'Mechanic*', level: 2, specialized: true },
+    ],
+    equipment: [
+      { name: 'Light Pistol', damage: 9, roll: '3+1d6', notes: '3 bullets remaining' },
+      { name: 'Hunting Knife', roll: '2+2d3' },
+      { name: 'Truck', notes: 'Contains shotgun with 2 shells' },
+      { name: 'Basic Survival Kit + 2 rations' },
+    ],
+    role: 'Scavenger / Survivor', pin_title: "Stansfield's Gas Station",
+    description: "Early 30s. Short hair, tattoos visible on arms. Wears a holster. Charming, furtive, smart like a fox. Complication is Dark Secret, Motivation is To Take Advantage. Has spent much of his life in jail. Watched his biker buddies die one by one until he ran into Becky nearly a year ago. Together they survive by scavenging, stealing, and backstabbing.",
+    how_to_meet: "Returns to the gas station a few minutes after players encounter Becky. Peeks through windows before entering — Stealth check 2d6+2+1.",
+    motivation: "GM has two modes — PEACEFUL: desperate to join a group, running out of supplies, will offer skills and knowledge to negotiate. HOSTILE: views all survivors as marks. Will attempt to follow the players back to their base to rob them. In both modes, will pull his gun if negotiations fail. Only has 3 bullets. Becky's bag on the counter has more ammo. Truck has a shotgun with 2 shells. Will attempt to grapple the weakest player as a hostage if outnumbered (PHY 1 + Unarmed Combat 2 = +3).",
+  },
+  {
+    name: 'Becky', rapid_range: '11011',
+    wp: 11, rp: 6, dmm: 0, dmr: 1, init: 2, per: 0, enc: 6, pt: 3,
+    skills: [
+      { name: 'Athletics', level: 1, specialized: false }, { name: 'Barter', level: 1, specialized: false },
+      { name: 'Medicine*', level: 2, specialized: true }, { name: 'Ranged Combat', level: 1, specialized: false },
+      { name: 'Scavenging', level: 1, specialized: false }, { name: 'Stealth', level: 1, specialized: false },
+      { name: 'Manipulation', level: 1, specialized: false },
+    ],
+    equipment: [
+      { name: 'Light Pistol', damage: 9, roll: '3+1d6', notes: '7 rounds — in backpack on counter, not immediately accessible. Must Move + action to retrieve, then Ready Weapon before firing.' },
+      { name: 'Backpack', notes: 'Contains pistol and personal items' },
+    ],
+    role: 'Survivor / Companion', pin_title: "Stansfield's Gas Station",
+    description: "Late 20s. Long red hair, slim, easy smile and easy laugh. Calm, insightful, friendly. Complication is Loss, Motivation is Find Safety. Grew up in a suburb of Chicago. Was studying to become a dental hygienist when the Distemper hit. Watched her hometown crumble. Met Dylan and formed a bond out of necessity and mutual understanding. Friendly and articulate but never answers questions directly — eyes always darting, taking in the situation.",
+    how_to_meet: "In the restroom when players arrive. Emerges moments after they enter. Unless players made significant noise she will not know they are there — assumes any noise is Dylan returning.",
+    motivation: "Buys time for Dylan to return. Takes his lead completely — mirrors the mood he sets when he arrives. If Dylan is killed or incapacitated she surrenders immediately and is overwhelmed with grief. Will not stop the players taking her belongings.",
+  },
 ]
 
 // ── CHASED PREGENS ──────────────────────────────────────────
@@ -740,11 +781,39 @@ export const CHASED_PREGENS: PregenSeed[] = [
   },
 ]
 
+// ── EMPTY PREGEN (Gus is exclusive to Empty) ─────────────────
+const GUS_PREGEN: PregenSeed = {
+  name: 'Gus González', profession: 'Gardener', age: 42, gender: 'Male',
+  height: "5'11\"", weight: '172lbs',
+  three_words: 'Observant, Peaceful, Intelligent', complication: 'Loss', motivation: 'Find Safety',
+  reason: 1, acumen: 1, physicality: 2, influence: 0, dexterity: 1,
+  skills: [
+    { skillName: 'Animal Handling', level: 1 }, { skillName: 'Ranged Combat', level: 1 },
+    { skillName: 'Athletics', level: 2 }, { skillName: 'Farming', level: 2 },
+    { skillName: 'Survival', level: 1 }, { skillName: 'Sleight of Hand', level: 1 },
+    { skillName: 'Stealth', level: 1 }, { skillName: 'Streetwise', level: 1 },
+    { skillName: 'Unarmed Combat', level: 1 }, { skillName: 'Scavenging', level: 1 },
+  ],
+  weaponPrimary: { weaponName: '', condition: 'Used', ammoCurrent: 0 },
+  equipment: [],
+  breakingPoint: 5,
+  description: "Gustavo grew up in Argentina but moved to the US when he was 15 to live with his father after his mother died. Struggling with English, he continually cut school until the point where he was kicked out and his father put him to work as a gardener on his own crew. Having done much work for David over the years, Gus ended up there with the others when the pandemic hit.",
+  relationships: [],
+}
+
+// Empty uses 4 shared Chased pregens (David, Carly, Morgan, Marv) + Gus
+export const EMPTY_PREGENS: PregenSeed[] = [
+  ...CHASED_PREGENS.filter(p => p.name !== 'Victor Williams'),
+  GUS_PREGEN,
+]
+
 export const SETTING_PREGENS: Record<string, PregenSeed[]> = {
   chased: CHASED_PREGENS,
+  empty: EMPTY_PREGENS,
 }
 
 export const SETTING_NPCS: Record<string, NpcSeed[]> = {
   district_zero: DISTRICT_ZERO_NPCS,
   chased: CHASED_NPCS,
+  empty: CHASED_NPCS,
 }

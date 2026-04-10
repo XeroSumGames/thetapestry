@@ -153,10 +153,9 @@
 ### GM Assets Panel
 - [x] NPCs tab (renamed from NPC Roster)
 - [x] Assets tab with campaign pins
-- [x] GM Notes tab (placeholder)
+- [x] GM Notes tab — campaign_notes table, GmNotes component, add/delete/expand notes
 - [ ] Maps & Objects — scene images, tactical map assets, tokens
 - [ ] Handouts, Communities, Roll Tables
-- [ ] Notes — full implementation
 - [x] NPC card 3-column grid layout over campaign map
 - [x] Publish to Library button on NPC card (GM only)
 - [x] NPC form + card compacted (portrait/bank/status on one row)
@@ -184,6 +183,11 @@
 - [x] Chased NPC skill name fixes — "Ranged Weapons" → "Ranged Combat" (Ray, Jackie, Maddy)
 - [x] Chased Georgetown pin updated — coords, category → settlement, description
 - [x] Tactical scene seeding — SETTING_SCENES in lib/setting-scenes.ts, auto-seeds during campaign creation (Chased: Connor Boys Farmhouse)
+- [x] Empty campaign package — Gus pregen, Dylan & Becky NPCs, Battersby Farm + Gas Station pins, gas station scene, Session Zero handout
+- [x] Empty pregens — 4 shared Chased pregens (David, Carly, Morgan, Marv) + Gus González (Empty-exclusive)
+- [x] GM handout seeding — SETTING_HANDOUTS in lib/setting-handouts.ts, auto-seeds during campaign creation
+- [x] Chased pins updated — 16 total (14 original + Battersby Farm + Stansfield's Gas Station)
+- [x] Empty maps to Chased content — shares pins, NPCs, scenes via setting slug mapping
 - [x] End session modal drop zone text size bumped (11/10px → 13/12px)
 - [x] All setting pins campaign-scoped only (District Zero, Chased, Mongrels)
 - [x] Make Thriver button — error feedback on failure
