@@ -67,7 +67,13 @@ Deno.serve(async (req) => {
       longitude: longitude || null,
     })
 
-    // Send email on first visit per session (non-blocking)
+    // Build the response now and return immediately. Anything below uses
+    // EdgeRuntime.waitUntil so the email send doesn't block the client.
+    const response = new Response(JSON.stringify({ ok: true }), {
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    })
+
+    // Send email on first visit per session (non-blocking — runs after response)
     // Skip emails from known bot/cloud locations
     const suppressedCities = ['san jose', 'ashburn', 'boardman', 'council bluffs']
     const isSuppressed = city && suppressedCities.includes(city.toLowerCase())
@@ -93,28 +99,37 @@ Deno.serve(async (req) => {
         ? `A visitor just arrived at The Tapestry.\n\nPage: ${page}\nLocation: ${location}\nTime: ${now}\nReferrer: ${referrer || 'Direct'}\nSession: ${session_id?.slice(0, 8) ?? 'unknown'}\n${visitLine}`
         : `A survivor is active on The Tapestry.\n\nPage: ${page}\nLocation: ${location}\nTime: ${now}\nReferrer: ${referrer || 'Direct'}\nSession: ${session_id?.slice(0, 8) ?? 'unknown'}\n${visitLine}`
 
-      try {
-        await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${RESEND_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: 'The Tapestry <onboarding@resend.dev>',
-            to: 'xerosumstudio@gmail.com',
-            subject,
-            text: body,
-          }),
-        })
-      } catch (_emailErr) {
-        console.error('Email send failed:', _emailErr)
+      const sendEmail = async () => {
+        try {
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${RESEND_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              from: 'The Tapestry <onboarding@resend.dev>',
+              to: 'xerosumstudio@gmail.com',
+              subject,
+              text: body,
+            }),
+          })
+        } catch (_emailErr) {
+          console.error('Email send failed:', _emailErr)
+        }
+      }
+      // Deno Deploy / Supabase Edge supports EdgeRuntime.waitUntil for
+      // background work that outlives the response. Fall back to a plain
+      // fire-and-forget if it's not present.
+      const edgeRuntime = (globalThis as any).EdgeRuntime
+      if (edgeRuntime && typeof edgeRuntime.waitUntil === 'function') {
+        edgeRuntime.waitUntil(sendEmail())
+      } else {
+        sendEmail()
       }
     }
 
-    return new Response(JSON.stringify({ ok: true }), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-    })
+    return response
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,

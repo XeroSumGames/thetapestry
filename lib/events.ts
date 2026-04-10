@@ -44,8 +44,11 @@ export async function logVisit(page: string) {
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      await fetch(`${SUPABASE_URL}/functions/v1/log-visit`, {
+      // Fire-and-forget: don't await, the response doesn't matter to the caller.
+      // Use keepalive so the request survives even if the page navigates away.
+      fetch(`${SUPABASE_URL}/functions/v1/log-visit`, {
         method: 'POST',
+        keepalive: true,
         headers: {
           'Content-Type': 'application/json',
           ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
@@ -57,7 +60,7 @@ export async function logVisit(page: string) {
           user_id: user?.id ?? null,
           ...geo,
         }),
-      })
+      }).catch(() => {})
     } catch {
       await supabase.from('visitor_logs').insert({
         session_id: getSessionId(),
