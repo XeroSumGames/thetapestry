@@ -24,6 +24,7 @@ interface Campaign {
   session_status: string
   session_count: number
   session_started_at: string | null
+  invite_code: string
 }
 
 interface TableEntry {
@@ -1487,6 +1488,16 @@ export default function TablePage() {
             style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
             Sessions
           </a>
+        )}
+        {campaign?.invite_code && (
+          <button onClick={() => {
+            navigator.clipboard.writeText(`${window.location.origin}/join/${campaign.invite_code}`)
+            alert('Invite link copied to clipboard!')
+          }}
+            style={hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a')}
+            title={`Code: ${campaign.invite_code}`}>
+            Share
+          </button>
         )}
         <button onClick={() => { setSheetMode(m => m === 'inline' ? 'overlay' : 'inline'); setSheetPos(null) }}
           style={hdrBtn('#242424', '#cce0f5', '#3a3a3a')}>

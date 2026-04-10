@@ -140,6 +140,18 @@
 - [x] Weapon dropdown on NPC edit form
 - [x] Viewed NPCs highlighted in roster, Show All / Hide All toggle
 - [x] NPCs linked to campaign map pins — `campaign_npcs.campaign_pin_id` wired in seed, backfill SQL for existing campaigns, pin popup shows `ALSO HERE` list of linked NPCs (player view filtered by `revealedNpcIds`, dead NPCs struck through, realtime via `campaign_npcs` channel)
+- [x] Click pin name in Assets tab → map flies to it and opens popup (uses `clusterGroup.zoomToShowLayer`)
+- [x] Click NPC card in NPCs tab again → closes (toggle behavior)
+- [x] `sort_order` column on `campaign_pins` and `campaign_npcs` — seeded campaigns get story-order from array index, manual additions append at max+1, drag the ⠿ handle to reorder
+- [x] NPC seed schema fix — migrated `lib/setting-npcs.ts` off legacy `rapid_range`/`wp`/`rp`/`dmm`/`dmr`/`init`/`per`/`enc`/`pt` to live RAPID columns; resurrected silently-broken NPC seeding (was inserting 0 rows on every create)
+- [x] Show All / Hide All button on NPCs tab — always visible when NPCs exist (disabled with tooltip when no players have joined), bulk-batched DB ops
+- [x] Select All / Deselect All toggle in Start Combat NPC picker
+- [x] Start Session is perceived-instant — fire-and-forget DB writes, mirrors endSession pattern
+- [x] Leaflet popup base font bumped site-wide for table readability; latent XSS in pin popup fixed
+- [x] Share button in table header — copies invite link to clipboard
+- [x] GM Notes attachments — jsonb `attachments` column on `campaign_notes`, `note-attachments` storage bucket with RLS, file picker in add form and on each expanded note, image thumbnails inline
+- [x] Campaign creation surfaces seed errors — no more silent swallowing on schema mismatch
+- [ ] **Author Mongrels NPCs** — `lib/setting-npcs.ts` has no `mongrels` entry, so Mongrels campaigns get 0 NPCs even though they have 28 pins seeded
 
 ### Campaign Pins
 - [x] campaign_pins table with reveal/hide per pin

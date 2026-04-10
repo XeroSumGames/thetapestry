@@ -52,6 +52,8 @@ export default function NewCampaignPage() {
       campaign_id: data.id,
       user_id: user.id,
     })
+    // Collect seed errors and surface them in the UI instead of silently swallowing.
+    const seedErrors: string[] = []
     // Seed setting pins into campaign_pins (not world map)
     const settingPins = SETTING_PINS[setting]
     let pinMap: Record<string, string> = {}
@@ -63,7 +65,7 @@ export default function NewCampaignPage() {
         sort_order: i + 1,
       }))
       const { data: createdPins, error: pinErr } = await supabase.from('campaign_pins').insert(pinRows).select('id, name')
-      if (pinErr) { console.error('[CampaignCreate] pin seed error:', pinErr.message) }
+      if (pinErr) seedErrors.push(`pins: ${pinErr.message}`)
       createdPins?.forEach((p: any) => { pinMap[p.name] = p.id })
     }
     // Seed setting NPCs into campaign_npcs
@@ -101,7 +103,7 @@ export default function NewCampaignPage() {
         }
       })
       const { error: npcErr } = await supabase.from('campaign_npcs').insert(npcRows)
-      if (npcErr) { console.error('[CampaignCreate] npc seed error:', npcErr.message) }
+      if (npcErr) seedErrors.push(`npcs: ${npcErr.message}`)
     }
     // Seed tactical scenes
     const settingScenes = SETTING_SCENES[setting]
@@ -114,7 +116,7 @@ export default function NewCampaignPage() {
         is_active: false,
       }))
       const { error: sceneErr } = await supabase.from('tactical_scenes').insert(sceneRows)
-      if (sceneErr) { console.error('[CampaignCreate] scene seed error:', sceneErr.message) }
+      if (sceneErr) seedErrors.push(`scenes: ${sceneErr.message}`)
     }
     // Seed GM handouts
     const settingHandouts = SETTING_HANDOUTS[setting]
@@ -125,9 +127,15 @@ export default function NewCampaignPage() {
         content: h.content,
       }))
       const { error: handoutErr } = await supabase.from('campaign_notes').insert(handoutRows)
-      if (handoutErr) { console.error('[CampaignCreate] handout seed error:', handoutErr.message) }
+      if (handoutErr) seedErrors.push(`handouts: ${handoutErr.message}`)
     }
     logEvent('campaign_created', { id: data.id, name })
+    if (seedErrors.length > 0) {
+      // Don't redirect — keep the user here so they can see what failed.
+      setError(`Story created but seeding had errors:\n${seedErrors.join('\n')}\n\nThis usually means a database migration hasn't been run. Check sql/ for pending scripts.`)
+      setSaving(false)
+      return
+    }
     router.push(`/stories/${data.id}`)
   }
 
