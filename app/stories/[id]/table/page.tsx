@@ -815,29 +815,29 @@ export default function TablePage() {
 
   async function startSession() {
     if (!isGM) return
-    setSessionActing(true)
+    // UI updates instantly; DB writes fire in the background (mirrors endSession).
     const newCount = sessionCount + 1
-    await supabase.from('campaigns').update({
-      session_status: 'active',
-      session_count: newCount,
-      session_started_at: new Date().toISOString(),
-    }).eq('id', id)
-    await supabase.from('sessions').insert({
-      campaign_id: id,
-      session_number: newCount,
-      started_at: new Date().toISOString(),
-    })
-    // Clear any leftover logs/chat from previous session
-    await Promise.all([
-      supabase.from('roll_log').delete().eq('campaign_id', id),
-      supabase.from('chat_messages').delete().eq('campaign_id', id),
-    ])
+    const startedAt = new Date().toISOString()
     setRolls([])
     setChatMessages([])
     setSessionStatus('active')
     setSessionCount(newCount)
     logEvent('session_started', { campaign_id: id, session_number: newCount })
-    setSessionActing(false)
+    // Fire all four DB calls in parallel — none depend on each other.
+    void Promise.all([
+      supabase.from('campaigns').update({
+        session_status: 'active',
+        session_count: newCount,
+        session_started_at: startedAt,
+      }).eq('id', id),
+      supabase.from('sessions').insert({
+        campaign_id: id,
+        session_number: newCount,
+        started_at: startedAt,
+      }),
+      supabase.from('roll_log').delete().eq('campaign_id', id),
+      supabase.from('chat_messages').delete().eq('campaign_id', id),
+    ]).catch(err => console.error('[startSession] background error:', err))
   }
 
   async function endSession() {
