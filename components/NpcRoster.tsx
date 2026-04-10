@@ -135,6 +135,7 @@ interface Props {
   isGM: boolean
   combatActive?: boolean
   initiativeNpcIds?: Set<string>
+  initiativeNpcOrder?: string[]   // NPC ids in turn order; first = currently acting
   onAddToCombat?: (npcs: CampaignNpc[]) => void
   pcEntries?: PCEntry[]
   onViewNpc?: (npc: CampaignNpc) => void
@@ -151,7 +152,7 @@ const emptyForm = {
   weapon: null as any,
 }
 
-export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted }: Props) {
+export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted }: Props) {
   const supabase = createClient()
   const [npcs, setNpcs] = useState<CampaignNpc[]>([])
   const [loading, setLoading] = useState(true)
@@ -585,7 +586,21 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
               <div style={{ fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>No NPCs yet</div>
             </div>
           ) : (
-            npcs.map(npc => {
+            (() => {
+              // During combat, float NPCs that are in initiative to the top in
+              // turn order, with the active combatant first. The rest preserve
+              // their existing sort_order order.
+              if (combatActive && initiativeNpcOrder && initiativeNpcOrder.length > 0) {
+                const idIdx = new Map(initiativeNpcOrder.map((id, i) => [id, i]))
+                return [...npcs].sort((a, b) => {
+                  const ai = idIdx.has(a.id) ? idIdx.get(a.id)! : Infinity
+                  const bi = idIdx.has(b.id) ? idIdx.get(b.id)! : Infinity
+                  if (ai !== bi) return ai - bi
+                  return 0
+                })
+              }
+              return npcs
+            })().map(npc => {
               const sc = STATUS_COLORS[npc.status] ?? STATUS_COLORS.active
               return (
                 <div key={npc.id} onClick={() => onViewNpc ? onViewNpc(npc) : openEdit(npc)}

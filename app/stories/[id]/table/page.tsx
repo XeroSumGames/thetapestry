@@ -154,9 +154,12 @@ export default function TablePage() {
   const rollChannelRef = useRef<any>(null)
   const initChannelRef = useRef<any>(null)
   const membersChannelRef = useRef<any>(null)
+  const npcsChannelRef = useRef<any>(null)
   const rollFeedRef = useRef<HTMLDivElement>(null)
   const revealChannelRef = useRef<any>(null)
   const myCharIdRef = useRef<string | null>(null)
+  // loadEntries sequence guard — see definition below.
+  const loadEntriesSeqRef = useRef(0)
 
   const [campaign, setCampaign] = useState<Campaign | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
@@ -212,14 +215,21 @@ export default function TablePage() {
   const campaignChannelRef = useRef<any>(null)
 
   async function loadEntries(campaignId: string) {
+    // Sequence guard — multiple realtime callbacks fire in quick succession
+    // (character_states + campaign_members + others) and a slower earlier
+    // call can finish AFTER a faster later one, overwriting good state with
+    // stale data. Each call gets a sequence number; only the latest one
+    // commits to React state.
+    const seq = ++loadEntriesSeqRef.current
+    const isLatest = () => seq === loadEntriesSeqRef.current
+
     const [{ data: members }, { data: rawStates }] = await Promise.all([
       supabase.from('campaign_members').select('user_id, character_id').eq('campaign_id', campaignId).not('character_id', 'is', null),
       supabase.from('character_states').select('*').eq('campaign_id', campaignId),
     ])
 
     if (!members || members.length === 0 || !rawStates || rawStates.length === 0) {
-      setEntries([])
-      setEntriesLoading(false)
+      if (isLatest()) { setEntries([]); setEntriesLoading(false) }
       return
     }
 
@@ -227,22 +237,27 @@ export default function TablePage() {
     for (const m of members) currentAssignment[m.user_id] = m.character_id
 
     const filteredStates = rawStates.filter((s: any) => currentAssignment[s.user_id] === s.character_id)
-    if (filteredStates.length === 0) { setEntries([]); setEntriesLoading(false); return }
+    if (filteredStates.length === 0) { if (isLatest()) { setEntries([]); setEntriesLoading(false) } return }
 
     const charIds = filteredStates.map((s: any) => s.character_id)
     const userIds = filteredStates.map((s: any) => s.user_id)
 
-    const [{ data: chars }, { data: profiles }] = await Promise.all([
+    const [{ data: chars, error: charsErr }, { data: profiles, error: profilesErr }] = await Promise.all([
       supabase.from('characters').select('id, name, created_at, data').in('id', charIds),
       supabase.from('profiles').select('id, username').in('id', userIds),
     ])
+    if (charsErr) console.error('[loadEntries] characters query error:', charsErr.message)
+    if (profilesErr) console.error('[loadEntries] profiles query error:', profilesErr.message)
 
     const charMap = Object.fromEntries((chars ?? []).map((c: any) => {
       const { photoDataUrl, ...dataWithoutPhoto } = c.data ?? {}
       return [c.id, { ...c, data: dataWithoutPhoto }]
     }))
     const profileMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.id, p.username]))
-    console.log('[loadEntries] members:', members?.length, 'states:', rawStates?.length, 'chars:', chars?.length, 'charIds:', charIds, 'charMapKeys:', Object.keys(charMap))
+    const missingChars = charIds.filter((cid: string) => !(cid in charMap))
+    if (missingChars.length > 0) {
+      console.warn('[loadEntries] missing chars for ids — likely RLS blocking cross-user reads:', missingChars, 'returned chars:', chars?.map((c: any) => c.id))
+    }
 
     const newEntries: TableEntry[] = filteredStates.map((s: any) => ({
       stateId: s.id,
@@ -257,6 +272,7 @@ export default function TablePage() {
       },
     }))
 
+    if (!isLatest()) return
     setEntries(newEntries)
     setEntriesLoading(false)
 
@@ -265,6 +281,7 @@ export default function TablePage() {
       .select('id, data->photoDataUrl')
       .in('id', charIds)
 
+    if (!isLatest()) return
     if (photoRows && photoRows.length > 0) {
       const photoMap: Record<string, string> = {}
       for (const row of photoRows as any[]) {
@@ -461,11 +478,25 @@ export default function TablePage() {
           setCampaign((prev: Campaign | null) => prev ? { ...prev, session_status: row.session_status, session_count: row.session_count, session_started_at: row.session_started_at } : prev)
         })
         .subscribe()
+
+      // NPC roster realtime — without this, damage applied to an NPC updates
+      // the DB but the GM (and players) keep seeing the old HP because
+      // rosterNpcs/campaignNpcs only refresh on combat-start or page reload.
+      npcsChannelRef.current = supabase.channel(`campaign_npcs_${id}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${id}` }, async () => {
+          const { data: cnpcs } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+          if (cnpcs) {
+            setCampaignNpcs(cnpcs)
+            setRosterNpcs(cnpcs.filter((n: any) => n.status === 'active'))
+          }
+        })
+        .subscribe()
     }
     load()
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current)
       if (membersChannelRef.current) supabase.removeChannel(membersChannelRef.current)
+      if (npcsChannelRef.current) supabase.removeChannel(npcsChannelRef.current)
       if (rollChannelRef.current) supabase.removeChannel(rollChannelRef.current)
       if (chatChannelRef.current) supabase.removeChannel(chatChannelRef.current)
       if (initChannelRef.current) supabase.removeChannel(initChannelRef.current)
@@ -637,11 +668,14 @@ export default function TablePage() {
   }
 
   async function nextTurn() {
+    console.log('[nextTurn] called')
     // Fetch fresh initiative order from DB to avoid stale state
-    const { data: freshOrder } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false })
+    const { data: freshOrder, error: orderErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false })
+    if (orderErr) console.warn('[nextTurn] order fetch error:', orderErr.message)
     const order = freshOrder ?? initiativeOrder
-    if (order.length === 0) return
+    if (order.length === 0) { console.warn('[nextTurn] empty order, bailing'); return }
     const currentIdx = order.findIndex((e: any) => e.is_active)
+    console.log('[nextTurn] currentIdx:', currentIdx, 'order length:', order.length, 'active name:', order[currentIdx]?.character_name)
 
     // New round when wrapping — re-roll initiative + decrement death countdowns
     if (currentIdx === order.length - 1) {
@@ -722,20 +756,27 @@ export default function TablePage() {
 
     // Deactivate current + activate next
     const currentEntry = order.find((e: any) => e.is_active)
+    console.log('[nextTurn] deactivating:', currentEntry?.character_name, '→ activating:', order[nextIdx]?.character_name)
     if (currentEntry) {
-      await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('id', currentEntry.id)
+      const { error: deactErr } = await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('id', currentEntry.id)
+      if (deactErr) console.warn('[nextTurn] deactivate error:', deactErr.message)
     }
-    await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', order[nextIdx].id)
+    const { error: actErr } = await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', order[nextIdx].id)
+    if (actErr) console.warn('[nextTurn] activate error:', actErr.message)
     await Promise.all([loadInitiative(id), loadEntries(id)])
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
   }
 
   async function consumeAction(entryId: string, actionLabel?: string, cost = 1) {
     // Re-fetch from DB to avoid stale state
-    const { data: freshEntry } = await supabase.from('initiative_order').select('*').eq('id', entryId).single()
+    const { data: freshEntry, error: freshErr } = await supabase.from('initiative_order').select('*').eq('id', entryId).single()
+    if (freshErr) console.warn('[consumeAction] fetch error:', freshErr.message)
     const entry = freshEntry ?? initiativeOrder.find(e => e.id === entryId)
-    if (!entry || entry.actions_remaining < cost) return
-    const newRemaining = entry.actions_remaining - cost
+    console.log('[consumeAction] entryId:', entryId, 'entry:', entry, 'cost:', cost, 'label:', actionLabel)
+    if (!entry) { console.warn('[consumeAction] no entry found, bailing'); return }
+    if ((entry.actions_remaining ?? 0) < cost) { console.warn('[consumeAction] actions_remaining', entry.actions_remaining, '< cost', cost, '— bailing'); return }
+    const newRemaining = (entry.actions_remaining ?? 0) - cost
+    console.log('[consumeAction] newRemaining:', newRemaining)
 
     // Log the action to game feed
     if (actionLabel) {
@@ -752,9 +793,11 @@ export default function TablePage() {
     const clearAim = !actionLabel && entry.aim_bonus > 0
 
     if (newRemaining <= 0) {
+      console.log('[consumeAction] newRemaining<=0 → calling nextTurn')
       await nextTurn()
     } else {
-      await supabase.from('initiative_order').update({ actions_remaining: newRemaining, ...(clearAim ? { aim_bonus: 0 } : {}) }).eq('id', entryId)
+      const { error: updErr } = await supabase.from('initiative_order').update({ actions_remaining: newRemaining, ...(clearAim ? { aim_bonus: 0 } : {}) }).eq('id', entryId)
+      if (updErr) console.warn('[consumeAction] update error:', updErr.message)
       await loadInitiative(id)
     }
   }
@@ -786,10 +829,18 @@ export default function TablePage() {
 
   async function endCombat() {
     if (!isGM) return
-    await supabase.from('roll_log').insert({ campaign_id: id, character_name: 'System', label: '⚔️ Combat Ended', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' })
+    // Snapshot the combatants for the log entry before clearing initiative.
+    const combatants = initiativeOrder.map(e => e.character_name)
+    await supabase.from('roll_log').insert({
+      campaign_id: id, character_name: 'System', label: '⚔️ Combat Ended',
+      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0,
+      outcome: 'combat_end',
+      damage_json: { combatants } as any,
+    })
     await supabase.from('initiative_order').delete().eq('campaign_id', id)
     setInitiativeOrder([])
     setCombatActive(false)
+    await loadRolls(id)
     initChannelRef.current?.send({ type: 'broadcast', event: 'combat_ended', payload: {} })
   }
 
@@ -1420,18 +1471,25 @@ export default function TablePage() {
     setPendingRoll(null)
     setRollResult(null)
 
+    console.log('[closeRollModal] rolledResult:', !!rolledResult, 'combatActive:', combatActive)
     // Consume an action if the roller was the active combatant
     if (rolledResult && combatActive) {
       // Re-fetch active entry from DB to avoid stale closure state
-      const { data: freshOrder } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).eq('is_active', true).limit(1)
+      const { data: freshOrder, error: foErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).eq('is_active', true).limit(1)
+      if (foErr) console.warn('[closeRollModal] active fetch error:', foErr.message)
       const activeEntry = freshOrder?.[0]
+      console.log('[closeRollModal] activeEntry:', activeEntry?.character_name, 'user_id:', activeEntry?.user_id, 'me:', userId, 'isGM:', isGM, 'is_npc:', activeEntry?.is_npc)
       if (activeEntry) {
         const isMyTurn = activeEntry.user_id === userId
         const isGMRollingNPC = isGM && activeEntry.is_npc
         const isGMRollingPC = isGM && !activeEntry.is_npc
         if (isMyTurn || isGMRollingNPC || isGMRollingPC) {
           await consumeAction(activeEntry.id)
+        } else {
+          console.warn('[closeRollModal] not consuming — not my turn / not GM authority')
         }
+      } else {
+        console.warn('[closeRollModal] no active entry found')
       }
     }
   }
@@ -1498,7 +1556,7 @@ export default function TablePage() {
         )}
         {isGM && combatActive && (
           <button onClick={endCombat}
-            style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>
+            style={hdrBtn('#0f2035', '#7ab3d4', '#1a3a5c')}>
             End Combat
           </button>
         )}
@@ -1839,6 +1897,23 @@ export default function TablePage() {
                       ))}
                     </div>
                   </div>
+                ) : r.outcome === 'combat_end' && (r.damage_json as any)?.combatants ? (
+                  <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Combat Ended</span>
+                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                    </div>
+                    {((r.damage_json as any).combatants as string[]).length > 0 && (
+                      <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
+                        Between {((r.damage_json as any).combatants as string[]).map((n, i, arr) => (
+                          <span key={i}>
+                            <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{n}</span>
+                            {i < arr.length - 2 ? ', ' : i === arr.length - 2 ? ' and ' : ''}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ) : r.outcome === 'initiative' && (r.damage_json as any)?.initiative ? (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
@@ -1948,6 +2023,23 @@ export default function TablePage() {
                       </span>
                     ))}
                   </div>
+                </div>
+              ) : item.data.outcome === 'combat_end' && (item.data.damage_json as any)?.combatants ? (
+                <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Combat Ended</span>
+                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                  </div>
+                  {((item.data.damage_json as any).combatants as string[]).length > 0 && (
+                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
+                      Between {((item.data.damage_json as any).combatants as string[]).map((n, i, arr) => (
+                        <span key={i}>
+                          <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{n}</span>
+                          {i < arr.length - 2 ? ', ' : i === arr.length - 2 ? ' and ' : ''}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : item.data.outcome === 'initiative' && (item.data.damage_json as any)?.initiative ? (
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
@@ -2113,7 +2205,17 @@ export default function TablePage() {
               ))}
             </div>
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              {gmTab === 'npcs' && <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc]); setSelectedEntry(null) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} />}
+              {gmTab === 'npcs' && (() => {
+                // Rotate initiative order so the currently-active combatant is first.
+                // NPC tab then sees: active NPC, then everyone after them in turn,
+                // wrapping around to the ones who already went.
+                const activeIdx = initiativeOrder.findIndex(e => e.is_active)
+                const rotated = activeIdx >= 0
+                  ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
+                  : initiativeOrder
+                const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
+                return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc]); setSelectedEntry(null) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} />
+              })()}
               {gmTab === 'assets' && <CampaignPins campaignId={id} isGM={isGM} onPinFocus={p => setFocusPin({ ...p })} />}
               {gmTab === 'notes' && <GmNotes campaignId={id} />}
             </div>

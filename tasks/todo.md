@@ -27,6 +27,9 @@
 - [ ] Manipulation rolls should auto-include First Impression CMod
 - [ ] Add to Combat modal should filter NPCs already in initiative
 - [ ] Self-attack should apply damage to self
+- [ ] **Auto-advance after 2 actions** — diagnostic logging now in place; instrument-and-retest to find root cause
+- [ ] **Player-facing NPC card on Show All click** — when GM reveals an NPC, players should be able to click the name to open a read-only card
+- [ ] **Player load 20s, combat start 15s, roll modal 55s stuck** — perf investigation needed; likely related to the "Unknown" cascade now that publication is fixed
 
 ---
 
