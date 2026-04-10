@@ -411,7 +411,7 @@ export const CHASED_NPCS: NpcSeed[] = [
   {
     name: 'Maddy Bell', rapid_range: '01011',
     wp: 11, rp: 6, dmm: 1, dmr: 0, init: 0, per: 0, enc: 0, pt: 0,
-    skills: [{ name: 'Athletics', level: 1, specialized: false }, { name: 'Manipulation', level: 1, specialized: false }, { name: 'Ranged Weapons', level: 1, specialized: false }, { name: 'Stealth', level: 1, specialized: false }],
+    skills: [{ name: 'Athletics', level: 1, specialized: false }, { name: 'Manipulation', level: 1, specialized: false }, { name: 'Ranged Combat', level: 1, specialized: false }, { name: 'Stealth', level: 1, specialized: false }],
     equipment: [{ name: 'Shotgun', damage: 6, roll: '5+2d6', notes: 'Taken from Luke Connor' }],
     role: 'Survivor / Mother', pin_title: '01 | Best Nite Motel',
     description: "Late 20s. Disheveled, hands bound, gagged when first encountered. Clothing torn and blood-stained. Escaped the Connor farmhouse when Luke was careless. Part of the King's Crossroads Mall group.",
@@ -483,7 +483,7 @@ export const CHASED_NPCS: NpcSeed[] = [
   {
     name: 'Ray Connor', rapid_range: '11112',
     wp: 13, rp: 7, dmm: 1, dmr: 2, init: 3, per: 0, enc: 7, pt: 3,
-    skills: [{ name: 'Hunting', level: 1, specialized: false }, { name: 'Intimidation', level: 2, specialized: false }, { name: 'Ranged Weapons', level: 2, specialized: false }, { name: 'Stealth', level: 1, specialized: false }, { name: 'Survival', level: 1, specialized: false }],
+    skills: [{ name: 'Hunting', level: 1, specialized: false }, { name: 'Intimidation', level: 2, specialized: false }, { name: 'Ranged Combat', level: 2, specialized: false }, { name: 'Stealth', level: 1, specialized: false }, { name: 'Survival', level: 1, specialized: false }],
     equipment: [{ name: 'Hunting Knife', roll: '2+1d3' }, { name: 'Shotgun', damage: 6, roll: '5+2d6' }, { name: 'Flashlight' }],
     role: 'Connor Patriarch', pin_title: '01 | Best Nite Motel',
     description: "Late 50s. The only genuinely smart Connor. Family patriarch. Out searching for Maddy during the farmhouse section. Tracks the group back to the mall and arrives at dusk the next day with Jackie. Fires a shot into the air to get everyone's attention. Targets Maddy specifically.",
@@ -493,7 +493,7 @@ export const CHASED_NPCS: NpcSeed[] = [
   {
     name: 'Jackie Connor', rapid_range: '00000',
     wp: 15, rp: 9, dmm: 3, dmr: 2, init: 2, per: 0, enc: 9, pt: 4,
-    skills: [{ name: 'Ranged Weapons', level: 2, specialized: false }, { name: 'Unarmed Combat', level: 2, specialized: false }, { name: 'Intimidation', level: 1, specialized: false }, { name: 'Hunting', level: 1, specialized: false }, { name: 'Survival', level: 1, specialized: false }],
+    skills: [{ name: 'Ranged Combat', level: 2, specialized: false }, { name: 'Unarmed Combat', level: 2, specialized: false }, { name: 'Intimidation', level: 1, specialized: false }, { name: 'Hunting', level: 1, specialized: false }, { name: 'Survival', level: 1, specialized: false }],
     equipment: [{ name: 'Hunting Knife', roll: '2+1d3' }, { name: 'Shotgun', damage: 6, roll: '5+2d6' }, { name: 'Flashlight' }],
     role: 'Connor Boy — Brother', pin_title: '01 | Best Nite Motel',
     description: "One of the brothers. Out with Ray during the farmhouse section. Returns with Ray for the Reckoning. Follows Ray entirely.",
@@ -628,48 +628,115 @@ export const CHASED_NPCS: NpcSeed[] = [
 // Stored in code for now — needs a DB decision (setting_pregens table or is_pregen flag on campaign_npcs)
 
 export interface PregenSeed {
-  name: string; profession: string; age: number
+  name: string; profession: string; age: number; gender: string
+  height: string; weight: string
   three_words: string; complication: string; motivation: string
   reason: number; acumen: number; physicality: number
   influence: number; dexterity: number
-  description: string; relationship: string
+  skills: { skillName: string; level: number }[]
+  weaponPrimary: { weaponName: string; condition: string; ammoCurrent: number }
+  weaponSecondary?: { weaponName: string; condition: string; ammoCurrent: number }
+  equipment: string[]
+  incidentalItem?: string
+  breakingPoint: number
+  description: string
+  relationships: { npc: string; cmod: number }[]
 }
 
 export const CHASED_PREGENS: PregenSeed[] = [
   {
-    name: 'David Battersby', profession: 'Farmer', age: 62,
+    name: 'David Battersby', profession: 'Farmer', age: 62, gender: 'Male',
+    height: "5'8\"", weight: '164lbs',
     three_words: 'Shrewd, Sullen, Pessimistic', complication: 'Betrayed', motivation: 'Revenge',
     reason: 2, acumen: 2, physicality: 1, influence: 0, dexterity: 0,
-    description: "Third-generation farmer from the Maryland/Delaware border. Took in survivors during the outbreak. Strangers returned in force, killed his wife Jenny, seized the farm. Moving east ever since. Driven by one thought: kill the men who killed his wife.",
-    relationship: 'Carly McIntyre is his niece (+2)',
+    skills: [
+      { skillName: 'Melee Combat', level: 2 }, { skillName: 'Unarmed Combat', level: 2 },
+      { skillName: 'Lock-Picking*', level: 2 }, { skillName: 'Sleight of Hand', level: 2 },
+      { skillName: 'Stealth', level: 2 }, { skillName: 'Manipulation', level: 3 },
+      { skillName: 'Athletics', level: 1 }, { skillName: 'Navigation', level: 1 },
+      { skillName: 'Scavenging', level: 1 }, { skillName: 'Survival', level: 1 },
+      { skillName: 'Barter', level: 1 },
+    ],
+    weaponPrimary: { weaponName: 'Shotgun (Sawed-Off)', condition: 'Used', ammoCurrent: 2 },
+    equipment: ['Tent and Sleeping Bag'],
+    breakingPoint: 7,
+    description: "David Battersby is a third-generation farmer who, along with his wife Jenny, spent most of his life studying agriculture and tending crops on a farm close to the Maryland and Delaware border. During the outbreak, David and Jenny began to take in acquaintances and friends, putting them to work on the farm in return for shelter. It went well for a while. Then strangers turned up with guns and wanted the farm. David stood up to them and for a minute it looked like they were leaving. But they came back in greater numbers, killing Jenny and several others and seizing the farm as their own. David and a few companions escaped and have been on the move for the last few days. He is driven by one thought — he will not stop until he has killed the men that killed his wife.",
+    relationships: [{ npc: 'Carly McIntyre', cmod: 2 }],
   },
   {
-    name: 'Carly McIntyre', profession: 'Trail Guide', age: 29,
+    name: 'Carly McIntyre', profession: 'Trail Guide', age: 29, gender: 'Female',
+    height: "5'5\"", weight: '139lbs',
     three_words: 'Sarcastic, Confident, Strong', complication: 'Family Obligation', motivation: 'Find Safety',
     reason: 0, acumen: 2, physicality: 2, influence: 0, dexterity: 1,
-    description: "Born in Delaware. Spent years as a trail guide across the US. Returned when her father got sick. Found herself at Aunt Jenny and Uncle David's farm. Was away when the strangers arrived. Seeing her aunt's corpse had a profound effect. Wants revenge but mostly just wants to feel safe again.",
-    relationship: 'David Battersby is her uncle (+2)',
+    skills: [
+      { skillName: 'Melee Combat', level: 1 }, { skillName: 'Ranged Combat', level: 1 },
+      { skillName: 'Stealth', level: 2 }, { skillName: 'Medicine*', level: 1 },
+      { skillName: 'Athletics', level: 2 }, { skillName: 'Survival', level: 3 },
+      { skillName: 'Navigation', level: 3 }, { skillName: 'Scavenging', level: 2 },
+      { skillName: 'Barter', level: 1 }, { skillName: 'Farming', level: 1 },
+    ],
+    weaponPrimary: { weaponName: 'Makeshift Club', condition: 'Used', ammoCurrent: 0 },
+    equipment: ['Tent and Sleeping Bag'],
+    breakingPoint: 5,
+    description: "Born in Delaware, Carly moved to Montana with her mother after her parents divorced. She has spent the last few years as a trail guide in various parts of the US. Early in the pandemic she returned to Delaware when her father got sick and found herself unable to leave. Her father's sister lived nearby on a farm and Carly found herself spending increasing time with her Aunt Jenny and Uncle David. When the food riots started she moved out to the farm. She was away when the strangers arrived and even if she had been there she knows she couldn't have saved her aunt. She would like revenge but mostly she wants to feel safe again.",
+    relationships: [{ npc: 'David Battersby', cmod: 2 }],
   },
   {
-    name: 'Morgan Lieu', profession: 'Vet Technician', age: 31,
+    name: 'Morgan Lieu', profession: 'Vet Technician', age: 31, gender: 'Female',
+    height: "5'2\"", weight: '119lbs',
     three_words: 'Angry, Suspicious, Insular', complication: 'Loss', motivation: 'Find Safety',
     reason: 2, acumen: 2, physicality: 0, influence: 0, dexterity: 1,
-    description: "Raised in Philadelphia. Vet tech at a practice in Denton, Delaware. David took her in during the outbreak. Strangers arrived with guns, killed David's wife and several others, drove the survivors out. Now just wants somewhere to feel safe.",
-    relationship: 'No established relationships',
+    skills: [
+      { skillName: 'Medicine*', level: 2 }, { skillName: 'Athletics', level: 2 },
+      { skillName: 'Navigation', level: 1 }, { skillName: 'Scavenging', level: 1 },
+      { skillName: 'Survival', level: 2 }, { skillName: 'Animal Handling', level: 2 },
+      { skillName: 'Sleight of Hand', level: 1 }, { skillName: 'Stealth', level: 1 },
+      { skillName: 'Manipulation', level: 2 }, { skillName: 'Farming', level: 1 },
+      { skillName: 'Research', level: 1 },
+    ],
+    weaponPrimary: { weaponName: 'Baseball Bat', condition: 'Used', ammoCurrent: 0 },
+    equipment: ['Map of area', 'Tent and Sleeping Bag'],
+    incidentalItem: 'Map of area',
+    breakingPoint: 5,
+    description: "Raised in Philadelphia, Morgan became a veterinary technician and took a job at a practice in Denton Delaware specializing in farm animals. She spent the next decade helping local farmers care for their animals. David Battersby took her in as the pandemic raged and put her to work on his farm. Things started to feel strangely normal as the weeks turned to months. Until strangers turned up with guns, killing David's wife and several of the others, driving the remaining few out. Now Morgan just wants to find somewhere she can feel safe again.",
+    relationships: [],
   },
   {
-    name: 'Marv Calhoun', profession: 'Handyman', age: 36,
+    name: 'Marv Calhoun', profession: 'Handyman', age: 36, gender: 'Male',
+    height: "5'11\"", weight: '174lbs',
     three_words: 'Sarcastic, Bold, Observant', complication: 'Addiction', motivation: 'Hedonism',
     reason: 1, acumen: 2, physicality: 1, influence: 0, dexterity: 1,
-    description: "Raised by the state after an abusive childhood. In and out of institutions driven by cocaine, alcohol, and a short temper. Paroled from Sussex Correctional just months before the outbreak. Found work on David's farm. Feels protective of Battersby since Jenny's murder. Has been making unauthorized trips for alcohol.",
-    relationship: 'David Battersby is a friend (+1)',
+    skills: [
+      { skillName: 'Demolitions*', level: 1 }, { skillName: 'Melee Combat', level: 2 },
+      { skillName: 'Unarmed Combat', level: 2 }, { skillName: 'Lock-Picking*', level: 1 },
+      { skillName: 'Sleight of Hand', level: 2 }, { skillName: 'Tinkerer', level: 2 },
+      { skillName: 'Mechanic*', level: 2 }, { skillName: 'Athletics', level: 1 },
+      { skillName: 'Scavenging', level: 1 }, { skillName: 'Survival', level: 1 },
+      { skillName: 'Barter', level: 1 }, { skillName: 'Manipulation', level: 2 },
+    ],
+    weaponPrimary: { weaponName: 'Baseball Bat', condition: 'Used', ammoCurrent: 0 },
+    equipment: [],
+    breakingPoint: 5,
+    description: "Raised first by his abusive uncle and aunt and later by the state, Marvin has spent much of his life drifting in and out of institutions. Paroled from Sussex Correctional Institution just months before the outbreak, Marv had found work helping David Battersby on his farm as a handyman. He has found himself feeling somewhat protective of Battersby, particularly in light of the murder of his wife Jenny. He is prepared to help get the farm back if they can find more guns and people willing to use them. Although there is no cocaine for him to get his hands on, there is no shortage of alcohol in the surrounding towns and Marv has made more than one trip without telling anyone.",
+    relationships: [{ npc: 'David Battersby', cmod: 1 }],
   },
   {
-    name: 'Victor Williams', profession: 'Las Vegas Cop', age: 39,
+    name: 'Victor Williams', profession: 'Las Vegas Cop', age: 39, gender: 'Male',
+    height: "6'1\"", weight: '187lbs',
     three_words: 'Brave, Loyalty, Quiet', complication: 'Code of Honor', motivation: 'Protect',
     reason: 0, acumen: 1, physicality: 2, influence: 1, dexterity: 1,
-    description: "Short Air Force stint then Las Vegas Metropolitan Police — assigned to McCarran Airport for over a decade. Drove east when the virus wiped out the city. His brother was dead on arrival. Still wears the remnants of his uniform for identity and the authority it projects.",
-    relationship: 'No established relationships',
+    skills: [
+      { skillName: 'Ranged Combat', level: 2 }, { skillName: 'Tactics*', level: 1 },
+      { skillName: 'Unarmed Combat', level: 1 }, { skillName: 'Manipulation', level: 1 },
+      { skillName: 'Athletics', level: 1 }, { skillName: 'Navigation', level: 1 },
+      { skillName: 'Streetwise', level: 1 }, { skillName: 'Medicine*', level: 1 },
+    ],
+    weaponPrimary: { weaponName: 'Tactical Baton', condition: 'Used', ammoCurrent: 0 },
+    weaponSecondary: { weaponName: 'Hunting Knife', condition: 'Used', ammoCurrent: 0 },
+    equipment: ['Compass'],
+    breakingPoint: 4,
+    description: "Victor joined the Las Vegas Metropolitan Police Department and after several years of street patrol was assigned to McCarran airport where he worked for more than a decade. When the virus wiped out the city Victor decided to drive east to be with his brother in Maryland. His brother was dead by the time he arrived and Victor had nothing left to go back to. His car died and since then Victor has been moving east to the coast. Although tattered, Victor still wears what remains of his uniform — partly to remind himself of who he was, and partly for the effect it has on others.",
+    relationships: [],
   },
 ]
 

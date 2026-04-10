@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { useRouter, useParams } from 'next/navigation'
 import { SETTINGS } from '../../../lib/settings'
+import { SETTING_PREGENS, type PregenSeed } from '../../../lib/setting-npcs'
+import { buildCharacterFromPregen } from '../../../lib/xse-schema'
 
 interface Campaign {
   id: string
@@ -64,6 +66,8 @@ export default function CampaignPage() {
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
   const [cloning, setCloning] = useState(false)
+  const [showPregens, setShowPregens] = useState(false)
+  const [creatingPregen, setCreatingPregen] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -110,6 +114,35 @@ export default function CampaignPage() {
       setMembers(mems)
     }
     setAssigning(false)
+  }
+
+  async function handleSelectPregen(seed: PregenSeed) {
+    if (!userId || !campaign || creatingPregen) return
+    setCreatingPregen(true)
+    try {
+      const char = buildCharacterFromPregen(seed)
+      const { data: created, error: charErr } = await supabase
+        .from('characters')
+        .insert({ user_id: userId, name: char.name, data: char })
+        .select('id, name')
+        .single()
+      if (charErr || !created) { console.error('[Pregen] character create error:', charErr?.message); return }
+      // Auto-assign to campaign
+      const { error: assignErr } = await supabase.from('campaign_members')
+        .update({ character_id: created.id })
+        .eq('campaign_id', id)
+        .eq('user_id', userId)
+      if (!assignErr) {
+        setSelectedCharId(created.id)
+        setAssignedCharName(created.name)
+        setMyCharacters(prev => [created, ...prev])
+        setShowPregens(false)
+        const mems = await fetchMembersWithProfiles(supabase, id)
+        setMembers(mems)
+      }
+    } finally {
+      setCreatingPregen(false)
+    }
   }
 
   async function handleLeave() {
@@ -256,6 +289,31 @@ export default function CampaignPage() {
                 style={{ padding: '8px 16px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: assigning || !selectedCharId ? 'not-allowed' : 'pointer', opacity: assigning || !selectedCharId ? 0.6 : 1 }}>
                 {assigning ? 'Saving...' : 'Assign'}
               </button>
+            </div>
+          )}
+          {/* Pregen selection — only for settings with pregens */}
+          {campaign.setting && SETTING_PREGENS[campaign.setting] && (
+            <div style={{ marginTop: '10px' }}>
+              <button onClick={() => setShowPregens(!showPregens)}
+                style={{ padding: '6px 14px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                {showPregens ? 'Hide Pre-Generated Characters' : 'Or Choose a Pre-Generated Character'}
+              </button>
+              {showPregens && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+                  {SETTING_PREGENS[campaign.setting]!.map(p => (
+                    <div key={p.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                      <div>
+                        <div style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>{p.name}</div>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>{p.profession} &middot; {p.three_words}</div>
+                      </div>
+                      <button onClick={() => handleSelectPregen(p)} disabled={creatingPregen}
+                        style={{ padding: '6px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: creatingPregen ? 'not-allowed' : 'pointer', opacity: creatingPregen ? 0.6 : 1, whiteSpace: 'nowrap' }}>
+                        {creatingPregen ? 'Creating...' : 'Select'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

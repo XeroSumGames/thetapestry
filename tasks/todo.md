@@ -178,7 +178,12 @@
 - [x] Renamed district0 → district_zero across entire codebase
 - [x] campaign_npcs table created with RLS + Realtime
 - [x] Campaign creation auto-seeds NPCs for District Zero and Chased
-- [ ] Pregen storage decision — setting_pregens table or is_pregen flag on campaign_npcs
+- [x] Mongrels — 28 pins (campaign-scoped, 14 waypoints + 14 landmarks/encounters) with notes, landmark (🗿) and encounter (⚡) categories added
+- [x] Pregen system — PregenSeed with full character data, buildCharacterFromPregen() builder, pregen selection UI on campaign page
+- [x] Chased pregens — 5 fully statted pregens (David, Carly, Morgan, Marv, Victor) with skills, weapons, equipment, relationships
+- [x] Chased NPC skill name fixes — "Ranged Weapons" → "Ranged Combat" (Ray, Jackie, Maddy)
+- [x] Chased Georgetown pin updated — coords, category → settlement, description
+- [x] Tactical scene seeding — SETTING_SCENES in lib/setting-scenes.ts, auto-seeds during campaign creation (Chased: Connor Boys Farmhouse)
 - [x] End session modal drop zone text size bumped (11/10px → 13/12px)
 - [x] All setting pins campaign-scoped only (District Zero, Chased, Mongrels)
 - [x] Make Thriver button — error feedback on failure

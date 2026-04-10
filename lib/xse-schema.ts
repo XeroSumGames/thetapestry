@@ -715,3 +715,76 @@ export function createBlankCharacter(): XSECharacter {
     relationships: [],
   };
 }
+
+// ----------------------------
+// PREGEN CHARACTER BUILDER
+// ----------------------------
+
+export function buildCharacterFromPregen(seed: {
+  name: string; profession: string; age: number; gender: string;
+  height: string; weight: string;
+  three_words: string; complication: string; motivation: string;
+  reason: number; acumen: number; physicality: number;
+  influence: number; dexterity: number;
+  skills: { skillName: string; level: number }[];
+  weaponPrimary: { weaponName: string; condition: string; ammoCurrent: number };
+  weaponSecondary?: { weaponName: string; condition: string; ammoCurrent: number };
+  equipment: string[];
+  incidentalItem?: string;
+  breakingPoint: number;
+  description: string;
+  relationships: { npc: string; cmod: number }[];
+}): XSECharacter {
+  const rapid: Record<AttributeName, AttributeValue> = {
+    RSN: seed.reason   as AttributeValue,
+    ACU: seed.acumen   as AttributeValue,
+    PHY: seed.physicality as AttributeValue,
+    INF: seed.influence as AttributeValue,
+    DEX: seed.dexterity as AttributeValue,
+  };
+  const secondary = deriveSecondaryStats(rapid);
+  const words = seed.three_words.split(',').map(w => w.trim());
+
+  // Build skill levels from seed — start with canonical defaults, then overlay
+  const skillMap = new Map(seed.skills.map(s => [s.skillName, s.level]));
+  const skills: CharacterSkill[] = SKILLS.map(s => ({
+    skillName: s.name,
+    level: (skillMap.get(s.name) ?? (s.vocational ? -3 : 0)) as SkillValue,
+  }));
+
+  return {
+    name: seed.name,
+    age: String(seed.age),
+    gender: seed.gender,
+    profession: seed.profession,
+    height: seed.height,
+    weight: seed.weight,
+    physdesc: '',
+    photoDataUrl: '',
+    threeWords: [words[0] ?? '', words[1] ?? '', words[2] ?? ''] as [string, string, string],
+    complication: seed.complication,
+    motivation: seed.motivation,
+    notes: seed.description,
+    creationMethod: 'pregen',
+    rapid,
+    secondary: { ...secondary, morality: 3 },
+    skills,
+    weaponPrimary: {
+      weaponName: seed.weaponPrimary.weaponName,
+      condition: seed.weaponPrimary.condition as ItemCondition,
+      ammoCurrent: seed.weaponPrimary.ammoCurrent,
+    },
+    weaponSecondary: seed.weaponSecondary
+      ? { weaponName: seed.weaponSecondary.weaponName, condition: seed.weaponSecondary.condition as ItemCondition, ammoCurrent: seed.weaponSecondary.ammoCurrent }
+      : { weaponName: '', condition: 'Used', ammoCurrent: 0 },
+    equipment: seed.equipment,
+    incidentalItem: seed.incidentalItem ?? '',
+    rations: '',
+    insightDice: 2,
+    cdp: 0,
+    stressLevel: 0,
+    breakingPoint: seed.breakingPoint,
+    lastingWounds: [],
+    relationships: seed.relationships,
+  };
+}

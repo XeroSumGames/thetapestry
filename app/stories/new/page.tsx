@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { logEvent } from '../../../lib/events'
 import { SETTING_PINS } from '../../../lib/setting-pins'
 import { SETTING_NPCS } from '../../../lib/setting-npcs'
+import { SETTING_SCENES } from '../../../lib/setting-scenes'
 import { SETTING_OPTIONS } from '../../../lib/settings'
 
 function generateCode(): string {
@@ -82,6 +83,19 @@ export default function NewCampaignPage() {
       }))
       const { error: npcErr } = await supabase.from('campaign_npcs').insert(npcRows)
       if (npcErr) { console.error('[CampaignCreate] npc seed error:', npcErr.message) }
+    }
+    // Seed tactical scenes
+    const settingScenes = SETTING_SCENES[setting]
+    if (settingScenes && settingScenes.length > 0) {
+      const sceneRows = settingScenes.map(s => ({
+        campaign_id: data.id,
+        name: s.name,
+        grid_cols: s.grid_cols,
+        grid_rows: s.grid_rows,
+        is_active: false,
+      }))
+      const { error: sceneErr } = await supabase.from('tactical_scenes').insert(sceneRows)
+      if (sceneErr) { console.error('[CampaignCreate] scene seed error:', sceneErr.message) }
     }
     logEvent('campaign_created', { id: data.id, name })
     router.push(`/stories/${data.id}`)

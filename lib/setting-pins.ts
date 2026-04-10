@@ -143,8 +143,8 @@ export const CHASED_PINS: SettingPin[] = [
     notes: 'Gas station at the edge of the King\'s Crossroads Mall property. Potential fuel source.' },
 
   // REFERENCE
-  { title: 'Georgetown, DE', lat: 38.6896, lng: -75.4974, category: 'location',
-    notes: 'Town approximately one hour south. 500+ people in a loose collective who consider the King\'s Crossroads Mall their territory. Will not be happy to find players and NPCs living there. Further detailed in the Crossroads Chronicles sourcebook.' },
+  { title: 'Georgetown', lat: 38.6901, lng: -75.3596, category: 'settlement',
+    notes: 'A town of around 500 people living in a loose collective to the south. They consider the King\'s Crossroads Mall to be their territory and have not ventured there in a while. They will not be happy to find strangers living there.' },
 ]
 
 export const SETTING_PINS: Record<string, SettingPin[]> = {
