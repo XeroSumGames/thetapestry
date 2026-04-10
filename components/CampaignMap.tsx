@@ -158,7 +158,13 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           `${!pin.revealed && isGM ? '<br/><em style="color:#c0392b;">Hidden from players</em>' : ''}` +
           npcSection +
         `</div>`
-      const marker = leaflet.marker([pin.lat, pin.lng], { icon }).bindPopup(popupHtml)
+      const marker = leaflet.marker([pin.lat, pin.lng], { icon, draggable: isGM }).bindPopup(popupHtml)
+      if (isGM) {
+        marker.on('dragend', async (ev: any) => {
+          const ll = ev.target.getLatLng()
+          await supabase.from('campaign_pins').update({ lat: ll.lat, lng: ll.lng }).eq('id', pin.id)
+        })
+      }
       clusterGroup.addLayer(marker)
       markersRef.current[pin.id] = marker
     })

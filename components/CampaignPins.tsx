@@ -28,6 +28,8 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [editNotes, setEditNotes] = useState('')
+  const [editLat, setEditLat] = useState('')
+  const [editLng, setEditLng] = useState('')
 
   async function loadPins() {
     const { data } = await supabase
@@ -83,12 +85,18 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
     setEditingId(pin.id)
     setEditName(pin.name)
     setEditNotes(pin.notes ?? '')
+    setEditLat(String(pin.lat))
+    setEditLng(String(pin.lng))
   }
 
   async function saveEdit() {
     if (!editingId) return
-    await supabase.from('campaign_pins').update({ name: editName.trim(), notes: editNotes.trim() || null }).eq('id', editingId)
-    setPins(prev => prev.map(p => p.id === editingId ? { ...p, name: editName.trim(), notes: editNotes.trim() || null } : p))
+    const lat = parseFloat(editLat)
+    const lng = parseFloat(editLng)
+    if (Number.isNaN(lat) || Number.isNaN(lng)) { alert('Latitude and longitude must be numbers'); return }
+    const update = { name: editName.trim(), notes: editNotes.trim() || null, lat, lng }
+    await supabase.from('campaign_pins').update(update).eq('id', editingId)
+    setPins(prev => prev.map(p => p.id === editingId ? { ...p, ...update } : p))
     setEditingId(null)
   }
 
@@ -147,6 +155,12 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
                     style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', marginBottom: '4px' }} />
                   <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} placeholder="Notes..." rows={2}
                     style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical', marginBottom: '4px' }} />
+                  <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+                    <input value={editLat} onChange={e => setEditLat(e.target.value)} placeholder="Lat"
+                      style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                    <input value={editLng} onChange={e => setEditLng(e.target.value)} placeholder="Lng"
+                      style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                  </div>
                   <div style={{ display: 'flex', gap: '4px' }}>
                     <button onClick={saveEdit} style={{ flex: 1, padding: '3px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Save</button>
                     <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: '3px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>

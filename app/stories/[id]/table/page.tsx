@@ -515,18 +515,35 @@ export default function TablePage() {
     // Getting The Drop: selected character gets -2 on initiative but acts first with 1 action
     const dropPenalty = -2
 
-    // Clear existing initiative. We don't need to re-fetch members/characters —
-    // `entries` already has them from loadEntries (refreshed in real time via the
-    // character_states + campaign_members subscriptions).
-    await supabase.from('initiative_order').delete().eq('campaign_id', id)
+    // Refetch members + characters fresh from DB rather than reading `entries`,
+    // because `entries` only includes PCs that already have a character_states
+    // row — a player who joined moments ago may not be in entries yet, but they
+    // still belong in combat. Also ensure their state row exists so damage can
+    // be applied to them later.
+    const [, { data: freshMembers }] = await Promise.all([
+      supabase.from('initiative_order').delete().eq('campaign_id', id),
+      supabase.from('campaign_members')
+        .select('user_id, character_id, characters:character_id(id, name, data->rapid)')
+        .eq('campaign_id', id)
+        .not('character_id', 'is', null),
+    ])
+    if (freshMembers && freshMembers.length > 0) {
+      await ensureCharacterStates(id, freshMembers as any[])
+    }
+    const charIds = (freshMembers ?? []).map((m: any) => m.character_id)
+    const { data: freshChars } = charIds.length > 0
+      ? await supabase.from('characters').select('id, name, data').in('id', charIds)
+      : { data: [] }
+    const charMap = Object.fromEntries((freshChars ?? []).map((c: any) => [c.id, c]))
 
     // Roll initiative for all PCs: 2d6 + ACU AMod + DEX AMod
     const initDetails: { name: string; d1: number; d2: number; acu: number; dex: number; drop: number; total: number }[] = []
-    const pcRows = entries.map(e => {
-      const rapid = (e.character.data?.rapid ?? {}) as any
+    const pcRows = (freshMembers ?? []).map((m: any) => {
+      const char = charMap[m.character_id]
+      const rapid = char?.data?.rapid ?? {}
       const acu = rapid.ACU ?? 0
       const dex = rapid.DEX ?? 0
-      const charName = e.character.name
+      const charName = char?.name ?? 'Unknown'
       const isDropChar = dropCharacter === charName
       const d1 = rollD6(), d2 = rollD6()
       const drop = isDropChar ? dropPenalty : 0
@@ -535,8 +552,8 @@ export default function TablePage() {
       return {
         campaign_id: id,
         character_name: charName,
-        character_id: e.character.id,
-        user_id: e.userId,
+        character_id: m.character_id,
+        user_id: m.user_id,
         npc_id: null,
         portrait_url: null,
         npc_type: null,
@@ -587,15 +604,17 @@ export default function TablePage() {
       : r
     )
 
+    // Combatant name list for the new "Combat Started" box (PCs and NPCs in roll order).
+    const combatants = sorted.map(s => s.name)
+
     // Insert initiative rows + log combat start in parallel.
-    // We don't await loadInitiative/loadRolls afterwards — both arrive via the
-    // existing realtime subscriptions, and we set the order optimistically here
-    // so the UI updates the instant the inserts return.
     if (toInsert.length > 0) {
       const [{ data: insertedInit }] = await Promise.all([
         supabase.from('initiative_order').insert(toInsert).select(),
         supabase.from('roll_log').insert([
-          { campaign_id: id, character_name: 'System', label: '⚔️ Combat Started', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' },
+          { campaign_id: id, character_name: 'System', label: '⚔️ Combat Started',
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'combat_start',
+            damage_json: { combatants } as any },
           { campaign_id: id, character_name: 'System', label: 'Initiative',
             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
             damage_json: { initiative: sorted } as any },
@@ -609,7 +628,11 @@ export default function TablePage() {
     setDropCharacter('')
 
     setStartingCombat(false)
-    // Broadcast combat start to all players
+    // Refresh the GM's log feed so the new entries appear immediately, then
+    // broadcast combat start so players also reload their state. We rely on
+    // postgres_changes for the player log refresh; broadcast is the trigger
+    // for loadInitiative on the player side.
+    await loadRolls(id)
     initChannelRef.current?.send({ type: 'broadcast', event: 'combat_started', payload: {} })
   }
 
@@ -1801,7 +1824,22 @@ export default function TablePage() {
                   </div>
                 </div>
               ) : (
-                rolls.map(r => r.outcome === 'initiative' && (r.damage_json as any)?.initiative ? (
+                rolls.map(r => r.outcome === 'combat_start' && (r.damage_json as any)?.combatants ? (
+                  <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Combat Started</span>
+                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
+                      Between {((r.damage_json as any).combatants as string[]).map((n, i, arr) => (
+                        <span key={i}>
+                          <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{n}</span>
+                          {i < arr.length - 2 ? ', ' : i === arr.length - 2 ? ' and ' : ''}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : r.outcome === 'initiative' && (r.damage_json as any)?.initiative ? (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Initiative</span>
@@ -1895,6 +1933,21 @@ export default function TablePage() {
                     <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
                   <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{item.data.message}</div>
+                </div>
+              ) : item.data.outcome === 'combat_start' && (item.data.damage_json as any)?.combatants ? (
+                <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Combat Started</span>
+                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
+                    Between {((item.data.damage_json as any).combatants as string[]).map((n, i, arr) => (
+                      <span key={i}>
+                        <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{n}</span>
+                        {i < arr.length - 2 ? ', ' : i === arr.length - 2 ? ' and ' : ''}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               ) : item.data.outcome === 'initiative' && (item.data.damage_json as any)?.initiative ? (
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
