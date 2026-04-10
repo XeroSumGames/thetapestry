@@ -642,14 +642,22 @@ export default function TablePage() {
     if (toInsert.length > 0) {
       const [{ data: insertedInit, error: initInsertErr }, { error: rollInsertErr }] = await Promise.all([
         supabase.from('initiative_order').insert(toInsert).select(),
-        supabase.from('roll_log').insert([
-          { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Started',
-            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'combat_start',
-            damage_json: { combatants } as any },
-          { campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
-            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
-            damage_json: { initiative: sorted } as any },
-        ]),
+        // Explicit timestamps so Combat Started always renders above Initiative.
+        // A multi-row insert otherwise gives both rows the same NOW() and the
+        // tie-break is non-deterministic.
+        (() => {
+          const now = Date.now()
+          return supabase.from('roll_log').insert([
+            { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Started',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'combat_start',
+              damage_json: { combatants } as any,
+              created_at: new Date(now).toISOString() },
+            { campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
+              damage_json: { initiative: sorted } as any,
+              created_at: new Date(now + 1).toISOString() },
+          ])
+        })(),
       ])
       if (initInsertErr) console.error('[confirmStartCombat] initiative insert error:', initInsertErr.message)
       if (rollInsertErr) console.error('[confirmStartCombat] roll_log insert error:', rollInsertErr.message)
