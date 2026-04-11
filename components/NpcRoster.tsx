@@ -436,7 +436,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     if (!pcEntries || pcEntries.length === 0) return
     const isRevealed = revealedNpcIds.has(npcId)
     for (const pc of pcEntries) {
-      const { data: existing } = await supabase.from('npc_relationships').select('id').eq('npc_id', npcId).eq('character_id', pc.characterId).single()
+      const { data: existing } = await supabase.from('npc_relationships').select('id').eq('npc_id', npcId).eq('character_id', pc.characterId).maybeSingle()
       if (existing) {
         await supabase.from('npc_relationships').update({ revealed: !isRevealed, reveal_level: isRevealed ? null : 'name_portrait' }).eq('id', existing.id)
       } else if (!isRevealed) {

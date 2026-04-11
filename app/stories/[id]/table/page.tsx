@@ -2537,7 +2537,7 @@ export default function TablePage() {
                       const npc = campaignNpcs.find((n: any) => n.id === npcId)
                       const myChar = entries.find(en => en.userId === userId)
                       if (!myChar) { setSocialCmod(null); return }
-                      const { data: rel } = await supabase.from('npc_relationships').select('relationship_cmod').eq('npc_id', npcId).eq('character_id', myChar.character.id).single()
+                      const { data: rel } = await supabase.from('npc_relationships').select('relationship_cmod').eq('npc_id', npcId).eq('character_id', myChar.character.id).maybeSingle()
                       if (rel) {
                         setSocialCmod({ npcName: npc?.name ?? '', cmod: rel.relationship_cmod })
                         setCmod(String(rel.relationship_cmod))
