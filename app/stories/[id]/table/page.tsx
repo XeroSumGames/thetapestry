@@ -1355,8 +1355,9 @@ export default function TablePage() {
         console.warn('[damage] PC target', targetEntry.character.name, 'WP:', targetEntry.liveState.wp_current, '→', newWP, 'RP:', targetEntry.liveState.rp_current, '→', newRP)
 
         if (newWP === 0 && targetEntry.liveState.wp_current > 0 && (targetEntry.liveState.insight_dice ?? 0) > 0) {
-          const { error: csErr } = await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId)
+          const { error: csErr, data: csData } = await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId).select()
           if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
+          else console.warn('[damage] PC character_states update returned', csData?.length, 'rows')
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, rp_current: newRP } } : e))
           setInsightSavePrompt({
             stateId: targetEntry.stateId,
@@ -1374,8 +1375,9 @@ export default function TablePage() {
           if (newRP === 0 && targetEntry.liveState.rp_current > 0 && newWP > 0) {
             update.incap_rounds = Math.max(1, 4 - (targetEntry.character.data?.rapid?.PHY ?? 0))
           }
-          const { error: csErr } = await supabase.from('character_states').update(update).eq('id', targetEntry.stateId)
+          const { error: csErr, data: csData } = await supabase.from('character_states').update(update).eq('id', targetEntry.stateId).select()
           if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
+          else console.warn('[damage] PC character_states update returned', csData?.length, 'rows')
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
         }
       } else if (targetNpc) {
