@@ -227,6 +227,9 @@
 ### Character Creation
 - [x] Clickable steps, portrait upload, concept display, photo resize, test character
 - [ ] CDP tracker boxes (partially fixed)
+- [ ] **Tooltips throughout character creation** — hover/tap explanations on skills, attributes (RAPID), and other game terms so new players understand what each thing does without leaving the page
+- [ ] **Clean up Weapons/Equipment page** — current layout is too messy; redesign for clarity (categories, search, fewer dense rows)
+- [ ] **Weapon dropdowns on Final Touch screen** — let players swap their seeded/picked weapons via a dropdown selector instead of being locked into the default loadout
 
 ### Ghost Mode
 - [x] Public pages: /, /map, /dashboard, /campaigns, /characters, /creating-a-character, character builders
