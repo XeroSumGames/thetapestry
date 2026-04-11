@@ -2212,7 +2212,7 @@ export default function TablePage() {
 
           {/* NPC Card(s) grid — floats over map */}
           {viewingNpcs.length > 0 && (
-            <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '8px', background: 'rgba(26,26,26,0.95)', zIndex: 1100, display: 'grid', gridTemplateColumns: viewingNpcs.length >= 3 ? 'repeat(3, 1fr)' : viewingNpcs.length === 2 ? 'repeat(2, 1fr)' : '1fr', gap: '6px', alignContent: 'start' }}>
+            <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '8px', background: 'rgba(26,26,26,0.95)', zIndex: 1100, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px', alignContent: 'start' }}>
               {viewingNpcs.map(npc => (
                 <NpcCard key={npc.id}
                   npc={npc}
