@@ -470,6 +470,19 @@ export default function TablePage() {
         .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false) })
         .on('broadcast', { event: 'combat_started' }, () => { loadInitiative(id); loadRolls(id) })
         .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id); loadRolls(id) })
+        // Players' postgres_changes subscription on npc_relationships is
+        // unreliable (RLS / publication), so mid-combat reveals go over this
+        // broadcast channel instead. Refetch cnpcs fresh so newly-added roster
+        // NPCs aren't missed due to a stale closure.
+        .on('broadcast', { event: 'npcs_revealed' }, async () => {
+          const { data: fresh } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+          const freshList = fresh ?? []
+          if (freshList.length > 0) {
+            setCampaignNpcs(freshList)
+            setRosterNpcs(freshList.filter((n: any) => n.status === 'active'))
+          }
+          loadRevealedNpcs(myCharIdRef.current, freshList)
+        })
         .subscribe()
 
       campaignChannelRef.current = supabase.channel(`campaign_${id}`)
@@ -893,6 +906,64 @@ export default function TablePage() {
       await supabase.from('initiative_order').insert(rows)
       await loadInitiative(id)
     }
+
+    // If combat is already underway, offer to reveal the newly-added NPC(s) to
+    // the players so they appear in the player-side NPC window. Mirrors the
+    // reveal logic in NpcRoster.revealAllNpcs: one npc_relationships row per
+    // (npc × pc) with revealed=true, reveal_level='name_portrait'. The realtime
+    // subscription on npc_relationships (see loadRevealedNpcs channel above)
+    // auto-refreshes player views when these rows land.
+    if (!combatActive || npcsToAdd.length === 0) return
+    const pcCharIds = entries
+      .filter(e => e.character?.id && e.userId !== campaign?.gm_user_id)
+      .map(e => e.character.id)
+    if (pcCharIds.length === 0) return
+
+    const npcIds = npcsToAdd.map(n => n.id)
+    const { data: existingRels } = await supabase
+      .from('npc_relationships')
+      .select('id, npc_id, character_id, revealed')
+      .in('npc_id', npcIds)
+
+    // If every added NPC is already fully revealed to every PC, skip the prompt.
+    const allFullyRevealed = npcIds.every(nid =>
+      pcCharIds.every(pcId => (existingRels ?? []).some((r: any) =>
+        r.npc_id === nid && r.character_id === pcId && r.revealed))
+    )
+    if (allFullyRevealed) return
+
+    const label = npcsToAdd.length === 1 ? npcsToAdd[0].name : `${npcsToAdd.length} NPCs`
+    if (!confirm(`Show ${label} to the players?`)) return
+
+    const existing = existingRels ?? []
+    const seen = new Set<string>(existing.map((r: any) => `${r.npc_id}|${r.character_id}`))
+    const updateIds = existing.map((r: any) => r.id)
+    const inserts: any[] = []
+    for (const npc of npcsToAdd) {
+      for (const pcId of pcCharIds) {
+        if (!seen.has(`${npc.id}|${pcId}`)) {
+          inserts.push({
+            npc_id: npc.id,
+            character_id: pcId,
+            relationship_cmod: 0,
+            revealed: true,
+            reveal_level: 'name_portrait',
+          })
+        }
+      }
+    }
+    if (updateIds.length > 0) {
+      await supabase.from('npc_relationships')
+        .update({ revealed: true, reveal_level: 'name_portrait' })
+        .in('id', updateIds)
+    }
+    if (inserts.length > 0) {
+      await supabase.from('npc_relationships').insert(inserts)
+    }
+    // Nudge the player clients to refetch — their postgres_changes subscription
+    // on npc_relationships doesn't reliably fire (see handler in initChannelRef
+    // setup). Broadcast bypasses RLS/publication and always lands.
+    initChannelRef.current?.send({ type: 'broadcast', event: 'npcs_revealed', payload: {} })
   }
 
   async function removeFromInitiative(entryId: string) {
@@ -906,12 +977,29 @@ export default function TablePage() {
     if (idx < 0 || idx >= initiativeOrder.length - 1) return
     const current = initiativeOrder[idx]
     const next = initiativeOrder[idx + 1]
-    // Set current's roll to 1 below next, and bump next up to current's old roll
-    await Promise.all([
+    // Set current's roll to 1 below next, and bump next up to current's old roll.
+    const updates: Promise<any>[] = [
       supabase.from('initiative_order').update({ roll: next.roll - 1 }).eq('id', current.id),
       supabase.from('initiative_order').update({ roll: current.roll }).eq('id', next.id),
-    ])
+    ]
+    // If the deferring combatant is currently active, hand the turn directly
+    // to the swap partner. We can't reuse nextTurn() here because after the
+    // swap the deferring combatant is now sorted BELOW the swap partner, so
+    // nextTurn would walk forward from the deferring entry's new position and
+    // land on the wrong combatant. The direct transfer keeps the semantics
+    // clean: "I defer → you go next → I'll act later in the round".
+    const wasActive = !!current.is_active
+    if (wasActive) {
+      updates.push(
+        supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('id', current.id),
+        supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', next.id),
+      )
+    }
+    await Promise.all(updates)
     await loadInitiative(id)
+    if (wasActive) {
+      initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+    }
   }
 
   // ── Session functions ──
@@ -1172,6 +1260,43 @@ export default function TablePage() {
   }
 
   function handleRollRequest(label: string, amod: number, smod: number, weapon?: WeaponContext) {
+    // During active combat, weapon rolls (attacks) are only allowed for the
+    // active combatant, and only while they still have actions remaining.
+    // The attacker is inferred from the label/context (not from "who clicked"),
+    // because GM authority by itself would let the GM roll an off-turn NPC
+    // attack from an NpcCard — closeRollModal would then decrement whichever
+    // OTHER combatant is currently active, silently corrupting the turn.
+    // Non-weapon rolls (skill checks, social, perception) are not gated.
+    if (combatActive && weapon) {
+      const active = initiativeOrder.find(e => e.is_active)
+      if (!active || (active.actions_remaining ?? 0) <= 0) {
+        alert('No actions remaining — wait for your next turn.')
+        return
+      }
+
+      // Determine the attacker. NPC weapon attacks from NpcCard are labelled
+      // "NpcName — Attack (weapon)"; PC weapon attacks from CharacterCard are
+      // labelled "Attack — weapon" or "Unarmed Attack" (no name prefix).
+      const firstPart = label.split(' — ')[0]
+      const firstPartIsKnownName =
+        campaignNpcs.some((n: any) => n.name === firstPart) ||
+        entries.some(e => e.character.name === firstPart)
+      let attackerName: string | null
+      if (firstPartIsKnownName) {
+        attackerName = firstPart
+      } else if (isGM && selectedEntry) {
+        // GM proxy-rolling from an open PC sheet — attacker is that PC.
+        attackerName = selectedEntry.character.name
+      } else {
+        const myChar = entries.find(e => e.userId === userId)
+        attackerName = myChar?.character.name ?? null
+      }
+
+      if (!attackerName || active.character_name !== attackerName) {
+        alert(`It's not ${attackerName ?? 'that character'}'s turn.`)
+        return
+      }
+    }
     setPendingRoll({ label, amod, smod, weapon })
     setRollResult(null)
     // Include aim bonus from Aim action or Tracking trait
@@ -1208,10 +1333,22 @@ export default function TablePage() {
   async function executeRoll() {
     if (!pendingRoll || !userId) return
     setRolling(true)
-    // Determine character name: NPC labels have "NpcName — Action", otherwise use selected entry or own entry
+    // Determine character name. Most labels containing " — " put the attacker
+    // name first (e.g. "Goon 1 — Attack (Pistol)", "David Battersby — Aim"),
+    // but the PC weapon-attack button builds its label as "Attack — <weapon>"
+    // which previously made the code write the literal string "Attack" into
+    // roll_log.character_name. Guard against that by only trusting the first
+    // split-part when it actually matches a known PC or NPC name.
     const labelParts = pendingRoll.label.split(' — ')
     const myEntry = entries.find(e => e.userId === userId)
-    const characterName = labelParts.length > 1 ? labelParts[0] : (syncedSelectedEntry?.character.name ?? myEntry?.character.name ?? 'Unknown')
+    const firstPart = labelParts[0]
+    const firstPartIsKnownName = labelParts.length > 1 && (
+      entries.some(e => e.character.name === firstPart) ||
+      campaignNpcs.some((n: any) => n.name === firstPart)
+    )
+    const characterName = firstPartIsKnownName
+      ? firstPart
+      : (syncedSelectedEntry?.character.name ?? myEntry?.character.name ?? 'Unknown')
     let cmodVal = parseInt(cmod) || 0
     // Add range band CMod for weapon attacks
     if (pendingRoll.weapon) cmodVal += getRangeCMod()
@@ -1260,7 +1397,12 @@ export default function TablePage() {
     if (pendingRoll.weapon && targetName && (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight')) {
       const weapon = pendingRoll.weapon
       const w = getWeaponByName(weapon.weaponName)
-      const isMelee = w?.category === 'melee'
+      // 'Unarmed' is a pseudo-weapon fabricated inline by the CharacterCard
+      // Unarmed Attack button — it has no entry in getWeaponByName, so we
+      // have to recognize it explicitly as melee. Without this, PHY AMod is
+      // never added to damage (rollDamage skips phyBonus) and the defensive
+      // mod uses DEX instead of PHY, easily producing 0 damage.
+      const isMelee = w?.category === 'melee' || weapon.weaponName === 'Unarmed'
       const attackerPhy = myEntry?.character.data?.rapid?.PHY ?? 0
       const traits = weapon.traits ?? []
       const isStun = getTraitValue(traits, 'Stun') !== null
@@ -1600,11 +1742,14 @@ export default function TablePage() {
         {isGM && sessionStatus === 'active' && (
           <button onClick={async () => {
             // Fetch any submitted player notes so the GM sees them in the modal.
+            // Only pull notes that were written DURING this session — notes from
+            // prior sessions must not carry forward (see sql/player-notes-session-tag.sql).
             const { data } = await supabase
               .from('player_notes')
               .select('id, user_id, title, content, submitted_at')
               .eq('campaign_id', id)
               .eq('submitted_to_summary', true)
+              .eq('session_number', sessionCount)
               .order('submitted_at', { ascending: true })
             // Resolve character name for each note via the entries table snapshot.
             const enriched = (data ?? []).map((n: any) => {

@@ -1,5 +1,13 @@
 # The Tapestry — TODO List
-Last updated: April 2026
+Last updated: 2026-04-11
+
+---
+
+## 🚧 In Flight — Pick Up Here
+
+- [ ] **VERIFY + APPLY `sql/initiative-order-rls-members-write.sql`** — player "Nana" took 2 attacks but initiative did not advance. Theory: RLS on `initiative_order` blocks player-client UPDATEs, so `consumeAction` and `nextTurn` writes silently fail (Supabase returns `{error}` without throwing, code only `console.warn`s it). Verify by opening DevTools console on the player client, doing two attacks, and watching for `[consumeAction] update error:` or `[nextTurn] deactivate error:`. If confirmed, run the migration in Supabase SQL Editor. Also watch for the pattern `[consumeAction] newRemaining: 1` logging twice in a row (same number on attack 1 and attack 2) — that's the same RLS symptom.
+- [ ] **APPLY `sql/player-notes-session-tag.sql`** — adds `session_number` column + BEFORE INSERT trigger so player notes only append to the session summary they were written in. Code in `page.tsx` end-session fetch already filters `.eq('session_number', sessionCount)`. Migration needs to be run in Supabase before the feature works end-to-end.
+- [ ] `tasks/testplan.md` got overwritten by content from a different project (`C:\theTableau` — dashboard tabs / star map). Decide whether to restore the Tapestry test plan or discard the file.
 
 ---
 
@@ -8,6 +16,7 @@ Last updated: April 2026
 - [ ] Print character sheet printing blank — @page CSS added but sheet renders empty, likely hydration issue
 - [ ] Distemper font not applying in navbar on mobile
 - [ ] Remove Insight Dice cap — hardcoded to 9 in CharacterCard (max={9}) and executeRoll (Math.min(..., 9))
+- [ ] HP render lag — previous-session follow-up (noted in prior commit `b4d4671`)
 
 ---
 
@@ -171,6 +180,18 @@ Last updated: April 2026
 
 ## ✅ Completed
 
+### 2026-04-11 session
+- [x] **Player notes — "Append to GM's session summary" checkbox on the create-note form** (`PlayerNotes.tsx`). Players tick it at write-time instead of having to save → expand → toggle afterwards.
+- [x] **Player notes — only append to the session they were written in.** Schema: new `session_number` column + BEFORE INSERT trigger stamps it from `campaigns.session_count` while a session is active. End-session fetch in `page.tsx` now filters by that number. Fixes ghost-notes from prior sessions showing up in every End Session modal. *(Migration file `sql/player-notes-session-tag.sql` needs to be run — see In Flight.)*
+- [x] **Mid-combat NPC reveal prompt** — when GM adds an NPC to active combat via the NpcRoster, if they aren't already fully revealed to every PC, GM is asked `Show <NPC> to the players?`. On confirm, creates `npc_relationships` rows with `revealed=true, reveal_level='name_portrait'` for each PC. No-ops silently if every added NPC is already revealed.
+- [x] **Players see revealed NPCs without a refresh** — `postgres_changes` on `npc_relationships` was unreliable (RLS / publication), so mid-combat reveals now broadcast `npcs_revealed` on the shared `initiative_${id}` channel. Handler refetches `campaign_npcs` fresh and re-runs `loadRevealedNpcs` so the player's NPCs tab populates within ~1 second.
+- [x] **Unarmed attack damage fix** — `getWeaponByName('Unarmed')` returns undefined, so `isMelee` was false, which (a) skipped the PHY AMod bonus in `rollDamage` and (b) mitigated with the target's DEX instead of PHY. David's unarmed attack on Frankie was doing 0 damage. Fixed by explicitly treating `weaponName === 'Unarmed'` as melee in `page.tsx:1333`.
+- [x] **Roll log attacker name** — PC weapon attack labels are `"Attack — <weapon>"`, and `executeRoll` was parsing the first split-part as a character name, writing the literal string `"Attack"` into `roll_log.character_name`. Now only trusts the first split-part when it matches a known PC or NPC name; otherwise falls back to `syncedSelectedEntry → myEntry`.
+- [x] **Combat action enforcement — off-turn weapon attacks blocked** (`handleRollRequest`). During active combat, weapon rolls require the attacker (inferred from label/context, not from authority) to be the currently active combatant with `actions_remaining > 0`. Players get `"It's not your turn."`, GM included — the GM bypass in the first iteration let the GM roll an off-turn NPC attack from an NpcCard which silently decremented the currently-active combatant's actions. Non-weapon rolls (skill, social, perception) are not gated.
+- [x] **Defer initiative actually advances the turn** (`deferInitiative`). Previously defer only swapped roll values, leaving `is_active` on the deferring combatant. Now when the deferring combatant is active, their `is_active` is flipped off and the swap partner is flipped on with fresh `actions_remaining = 2`, plus a `turn_changed` broadcast. Direct transfer avoids the trap where `nextTurn()` after a swap walks to the wrong combatant.
+- [x] `sql/initiative-order-rls-members-write.sql` written (pending apply — see In Flight).
+
+### Earlier
 - [x] Auth, signup, login, roles, suspension
 - [x] Character creator — 10-step backstory wizard
 - [x] Quick Character Creator

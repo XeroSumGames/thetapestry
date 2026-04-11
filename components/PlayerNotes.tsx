@@ -18,6 +18,7 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
   const [showAdd, setShowAdd] = useState(false)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [submitOnSave, setSubmitOnSave] = useState(false)
   const [saving, setSaving] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
 
@@ -42,16 +43,20 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
   async function handleSave() {
     if (!content.trim() || !userId) return
     setSaving(true)
+    const now = new Date().toISOString()
     const { error } = await supabase.from('player_notes').insert({
       campaign_id: campaignId,
       user_id: userId,
       title: title.trim() || null,
       content: content.trim(),
+      submitted_to_summary: submitOnSave,
+      submitted_at: submitOnSave ? now : null,
     })
     if (error) console.error('[PlayerNotes] insert error:', error.message)
     else {
       setTitle('')
       setContent('')
+      setSubmitOnSave(false)
       setShowAdd(false)
       await load()
     }
@@ -99,6 +104,11 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title (optional)" style={inp} />
           <textarea value={content} onChange={e => setContent(e.target.value)} placeholder="Your notes for this session..." rows={6} style={{ ...inp, resize: 'vertical' }} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: submitOnSave ? '#7fc458' : '#7ab3d4', cursor: 'pointer', padding: '4px 2px' }}>
+            <input type="checkbox" checked={submitOnSave} onChange={e => setSubmitOnSave(e.target.checked)}
+              style={{ width: '14px', height: '14px', accentColor: '#7fc458', cursor: 'pointer' }} />
+            Append to GM's session summary
+          </label>
           <button onClick={handleSave} disabled={saving || !content.trim()}
             style={{ padding: '6px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, alignSelf: 'flex-start' }}>
             {saving ? 'Saving...' : 'Save'}
