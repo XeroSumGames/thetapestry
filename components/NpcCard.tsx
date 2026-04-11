@@ -175,7 +175,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', marginBottom: '4px' }}>
           {skillEntries.filter(s => s.name).map((s, i) => (
             <span key={i} onClick={() => handleSkillRoll(s.name, s.level)}
-              style={{ fontSize: '11px', padding: '0 4px', background: s.level > 0 ? '#1a2e10' : '#242424', border: `1px solid ${s.level > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '2px', color: s.level > 0 ? '#7fc458' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: onRoll ? 'pointer' : 'default' }}>
+              style={{ fontSize: '13px', padding: '0 4px', background: s.level > 0 ? '#1a2e10' : '#242424', border: `1px solid ${s.level > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '2px', color: s.level > 0 ? '#7fc458' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: onRoll ? 'pointer' : 'default' }}>
               {s.name} {sgn(s.level)}
             </span>
           ))}
@@ -188,7 +188,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
             ].filter(s => !existing.has(s.name))
             return combatSkills.map(s => (
               <span key={s.name} onClick={() => handleSkillRoll(s.name, getSkillLevel(s.name))}
-                style={{ fontSize: '11px', padding: '0 4px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>
+                style={{ fontSize: '13px', padding: '0 4px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>
                 {s.label} {sgn(getSkillLevel(s.name))}
               </span>
             ))
