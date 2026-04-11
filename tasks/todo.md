@@ -27,9 +27,10 @@
 - [ ] Manipulation rolls should auto-include First Impression CMod
 - [ ] Add to Combat modal should filter NPCs already in initiative
 - [ ] Self-attack should apply damage to self
-- [ ] **Auto-advance after 2 actions** — diagnostic logging in place on `closeRollModal` / `consumeAction` / `nextTurn`. Next test session: make 2 actions, copy console output starting with `[closeRollModal]` etc.
-- [ ] **Damage display still broken** — NPC HP not updating after damage. Diagnostic logging now in place on the damage path (`[damage] target lookup`, `[damage] PC/NPC target ...`, `[damage] update returned N rows`). User reported empty console on last test — likely cached JS. Re-test in incognito with DevTools "Disable cache" on, copy the `[damage]` lines.
-- [ ] **Roll modal stuck "Rolling..." for 55s** + **roll result delayed 30s into Logs** — likely same root cause as damage display. Investigate after damage is fixed.
+- [ ] **Auto-advance after 2 actions** — diagnostic logging landed and working in production (next.config was stripping console.log, switched to console.warn). Logs show consumeAction fires and nextTurn is called correctly. Next test: actually watch the active highlight after second action and confirm it visibly advances.
+- [ ] **NPC HP display lags until refresh** — PC→NPC damage DB update succeeds (confirmed `returned 1 rows`), but the optimistic setRosterNpcs/setCampaignNpcs/setViewingNpcs update isn't rendering until the user refreshes. Likely the campaign_npcs realtime self-event isn't firing reliably. Investigate the campaign_npcs subscription and/or force a rosterNpcs refetch after damage lands.
+- [ ] **Roll modal stuck "Rolling..." for 55s** + **roll result delayed 30s into Logs** — still to investigate. Previously thought it was the same root cause as damage; now that damage is fixed, may be independent. Re-test after HP display fix.
+- [x] **Damage bidirectional** — PC→NPC and NPC→PC both work. Root cause was silent RLS rejection on `character_states` and `campaign_npcs` UPDATE policies. Fixed via `sql/character-states-rls-fix.sql` and `sql/campaign-npcs-rls-fix.sql` plus explicit `.select()` on both updates to detect 0-row cases. Biggest diagnostic unlock: `next.config.ts` `compiler.removeConsole` was stripping every `console.log` from production — switched diagnostic logs to `console.warn` to survive the build.
 - [x] Player join 20s → 1-2s — RLS index fix (`sql/campaign-members-indexes.sql`) and `log-visit` edge function unblock
 - [x] Combat start 15s → fast (verified by user)
 - [x] PCs showing "Unknown" — characters/profiles cross-user RLS (`sql/character-profile-rls-fix.sql`)
