@@ -1,59 +1,72 @@
-# Test Plan: Region filter buttons (District Zero / Chased / Mongrels)
+# Test Plan — Unified `/dashboard` tab host
 
-## 1. Start the dev server
+## What changed
+- New `components/TerminalFrame.tsx` renders the fixed chrome: title bar + left panel (ACTIVE OPERATOR / OPERATOR STATUS / SYSTEM STATUS / QUICK ACCESS) + right panel (SECTOR MAP / THE TERMINAL / MY OPERATIONS). Center column is children.
+- `components/TerminalTitleBar.tsx` tabs now all point at `/dashboard?tab=<name>`. Active tab is driven by a new `activeTab` prop (no more `useSearchParams` inside TitleBar).
+- `app/dashboard/page.tsx` rewritten as the unified host. Reads `?tab=` and swaps center content:
+  - `terminal` (default) → old dashboard center (ACTIVE OPERATION / roll log / comms log)
+  - `starchart` → `DisplacedStarMap` filling the center column, with Travel Calculator overlay
+  - `operations` / `roster` / `tools` → placeholder stubs
+- Legacy `/terminal` and `/starmap` pages still exist and still render via direct URL, but no longer highlight a tab.
 
-```
-npm run dev
-```
+## Prerequisites
+1. Open a terminal in `C:\theTableau`
+2. Start the dev server (e.g. `powershell -File dev-server.ps1`)
+3. Wait for "Ready on http://localhost:PORT"
 
-Open the campaign map page that renders `MapView` (e.g. `http://localhost:3000/`).
+## Golden path tests
 
-## 2. Visual: button styling matches the chips above
+### 1. Default tab loads Terminal content
+- Navigate to `http://localhost:PORT/dashboard`
+- **Expect:** URL stays `/dashboard`. Frame renders. Left panel shows ACTIVE OPERATOR card (Korr, Aanya) and OPERATOR STATUS stats. Right panel shows SECTOR MAP + THE TERMINAL feed. Center shows ALERT banner, ACTIVE OPERATION card, RECENT ROLLS, COMMS LOG. Top nav shows "TERMINAL" tab highlighted cyan.
 
-1. Open the **Filters** sidebar (left rail).
-2. Locate the bottom row: `DISTRICT ZERO (N)`, `CHASED (N)`, `MONGRELS (N)`.
-3. Confirm each shows a count in parentheses (e.g. `MONGRELS (37)`) — same format as `CANON (19)` etc.
-4. Confirm all three start **inactive** (grey border `#3a3a3a`, dark grey background `#242424`, muted text `#d4cfc9`).
+### 2. Switch to Star Chart
+- Click "STAR CHART" tab
+- **Expect:** URL becomes `/dashboard?tab=starchart`. Left and right panels are **unchanged** (exact same frame). Center column now shows the interactive star map filling the center area with the Travel Calculator overlay in the top-left of the center column. "STAR CHART" tab is highlighted cyan. Status bar reads "STAR CHART — THE REACH // 29 SYSTEMS..."
 
-## 3. Toggle behavior — single region
+### 3. Star Chart functionality inside the frame
+- Click two stars on the map
+- **Expect:** Travel Calculator picks up origin + destination, shows route, distances, and drive comparison (BK / Galileo MK1 / Galileo MK2). Route highlight renders on the map. "CLEAR ROUTE" resets.
 
-1. Click `MONGRELS`. Expect:
-   - Button flips to active style (red border `#c0392b`, dark red background `#2a1210`, salmon text `#f5a89a`) — same as the active row 2 chips.
-   - Map flies to the Mongrels area (lat 38, lng -112, zoom 5).
-   - Sidebar pin list narrows to only pins whose lat is between 33–46 and lng is between -113.5 and -110.5.
-2. Click `MONGRELS` again. Expect:
-   - Button returns to inactive style.
-   - Map does **not** fly anywhere on deactivation.
-   - Sidebar pin list returns to whatever the chip filters above produce.
+### 4. Switch to Operations / Roster / Tools
+- Click each tab
+- **Expect:** URL updates to `?tab=operations`, `?tab=roster`, `?tab=tools`. Frame (left + right panels) is unchanged. Center shows placeholder "OPERATIONS // CONTENT PENDING" etc. Correct tab highlighted.
 
-## 4. Toggle behavior — multiple regions (union)
+### 5. Switch back to Terminal
+- Click "TERMINAL" tab
+- **Expect:** URL becomes `/dashboard?tab=terminal`. Center returns to ACTIVE OPERATION content. No flicker in left/right panels.
 
-1. Activate `DISTRICT ZERO` and `CHASED` together.
-2. Sidebar list should now show pins from **both** regions (union), still intersected with whatever chips above are active.
-3. Counts in `(N)` next to each region button do not change as you toggle — they always show the total number of pins in that region.
+## Edge cases
 
-## 5. Interaction with existing chip filters
+### 6. Deep link to Star Chart
+- Paste `http://localhost:PORT/dashboard?tab=starchart` directly in browser
+- **Expect:** Page loads straight to Star Chart tab with map + overlay.
 
-1. Activate `MINE` only in row 1 (deactivate `ALL` if needed) and activate `MONGRELS`.
-2. Expect: only **your** pins inside the Mongrels bounding box appear in the sidebar.
-3. Switch row 1 to `PUBLIC` only and keep `MONGRELS` on. Expect: only approved pins inside Mongrels.
+### 7. Bogus tab value
+- Navigate to `http://localhost:PORT/dashboard?tab=doesnotexist`
+- **Expect:** Falls back to Terminal tab content (default case in switch). No crash.
 
-## 6. Persistence (signed-in user)
+### 8. Legacy routes still work
+- Navigate to `http://localhost:PORT/terminal` → old `/terminal` page renders unchanged, no tab highlighted.
+- Navigate to `http://localhost:PORT/starmap` → old full-screen star map page still renders.
 
-1. Activate `CHASED`, refresh the page.
-2. Expect: `CHASED` is still active after reload (persisted to `localStorage` under key `tapestry_pin_regions`).
-3. Sign out / open as a Ghost (unauthenticated). Expect: regions reset to none and the timeline-only filter takes over as before.
+### 9. Frame state persists across tab switches
+- On Star Chart, click two stars to set a route.
+- Switch to Terminal tab, then back to Star Chart.
+- **Expect:** Route resets (StarChartTabContent unmounts on tab switch). This is **expected** — noting it in case we want to lift state later.
 
-## 7. Empty / out-of-bounds case
+### 10. Browser back button
+- Click Terminal → Star Chart → Operations → press browser Back twice
+- **Expect:** Goes Operations → Star Chart → Terminal.
 
-1. Activate all three region buttons.
-2. The sidebar list should be the union of pins in District Zero + Chased + Mongrels bounding boxes only.
-3. A pin you create in, say, Tokyo should **not** appear in the sidebar while any region is active.
+## Regression checks
+- [ ] No console errors on any tab
+- [ ] Title bar clock ticks every second on all tabs
+- [ ] Scanline overlay still visible on all tabs
+- [ ] Navigating to `/welcome` or other app pages still works (TerminalTitleBar refactor didn't break anything)
+- [ ] `notepad C:\theTableau\app\terminal\page.tsx` — sanity-check it still compiles
 
-## 8. Regression checks
-
-- Row 1 chips (`SHOW`, `MINE`, `ALL`, `PUBLIC`) still toggle as before.
-- Row 2 chips (`CANON`, `RUMORS`, `TIMELINE`) still toggle and persist as before.
-- Sort: Date ⇄ A–Z still works.
-- Pin search box still filters by title/notes/category.
-- Map markers themselves are unaffected (existing behavior — chip + region filters only narrow the sidebar list).
+## If something breaks
+- Build-time `useSearchParams must be wrapped in Suspense` error → `DashboardHost` is already wrapped. If this fires for another component, check for stray `useSearchParams` calls.
+- Star map too small / clipped → `DisplacedStarMap` uses 100% of its container via ResizeObserver; check the parent `<div style={{ position: 'absolute', inset: 0 }}>` in `StarChartTabContent`.
+- Tabs highlight wrong → `activeTab` is passed from `DashboardHost` → `TerminalFrame` → `TerminalTitleBar`. Check the chain.
