@@ -7,7 +7,7 @@ Last updated: 2026-04-11
 
 - [ ] **VERIFY + APPLY `sql/initiative-order-rls-members-write.sql`** — player "Nana" took 2 attacks but initiative did not advance. Theory: RLS on `initiative_order` blocks player-client UPDATEs, so `consumeAction` and `nextTurn` writes silently fail (Supabase returns `{error}` without throwing, code only `console.warn`s it). Verify by opening DevTools console on the player client, doing two attacks, and watching for `[consumeAction] update error:` or `[nextTurn] deactivate error:`. If confirmed, run the migration in Supabase SQL Editor. Also watch for the pattern `[consumeAction] newRemaining: 1` logging twice in a row (same number on attack 1 and attack 2) — that's the same RLS symptom.
 - [ ] **APPLY `sql/player-notes-session-tag.sql`** — adds `session_number` column + BEFORE INSERT trigger so player notes only append to the session summary they were written in. Code in `page.tsx` end-session fetch already filters `.eq('session_number', sessionCount)`. Migration needs to be run in Supabase before the feature works end-to-end.
-- [ ] `tasks/testplan.md` got overwritten by content from a different project (`C:\theTableau` — dashboard tabs / star map). Decide whether to restore the Tapestry test plan or discard the file.
+- [ ] On the **old machine only**, `tasks/testplan.md` got overwritten locally by content from a different project (`C:\theTableau` — dashboard tabs / star map). That change was never committed. The home-machine checkout will have the last-committed Tapestry test plan (region filter buttons) — not a concern for pickup, but don't accidentally resurrect the wrong content.
 
 ---
 
