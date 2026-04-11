@@ -680,14 +680,14 @@ export default function TablePage() {
   }
 
   async function nextTurn() {
-    console.log('[nextTurn] called')
+    console.warn('[nextTurn] called')
     // Fetch fresh initiative order from DB to avoid stale state
     const { data: freshOrder, error: orderErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false })
     if (orderErr) console.warn('[nextTurn] order fetch error:', orderErr.message)
     const order = freshOrder ?? initiativeOrder
     if (order.length === 0) { console.warn('[nextTurn] empty order, bailing'); return }
     const currentIdx = order.findIndex((e: any) => e.is_active)
-    console.log('[nextTurn] currentIdx:', currentIdx, 'order length:', order.length, 'active name:', order[currentIdx]?.character_name)
+    console.warn('[nextTurn] currentIdx:', currentIdx, 'order length:', order.length, 'active name:', order[currentIdx]?.character_name)
 
     // New round when wrapping — re-roll initiative + decrement death countdowns
     if (currentIdx === order.length - 1) {
@@ -768,7 +768,7 @@ export default function TablePage() {
 
     // Deactivate current + activate next
     const currentEntry = order.find((e: any) => e.is_active)
-    console.log('[nextTurn] deactivating:', currentEntry?.character_name, '→ activating:', order[nextIdx]?.character_name)
+    console.warn('[nextTurn] deactivating:', currentEntry?.character_name, '→ activating:', order[nextIdx]?.character_name)
     if (currentEntry) {
       const { error: deactErr } = await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('id', currentEntry.id)
       if (deactErr) console.warn('[nextTurn] deactivate error:', deactErr.message)
@@ -784,11 +784,11 @@ export default function TablePage() {
     const { data: freshEntry, error: freshErr } = await supabase.from('initiative_order').select('*').eq('id', entryId).single()
     if (freshErr) console.warn('[consumeAction] fetch error:', freshErr.message)
     const entry = freshEntry ?? initiativeOrder.find(e => e.id === entryId)
-    console.log('[consumeAction] entryId:', entryId, 'entry:', entry, 'cost:', cost, 'label:', actionLabel)
+    console.warn('[consumeAction] entryId:', entryId, 'entry:', entry, 'cost:', cost, 'label:', actionLabel)
     if (!entry) { console.warn('[consumeAction] no entry found, bailing'); return }
     if ((entry.actions_remaining ?? 0) < cost) { console.warn('[consumeAction] actions_remaining', entry.actions_remaining, '< cost', cost, '— bailing'); return }
     const newRemaining = (entry.actions_remaining ?? 0) - cost
-    console.log('[consumeAction] newRemaining:', newRemaining)
+    console.warn('[consumeAction] newRemaining:', newRemaining)
 
     // Log the action to game feed
     if (actionLabel) {
@@ -807,7 +807,7 @@ export default function TablePage() {
     const clearAim = !actionLabel && entry.aim_bonus > 0
 
     if (newRemaining <= 0) {
-      console.log('[consumeAction] newRemaining<=0 → calling nextTurn')
+      console.warn('[consumeAction] newRemaining<=0 → calling nextTurn')
       await nextTurn()
     } else {
       const { error: updErr } = await supabase.from('initiative_order').update({ actions_remaining: newRemaining, ...(clearAim ? { aim_bonus: 0 } : {}) }).eq('id', entryId)
@@ -1347,12 +1347,12 @@ export default function TablePage() {
       }
 
       // Auto-apply damage to target (PC or NPC)
-      console.log('[damage] target lookup:', { targetName, targetEntry: !!targetEntry, hasLiveState: !!targetEntry?.liveState, targetNpc: !!targetNpc, finalWP, finalRP })
+      console.warn('[damage] target lookup:', { targetName, targetEntry: !!targetEntry, hasLiveState: !!targetEntry?.liveState, targetNpc: !!targetNpc, finalWP, finalRP })
       if (targetEntry?.liveState) {
         // PC target — use character_states
         const newWP = Math.max(0, targetEntry.liveState.wp_current - finalWP)
         const newRP = Math.max(0, targetEntry.liveState.rp_current - finalRP)
-        console.log('[damage] PC target', targetEntry.character.name, 'WP:', targetEntry.liveState.wp_current, '→', newWP, 'RP:', targetEntry.liveState.rp_current, '→', newRP)
+        console.warn('[damage] PC target', targetEntry.character.name, 'WP:', targetEntry.liveState.wp_current, '→', newWP, 'RP:', targetEntry.liveState.rp_current, '→', newRP)
 
         if (newWP === 0 && targetEntry.liveState.wp_current > 0 && (targetEntry.liveState.insight_dice ?? 0) > 0) {
           const { error: csErr } = await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId)
@@ -1384,14 +1384,14 @@ export default function TablePage() {
         const npcRP = targetNpc.rp_current ?? targetNpc.rp_max ?? 6
         const newWP = Math.max(0, npcWP - finalWP)
         const newRP = Math.max(0, npcRP - finalRP)
-        console.log('[damage] NPC target', targetNpc.name, 'id:', targetNpc.id, 'WP:', npcWP, '→', newWP, 'RP:', npcRP, '→', newRP)
+        console.warn('[damage] NPC target', targetNpc.name, 'id:', targetNpc.id, 'WP:', npcWP, '→', newWP, 'RP:', npcRP, '→', newRP)
         const { error: npcUpdErr, data: npcUpdData } = await supabase
           .from('campaign_npcs')
           .update({ wp_current: newWP, rp_current: newRP })
           .eq('id', targetNpc.id)
           .select()
         if (npcUpdErr) console.error('[damage] campaign_npcs update error:', npcUpdErr.message)
-        else console.log('[damage] campaign_npcs update returned', npcUpdData?.length, 'rows')
+        else console.warn('[damage] campaign_npcs update returned', npcUpdData?.length, 'rows')
         // Optimistic local update — don't wait for the realtime callback to
         // refresh rosterNpcs/campaignNpcs/viewingNpcs.
         const patch = { wp_current: newWP, rp_current: newRP }
@@ -1522,14 +1522,14 @@ export default function TablePage() {
     setPendingRoll(null)
     setRollResult(null)
 
-    console.log('[closeRollModal] rolledResult:', !!rolledResult, 'combatActive:', combatActive)
+    console.warn('[closeRollModal] rolledResult:', !!rolledResult, 'combatActive:', combatActive)
     // Consume an action if the roller was the active combatant
     if (rolledResult && combatActive) {
       // Re-fetch active entry from DB to avoid stale closure state
       const { data: freshOrder, error: foErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).eq('is_active', true).limit(1)
       if (foErr) console.warn('[closeRollModal] active fetch error:', foErr.message)
       const activeEntry = freshOrder?.[0]
-      console.log('[closeRollModal] activeEntry:', activeEntry?.character_name, 'user_id:', activeEntry?.user_id, 'me:', userId, 'isGM:', isGM, 'is_npc:', activeEntry?.is_npc)
+      console.warn('[closeRollModal] activeEntry:', activeEntry?.character_name, 'user_id:', activeEntry?.user_id, 'me:', userId, 'isGM:', isGM, 'is_npc:', activeEntry?.is_npc)
       if (activeEntry) {
         const isMyTurn = activeEntry.user_id === userId
         const isGMRollingNPC = isGM && activeEntry.is_npc
@@ -1802,7 +1802,7 @@ export default function TablePage() {
             const isMyTurn = !!(activeEntry.character_id && myChar && activeEntry.character_id === myChar.character.id)
             const canAct = isMyTurn || isGM
             if (!canAct) return null
-            console.log('[CombatActions]', { isMyTurn, isGM, activeChar: activeEntry.character_name, myCharId: myChar?.character.id, activeCharId: activeEntry.character_id, userId })
+            console.warn('[CombatActions]', { isMyTurn, isGM, activeChar: activeEntry.character_name, myCharId: myChar?.character.id, activeCharId: activeEntry.character_id, userId })
 
             // Determine combatant's weapon for conditional buttons
             const charEntry = entries.find(e => e.character.name === activeEntry.character_name)
