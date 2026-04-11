@@ -275,6 +275,8 @@
 - [x] Pin card attachments — images inline, documents as download links, public bucket
 - [ ] Parent/child pin structure — rumor about a specific building within a landmark
 - [ ] Immutable canon layer — Thriver-set pins only, cannot be edited by others
+- [ ] **Map search predictive results — prioritize US locations** — currently Nominatim returns global results in arbitrary order; bias the autocomplete to US first (use `countrycodes=us` as a primary query, fall back to global if no matches)
+- [ ] **Players can drop pins on the /table campaign map** — currently the "+ Pin" button in `CampaignMap.tsx` is gated on `isGM`; let players place their own pins (probably starts as `revealed=false` from the GM's POV until the GM approves, or as a separate "player-suggested" category)
 
 ---
 
