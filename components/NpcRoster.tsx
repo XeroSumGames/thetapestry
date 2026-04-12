@@ -144,6 +144,7 @@ interface Props {
   viewingNpcIds?: Set<string>
   editNpcId?: string | null
   onEditStarted?: () => void
+  externalNpcs?: CampaignNpc[]    // Parent's optimistic NPC state — syncs HP/status without waiting for realtime
 }
 
 const emptyForm = {
@@ -154,7 +155,7 @@ const emptyForm = {
   weapon: null as any,
 }
 
-export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted }: Props) {
+export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs }: Props) {
   const supabase = createClient()
   const [npcs, setNpcs] = useState<CampaignNpc[]>([])
   const [loading, setLoading] = useState(true)
@@ -210,6 +211,28 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
 
     return () => { supabase.removeChannel(channel) }
   }, [campaignId, isGM])
+
+  // Sync HP/status from parent's optimistic state so damage appears instantly
+  useEffect(() => {
+    if (!externalNpcs || externalNpcs.length === 0) return
+    setNpcs(prev => {
+      if (prev.length === 0) return prev
+      let changed = false
+      const next = prev.map(n => {
+        const ext = externalNpcs.find(e => e.id === n.id)
+        if (!ext) return n
+        if (ext.wp_current !== n.wp_current || ext.rp_current !== n.rp_current ||
+            ext.death_countdown !== n.death_countdown || ext.incap_rounds !== n.incap_rounds ||
+            ext.status !== n.status) {
+          changed = true
+          return { ...n, wp_current: ext.wp_current, rp_current: ext.rp_current,
+            death_countdown: ext.death_countdown, incap_rounds: ext.incap_rounds, status: ext.status }
+        }
+        return n
+      })
+      return changed ? next : prev
+    })
+  }, [externalNpcs])
 
   useEffect(() => {
     if (editNpcId && npcs.length > 0) {
@@ -322,7 +345,13 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   const [revealIds, setRevealIds] = useState<Set<string>>(new Set())
   const [revealLevel, setRevealLevel] = useState<'name_portrait' | 'name_portrait_role'>('name_portrait')
 
-  const availableForCombat = npcs.filter(n => n.status === 'active' && !initiativeNpcIds?.has(n.id))
+  const availableForCombat = npcs.filter(n => {
+    if (n.status !== 'active' || initiativeNpcIds?.has(n.id)) return false
+    // Exclude dead NPCs (WP=0 and death countdown expired)
+    const wp = n.wp_current ?? n.wp_max ?? 10
+    if (wp === 0 && n.death_countdown != null && n.death_countdown <= 0) return false
+    return true
+  })
 
   function handleAddToCombat() {
     const selected = npcs.filter(n => combatPickerIds.has(n.id))
@@ -602,16 +631,29 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
               // During combat, float NPCs that are in initiative to the top in
               // turn order, with the active combatant first. The rest preserve
               // their existing sort_order order.
+              const isDead = (n: CampaignNpc) => {
+                const wp = n.wp_current ?? n.wp_max ?? 10
+                return n.status === 'dead' || (wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+              }
               if (combatActive && initiativeNpcOrder && initiativeNpcOrder.length > 0) {
                 const idIdx = new Map(initiativeNpcOrder.map((id, i) => [id, i]))
                 return [...npcs].sort((a, b) => {
+                  // Dead NPCs always last
+                  const ad = isDead(a) ? 1 : 0
+                  const bd = isDead(b) ? 1 : 0
+                  if (ad !== bd) return ad - bd
                   const ai = idIdx.has(a.id) ? idIdx.get(a.id)! : Infinity
                   const bi = idIdx.has(b.id) ? idIdx.get(b.id)! : Infinity
                   if (ai !== bi) return ai - bi
                   return 0
                 })
               }
-              return npcs
+              // Non-combat: dead NPCs sink to bottom
+              return [...npcs].sort((a, b) => {
+                const ad = isDead(a) ? 1 : 0
+                const bd = isDead(b) ? 1 : 0
+                return ad - bd
+              })
             })().map(npc => {
               const sc = STATUS_COLORS[npc.status] ?? STATUS_COLORS.active
               return (
@@ -653,7 +695,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: revealedNpcIds.has(npc.id) ? '#2a1210' : '#1a2e10', border: `1px solid ${revealedNpcIds.has(npc.id) ? '#c0392b' : '#2d5a1b'}`, color: revealedNpcIds.has(npc.id) ? '#f5a89a' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                       {revealedNpcIds.has(npc.id) ? 'Hide' : 'Show'}
                     </button>
-                    {combatActive && !initiativeNpcIds?.has(npc.id) && (
+                    {combatActive && !initiativeNpcIds?.has(npc.id) && !((npc.wp_current ?? npc.wp_max ?? 10) === 0 && npc.death_countdown != null && npc.death_countdown <= 0) && (
                       <button onClick={e => { e.stopPropagation(); onAddToCombat?.([npc]) }}
                         style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: '#7a1f16', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                         Fight

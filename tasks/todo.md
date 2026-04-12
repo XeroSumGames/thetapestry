@@ -27,8 +27,8 @@
 - [ ] Manipulation rolls should auto-include First Impression CMod
 - [ ] Add to Combat modal should filter NPCs already in initiative
 - [ ] Self-attack should apply damage to self
-- [ ] **Auto-advance after 2 actions** — previous session confirmed consumeAction fires and nextTurn is called correctly *on GM-issued attacks*. 2026-04-11 session reproduced the bug with player Nana: she took 2 attacks, initiative never advanced. Strong suspicion this is **RLS on `initiative_order`** — player client tries to UPDATE actions_remaining, RLS blocks it, Supabase returns `{error}` without throwing, code only `console.warn`s the error, so visibly nothing happens. Added `sql/initiative-order-rls-members-write.sql` — grants UPDATE/SELECT/INSERT on initiative_order to campaign members (DELETE stays GM-only). **Next machine**: (1) open DevTools console on the player client, (2) do two attacks, (3) watch for `[consumeAction] update error:` / `[nextTurn] deactivate error:` / `[nextTurn] activate error:` OR for `[consumeAction] newRemaining: 1` logging twice in a row, (4) if any of those appear, run the migration in Supabase SQL Editor; if not, dig deeper.
-- [ ] **NPC HP display lags until refresh** — PC→NPC damage DB update succeeds (confirmed `returned 1 rows`), but the optimistic setRosterNpcs/setCampaignNpcs/setViewingNpcs update isn't rendering until the user refreshes. Likely the campaign_npcs realtime self-event isn't firing reliably. Investigate the campaign_npcs subscription and/or force a rosterNpcs refetch after damage lands.
+- [x] **Auto-advance after 2 actions** — root causes: (1) consumeAction didn't write actions_remaining=0 to DB before calling nextTurn, (2) closeRollModal used rollResult state (subject to React batching/stale closures) — switched to rollExecutedRef, (3) Charge/Rapid Fire/Stabilize double-consumed via closeRollModal — added actionPreConsumedRef flag, (4) nextTurn had no fallback when no active entry found in DB
+- [x] **NPC HP display lags until refresh** — NpcRoster had no realtime subscription on campaign_npcs; added Supabase realtime channel that calls loadNpcs() on any change
 - [ ] **Roll modal stuck "Rolling..." for 55s** + **roll result delayed 30s into Logs** — still to investigate. Previously thought it was the same root cause as damage; now that damage is fixed, may be independent. Re-test after HP display fix.
 - [x] **Damage bidirectional** — PC→NPC and NPC→PC both work. Root cause was silent RLS rejection on `character_states` and `campaign_npcs` UPDATE policies. Fixed via `sql/character-states-rls-fix.sql` and `sql/campaign-npcs-rls-fix.sql` plus explicit `.select()` on both updates to detect 0-row cases. Biggest diagnostic unlock: `next.config.ts` `compiler.removeConsole` was stripping every `console.log` from production — switched diagnostic logs to `console.warn` to survive the build.
 - [x] Player join 20s → 1-2s — RLS index fix (`sql/campaign-members-indexes.sql`) and `log-visit` edge function unblock
@@ -41,7 +41,7 @@
 - [x] Show All / Hide All toggle on NPCs tab (always visible, disabled with tooltip when no players)
 - [x] Select All / Deselect All toggle in Start Combat NPC picker
 - [x] NPC tab reorders during combat — active combatant on top, rotating in turn order
-- [x] Players see right-side asset panel with revealed NPCs
+- [x] Players see right-side asset panel with revealed NPCs + any NPCs in combat (auto-merged, "In Combat" label)
 - [x] Players have own Notes tab with "Add to Session Summary" — appended notes prefix with character name in GM's End Session modal
 - [x] Player bar reorders so each viewer sees their own character next to GM portrait
 - [x] Open NpcCard refreshes when underlying NPC HP changes
@@ -96,9 +96,12 @@
 - [x] 4 combat skill buttons on PC card
 - [x] Weapon jam/degrade on Moment of Low Insight
 - [x] Aim/social bonus badges on initiative tracker (+1/-1)
-- [x] Status badges: 💀 Dead, 🩸 Mortally Wounded, 💤 Unconscious, ⚡ Stressed
+- [x] Status badges: 💀 Dead, 🩸 Mortally Wounded, 💤 Unconscious, ⚡ Stressed (PCs + NPCs)
 - [x] Instant combat end broadcast to players
 - [x] Instant turn change broadcast to players (turn_changed event)
+- [x] Initiative bar hides combatants who already acted — only shows active + waiting until next round
+- [x] All combat rolls (weapon + skill) gated on active combatant with actions remaining
+- [x] PC weapon attack labels include character name (consistent with NPC format)
 - [x] NPC target dropdown — fix false-dead filter for NPCs with null wp_current
 - [x] Default feed tab opens on Logs (not Both)
 - [x] Both tab merges rolls + chat chronologically (was sequential blocks)
@@ -122,7 +125,8 @@
 - [x] RP auto-recovery: 1 per round for conscious characters below max
 - [x] WP reaches 0 → Mortally Wounded with death countdown (4+PHY rounds per SRD)
 - [x] Death countdown decrements each round, reaches 0 → Dead
-- [x] Stabilize mechanic — Medicine roll, success → incapacitated 1d6-PHY rounds, then 1 WP + 1 RP
+- [x] Stabilize mechanic — Medicine roll, success → incapacitated 1d6-PHY rounds, then 1 WP + 1 RP (PCs + NPCs)
+- [x] NPC mortal wounds — death_countdown (4+PHY), incap_rounds, badges, turn skip, stabilize button
 - [x] Death prevention via Insight Die — trade ALL dice, regain 1 WP + 1 RP (per SRD)
 - [x] Lasting Wounds — PHY check first, Table 12 only on failure (per SRD)
 - [x] Healing rates — Rest button with hours/days/weeks, SRD rates (1 WP/day, 1 WP/2 days mortally wounded, 1 RP/hour)
@@ -403,6 +407,11 @@
 - [ ] Extract shared XSE engine into @xse/core monorepo — character system, campaign system, table surface shared across platforms
 - [ ] Each setting gets own domain, branding, and map layer built on shared core
 - [ ] Long-term: Tapestry becomes the proof of concept for the XSE platform family
+
+---
+
+## 🔵 Phase 11 — Cross-Platform Parity
+- [ ] **Campaign Calendar** — date-gated lore events, GM-controlled include/ignore/pending states. Build for Displaced first, backport to Tapestry using same schema pattern if player demand exists. Potential Distemper uses: seasonal/anniversary events tied to collapse timeline, campaign duration tracking, faction state changes over time. Schema: `campaign_date timestamptz` on campaigns table (default year TBD — confirm canonical Distemper present year).
 
 ---
 

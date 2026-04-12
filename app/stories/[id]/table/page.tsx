@@ -413,7 +413,11 @@ export default function TablePage() {
       ])
       const cnpcs = cnpcsResult.data ?? []
       setCampaignNpcs(cnpcs)
-      setRosterNpcs(cnpcs.filter((n: any) => n.status === 'active'))
+      setRosterNpcs(cnpcs.filter((n: any) => {
+          if (n.status !== 'active') return false
+          const wp = n.wp_current ?? n.wp_max ?? 10
+          return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+        }))
       if (pubDataResult.data) setPublishedNpcIds(new Set(pubDataResult.data.map((d: any) => d.source_campaign_npc_id!)))
 
       // Load revealed NPCs — GM sees all, players see their own
@@ -469,7 +473,7 @@ export default function TablePage() {
 
       initChannelRef.current = supabase.channel(`initiative_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
-        .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false) })
+        .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]) })
         .on('broadcast', { event: 'combat_started' }, () => { loadInitiative(id); loadRolls(id) })
         .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id); loadRolls(id) })
         // Players' postgres_changes subscription on npc_relationships is
@@ -481,7 +485,11 @@ export default function TablePage() {
           const freshList = fresh ?? []
           if (freshList.length > 0) {
             setCampaignNpcs(freshList)
-            setRosterNpcs(freshList.filter((n: any) => n.status === 'active'))
+            setRosterNpcs(freshList.filter((n: any) => {
+              if (n.status !== 'active') return false
+              const wp = n.wp_current ?? n.wp_max ?? 10
+              return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+            }))
           }
           loadRevealedNpcs(myCharIdRef.current, freshList)
         })
@@ -504,7 +512,11 @@ export default function TablePage() {
           const { data: cnpcs } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
           if (cnpcs) {
             setCampaignNpcs(cnpcs)
-            setRosterNpcs(cnpcs.filter((n: any) => n.status === 'active'))
+            setRosterNpcs(cnpcs.filter((n: any) => {
+          if (n.status !== 'active') return false
+          const wp = n.wp_current ?? n.wp_max ?? 10
+          return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+        }))
           }
         })
         .subscribe()
@@ -551,8 +563,12 @@ export default function TablePage() {
       .eq('campaign_id', id)
       .eq('status', 'active')
       .order('name')
-    setRosterNpcs(roster ?? [])
-    setSelectedNpcIds(new Set((roster ?? []).map((n: any) => n.id)))
+    const aliveRoster = (roster ?? []).filter((n: any) => {
+      const wp = n.wp_current ?? n.wp_max ?? 10
+      return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+    })
+    setRosterNpcs(aliveRoster)
+    setSelectedNpcIds(new Set(aliveRoster.map((n: any) => n.id)))
     setShowNpcPicker(true)
   }
 
@@ -608,6 +624,7 @@ export default function TablePage() {
         roll,
         is_active: false,
         is_npc: false,
+        actions_remaining: 2,
       }
     })
 
@@ -633,6 +650,7 @@ export default function TablePage() {
           roll,
           is_active: false,
           is_npc: true,
+          actions_remaining: 2,
         }
       })
 
@@ -723,6 +741,14 @@ export default function TablePage() {
         // Death countdown
         if (ls.wp_current === 0 && ls.death_countdown != null && ls.death_countdown > 0) {
           updates.death_countdown = ls.death_countdown - 1
+          if (ls.death_countdown - 1 <= 0) {
+            await supabase.from('roll_log').insert({
+              campaign_id: id, user_id: userId,
+              character_name: 'Death is in the air',
+              label: `💀 ${e.character.name} has died.`,
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action',
+            })
+          }
         }
         // Incapacitation countdown
         if (ls.incap_rounds != null && ls.incap_rounds > 0) {
@@ -752,6 +778,16 @@ export default function TablePage() {
         // Death countdown
         if ((npc.wp_current ?? npc.wp_max ?? 10) === 0 && npc.death_countdown != null && npc.death_countdown > 0) {
           updates.death_countdown = npc.death_countdown - 1
+          // NPC dies when countdown expires — mark status and log
+          if (npc.death_countdown - 1 <= 0) {
+            updates.status = 'dead'
+            await supabase.from('roll_log').insert({
+              campaign_id: id, user_id: userId,
+              character_name: 'Death is in the air',
+              label: `💀 ${npc.name} has died.`,
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action',
+            })
+          }
         }
         // Incapacitation countdown
         if (npc.incap_rounds != null && npc.incap_rounds > 0) {
@@ -933,6 +969,7 @@ export default function TablePage() {
     await supabase.from('initiative_order').delete().eq('campaign_id', id)
     setInitiativeOrder([])
     setCombatActive(false)
+    setViewingNpcs([])
     await loadRolls(id)
     initChannelRef.current?.send({ type: 'broadcast', event: 'combat_ended', payload: {} })
   }
@@ -948,6 +985,7 @@ export default function TablePage() {
       roll,
       is_active: false,
       is_npc: true,
+      actions_remaining: 2,
     })
     setNpcName('')
     setShowAddNPC(false)
@@ -966,6 +1004,7 @@ export default function TablePage() {
       roll: rollD6() + rollD6() + (n.acumen ?? 0) + (n.dexterity ?? 0),
       is_active: false,
       is_npc: true,
+      actions_remaining: 2,
     }))
     if (rows.length > 0) {
       await supabase.from('initiative_order').insert(rows)
@@ -1595,6 +1634,12 @@ export default function TablePage() {
           const update: any = { wp_current: newWP, rp_current: newRP, updated_at: new Date().toISOString() }
           if (newWP === 0 && targetEntry.liveState.wp_current > 0) {
             update.death_countdown = Math.max(1, 4 + (targetEntry.character.data?.rapid?.PHY ?? 0))
+            await supabase.from('roll_log').insert({
+              campaign_id: id, user_id: userId,
+              character_name: 'Death is in the air',
+              label: `💀 ${targetEntry.character.name} is mortally wounded by ${characterName}! ${update.death_countdown} rounds to stabilize.`,
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action',
+            })
           }
           // Set incapacitation when RP first hits 0
           if (newRP === 0 && targetEntry.liveState.rp_current > 0 && newWP > 0) {
@@ -1616,6 +1661,13 @@ export default function TablePage() {
         // Mortal wound — NPC enters death countdown when WP first hits 0
         if (newWP === 0 && npcWP > 0) {
           npcUpdate.death_countdown = Math.max(1, 4 + (targetNpc.physicality ?? 0))
+          // Log the mortal wound to the game feed
+          await supabase.from('roll_log').insert({
+            campaign_id: id, user_id: userId,
+            character_name: 'Death is in the air',
+            label: `💀 ${targetNpc.name} is mortally wounded by ${characterName}! ${npcUpdate.death_countdown} rounds to stabilize.`,
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action',
+          })
         }
         // Incapacitation — NPC loses consciousness when RP first hits 0
         if (newRP === 0 && npcRP > 0 && newWP > 0) {
@@ -1947,16 +1999,23 @@ export default function TablePage() {
               ⚔️ Initiative
             </div>
 
-            {initiativeOrder.filter(entry =>
-              // Show: active combatant, or anyone still waiting for their turn this round.
-              // Hide: combatants who already acted (is_active=false, actions_remaining=0).
-              entry.is_active || (entry.actions_remaining ?? 0) > 0
-            ).map((entry, idx) => (
+            {(() => {
+              // Rotate so active combatant is first (leftmost), rest follow in turn order
+              const activeIdx = initiativeOrder.findIndex(e => e.is_active)
+              return activeIdx >= 0
+                ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
+                : initiativeOrder
+            })().map((entry, idx) => {
+              // Green = active (has initiative), Yellow = waiting (hasn't gone yet), Red = already acted
+              const hasActed = !entry.is_active && entry.actions_remaining != null && entry.actions_remaining <= 0
+              const borderColor = entry.is_active ? '#7fc458' : hasActed ? '#c0392b' : '#EF9F27'
+              const bgColor = entry.is_active ? '#1a2e10' : hasActed ? '#1a1010' : '#1a1a1a'
+              return (
               <div key={entry.id} style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 padding: '4px 10px',
-                background: entry.is_active ? '#2a1210' : '#1a1a1a',
-                border: `1px solid ${entry.is_active ? '#c0392b' : '#2e2e2e'}`,
+                background: bgColor,
+                border: `1px solid ${borderColor}`,
                 borderRadius: '3px',
                 flexShrink: 0,
                 position: 'relative',
@@ -2043,7 +2102,7 @@ export default function TablePage() {
                     style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '12px', padding: '0 0 0 2px', lineHeight: 1 }}>×</button>
                 )}
               </div>
-            ))}
+            )})}
 
             {isGM && (
               <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
@@ -2560,24 +2619,30 @@ export default function TablePage() {
                 ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
                 : initiativeOrder
               const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
-              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc]); setSelectedEntry(null) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} />
+              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc]); setSelectedEntry(null) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} />
             })()}
             {gmTab === 'npcs' && !isGM && (() => {
-              // Merge revealed NPCs with any NPCs currently in combat
+              // Merge revealed NPCs with any NPCs currently in combat,
+              // sorted in initiative order (active combatant first) — mirrors GM view.
               const revealedIds = new Set(revealedNpcs.map((n: any) => n.id))
-              const combatNpcIds = initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!)
-              const combatOnlyNpcs = combatActive
-                ? combatNpcIds
-                    .filter(npcId => !revealedIds.has(npcId))
-                    .map(npcId => campaignNpcs.find((n: any) => n.id === npcId))
-                    .filter(Boolean)
-                    .map(npc => ({ ...npc, _combatOnly: true }))
+              const activeIdx = initiativeOrder.findIndex(e => e.is_active)
+              const rotated = activeIdx >= 0
+                ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
+                : initiativeOrder
+              const combatNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
+              const combatIdSet = new Set(combatNpcOrder)
+              // Build combat NPCs in initiative order
+              const combatNpcsInOrder = combatActive
+                ? combatNpcOrder.map(npcId => {
+                    const revealed = revealedNpcs.find((n: any) => n.id === npcId)
+                    if (revealed) return revealed
+                    const base = campaignNpcs.find((n: any) => n.id === npcId)
+                    return base ? { ...base, _combatOnly: true } : null
+                  }).filter(Boolean)
                 : []
-              const combatIdSet = new Set(combatNpcIds)
               const playerNpcs = [
-                // Combat NPCs first (in initiative order)
-                ...revealedNpcs.filter((n: any) => combatIdSet.has(n.id)),
-                ...combatOnlyNpcs,
+                // Combat NPCs first, in initiative turn order
+                ...combatNpcsInOrder,
                 // Then non-combat revealed NPCs
                 ...revealedNpcs.filter((n: any) => !combatIdSet.has(n.id)),
               ]
@@ -3105,23 +3170,35 @@ export default function TablePage() {
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '400px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
             <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Start Combat</div>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '0.5rem' }}>Select NPCs for this encounter</div>
-            {rosterNpcs.length > 0 && (() => {
-              const allSelected = rosterNpcs.every(n => selectedNpcIds.has(n.id))
-              return (
+            {(() => {
+              // Exclude dead NPCs from the combat picker
+              const aliveNpcs = rosterNpcs.filter(n => {
+                const wp = n.wp_current ?? n.wp_max ?? 10
+                const isDead = wp === 0 && n.death_countdown != null && n.death_countdown <= 0
+                return !isDead
+              })
+              const allSelected = aliveNpcs.length > 0 && aliveNpcs.every(n => selectedNpcIds.has(n.id))
+              return aliveNpcs.length > 0 ? (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{selectedNpcIds.size} of {rosterNpcs.length} selected</span>
-                  <button onClick={() => setSelectedNpcIds(allSelected ? new Set() : new Set(rosterNpcs.map(n => n.id)))}
+                  <span style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{selectedNpcIds.size} of {aliveNpcs.length} selected</span>
+                  <button onClick={() => setSelectedNpcIds(allSelected ? new Set() : new Set(aliveNpcs.map(n => n.id)))}
                     style={{ padding: '2px 8px', background: allSelected ? '#2a1210' : '#1a2e10', border: `1px solid ${allSelected ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allSelected ? '#f5a89a' : '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     {allSelected ? 'Deselect All' : 'Select All'}
                   </button>
                 </div>
-              )
+              ) : null
             })()}
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
-              {rosterNpcs.length === 0 ? (
+              {(() => {
+                const aliveNpcs = rosterNpcs.filter(n => {
+                  const wp = n.wp_current ?? n.wp_max ?? 10
+                  const isDead = wp === 0 && n.death_countdown != null && n.death_countdown <= 0
+                  return !isDead
+                })
+                return aliveNpcs.length === 0 ? (
                 <div style={{ color: '#cce0f5', fontSize: '12px', textAlign: 'center', padding: '1rem' }}>No active NPCs in roster. You can add them during combat.</div>
               ) : (
-                rosterNpcs.map(npc => (
+                aliveNpcs.map(npc => (
                   <label key={npc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', background: selectedNpcIds.has(npc.id) ? '#2a1210' : '#1a1a1a', border: `1px solid ${selectedNpcIds.has(npc.id) ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer' }}>
                     <input type="checkbox" checked={selectedNpcIds.has(npc.id)} onChange={() => {
                       setSelectedNpcIds(prev => {
@@ -3144,7 +3221,7 @@ export default function TablePage() {
                     </div>
                   </label>
                 ))
-              )}
+              )})()}
             </div>
             {/* Getting The Drop */}
             <div style={{ marginBottom: '1rem', padding: '8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
