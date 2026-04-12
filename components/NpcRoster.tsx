@@ -103,6 +103,8 @@ export interface CampaignNpc {
   status: string
   created_at: string
   sort_order: number | null
+  death_countdown: number | null
+  incap_rounds: number | null
 }
 
 interface Relationship {
@@ -197,6 +199,16 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   useEffect(() => {
     if (isGM) loadNpcs()
     else setLoading(false)
+
+    // Realtime subscription — refresh when any campaign_npcs row changes
+    // (e.g. damage applied from table page updates WP/RP in DB).
+    const channel = supabase.channel(`npc_roster_${campaignId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${campaignId}` }, () => {
+        if (isGM) loadNpcs()
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [campaignId, isGM])
 
   useEffect(() => {

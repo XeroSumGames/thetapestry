@@ -518,7 +518,7 @@ export default function CharacterCard({
         {/* Unarmed attack button */}
         <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '10px', marginTop: '10px' }}>
           <button onClick={onRoll ? () => {
-            onRoll('Unarmed Attack', rapid.PHY ?? 0, skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
+            onRoll(`${c.name} — Unarmed Attack`, rapid.PHY ?? 0, skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
           } : undefined}
             style={{ width: '100%', padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: onRoll ? 'pointer' : 'default', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
             <span>👊 Unarmed Attack</span>
@@ -650,7 +650,7 @@ export default function CharacterCard({
                           if (cumbersome !== null) { const deficit = cumbersome - (rapid.PHY ?? 0); if (deficit > 0) { traitCmod -= deficit; traitLabel = `Cumbersome -${deficit}` } }
                           const unwieldy = getTraitValue(w.traits, 'Unwieldy')
                           if (unwieldy !== null) { const deficit = unwieldy - (rapid.DEX ?? 0); if (deficit > 0) { traitCmod -= deficit; traitLabel = traitLabel ? `${traitLabel}, Unwieldy -${deficit}` : `Unwieldy -${deficit}` } }
-                          onRoll(`Attack — ${w.name}`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: (condCmod !== -99 ? condCmod : 0) + traitCmod, traitCmod, traitLabel, traits: w.traits })
+                          onRoll(`${c.name} — Attack (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: (condCmod !== -99 ? condCmod : 0) + traitCmod, traitCmod, traitLabel, traits: w.traits })
                         }}
                           style={{ marginTop: '6px', width: '100%', padding: '6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: cond === 'Broken' ? 'not-allowed' : 'pointer', opacity: cond === 'Broken' ? 0.4 : 1 }}
                           disabled={cond === 'Broken'}>

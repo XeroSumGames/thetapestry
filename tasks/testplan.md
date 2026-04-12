@@ -1,72 +1,69 @@
-# Test Plan — Unified `/dashboard` tab host
+# Test Plan: Combat Bug Fixes
 
-## What changed
-- New `components/TerminalFrame.tsx` renders the fixed chrome: title bar + left panel (ACTIVE OPERATOR / OPERATOR STATUS / SYSTEM STATUS / QUICK ACCESS) + right panel (SECTOR MAP / THE TERMINAL / MY OPERATIONS). Center column is children.
-- `components/TerminalTitleBar.tsx` tabs now all point at `/dashboard?tab=<name>`. Active tab is driven by a new `activeTab` prop (no more `useSearchParams` inside TitleBar).
-- `app/dashboard/page.tsx` rewritten as the unified host. Reads `?tab=` and swaps center content:
-  - `terminal` (default) → old dashboard center (ACTIVE OPERATION / roll log / comms log)
-  - `starchart` → `DisplacedStarMap` filling the center column, with Travel Calculator overlay
-  - `operations` / `roster` / `tools` → placeholder stubs
-- Legacy `/terminal` and `/starmap` pages still exist and still render via direct URL, but no longer highlight a tab.
+## Changes Made
 
-## Prerequisites
-1. Open a terminal in `C:\theTableau`
-2. Start the dev server (e.g. `powershell -File dev-server.ps1`)
-3. Wait for "Ready on http://localhost:PORT"
+### Fix 1+2: All combat rolls now gated
+- `handleRollRequest` now blocks ALL rolls (weapon + skill) during combat if the roller isn't the active combatant or has no actions remaining
+- Previously only weapon rolls were gated; skill rolls could be used freely
 
-## Golden path tests
+### Fix 3: NPC damage visible in real-time
+- NpcRoster now subscribes to Supabase realtime on `campaign_npcs` table
+- When damage lands, the roster refreshes automatically
 
-### 1. Default tab loads Terminal content
-- Navigate to `http://localhost:PORT/dashboard`
-- **Expect:** URL stays `/dashboard`. Frame renders. Left panel shows ACTIVE OPERATOR card (Korr, Aanya) and OPERATOR STATUS stats. Right panel shows SECTOR MAP + THE TERMINAL feed. Center shows ALERT banner, ACTIVE OPERATION card, RECENT ROLLS, COMMS LOG. Top nav shows "TERMINAL" tab highlighted cyan.
+### Fix 4: NPC mortal wounds + stabilization
+- NPCs at 0 WP now enter mortal wound state (death_countdown = 4 + PHY)
+- NPCs at 0 RP (but WP > 0) become incapacitated (incap_rounds = 4 - PHY)
+- Death countdown ticks each combat round
+- Stabilize button appears for mortally wounded NPCs
+- Dead/mortal/unconscious badges show on NPCs in initiative
+- Dead and unconscious NPCs are skipped in turn order
+- NPC RP recovery happens each round (same as PCs)
 
-### 2. Switch to Star Chart
-- Click "STAR CHART" tab
-- **Expect:** URL becomes `/dashboard?tab=starchart`. Left and right panels are **unchanged** (exact same frame). Center column now shows the interactive star map filling the center area with the Travel Calculator overlay in the top-left of the center column. "STAR CHART" tab is highlighted cyan. Status bar reads "STAR CHART — THE REACH // 29 SYSTEMS..."
+### Fix 5: Roll log naming
+- PC weapon attacks now include character name in label (e.g. "Mila Kade — Attack (Light Pistol)")
+- Label display strips the name prefix to avoid redundancy with the character_name header
 
-### 3. Star Chart functionality inside the frame
-- Click two stars on the map
-- **Expect:** Travel Calculator picks up origin + destination, shows route, distances, and drive comparison (BK / Galileo MK1 / Galileo MK2). Route highlight renders on the map. "CLEAR ROUTE" resets.
+### DB Migration Required
+Run `sql/npc-death.sql` to add `death_countdown` and `incap_rounds` columns to `campaign_npcs`.
 
-### 4. Switch to Operations / Roster / Tools
-- Click each tab
-- **Expect:** URL updates to `?tab=operations`, `?tab=roster`, `?tab=tools`. Frame (left + right panels) is unchanged. Center shows placeholder "OPERATIONS // CONTENT PENDING" etc. Correct tab highlighted.
+---
 
-### 5. Switch back to Terminal
-- Click "TERMINAL" tab
-- **Expect:** URL becomes `/dashboard?tab=terminal`. Center returns to ACTIVE OPERATION content. No flicker in left/right panels.
+## Test Cases
 
-## Edge cases
+### Combat Action Gating
+1. Start combat with a PC (2 actions)
+2. Use Aim (1 action consumed, 1 remaining)
+3. Attack with weapon from character sheet (opens roll modal)
+4. Complete the roll and close modal → action consumed, **turn should auto-advance**
+5. Try opening a skill roll from the character sheet → **should be blocked** ("No actions remaining" or "not your turn")
+6. Switch to another player's view → confirm they can't roll skills when it's not their turn
 
-### 6. Deep link to Star Chart
-- Paste `http://localhost:PORT/dashboard?tab=starchart` directly in browser
-- **Expect:** Page loads straight to Star Chart tab with map + overlay.
+### NPC Damage Visibility
+7. As GM, deal damage to an NPC
+8. **Without refreshing**, check:
+   - NPC card (if open) shows updated WP/RP
+   - NPC roster sidebar shows updated health
+9. As another client (second browser tab), confirm damage appears without refresh
 
-### 7. Bogus tab value
-- Navigate to `http://localhost:PORT/dashboard?tab=doesnotexist`
-- **Expect:** Falls back to Terminal tab content (default case in switch). No crash.
+### NPC Mortal Wounds
+10. Deal enough damage to reduce an NPC to 0 WP
+11. **Expected**: NPC gets 🩸 badge in initiative, death_countdown starts (4 + PHY rounds)
+12. NPC's turn should still come up (they're mortal, not dead yet)
+13. A "🩸 Stabilize [NPC Name]" button should appear in the active combatant's action bar
+14. Roll stabilize:
+    - **Success**: death_countdown clears, incap_rounds set, message in feed
+    - **Failure**: "Failed to stabilize" message, countdown continues
+15. If not stabilized, let rounds pass → when countdown hits 0, NPC gets 💀 badge
+16. Dead NPC should be **skipped** in turn order
+17. NPC at 0 RP (but WP > 0) → 💤 badge, skipped in turn order
 
-### 8. Legacy routes still work
-- Navigate to `http://localhost:PORT/terminal` → old `/terminal` page renders unchanged, no tab highlighted.
-- Navigate to `http://localhost:PORT/starmap` → old full-screen star map page still renders.
+### Roll Log Naming
+18. As a PC, attack with a weapon
+19. Check the roll feed — should display:
+    - Header: **MILA KADE** (character_name)
+    - Label: **Attack (Light Pistol)** (name prefix stripped)
+    - NOT "Mila Kade — Attack (Light Pistol)" redundantly
 
-### 9. Frame state persists across tab switches
-- On Star Chart, click two stars to set a route.
-- Switch to Terminal tab, then back to Star Chart.
-- **Expect:** Route resets (StarChartTabContent unmounts on tab switch). This is **expected** — noting it in case we want to lift state later.
-
-### 10. Browser back button
-- Click Terminal → Star Chart → Operations → press browser Back twice
-- **Expect:** Goes Operations → Star Chart → Terminal.
-
-## Regression checks
-- [ ] No console errors on any tab
-- [ ] Title bar clock ticks every second on all tabs
-- [ ] Scanline overlay still visible on all tabs
-- [ ] Navigating to `/welcome` or other app pages still works (TerminalTitleBar refactor didn't break anything)
-- [ ] `notepad C:\theTableau\app\terminal\page.tsx` — sanity-check it still compiles
-
-## If something breaks
-- Build-time `useSearchParams must be wrapped in Suspense` error → `DashboardHost` is already wrapped. If this fires for another component, check for stray `useSearchParams` calls.
-- Star map too small / clipped → `DisplacedStarMap` uses 100% of its container via ResizeObserver; check the parent `<div style={{ position: 'absolute', inset: 0 }}>` in `StarChartTabContent`.
-- Tabs highlight wrong → `activeTab` is passed from `DashboardHost` → `TerminalFrame` → `TerminalTitleBar`. Check the chain.
+### Charge / Rapid Fire (Regression)
+20. Use Charge (2-action attack) — confirm it costs 2 actions and turn advances
+21. Confirm closeRollModal doesn't double-consume by eating from the next combatant

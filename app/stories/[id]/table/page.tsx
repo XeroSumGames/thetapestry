@@ -172,6 +172,8 @@ export default function TablePage() {
   const [selectedEntry, setSelectedEntry] = useState<TableEntry | null>(null)
   const [rolls, setRolls] = useState<RollEntry[]>([])
   const [pendingRoll, setPendingRoll] = useState<PendingRoll | null>(null)
+  const actionPreConsumedRef = useRef(false)  // Set when Charge/Rapid Fire/Stabilize pre-consume before the roll modal
+  const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal — refs survive React batching
   const [insightSavePrompt, setInsightSavePrompt] = useState<{ stateId: string; targetName: string; newWP: number; newRP: number; phyAmod: number; insightDice: number } | null>(null)
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
   const [cmod, setCmod] = useState('0')
@@ -702,6 +704,15 @@ export default function TablePage() {
     const currentIdx = order.findIndex((e: any) => e.is_active)
     console.warn('[nextTurn] currentIdx:', currentIdx, 'order length:', order.length, 'active name:', order[currentIdx]?.character_name)
 
+    // Guard: if no active entry found, forcibly activate the first alive combatant
+    if (currentIdx < 0) {
+      console.warn('[nextTurn] no active entry found — activating first combatant as fallback')
+      await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', order[0].id)
+      await loadInitiative(id)
+      initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+      return
+    }
+
     // New round when wrapping — re-roll initiative + decrement death countdowns
     if (currentIdx === order.length - 1) {
       // Decrement death countdown + incapacitation + RP recovery
@@ -729,6 +740,39 @@ export default function TablePage() {
         }
         if (Object.keys(updates).length > 0) {
           await supabase.from('character_states').update(updates).eq('id', e.stateId)
+        }
+      }
+
+      // NPC death countdown + incapacitation + RP recovery (mirrors PC logic above)
+      const combatNpcIds = order.filter((e: any) => e.npc_id).map((e: any) => e.npc_id)
+      for (const npcId of combatNpcIds) {
+        const npc = campaignNpcs.find((n: any) => n.id === npcId)
+        if (!npc) continue
+        const updates: any = {}
+        // Death countdown
+        if ((npc.wp_current ?? npc.wp_max ?? 10) === 0 && npc.death_countdown != null && npc.death_countdown > 0) {
+          updates.death_countdown = npc.death_countdown - 1
+        }
+        // Incapacitation countdown
+        if (npc.incap_rounds != null && npc.incap_rounds > 0) {
+          updates.incap_rounds = npc.incap_rounds - 1
+          if (npc.incap_rounds - 1 <= 0) {
+            updates.rp_current = Math.max(1, npc.rp_current ?? 0)
+            if ((npc.wp_current ?? 0) === 0) updates.wp_current = 1
+            updates.incap_rounds = null
+          }
+        }
+        // RP recovery
+        const npcWP = npc.wp_current ?? npc.wp_max ?? 10
+        const npcRP = npc.rp_current ?? npc.rp_max ?? 6
+        const npcRPMax = npc.rp_max ?? 6
+        if (npcRP > 0 && npcRP < npcRPMax && npcWP > 0 && (npc.incap_rounds == null || npc.incap_rounds <= 0)) {
+          updates.rp_current = Math.min(npcRPMax, (updates.rp_current ?? npcRP) + 1)
+        }
+        if (Object.keys(updates).length > 0) {
+          await supabase.from('campaign_npcs').update(updates).eq('id', npcId)
+          setCampaignNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...updates } : n))
+          setRosterNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...updates } : n))
         }
       }
 
@@ -765,15 +809,28 @@ export default function TablePage() {
       return
     }
 
-    // Find next non-dead, non-unconscious combatant
+    // Find next non-dead, non-unconscious combatant (PCs + NPCs)
     let nextIdx = (currentIdx + 1) % order.length
     let attempts = 0
     while (attempts < order.length) {
       const nextEntry = order[nextIdx]
-      const charEntry = entries.find((ce: any) => nextEntry.character_id ? ce.character.id === nextEntry.character_id : ce.character.name === nextEntry.character_name)
-      const ls = charEntry?.liveState
-      const isDead = ls && ls.wp_current === 0 && (ls as any).death_countdown != null && (ls as any).death_countdown <= 0
-      const isUnconscious = ls && ls.rp_current === 0 && ls.wp_current > 0
+      let isDead = false
+      let isUnconscious = false
+      if (nextEntry.is_npc && nextEntry.npc_id) {
+        // NPC — check campaign_npcs for death/incap state
+        const npc = campaignNpcs.find((n: any) => n.id === nextEntry.npc_id)
+        if (npc) {
+          const npcWP = npc.wp_current ?? npc.wp_max ?? 10
+          isDead = npcWP === 0 && npc.death_countdown != null && npc.death_countdown <= 0
+          isUnconscious = (npc.rp_current ?? npc.rp_max ?? 6) === 0 && npcWP > 0
+        }
+      } else {
+        // PC — check character_states via entries
+        const charEntry = entries.find((ce: any) => nextEntry.character_id ? ce.character.id === nextEntry.character_id : ce.character.name === nextEntry.character_name)
+        const ls = charEntry?.liveState
+        isDead = !!(ls && ls.wp_current === 0 && (ls as any).death_countdown != null && (ls as any).death_countdown <= 0)
+        isUnconscious = !!(ls && ls.rp_current === 0 && ls.wp_current > 0)
+      }
       if (!isDead && !isUnconscious) break
       nextIdx = (nextIdx + 1) % order.length
       attempts++
@@ -819,12 +876,20 @@ export default function TablePage() {
     // Clear aim bonus after a roll (no actionLabel = called from closeRollModal)
     const clearAim = !actionLabel && entry.aim_bonus > 0
 
+    // Always persist the new action count to DB first — if nextTurn fails or
+    // races, the DB is at least consistent with "this combatant is spent".
+    const { error: updErr } = await supabase.from('initiative_order')
+      .update({ actions_remaining: newRemaining, ...(clearAim ? { aim_bonus: 0 } : {}) })
+      .eq('id', entryId)
+    if (updErr) console.warn('[consumeAction] update error:', updErr.message)
+
     if (newRemaining <= 0) {
       console.warn('[consumeAction] newRemaining<=0 → calling nextTurn')
       await nextTurn()
+      // Safety: ensure local state reflects the advance even if nextTurn's
+      // internal loadInitiative raced with something else.
+      await loadInitiative(id)
     } else {
-      const { error: updErr } = await supabase.from('initiative_order').update({ actions_remaining: newRemaining, ...(clearAim ? { aim_bonus: 0 } : {}) }).eq('id', entryId)
-      if (updErr) console.warn('[consumeAction] update error:', updErr.message)
       await loadInitiative(id)
     }
   }
@@ -1260,43 +1325,60 @@ export default function TablePage() {
   }
 
   function handleRollRequest(label: string, amod: number, smod: number, weapon?: WeaponContext) {
-    // During active combat, weapon rolls (attacks) are only allowed for the
-    // active combatant, and only while they still have actions remaining.
-    // The attacker is inferred from the label/context (not from "who clicked"),
-    // because GM authority by itself would let the GM roll an off-turn NPC
-    // attack from an NpcCard — closeRollModal would then decrement whichever
-    // OTHER combatant is currently active, silently corrupting the turn.
-    // Non-weapon rolls (skill checks, social, perception) are not gated.
-    if (combatActive && weapon) {
+    // During active combat, ALL rolls (weapon + skill) are gated to the active
+    // combatant with actions remaining.  Without this, a player whose turn ended
+    // could still open a skill check, and closeRollModal would then consume an
+    // action from whichever OTHER combatant is now active — corrupting the turn.
+    if (combatActive) {
       const active = initiativeOrder.find(e => e.is_active)
       if (!active || (active.actions_remaining ?? 0) <= 0) {
         alert('No actions remaining — wait for your next turn.')
         return
       }
 
-      // Determine the attacker. NPC weapon attacks from NpcCard are labelled
-      // "NpcName — Attack (weapon)"; PC weapon attacks from CharacterCard are
-      // labelled "Attack — weapon" or "Unarmed Attack" (no name prefix).
-      const firstPart = label.split(' — ')[0]
-      const firstPartIsKnownName =
-        campaignNpcs.some((n: any) => n.name === firstPart) ||
-        entries.some(e => e.character.name === firstPart)
-      let attackerName: string | null
-      if (firstPartIsKnownName) {
-        attackerName = firstPart
-      } else if (isGM && selectedEntry) {
-        // GM proxy-rolling from an open PC sheet — attacker is that PC.
-        attackerName = selectedEntry.character.name
+      // Determine the roller's identity so we can verify it matches the active
+      // combatant.  Weapon attacks: inferred from label prefix or selected sheet.
+      // Skill/other rolls: inferred from the roller's PC or GM-controlled NPC.
+      let rollerName: string | null
+      if (weapon) {
+        const firstPart = label.split(' — ')[0]
+        const firstPartIsKnownName =
+          campaignNpcs.some((n: any) => n.name === firstPart) ||
+          entries.some(e => e.character.name === firstPart)
+        if (firstPartIsKnownName) {
+          rollerName = firstPart
+        } else if (isGM && selectedEntry) {
+          rollerName = selectedEntry.character.name
+        } else {
+          const myChar = entries.find(e => e.userId === userId)
+          rollerName = myChar?.character.name ?? null
+        }
       } else {
-        const myChar = entries.find(e => e.userId === userId)
-        attackerName = myChar?.character.name ?? null
+        // Non-weapon roll — figure out who is rolling.
+        // Label may start with "CharName — Skill" (NPC rolls from NpcCard).
+        const firstPart = label.split(' — ')[0]
+        const firstPartIsKnownName =
+          campaignNpcs.some((n: any) => n.name === firstPart) ||
+          entries.some(e => e.character.name === firstPart)
+        if (firstPartIsKnownName) {
+          rollerName = firstPart
+        } else if (isGM && active.is_npc) {
+          // GM rolling a skill for the active NPC — allow it
+          rollerName = active.character_name
+        } else if (isGM && selectedEntry) {
+          rollerName = selectedEntry.character.name
+        } else {
+          const myChar = entries.find(e => e.userId === userId)
+          rollerName = myChar?.character.name ?? null
+        }
       }
 
-      if (!attackerName || active.character_name !== attackerName) {
-        alert(`It's not ${attackerName ?? 'that character'}'s turn.`)
+      if (!rollerName || active.character_name !== rollerName) {
+        alert(`It's not ${rollerName ?? 'that character'}'s turn.`)
         return
       }
     }
+    rollExecutedRef.current = false
     setPendingRoll({ label, amod, smod, weapon })
     setRollResult(null)
     // Include aim bonus from Aim action or Tracking trait
@@ -1332,6 +1414,7 @@ export default function TablePage() {
 
   async function executeRoll() {
     if (!pendingRoll || !userId) return
+    rollExecutedRef.current = true
     setRolling(true)
     // Determine character name. Most labels containing " — " put the attacker
     // name first (e.g. "Goon 1 — Attack (Pistol)", "David Battersby — Aim"),
@@ -1529,16 +1612,25 @@ export default function TablePage() {
         const newWP = Math.max(0, npcWP - finalWP)
         const newRP = Math.max(0, npcRP - finalRP)
         console.warn('[damage] NPC target', targetNpc.name, 'id:', targetNpc.id, 'WP:', npcWP, '→', newWP, 'RP:', npcRP, '→', newRP)
+        const npcUpdate: any = { wp_current: newWP, rp_current: newRP }
+        // Mortal wound — NPC enters death countdown when WP first hits 0
+        if (newWP === 0 && npcWP > 0) {
+          npcUpdate.death_countdown = Math.max(1, 4 + (targetNpc.physicality ?? 0))
+        }
+        // Incapacitation — NPC loses consciousness when RP first hits 0
+        if (newRP === 0 && npcRP > 0 && newWP > 0) {
+          npcUpdate.incap_rounds = Math.max(1, 4 - (targetNpc.physicality ?? 0))
+        }
         const { error: npcUpdErr, data: npcUpdData } = await supabase
           .from('campaign_npcs')
-          .update({ wp_current: newWP, rp_current: newRP })
+          .update(npcUpdate)
           .eq('id', targetNpc.id)
           .select()
         if (npcUpdErr) console.error('[damage] campaign_npcs update error:', npcUpdErr.message)
         else console.warn('[damage] campaign_npcs update returned', npcUpdData?.length, 'rows')
         // Optimistic local update — don't wait for the realtime callback to
         // refresh rosterNpcs/campaignNpcs/viewingNpcs.
-        const patch = { wp_current: newWP, rp_current: newRP }
+        const patch = { ...npcUpdate }
         setRosterNpcs(prev => prev.map(n => n.id === targetNpc.id ? { ...n, ...patch } : n))
         setCampaignNpcs(prev => prev.map(n => n.id === targetNpc.id ? { ...n, ...patch } : n))
         setViewingNpcs(prev => prev.map(n => n.id === targetNpc.id ? { ...n, ...patch } as CampaignNpc : n))
@@ -1602,20 +1694,36 @@ export default function TablePage() {
       }
     }
 
-    // Stabilize result — stop death countdown, set WP=1 on success
+    // Stabilize result — stop death countdown on success (PC or NPC)
     let stabilizeResult = ''
     if (pendingRoll.label.includes('Stabilize ')) {
-      const targetName = pendingRoll.label.split('Stabilize ')[1]
-      const targetEntry = entries.find(e => e.character.name === targetName)
+      const stTargetName = pendingRoll.label.split('Stabilize ')[1]
+      const targetEntry = entries.find(e => e.character.name === stTargetName)
+      const targetNpcStab = campaignNpcs.find((n: any) => n.name === stTargetName)
       if (targetEntry?.liveState && targetEntry.liveState.wp_current === 0) {
+        // PC stabilization
         if (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight') {
           const phyAmod = targetEntry.character.data?.rapid?.PHY ?? 0
           const incapRounds = Math.max(1, Math.floor(Math.random() * 6) + 1 - phyAmod)
           await supabase.from('character_states').update({ death_countdown: null, incap_rounds: incapRounds, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId)
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, death_countdown: null, incap_rounds: incapRounds } as any } : e))
-          stabilizeResult = `${targetName} stabilized! Incapacitated for ${incapRounds} round${incapRounds !== 1 ? 's' : ''}, then regains 1 WP + 1 RP.`
+          stabilizeResult = `${stTargetName} stabilized! Incapacitated for ${incapRounds} round${incapRounds !== 1 ? 's' : ''}, then regains 1 WP + 1 RP.`
         } else {
-          stabilizeResult = `Failed to stabilize ${targetName}.`
+          stabilizeResult = `Failed to stabilize ${stTargetName}.`
+        }
+      } else if (targetNpcStab && (targetNpcStab.wp_current ?? targetNpcStab.wp_max ?? 10) === 0) {
+        // NPC stabilization
+        if (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight') {
+          const phyAmod = targetNpcStab.physicality ?? 0
+          const incapRounds = Math.max(1, Math.floor(Math.random() * 6) + 1 - phyAmod)
+          await supabase.from('campaign_npcs').update({ death_countdown: null, incap_rounds: incapRounds }).eq('id', targetNpcStab.id)
+          const npcPatch = { death_countdown: null, incap_rounds: incapRounds }
+          setCampaignNpcs(prev => prev.map(n => n.id === targetNpcStab.id ? { ...n, ...npcPatch } : n))
+          setRosterNpcs(prev => prev.map(n => n.id === targetNpcStab.id ? { ...n, ...npcPatch } : n))
+          setViewingNpcs(prev => prev.map(n => n.id === targetNpcStab.id ? { ...n, ...npcPatch } as CampaignNpc : n))
+          stabilizeResult = `${stTargetName} stabilized! Incapacitated for ${incapRounds} round${incapRounds !== 1 ? 's' : ''}, then regains 1 WP + 1 RP.`
+        } else {
+          stabilizeResult = `Failed to stabilize ${stTargetName}.`
         }
       }
     }
@@ -1662,13 +1770,19 @@ export default function TablePage() {
   }
 
   async function closeRollModal() {
-    const rolledResult = rollResult
+    // Use ref (synchronous, immune to React batching) to determine if a roll
+    // was actually executed — rollResult state can be stale in closures.
+    const didRoll = rollExecutedRef.current
+    const preConsumed = actionPreConsumedRef.current
+    rollExecutedRef.current = false
+    actionPreConsumedRef.current = false
     setPendingRoll(null)
     setRollResult(null)
 
-    console.warn('[closeRollModal] rolledResult:', !!rolledResult, 'combatActive:', combatActive)
-    // Consume an action if the roller was the active combatant
-    if (rolledResult && combatActive) {
+    console.warn('[closeRollModal] didRoll:', didRoll, 'combatActive:', combatActive, 'preConsumed:', preConsumed)
+    // Consume an action if a roll was actually executed.
+    // Skip if the action was already pre-consumed (Charge/Rapid Fire/Stabilize).
+    if (didRoll && combatActive && !preConsumed) {
       // Re-fetch active entry from DB to avoid stale closure state
       const { data: freshOrder, error: foErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).eq('is_active', true).limit(1)
       if (foErr) console.warn('[closeRollModal] active fetch error:', foErr.message)
@@ -1833,7 +1947,11 @@ export default function TablePage() {
               ⚔️ Initiative
             </div>
 
-            {initiativeOrder.map((entry, idx) => (
+            {initiativeOrder.filter(entry =>
+              // Show: active combatant, or anyone still waiting for their turn this round.
+              // Hide: combatants who already acted (is_active=false, actions_remaining=0).
+              entry.is_active || (entry.actions_remaining ?? 0) > 0
+            ).map((entry, idx) => (
               <div key={entry.id} style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 padding: '4px 10px',
@@ -1881,8 +1999,22 @@ export default function TablePage() {
                     {entry.aim_bonus > 0 ? '+' : ''}{entry.aim_bonus}
                   </span>
                 )}
-                {/* Status badges */}
+                {/* Status badges — PCs and NPCs */}
                 {(() => {
+                  if (entry.is_npc && entry.npc_id) {
+                    const npc = campaignNpcs.find((n: any) => n.id === entry.npc_id)
+                    if (!npc) return null
+                    const npcWP = npc.wp_current ?? npc.wp_max ?? 10
+                    const npcRP = npc.rp_current ?? npc.rp_max ?? 6
+                    const isDead = npcWP === 0 && npc.death_countdown != null && npc.death_countdown <= 0
+                    const isMortal = npcWP === 0 && !isDead
+                    const isUnconscious = npcRP === 0 && npcWP > 0
+                    return <>
+                      {isDead && <span style={{ fontSize: '10px' }} title="Dead">💀</span>}
+                      {isMortal && <span style={{ fontSize: '10px' }} title={`Death in ${npc.death_countdown ?? '?'} rounds`}>🩸</span>}
+                      {isUnconscious && <span style={{ fontSize: '10px' }} title="Unconscious">💤</span>}
+                    </>
+                  }
                   const charEntry = entries.find(e => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
                   if (!charEntry?.liveState) return null
                   const ls = charEntry.liveState
@@ -1986,6 +2118,7 @@ export default function TablePage() {
                     const rapid = charEntry?.character.data?.rapid ?? {}
                     const amod = rapid.PHY ?? 0
                     const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Melee Combat')?.level ?? 0
+                    actionPreConsumedRef.current = true
                     consumeAction(activeEntry.id, undefined, 2)
                     handleRollRequest(`${activeEntry.character_name} — Charge (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: 1, traits: w.traits })
                   } : undefined} disabled={!has2Actions}
@@ -2031,6 +2164,7 @@ export default function TablePage() {
                     const rapid = charEntry?.character.data?.rapid ?? {}
                     const amod = rapid[attrKey] ?? 0
                     const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === skillName)?.level ?? 0
+                    actionPreConsumedRef.current = true
                     consumeAction(activeEntry.id, undefined, 2)
                     handleRollRequest(`${activeEntry.character_name} — Rapid Fire (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: 0, traits: w.traits })
                   } : undefined} disabled={!has2Actions}
@@ -2048,18 +2182,27 @@ export default function TablePage() {
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Subdue</button>
                 <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Take Cover`)}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Take Cover</button>
-                {entries.some(e => e.liveState && e.liveState.wp_current === 0 && ((e.liveState as any).death_countdown == null || (e.liveState as any).death_countdown > 0)) && (
-                  <button onClick={() => {
-                    const wounded = entries.find(e => e.liveState && e.liveState.wp_current === 0 && ((e.liveState as any).death_countdown == null || (e.liveState as any).death_countdown > 0))
-                    if (!wounded) return
-                    const rapid = charEntry?.character.data?.rapid ?? {}
-                    const amod = rapid.RSN ?? 0
-                    const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Medicine')?.level ?? 0
-                    consumeAction(activeEntry.id)
-                    handleRollRequest(`${activeEntry.character_name} — Stabilize ${wounded.character.name}`, amod, smod)
-                  }}
-                    style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>🩸 Stabilize</button>
-                )}
+                {/* Stabilize — PC or NPC with mortal wounds (WP=0, not yet dead) */}
+                {(() => {
+                  const woundedPC = entries.find(e => e.liveState && e.liveState.wp_current === 0 && ((e.liveState as any).death_countdown == null || (e.liveState as any).death_countdown > 0))
+                  const woundedNPC = campaignNpcs.find((n: any) => {
+                    const wp = n.wp_current ?? n.wp_max ?? 10
+                    return wp === 0 && (n.death_countdown == null || n.death_countdown > 0)
+                  })
+                  if (!woundedPC && !woundedNPC) return null
+                  const targetName = woundedPC ? woundedPC.character.name : woundedNPC!.name
+                  return (
+                    <button onClick={() => {
+                      const rapid = charEntry?.character.data?.rapid ?? {}
+                      const amod = rapid.RSN ?? 0
+                      const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Medicine')?.level ?? 0
+                      actionPreConsumedRef.current = true
+                      consumeAction(activeEntry.id)
+                      handleRollRequest(`${activeEntry.character_name} — Stabilize ${targetName}`, amod, smod)
+                    }}
+                      style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>🩸 Stabilize {targetName}</button>
+                  )
+                })()}
               </div>
             )
           })()}
@@ -2163,7 +2306,8 @@ export default function TablePage() {
                       <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                     </div>
                     <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>
-                      {r.label}
+                      {/* Strip character name prefix from label to avoid redundancy with the header */}
+                      {r.label.startsWith(r.character_name + ' — ') ? r.label.slice(r.character_name.length + 3) : r.label}
                       {r.target_name && <span style={{ color: '#EF9F27' }}> → {r.target_name}</span>}
                     </div>
                     <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
@@ -2418,15 +2562,35 @@ export default function TablePage() {
               const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
               return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc]); setSelectedEntry(null) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} />
             })()}
-            {gmTab === 'npcs' && !isGM && (
+            {gmTab === 'npcs' && !isGM && (() => {
+              // Merge revealed NPCs with any NPCs currently in combat
+              const revealedIds = new Set(revealedNpcs.map((n: any) => n.id))
+              const combatNpcIds = initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!)
+              const combatOnlyNpcs = combatActive
+                ? combatNpcIds
+                    .filter(npcId => !revealedIds.has(npcId))
+                    .map(npcId => campaignNpcs.find((n: any) => n.id === npcId))
+                    .filter(Boolean)
+                    .map(npc => ({ ...npc, _combatOnly: true }))
+                : []
+              const combatIdSet = new Set(combatNpcIds)
+              const playerNpcs = [
+                // Combat NPCs first (in initiative order)
+                ...revealedNpcs.filter((n: any) => combatIdSet.has(n.id)),
+                ...combatOnlyNpcs,
+                // Then non-combat revealed NPCs
+                ...revealedNpcs.filter((n: any) => !combatIdSet.has(n.id)),
+              ]
+              return (
               <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-                {revealedNpcs.length === 0 ? (
+                {playerNpcs.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                     No NPCs revealed yet
                   </div>
                 ) : (
-                  revealedNpcs.map((npc: any) => {
+                  playerNpcs.map((npc: any) => {
                     const isOpen = viewingNpcs.some(n => n.id === npc.id)
+                    const inCombat = combatIdSet.has(npc.id)
                     return (
                       <div
                         key={npc.id}
@@ -2434,7 +2598,7 @@ export default function TablePage() {
                           setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc])
                           setSelectedEntry(null)
                         }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: isOpen ? '#2a1210' : '#1a1a1a', border: `1px solid ${isOpen ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: isOpen ? '#2a1210' : '#1a1a1a', border: `1px solid ${isOpen ? '#c0392b' : inCombat ? '#5a1b1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s' }}
                       >
                         <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                           {npc.portrait_url ? (
@@ -2445,10 +2609,13 @@ export default function TablePage() {
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.name}</div>
-                          {npc.reveal_level === 'name_portrait_role' && npc.recruitment_role && (
+                          {inCombat && (
+                            <div style={{ fontSize: '11px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>In Combat</div>
+                          )}
+                          {!npc._combatOnly && npc.reveal_level === 'name_portrait_role' && npc.recruitment_role && (
                             <div style={{ fontSize: '11px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.recruitment_role}</div>
                           )}
-                          {npc.relationship_cmod !== 0 && npc.relationship_cmod != null && (
+                          {!npc._combatOnly && npc.relationship_cmod !== 0 && npc.relationship_cmod != null && (
                             <div style={{ fontSize: '11px', color: npc.relationship_cmod > 0 ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>
                               {npc.relationship_cmod > 0 ? `+${npc.relationship_cmod}` : npc.relationship_cmod} CMod
                             </div>
@@ -2459,7 +2626,8 @@ export default function TablePage() {
                   })
                 )}
               </div>
-            )}
+              )
+            })()}
             {gmTab === 'assets' && <CampaignPins campaignId={id} isGM={isGM} onPinFocus={p => setFocusPin({ ...p })} />}
             {gmTab === 'notes' && isGM && <GmNotes campaignId={id} />}
             {gmTab === 'notes' && !isGM && <PlayerNotes campaignId={id} />}
