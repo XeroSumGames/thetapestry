@@ -479,6 +479,12 @@ export default function TablePage() {
       initChannelRef.current = supabase.channel(`initiative_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
         .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]) })
+        .on('broadcast', { event: 'player_kicked' }, (msg: any) => {
+          if (msg.payload?.userId === userId) {
+            alert('You have been removed from this session by the GM.')
+            window.location.href = `/stories/${id}`
+          }
+        })
         .on('broadcast', { event: 'combat_started' }, () => { loadInitiative(id); loadRolls(id) })
         .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id); loadRolls(id) })
         .on('broadcast', { event: 'npc_damaged' }, (msg: any) => {
@@ -2876,11 +2882,8 @@ export default function TablePage() {
                 onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
                 onClose={() => { setSelectedEntry(null); setSheetPos(null) }}
                 onKick={isGM && syncedSelectedEntry.userId !== userId ? async () => {
-                  const memberUserId = syncedSelectedEntry.userId
-                  await supabase.from('campaign_members').delete().eq('campaign_id', id).eq('user_id', memberUserId)
+                  initChannelRef.current?.send({ type: 'broadcast', event: 'player_kicked', payload: { userId: syncedSelectedEntry.userId } })
                   setSelectedEntry(null)
-                  await loadEntries(id)
-                  initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
                 } : undefined}
                 inline={true}
               />
