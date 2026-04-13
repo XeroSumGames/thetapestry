@@ -217,7 +217,7 @@ export default function CampaignPage() {
       {/* Action buttons — GM */}
       {isGM && (
         <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
-          <a href={`/stories/${id}/table`} style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
+          <a href={`/stories/${id}/table`} target="_blank" rel="noreferrer" style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
           <a href={`/stories/${id}/edit`} style={btn('#242424', '#f5f2ee', '#3a3a3a')}>Edit</a>
           <button onClick={handleClone} disabled={cloning} style={{ ...btn('#242424', '#d4cfc9', '#3a3a3a'), opacity: cloning ? 0.6 : 1 } as any}>
             {cloning ? 'Cloning...' : 'Clone'}
@@ -234,7 +234,7 @@ export default function CampaignPage() {
       {/* Action buttons — Player */}
       {!isGM && (
         <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
-          <a href={`/stories/${id}/table`} style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
+          <a href={`/stories/${id}/table`} target="_blank" rel="noreferrer" style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
           <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
             {copied ? 'Copied!' : 'Share'}
           </button>

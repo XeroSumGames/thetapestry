@@ -32,10 +32,13 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
   const [editLng, setEditLng] = useState('')
 
   async function loadPins() {
-    const { data } = await supabase
+    let query = supabase
       .from('campaign_pins')
       .select('*')
       .eq('campaign_id', campaignId)
+    // Players only see revealed pins
+    if (!isGM) query = query.eq('revealed', true)
+    const { data } = await query
       .order('sort_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true })
     setPins(data ?? [])
