@@ -886,26 +886,43 @@ export default function TablePage() {
         damage_json: { initiative: sortedReroll } as any,
       })
 
-      // Re-sort and set first as active (PCs beat NPCs on ties)
+      // Re-sort and set first ALIVE combatant as active (PCs beat NPCs on ties)
       const { data: rerolled } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false })
+      const { data: freshNpcsForRound } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+      const freshNpcMap = new Map<string, any>((freshNpcsForRound ?? []).map((n: any) => [n.id, n]))
       if (rerolled && rerolled.length > 0) {
-        // On ties, PCs go first
         rerolled.sort((a: any, b: any) => b.roll - a.roll || (a.is_npc ? 1 : 0) - (b.is_npc ? 1 : 0))
-        await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2 }).eq('id', rerolled[0].id)
+        // Find first combatant who can act (skip dead/mortally wounded/incapacitated)
+        const firstAlive = rerolled.find((e: any) => {
+          if (e.is_npc && e.npc_id) {
+            const npc = freshNpcMap.get(e.npc_id)
+            if (npc) return (npc.wp_current ?? npc.wp_max ?? 10) > 0 && (npc.rp_current ?? npc.rp_max ?? 6) > 0 && npc.status !== 'dead'
+          } else {
+            const ce = entries.find((c: any) => e.character_id ? c.character.id === e.character_id : c.character.name === e.character_name)
+            if (ce?.liveState) return (ce.liveState as any).wp_current > 0 && (ce.liveState as any).rp_current > 0
+          }
+          return true
+        })
+        if (firstAlive) {
+          await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2 }).eq('id', firstAlive.id)
+        }
       }
       await Promise.all([loadInitiative(id), loadEntries(id), loadRolls(id)])
       initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       return
     }
 
-    // Find next combatant who can act — skip dead, mortally wounded, and incapacitated
+    // Find next combatant who can act — skip dead, mortally wounded, and incapacitated.
+    // Re-fetch NPC data from DB to avoid stale closure values.
+    const { data: freshNpcsForSkip } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+    const skipNpcMap = new Map<string, any>((freshNpcsForSkip ?? []).map((n: any) => [n.id, n]))
     let nextIdx = (currentIdx + 1) % order.length
     let attempts = 0
     while (attempts < order.length) {
       const nextEntry = order[nextIdx]
       let skipTurn = false
       if (nextEntry.is_npc && nextEntry.npc_id) {
-        const npc = campaignNpcs.find((n: any) => n.id === nextEntry.npc_id)
+        const npc = skipNpcMap.get(nextEntry.npc_id)
         if (npc) {
           const npcWP = npc.wp_current ?? npc.wp_max ?? 10
           const npcRP = npc.rp_current ?? npc.rp_max ?? 6
@@ -2189,20 +2206,19 @@ export default function TablePage() {
             </div>
 
             {(() => {
-              // Filter out only DEAD combatants (death countdown expired).
-              // Mortally wounded and incapacitated stay visible — they need stabilizing.
+              // Filter out combatants who can't act: dead, mortally wounded (WP=0), incapacitated (RP=0)
               const alive = initiativeOrder.filter(entry => {
                 if (entry.is_npc && entry.npc_id) {
                   const npc = campaignNpcs.find((n: any) => n.id === entry.npc_id)
                   if (npc) {
                     const wp = npc.wp_current ?? npc.wp_max ?? 10
-                    if (wp === 0 && npc.death_countdown != null && npc.death_countdown <= 0) return false
-                    if (npc.status === 'dead') return false
+                    const rp = npc.rp_current ?? npc.rp_max ?? 6
+                    if (wp === 0 || rp === 0 || npc.status === 'dead') return false
                   }
                 } else {
                   const ce = entries.find(e => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
                   if (ce?.liveState) {
-                    if (ce.liveState.wp_current === 0 && (ce.liveState as any).death_countdown != null && (ce.liveState as any).death_countdown <= 0) return false
+                    if (ce.liveState.wp_current === 0 || ce.liveState.rp_current === 0) return false
                   }
                 }
                 return true
