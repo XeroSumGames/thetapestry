@@ -142,8 +142,8 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     visible.forEach((pin: any) => {
       const emoji = getCategoryEmoji(pin.category)
       const icon = leaflet.divIcon({
-        html: `<div style="font-size:16px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));cursor:pointer;${!pin.revealed && isGM ? 'opacity:0.4;' : ''}" title="${escapeHtml(pin.name)}">${emoji}</div>`,
-        className: '', iconSize: [20, 20], iconAnchor: [10, 20],
+        html: `<div style="font-size:16px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(26,26,26,0.85);border:2px solid #c0392b;box-shadow:0 0 6px rgba(192,57,43,0.5);${!pin.revealed && isGM ? 'opacity:0.4;border-color:#3a3a3a;box-shadow:none;' : ''}" title="${escapeHtml(pin.name)}">${emoji}</div>`,
+        className: '', iconSize: [28, 28], iconAnchor: [14, 28],
       })
       const npcsHere = npcsByPin[pin.id] ?? []
       const npcSection = npcsHere.length === 0 ? '' :
