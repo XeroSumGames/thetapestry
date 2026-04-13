@@ -191,6 +191,8 @@ export default function TablePage() {
   const [dropCharacter, setDropCharacter] = useState<string>('')
   const [selectedNpcIds, setSelectedNpcIds] = useState<Set<string>>(new Set())
   const [rosterNpcs, setRosterNpcs] = useState<any[]>([])
+  const [showRestorePicker, setShowRestorePicker] = useState(false)
+  const [restoreNpcIds, setRestoreNpcIds] = useState<Set<string>>(new Set())
 
   // Session
   const [sessionStatus, setSessionStatus] = useState<'idle' | 'active'>('idle')
@@ -485,6 +487,22 @@ export default function TablePage() {
             setRosterNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
             setViewingNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } as CampaignNpc : n))
           }
+        })
+        .on('broadcast', { event: 'pc_damaged' }, () => {
+          // Another client dealt damage to a PC — refresh entries to see updated HP
+          loadEntries(id)
+        })
+        .on('broadcast', { event: 'pc_mortal_wound' }, (msg: any) => {
+          // Show insight save modal on the PLAYER's screen when their PC is mortally wounded
+          const data = msg.payload
+          if (data && data.targetUserId === userId) {
+            setInsightSavePrompt(data)
+          }
+        })
+        .on('broadcast', { event: 'pc_mortal_wound_resolved' }, () => {
+          // Another client resolved the insight save — close our modal and refresh
+          setInsightSavePrompt(null)
+          loadEntries(id)
         })
         // Players' postgres_changes subscription on npc_relationships is
         // unreliable (RLS / publication), so mid-combat reveals go over this
@@ -1029,6 +1047,12 @@ export default function TablePage() {
     if (rows.length > 0) {
       await supabase.from('initiative_order').insert(rows)
       await loadInitiative(id)
+      // Open NPC cards in the center for the newly added NPCs
+      setViewingNpcs(prev => {
+        const existingIds = new Set(prev.map(n => n.id))
+        const newCards = npcsToAdd.filter(n => !existingIds.has(n.id))
+        return newCards.length > 0 ? [...prev, ...newCards as CampaignNpc[]] : prev
+      })
     }
 
     // If combat is already underway, offer to reveal the newly-added NPC(s) to
@@ -1367,6 +1391,8 @@ export default function TablePage() {
       setEntries(prev => prev.map(e => e.stateId === stateId ? { ...e, liveState: { ...e.liveState, wp_current: 0, death_countdown: deathCountdown } as any } : e))
     }
     setInsightSavePrompt(null)
+    // Broadcast resolution so other clients close their modal and refresh
+    initChannelRef.current?.send({ type: 'broadcast', event: 'pc_mortal_wound_resolved', payload: {} })
     await loadEntries(id)
   }
 
@@ -1646,13 +1672,17 @@ export default function TablePage() {
           if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
           else console.warn('[damage] PC character_states update returned', csData?.length, 'rows')
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, rp_current: newRP } } : e))
-          setInsightSavePrompt({
+          const insightData = {
             stateId: targetEntry.stateId,
             targetName: targetEntry.character.name,
+            targetUserId: targetEntry.userId,
             newWP, newRP,
             phyAmod: targetEntry.character.data?.rapid?.PHY ?? 0,
             insightDice: targetEntry.liveState.insight_dice,
-          })
+          }
+          setInsightSavePrompt(insightData)
+          // Broadcast so the PLAYER whose PC is dying sees the modal on their screen
+          initChannelRef.current?.send({ type: 'broadcast', event: 'pc_mortal_wound', payload: insightData })
         } else {
           const update: any = { wp_current: newWP, rp_current: newRP, updated_at: new Date().toISOString() }
           if (newWP === 0 && targetEntry.liveState.wp_current > 0) {
@@ -1672,6 +1702,8 @@ export default function TablePage() {
           if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
           else console.warn('[damage] PC character_states update returned', csData?.length, 'rows')
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
+          // Broadcast so other clients (the player whose PC took damage) refresh
+          initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
         }
       } else if (targetNpc) {
         // NPC target — use campaign_npcs
@@ -1968,6 +2000,20 @@ export default function TablePage() {
             {startingCombat ? 'Rolling...' : '⚔️ Start Combat'}
           </button>
         )}
+        {isGM && campaignNpcs.some((n: any) => n.status === 'dead' || ((n.wp_current ?? n.wp_max ?? 10) === 0)) && (
+          <button onClick={async () => {
+            const { data } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+            const dead = (data ?? []).filter((n: any) => {
+              const wp = n.wp_current ?? n.wp_max ?? 10
+              return n.status === 'dead' || (wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+            })
+            setRestoreNpcIds(new Set(dead.map((n: any) => n.id)))
+            setShowRestorePicker(true)
+          }}
+            style={hdrBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
+            Restore NPCs
+          </button>
+        )}
         {isGM && combatActive && (
           <button onClick={endCombat}
             style={hdrBtn('#0f2035', '#7ab3d4', '#1a3a5c')}>
@@ -1980,9 +2026,9 @@ export default function TablePage() {
           </div>
         )}
         <div style={{ flex: 1 }} />
-        {isGM && sessionStatus === 'active' && (
+        {sessionStatus === 'active' && (
           <select value="" onChange={e => { if (e.target.value) setShowSpecialCheck(e.target.value as any); e.target.value = '' }}
-            style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), flex: 'none', width: 'auto' }}>
+            style={hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a')}>
             <option value="">Checks</option>
             <option value="perception">Perception</option>
             <option value="gut">Gut Instinct</option>
@@ -2028,11 +2074,30 @@ export default function TablePage() {
             </div>
 
             {(() => {
+              // Filter out dead, mortally wounded, and incapacitated combatants
+              const alive = initiativeOrder.filter(entry => {
+                if (entry.is_npc && entry.npc_id) {
+                  const npc = campaignNpcs.find((n: any) => n.id === entry.npc_id)
+                  if (npc) {
+                    const wp = npc.wp_current ?? npc.wp_max ?? 10
+                    const rp = npc.rp_current ?? npc.rp_max ?? 6
+                    if (wp === 0) return false  // dead or mortally wounded
+                    if (rp === 0) return false  // incapacitated
+                  }
+                } else {
+                  const ce = entries.find(e => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
+                  if (ce?.liveState) {
+                    if (ce.liveState.wp_current === 0) return false  // dead or mortally wounded
+                    if (ce.liveState.rp_current === 0) return false  // incapacitated
+                  }
+                }
+                return true
+              })
               // Rotate so active combatant is first (leftmost), rest follow in turn order
-              const activeIdx = initiativeOrder.findIndex(e => e.is_active)
+              const activeIdx = alive.findIndex(e => e.is_active)
               return activeIdx >= 0
-                ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
-                : initiativeOrder
+                ? [...alive.slice(activeIdx), ...alive.slice(0, activeIdx)]
+                : alive
             })().map((entry, idx) => {
               // Green = active (has initiative), Yellow = waiting (hasn't gone yet), Red = already acted
               const hasActed = !entry.is_active && entry.actions_remaining != null && entry.actions_remaining <= 0
@@ -3130,6 +3195,103 @@ export default function TablePage() {
         </div>
       )}
 
+      {/* Restore NPCs modal */}
+      {showRestorePicker && (
+        <div onClick={() => setShowRestorePicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '400px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: '10px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Restore</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '0.5rem' }}>Select NPCs to restore</div>
+            {(() => {
+              const deadNpcs = campaignNpcs.filter((n: any) => {
+                const wp = n.wp_current ?? n.wp_max ?? 10
+                return n.status === 'dead' || (wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+              })
+              const allSelected = deadNpcs.length > 0 && deadNpcs.every(n => restoreNpcIds.has(n.id))
+              return deadNpcs.length > 0 ? (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{restoreNpcIds.size} of {deadNpcs.length} selected</span>
+                  <button onClick={() => setRestoreNpcIds(allSelected ? new Set() : new Set(deadNpcs.map(n => n.id)))}
+                    style={{ padding: '2px 8px', background: allSelected ? '#2a1210' : '#1a2e10', border: `1px solid ${allSelected ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allSelected ? '#f5a89a' : '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    {allSelected ? 'Deselect All' : 'Select All'}
+                  </button>
+                </div>
+              ) : null
+            })()}
+            <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
+              {(() => {
+                const deadNpcs = campaignNpcs.filter((n: any) => {
+                  const wp = n.wp_current ?? n.wp_max ?? 10
+                  return n.status === 'dead' || (wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+                })
+                return deadNpcs.length === 0 ? (
+                  <div style={{ color: '#cce0f5', fontSize: '12px', textAlign: 'center', padding: '1rem' }}>No dead NPCs to restore.</div>
+                ) : (
+                  deadNpcs.map(npc => (
+                    <label key={npc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', background: restoreNpcIds.has(npc.id) ? '#1a2e10' : '#1a1a1a', border: `1px solid ${restoreNpcIds.has(npc.id) ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={restoreNpcIds.has(npc.id)} onChange={() => {
+                        setRestoreNpcIds(prev => {
+                          const next = new Set(prev)
+                          if (next.has(npc.id)) next.delete(npc.id)
+                          else next.add(npc.id)
+                          return next
+                        })
+                      }} style={{ accentColor: '#7fc458' }} />
+                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                        {npc.portrait_url ? (
+                          <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <span style={{ fontSize: '9px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
+                        )}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
+                        {npc.npc_type && <span style={{ fontSize: '9px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
+                      </div>
+                    </label>
+                  ))
+                )
+              })()}
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => setShowRestorePicker(false)}
+                style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                Cancel
+              </button>
+              <button onClick={async () => {
+                if (restoreNpcIds.size === 0) return
+                const ids = Array.from(restoreNpcIds)
+                for (const npcId of ids) {
+                  const npc = campaignNpcs.find((n: any) => n.id === npcId)
+                  const wpMax = npc?.wp_max ?? (10 + (npc?.physicality ?? 0) + (npc?.dexterity ?? 0))
+                  const rpMax = npc?.rp_max ?? (6 + (npc?.physicality ?? 0))
+                  await supabase.from('campaign_npcs').update({ wp_current: wpMax, rp_current: rpMax, status: 'active', death_countdown: null, incap_rounds: null }).eq('id', npcId)
+                }
+                // Refresh NPC data
+                const { data: freshNpcs } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+                if (freshNpcs) {
+                  setCampaignNpcs(freshNpcs)
+                  setRosterNpcs(freshNpcs.filter((n: any) => {
+                    if (n.status !== 'active') return false
+                    const wp = n.wp_current ?? n.wp_max ?? 10
+                    return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+                  }))
+                  setViewingNpcs(prev => prev.map(vn => {
+                    const fresh = freshNpcs.find((f: any) => f.id === vn.id)
+                    return fresh ? { ...fresh } as CampaignNpc : vn
+                  }))
+                }
+                setShowRestorePicker(false)
+                setRestoreNpcIds(new Set())
+              }}
+                disabled={restoreNpcIds.size === 0}
+                style={{ flex: 1, padding: '10px', background: restoreNpcIds.size > 0 ? '#1a2e10' : '#242424', border: `1px solid ${restoreNpcIds.size > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: restoreNpcIds.size > 0 ? '#7fc458' : '#3a3a3a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: restoreNpcIds.size > 0 ? 'pointer' : 'not-allowed' }}>
+                Restore {restoreNpcIds.size > 0 ? `(${restoreNpcIds.size} NPCs)` : ''}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* End Session modal */}
       {showEndSessionModal && (
         <div onClick={() => setShowEndSessionModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
@@ -3446,9 +3608,10 @@ export default function TablePage() {
 }
 
 const hdrBtn = (bg: string, color: string, border: string): React.CSSProperties => ({
-  padding: '4px 10px', background: bg, border: `1px solid ${border}`, borderRadius: '3px',
+  padding: '4px 14px', background: bg, border: `1px solid ${border}`, borderRadius: '3px',
   color, fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif',
   letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  height: '28px', boxSizing: 'border-box', appearance: 'none',
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  height: '28px', minWidth: '70px', boxSizing: 'border-box',
+  appearance: 'none', lineHeight: 1, whiteSpace: 'nowrap', flexShrink: 0,
 })

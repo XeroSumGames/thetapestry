@@ -392,6 +392,16 @@ export default function CharacterCard({
                           style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                           Lasting Wound Check
                         </button>
+                        {onRoll && (
+                          <button onClick={() => {
+                            const amod = rapid.RSN ?? 0
+                            const smod = skills.find(s => s.skillName === 'Medicine')?.level ?? 0
+                            onRoll(`Stabilize ${c.name}`, amod, smod)
+                          }}
+                            style={{ marginLeft: '6px', padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            Stabilize
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
