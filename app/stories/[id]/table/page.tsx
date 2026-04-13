@@ -193,6 +193,8 @@ export default function TablePage() {
   const [rosterNpcs, setRosterNpcs] = useState<any[]>([])
   const [showRestorePicker, setShowRestorePicker] = useState(false)
   const [restoreNpcIds, setRestoreNpcIds] = useState<Set<string>>(new Set())
+  const [presenceCount, setPresenceCount] = useState(0)
+  const presenceChannelRef = useRef<any>(null)
 
   // Session
   const [sessionStatus, setSessionStatus] = useState<'idle' | 'active'>('idle')
@@ -551,6 +553,18 @@ export default function TablePage() {
           }
         })
         .subscribe()
+
+      // Presence — track how many users are on this table page
+      presenceChannelRef.current = supabase.channel(`presence_${id}`, { config: { presence: { key: user.id } } })
+      presenceChannelRef.current.on('presence', { event: 'sync' }, () => {
+        const state = presenceChannelRef.current.presenceState()
+        setPresenceCount(Object.keys(state).length)
+      })
+      presenceChannelRef.current.subscribe(async (status: string) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceChannelRef.current.track({ user_id: user.id, username: user.user_metadata?.username ?? 'Unknown' })
+        }
+      })
     }
     load()
     return () => {
@@ -562,6 +576,7 @@ export default function TablePage() {
       if (initChannelRef.current) supabase.removeChannel(initChannelRef.current)
       if (campaignChannelRef.current) supabase.removeChannel(campaignChannelRef.current)
       if (revealChannelRef.current) supabase.removeChannel(revealChannelRef.current)
+      if (presenceChannelRef.current) supabase.removeChannel(presenceChannelRef.current)
     }
   }, [id])
 
@@ -2476,6 +2491,11 @@ export default function TablePage() {
 
         {/* Left — Game Feed */}
         <div style={{ width: '260px', flexShrink: 0, borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
+          <div style={{ padding: '6px 10px', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
+            <div style={{ fontSize: '9px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase' }}>
+              Survivors present: {presenceCount}
+            </div>
+          </div>
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
             {(['rolls', 'chat', 'both'] as const).map(tab => (
               <button key={tab} onClick={() => setFeedTab(tab)}
