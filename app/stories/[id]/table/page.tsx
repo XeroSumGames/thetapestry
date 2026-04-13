@@ -2875,6 +2875,13 @@ export default function TablePage() {
                 onStatUpdate={handleStatUpdate}
                 onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
                 onClose={() => { setSelectedEntry(null); setSheetPos(null) }}
+                onKick={isGM && syncedSelectedEntry.userId !== userId ? async () => {
+                  const memberUserId = syncedSelectedEntry.userId
+                  await supabase.from('campaign_members').delete().eq('campaign_id', id).eq('user_id', memberUserId)
+                  setSelectedEntry(null)
+                  await loadEntries(id)
+                  initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+                } : undefined}
                 inline={true}
               />
             </div>

@@ -85,6 +85,7 @@ interface Props {
   onDuplicate?: (c: any) => void
   onRoll?: (label: string, amod: number, smod: number, weaponContext?: { weaponName: string; damage: string; rpPercent: number; conditionCmod: number; traitCmod?: number; traitLabel?: string; traits?: string[] }) => void
   onClose?: () => void
+  onKick?: () => void
   inline?: boolean
 }
 
@@ -99,6 +100,7 @@ export default function CharacterCard({
   onDuplicate,
   onRoll,
   onClose,
+  onKick,
   inline = false,
 }: Props) {
   const router = useRouter()
@@ -315,6 +317,7 @@ export default function CharacterCard({
               <button onClick={handlePrint} disabled={printing} style={btn('#2d5a1b', '#7fc458')}>Print</button>
               {!inline && <button onClick={handleDuplicate} disabled={duplicating} style={btn('#1a3a5c', '#7ab3d4')}>{duplicating ? '...' : 'Duplicate'}</button>}
               {!inline && <button onClick={handleDelete} disabled={deleting} style={btn('#2e2e2e', '#d4cfc9')}>{deleting ? '...' : 'Delete'}</button>}
+              {inline && onKick && <button onClick={() => { if (confirm(`Remove ${c.name} from this campaign?`)) onKick() }} style={btn('#7a1f16', '#f5a89a')}>Kick</button>}
               {inline && onClose && <button onClick={onClose} style={btn('#c0392b', '#f5a89a')}>Close</button>}
             </div>
           )}
