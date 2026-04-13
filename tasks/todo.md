@@ -27,6 +27,16 @@
 - [ ] Manipulation rolls should auto-include First Impression CMod
 - [ ] Add to Combat modal should filter NPCs already in initiative
 - [ ] Self-attack should apply damage to self
+- [x] **Stafford → Staff** — typo in weapon database, renamed
+- [ ] **NPC card HP not updating on damage** — optimistic patches to viewingNpcs/campaignNpcs run but NpcCard may not re-render; added campaignNpcs merge at render time + removed local useState for HP. Diagnostic logging added — needs live testing to confirm fix
+- [x] **Stabilize button blocked during combat** — consumeAction was called before handleRollRequest, which triggered nextTurn and changed the active combatant before the roll gate ran. Fixed: open roll first, then consume action. Same fix for Charge and Rapid Fire
+- [x] **Dead NPCs appearing in Start Combat** — rosterNpcs filter missed the combat picker re-fetch path; also NPC death now sets status='dead' so the existing status filter catches them
+- [x] **Initiative bar shows all combatants with color coding** — green (active), yellow (waiting), red (acted); rotates so active is always leftmost
+- [x] **NPC cards auto-open/close with combat** — open all selected NPCs on combat start, close all on combat end
+- [x] **Death log entries** — "Death is in the air" header, custom red card rendering, no dice display
+- [x] **NPC card shows derived status** — dead/mortally wounded/unconscious from HP, not stale DB status field
+- [x] **Restore button on dead/mortally wounded NPC cards** — resets to full HP + active status
+- [x] **Out-of-combat stabilize on NPC cards** — Medicine roll from NPC card when mortally wounded
 - [x] **Auto-advance after 2 actions** — root causes: (1) consumeAction didn't write actions_remaining=0 to DB before calling nextTurn, (2) closeRollModal used rollResult state (subject to React batching/stale closures) — switched to rollExecutedRef, (3) Charge/Rapid Fire/Stabilize double-consumed via closeRollModal — added actionPreConsumedRef flag, (4) nextTurn had no fallback when no active entry found in DB
 - [x] **NPC HP display lags until refresh** — NpcRoster had no realtime subscription on campaign_npcs; added Supabase realtime channel that calls loadNpcs() on any change
 - [ ] **Roll modal stuck "Rolling..." for 55s** + **roll result delayed 30s into Logs** — still to investigate. Previously thought it was the same root cause as damage; now that damage is fixed, may be independent. Re-test after HP display fix.
@@ -146,6 +156,7 @@
 - [x] Tracking +1 CMod via Ready Weapon action
 - [x] Upkeep Checks (Mechanic/Tinkerer/weapon skill, full SRD outcomes)
 - [x] Encumbrance tracker (6 + PHY AMod, OVERLOADED warning)
+- [ ] **Add Katana to weapon database** — differentiate from Sword (higher damage or different traits, e.g. lighter/faster with lower Cumbersome, or a unique trait like Precise)
 
 ### Additional Check Types (SRD)
 - [x] Perception Check (RSN + ACU)

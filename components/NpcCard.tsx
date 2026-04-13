@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+// no React hooks needed — HP is derived from props
 import { CampaignNpc } from './NpcRoster'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, Condition, getTraitValue } from '../lib/weapons'
 import { createClient } from '../lib/supabase-browser'
@@ -14,6 +14,8 @@ const TYPE_COLORS: Record<string, { bg: string; border: string; color: string }>
 const STATUS_COLORS: Record<string, { bg: string; border: string; color: string }> = {
   active: { bg: '#1a2e10', border: '#2d5a1b', color: '#7fc458' },
   dead: { bg: '#2a1210', border: '#c0392b', color: '#f5a89a' },
+  'mortally wounded': { bg: '#2a1210', border: '#c0392b', color: '#f5a89a' },
+  unconscious: { bg: '#1a1a2e', border: '#2e2e5a', color: '#7ab3d4' },
   unknown: { bg: '#1a1a2e', border: '#2e2e5a', color: '#7ab3d4' },
 }
 
@@ -32,16 +34,29 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
   const supabase = createClient()
   const rapid: Record<string, number> = { RSN: npc.reason, ACU: npc.acumen, PHY: npc.physicality, INF: npc.influence, DEX: npc.dexterity }
   const tc = TYPE_COLORS[npc.npc_type ?? ''] ?? TYPE_COLORS.goon
-  const sc = STATUS_COLORS[npc.status] ?? STATUS_COLORS.active
 
   const wpMax = npc.wp_max ?? (10 + npc.physicality + npc.dexterity)
   const rpMax = npc.rp_max ?? (6 + npc.physicality)
-  const [wpCurrent, setWpCurrent] = useState(npc.wp_current ?? wpMax)
-  const [rpCurrent, setRpCurrent] = useState(npc.rp_current ?? rpMax)
+  // Read HP directly from prop — no local state, so optimistic patches from
+  // the parent always reflect immediately without sync issues.
+  const wpCurrent = npc.wp_current ?? wpMax
+  const rpCurrent = npc.rp_current ?? rpMax
+
+  // Derive display status from HP — don't rely on the DB status field which
+  // only updates at round-end when death countdown expires.
+  const isDead = wpCurrent === 0 && npc.death_countdown != null && npc.death_countdown <= 0
+  const isMortal = wpCurrent === 0 && !isDead
+  const isUnconscious = rpCurrent === 0 && wpCurrent > 0
+  const displayStatus = npc.status === 'dead' || isDead ? 'dead'
+    : isMortal ? 'mortally wounded'
+    : isUnconscious ? 'unconscious'
+    : npc.status
+  const sc = STATUS_COLORS[displayStatus] ?? (isMortal || isUnconscious
+    ? STATUS_COLORS.dead
+    : STATUS_COLORS.active)
 
   async function updateHealth(field: 'wp_current' | 'rp_current', value: number) {
-    if (field === 'wp_current') setWpCurrent(value)
-    else setRpCurrent(value)
+    // Write to DB; parent's realtime or optimistic patch will update the prop
     await supabase.from('campaign_npcs').update({ [field]: value }).eq('id', npc.id)
   }
 
@@ -111,13 +126,26 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         </div>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '15px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>{npc.name}</div>
         {npc.npc_type && <span style={{ fontSize: '11px', padding: '0 4px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
-        <span style={{ fontSize: '11px', padding: '0 4px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.status}</span>
+        <span style={{ fontSize: '11px', padding: '0 4px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{displayStatus}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '3px', flexShrink: 0 }}>
           {onPublish && !isPublished && (
             <button onClick={onPublish} style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Publish</button>
           )}
           {isPublished && (
             <span style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>
+          )}
+          {displayStatus === 'mortally wounded' && onRoll && (
+            <button onClick={() => {
+              const amod = npc.reason ?? 0
+              const npcSkills: any[] = Array.isArray(npc.skills?.entries) ? npc.skills.entries : []
+              const smod = npcSkills.find((s: any) => s.name === 'Medicine')?.level ?? 0
+              onRoll(`${npc.name} — Stabilize ${npc.name}`, amod, smod)
+            }} style={{ padding: '2px 6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Stabilize</button>
+          )}
+          {(displayStatus === 'dead' || displayStatus === 'mortally wounded') && (
+            <button onClick={async () => {
+              await supabase.from('campaign_npcs').update({ wp_current: wpMax, rp_current: rpMax, status: 'active', death_countdown: null, incap_rounds: null }).eq('id', npc.id)
+            }} style={{ padding: '2px 6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Restore</button>
           )}
           <button onClick={onEdit} style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Edit</button>
           <button onClick={onClose} style={{ padding: '2px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Close</button>

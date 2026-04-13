@@ -156,6 +156,7 @@ export default function TablePage() {
   const initChannelRef = useRef<any>(null)
   const membersChannelRef = useRef<any>(null)
   const npcsChannelRef = useRef<any>(null)
+  const npcFetchInFlightRef = useRef(false)  // Suppress realtime callback during manual NPC re-fetch
   const rollFeedRef = useRef<HTMLDivElement>(null)
   const revealChannelRef = useRef<any>(null)
   const myCharIdRef = useRef<string | null>(null)
@@ -476,6 +477,15 @@ export default function TablePage() {
         .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]) })
         .on('broadcast', { event: 'combat_started' }, () => { loadInitiative(id); loadRolls(id) })
         .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id); loadRolls(id) })
+        .on('broadcast', { event: 'npc_damaged' }, (msg: any) => {
+          // Another client dealt damage to an NPC — apply the patch locally
+          const { npcId, patch } = msg.payload ?? {}
+          if (npcId && patch) {
+            setCampaignNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
+            setRosterNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
+            setViewingNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } as CampaignNpc : n))
+          }
+        })
         // Players' postgres_changes subscription on npc_relationships is
         // unreliable (RLS / publication), so mid-combat reveals go over this
         // broadcast channel instead. Refetch cnpcs fresh so newly-added roster
@@ -509,14 +519,17 @@ export default function TablePage() {
       // rosterNpcs/campaignNpcs only refresh on combat-start or page reload.
       npcsChannelRef.current = supabase.channel(`campaign_npcs_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${id}` }, async () => {
+          // Skip if a manual re-fetch is in progress (e.g. after dealing damage)
+          // to avoid a race condition where this stale fetch overwrites fresh data.
+          if (npcFetchInFlightRef.current) return
           const { data: cnpcs } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
-          if (cnpcs) {
+          if (cnpcs && !npcFetchInFlightRef.current) {
             setCampaignNpcs(cnpcs)
             setRosterNpcs(cnpcs.filter((n: any) => {
-          if (n.status !== 'active') return false
-          const wp = n.wp_current ?? n.wp_max ?? 10
-          return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
-        }))
+              if (n.status !== 'active') return false
+              const wp = n.wp_current ?? n.wp_max ?? 10
+              return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+            }))
           }
         })
         .subscribe()
@@ -703,6 +716,13 @@ export default function TablePage() {
     }
     setDropCharacter('')
 
+    // Auto-open NPC cards for all NPCs in combat
+    const combatNpcObjs = rosterNpcs.filter(n => selectedNpcIds.has(n.id))
+    if (combatNpcObjs.length > 0) {
+      setViewingNpcs(combatNpcObjs as CampaignNpc[])
+      setSelectedEntry(null)
+    }
+
     setStartingCombat(false)
     // Refresh the GM's log feed so the new entries appear immediately, then
     // broadcast combat start so players also reload their state. We rely on
@@ -746,7 +766,7 @@ export default function TablePage() {
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
               label: `💀 ${e.character.name} has died.`,
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
             })
           }
         }
@@ -785,7 +805,7 @@ export default function TablePage() {
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
               label: `💀 ${npc.name} has died.`,
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
             })
           }
         }
@@ -1437,7 +1457,11 @@ export default function TablePage() {
   async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false, target: string | null = null, damageData?: DamageResult) {
     const total = die1 + die2 + amod + smod + cmodVal
     const outcome = getOutcome(total, die1, die2)
-    const insightAwarded = outcome === 'Low Insight' || outcome === 'High Insight'
+    // Non-antagonist NPCs never get Insight Dice
+    const isHighLow = outcome === 'Low Insight' || outcome === 'High Insight'
+    const isNPC = isHighLow && !entries.some(e => e.character.name === characterName)
+    const npcTypeForLog = isNPC ? (rosterNpcs.find((n: any) => n.name === characterName)?.npc_type ?? campaignNpcs.find((n: any) => n.name === characterName)?.npc_type ?? '') : ''
+    const insightAwarded = isHighLow && !(isNPC && npcTypeForLog !== 'antagonist')
 
     await supabase.from('roll_log').insert({
       campaign_id: id, user_id: userId, character_name: characterName,
@@ -1499,18 +1523,15 @@ export default function TablePage() {
 
     const total = die1 + die2 + pendingRoll.amod + pendingRoll.smod + cmodVal
     const outcome = getOutcome(total, die1, die2)
-    const insightAwarded = outcome === 'Low Insight' || outcome === 'High Insight'
-
     // Award Insight Die — only to PCs, or Antagonist NPCs (Bystanders/Goons/Foes never get Insight Dice)
+    const isHighLow = outcome === 'Low Insight' || outcome === 'High Insight'
+    const isNPCRoll = isHighLow && pendingRoll.label.includes(' — ') && !entries.some(e => pendingRoll.label.startsWith(e.character.name))
+    const npcType = isNPCRoll ? (rosterNpcs.find((n: any) => pendingRoll.label.includes(n.name))?.npc_type ?? campaignNpcs.find((n: any) => pendingRoll.label.includes(n.name))?.npc_type ?? '') : ''
+    const insightAwarded = isHighLow && !(isNPCRoll && npcType !== 'antagonist')
     if (insightAwarded && myEntry?.liveState) {
-      const isNPCRoll = pendingRoll.label.includes(' — ') && !entries.some(e => pendingRoll.label.startsWith(e.character.name))
-      const npcType = isNPCRoll ? (rosterNpcs.find((n: any) => pendingRoll.label.includes(n.name))?.npc_type ?? '') : ''
-      const skipInsight = isNPCRoll && npcType !== 'antagonist'
-      if (!skipInsight) {
-        const currentInsight = preRollSpent ? myEntry.liveState.insight_dice - 1 : myEntry.liveState.insight_dice
-        const newInsight = currentInsight + 1
-        await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
-      }
+      const currentInsight = preRollSpent ? myEntry.liveState.insight_dice - 1 : myEntry.liveState.insight_dice
+      const newInsight = currentInsight + 1
+      await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
     }
 
     // Calculate and apply damage for successful weapon attacks
@@ -1553,7 +1574,9 @@ export default function TablePage() {
       // Find target — could be PC (in entries) or NPC (in initiativeOrder + rosterNpcs)
       const targetInitEntry = initiativeOrder.find(e => e.character_name === targetName)
       const targetEntry = entries.find(e => e.character.name === targetName) ?? (targetInitEntry?.character_id ? entries.find(e => e.character.id === targetInitEntry.character_id) : undefined)
-      const targetNpc = targetInitEntry?.is_npc ? rosterNpcs.find(n => n.id === targetInitEntry.npc_id) : null
+      const targetNpc = targetInitEntry?.is_npc
+        ? (rosterNpcs.find(n => n.id === targetInitEntry.npc_id) ?? campaignNpcs.find((n: any) => n.id === targetInitEntry.npc_id))
+        : null
       const targetRapid = targetEntry?.character.data?.rapid ?? (targetNpc ? { PHY: targetNpc.physicality ?? 0, DEX: targetNpc.dexterity ?? 0 } : {})
       const defensiveMod = isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)
 
@@ -1638,7 +1661,7 @@ export default function TablePage() {
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
               label: `💀 ${targetEntry.character.name} is mortally wounded by ${characterName}! ${update.death_countdown} rounds to stabilize.`,
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
             })
           }
           // Set incapacitation when RP first hits 0
@@ -1666,7 +1689,7 @@ export default function TablePage() {
             campaign_id: id, user_id: userId,
             character_name: 'Death is in the air',
             label: `💀 ${targetNpc.name} is mortally wounded by ${characterName}! ${npcUpdate.death_countdown} rounds to stabilize.`,
-            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action',
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
           })
         }
         // Incapacitation — NPC loses consciousness when RP first hits 0
@@ -1680,12 +1703,17 @@ export default function TablePage() {
           .select()
         if (npcUpdErr) console.error('[damage] campaign_npcs update error:', npcUpdErr.message)
         else console.warn('[damage] campaign_npcs update returned', npcUpdData?.length, 'rows')
-        // Optimistic local update — don't wait for the realtime callback to
-        // refresh rosterNpcs/campaignNpcs/viewingNpcs.
+        // Direct state update for THIS client (the roller).
+        const npcId = targetNpc.id
         const patch = { ...npcUpdate }
-        setRosterNpcs(prev => prev.map(n => n.id === targetNpc.id ? { ...n, ...patch } : n))
-        setCampaignNpcs(prev => prev.map(n => n.id === targetNpc.id ? { ...n, ...patch } : n))
-        setViewingNpcs(prev => prev.map(n => n.id === targetNpc.id ? { ...n, ...patch } as CampaignNpc : n))
+        npcFetchInFlightRef.current = true  // suppress realtime overwrite
+        setCampaignNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
+        setRosterNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
+        setViewingNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } as CampaignNpc : n))
+        setTimeout(() => { npcFetchInFlightRef.current = false }, 500)
+        // Broadcast to OTHER clients (GM) so they re-fetch NPC data.
+        // Without this, a player dealing damage only updates their own state.
+        initChannelRef.current?.send({ type: 'broadcast', event: 'npc_damaged', payload: { npcId, patch } })
       } else {
         console.warn('[damage] no target resolved — damage NOT applied. targetName was:', targetName)
       }
@@ -2177,9 +2205,9 @@ export default function TablePage() {
                     const rapid = charEntry?.character.data?.rapid ?? {}
                     const amod = rapid.PHY ?? 0
                     const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Melee Combat')?.level ?? 0
+                    handleRollRequest(`${activeEntry.character_name} — Charge (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: 1, traits: w.traits })
                     actionPreConsumedRef.current = true
                     consumeAction(activeEntry.id, undefined, 2)
-                    handleRollRequest(`${activeEntry.character_name} — Charge (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: 1, traits: w.traits })
                   } : undefined} disabled={!has2Actions}
                     style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Charge</button>
                 ) : (
@@ -2223,9 +2251,9 @@ export default function TablePage() {
                     const rapid = charEntry?.character.data?.rapid ?? {}
                     const amod = rapid[attrKey] ?? 0
                     const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === skillName)?.level ?? 0
+                    handleRollRequest(`${activeEntry.character_name} — Rapid Fire (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: 0, traits: w.traits })
                     actionPreConsumedRef.current = true
                     consumeAction(activeEntry.id, undefined, 2)
-                    handleRollRequest(`${activeEntry.character_name} — Rapid Fire (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: 0, traits: w.traits })
                   } : undefined} disabled={!has2Actions}
                     style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Rapid Fire</button>
                 ) : (
@@ -2252,12 +2280,25 @@ export default function TablePage() {
                   const targetName = woundedPC ? woundedPC.character.name : woundedNPC!.name
                   return (
                     <button onClick={() => {
-                      const rapid = charEntry?.character.data?.rapid ?? {}
-                      const amod = rapid.RSN ?? 0
-                      const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Medicine')?.level ?? 0
+                      // Determine roller's Medicine stats — use active combatant's stats
+                      // (could be PC via charEntry, or NPC via campaignNpcs)
+                      let amod = 0, smod = 0
+                      if (charEntry) {
+                        const rapid = charEntry.character.data?.rapid ?? {}
+                        amod = rapid.RSN ?? 0
+                        smod = charEntry.character.data?.skills?.find((s: any) => s.skillName === 'Medicine')?.level ?? 0
+                      } else {
+                        const npcRoller = campaignNpcs.find((n: any) => n.name === activeEntry.character_name)
+                        if (npcRoller) {
+                          amod = npcRoller.reason ?? 0
+                          const npcSkills: any[] = Array.isArray(npcRoller.skills?.entries) ? npcRoller.skills.entries : []
+                          smod = npcSkills.find((s: any) => s.name === 'Medicine')?.level ?? 0
+                        }
+                      }
+                      // Open roll FIRST (before consumeAction changes the active combatant)
+                      handleRollRequest(`${activeEntry.character_name} — Stabilize ${targetName}`, amod, smod)
                       actionPreConsumedRef.current = true
                       consumeAction(activeEntry.id)
-                      handleRollRequest(`${activeEntry.character_name} — Stabilize ${targetName}`, amod, smod)
                     }}
                       style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>🩸 Stabilize {targetName}</button>
                   )
@@ -2318,6 +2359,14 @@ export default function TablePage() {
                         </span>
                       ))}
                     </div>
+                  </div>
+                ) : (r.outcome === 'death' || r.character_name === 'Death is in the air') ? (
+                  <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a0a0a', border: '1px solid #5a1b1b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.character_name}</span>
+                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>{r.label}</div>
                   </div>
                 ) : r.outcome === 'combat_end' && (r.damage_json as any)?.combatants ? (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
@@ -2563,16 +2612,42 @@ export default function TablePage() {
           {/* NPC Card(s) grid — floats over map */}
           {viewingNpcs.length > 0 && (
             <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '8px', background: 'rgba(26,26,26,0.95)', zIndex: 1100, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px', alignContent: 'start' }}>
-              {viewingNpcs.map(npc => (
-                <NpcCard key={npc.id}
-                  npc={npc}
+              {(() => {
+                // During combat, sort cards in initiative order (active combatant first)
+                if (!combatActive) return viewingNpcs
+                const activeIdx = initiativeOrder.findIndex(e => e.is_active)
+                const rotated = activeIdx >= 0
+                  ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
+                  : initiativeOrder
+                const npcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
+                const idIdx = new Map(npcOrder.map((id, i) => [id, i]))
+                const isDead = (n: CampaignNpc) => {
+                  const wp = n.wp_current ?? n.wp_max ?? 10
+                  return n.status === 'dead' || (wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+                }
+                return [...viewingNpcs].sort((a, b) => {
+                  const ad = isDead(a) ? 1 : 0
+                  const bd = isDead(b) ? 1 : 0
+                  if (ad !== bd) return ad - bd
+                  const ai = idIdx.has(a.id) ? idIdx.get(a.id)! : Infinity
+                  const bi = idIdx.has(b.id) ? idIdx.get(b.id)! : Infinity
+                  return ai - bi
+                })
+              })().map(npc => {
+                // Always use latest data from campaignNpcs (optimistically patched on damage)
+                // so NPC cards reflect HP changes instantly even if viewingNpcs is stale.
+                const fresh = campaignNpcs.find((c: any) => c.id === npc.id)
+                const liveNpc = fresh ? { ...fresh } as CampaignNpc : npc
+                return (
+                <NpcCard key={`${npc.id}-${liveNpc.wp_current}-${liveNpc.rp_current}-${liveNpc.death_countdown}`}
+                  npc={liveNpc}
                   onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
                   onEdit={() => { setViewingNpcs(prev => prev.filter(n => n.id !== npc.id)); setGmTab('npcs'); setPendingEditNpcId(npc.id) }}
                   onRoll={sessionStatus === 'active' ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
                   onPublish={isGM ? () => handlePublishNpc(npc) : undefined}
                   isPublished={publishedNpcIds.has(npc.id)}
                 />
-              ))}
+              )})}
             </div>
           )}
 

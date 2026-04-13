@@ -73,7 +73,7 @@ export const MELEE_WEAPONS: Weapon[] = [
   { name: 'Makeshift Cleaver', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '3+1d3', rpPercent: 100, enc: 1, traits: [] },
   { name: 'Sledgehammer', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '3+3d3', rpPercent: 100, enc: 2, traits: ['Cumbersome (2)'] },
   { name: 'Spear', category: 'melee', skill: 'Melee Combat', range: 'Close', rarity: 'Uncommon', damage: '2+2d6', rpPercent: 50, enc: 1, traits: ['Cumbersome (2)'] },
-  { name: 'Stafford', category: 'melee', skill: 'Melee Combat', range: 'Close', rarity: 'Common', damage: '2+2d3', rpPercent: 100, enc: 1, traits: ['Unwieldy (1)'] },
+  { name: 'Staff', category: 'melee', skill: 'Melee Combat', range: 'Close', rarity: 'Common', damage: '2+2d3', rpPercent: 100, enc: 1, traits: ['Unwieldy (1)'] },
   { name: 'Sword', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '3+3d3', rpPercent: 50, enc: 1, traits: [] },
   { name: 'Tactical Baton', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '4+2d3', rpPercent: 100, enc: 1, traits: [] },
   { name: 'Taser', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '2', rpPercent: 400, enc: 1, traits: ['Stun'] },
