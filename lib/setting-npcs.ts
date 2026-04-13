@@ -95,7 +95,7 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
       { name: 'Barter', level: 2, specialized: false },
       { name: 'Animal Handling', level: 1, specialized: false },
       { name: 'Farming', level: 1, specialized: false },
-      { name: 'General Knowledge', level: 1, specialized: false },
+      { name: 'Specific Knowledge', level: 1, specialized: false },
       { name: 'Manipulation', level: 1, specialized: false },
       { name: 'Psychology', level: 1, specialized: true },
       { name: 'Scavenging', level: 1, specialized: false },
@@ -117,7 +117,7 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
     skills: [
       { name: 'Psychology', level: 2, specialized: true },
       { name: 'Barter', level: 1, specialized: false },
-      { name: 'General Knowledge', level: 1, specialized: false },
+      { name: 'Specific Knowledge', level: 1, specialized: false },
       { name: 'Manipulation', level: 1, specialized: false },
     ],
     equipment: [
@@ -178,7 +178,7 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
     reason: 1, acumen: 2, physicality: 0, influence: 0, dexterity: 0,
     wp_max: 10, rp_max: 6,
     skills: [
-      { name: 'General Knowledge', level: 1, specialized: false },
+      { name: 'Specific Knowledge', level: 1, specialized: false },
       { name: 'Research', level: 1, specialized: false },
       { name: 'Scavenging', level: 1, specialized: false },
       { name: 'Sleight of Hand', level: 1, specialized: false },
@@ -199,7 +199,7 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
     reason: 2, acumen: 0, physicality: 0, influence: 1, dexterity: 0,
     wp_max: 10, rp_max: 6,
     skills: [
-      { name: 'General Knowledge', level: 2, specialized: false },
+      { name: 'Specific Knowledge', level: 2, specialized: false },
       { name: 'Inspiration', level: 1, specialized: false },
       { name: 'Manipulation', level: 1, specialized: false },
       { name: 'Research', level: 1, specialized: false },
@@ -242,7 +242,7 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
     reason: 1, acumen: 1, physicality: 0, influence: 1, dexterity: 0,
     wp_max: 10, rp_max: 6,
     skills: [
-      { name: 'General Knowledge', level: 1, specialized: false },
+      { name: 'Specific Knowledge', level: 1, specialized: false },
       { name: 'Inspiration', level: 1, specialized: false },
       { name: 'Psychology', level: 1, specialized: true },
       { name: 'Research', level: 1, specialized: false },
@@ -265,7 +265,7 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
       { name: 'Manipulation', level: 2, specialized: false },
       { name: 'Research', level: 2, specialized: false },
       { name: 'Barter', level: 1, specialized: false },
-      { name: 'General Knowledge', level: 1, specialized: false },
+      { name: 'Specific Knowledge', level: 1, specialized: false },
     ],
     equipment: [
       { name: 'Heavy Pistol', damage: 27, roll: '3+2d3' },
@@ -350,7 +350,7 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
     wp_max: 10, rp_max: 6,
     skills: [
       { name: 'Demolitions', level: 2, specialized: true },
-      { name: 'General Knowledge', level: 2, specialized: false },
+      { name: 'Specific Knowledge', level: 2, specialized: false },
       { name: 'Mechanic', level: 2, specialized: true },
       { name: 'Research', level: 2, specialized: false },
       { name: 'Tinkerer', level: 2, specialized: false },
@@ -371,7 +371,7 @@ export const DISTRICT_ZERO_NPCS: NpcSeed[] = [
     wp_max: 10, rp_max: 6,
     skills: [
       { name: 'Athletics', level: 2, specialized: false },
-      { name: 'General Knowledge', level: 2, specialized: false },
+      { name: 'Specific Knowledge', level: 2, specialized: false },
       { name: 'Research', level: 2, specialized: false },
       { name: 'Inspiration', level: 1, specialized: false },
     ],
@@ -519,7 +519,7 @@ export const CHASED_NPCS: NpcSeed[] = [
     name: 'William Robertson',
     reason: 1, acumen: 1, physicality: -1, influence: 2, dexterity: -1,
     wp_max: 8, rp_max: 5,
-    skills: [{ name: 'Barter', level: 1, specialized: false }, { name: 'General Knowledge', level: 1, specialized: false }, { name: 'Inspiration', level: 1, specialized: false }, { name: 'Manipulation', level: 1, specialized: false }, { name: 'Tinkerer', level: 1, specialized: false }],
+    skills: [{ name: 'Barter', level: 1, specialized: false }, { name: 'Specific Knowledge', level: 1, specialized: false }, { name: 'Inspiration', level: 1, specialized: false }, { name: 'Manipulation', level: 1, specialized: false }, { name: 'Tinkerer', level: 1, specialized: false }],
     equipment: [{ name: 'Light Pistol', damage: 9, roll: '3+1d6' }, { name: 'Walkie-Talkie' }],
     role: 'Mall Community Leader', pin_title: '01 | Best Nite Motel',
     description: "Born and raised in Denton, DE. Ran his grandfather's hardware store his whole life. De facto mall leader. Still wants to believe there is good in people — broadcasts on a ham radio trying to reach survivors, to Caleb's frustration.",
@@ -618,7 +618,7 @@ export const CHASED_NPCS: NpcSeed[] = [
     name: 'Macy Stevens',
     reason: 0, acumen: 0, physicality: 0, influence: 0, dexterity: 0,
     wp_max: 8, rp_max: 5,
-    skills: [{ name: 'General Knowledge', level: 1, specialized: false }],
+    skills: [{ name: 'Specific Knowledge', level: 1, specialized: false }],
     equipment: [{ name: 'Walkie-Talkie' }],
     role: 'Mall Resident', pin_title: '01 | Best Nite Motel',
     description: "Delaware native. Was studying Business Administration at Wilmington University. Has known Eric since childhood — the closest thing she has to family now. Becomes anxious when separated from him.",
