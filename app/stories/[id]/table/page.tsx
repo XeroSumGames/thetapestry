@@ -210,7 +210,7 @@ export default function TablePage() {
   const [sessionActing, setSessionActing] = useState(false)
   const [gmTab, setGmTab] = useState<'npcs' | 'assets' | 'notes'>('npcs')
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
-  const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('rolls')
+  const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
   const [chatMessages, setChatMessages] = useState<{ id: string; user_id: string; character_name: string; message: string; created_at: string }[]>([])
   const [chatInput, setChatInput] = useState('')
   const chatChannelRef = useRef<any>(null)
@@ -883,29 +883,25 @@ export default function TablePage() {
       return
     }
 
-    // Find next non-dead, non-unconscious combatant (PCs + NPCs)
+    // Find next combatant who can act — skip dead, mortally wounded, and incapacitated
     let nextIdx = (currentIdx + 1) % order.length
     let attempts = 0
     while (attempts < order.length) {
       const nextEntry = order[nextIdx]
-      let isDead = false
-      let isUnconscious = false
+      let skipTurn = false
       if (nextEntry.is_npc && nextEntry.npc_id) {
-        // NPC — check campaign_npcs for death/incap state
         const npc = campaignNpcs.find((n: any) => n.id === nextEntry.npc_id)
         if (npc) {
           const npcWP = npc.wp_current ?? npc.wp_max ?? 10
-          isDead = npcWP === 0 && npc.death_countdown != null && npc.death_countdown <= 0
-          isUnconscious = (npc.rp_current ?? npc.rp_max ?? 6) === 0 && npcWP > 0
+          const npcRP = npc.rp_current ?? npc.rp_max ?? 6
+          skipTurn = npcWP === 0 || npcRP === 0 || npc.status === 'dead'
         }
       } else {
-        // PC — check character_states via entries
         const charEntry = entries.find((ce: any) => nextEntry.character_id ? ce.character.id === nextEntry.character_id : ce.character.name === nextEntry.character_name)
         const ls = charEntry?.liveState
-        isDead = !!(ls && ls.wp_current === 0 && (ls as any).death_countdown != null && (ls as any).death_countdown <= 0)
-        isUnconscious = !!(ls && ls.rp_current === 0 && ls.wp_current > 0)
+        skipTurn = !!(ls && (ls.wp_current === 0 || ls.rp_current === 0))
       }
-      if (!isDead && !isUnconscious) break
+      if (!skipTurn) break
       nextIdx = (nextIdx + 1) % order.length
       attempts++
     }
@@ -1139,7 +1135,7 @@ export default function TablePage() {
     const wasActive = !!current.is_active
     if (wasActive) {
       updates.push(
-        supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('id', current.id),
+        supabase.from('initiative_order').update({ is_active: false, actions_remaining: current.actions_remaining ?? 2, aim_bonus: 0 }).eq('id', current.id),
         supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', next.id),
       )
     }
@@ -1663,25 +1659,35 @@ export default function TablePage() {
       console.warn('[damage] target lookup:', { targetName, targetEntry: !!targetEntry, hasLiveState: !!targetEntry?.liveState, targetNpc: !!targetNpc, finalWP, finalRP })
       if (targetEntry?.liveState) {
         // PC target — use character_states
-        const newWP = Math.max(0, targetEntry.liveState.wp_current - finalWP)
-        const newRP = Math.max(0, targetEntry.liveState.rp_current - finalRP)
-        console.warn('[damage] PC target', targetEntry.character.name, 'WP:', targetEntry.liveState.wp_current, '→', newWP, 'RP:', targetEntry.liveState.rp_current, '→', newRP)
+        // Re-fetch fresh HP from DB to avoid stale closure values
+        const { data: freshState } = await supabase.from('character_states').select('*').eq('id', targetEntry.stateId).single()
+        const currentWP = freshState?.wp_current ?? targetEntry.liveState.wp_current
+        const currentRP = freshState?.rp_current ?? targetEntry.liveState.rp_current
+        const currentInsight = freshState?.insight_dice ?? targetEntry.liveState.insight_dice ?? 0
+        const newWP = Math.max(0, currentWP - finalWP)
+        const newRP = Math.max(0, currentRP - finalRP)
+        console.warn('[damage] PC target', targetEntry.character.name, 'WP:', currentWP, '→', newWP, 'RP:', currentRP, '→', newRP)
 
-        if (newWP === 0 && targetEntry.liveState.wp_current > 0 && (targetEntry.liveState.insight_dice ?? 0) > 0) {
+        if (newWP === 0 && currentWP > 0 && currentInsight > 0) {
           const { error: csErr, data: csData } = await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId).select()
           if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
           else console.warn('[damage] PC character_states update returned', csData?.length, 'rows')
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, rp_current: newRP } } : e))
+          // Broadcast RP change so the player sees updated sheet
+          initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
           const insightData = {
             stateId: targetEntry.stateId,
             targetName: targetEntry.character.name,
             targetUserId: targetEntry.userId,
             newWP, newRP,
             phyAmod: targetEntry.character.data?.rapid?.PHY ?? 0,
-            insightDice: targetEntry.liveState.insight_dice,
+            insightDice: currentInsight,
           }
-          setInsightSavePrompt(insightData)
-          // Broadcast so the PLAYER whose PC is dying sees the modal on their screen
+          // Show modal only on the PLAYER's screen (or GM if they own the PC)
+          if (targetEntry.userId === userId) {
+            setInsightSavePrompt(insightData)
+          }
+          // Broadcast so the player's client shows the modal
           initChannelRef.current?.send({ type: 'broadcast', event: 'pc_mortal_wound', payload: insightData })
         } else {
           const update: any = { wp_current: newWP, rp_current: newRP, updated_at: new Date().toISOString() }
@@ -1690,9 +1696,18 @@ export default function TablePage() {
             await supabase.from('roll_log').insert({
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
-              label: `💀 ${targetEntry.character.name} is mortally wounded by ${characterName}! ${update.death_countdown} rounds to stabilize.`,
+              label: `${targetEntry.character.name} is mortally wounded by ${characterName} and will die if not stabilized in ${update.death_countdown} rounds.`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
             })
+            // Notify the player whose PC is dying (even without insight dice)
+            initChannelRef.current?.send({ type: 'broadcast', event: 'pc_mortal_wound', payload: {
+              stateId: targetEntry.stateId,
+              targetName: targetEntry.character.name,
+              targetUserId: targetEntry.userId,
+              newWP, newRP,
+              phyAmod: targetEntry.character.data?.rapid?.PHY ?? 0,
+              insightDice: 0,
+            } })
           }
           // Set incapacitation when RP first hits 0
           if (newRP === 0 && targetEntry.liveState.rp_current > 0 && newWP > 0) {
@@ -1704,6 +1719,18 @@ export default function TablePage() {
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
           // Broadcast so other clients (the player whose PC took damage) refresh
           initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
+          // Mortally wounded / incapacitated — zero their actions and auto-advance if active
+          if (combatActive && (newWP === 0 || newRP === 0)) {
+            const initEntry = initiativeOrder.find(e => e.character_id === targetEntry.character.id)
+            if (initEntry) {
+              await supabase.from('initiative_order').update({ actions_remaining: 0 }).eq('id', initEntry.id)
+              if (initEntry.is_active) {
+                await nextTurn()
+              }
+              await loadInitiative(id)
+              initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+            }
+          }
         }
       } else if (targetNpc) {
         // NPC target — use campaign_npcs
@@ -1720,7 +1747,7 @@ export default function TablePage() {
           await supabase.from('roll_log').insert({
             campaign_id: id, user_id: userId,
             character_name: 'Death is in the air',
-            label: `💀 ${targetNpc.name} is mortally wounded by ${characterName}! ${npcUpdate.death_countdown} rounds to stabilize.`,
+            label: `${targetNpc.name} is mortally wounded by ${characterName} and will die if not stabilized in ${npcUpdate.death_countdown} rounds.`,
             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
           })
         }
@@ -1746,6 +1773,18 @@ export default function TablePage() {
         // Broadcast to OTHER clients (GM) so they re-fetch NPC data.
         // Without this, a player dealing damage only updates their own state.
         initChannelRef.current?.send({ type: 'broadcast', event: 'npc_damaged', payload: { npcId, patch } })
+        // Mortally wounded / incapacitated — zero their actions and auto-advance if active
+        if (combatActive && (newWP === 0 || newRP === 0)) {
+          const initEntry = initiativeOrder.find(e => e.npc_id === npcId)
+          if (initEntry) {
+            await supabase.from('initiative_order').update({ actions_remaining: 0 }).eq('id', initEntry.id)
+            if (initEntry.is_active) {
+              await nextTurn()
+            }
+            await loadInitiative(id)
+            initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+          }
+        }
       } else {
         console.warn('[damage] no target resolved — damage NOT applied. targetName was:', targetName)
       }
@@ -1876,7 +1915,63 @@ export default function TablePage() {
       await supabase.from('character_states').update({ insight_dice: newInsight + 1, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
     }
 
-    setRollResult({ ...rollResult, die1: newDie1, die2: newDie2, total, outcome, insightAwarded, spent: true })
+    // Calculate and apply damage if the reroll turned a failure into a hit
+    let rerollDamage: DamageResult | undefined
+    if (pendingRoll?.weapon && targetName && (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight')) {
+      const weapon = pendingRoll.weapon
+      const w = getWeaponByName(weapon.weaponName)
+      const isMelee = w?.category === 'melee' || weapon.weaponName === 'Unarmed'
+      const targetInitEntry = initiativeOrder.find(e => e.character_name === targetName)
+      const targetEntry = entries.find(e => e.character.name === targetName) ?? (targetInitEntry?.character_id ? entries.find(e => e.character.id === targetInitEntry.character_id) : undefined)
+      const targetNpcObj = targetInitEntry?.is_npc ? (rosterNpcs.find(n => n.id === targetInitEntry.npc_id) ?? campaignNpcs.find((n: any) => n.id === targetInitEntry.npc_id)) : null
+      const targetRapid = targetEntry?.character.data?.rapid ?? (targetNpcObj ? { PHY: targetNpcObj.physicality ?? 0, DEX: targetNpcObj.dexterity ?? 0 } : {})
+      const defensiveMod = isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)
+
+      const attackerPhy = myEntry.character.data?.rapid?.PHY ?? 0
+      const dmg = rollDamage(weapon.damage, attackerPhy, !!isMelee)
+      const unarmedBonus = weapon.weaponName === 'Unarmed' ? rollResult.smod : 0
+      const { finalWP, finalRP, mitigated } = calculateDamage(dmg.totalWP + unarmedBonus, weapon.rpPercent, defensiveMod)
+
+      rerollDamage = { base: dmg.base, diceRoll: dmg.diceRoll, diceDesc: dmg.diceDesc, phyBonus: dmg.phyBonus, totalWP: dmg.totalWP + unarmedBonus, finalWP, finalRP, mitigated, targetName }
+
+      // Apply damage to target
+      if (targetEntry?.liveState) {
+        const tNewWP = Math.max(0, targetEntry.liveState.wp_current - finalWP)
+        const tNewRP = Math.max(0, targetEntry.liveState.rp_current - finalRP)
+        const update: any = { wp_current: tNewWP, rp_current: tNewRP, updated_at: new Date().toISOString() }
+        if (tNewWP === 0 && targetEntry.liveState.wp_current > 0) {
+          update.death_countdown = Math.max(1, 4 + (targetEntry.character.data?.rapid?.PHY ?? 0))
+        }
+        if (tNewRP === 0 && targetEntry.liveState.rp_current > 0 && tNewWP > 0) {
+          update.incap_rounds = Math.max(1, 4 - (targetEntry.character.data?.rapid?.PHY ?? 0))
+        }
+        await supabase.from('character_states').update(update).eq('id', targetEntry.stateId)
+        setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
+        initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
+      } else if (targetNpcObj) {
+        const tNpcWP = targetNpcObj.wp_current ?? targetNpcObj.wp_max ?? 10
+        const tNpcRP = targetNpcObj.rp_current ?? targetNpcObj.rp_max ?? 6
+        const tNewWP = Math.max(0, tNpcWP - finalWP)
+        const tNewRP = Math.max(0, tNpcRP - finalRP)
+        const npcUpdate: any = { wp_current: tNewWP, rp_current: tNewRP }
+        if (tNewWP === 0 && tNpcWP > 0) npcUpdate.death_countdown = Math.max(1, 4 + (targetNpcObj.physicality ?? 0))
+        if (tNewRP === 0 && tNpcRP > 0 && tNewWP > 0) npcUpdate.incap_rounds = Math.max(1, 4 - (targetNpcObj.physicality ?? 0))
+        await supabase.from('campaign_npcs').update(npcUpdate).eq('id', targetNpcObj.id)
+        const npcId = targetNpcObj.id
+        const patch = { ...npcUpdate }
+        npcFetchInFlightRef.current = true
+        setCampaignNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
+        setRosterNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
+        setViewingNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } as CampaignNpc : n))
+        setTimeout(() => { npcFetchInFlightRef.current = false }, 500)
+        initChannelRef.current?.send({ type: 'broadcast', event: 'npc_damaged', payload: { npcId, patch } })
+      }
+
+      // Save damage to log
+      await saveRollToLog(newDie1, newDie2, rollResult.amod, rollResult.smod, rollResult.cmod, rollResult.label, characterName, true, targetName, rerollDamage)
+    }
+
+    setRollResult({ ...rollResult, die1: newDie1, die2: newDie2, total, outcome, insightAwarded, spent: true, damage: rerollDamage ?? (rollResult as any).damage })
     setRolling(false)
     await Promise.all([loadEntries(id), loadRolls(id)])
   }
@@ -2000,20 +2095,6 @@ export default function TablePage() {
             {startingCombat ? 'Rolling...' : '⚔️ Start Combat'}
           </button>
         )}
-        {isGM && campaignNpcs.some((n: any) => n.status === 'dead' || ((n.wp_current ?? n.wp_max ?? 10) === 0)) && (
-          <button onClick={async () => {
-            const { data } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
-            const dead = (data ?? []).filter((n: any) => {
-              const wp = n.wp_current ?? n.wp_max ?? 10
-              return n.status === 'dead' || (wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
-            })
-            setRestoreNpcIds(new Set(dead.map((n: any) => n.id)))
-            setShowRestorePicker(true)
-          }}
-            style={hdrBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
-            Restore NPCs
-          </button>
-        )}
         {isGM && combatActive && (
           <button onClick={endCombat}
             style={hdrBtn('#0f2035', '#7ab3d4', '#1a3a5c')}>
@@ -2028,7 +2109,7 @@ export default function TablePage() {
         <div style={{ flex: 1 }} />
         {sessionStatus === 'active' && (
           <select value="" onChange={e => { if (e.target.value) setShowSpecialCheck(e.target.value as any); e.target.value = '' }}
-            style={hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a')}>
+            style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), width: '80px' }}>
             <option value="">Checks</option>
             <option value="perception">Perception</option>
             <option value="gut">Gut Instinct</option>
@@ -2036,12 +2117,6 @@ export default function TablePage() {
             <option value="group">Group Check</option>
             <option value="opposed">Opposed Check</option>
           </select>
-        )}
-        {isGM && sessionCount > 0 && (
-          <a href={`/stories/${id}/sessions`}
-            style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
-            Sessions
-          </a>
         )}
         {campaign?.invite_code && (
           <button onClick={() => {
@@ -2057,6 +2132,31 @@ export default function TablePage() {
           style={hdrBtn('#242424', '#cce0f5', '#3a3a3a')}>
           {sheetMode === 'inline' ? 'Overlay' : 'Inline'}
         </button>
+        {isGM && (
+          <button onClick={() => {
+            // Pre-select everyone who's damaged, dead, or wounded
+            const damagedNpcs = campaignNpcs.filter((n: any) => {
+              const wp = n.wp_current ?? n.wp_max ?? 10
+              const wpMax = n.wp_max ?? 10
+              const rp = n.rp_current ?? n.rp_max ?? 6
+              const rpMax = n.rp_max ?? 6
+              return n.status === 'dead' || wp < wpMax || rp < rpMax
+            }).map(n => `npc:${n.id}`)
+            const damagedPCs = entries.filter(e => e.liveState && (e.liveState.wp_current < e.liveState.wp_max || e.liveState.rp_current < e.liveState.rp_max))
+              .map(e => `pc:${e.stateId}`)
+            setRestoreNpcIds(new Set([...damagedNpcs, ...damagedPCs]))
+            setShowRestorePicker(true)
+          }}
+            style={hdrBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
+            Restore
+          </button>
+        )}
+        {sessionCount > 0 && (
+          <a href={`/stories/${id}/sessions`}
+            style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
+            Sessions
+          </a>
+        )}
         <a href={`/stories/${id}`} style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
           Back
         </a>
@@ -2074,21 +2174,20 @@ export default function TablePage() {
             </div>
 
             {(() => {
-              // Filter out dead, mortally wounded, and incapacitated combatants
+              // Filter out only DEAD combatants (death countdown expired).
+              // Mortally wounded and incapacitated stay visible — they need stabilizing.
               const alive = initiativeOrder.filter(entry => {
                 if (entry.is_npc && entry.npc_id) {
                   const npc = campaignNpcs.find((n: any) => n.id === entry.npc_id)
                   if (npc) {
                     const wp = npc.wp_current ?? npc.wp_max ?? 10
-                    const rp = npc.rp_current ?? npc.rp_max ?? 6
-                    if (wp === 0) return false  // dead or mortally wounded
-                    if (rp === 0) return false  // incapacitated
+                    if (wp === 0 && npc.death_countdown != null && npc.death_countdown <= 0) return false
+                    if (npc.status === 'dead') return false
                   }
                 } else {
                   const ce = entries.find(e => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
                   if (ce?.liveState) {
-                    if (ce.liveState.wp_current === 0) return false  // dead or mortally wounded
-                    if (ce.liveState.rp_current === 0) return false  // incapacitated
+                    if (ce.liveState.wp_current === 0 && (ce.liveState as any).death_countdown != null && (ce.liveState as any).death_countdown <= 0) return false
                   }
                 }
                 return true
@@ -2139,9 +2238,7 @@ export default function TablePage() {
                   {Array.from({ length: 2 }).map((_, i) => {
                     const remaining = entry.actions_remaining ?? 0
                     const hasActions = i < remaining
-                    const isActive = entry.is_active
-                    const spent = !hasActions && remaining < 2
-                    const color = isActive && hasActions ? '#7fc458' : spent ? '#3a3a3a' : !isActive && hasActions ? '#EF9F27' : '#3a3a3a'
+                    const color = hasActions ? '#7fc458' : '#3a3a3a'
                     return <span key={i} style={{ color }}>●</span>
                   })}
                 </span>
@@ -2688,7 +2785,7 @@ export default function TablePage() {
                 const idIdx = new Map(npcOrder.map((id, i) => [id, i]))
                 const isDead = (n: CampaignNpc) => {
                   const wp = n.wp_current ?? n.wp_max ?? 10
-                  return n.status === 'dead' || (wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+                  return n.status === 'dead' || wp === 0
                 }
                 return [...viewingNpcs].sort((a, b) => {
                   const ad = isDead(a) ? 1 : 0
@@ -2796,6 +2893,11 @@ export default function TablePage() {
                   playerNpcs.map((npc: any) => {
                     const isOpen = viewingNpcs.some(n => n.id === npc.id)
                     const inCombat = combatIdSet.has(npc.id)
+                    // Derive status from fresh campaignNpcs data
+                    const freshNpc = campaignNpcs.find((n: any) => n.id === npc.id)
+                    const npcWP = freshNpc?.wp_current ?? npc.wp_current ?? npc.wp_max ?? 10
+                    const npcIsDead = freshNpc?.status === 'dead' || (npcWP === 0 && freshNpc?.death_countdown != null && freshNpc.death_countdown <= 0)
+                    const npcIsMortal = npcWP === 0 && !npcIsDead
                     return (
                       <div
                         key={npc.id}
@@ -2803,7 +2905,7 @@ export default function TablePage() {
                           setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc])
                           setSelectedEntry(null)
                         }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: isOpen ? '#2a1210' : '#1a1a1a', border: `1px solid ${isOpen ? '#c0392b' : inCombat ? '#5a1b1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: isOpen ? '#2a1210' : npcIsDead ? '#0f0f0f' : '#1a1a1a', border: `1px solid ${isOpen ? '#c0392b' : npcIsDead ? '#3a3a3a' : inCombat ? '#5a1b1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s', opacity: npcIsDead ? 0.5 : 1 }}
                       >
                         <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                           {npc.portrait_url ? (
@@ -2814,7 +2916,13 @@ export default function TablePage() {
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.name}</div>
-                          {inCombat && (
+                          {npcIsDead && (
+                            <div style={{ fontSize: '11px', color: '#3a3a3a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>💀 Dead</div>
+                          )}
+                          {npcIsMortal && (
+                            <div style={{ fontSize: '11px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>🩸 Mortally Wounded</div>
+                          )}
+                          {inCombat && !npcIsDead && !npcIsMortal && (
                             <div style={{ fontSize: '11px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>In Combat</div>
                           )}
                           {!npc._combatOnly && npc.reveal_level === 'name_portrait_role' && npc.recruitment_role && (
@@ -3195,62 +3303,50 @@ export default function TablePage() {
         </div>
       )}
 
-      {/* Restore NPCs modal */}
-      {showRestorePicker && (
+      {/* Restore modal — NPCs and PCs */}
+      {showRestorePicker && (() => {
+        const deadNpcs = campaignNpcs.map(n => {
+          const wp = n.wp_current ?? n.wp_max ?? 10
+          const wpMax = n.wp_max ?? 10
+          const rp = n.rp_current ?? n.rp_max ?? 6
+          const rpMax = n.rp_max ?? 6
+          const damaged = n.status === 'dead' || wp < wpMax || rp < rpMax
+          return { key: `npc:${n.id}`, name: n.name, type: n.npc_type ?? 'NPC', isPC: false, id: n.id, damaged }
+        })
+        const deadPCs = entries.filter(e => e.liveState)
+          .map(e => ({ key: `pc:${e.stateId}`, name: e.character.name, type: 'PC', isPC: true, id: e.stateId, damaged: e.liveState!.wp_current < e.liveState!.wp_max || e.liveState!.rp_current < e.liveState!.rp_max }))
+        const allDead = [...deadPCs, ...deadNpcs]
+        const allSelected = allDead.length > 0 && allDead.every(d => restoreNpcIds.has(d.key))
+        return (
         <div onClick={() => setShowRestorePicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '400px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
             <div style={{ fontSize: '10px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Restore</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '0.5rem' }}>Select NPCs to restore</div>
-            {(() => {
-              const deadNpcs = campaignNpcs.filter((n: any) => {
-                const wp = n.wp_current ?? n.wp_max ?? 10
-                return n.status === 'dead' || (wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
-              })
-              const allSelected = deadNpcs.length > 0 && deadNpcs.every(n => restoreNpcIds.has(n.id))
-              return deadNpcs.length > 0 ? (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{restoreNpcIds.size} of {deadNpcs.length} selected</span>
-                  <button onClick={() => setRestoreNpcIds(allSelected ? new Set() : new Set(deadNpcs.map(n => n.id)))}
-                    style={{ padding: '2px 8px', background: allSelected ? '#2a1210' : '#1a2e10', border: `1px solid ${allSelected ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allSelected ? '#f5a89a' : '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    {allSelected ? 'Deselect All' : 'Select All'}
-                  </button>
-                </div>
-              ) : null
-            })()}
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '0.5rem' }}>Restore to full health</div>
+            {allDead.length > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{restoreNpcIds.size} of {allDead.length} selected</span>
+                <button onClick={() => setRestoreNpcIds(allSelected ? new Set() : new Set(allDead.map(d => d.key)))}
+                  style={{ padding: '2px 8px', background: allSelected ? '#2a1210' : '#1a2e10', border: `1px solid ${allSelected ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allSelected ? '#f5a89a' : '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  {allSelected ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
+            )}
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
-              {(() => {
-                const deadNpcs = campaignNpcs.filter((n: any) => {
-                  const wp = n.wp_current ?? n.wp_max ?? 10
-                  return n.status === 'dead' || (wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
-                })
-                return deadNpcs.length === 0 ? (
-                  <div style={{ color: '#cce0f5', fontSize: '12px', textAlign: 'center', padding: '1rem' }}>No dead NPCs to restore.</div>
-                ) : (
-                  deadNpcs.map(npc => (
-                    <label key={npc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', background: restoreNpcIds.has(npc.id) ? '#1a2e10' : '#1a1a1a', border: `1px solid ${restoreNpcIds.has(npc.id) ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer' }}>
-                      <input type="checkbox" checked={restoreNpcIds.has(npc.id)} onChange={() => {
-                        setRestoreNpcIds(prev => {
-                          const next = new Set(prev)
-                          if (next.has(npc.id)) next.delete(npc.id)
-                          else next.add(npc.id)
-                          return next
-                        })
-                      }} style={{ accentColor: '#7fc458' }} />
-                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                        {npc.portrait_url ? (
-                          <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                          <span style={{ fontSize: '9px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
-                        )}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
-                        {npc.npc_type && <span style={{ fontSize: '9px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
-                      </div>
-                    </label>
-                  ))
-                )
-              })()}
+              {allDead.length === 0 ? (
+                <div style={{ color: '#cce0f5', fontSize: '12px', textAlign: 'center', padding: '1rem' }}>No characters in this campaign.</div>
+              ) : (
+                allDead.map(d => (
+                  <label key={d.key} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', background: restoreNpcIds.has(d.key) ? '#1a2e10' : '#1a1a1a', border: `1px solid ${restoreNpcIds.has(d.key) ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={restoreNpcIds.has(d.key)} onChange={() => {
+                      setRestoreNpcIds(prev => { const next = new Set(prev); if (next.has(d.key)) next.delete(d.key); else next.add(d.key); return next })
+                    }} style={{ accentColor: '#7fc458' }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{d.name}</div>
+                      <span style={{ fontSize: '9px', color: d.isPC ? '#7ab3d4' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{d.type}</span>
+                    </div>
+                  </label>
+                ))
+              )}
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setShowRestorePicker(false)}
@@ -3259,14 +3355,24 @@ export default function TablePage() {
               </button>
               <button onClick={async () => {
                 if (restoreNpcIds.size === 0) return
-                const ids = Array.from(restoreNpcIds)
-                for (const npcId of ids) {
+                const selected = Array.from(restoreNpcIds)
+                // Restore NPCs
+                for (const key of selected.filter(k => k.startsWith('npc:'))) {
+                  const npcId = key.slice(4)
                   const npc = campaignNpcs.find((n: any) => n.id === npcId)
                   const wpMax = npc?.wp_max ?? (10 + (npc?.physicality ?? 0) + (npc?.dexterity ?? 0))
                   const rpMax = npc?.rp_max ?? (6 + (npc?.physicality ?? 0))
                   await supabase.from('campaign_npcs').update({ wp_current: wpMax, rp_current: rpMax, status: 'active', death_countdown: null, incap_rounds: null }).eq('id', npcId)
                 }
-                // Refresh NPC data
+                // Restore PCs
+                for (const key of selected.filter(k => k.startsWith('pc:'))) {
+                  const stateId = key.slice(3)
+                  const entry = entries.find(e => e.stateId === stateId)
+                  if (entry) {
+                    await supabase.from('character_states').update({ wp_current: entry.liveState.wp_max, rp_current: entry.liveState.rp_max, death_countdown: null, incap_rounds: null, updated_at: new Date().toISOString() }).eq('id', stateId)
+                  }
+                }
+                // Refresh all data
                 const { data: freshNpcs } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
                 if (freshNpcs) {
                   setCampaignNpcs(freshNpcs)
@@ -3280,17 +3386,20 @@ export default function TablePage() {
                     return fresh ? { ...fresh } as CampaignNpc : vn
                   }))
                 }
+                await loadEntries(id)
+                initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
                 setShowRestorePicker(false)
                 setRestoreNpcIds(new Set())
               }}
                 disabled={restoreNpcIds.size === 0}
                 style={{ flex: 1, padding: '10px', background: restoreNpcIds.size > 0 ? '#1a2e10' : '#242424', border: `1px solid ${restoreNpcIds.size > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: restoreNpcIds.size > 0 ? '#7fc458' : '#3a3a3a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: restoreNpcIds.size > 0 ? 'pointer' : 'not-allowed' }}>
-                Restore {restoreNpcIds.size > 0 ? `(${restoreNpcIds.size} NPCs)` : ''}
+                Restore {restoreNpcIds.size > 0 ? `(${restoreNpcIds.size})` : ''}
               </button>
             </div>
           </div>
         </div>
-      )}
+        )
+      })()}
 
       {/* End Session modal */}
       {showEndSessionModal && (
@@ -3583,22 +3692,36 @@ export default function TablePage() {
               Mortal Injury
             </div>
             <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', marginBottom: '6px' }}>
-              <strong>{insightSavePrompt.targetName}</strong> would be mortally wounded!
+              <strong>{insightSavePrompt.targetName}</strong> is mortally wounded!
             </div>
-            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1.5rem' }}>
-              Trade ALL Insight Dice to survive with 1 WP and 1 RP?
-              <br /><span style={{ fontSize: '13px', color: '#7fc458' }}>({insightSavePrompt.insightDice} Insight {insightSavePrompt.insightDice === 1 ? 'Die' : 'Dice'} will be lost)</span>
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => handleInsightSave(true)}
-                style={{ flex: 1, padding: '10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                Trade All Dice — Survive
-              </button>
-              <button onClick={() => handleInsightSave(false)}
-                style={{ flex: 1, padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                Accept Fate
-              </button>
-            </div>
+            {insightSavePrompt.insightDice > 0 ? (
+              <>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1.5rem' }}>
+                  Trade ALL Insight Dice to survive with 1 WP and 1 RP?
+                  <br /><span style={{ fontSize: '13px', color: '#7fc458' }}>({insightSavePrompt.insightDice} Insight {insightSavePrompt.insightDice === 1 ? 'Die' : 'Dice'} will be lost)</span>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => handleInsightSave(true)}
+                    style={{ flex: 1, padding: '10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Trade All Dice — Survive
+                  </button>
+                  <button onClick={() => handleInsightSave(false)}
+                    style={{ flex: 1, padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Accept Fate
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: '14px', color: '#f5a89a', fontFamily: 'Barlow, sans-serif', marginBottom: '1.5rem' }}>
+                  No Insight Dice available to trade. {insightSavePrompt.targetName} will die if not stabilized.
+                </div>
+                <button onClick={() => { setInsightSavePrompt(null); initChannelRef.current?.send({ type: 'broadcast', event: 'pc_mortal_wound_resolved', payload: {} }) }}
+                  style={{ width: '100%', padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Understood
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -3611,7 +3734,7 @@ const hdrBtn = (bg: string, color: string, border: string): React.CSSProperties 
   padding: '4px 14px', background: bg, border: `1px solid ${border}`, borderRadius: '3px',
   color, fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif',
   letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer',
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
   height: '28px', minWidth: '70px', boxSizing: 'border-box',
-  appearance: 'none', lineHeight: 1, whiteSpace: 'nowrap', flexShrink: 0,
+  appearance: 'none', lineHeight: 1, whiteSpace: 'nowrap', flexShrink: 0, verticalAlign: 'middle',
 })
