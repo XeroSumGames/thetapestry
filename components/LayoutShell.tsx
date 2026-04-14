@@ -9,6 +9,8 @@ const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/stories', '/campa
 
 // Pages that always hide the sidebar
 const NO_SIDEBAR_PAGES = ['/login', '/signup', '/firsttimers', '/welcome']
+// Pages that use their own full-width layout
+const FULL_WIDTH_PATTERN = /^\/stories\/[^/]+\/table$/
 
 function MobileBanner() {
   const [dismissed, setDismissed] = useState(false)
@@ -100,7 +102,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
     )
   }
 
-  const hideSidebar = NO_SIDEBAR_PAGES.includes(pathname)
+  const hideSidebar = NO_SIDEBAR_PAGES.includes(pathname) || FULL_WIDTH_PATTERN.test(pathname)
 
   if (hideSidebar) {
     return <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}><MobileBanner />{children}</div>
