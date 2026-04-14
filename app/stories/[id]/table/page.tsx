@@ -2099,7 +2099,7 @@ export default function TablePage() {
             {sessionActing ? 'Starting...' : 'Start Session'}
           </button>
         )}
-        <a href="/dashboard" style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), textDecoration: 'none' }}>
+        <a href="/dashboard" target="_blank" rel="noreferrer" style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), textDecoration: 'none' }}>
           Dashboard
         </a>
         {isGM && sessionStatus === 'active' && (
