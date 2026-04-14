@@ -145,6 +145,7 @@ interface Props {
   editNpcId?: string | null
   onEditStarted?: () => void
   externalNpcs?: CampaignNpc[]    // Parent's optimistic NPC state — syncs HP/status without waiting for realtime
+  onPlaceOnMap?: (npc: CampaignNpc) => void
 }
 
 const emptyForm = {
@@ -155,7 +156,7 @@ const emptyForm = {
   weapon: null as any,
 }
 
-export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs }: Props) {
+export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs, onPlaceOnMap }: Props) {
   const supabase = createClient()
   const [npcs, setNpcs] = useState<CampaignNpc[]>([])
   const [loading, setLoading] = useState(true)
@@ -699,6 +700,12 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       <button onClick={e => { e.stopPropagation(); onAddToCombat?.([npc]) }}
                         style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: '#7a1f16', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                         Fight
+                      </button>
+                    )}
+                    {onPlaceOnMap && (
+                      <button onClick={e => { e.stopPropagation(); onPlaceOnMap(npc) }}
+                        style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        Map
                       </button>
                     )}
                     {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>}

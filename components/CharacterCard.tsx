@@ -86,6 +86,7 @@ interface Props {
   onRoll?: (label: string, amod: number, smod: number, weaponContext?: { weaponName: string; damage: string; rpPercent: number; conditionCmod: number; traitCmod?: number; traitLabel?: string; traits?: string[] }) => void
   onClose?: () => void
   onKick?: () => void
+  onPlaceOnMap?: () => void
   inline?: boolean
 }
 
@@ -101,6 +102,7 @@ export default function CharacterCard({
   onRoll,
   onClose,
   onKick,
+  onPlaceOnMap,
   inline = false,
 }: Props) {
   const router = useRouter()
@@ -313,6 +315,7 @@ export default function CharacterCard({
           </div>
           {showButtons && (
             <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+              {onPlaceOnMap && <button onClick={onPlaceOnMap} style={btn('#1a1a2e', '#7ab3d4')}>Map</button>}
               <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={btn('#c0392b', '#f5a89a')}>Edit</button>
               <button onClick={handlePrint} disabled={printing} style={btn('#2d5a1b', '#7fc458')}>Print</button>
               {!inline && <button onClick={handleDuplicate} disabled={duplicating} style={btn('#1a3a5c', '#7ab3d4')}>{duplicating ? '...' : 'Duplicate'}</button>}

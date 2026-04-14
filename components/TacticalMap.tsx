@@ -33,9 +33,10 @@ interface Props {
   isGM: boolean
   initiativeOrder: any[]
   onTokenClick?: (token: Token) => void
+  tokenRefreshKey?: number
 }
 
-export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick }: Props) {
+export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, tokenRefreshKey }: Props) {
   const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -64,6 +65,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [resizing, setResizing] = useState<{ corner: string; startX: number; startY: number; startZoom: number } | null>(null)
   const mapDrawRef = useRef<{ x: number; y: number; w: number; h: number }>({ x: 0, y: 0, w: 0, h: 0 })
   const tokensRef = useRef<Token[]>([])
+  const portraitCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
   const sceneRef = useRef<Scene | null>(null)
 
   // Keep refs in sync for canvas drawing
@@ -105,6 +107,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     img.onload = () => { bgImageRef.current = img; draw() }
     img.src = scene.background_url
   }, [scene?.background_url])
+
+  // Refresh tokens when parent signals a change
+  useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
 
   // Redraw on token/scene changes
   useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale])
@@ -255,33 +260,56 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         ctx.shadowBlur = 16
       }
 
-      // Token circle
-      ctx.beginPath()
-      ctx.arc(cx, cy, radius, 0, Math.PI * 2)
-      ctx.fillStyle = t.is_visible ? (t.color || '#c0392b') : 'rgba(192,57,43,0.3)'
-      ctx.fill()
-      ctx.strokeStyle = isActive ? '#7fc458' : selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,1)'
-      ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 1.5
-      ctx.stroke()
-
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-
       // Hidden indicator
       if (!t.is_visible && isGM) {
         ctx.globalAlpha = 0.5
       }
 
-      // Initials
-      ctx.fillStyle = '#f5f2ee'
-      ctx.font = `bold ${Math.max(10, radius * 0.8)}px Barlow Condensed`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      const initials = t.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-      ctx.fillText(initials, cx, cy)
+      // Token circle — portrait or solid color with initials
+      ctx.beginPath()
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+      const portraitImg = t.portrait_url ? portraitCacheRef.current.get(t.portrait_url) : null
+      if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
+        // Clip to circle and draw portrait
+        ctx.save()
+        ctx.clip()
+        ctx.drawImage(portraitImg, cx - radius, cy - radius, radius * 2, radius * 2)
+        ctx.restore()
+        // Border
+        ctx.beginPath()
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+        ctx.strokeStyle = isActive ? '#7fc458' : selectedToken === t.id ? '#f5f2ee' : t.color || '#c0392b'
+        ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 2
+        ctx.stroke()
+      } else {
+        // Solid color circle with initials
+        ctx.fillStyle = t.is_visible ? (t.color || '#c0392b') : 'rgba(192,57,43,0.3)'
+        ctx.fill()
+        ctx.strokeStyle = isActive ? '#7fc458' : selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,1)'
+        ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 1.5
+        ctx.stroke()
+        // Initials
+        ctx.fillStyle = '#f5f2ee'
+        ctx.font = `bold ${Math.max(10, radius * 0.8)}px Barlow Condensed`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        const initials = t.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+        ctx.fillText(initials, cx, cy)
+        // Load portrait for next draw
+        if (t.portrait_url && !portraitCacheRef.current.has(t.portrait_url)) {
+          const img = new Image()
+          img.crossOrigin = 'anonymous'
+          img.onload = () => draw()
+          img.src = t.portrait_url
+          portraitCacheRef.current.set(t.portrait_url, img)
+        }
+      }
+
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
 
       // Name below
-      ctx.font = `${Math.max(8, cellSize * 0.22)}px Barlow Condensed`
+      ctx.font = `${Math.max(13, cellSize * 0.32)}px Barlow Condensed`
       ctx.fillStyle = 'rgba(255,255,255,0.7)'
       ctx.fillText(t.name.split(' ')[0], cx, cy + radius + Math.max(8, cellSize * 0.2))
 
