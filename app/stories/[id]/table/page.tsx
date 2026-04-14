@@ -480,7 +480,7 @@ export default function TablePage() {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
         .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]) })
         .on('broadcast', { event: 'player_kicked' }, (msg: any) => {
-          if (msg.payload?.userId === userId) {
+          if (msg.payload?.userId === user.id) {
             alert('You have been removed from this session by the GM.')
             window.location.href = `/stories/${id}`
           }
