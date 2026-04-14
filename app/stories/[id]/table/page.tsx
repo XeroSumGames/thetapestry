@@ -1075,6 +1075,27 @@ export default function TablePage() {
     await loadInitiative(id)
   }
 
+  async function placeTokenOnMap(name: string, type: 'pc' | 'npc', characterId?: string, npcId?: string, portraitUrl?: string) {
+    // Find the active tactical scene
+    const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
+    if (!activeScene) { alert('No active tactical scene. Create a scene first.'); return }
+    // Check if token already exists
+    const { data: existing } = await supabase.from('scene_tokens').select('id').eq('scene_id', activeScene.id).eq('name', name).limit(1)
+    if (existing && existing.length > 0) { alert(`${name} is already on the map.`); return }
+    await supabase.from('scene_tokens').insert({
+      scene_id: activeScene.id,
+      name,
+      token_type: type,
+      character_id: characterId || null,
+      npc_id: npcId || null,
+      portrait_url: portraitUrl || null,
+      grid_x: 1,
+      grid_y: 1,
+      is_visible: true,
+      color: type === 'pc' ? '#7ab3d4' : '#c0392b',
+    })
+  }
+
   async function addNpcsToCombat(npcsToAdd: any[]) {
     const rows = npcsToAdd.map(n => ({
       campaign_id: id,
@@ -2891,6 +2912,7 @@ export default function TablePage() {
                   onRoll={sessionStatus === 'active' ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
                   onPublish={isGM ? () => handlePublishNpc(npc) : undefined}
                   isPublished={publishedNpcIds.has(npc.id)}
+                  onPlaceOnMap={isGM && (combatActive || showTacticalMap) ? () => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined}
                 />
               )})}
             </div>
@@ -3083,6 +3105,12 @@ export default function TablePage() {
                 <div style={{ fontSize: nameSize, color: isActive ? '#f5a89a' : '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {entry.character.name} <span style={{ color: '#cce0f5', fontWeight: 400 }}>({entry.username})</span>
                 </div>
+                {isGM && (combatActive || showTacticalMap) && (
+                  <div onClick={e => { e.stopPropagation(); placeTokenOnMap(entry.character.name, 'pc', entry.character.id, undefined, getCharPhoto(entry) || undefined) }}
+                    style={{ padding: '1px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', marginTop: '2px' }}>
+                    Map
+                  </div>
+                )}
               </button>
             )
           })
