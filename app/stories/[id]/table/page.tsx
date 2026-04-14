@@ -480,6 +480,7 @@ export default function TablePage() {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
         .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]) })
         .on('broadcast', { event: 'player_kicked' }, (msg: any) => {
+          console.warn('[kick] received player_kicked broadcast:', msg.payload, 'myId:', user.id)
           if (msg.payload?.userId === user.id) {
             alert('You have been removed from this session by the GM.')
             window.location.href = `/stories/${id}`
@@ -2882,7 +2883,12 @@ export default function TablePage() {
                 onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
                 onClose={() => { setSelectedEntry(null); setSheetPos(null) }}
                 onKick={isGM && syncedSelectedEntry.userId !== userId ? async () => {
-                  initChannelRef.current?.send({ type: 'broadcast', event: 'player_kicked', payload: { userId: syncedSelectedEntry.userId } })
+                  const kickUserId = syncedSelectedEntry.userId
+                  console.warn('[kick] kicking userId:', kickUserId, 'channel:', !!initChannelRef.current)
+                  if (initChannelRef.current) {
+                    await initChannelRef.current.send({ type: 'broadcast', event: 'player_kicked', payload: { userId: kickUserId } })
+                    console.warn('[kick] broadcast sent')
+                  }
                   setSelectedEntry(null)
                 } : undefined}
                 inline={true}
