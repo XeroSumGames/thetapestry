@@ -3012,7 +3012,7 @@ export default function TablePage() {
       {/* Bottom portrait strip */}
       <div style={{ borderTop: '1px solid #2e2e2e', display: 'flex', flexShrink: 0, background: '#0f0f0f', height: '80px' }}>
         <button
-          onClick={() => { if (gmEntry) { setSelectedEntry(gmEntry); setViewingNpcs([]); setSheetPos(null) } }}
+          onClick={() => { if (gmEntry) { if (selectedEntry?.stateId === gmEntry.stateId) { setSelectedEntry(null); setSheetPos(null) } else { setSelectedEntry(gmEntry); setViewingNpcs([]); setSheetPos(null) } } }}
           style={{ width: '120px', flexShrink: 0, background: gmEntry ? '#1a1a1a' : '#111', borderTop: 'none', borderBottom: 'none', borderLeft: 'none', borderRight: '1px solid #2e2e2e', cursor: gmEntry ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px', transition: 'background 0.15s' }}
           onMouseEnter={e => { if (gmEntry) (e.currentTarget as HTMLElement).style.background = '#242424' }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = gmEntry ? '#1a1a1a' : '#111' }}
@@ -3040,7 +3040,7 @@ export default function TablePage() {
             const isActive = combatActive && initiativeOrder.some(o => o.is_active && o.character_id === entry.character.id)
             const isMe = entry.userId === userId
             return (
-              <button key={entry.stateId} onClick={() => { if (isGM || isMe) { setSelectedEntry(entry); setViewingNpcs([]); setSheetPos(null) } }}
+              <button key={entry.stateId} onClick={() => { if (isGM || isMe) { if (selectedEntry?.stateId === entry.stateId) { setSelectedEntry(null); setSheetPos(null) } else { setSelectedEntry(entry); setViewingNpcs([]); setSheetPos(null) } } }}
                 style={{ flex: 1, minWidth: 0, background: isActive ? '#1a0f0f' : '#1a1a1a', borderTop: isActive ? '2px solid #c0392b' : isMe ? '2px solid #2d5a1b' : 'none', borderBottom: 'none', borderLeft: 'none', borderRight: i < playerEntries.length - 1 ? '1px solid #2e2e2e' : 'none', cursor: (isGM || isMe) ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: isCompact ? '2px' : '4px', padding: pad, transition: 'background 0.15s' }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                 onMouseLeave={e => (e.currentTarget.style.background = isActive ? '#1a0f0f' : '#1a1a1a')}
