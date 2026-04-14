@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS tactical_scenes (
   grid_rows integer NOT NULL DEFAULT 15,
   is_active boolean NOT NULL DEFAULT false,
   has_grid boolean NOT NULL DEFAULT false,
+  cell_feet integer NOT NULL DEFAULT 3,
   created_at timestamptz DEFAULT now()
 );
 

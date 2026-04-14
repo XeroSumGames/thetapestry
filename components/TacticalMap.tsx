@@ -23,6 +23,7 @@ interface Scene {
   background_url: string | null
   grid_cols: number
   grid_rows: number
+  cell_feet: number
   is_active: boolean
   has_grid: boolean
 }
@@ -55,6 +56,10 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [panY, setPanY] = useState(0)
   const [panning, setPanning] = useState<{ startX: number; startY: number; startPanX: number; startPanY: number } | null>(null)
   const [mapLocked, setMapLocked] = useState(false)
+  const [showGrid, setShowGrid] = useState(true)
+  const [imgScale, setImgScale] = useState(1)
+  const [gridColor, setGridColor] = useState('rgba(255,255,255,0.15)')
+  const [spaceHeld, setSpaceHeld] = useState(false)
   const [resizing, setResizing] = useState<{ corner: string; startX: number; startY: number; startZoom: number } | null>(null)
   const mapDrawRef = useRef<{ x: number; y: number; w: number; h: number }>({ x: 0, y: 0, w: 0, h: 0 })
   const tokensRef = useRef<Token[]>([])
@@ -101,7 +106,16 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   }, [scene?.background_url])
 
   // Redraw on token/scene changes
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, imgScale])
+
+  // Spacebar = pan mode
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) { if (e.code === 'Space' && !e.repeat && !['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) { e.preventDefault(); setSpaceHeld(true) } }
+    function onKeyUp(e: KeyboardEvent) { if (e.code === 'Space') { setSpaceHeld(false) } }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
+  }, [])
 
   // Resize observer
   useEffect(() => {
@@ -125,44 +139,52 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     const s = sceneRef.current
     if (!s) return
 
-    // Canvas scales with zoom — at >100% it exceeds the container, enabling scroll
-    canvas.width = Math.max(container.clientWidth, container.clientWidth * zoom)
-    canvas.height = Math.max(container.clientHeight, container.clientHeight * zoom)
+    // Canvas must be large enough for the zoomed view AND the scaled image
+    const baseW = container.clientWidth
+    const baseH = container.clientHeight
+    let imgW = 0, imgH = 0
+    if (bgImageRef.current) {
+      const img = bgImageRef.current
+      const imgAspect = img.naturalWidth / img.naturalHeight
+      // Always fit to container width — scroll vertically if needed
+      imgW = baseW
+      imgH = baseW / imgAspect
+      imgW *= imgScale
+      imgH *= imgScale
+    }
+    canvas.width = Math.max(baseW, baseW * zoom, imgW)
+    canvas.height = Math.max(baseH, baseH * zoom, imgH)
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     const cellSize = getCellSize()
     const gridW = s.grid_cols * cellSize
     const gridH = s.grid_rows * cellSize
-    const offsetX = (canvas.width - gridW) / 2
-    const offsetY = (canvas.height - gridH) / 2
+    const offsetX = 0
+    const offsetY = 0
 
     // Clear
     ctx.fillStyle = '#111'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // Background image — draw at original aspect ratio, filling the canvas
+    // Background image — always fit to canvas width, scroll vertically if needed
     if (bgImageRef.current) {
       const img = bgImageRef.current
       const imgAspect = img.naturalWidth / img.naturalHeight
-      let drawW: number, drawH: number
-      if (imgAspect > canvas.width / canvas.height) {
-        drawW = canvas.width
-        drawH = canvas.width / imgAspect
-      } else {
-        drawH = canvas.height
-        drawW = canvas.height * imgAspect
-      }
-      ctx.drawImage(img, 0, 0, drawW, drawH)
-      mapDrawRef.current = { x: 0, y: 0, w: drawW, h: drawH }
+      const drawW = canvas.width
+      const drawH = canvas.width / imgAspect
+      const scaledW = drawW * imgScale
+      const scaledH = drawH * imgScale
+      ctx.drawImage(img, 0, 0, scaledW, scaledH)
+      mapDrawRef.current = { x: 0, y: 0, w: scaledW, h: scaledH }
 
       // Resize handles at corners (GM only, unlocked)
       if (isGM && !mapLocked) {
         const hs = 10
         ctx.fillStyle = '#c0392b'
         ;[
-          [0, 0], [drawW - hs, 0],
-          [0, drawH - hs], [drawW - hs, drawH - hs],
+          [0, 0], [scaledW - hs, 0],
+          [0, scaledH - hs], [scaledW - hs, scaledH - hs],
         ].forEach(([hx, hy]) => ctx.fillRect(hx, hy, hs, hs))
       }
     } else {
@@ -170,7 +192,38 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       ctx.fillRect(offsetX, offsetY, gridW, gridH)
     }
 
-    // Grid drawing removed — will be re-added with more context later
+    // Grid overlay
+    if (showGrid) {
+    const cellW = gridW / s.grid_cols
+    const cellH = gridH / s.grid_rows
+    // Grid lines
+    ctx.strokeStyle = gridColor
+    ctx.lineWidth = 0.5
+    for (let x = 0; x <= s.grid_cols; x++) {
+      ctx.beginPath()
+      ctx.moveTo(offsetX + x * cellW, offsetY)
+      ctx.lineTo(offsetX + x * cellW, offsetY + gridH)
+      ctx.stroke()
+    }
+    for (let y = 0; y <= s.grid_rows; y++) {
+      ctx.beginPath()
+      ctx.moveTo(offsetX, offsetY + y * cellH)
+      ctx.lineTo(offsetX + gridW, offsetY + y * cellH)
+      ctx.stroke()
+    }
+    // Column labels (A, B, C...)
+    ctx.fillStyle = gridColor.replace('0.15', '0.5').replace('0.4', '0.7')
+    ctx.font = `${Math.max(8, cellW * 0.3)}px Barlow Condensed`
+    ctx.textAlign = 'center'
+    for (let x = 0; x < s.grid_cols; x++) {
+      ctx.fillText(String.fromCharCode(65 + (x % 26)), offsetX + x * cellW + cellW / 2, offsetY - 4)
+    }
+    // Row labels (1, 2, 3...)
+    ctx.textAlign = 'right'
+    for (let y = 0; y < s.grid_rows; y++) {
+      ctx.fillText(String(y + 1), offsetX - 4, offsetY + y * cellH + cellH / 2 + 4)
+    }
+    } // end showGrid
 
     // Tokens
     const toks = tokensRef.current
@@ -279,6 +332,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   }
 
   function handleMouseDown(e: React.MouseEvent) {
+    // Spacebar held = always pan
+    if (spaceHeld) {
+      setPanning({ startX: e.clientX, startY: e.clientY, startPanX: panX, startPanY: panY })
+      return
+    }
     const pos = getGridPos(e)
     if (pos) {
       const tok = getTokenAt(pos.gx, pos.gy)
@@ -291,10 +349,10 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       }
     }
     // Check if clicking a resize handle (corners of the map image)
-    if (isGM && !mapLocked && bgImageRef.current) {
-      const rect = canvasRef.current!.getBoundingClientRect()
-      const mx = e.clientX - rect.left
-      const my = e.clientY - rect.top
+    if (isGM && !mapLocked && bgImageRef.current && canvasRef.current && containerRef.current) {
+      const rect = canvasRef.current.getBoundingClientRect()
+      const mx = e.clientX - rect.left + containerRef.current.scrollLeft
+      const my = e.clientY - rect.top + containerRef.current.scrollTop
       const m = mapDrawRef.current
       const hs = 14 // hit area slightly larger than visual handle
       const corners = [
@@ -305,7 +363,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       ]
       for (const c of corners) {
         if (mx >= c.x && mx <= c.x + hs && my >= c.y && my <= c.y + hs) {
-          setResizing({ corner: c.name, startX: e.clientX, startY: e.clientY, startZoom: zoom })
+          console.warn('[TacticalMap] resize start:', c.name, 'zoom:', zoom)
+          setResizing({ corner: c.name, startX: e.clientX, startY: e.clientY, startZoom: imgScale })
           return
         }
       }
@@ -320,8 +379,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   function handleMouseMove(e: React.MouseEvent) {
     if (resizing) {
       const delta = e.clientX - resizing.startX
-      const zoomDelta = delta / 300
-      setZoom(Math.max(0.1, Math.min(4, resizing.startZoom + zoomDelta)))
+      const scaleDelta = delta / 300
+      setImgScale(Math.max(0.1, Math.min(5, resizing.startZoom + scaleDelta)))
       return
     }
     if (panning) {
@@ -358,7 +417,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   // Scene management
   async function createScene() {
     const { data, error } = await supabase.from('tactical_scenes').insert({
-      campaign_id: campaignId, name: setupName, grid_cols: setupCols, grid_rows: setupRows, is_active: true, has_grid: setupHasGrid,
+      campaign_id: campaignId, name: setupName, grid_cols: setupCols, grid_rows: setupRows, cell_feet: 3, is_active: true, has_grid: setupHasGrid,
     }).select().single()
     if (error) { console.error('[TacticalMap] createScene error:', error.message); alert('Failed to create scene: ' + error.message); return }
     if (data) {
@@ -470,6 +529,14 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       {/* GM Controls — left strip */}
       {isGM && (
         <div style={{ width: '130px', flexShrink: 0, background: '#0d0d0d', borderRight: '1px solid #2e2e2e', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden' }}>
+          <select value={scene.id} onChange={e => {
+            if (e.target.value === '__new__') { setShowSetup(true); e.target.value = scene.id }
+            else activateScene(e.target.value)
+          }}
+            style={{ padding: '4px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', width: '100%', height: '28px', boxSizing: 'border-box', textAlign: 'center', marginBottom: '4px' }}>
+            {scenes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            <option value="__new__">+ New Scene</option>
+          </select>
           <div style={{ marginBottom: '4px' }}>
             <div style={{ fontSize: '11px', color: '#fff', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px', textAlign: 'center' }}>Scene Name</div>
             <input value={scene.name} onChange={async e => {
@@ -494,8 +561,86 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
             <button onClick={() => setZoom(z => Math.min(4, z + 0.25))}
               style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>+</button>
           </div>
+          {/* Grid controls */}
+          <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '6px', marginTop: '4px' }}>
+            <button onClick={() => setShowGrid(prev => !prev)}
+              style={{ padding: '4px 10px', background: showGrid ? '#1a2e10' : 'rgba(15,15,15,.85)', border: `1px solid ${showGrid ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: showGrid ? '#7fc458' : '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', marginBottom: '4px' }}>
+              Grid {showGrid ? 'ON' : 'OFF'}
+            </button>
+            <select value={gridColor} onChange={e => setGridColor(e.target.value)}
+              style={{ padding: '4px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', width: '100%', height: '28px', boxSizing: 'border-box', textAlign: 'center', marginBottom: '4px' }}>
+              <option value="rgba(255,255,255,0.15)">White</option>
+              <option value="rgba(0,0,0,0.4)">Black</option>
+              <option value="rgba(128,128,128,0.4)">Grey</option>
+              <option value="rgba(192,57,43,0.4)">Red</option>
+              <option value="rgba(52,152,219,0.4)">Blue</option>
+              <option value="rgba(241,196,15,0.4)">Yellow</option>
+              <option value="rgba(39,174,96,0.4)">Green</option>
+            </select>
+            <button onClick={async () => {
+              if (!bgImageRef.current || !containerRef.current) return
+              const img = bgImageRef.current
+              const cw = containerRef.current.clientWidth
+              const ch = containerRef.current.clientHeight
+              const imgAspect = img.naturalWidth / img.naturalHeight
+              let drawW: number, drawH: number
+              if (imgAspect > cw / ch) { drawW = cw; drawH = cw / imgAspect }
+              else { drawH = ch; drawW = ch * imgAspect }
+              const cellPx = Math.max(20, drawW / 30)
+              const newCols = Math.round(drawW / cellPx)
+              const newRows = Math.round(drawH / cellPx)
+              setScene(p => p ? { ...p, grid_cols: newCols, grid_rows: newRows } : p)
+              await supabase.from('tactical_scenes').update({ grid_cols: newCols, grid_rows: newRows }).eq('id', scene.id)
+            }}
+              style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', marginBottom: '4px' }}>
+              Fit to Map
+            </button>
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '9px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cols</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                  <button onClick={async () => { const v = Math.max(1, scene.grid_cols - 1); setScene(p => p ? { ...p, grid_cols: v } : p); await supabase.from('tactical_scenes').update({ grid_cols: v }).eq('id', scene.id) }}
+                    style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'center' }}>{scene.grid_cols}</span>
+                  <button onClick={async () => { const v = scene.grid_cols + 1; setScene(p => p ? { ...p, grid_cols: v } : p); await supabase.from('tactical_scenes').update({ grid_cols: v }).eq('id', scene.id) }}
+                    style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>+</button>
+                </div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '9px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Rows</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                  <button onClick={async () => { const v = Math.max(1, scene.grid_rows - 1); setScene(p => p ? { ...p, grid_rows: v } : p); await supabase.from('tactical_scenes').update({ grid_rows: v }).eq('id', scene.id) }}
+                    style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'center' }}>{scene.grid_rows}</span>
+                  <button onClick={async () => { const v = scene.grid_rows + 1; setScene(p => p ? { ...p, grid_rows: v } : p); await supabase.from('tactical_scenes').update({ grid_rows: v }).eq('id', scene.id) }}
+                    style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>+</button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '9px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cell (ft)</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                <button onClick={async () => { const v = Math.max(1, (scene.cell_feet ?? 3) - 1); setScene(p => p ? { ...p, cell_feet: v } : p); await supabase.from('tactical_scenes').update({ cell_feet: v }).eq('id', scene.id) }}
+                  style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
+                <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'center' }}>{scene.cell_feet ?? 3}ft</span>
+                <button onClick={async () => { const v = (scene.cell_feet ?? 3) + 1; setScene(p => p ? { ...p, cell_feet: v } : p); await supabase.from('tactical_scenes').update({ cell_feet: v }).eq('id', scene.id) }}
+                  style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>+</button>
+              </div>
+            </div>
+          </div>
+          <div style={{ flex: 1 }} />
+          <button onClick={() => {
+              setImgScale(1)
+              setZoom(1)
+              setPanX(0)
+              setPanY(0)
+              if (containerRef.current) { containerRef.current.scrollTop = 0; containerRef.current.scrollLeft = 0 }
+            }}
+              style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
+              Fit to Screen
+          </button>
           <button onClick={() => setMapLocked(prev => !prev)}
-            style={{ padding: '4px 10px', background: mapLocked ? '#2a1210' : 'rgba(15,15,15,.85)', border: `1px solid ${mapLocked ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: mapLocked ? '#f5a89a' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%' }}>
+            style={{ padding: '4px 10px', background: mapLocked ? '#2a1210' : 'rgba(15,15,15,.85)', border: `1px solid ${mapLocked ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: mapLocked ? '#f5a89a' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
             {mapLocked ? 'Unlock Map' : 'Lock Map'}
           </button>
           {scene.background_url && (
@@ -505,19 +650,10 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               setScene(prev => prev ? { ...prev, background_url: null } : prev)
               bgImageRef.current = null
             }}
-              style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%' }}>
+              style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
               Delete Map
             </button>
           )}
-          <div style={{ flex: 1 }} />
-          <select value={scene.id} onChange={e => {
-            if (e.target.value === '__new__') { setShowSetup(true); e.target.value = scene.id }
-            else activateScene(e.target.value)
-          }}
-            style={{ padding: '4px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', width: '100%', height: '28px', boxSizing: 'border-box', textAlign: 'center' }}>
-            {scenes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            <option value="__new__">+ New Scene</option>
-          </select>
         </div>
       )}
 
@@ -529,7 +665,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           onMouseUp={handleMouseUp}
           onDoubleClick={handleDoubleClick}
           onWheel={e => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); setZoom(z => Math.max(0.1, Math.min(4, z + (e.deltaY < 0 ? 0.1 : -0.1)))) } }}
-          style={{ display: 'block', cursor: resizing ? 'nwse-resize' : dragging ? 'grabbing' : 'default' }}
+          style={{ display: 'block', cursor: panning ? 'grabbing' : spaceHeld ? 'grab' : resizing ? 'nwse-resize' : dragging ? 'grabbing' : 'default' }}
         />
 
       {/* Selected token info — bottom left */}
