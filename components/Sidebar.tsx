@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import NotificationBell from './NotificationBell'
@@ -8,6 +8,8 @@ export default function Sidebar() {
   const [username, setUsername] = useState('')
   const [userRole, setUserRole] = useState<'survivor' | 'thriver' | null>(null)
   const [pendingCount, setPendingCount] = useState(0)
+  const [onlineCount, setOnlineCount] = useState(0)
+  const presenceRef = useRef<any>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -26,8 +28,20 @@ export default function Sidebar() {
         setPendingCount(count ?? 0)
       }
       setLoaded(true)
+
+      // Global presence — track who's online across the platform
+      presenceRef.current = supabase.channel('global_presence', { config: { presence: { key: user.id } } })
+      presenceRef.current.on('presence', { event: 'sync' }, () => {
+        setOnlineCount(Object.keys(presenceRef.current.presenceState()).length)
+      })
+      presenceRef.current.subscribe(async (status: string) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceRef.current.track({ user_id: user.id })
+        }
+      })
     }
     load()
+    return () => { if (presenceRef.current) supabase.removeChannel(presenceRef.current) }
   }, [])
 
   if (!loaded) return null
@@ -68,6 +82,11 @@ export default function Sidebar() {
           <img src="/DistemperLogoRedv5.png" alt="Distemper" style={{ height: '28px', objectFit: 'contain', marginBottom: '4px' }} />
           <div style={{ fontFamily: 'Distemper, sans-serif', fontSize: '18px', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1 }}>The Tapestry <span style={{ fontSize: '12px', color: '#f5f2ee' }}>v1.0</span></div>
         </a>
+        {onlineCount > 0 && (
+          <div style={{ fontSize: '9px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: '4px' }}>
+            Survivors present: {onlineCount}
+          </div>
+        )}
       </div>
 
       {/* User header */}
