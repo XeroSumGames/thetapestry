@@ -2165,16 +2165,16 @@ export default function TablePage() {
             Session {sessionCount}
           </div>
         )}
-        {isGM && sessionStatus === 'active' && !combatActive && (
-          <button onClick={startCombat} disabled={startingCombat || entries.length === 0}
-            style={{ ...hdrBtn('#7a1f16', '#f5a89a', '#c0392b'), opacity: startingCombat || entries.length === 0 ? 0.5 : 1, cursor: startingCombat || entries.length === 0 ? 'not-allowed' : 'pointer' }}>
-            {startingCombat ? 'Rolling...' : '⚔️ Start Combat'}
-          </button>
-        )}
         {isGM && !combatActive && (
           <button onClick={() => setShowTacticalMap(prev => !prev)}
             style={hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a')}>
             {showTacticalMap ? 'Campaign Map' : 'Tactical Map'}
+          </button>
+        )}
+        {isGM && sessionStatus === 'active' && !combatActive && (
+          <button onClick={startCombat} disabled={startingCombat || entries.length === 0}
+            style={{ ...hdrBtn('#7a1f16', '#f5a89a', '#c0392b'), opacity: startingCombat || entries.length === 0 ? 0.5 : 1, cursor: startingCombat || entries.length === 0 ? 'not-allowed' : 'pointer' }}>
+            {startingCombat ? 'Rolling...' : '⚔️ Start Combat'}
           </button>
         )}
         {isGM && combatActive && (
