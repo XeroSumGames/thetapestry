@@ -11,6 +11,7 @@ import PlayerNotes from '../../../../components/PlayerNotes'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
 const CampaignMap = dynamic(() => import('../../../../components/CampaignMap'), { ssr: false })
+const TacticalMap = dynamic(() => import('../../../../components/TacticalMap'), { ssr: false })
 import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { logEvent } from '../../../../lib/events'
 import { rollDamage, calculateDamage } from '../../../../lib/damage'
@@ -165,6 +166,7 @@ export default function TablePage() {
 
   const [campaign, setCampaign] = useState<Campaign | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const [myUsername, setMyUsername] = useState<string>('')
   const [isGM, setIsGM] = useState(false)
   const [entries, setEntries] = useState<TableEntry[]>([])
   const [gmInfo, setGmInfo] = useState<GmInfo | null>(null)
@@ -187,6 +189,7 @@ export default function TablePage() {
   const [showAddNPC, setShowAddNPC] = useState(false)
   const [npcName, setNpcName] = useState('')
   const [startingCombat, setStartingCombat] = useState(false)
+  const [showTacticalMap, setShowTacticalMap] = useState(false)
   const [showNpcPicker, setShowNpcPicker] = useState(false)
   const [dropCharacter, setDropCharacter] = useState<string>('')
   const [selectedNpcIds, setSelectedNpcIds] = useState<Set<string>>(new Set())
@@ -391,6 +394,8 @@ export default function TablePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       setUserId(user.id)
+      const { data: myProfile } = await supabase.from('profiles').select('username, role').eq('id', user.id).single()
+      setMyUsername(myProfile?.username ?? '')
 
       const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
       if (!camp) { router.push('/stories'); return }
@@ -562,16 +567,21 @@ export default function TablePage() {
         .subscribe()
 
       // Presence — track how many users are on this table page
-      presenceChannelRef.current = supabase.channel(`presence_${id}`, { config: { presence: { key: user.id } } })
-      presenceChannelRef.current.on('presence', { event: 'sync' }, () => {
-        const state = presenceChannelRef.current.presenceState()
-        setPresenceCount(Object.keys(state).length)
-      })
-      presenceChannelRef.current.subscribe(async (status: string) => {
-        if (status === 'SUBSCRIBED') {
-          await presenceChannelRef.current.track({ user_id: user.id, username: user.user_metadata?.username ?? 'Unknown' })
-        }
-      })
+      try {
+        const presChannel = supabase.channel(`presence_table_${id}_${Date.now()}`, { config: { presence: { key: user.id } } })
+        presChannel.on('presence', { event: 'sync' }, () => {
+          const state = presChannel.presenceState()
+          setPresenceCount(Object.keys(state).length)
+        })
+        presChannel.subscribe(async (status: string) => {
+          if (status === 'SUBSCRIBED') {
+            await presChannel.track({ user_id: user.id })
+          }
+        })
+        presenceChannelRef.current = presChannel
+      } catch (e) {
+        console.warn('[presence] setup error:', e)
+      }
     }
     load()
     return () => {
@@ -2137,6 +2147,12 @@ export default function TablePage() {
             {startingCombat ? 'Rolling...' : '⚔️ Start Combat'}
           </button>
         )}
+        {isGM && !combatActive && (
+          <button onClick={() => setShowTacticalMap(prev => !prev)}
+            style={hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a')}>
+            {showTacticalMap ? 'Campaign Map' : 'Tactical Map'}
+          </button>
+        )}
         {isGM && combatActive && (
           <button onClick={endCombat}
             style={hdrBtn('#0f2035', '#7ab3d4', '#1a3a5c')}>
@@ -2518,8 +2534,8 @@ export default function TablePage() {
         {/* Left — Game Feed */}
         <div style={{ width: '260px', flexShrink: 0, borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ padding: '6px 10px', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
-            <div style={{ fontSize: '9px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase' }}>
-              Survivors present: {presenceCount}
+            <div style={{ fontSize: '15px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', textAlign: 'center' }}>
+              <span style={{ color: '#c0392b' }}>{myUsername}{isGM ? ' (GM)' : ''}</span> | Survivors: {entries.length}
             </div>
           </div>
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
@@ -2638,8 +2654,8 @@ export default function TablePage() {
                       {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
                     </div>
                     {r.damage_json && (
-                      <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>
-                        <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '11px' }}>Damage → {r.damage_json.targetName}</span>
+                      <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>
+                        <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '12px' }}>Damage → {r.damage_json.targetName}</span>
                         <div style={{ marginTop: '2px' }}>
                           {r.damage_json.base > 0 && <span>{r.damage_json.base}</span>}
                           {r.damage_json.diceDesc && <span>{r.damage_json.base > 0 ? '+' : ''}{r.damage_json.diceDesc} ({r.damage_json.diceRoll})</span>}
@@ -2778,7 +2794,7 @@ export default function TablePage() {
                   </div>
                   {item.data.damage_json && (
                     <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>
-                      <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '11px' }}>Damage → {item.data.damage_json.targetName}</span>
+                      <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '12px' }}>Damage → {item.data.damage_json.targetName}</span>
                       <div style={{ marginTop: '2px' }}>
                         {item.data.damage_json.base > 0 && <span>{item.data.damage_json.base}</span>}
                         {item.data.damage_json.diceDesc && <span>{item.data.damage_json.base > 0 ? '+' : ''}{item.data.damage_json.diceDesc} ({item.data.damage_json.diceRoll})</span>}
@@ -2812,8 +2828,31 @@ export default function TablePage() {
 
         {/* Center — Map always rendered, sheets float on top */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
-          {/* Campaign Map — always rendered */}
-          <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} revealedNpcIds={revealedNpcIds} focusPin={focusPin} />
+          {/* Center map — tactical during combat or when toggled, campaign otherwise */}
+          {(combatActive || showTacticalMap) ? (
+            <TacticalMap
+              campaignId={id}
+              isGM={isGM}
+              initiativeOrder={initiativeOrder}
+              onTokenClick={(token: any) => {
+                if (token.npc_id) {
+                  const npc = campaignNpcs.find((n: any) => n.id === token.npc_id)
+                  if (npc) {
+                    setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc as CampaignNpc])
+                    setSelectedEntry(null)
+                  }
+                } else if (token.character_id) {
+                  const entry = entries.find(e => e.character.id === token.character_id)
+                  if (entry) {
+                    if (selectedEntry?.stateId === entry.stateId) { setSelectedEntry(null); setSheetPos(null) }
+                    else { setSelectedEntry(entry); setViewingNpcs([]); setSheetPos(null) }
+                  }
+                }
+              }}
+            />
+          ) : (
+            <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} revealedNpcIds={revealedNpcIds} focusPin={focusPin} />
+          )}
 
           {/* NPC Card(s) grid — floats over map */}
           {viewingNpcs.length > 0 && (
