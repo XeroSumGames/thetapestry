@@ -190,6 +190,7 @@ export default function TablePage() {
   const [npcName, setNpcName] = useState('')
   const [startingCombat, setStartingCombat] = useState(false)
   const [showTacticalMap, setShowTacticalMap] = useState(false)
+  const [tacticalShared, setTacticalShared] = useState(false)
   const [tokenRefreshKey, setTokenRefreshKey] = useState(0)
   const [showNpcPicker, setShowNpcPicker] = useState(false)
   const [dropCharacter, setDropCharacter] = useState<string>('')
@@ -493,6 +494,8 @@ export default function TablePage() {
           }
         })
         .on('broadcast', { event: 'combat_started' }, () => { loadInitiative(id); loadRolls(id) })
+        .on('broadcast', { event: 'tactical_shared' }, (msg: any) => { setTacticalShared(msg.payload?.shared ?? false); setShowTacticalMap(msg.payload?.shared ?? false) })
+        .on('broadcast', { event: 'tactical_unshared' }, () => { setTacticalShared(false); setShowTacticalMap(false) })
         .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id); loadRolls(id) })
         .on('broadcast', { event: 'npc_damaged' }, (msg: any) => {
           // Another client dealt damage to an NPC — apply the patch locally
@@ -2171,6 +2174,16 @@ export default function TablePage() {
             {showTacticalMap ? 'Campaign Map' : 'Tactical Map'}
           </button>
         )}
+        {isGM && showTacticalMap && !combatActive && (
+          <button onClick={() => {
+            const newShared = !tacticalShared
+            setTacticalShared(newShared)
+            initChannelRef.current?.send({ type: 'broadcast', event: newShared ? 'tactical_shared' : 'tactical_unshared', payload: { shared: newShared } })
+          }}
+            style={hdrBtn(tacticalShared ? '#1a2e10' : '#242424', tacticalShared ? '#7fc458' : '#d4cfc9', tacticalShared ? '#2d5a1b' : '#3a3a3a')}>
+            {tacticalShared ? 'Unshare Map' : 'Share Map'}
+          </button>
+        )}
         {isGM && sessionStatus === 'active' && !combatActive && (
           <button onClick={startCombat} disabled={startingCombat || entries.length === 0}
             style={{ ...hdrBtn('#7a1f16', '#f5a89a', '#c0392b'), opacity: startingCombat || entries.length === 0 ? 0.5 : 1, cursor: startingCombat || entries.length === 0 ? 'not-allowed' : 'pointer' }}>
@@ -2853,7 +2866,7 @@ export default function TablePage() {
         {/* Center — Map always rendered, sheets float on top */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#1a1a1a', overflow: 'hidden', position: 'relative' }}>
           {/* Center map — tactical during combat or when toggled, campaign otherwise */}
-          {(combatActive || showTacticalMap) ? (
+          {(combatActive || showTacticalMap || tacticalShared) ? (
             <TacticalMap
               campaignId={id}
               isGM={isGM}
@@ -3113,7 +3126,7 @@ export default function TablePage() {
                 {isGM && (combatActive || showTacticalMap) && (
                   <div onClick={e => { e.stopPropagation(); placeTokenOnMap(entry.character.name, 'pc', entry.character.id, undefined, getCharPhoto(entry) || undefined) }}
                     style={{ padding: '1px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', marginTop: '2px' }}>
-                    Map
+                    + Map
                   </div>
                 )}
               </button>
