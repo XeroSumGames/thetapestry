@@ -57,6 +57,7 @@
 - [x] Player bar reorders so each viewer sees their own character next to GM portrait
 - [x] Open NpcCard refreshes when underlying NPC HP changes
 - [ ] **Player-facing NPC card on Show All click** — clicking a revealed NPC in the player's NPCs tab opens a read-only card (currently opens the same editable view as GM)
+- [ ] **Player NPC notes + first impressions** — clicking an NPC name in the player's Assets NPCs tab should open a space where the player can write personal notes about that NPC, and show their First Impression results
 
 ---
 

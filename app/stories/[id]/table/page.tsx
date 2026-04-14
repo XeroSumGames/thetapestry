@@ -2804,16 +2804,6 @@ export default function TablePage() {
                   style={{ width: '24px', flexShrink: 0, background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '0 3px 3px 0', color: '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', writingMode: 'vertical-rl', letterSpacing: '.08em', padding: 0, transform: 'rotate(180deg)' }}>Send</button>
               </div>
             )}
-            {sessionStatus !== 'idle' && myEntry && (
-              <div style={{ padding: '6px 8px' }}>
-                <button
-                  onClick={() => { if (selectedEntry?.character.id === myEntry.character.id) { setSelectedEntry(null) } else { setSelectedEntry(myEntry); setViewingNpcs([]); setSheetPos(null) } }}
-                  style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
-                >
-                  Open My Sheet to Roll
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
