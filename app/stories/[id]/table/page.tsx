@@ -2099,6 +2099,9 @@ export default function TablePage() {
             {sessionActing ? 'Starting...' : 'Start Session'}
           </button>
         )}
+        <a href="/dashboard" style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), textDecoration: 'none' }}>
+          Dashboard
+        </a>
         {isGM && sessionStatus === 'active' && (
           <button onClick={async () => {
             // Fetch any submitted player notes so the GM sees them in the modal.

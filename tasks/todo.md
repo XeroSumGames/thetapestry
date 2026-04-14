@@ -56,8 +56,12 @@
 - [x] Players have own Notes tab with "Add to Session Summary" — appended notes prefix with character name in GM's End Session modal
 - [x] Player bar reorders so each viewer sees their own character next to GM portrait
 - [x] Open NpcCard refreshes when underlying NPC HP changes
-- [ ] **Player-facing NPC card on Show All click** — clicking a revealed NPC in the player's NPCs tab opens a read-only card (currently opens the same editable view as GM)
+- [ ] **Player-facing NPC card on Show All click** — clicking a revealed NPC in the player's NPCs tab opens a read-only card (currently opens the same editable view as GM). Design question: should the player card just show Name, First Impression role, and description? Or more?
 - [ ] **Player NPC notes + first impressions** — clicking an NPC name in the player's Assets NPCs tab should open a space where the player can write personal notes about that NPC, and show their First Impression results
+- [ ] **Insight Dice pre-roll CMod** — rethink whether spending an Insight Die pre-roll should give +3 or +2 CMod
+- [ ] **Insight Dice sequential reroll** — if rerolling die 1 doesn't improve the result, allow spending a second Insight Die to reroll die 2 (currently locked out after first spend)
+- [ ] **Whisper chat** — clicking another player's name in the bottom portrait bar opens a private whisper chat between the two players (not visible to GM or other players)
+- [ ] **NPC health as narrative feeling** — player-facing NPC cards should show WP/RP as a descriptive state (Healthy, Ragged, Beaten, Dying, etc.) instead of exact numbers — GM still sees the dots
 
 ---
 
