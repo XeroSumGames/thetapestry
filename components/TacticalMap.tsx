@@ -471,7 +471,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       {isGM && (
         <div style={{ width: '130px', flexShrink: 0, background: '#0d0d0d', borderRight: '1px solid #2e2e2e', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden' }}>
           <div style={{ marginBottom: '4px' }}>
-            <div style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Scene Name</div>
+            <div style={{ fontSize: '11px', color: '#fff', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px', textAlign: 'center' }}>Scene Name</div>
             <input value={scene.name} onChange={async e => {
               const newName = e.target.value
               setScene(prev => prev ? { ...prev, name: newName } : prev)
@@ -479,24 +479,14 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
             }}
               style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', textAlign: 'center' }} />
           </div>
-          <label style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', display: 'block' }}>
+          <label style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '28px', boxSizing: 'border-box' }}>
             {uploading ? '...' : 'Upload Map'}
             <input type="file" accept="image/*" hidden onChange={e => { if (e.target.files?.[0]) uploadBackground(e.target.files[0]) }} />
           </label>
           <button onClick={autoPopulateTokens}
-            style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%' }}>
+            style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
             Place Tokens
           </button>
-          <button onClick={() => setShowSetup(true)}
-            style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%' }}>
-            New Scene
-          </button>
-          {scenes.length > 1 && (
-            <select value={scene.id} onChange={e => activateScene(e.target.value)}
-              style={{ padding: '4px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', cursor: 'pointer' }}>
-              {scenes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          )}
           <div style={{ display: 'flex', gap: '4px' }}>
             <button onClick={() => setZoom(z => Math.max(0.25, z - 0.25))}
               style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>−</button>
@@ -519,6 +509,15 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               Delete Map
             </button>
           )}
+          <div style={{ flex: 1 }} />
+          <select value={scene.id} onChange={e => {
+            if (e.target.value === '__new__') { setShowSetup(true); e.target.value = scene.id }
+            else activateScene(e.target.value)
+          }}
+            style={{ padding: '4px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', width: '100%', height: '28px', boxSizing: 'border-box', textAlign: 'center' }}>
+            {scenes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            <option value="__new__">+ New Scene</option>
+          </select>
         </div>
       )}
 
