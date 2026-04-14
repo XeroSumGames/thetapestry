@@ -361,7 +361,13 @@
 - [x] Multiple scenes per campaign with dropdown switcher
 - [x] Double-click token opens NPC card
 - [x] Reverts to campaign map when combat ends
-- [ ] Zoom and pan
+- [x] Zoom and pan — +/- buttons, Ctrl+scroll wheel zoom, spacebar+drag to pan, scrollable at >100%
+- [x] Tactical Map toggle button in header bar (GM can set up scenes before combat)
+- [x] GM controls strip — Scene Name, Upload Map, Place Tokens, zoom, grid on/off, grid color picker, opacity slider, Fit to Map, cols/rows/cell-feet adjusters, Lock/Unlock Map, Delete Map, Delete Scene, Fit to Screen
+- [x] Scene dropdown with + New Scene option
+- [x] Corner resize handles for map image (independent of zoom)
+- [x] Map always fits to container width, scroll vertically for tall maps
+- [x] Grid anchored to top-left, adjustable cols/rows/cell size in feet (default 3ft)
 - [ ] WP and stress visible beneath each token
 - [ ] Token status badges — Wounded, Stressed, Incapacitated, Dead
 - [ ] GM ping — flash a location on everyone's screen

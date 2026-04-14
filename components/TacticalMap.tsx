@@ -58,7 +58,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [mapLocked, setMapLocked] = useState(false)
   const [showGrid, setShowGrid] = useState(true)
   const [imgScale, setImgScale] = useState(1)
-  const [gridColor, setGridColor] = useState('rgba(255,255,255,0.15)')
+  const [gridColor, setGridColor] = useState('white')
+  const [gridOpacity, setGridOpacity] = useState(0.4)
   const [spaceHeld, setSpaceHeld] = useState(false)
   const [resizing, setResizing] = useState<{ corner: string; startX: number; startY: number; startZoom: number } | null>(null)
   const mapDrawRef = useRef<{ x: number; y: number; w: number; h: number }>({ x: 0, y: 0, w: 0, h: 0 })
@@ -106,7 +107,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   }, [scene?.background_url])
 
   // Redraw on token/scene changes
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, imgScale])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale])
 
   // Spacebar = pan mode
   useEffect(() => {
@@ -197,6 +198,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     const cellW = gridW / s.grid_cols
     const cellH = gridH / s.grid_rows
     // Grid lines
+    ctx.globalAlpha = gridOpacity
     ctx.strokeStyle = gridColor
     ctx.lineWidth = 0.5
     for (let x = 0; x <= s.grid_cols; x++) {
@@ -212,7 +214,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       ctx.stroke()
     }
     // Column labels (A, B, C...)
-    ctx.fillStyle = gridColor.replace('0.15', '0.5').replace('0.4', '0.7')
+    ctx.fillStyle = gridColor
     ctx.font = `${Math.max(8, cellW * 0.3)}px Barlow Condensed`
     ctx.textAlign = 'center'
     for (let x = 0; x < s.grid_cols; x++) {
@@ -223,6 +225,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     for (let y = 0; y < s.grid_rows; y++) {
       ctx.fillText(String(y + 1), offsetX - 4, offsetY + y * cellH + cellH / 2 + 4)
     }
+    ctx.globalAlpha = 1
     } // end showGrid
 
     // Tokens
@@ -257,7 +260,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       ctx.arc(cx, cy, radius, 0, Math.PI * 2)
       ctx.fillStyle = t.is_visible ? (t.color || '#c0392b') : 'rgba(192,57,43,0.3)'
       ctx.fill()
-      ctx.strokeStyle = isActive ? '#7fc458' : selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,0.4)'
+      ctx.strokeStyle = isActive ? '#7fc458' : selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,1)'
       ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 1.5
       ctx.stroke()
 
@@ -557,7 +560,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           <div style={{ display: 'flex', gap: '4px' }}>
             <button onClick={() => setZoom(z => Math.max(0.25, z - 0.25))}
               style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>−</button>
-            <span style={{ padding: '4px 6px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', minWidth: '40px' }}>{Math.round(zoom * 100)}%</span>
+            <span style={{ padding: '4px 6px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', minWidth: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{Math.round(zoom * 100)}%</span>
             <button onClick={() => setZoom(z => Math.min(4, z + 0.25))}
               style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>+</button>
           </div>
@@ -568,15 +571,20 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               Grid {showGrid ? 'ON' : 'OFF'}
             </button>
             <select value={gridColor} onChange={e => setGridColor(e.target.value)}
-              style={{ padding: '4px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', width: '100%', height: '28px', boxSizing: 'border-box', textAlign: 'center', marginBottom: '4px' }}>
-              <option value="rgba(255,255,255,0.15)">White</option>
-              <option value="rgba(0,0,0,0.4)">Black</option>
-              <option value="rgba(128,128,128,0.4)">Grey</option>
-              <option value="rgba(192,57,43,0.4)">Red</option>
-              <option value="rgba(52,152,219,0.4)">Blue</option>
-              <option value="rgba(241,196,15,0.4)">Yellow</option>
-              <option value="rgba(39,174,96,0.4)">Green</option>
+              style={{ padding: '4px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', width: '100%', height: '28px', boxSizing: 'border-box', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px' }}>
+              <option value="white">White</option>
+              <option value="black">Black</option>
+              <option value="#888">Grey</option>
+              <option value="#c0392b">Red</option>
+              <option value="#3498db">Blue</option>
+              <option value="#f1c40f">Yellow</option>
+              <option value="#27ae60">Green</option>
             </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: '4px' }}>
+              <input type="range" min="5" max="100" value={Math.round(gridOpacity * 100)} onChange={e => setGridOpacity(parseInt(e.target.value) / 100)}
+                style={{ flex: 1, accentColor: '#c0392b', width: '70px', minWidth: 0 }} />
+              <span style={{ fontSize: '11px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '22px', textAlign: 'right' }}>{Math.round(gridOpacity * 100)}%</span>
+            </div>
             <button onClick={async () => {
               if (!bgImageRef.current || !containerRef.current) return
               const img = bgImageRef.current
@@ -592,12 +600,12 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               setScene(p => p ? { ...p, grid_cols: newCols, grid_rows: newRows } : p)
               await supabase.from('tactical_scenes').update({ grid_cols: newCols, grid_rows: newRows }).eq('id', scene.id)
             }}
-              style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', marginBottom: '4px' }}>
+              style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', marginBottom: '4px' }}>
               Fit to Map
             </button>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '9px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cols</div>
+                <div style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cols</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
                   <button onClick={async () => { const v = Math.max(1, scene.grid_cols - 1); setScene(p => p ? { ...p, grid_cols: v } : p); await supabase.from('tactical_scenes').update({ grid_cols: v }).eq('id', scene.id) }}
                     style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
@@ -607,7 +615,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
                 </div>
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '9px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Rows</div>
+                <div style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Rows</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
                   <button onClick={async () => { const v = Math.max(1, scene.grid_rows - 1); setScene(p => p ? { ...p, grid_rows: v } : p); await supabase.from('tactical_scenes').update({ grid_rows: v }).eq('id', scene.id) }}
                     style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
@@ -618,7 +626,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               </div>
             </div>
             <div>
-              <div style={{ fontSize: '9px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cell (ft)</div>
+              <div style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cell (ft)</div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
                 <button onClick={async () => { const v = Math.max(1, (scene.cell_feet ?? 3) - 1); setScene(p => p ? { ...p, cell_feet: v } : p); await supabase.from('tactical_scenes').update({ cell_feet: v }).eq('id', scene.id) }}
                   style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
@@ -654,6 +662,17 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               Delete Map
             </button>
           )}
+          <button onClick={async () => {
+            if (!confirm(`Delete scene "${scene.name}"? This cannot be undone.`)) return
+            await supabase.from('scene_tokens').delete().eq('scene_id', scene.id)
+            await supabase.from('tactical_scenes').delete().eq('id', scene.id)
+            setScene(null)
+            setTokens([])
+            await loadScenes()
+          }}
+            style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
+            Delete Scene
+          </button>
         </div>
       )}
 
