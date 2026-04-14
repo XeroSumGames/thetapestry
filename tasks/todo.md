@@ -22,7 +22,7 @@
 - [x] Visitor email suppression for bot cities (San Jose, Ashburn, etc.)
 
 ### Known Issues (needs testing)
-- [ ] NPC action pips not consuming on use — may need fresh DB fetch in NPC action flow
+- [ ] NPC action pips not consuming on use — likely fixed by consumeAction DB write + loadInitiative, needs live testing to confirm
 - [ ] PC damage from NPC attacks — needs verification with latest character_id fallback
 - [ ] Manipulation rolls should auto-include First Impression CMod
 - [ ] Add to Combat modal should filter NPCs already in initiative
