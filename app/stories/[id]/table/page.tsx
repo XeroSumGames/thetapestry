@@ -1060,6 +1060,8 @@ export default function TablePage() {
     setInitiativeOrder([])
     setCombatActive(false)
     setViewingNpcs([])
+    // Stay on tactical map after combat ends
+    setShowTacticalMap(true)
     await loadRolls(id)
     initChannelRef.current?.send({ type: 'broadcast', event: 'combat_ended', payload: {} })
   }
