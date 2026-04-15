@@ -686,11 +686,11 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       })()}
                     </div>
                   </div>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                  <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                     {npc.portrait_url ? (
                       <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(npc.name)}</span>
+                      <span style={{ fontSize: '18px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(npc.name)}</span>
                     )}
                   </div>
                 </div>
