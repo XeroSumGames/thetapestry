@@ -2186,7 +2186,7 @@ export default function TablePage() {
           </div>
         )}
         {isGM && !combatActive && (
-          <button onClick={() => setShowTacticalMap(prev => !prev)}
+          <button onClick={() => { setShowTacticalMap(prev => !prev); refreshMapTokenIds() }}
             style={hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a')}>
             {showTacticalMap ? 'Campaign Map' : 'Tactical Map'}
           </button>
