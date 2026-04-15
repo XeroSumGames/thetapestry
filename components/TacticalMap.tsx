@@ -1,6 +1,15 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { getWeaponByName } from '../lib/weapons'
+
+const RANGE_BAND_FEET: Record<string, number> = {
+  'Engaged': 3,
+  'Close': 15,
+  'Medium': 30,
+  'Long': 60,
+  'Distant': 120,
+}
 
 interface Token {
   id: string
@@ -34,9 +43,11 @@ interface Props {
   initiativeOrder: any[]
   onTokenClick?: (token: Token) => void
   tokenRefreshKey?: number
+  campaignNpcs?: any[]
+  entries?: any[]
 }
 
-export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, tokenRefreshKey }: Props) {
+export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, tokenRefreshKey, campaignNpcs, entries }: Props) {
   const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -326,35 +337,57 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       ctx.globalAlpha = 1
     })
 
-    // Range bands for selected token
+    // Range circles for selected token: Engaged, Movement, Weapon Range
     if (selectedToken) {
       const selTok = toks.find(t => t.id === selectedToken)
       if (selTok) {
         const cx = offsetX + selTok.grid_x * cellSize + cellSize / 2
         const cy = offsetY + selTok.grid_y * cellSize + cellSize / 2
         const ft = s.cell_feet ?? 3
-        const bands = [
+
+        // Look up weapon range for this token
+        let weaponRangeBand = 'Engaged' // default unarmed
+        if (selTok.npc_id && campaignNpcs) {
+          const npc = campaignNpcs.find((n: any) => n.id === selTok.npc_id)
+          const weaponName = npc?.skills?.weapon?.weaponName
+          if (weaponName) {
+            const w = getWeaponByName(weaponName)
+            if (w) weaponRangeBand = w.range
+          }
+        } else if (selTok.character_id && entries) {
+          const entry = entries.find((e: any) => e.character.id === selTok.character_id)
+          const weaponName = entry?.character.data?.weaponPrimary?.weaponName
+          if (weaponName) {
+            const w = getWeaponByName(weaponName)
+            if (w) weaponRangeBand = w.range
+          }
+        }
+        const weaponRangeFt = RANGE_BAND_FEET[weaponRangeBand] ?? 3
+        const weaponCells = Math.max(1, Math.ceil(weaponRangeFt / ft))
+
+        const circles = [
+          { cells: weaponCells, fill: 'rgba(192,57,43,0.06)', stroke: '#c0392b', label: `${weaponRangeBand} (${weaponRangeFt}ft)` },
+          { cells: 3, fill: 'rgba(52,152,219,0.08)', stroke: '#3498db', label: 'Move (9ft)' },
           { cells: Math.max(1, Math.ceil(3 / ft)), fill: 'rgba(127,196,88,0.15)', stroke: '#7fc458', label: 'Engaged' },
-          { cells: Math.max(2, Math.ceil(15 / ft)), fill: 'rgba(52,152,219,0.1)', stroke: '#3498db', label: 'Close' },
-          { cells: Math.max(3, Math.ceil(30 / ft)), fill: 'rgba(241,196,15,0.08)', stroke: '#f1c40f', label: 'Medium' },
-          { cells: Math.max(4, Math.ceil(60 / ft)), fill: 'rgba(192,57,43,0.06)', stroke: '#c0392b', label: 'Long' },
         ]
-        bands.reverse().forEach(b => {
+        // Draw largest first
+        circles.sort((a, b) => b.cells - a.cells)
+        circles.forEach(c => {
           ctx.beginPath()
-          ctx.arc(cx, cy, b.cells * cellSize, 0, Math.PI * 2)
-          ctx.fillStyle = b.fill
+          ctx.arc(cx, cy, c.cells * cellSize, 0, Math.PI * 2)
+          ctx.fillStyle = c.fill
           ctx.fill()
-          ctx.strokeStyle = b.stroke
-          ctx.globalAlpha = 0.4
-          ctx.lineWidth = 1.5
+          ctx.strokeStyle = c.stroke
+          ctx.globalAlpha = 0.5
+          ctx.lineWidth = 2
           ctx.stroke()
           ctx.globalAlpha = 1
-          // Label
-          ctx.font = `bold 11px Barlow Condensed`
-          ctx.fillStyle = b.stroke
+          // Label at top of circle
+          ctx.font = `bold 12px Barlow Condensed`
+          ctx.fillStyle = c.stroke
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
-          ctx.fillText(b.label, cx, cy - b.cells * cellSize + 10)
+          ctx.fillText(c.label, cx, cy - c.cells * cellSize + 12)
         })
       }
     }

@@ -771,11 +771,13 @@ export default function TablePage() {
     }
     setDropCharacter('')
 
-    // Auto-open NPC cards for all NPCs in combat
-    const combatNpcObjs = rosterNpcs.filter(n => selectedNpcIds.has(n.id))
-    if (combatNpcObjs.length > 0) {
-      setViewingNpcs(combatNpcObjs as CampaignNpc[])
-      setSelectedEntry(null)
+    // Auto-open NPC cards for all NPCs in combat (skip if tactical map is showing — cards block the map)
+    if (!showTacticalMap) {
+      const combatNpcObjs = rosterNpcs.filter(n => selectedNpcIds.has(n.id))
+      if (combatNpcObjs.length > 0) {
+        setViewingNpcs(combatNpcObjs as CampaignNpc[])
+        setSelectedEntry(null)
+      }
     }
 
     setStartingCombat(false)
@@ -1136,12 +1138,14 @@ export default function TablePage() {
     if (rows.length > 0) {
       await supabase.from('initiative_order').insert(rows)
       await loadInitiative(id)
-      // Open NPC cards in the center for the newly added NPCs
-      setViewingNpcs(prev => {
-        const existingIds = new Set(prev.map(n => n.id))
-        const newCards = npcsToAdd.filter(n => !existingIds.has(n.id))
-        return newCards.length > 0 ? [...prev, ...newCards as CampaignNpc[]] : prev
-      })
+      // Open NPC cards in the center for the newly added NPCs (skip if tactical map showing)
+      if (!showTacticalMap && !combatActive) {
+        setViewingNpcs(prev => {
+          const existingIds = new Set(prev.map(n => n.id))
+          const newCards = npcsToAdd.filter(n => !existingIds.has(n.id))
+          return newCards.length > 0 ? [...prev, ...newCards as CampaignNpc[]] : prev
+        })
+      }
     }
 
     // If combat is already underway, offer to reveal the newly-added NPC(s) to
@@ -2889,6 +2893,8 @@ export default function TablePage() {
               isGM={isGM}
               initiativeOrder={initiativeOrder}
               tokenRefreshKey={tokenRefreshKey}
+              campaignNpcs={campaignNpcs}
+              entries={entries}
               onTokenClick={(token: any) => {
                 if (token.npc_id) {
                   const npc = campaignNpcs.find((n: any) => n.id === token.npc_id)
