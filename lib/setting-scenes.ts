@@ -25,7 +25,23 @@ export const EMPTY_SCENES: SceneSeed[] = [
   },
 ]
 
+export const MONGRELS_SCENES: SceneSeed[] = [
+  {
+    name: 'Minnie — Interior',
+    grid_cols: 13,
+    grid_rows: 4,
+    notes: 'Interior floor plan of the Winnebago Minnie Winnie 25B. Each cell is 2 feet. Upload the floor plan image as the background.\n\nLayout (left-to-right = rear-to-front of vehicle):\n\nRow 1 (driver side / top):\n- Cols 1-2: Shower (23"x34")\n- Col 3: Wardrobe\n- Cols 4-5: Kitchen (stove/sink)\n- Cols 6-9: Sofa/Bed (40"x67")\n- Cols 10-13: Overhead Bed / Cab (57"x95")\n\nRow 2-3 (center aisle):\n- Cols 1-3: Bed (54"x80")\n- Col 4: Door (entry/exit — step well)\n- Cols 5-6: Refrig\n- Cols 7-9: Dinette (42"x69")\n- Cols 10-13: Cab area\n\nRow 4 (passenger side / bottom):\n- Cols 1-2: TV Location / Bed area\n- Col 3: Shirt Closet\n- Cols 4-5: Step Well / Entry Door\n- Cols 6-9: Dinette seating\n- Col 10: TV Location\n- Cols 11-13: Cab / Passenger seat\n\nKey tactical notes:\n- Entry door at col 4, passenger side — only normal exit\n- Rear ladder (exterior) — access to sniper\'s nest on roof\n- Sniper\'s nest: roof hatch above col 2, fires forward 90-degree arc only\n- Still equipment: rear cargo area, cols 1-2\n- Narrow interior — movement is single-file in the aisle\n- Reinforced windows deflect low-calibre rounds at distance',
+  },
+  {
+    name: 'The Barn — Day One',
+    grid_cols: 20,
+    grid_rows: 15,
+    notes: 'The compound workshop where Minnie is parked. Players are inside preparing the Winnebago when Kincaid arrives.\n\nLayout: The barn is a large open workshop with Minnie (the Winnebago) parked inside. A single large door opens onto the compound yard. The main house and barracks are across the yard — visible but not reachable without being seen by Kincaid\'s men.\n\nKey locations:\n- Workshop interior — tools, spare parts, the still components being loaded\n- Barn door — view to the yard where Kincaid confronts Frankie\n- Minnie — players must load supplies and disconnect the still\n\nSequence:\n1. Players hear vehicles approach — Kincaid arrives with Justice Morse and a dozen soldiers\n2. Frankie goes out to talk while players prep Minnie (Mechanic*/Tinkerer check to disconnect still)\n3. Kincaid executes a hostage, then Frankie. Frankie drops a live grenade (4-square blast)\n4. Quintin and Forrest fire RPGs at the house and barracks\n5. Players must get Minnie out through the barn door and past Kincaid\'s confused men (Driving check)\n6. Chase sequence — Kincaid\'s jeep (Speed 4) pursues Minnie (Speed 2) until the Apache Junction territorial line\n\nStarting positions:\n- Players: inside the barn, around Minnie\n- Frankie: moves to the yard when Kincaid arrives\n- Kincaid + Justice Morse: yard, facing the barn\n- Kincaid\'s soldiers: spread around compound perimeter',
+  },
+]
+
 export const SETTING_SCENES: Record<string, SceneSeed[]> = {
   chased: CHASED_SCENES,
   empty: EMPTY_SCENES,
+  mongrels: MONGRELS_SCENES,
 }

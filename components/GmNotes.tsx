@@ -16,6 +16,7 @@ interface Note {
   content: string
   created_at: string
   attachments: Attachment[]
+  shared: boolean
 }
 
 export default function GmNotes({ campaignId }: { campaignId: string }) {
@@ -37,7 +38,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
       .select('*')
       .eq('campaign_id', campaignId)
       .order('created_at', { ascending: true })
-    setNotes((data ?? []).map((n: any) => ({ ...n, attachments: n.attachments ?? [] })))
+    setNotes((data ?? []).map((n: any) => ({ ...n, attachments: n.attachments ?? [], shared: n.shared ?? false })))
   }
 
   async function uploadFiles(noteId: string, files: File[]): Promise<Attachment[]> {
@@ -188,6 +189,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', cursor: 'pointer' }}>
             <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>
               {n.title}
+              {n.shared && <span style={{ marginLeft: '6px', fontSize: '10px', color: '#7fc458' }}>SHARED</span>}
               {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '11px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
             </span>
             <span style={{ fontSize: '11px', color: '#5a5550' }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
@@ -220,6 +222,14 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
               )}
 
               <div style={{ display: 'flex', gap: '6px' }}>
+                <button onClick={async () => {
+                  const next = !n.shared
+                  await supabase.from('campaign_notes').update({ shared: next }).eq('id', n.id)
+                  setNotes(prev => prev.map(x => x.id === n.id ? { ...x, shared: next } : x))
+                }}
+                  style={{ padding: '4px 10px', background: n.shared ? '#1a2e10' : 'transparent', border: `1px solid ${n.shared ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.shared ? '#7fc458' : '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  {n.shared ? '✓ Shared' : 'Share'}
+                </button>
                 <label style={{ ...chipBtn, display: 'inline-block', cursor: uploadingNoteId === n.id ? 'wait' : 'pointer', opacity: uploadingNoteId === n.id ? 0.6 : 1 }}>
                   {uploadingNoteId === n.id ? 'Uploading...' : '+ Attach'}
                   <input type="file" multiple disabled={uploadingNoteId === n.id} onChange={e => { handleAddAttachments(n, e.target.files); e.target.value = '' }} style={{ display: 'none' }} />

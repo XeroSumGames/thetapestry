@@ -839,8 +839,101 @@ export const SETTING_PREGENS: Record<string, PregenSeed[]> = {
   empty: EMPTY_PREGENS,
 }
 
+export const MONGRELS_NPCS: NpcSeed[] = [
+  {
+    name: 'Frank "Frankie" Wallace',
+    reason: 2, acumen: 2, physicality: 1, influence: 2, dexterity: 1,
+    wp_max: 12, rp_max: 7,
+    skills: [
+      { name: 'Mechanic', level: 2, specialized: true },
+      { name: 'Tinkerer', level: 2, specialized: false },
+      { name: 'Inspiration', level: 1, specialized: false },
+      { name: 'Ranged Combat', level: 1, specialized: false },
+      { name: 'Survival', level: 1, specialized: false },
+      { name: 'Tactics', level: 1, specialized: true },
+      { name: 'Driving', level: 1, specialized: false },
+      { name: 'Intimidation', level: 1, specialized: false },
+    ],
+    equipment: [
+      { name: 'Heavy Pistol', damage: 27, roll: '3+2d3' },
+      { name: 'Grenade', damage: 30, roll: '5d6', notes: 'Hidden in pocket. 4-square blast radius.' },
+    ],
+    role: 'Compound Leader',
+    pin_title: 'Hells Hole Spring, AZ',
+    description: 'Frankie is a competent, stubborn man who has kept eleven people alive in the Sonoran Desert for three years through methanol production, self-sufficiency, and staying out of everyone else\'s business. He built the still in Minnie and planned the Bozeman trip in secret. He dies on Day One — killed by Kincaid after pulling the pin on a grenade in his pocket, taking several of Kincaid\'s men with him.',
+    how_to_meet: 'The players begin the campaign working alongside Frankie in the barn, preparing Minnie for departure.',
+    motivation: 'Get his people to Bozeman, Montana — his family\'s farm in the Gallatin Valley — before Kincaid forces them into a water war they cannot win.',
+  },
+  {
+    name: 'Kincaid',
+    reason: 1, acumen: 1, physicality: 2, influence: 2, dexterity: 1,
+    wp_max: 14, rp_max: 6,
+    skills: [
+      { name: 'Intimidation', level: 2, specialized: false },
+      { name: 'Tactics', level: 2, specialized: true },
+      { name: 'Ranged Combat', level: 2, specialized: false },
+      { name: 'Melee Combat', level: 1, specialized: false },
+      { name: 'Manipulation', level: 1, specialized: false },
+      { name: 'Athletics', level: 1, specialized: false },
+      { name: 'Survival', level: 1, specialized: false },
+    ],
+    equipment: [
+      { name: 'Heavy Pistol', damage: 27, roll: '3+2d3' },
+      { name: 'Hunting Rifle', damage: 34, roll: '4+2d3' },
+    ],
+    role: 'Warlord / Antagonist',
+    pin_title: 'Canyon Lake Marina & Campground',
+    description: 'Kincaid controls the Apache Junction area and Canyon Lake — the most contested water source in the region. He has been pressuring Frankie to convert his vehicles to methanol. When Frankie refused, Kincaid showed up with a dozen armed men, hostages, and an ultimatum. He is ruthless, calculating, and not above executing prisoners to make a point. His men do not cross into Menendez territory.',
+    how_to_meet: 'Kincaid arrives at the compound on Day One with Justice Morse and a dozen soldiers. He is the primary antagonist of the opening sequence.',
+    motivation: 'Control the methanol production capability to gain an edge in the coming water war with Menendez.',
+  },
+  {
+    name: 'Justice Morse',
+    reason: 0, acumen: 1, physicality: 2, influence: 1, dexterity: 1,
+    wp_max: 13, rp_max: 6,
+    skills: [
+      { name: 'Ranged Combat', level: 2, specialized: false },
+      { name: 'Melee Combat', level: 1, specialized: false },
+      { name: 'Intimidation', level: 1, specialized: false },
+      { name: 'Athletics', level: 1, specialized: false },
+      { name: 'Tactics', level: 1, specialized: true },
+      { name: 'Driving', level: 1, specialized: false },
+    ],
+    equipment: [
+      { name: 'Automatic Rifle', damage: 30, roll: '4+2d3', notes: 'Full-auto capable' },
+      { name: 'Heavy Pistol', damage: 27, roll: '3+2d3' },
+    ],
+    role: "Kincaid's Lieutenant",
+    description: 'Justice Morse is Kincaid\'s right hand — the one who handles the dirty work. On Day One, Kincaid tells Justice to pull the hostages from the truck. He is loyal, efficient, and dangerous.',
+    how_to_meet: 'Arrives with Kincaid on Day One. Pulls the hostages from the back of the truck on Kincaid\'s order.',
+    motivation: 'Loyalty to Kincaid. Keeps the operation running.',
+  },
+  {
+    name: "Kincaid's Soldier",
+    reason: 0, acumen: 0, physicality: 1, influence: 0, dexterity: 1,
+    wp_max: 12, rp_max: 7,
+    skills: [
+      { name: 'Ranged Combat', level: 1, specialized: false },
+      { name: 'Melee Combat', level: 1, specialized: false },
+      { name: 'Athletics', level: 1, specialized: false },
+      { name: 'Intimidation', level: 1, specialized: false },
+      { name: 'Driving', level: 1, specialized: false },
+      { name: 'Survival', level: 1, specialized: false },
+    ],
+    equipment: [
+      { name: 'Automatic Rifle', damage: 30, roll: '4+2d3' },
+      { name: 'Light Pistol', damage: 21, roll: '3+2d3' },
+    ],
+    role: 'Raider',
+    description: 'Generic stat block for Kincaid\'s armed men. A dozen of them arrive on Day One — some on horseback, two carrying RPGs (Quintin and Forrest). They drive the players\' stolen jeeps and truck. They do not pursue past the Apache Junction territorial line into Menendez territory.',
+    how_to_meet: 'Day One — they surround the compound with Kincaid.',
+    motivation: 'Following orders. Survival under Kincaid\'s protection.',
+  },
+]
+
 export const SETTING_NPCS: Record<string, NpcSeed[]> = {
   district_zero: DISTRICT_ZERO_NPCS,
   chased: CHASED_NPCS,
   empty: CHASED_NPCS,
+  mongrels: MONGRELS_NPCS,
 }

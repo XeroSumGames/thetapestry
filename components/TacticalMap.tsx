@@ -11,6 +11,21 @@ const RANGE_BAND_FEET: Record<string, number> = {
   'Distant': 120,
 }
 
+const RANGE_BAND_ORDER = ['Engaged', 'Close', 'Medium', 'Long', 'Distant']
+
+function bestWeaponRange(names: string[]): string {
+  let best = 'Engaged'
+  let bestIdx = 0
+  for (const name of names) {
+    if (!name) continue
+    const w = getWeaponByName(name)
+    if (!w) continue
+    const idx = RANGE_BAND_ORDER.indexOf(w.range)
+    if (idx > bestIdx) { best = w.range; bestIdx = idx }
+  }
+  return best
+}
+
 interface Token {
   id: string
   scene_id: string
@@ -48,9 +63,13 @@ interface Props {
   tokenRefreshKey?: number
   campaignNpcs?: any[]
   entries?: any[]
+  moveMode?: { characterId?: string; npcId?: string; feet: number } | null
+  onMoveComplete?: () => void
+  onMoveCancel?: () => void
+  onTokensUpdate?: (tokens: { id: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number }[], cellFeet: number) => void
 }
 
-export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, tokenRefreshKey, campaignNpcs, entries }: Props) {
+export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, tokenRefreshKey, campaignNpcs, entries, moveMode, onMoveComplete, onMoveCancel, onTokensUpdate }: Props) {
   const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -136,16 +155,26 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
 
   // Redraw on token/scene changes
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale, cellPx])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode])
+
+  // Notify parent of token positions for range calculations
+  useEffect(() => {
+    if (onTokensUpdate && scene) {
+      onTokensUpdate(tokens.map(t => ({ id: t.id, character_id: t.character_id, npc_id: t.npc_id, grid_x: t.grid_x, grid_y: t.grid_y })), scene.cell_feet ?? 3)
+    }
+  }, [tokens, scene?.cell_feet])
 
   // Spacebar = pan mode
   useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) { if (e.code === 'Space' && !e.repeat && !['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) { e.preventDefault(); setSpaceHeld(true) } }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.code === 'Space' && !e.repeat && !['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) { e.preventDefault(); setSpaceHeld(true) }
+      if (e.code === 'Escape' && onMoveCancel) { onMoveCancel() }
+    }
     function onKeyUp(e: KeyboardEvent) { if (e.code === 'Space') { setSpaceHeld(false) } }
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
     return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
-  }, [])
+  }, [onMoveCancel])
 
   // Resize observer
   useEffect(() => {
@@ -258,6 +287,31 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     ctx.globalAlpha = 1
     } // end showGrid
 
+    // Move mode highlight — draw valid movement cells
+    if (moveMode) {
+      const ft = s.cell_feet ?? 3
+      const moveCells = Math.floor(moveMode.feet / ft)
+      const moveTok = tokensRef.current.find(t =>
+        (moveMode.characterId && t.character_id === moveMode.characterId) ||
+        (moveMode.npcId && t.npc_id === moveMode.npcId)
+      )
+      if (moveTok) {
+        const occupied = new Set(tokensRef.current.filter(t => t.id !== moveTok.id).map(t => `${t.grid_x},${t.grid_y}`))
+        for (let gx = 0; gx < s.grid_cols; gx++) {
+          for (let gy = 0; gy < s.grid_rows; gy++) {
+            const dist = Math.max(Math.abs(gx - moveTok.grid_x), Math.abs(gy - moveTok.grid_y))
+            if (dist > 0 && dist <= moveCells && !occupied.has(`${gx},${gy}`)) {
+              ctx.fillStyle = 'rgba(127,196,88,0.25)'
+              ctx.fillRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
+              ctx.strokeStyle = 'rgba(127,196,88,0.5)'
+              ctx.lineWidth = 1
+              ctx.strokeRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
+            }
+          }
+        }
+      }
+    }
+
     // Tokens
     const toks = tokensRef.current
     const activeEntry = initiativeOrder.find((e: any) => e.is_active)
@@ -303,6 +357,27 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         ctx.globalAlpha = 0.5
       }
 
+      // Determine mortal wound / dead status
+      let tokenDead = false
+      let tokenMortal = false
+      if (t.npc_id && campaignNpcs) {
+        const npc = campaignNpcs.find((n: any) => n.id === t.npc_id)
+        if (npc) {
+          const wp = npc.wp_current ?? npc.wp_max ?? 10
+          tokenDead = npc.status === 'dead' || (wp === 0 && npc.death_countdown != null && npc.death_countdown <= 0)
+          tokenMortal = wp === 0 && !tokenDead
+        }
+      } else if (t.character_id && entries) {
+        const entry = entries.find((e: any) => e.character.id === t.character_id)
+        if (entry) {
+          const wp = entry.liveState.wp_current ?? entry.liveState.wp_max ?? 10
+          tokenDead = wp === 0
+          tokenMortal = wp === 0
+        }
+      }
+
+      if (tokenDead) ctx.globalAlpha = 0.5
+
       // Token circle — portrait or solid color with initials
       ctx.beginPath()
       ctx.arc(cx, cy, radius, 0, Math.PI * 2)
@@ -346,6 +421,25 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       ctx.shadowColor = 'transparent'
       ctx.shadowBlur = 0
 
+      // Mortal wound: red X over token
+      if (tokenMortal || tokenDead) {
+        ctx.save()
+        ctx.globalAlpha = 1
+        ctx.strokeStyle = '#ff2020'
+        ctx.lineWidth = Math.max(4, radius * 0.3)
+        ctx.lineCap = 'round'
+        const xSize = radius * 0.7
+        ctx.beginPath()
+        ctx.moveTo(cx - xSize, cy - xSize)
+        ctx.lineTo(cx + xSize, cy + xSize)
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.moveTo(cx + xSize, cy - xSize)
+        ctx.lineTo(cx - xSize, cy + xSize)
+        ctx.stroke()
+        ctx.restore()
+      }
+
       // Name below — with dark background for legibility
       const fontSize = Math.max(14, cellSize * 0.34)
       ctx.font = `bold ${fontSize}px Barlow Condensed`
@@ -374,22 +468,20 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         const cy = offsetY + selTok.grid_y * cellSize + cellSize / 2
         const ft = s.cell_feet ?? 3
 
-        // Look up weapon range for this token
+        // Look up weapon range for this token — use longest-range weapon available
         let weaponRangeBand = 'Engaged' // default unarmed
         if (selTok.npc_id && campaignNpcs) {
           const npc = campaignNpcs.find((n: any) => n.id === selTok.npc_id)
-          const weaponName = npc?.skills?.weapon?.weaponName
-          if (weaponName) {
-            const w = getWeaponByName(weaponName)
-            if (w) weaponRangeBand = w.range
-          }
+          const names: string[] = []
+          if (npc?.skills?.weapon?.weaponName) names.push(npc.skills.weapon.weaponName)
+          if (Array.isArray(npc?.equipment)) npc.equipment.forEach((eq: any) => { if (eq.name) names.push(eq.name) })
+          if (names.length > 0) weaponRangeBand = bestWeaponRange(names)
         } else if (selTok.character_id && entries) {
           const entry = entries.find((e: any) => e.character.id === selTok.character_id)
-          const weaponName = entry?.character.data?.weaponPrimary?.weaponName
-          if (weaponName) {
-            const w = getWeaponByName(weaponName)
-            if (w) weaponRangeBand = w.range
-          }
+          const names: string[] = []
+          if (entry?.character.data?.weaponPrimary?.weaponName) names.push(entry.character.data.weaponPrimary.weaponName)
+          if (entry?.character.data?.weaponSecondary?.weaponName) names.push(entry.character.data.weaponSecondary.weaponName)
+          if (names.length > 0) weaponRangeBand = bestWeaponRange(names)
         }
         const weaponRangeFt = RANGE_BAND_FEET[weaponRangeBand] ?? 3
         const weaponCells = Math.max(1, Math.ceil(weaponRangeFt / ft))
@@ -451,6 +543,36 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   }
 
   function handleMouseDown(e: React.MouseEvent) {
+    // Move mode — click a valid cell to move the token there
+    if (moveMode) {
+      const pos = getGridPos(e)
+      if (pos && scene) {
+        const ft = scene.cell_feet ?? 3
+        const moveCells = Math.floor(moveMode.feet / ft)
+        const moveTok = tokens.find(t =>
+          (moveMode.characterId && t.character_id === moveMode.characterId) ||
+          (moveMode.npcId && t.npc_id === moveMode.npcId)
+        )
+        if (moveTok) {
+          const dist = Math.max(Math.abs(pos.gx - moveTok.grid_x), Math.abs(pos.gy - moveTok.grid_y))
+          const occupied = new Set(tokens.filter(t => t.id !== moveTok.id).map(t => `${t.grid_x},${t.grid_y}`))
+          if (dist > 0 && dist <= moveCells && !occupied.has(`${pos.gx},${pos.gy}`)) {
+            // Animate and move
+            const fromX = moveTok.grid_x * cellPx + cellPx / 2
+            const fromY = moveTok.grid_y * cellPx + cellPx / 2
+            const toX = pos.gx * cellPx + cellPx / 2
+            const toY = pos.gy * cellPx + cellPx / 2
+            tokenAnimRef.current.set(moveTok.id, { fromX, fromY, toX, toY, t: 0 })
+            setTokens(prev => prev.map(t => t.id === moveTok.id ? { ...t, grid_x: pos.gx, grid_y: pos.gy } : t))
+            supabase.from('scene_tokens').update({ grid_x: pos.gx, grid_y: pos.gy }).eq('id', moveTok.id).then(() => {
+              onMoveComplete?.()
+            })
+            return
+          }
+        }
+      }
+      return
+    }
     // Spacebar held = always pan
     if (spaceHeld) {
       setPanning({ startX: e.clientX, startY: e.clientY, startPanX: panX, startPanY: panY })
@@ -631,10 +753,6 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
                 <input value={setupName} onChange={e => setSetupName(e.target.value)}
                   style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
               </div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem', cursor: 'pointer' }}>
-                <input type="checkbox" checked={setupHasGrid} onChange={e => setSetupHasGrid(e.target.checked)} style={{ accentColor: '#c0392b' }} />
-                <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>Map has a grid</span>
-              </label>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button onClick={() => setShowSetup(false)}
                   style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
@@ -869,10 +987,6 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               <input value={setupName} onChange={e => setSetupName(e.target.value)}
                 style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
             </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem', cursor: 'pointer' }}>
-              <input type="checkbox" checked={setupHasGrid} onChange={e => setSetupHasGrid(e.target.checked)} style={{ accentColor: '#c0392b' }} />
-              <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>Map has a grid</span>
-            </label>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setShowSetup(false)}
                 style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>

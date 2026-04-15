@@ -8,6 +8,7 @@ import NpcCard from '../../../../components/NpcCard'
 import CampaignPins from '../../../../components/CampaignPins'
 import GmNotes from '../../../../components/GmNotes'
 import PlayerNotes from '../../../../components/PlayerNotes'
+import NotificationBell from '../../../../components/NotificationBell'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
 const CampaignMap = dynamic(() => import('../../../../components/CampaignMap'), { ssr: false })
@@ -192,6 +193,9 @@ export default function TablePage() {
   const [showTacticalMap, setShowTacticalMap] = useState(false)
   const [tacticalShared, setTacticalShared] = useState(false)
   const [tokenRefreshKey, setTokenRefreshKey] = useState(0)
+  const [moveMode, setMoveMode] = useState<{ characterId?: string; npcId?: string; feet: number } | null>(null)
+  const [mapTokens, setMapTokens] = useState<{ id: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number }[]>([])
+  const [mapCellFeet, setMapCellFeet] = useState(3)
   const [mapTokenNpcIds, setMapTokenNpcIds] = useState<Set<string>>(new Set())
   const [showNpcPicker, setShowNpcPicker] = useState(false)
   const [dropCharacter, setDropCharacter] = useState<string>('')
@@ -227,6 +231,8 @@ export default function TablePage() {
   const [pendingEditNpcId, setPendingEditNpcId] = useState<string | null>(null)
   const [sheetPos, setSheetPos] = useState<{ x: number; y: number } | null>(null)
   const sheetDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
+  const [npcPositions, setNpcPositions] = useState<Record<string, { x: number; y: number }>>({})
+  const npcDragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null)
   const campaignChannelRef = useRef<any>(null)
 
   async function loadEntries(campaignId: string) {
@@ -418,7 +424,7 @@ export default function TablePage() {
 
       setGmInfo({ userId: camp.gm_user_id, username: (gmProfile as any)?.username ?? 'GM' })
 
-      if (members && members.length > 0) ensureCharacterStates(id, members as any[])
+      if (members && members.length > 0) await ensureCharacterStates(id, members as any[])
       const [,,,, cnpcsResult, pubDataResult] = await Promise.all([
         loadEntries(id), loadRolls(id), loadInitiative(id), loadChat(id),
         supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
@@ -781,6 +787,12 @@ export default function TablePage() {
     }
 
     setStartingCombat(false)
+    // Auto-share tactical map so all players see it
+    if (!tacticalShared) {
+      setTacticalShared(true)
+      setShowTacticalMap(true)
+      initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_shared', payload: { shared: true } })
+    }
     // Refresh the GM's log feed so the new entries appear immediately, then
     // broadcast combat start so players also reload their state. We rely on
     // postgres_changes for the player log refresh; broadcast is the trigger
@@ -1453,6 +1465,47 @@ export default function TablePage() {
     setShowSpecialCheck(null)
     setGroupCheckParticipants(new Set())
     setGroupCheckSkill('')
+  }
+
+  const RANGE_ORDER = ['engaged', 'close', 'medium', 'long', 'distant']
+  const RANGE_FEET: Record<string, number> = { engaged: 3, close: 15, medium: 30, long: 60, distant: 120 }
+
+  function getAutoRangeBand(attackerCharId?: string, attackerNpcId?: string, targetName?: string): 'engaged' | 'close' | 'medium' | 'long' | 'distant' | null {
+    if (!targetName || mapTokens.length === 0) return null
+    // Find attacker token
+    const aTok = mapTokens.find(t =>
+      (attackerCharId && t.character_id === attackerCharId) ||
+      (attackerNpcId && t.npc_id === attackerNpcId)
+    )
+    if (!aTok) return null
+    // Find target token — match by character_id, npc_id, or name
+    const tTok = mapTokens.find(t => {
+      // Match by name against entries
+      const entry = entries.find(e => e.character.name === targetName)
+      if (entry && t.character_id === entry.character.id) return true
+      // Match by name against NPCs
+      const npc = campaignNpcs.find((n: any) => n.name === targetName)
+      if (npc && t.npc_id === npc.id) return true
+      return false
+    })
+    if (!tTok) return null
+    const dist = Math.max(Math.abs(aTok.grid_x - tTok.grid_x), Math.abs(aTok.grid_y - tTok.grid_y))
+    const feet = dist * mapCellFeet
+    if (feet <= 3) return 'engaged'
+    if (feet <= 15) return 'close'
+    if (feet <= 30) return 'medium'
+    if (feet <= 60) return 'long'
+    return 'distant'
+  }
+
+  function isInRange(weaponName: string, currentRangeBand: string): boolean {
+    if (weaponName === 'Unarmed') return currentRangeBand === 'engaged'
+    const w = getWeaponByName(weaponName)
+    if (!w) return true // unknown weapon, allow
+    const weaponIdx = RANGE_ORDER.indexOf(w.range.toLowerCase())
+    const targetIdx = RANGE_ORDER.indexOf(currentRangeBand)
+    if (weaponIdx < 0 || targetIdx < 0) return true
+    return targetIdx <= weaponIdx
   }
 
   function getRangeCMod(): number {
@@ -2536,8 +2589,13 @@ export default function TablePage() {
                 })}
                 <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Defend`)}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Defend</button>
-                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Move`)}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Move</button>
+                <button onClick={() => {
+                  if (moveMode) { setMoveMode(null); return }
+                  const active = initiativeOrder.find(e => e.is_active)
+                  if (!active) return
+                  setMoveMode({ characterId: active.character_id || undefined, npcId: active.npc_id || undefined, feet: 10 })
+                }}
+                  style={moveMode ? actBtn('#1a2e10', '#7fc458', '#2d5a1b') : actBtn('#242424', '#d4cfc9', '#3a3a3a')}>{moveMode ? 'Cancel Move' : 'Move'}</button>
                 {hasBurst && w ? (
                   <button onClick={has2Actions ? () => {
                     setUseBurst(true)
@@ -2564,6 +2622,16 @@ export default function TablePage() {
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Subdue</button>
                 <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Take Cover`)}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Take Cover</button>
+                <button onClick={() => {
+                  const rapid = charEntry?.character.data?.rapid ?? {}
+                  const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+                  const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
+                  const smod = npcAttacker
+                    ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Unarmed Combat')?.level ?? 0 : 0)
+                    : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Unarmed Combat')?.level ?? 0
+                  handleRollRequest(`${activeEntry.character_name} — Unarmed`, amod, smod, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
+                }}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Unarmed</button>
                 {/* Stabilize — PC or NPC with mortal wounds (WP=0, not yet dead) */}
                 {(() => {
                   const woundedPC = entries.find(e => e.liveState && e.liveState.wp_current === 0 && ((e.liveState as any).death_countdown == null || (e.liveState as any).death_countdown > 0))
@@ -2610,8 +2678,8 @@ export default function TablePage() {
         {/* Left — Game Feed */}
         <div style={{ width: '260px', flexShrink: 0, borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ padding: '6px 10px', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
-            <div style={{ fontSize: '15px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', textAlign: 'center' }}>
-              <span style={{ color: '#c0392b' }}>{myUsername}{isGM ? ' (GM)' : ''}</span> | Survivors: {entries.length}
+            <div style={{ fontSize: '15px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+              <span style={{ color: '#c0392b' }}>{myUsername}{isGM ? ' (GM)' : ''}</span><NotificationBell />
             </div>
           </div>
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
@@ -2928,38 +2996,23 @@ export default function TablePage() {
                   }
                 }
               }}
+              moveMode={moveMode}
+              onTokensUpdate={(toks, cellFeet) => { setMapTokens(toks); setMapCellFeet(cellFeet) }}
+              onMoveComplete={() => {
+                const active = initiativeOrder.find((e: any) => e.is_active)
+                if (active) consumeAction(active.id, `${active.character_name} — Move`)
+                setMoveMode(null)
+              }}
+              onMoveCancel={() => setMoveMode(null)}
             />
           ) : (
             <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} revealedNpcIds={revealedNpcIds} focusPin={focusPin} />
           )}
 
-          {/* NPC Card(s) grid — floats over map */}
-          {viewingNpcs.length > 0 && (
+          {/* NPC Card(s) — grid overlay when out of combat, draggable inline when in combat */}
+          {viewingNpcs.length > 0 && !combatActive && (
             <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '8px', background: 'rgba(26,26,26,0.95)', zIndex: 1100, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px', alignContent: 'start' }}>
-              {(() => {
-                // During combat, sort cards in initiative order (active combatant first)
-                if (!combatActive) return viewingNpcs
-                const activeIdx = initiativeOrder.findIndex(e => e.is_active)
-                const rotated = activeIdx >= 0
-                  ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
-                  : initiativeOrder
-                const npcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
-                const idIdx = new Map(npcOrder.map((id, i) => [id, i]))
-                const isDead = (n: CampaignNpc) => {
-                  const wp = n.wp_current ?? n.wp_max ?? 10
-                  return n.status === 'dead' || wp === 0
-                }
-                return [...viewingNpcs].sort((a, b) => {
-                  const ad = isDead(a) ? 1 : 0
-                  const bd = isDead(b) ? 1 : 0
-                  if (ad !== bd) return ad - bd
-                  const ai = idIdx.has(a.id) ? idIdx.get(a.id)! : Infinity
-                  const bi = idIdx.has(b.id) ? idIdx.get(b.id)! : Infinity
-                  return ai - bi
-                })
-              })().map(npc => {
-                // Always use latest data from campaignNpcs (optimistically patched on damage)
-                // so NPC cards reflect HP changes instantly even if viewingNpcs is stale.
+              {viewingNpcs.map(npc => {
                 const fresh = campaignNpcs.find((c: any) => c.id === npc.id)
                 const liveNpc = fresh ? { ...fresh } as CampaignNpc : npc
                 return (
@@ -2975,6 +3028,76 @@ export default function TablePage() {
               )})}
             </div>
           )}
+          {viewingNpcs.length > 0 && combatActive && (() => {
+            const activeIdx = initiativeOrder.findIndex(e => e.is_active)
+            const rotated = activeIdx >= 0
+              ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
+              : initiativeOrder
+            const npcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
+            const idIdx = new Map(npcOrder.map((id, i) => [id, i]))
+            const isDead = (n: CampaignNpc) => {
+              const wp = n.wp_current ?? n.wp_max ?? 10
+              return n.status === 'dead' || wp === 0
+            }
+            const sorted = [...viewingNpcs].sort((a, b) => {
+              const ad = isDead(a) ? 1 : 0
+              const bd = isDead(b) ? 1 : 0
+              if (ad !== bd) return ad - bd
+              const ai = idIdx.has(a.id) ? idIdx.get(a.id)! : Infinity
+              const bi = idIdx.has(b.id) ? idIdx.get(b.id)! : Infinity
+              return ai - bi
+            })
+            return sorted.map((npc, i) => {
+              const fresh = campaignNpcs.find((c: any) => c.id === npc.id)
+              const liveNpc = fresh ? { ...fresh } as CampaignNpc : npc
+              const pos = npcPositions[npc.id]
+              return (
+                <div key={`${npc.id}-${liveNpc.wp_current}-${liveNpc.rp_current}-${liveNpc.death_countdown}`}
+                  style={{
+                    position: 'absolute',
+                    left: pos?.x ?? 10 + i * 20,
+                    top: pos?.y ?? 10 + i * 20,
+                    width: '340px',
+                    zIndex: 1100 + i,
+                    borderRadius: '4px',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
+                  }}>
+                  {/* Drag handle */}
+                  <div
+                    onMouseDown={e => {
+                      const el = e.currentTarget.parentElement as HTMLElement
+                      const rect = el.getBoundingClientRect()
+                      npcDragRef.current = { id: npc.id, startX: e.clientX, startY: e.clientY, origX: rect.left, origY: rect.top }
+                      const onMove = (ev: MouseEvent) => {
+                        if (!npcDragRef.current) return
+                        const dx = ev.clientX - npcDragRef.current.startX
+                        const dy = ev.clientY - npcDragRef.current.startY
+                        setNpcPositions(prev => ({ ...prev, [npc.id]: { x: npcDragRef.current!.origX + dx, y: npcDragRef.current!.origY + dy } }))
+                      }
+                      const onUp = () => {
+                        npcDragRef.current = null
+                        window.removeEventListener('mousemove', onMove)
+                        window.removeEventListener('mouseup', onUp)
+                      }
+                      window.addEventListener('mousemove', onMove)
+                      window.addEventListener('mouseup', onUp)
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3px', cursor: 'grab', borderRadius: '4px 4px 0 0', background: '#242424', border: '1px solid #3a3a3a', borderBottom: 'none', userSelect: 'none' }}>
+                    <div style={{ width: '40px', height: '3px', borderRadius: '2px', background: '#5a5a5a' }} />
+                  </div>
+                  <NpcCard
+                    npc={liveNpc}
+                    onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
+                    onEdit={() => { setViewingNpcs(prev => prev.filter(n => n.id !== npc.id)); setGmTab('npcs'); setPendingEditNpcId(npc.id) }}
+                    onRoll={sessionStatus === 'active' ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
+                    onPublish={isGM ? () => handlePublishNpc(npc) : undefined}
+                    isPublished={publishedNpcIds.has(npc.id)}
+                    onPlaceOnMap={isGM ? () => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined}
+                  />
+                </div>
+              )
+            })
+          })()}
 
           {/* Inline character sheet — full screen over map */}
           {syncedSelectedEntry && sheetMode === 'inline' && (
@@ -3300,16 +3423,11 @@ export default function TablePage() {
                       ))}
                     </div>
                     {(() => {
-                      const w = pendingRoll.weapon ? getWeaponByName(pendingRoll.weapon.weaponName) : null
-                      const isMelee = w?.category === 'melee'
-                      const isRanged = w?.category === 'ranged' || w?.category === 'explosive' || w?.category === 'heavy'
-                      let note = ''
-                      if (rangeBand === 'engaged') note = isMelee ? '+1 CMod (Melee)' : isRanged ? '-1 CMod (Ranged)' : ''
-                      if (rangeBand === 'close') note = isMelee ? '-1 CMod (Melee at Close)' : isRanged ? '+1 CMod (Ranged)' : ''
-                      if (rangeBand === 'medium') note = 'No modifiers'
-                      if (rangeBand === 'long') note = 'Pistols: -5 CMod | Rifles: +1 CMod'
-                      if (rangeBand === 'distant') note = 'Hunting/Sniper Rifle only'
-                      return note ? <div style={{ fontSize: '11px', color: '#cce0f5', marginTop: '4px', fontFamily: 'Barlow, sans-serif' }}>{note}</div> : null
+                      const rcmod = getRangeCMod()
+                      if (rcmod === 0) return <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '4px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>No range modifier</div>
+                      return <div style={{ fontSize: '13px', marginTop: '4px', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, color: rcmod > 0 ? '#7fc458' : '#c0392b' }}>
+                        Range CMod: {rcmod > 0 ? '+' : ''}{rcmod}
+                      </div>
                     })()}
                   </div>
                 )}
@@ -3327,6 +3445,12 @@ export default function TablePage() {
                         const defensiveMod = isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)
                         const baseCmod = pendingRoll.weapon.conditionCmod ?? 0
                         setCmod(String(baseCmod - defensiveMod))
+                        // Auto-calculate range band from token positions
+                        const active = initiativeOrder.find(ie => ie.is_active)
+                        if (active) {
+                          const autoRange = getAutoRangeBand(active.character_id || undefined, active.npc_id || undefined, e.target.value)
+                          if (autoRange) setRangeBand(autoRange)
+                        }
                       }
                     }}
                       style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
@@ -3341,6 +3465,18 @@ export default function TablePage() {
                           // Filter out dead PCs
                           const pcEntry = entries.find(e => e.character.id === entry.character_id)
                           if (pcEntry?.liveState && pcEntry.liveState.wp_current === 0 && (pcEntry.liveState as any).death_countdown != null && (pcEntry.liveState as any).death_countdown <= 0) return false
+                          // Filter out targets out of range for melee/unarmed
+                          if (pendingRoll.weapon && mapTokens.length > 0) {
+                            const pw = pendingRoll.weapon.weaponName === 'Unarmed' ? null : getWeaponByName(pendingRoll.weapon.weaponName)
+                            const isMeleeOrUnarmed = pendingRoll.weapon.weaponName === 'Unarmed' || pw?.category === 'melee'
+                            if (isMeleeOrUnarmed) {
+                              const active = initiativeOrder.find(ie => ie.is_active)
+                              if (active) {
+                                const autoRange = getAutoRangeBand(active.character_id || undefined, active.npc_id || undefined, entry.character_name)
+                                if (autoRange && !isInRange(pendingRoll.weapon.weaponName, autoRange)) return false
+                              }
+                            }
+                          }
                           return true
                         })
                         .map(entry => (
@@ -3404,9 +3540,14 @@ export default function TablePage() {
                     </div>
                   </div>
                 )}
+                {pendingRoll.weapon && targetName && !isInRange(pendingRoll.weapon.weaponName, rangeBand) && (
+                  <div style={{ padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
+                    Out of range
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={closeRollModal} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-                  <button onClick={executeRoll} disabled={rolling} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: rolling ? 'not-allowed' : 'pointer', opacity: rolling ? 0.6 : 1 }}>
+                  <button onClick={executeRoll} disabled={rolling || (!!pendingRoll.weapon && !!targetName && !isInRange(pendingRoll.weapon.weaponName, rangeBand))} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: (rolling || (!!pendingRoll.weapon && !!targetName && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 'not-allowed' : 'pointer', opacity: (rolling || (!!pendingRoll.weapon && !!targetName && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 0.6 : 1 }}>
                     {rolling ? 'Rolling...' : preRollInsight === '3d6' ? '🎲 Roll 3d6' : '🎲 Roll'}
                   </button>
                 </div>

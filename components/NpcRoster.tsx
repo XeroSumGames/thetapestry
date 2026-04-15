@@ -105,6 +105,7 @@ export interface CampaignNpc {
   sort_order: number | null
   death_countdown: number | null
   incap_rounds: number | null
+  equipment: { name: string; damage?: number; roll?: string; notes?: string }[] | null
 }
 
 interface Relationship {

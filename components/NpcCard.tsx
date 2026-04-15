@@ -233,9 +233,9 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         <div style={{ fontSize: '11px', color: '#cce0f5', fontStyle: 'italic', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.notes}</div>
       )}
 
-      {/* Combat: weapon + unarmed on one row */}
+      {/* Combat: unarmed + all equipment weapons */}
       {onRoll && (
-        <div style={{ display: 'flex', gap: '3px' }}>
+        <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
           <button onClick={() => {
             const phyAmod = rapid.PHY ?? 0
             const smod = getSkillLevel('Unarmed Combat')
@@ -246,10 +246,32 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
           </button>
           {w && (
             <button onClick={handleWeaponAttack}
-              style={{ padding: '2px 6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', flex: 1 }}>
+              style={{ padding: '2px 6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
               ⚔️ {w.name} ({w.damage})
             </button>
           )}
+          {(npc.equipment ?? []).map((eq, i) => {
+            const eqWeapon = getWeaponByName(eq.name)
+            if (!eqWeapon) return null
+            // Skip if this is the same weapon already shown from skills.weapon
+            if (w && eqWeapon.name === w.name) return null
+            const isMelee = eqWeapon.category === 'melee'
+            const attrKey = isMelee ? 'PHY' : 'DEX'
+            const amod = rapid[attrKey] ?? 0
+            const smod = getSkillLevel(eqWeapon.skill)
+            let traitCmod = 0
+            let traitLabel = ''
+            const cumbersome = getTraitValue(eqWeapon.traits, 'Cumbersome')
+            if (cumbersome !== null) { const deficit = cumbersome - (rapid.PHY ?? 0); if (deficit > 0) { traitCmod -= deficit; traitLabel = `Cumbersome -${deficit}` } }
+            const unwieldy = getTraitValue(eqWeapon.traits, 'Unwieldy')
+            if (unwieldy !== null) { const deficit = unwieldy - (rapid.DEX ?? 0); if (deficit > 0) { traitCmod -= deficit; traitLabel = traitLabel ? `${traitLabel}, Unwieldy -${deficit}` : `Unwieldy -${deficit}` } }
+            return (
+              <button key={i} onClick={() => onRoll!(`${npc.name} — Attack (${eqWeapon.name})`, amod, smod, { weaponName: eqWeapon.name, damage: eqWeapon.damage, rpPercent: eqWeapon.rpPercent, conditionCmod: traitCmod, traitCmod, traitLabel, traits: eqWeapon.traits })}
+                style={{ padding: '2px 6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                ⚔️ {eqWeapon.name} ({eqWeapon.damage})
+              </button>
+            )
+          })}
         </div>
       )}
     </div>

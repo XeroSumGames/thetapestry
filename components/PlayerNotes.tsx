@@ -11,9 +11,17 @@ interface PlayerNote {
   created_at: string
 }
 
+interface SharedNote {
+  id: string
+  title: string
+  content: string
+  attachments: { name: string; url: string; size: number; type: string; path: string }[]
+}
+
 export default function PlayerNotes({ campaignId }: { campaignId: string }) {
   const supabase = createClient()
   const [notes, setNotes] = useState<PlayerNote[]>([])
+  const [sharedNotes, setSharedNotes] = useState<SharedNote[]>([])
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [showAdd, setShowAdd] = useState(false)
   const [title, setTitle] = useState('')
@@ -28,6 +36,7 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
       if (user) setUserId(user.id)
     })()
     load()
+    loadShared()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campaignId])
 
@@ -38,6 +47,16 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
       .eq('campaign_id', campaignId)
       .order('created_at', { ascending: false })
     setNotes(data ?? [])
+  }
+
+  async function loadShared() {
+    const { data } = await supabase
+      .from('campaign_notes')
+      .select('id, title, content, attachments')
+      .eq('campaign_id', campaignId)
+      .eq('shared', true)
+      .order('created_at', { ascending: true })
+    setSharedNotes((data ?? []).map((n: any) => ({ ...n, attachments: n.attachments ?? [] })))
   }
 
   async function handleSave() {
@@ -116,7 +135,44 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
         </div>
       )}
 
-      {notes.length === 0 && !showAdd && (
+      {sharedNotes.length > 0 && (
+        <>
+          <div style={{ fontSize: '11px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '4px 0' }}>GM Handouts</div>
+          {sharedNotes.map(n => (
+            <div key={`shared-${n.id}`} style={{ background: '#1a1a1a', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
+              <div onClick={() => toggle(`shared-${n.id}`)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', cursor: 'pointer' }}>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {n.title}
+                  {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '11px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
+                </span>
+                <span style={{ fontSize: '11px', color: '#5a5550' }}>{expanded.has(`shared-${n.id}`) ? '▲' : '▼'}</span>
+              </div>
+              {expanded.has(`shared-${n.id}`) && (
+                <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
+                  <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: '1.5', margin: '10px 0' }}>
+                    {n.content}
+                  </pre>
+                  {n.attachments.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {n.attachments.map(att => (
+                        <a key={att.path} href={att.url} target="_blank" rel="noreferrer"
+                          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow, sans-serif', textDecoration: 'none' }}>
+                          {att.type.startsWith('image/') && <img src={att.url} alt="" style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '2px' }} />}
+                          {att.name}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+          <div style={{ borderBottom: '1px solid #2e2e2e', margin: '4px 0' }} />
+        </>
+      )}
+
+      {notes.length === 0 && sharedNotes.length === 0 && !showAdd && (
         <div style={{ color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', padding: '2rem' }}>
           No notes yet
         </div>

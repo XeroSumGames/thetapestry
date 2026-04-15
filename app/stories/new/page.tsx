@@ -72,15 +72,11 @@ export default function NewCampaignPage() {
     const settingNpcs = SETTING_NPCS[setting]
     if (settingNpcs && settingNpcs.length > 0) {
       const npcRows = settingNpcs.map((n, i) => {
-        // Fold non-column seed fields (role, description, how_to_meet, equipment) into the notes column.
-        const equipmentText = n.equipment.length > 0
-          ? 'Equipment: ' + n.equipment.map(e => e.name + (e.notes ? ` (${e.notes})` : '')).join(', ')
-          : ''
+        // Fold non-column seed fields (role, description, how_to_meet) into the notes column.
         const notes = [
           n.role && `Role: ${n.role}`,
           n.description,
           n.how_to_meet && `How to meet: ${n.how_to_meet}`,
-          equipmentText,
         ].filter(Boolean).join('\n\n')
         return {
           campaign_id: data.id,
@@ -92,6 +88,7 @@ export default function NewCampaignPage() {
           influence: n.influence,
           dexterity: n.dexterity,
           skills: { entries: n.skills.map(s => ({ name: s.name, level: s.level })), text: n.skills.map(s => `${s.name} ${s.level}`).join(', '), weapon: null },
+          equipment: n.equipment,
           notes,
           motivation: n.motivation || null,
           wp_max: n.wp_max,
