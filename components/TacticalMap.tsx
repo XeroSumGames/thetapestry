@@ -62,6 +62,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [gridColor, setGridColor] = useState('white')
   const [gridOpacity, setGridOpacity] = useState(0.4)
   const [spaceHeld, setSpaceHeld] = useState(false)
+  const [cellPx, setCellPx] = useState(70)
   const [resizing, setResizing] = useState<{ corner: string; startX: number; startY: number; startZoom: number } | null>(null)
   const mapDrawRef = useRef<{ x: number; y: number; w: number; h: number }>({ x: 0, y: 0, w: 0, h: 0 })
   const tokensRef = useRef<Token[]>([])
@@ -112,7 +113,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
 
   // Redraw on token/scene changes
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale, cellPx])
 
   // Spacebar = pan mode
   useEffect(() => {
@@ -132,10 +133,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   }, [])
 
   function getCellSize(): number {
-    if (!canvasRef.current || !scene) return 40
-    const cw = canvasRef.current.width
-    const ch = canvasRef.current.height
-    return Math.min(cw / scene.grid_cols, ch / scene.grid_rows)
+    return cellPx
   }
 
   function draw() {
@@ -680,6 +678,16 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
                   style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
                 <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'center' }}>{scene.cell_feet ?? 3}ft</span>
                 <button onClick={async () => { const v = (scene.cell_feet ?? 3) + 1; setScene(p => p ? { ...p, cell_feet: v } : p); await supabase.from('tactical_scenes').update({ cell_feet: v }).eq('id', scene.id) }}
+                  style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>+</button>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cell (px)</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                <button onClick={() => setCellPx(p => Math.max(20, p - 5))}
+                  style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
+                <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '30px', textAlign: 'center' }}>{cellPx}px</span>
+                <button onClick={() => setCellPx(p => Math.min(200, p + 5))}
                   style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>+</button>
               </div>
             </div>

@@ -373,6 +373,7 @@
 - [ ] GM ping — flash a location on everyone's screen
 - [ ] Initiative order numbered badges on tokens
 - [ ] Range band auto-select from token positions in attack modal
+- [ ] NPC cards as draggable floating windows over tactical map (like PC sheet overlay mode)
 
 ---
 
