@@ -146,6 +146,8 @@ interface Props {
   onEditStarted?: () => void
   externalNpcs?: CampaignNpc[]    // Parent's optimistic NPC state — syncs HP/status without waiting for realtime
   onPlaceOnMap?: (npc: CampaignNpc) => void
+  onRemoveFromMap?: (npc: CampaignNpc) => void
+  npcIdsOnMap?: Set<string>
 }
 
 const emptyForm = {
@@ -156,7 +158,7 @@ const emptyForm = {
   weapon: null as any,
 }
 
-export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs, onPlaceOnMap }: Props) {
+export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs, onPlaceOnMap, onRemoveFromMap, npcIdsOnMap }: Props) {
   const supabase = createClient()
   const [npcs, setNpcs] = useState<CampaignNpc[]>([])
   const [loading, setLoading] = useState(true)
@@ -702,12 +704,15 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                         Fight
                       </button>
                     )}
-                    {onPlaceOnMap && (
-                      <button onClick={e => { e.stopPropagation(); onPlaceOnMap(npc) }}
-                        style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
-                        Map
-                      </button>
-                    )}
+                    {onPlaceOnMap && (() => {
+                      const isOnMap = npcIdsOnMap?.has(npc.id) ?? false
+                      return (
+                        <button onClick={e => { e.stopPropagation(); isOnMap && onRemoveFromMap ? onRemoveFromMap(npc) : onPlaceOnMap(npc) }}
+                          style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: isOnMap ? '#1a2e10' : '#1a1a2e', border: `1px solid ${isOnMap ? '#2d5a1b' : '#2e2e5a'}`, color: isOnMap ? '#7fc458' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                          Map
+                        </button>
+                      )
+                    })()}
                     {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>}
                   </div>
                 </div>

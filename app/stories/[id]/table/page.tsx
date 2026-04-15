@@ -192,6 +192,7 @@ export default function TablePage() {
   const [showTacticalMap, setShowTacticalMap] = useState(false)
   const [tacticalShared, setTacticalShared] = useState(false)
   const [tokenRefreshKey, setTokenRefreshKey] = useState(0)
+  const [mapTokenNpcIds, setMapTokenNpcIds] = useState<Set<string>>(new Set())
   const [showNpcPicker, setShowNpcPicker] = useState(false)
   const [dropCharacter, setDropCharacter] = useState<string>('')
   const [selectedNpcIds, setSelectedNpcIds] = useState<Set<string>>(new Set())
@@ -1079,6 +1080,21 @@ export default function TablePage() {
     await loadInitiative(id)
   }
 
+  async function refreshMapTokenIds() {
+    const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
+    if (!activeScene) return
+    const { data: tokens } = await supabase.from('scene_tokens').select('npc_id').eq('scene_id', activeScene.id).not('npc_id', 'is', null)
+    setMapTokenNpcIds(new Set((tokens ?? []).map((t: any) => t.npc_id)))
+  }
+
+  async function removeTokenFromMap(name: string) {
+    const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
+    if (!activeScene) return
+    await supabase.from('scene_tokens').delete().eq('scene_id', activeScene.id).eq('name', name)
+    setTokenRefreshKey(k => k + 1)
+    await refreshMapTokenIds()
+  }
+
   async function placeTokenOnMap(name: string, type: 'pc' | 'npc', characterId?: string, npcId?: string, portraitUrl?: string) {
     // Find the active tactical scene
     const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
@@ -1100,6 +1116,7 @@ export default function TablePage() {
     })
     if (tokenErr) { console.error('[placeToken] error:', tokenErr.message); alert('Failed to place token: ' + tokenErr.message); return }
     setTokenRefreshKey(k => k + 1)
+    await refreshMapTokenIds()
   }
 
   async function addNpcsToCombat(npcsToAdd: any[]) {
@@ -2988,7 +3005,7 @@ export default function TablePage() {
                 ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
                 : initiativeOrder
               const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
-              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc]); setSelectedEntry(null) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} />
+              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc]); setSelectedEntry(null) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} npcIdsOnMap={mapTokenNpcIds} />
             })()}
             {gmTab === 'npcs' && !isGM && (() => {
               // Merge revealed NPCs with any NPCs currently in combat,
