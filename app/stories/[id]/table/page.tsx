@@ -3003,7 +3003,7 @@ export default function TablePage() {
                   }
                   setSelectedEntry(null)
                 } : undefined}
-                onPlaceOnMap={isGM && (combatActive || showTacticalMap) ? () => placeTokenOnMap(syncedSelectedEntry.character.name, 'pc', syncedSelectedEntry.character.id, undefined, getCharPhoto(syncedSelectedEntry) || undefined) : undefined}
+                onPlaceOnMap={(combatActive || showTacticalMap || tacticalShared) && syncedSelectedEntry.userId === userId ? () => placeTokenOnMap(syncedSelectedEntry.character.name, 'pc', syncedSelectedEntry.character.id, undefined, getCharPhoto(syncedSelectedEntry) || undefined) : undefined}
                 inline={true}
               />
             </div>
