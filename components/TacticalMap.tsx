@@ -192,6 +192,10 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     ctx.fillStyle = '#111'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
+    // Apply zoom — scales everything: image, grid, tokens
+    ctx.save()
+    ctx.scale(zoom, zoom)
+
     // Background image — always fit to canvas width, scroll vertically if needed
     if (bgImageRef.current) {
       const img = bgImageRef.current
@@ -401,6 +405,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         })
       }
     }
+
+    ctx.restore() // undo zoom scale
   }
 
   // Mouse handlers
@@ -412,10 +418,10 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     const gridH = scene.grid_rows * cellSize
     const offsetX = (canvasRef.current.width - gridW) / 2
     const offsetY = (canvasRef.current.height - gridH) / 2
-    const mx = e.clientX - rect.left
-    const my = e.clientY - rect.top
-    const gx = Math.floor((mx - offsetX) / cellSize)
-    const gy = Math.floor((my - offsetY) / cellSize)
+    const mx = (e.clientX - rect.left) / zoom
+    const my = (e.clientY - rect.top) / zoom
+    const gx = Math.floor((mx - 0) / cellSize)
+    const gy = Math.floor((my - 0) / cellSize)
     if (gx < 0 || gx >= scene.grid_cols || gy < 0 || gy >= scene.grid_rows) return null
     return { gx, gy }
   }
