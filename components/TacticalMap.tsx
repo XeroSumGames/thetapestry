@@ -81,6 +81,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const mapDrawRef = useRef<{ x: number; y: number; w: number; h: number }>({ x: 0, y: 0, w: 0, h: 0 })
   const tokensRef = useRef<Token[]>([])
   const portraitCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
+  const tokenAnimRef = useRef<Map<string, { fromX: number; fromY: number; toX: number; toY: number; t: number }>>(new Map())
+  const animFrameRef = useRef<number>(0)
   const sceneRef = useRef<Scene | null>(null)
 
   // Keep refs in sync for canvas drawing
@@ -260,10 +262,23 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     const toks = tokensRef.current
     const activeEntry = initiativeOrder.find((e: any) => e.is_active)
 
+    let hasActiveAnim = false
     toks.forEach(t => {
       if (!t.is_visible && !isGM) return
-      const cx = offsetX + t.grid_x * cellSize + cellSize / 2
-      const cy = offsetY + t.grid_y * cellSize + cellSize / 2
+      // Animated position — lerp toward target grid cell
+      const targetPxX = offsetX + t.grid_x * cellSize + cellSize / 2
+      const targetPxY = offsetY + t.grid_y * cellSize + cellSize / 2
+      let cx = targetPxX
+      let cy = targetPxY
+      const anim = tokenAnimRef.current.get(t.id)
+      if (anim) {
+        anim.t = Math.min(1, anim.t + 0.08)
+        const ease = 1 - Math.pow(1 - anim.t, 3) // ease-out cubic
+        cx = anim.fromX + (anim.toX - anim.fromX) * ease
+        cy = anim.fromY + (anim.toY - anim.fromY) * ease
+        if (anim.t >= 1) tokenAnimRef.current.delete(t.id)
+        else hasActiveAnim = true
+      }
       const radius = cellSize * 0.4
 
       // Active combatant glow
@@ -407,6 +422,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     }
 
     ctx.restore() // undo zoom scale
+
+    // Continue animation loop if tokens are still moving
+    if (hasActiveAnim) {
+      animFrameRef.current = requestAnimationFrame(draw)
+    }
   }
 
   // Mouse handlers
@@ -500,6 +520,15 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     if (!dragging) return
     const pos = getGridPos(e)
     if (pos) {
+      // Start animation from current position to new position
+      const tok = tokens.find(t => t.id === dragging.tokenId)
+      if (tok) {
+        const fromX = tok.grid_x * cellPx + cellPx / 2
+        const fromY = tok.grid_y * cellPx + cellPx / 2
+        const toX = pos.gx * cellPx + cellPx / 2
+        const toY = pos.gy * cellPx + cellPx / 2
+        tokenAnimRef.current.set(dragging.tokenId, { fromX, fromY, toX, toY, t: 0 })
+      }
       await supabase.from('scene_tokens').update({ grid_x: pos.gx, grid_y: pos.gy }).eq('id', dragging.tokenId)
       setTokens(prev => prev.map(t => t.id === dragging.tokenId ? { ...t, grid_x: pos.gx, grid_y: pos.gy } : t))
     }
