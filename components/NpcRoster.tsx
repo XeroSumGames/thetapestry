@@ -684,9 +684,9 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(npc.name)}</span>
                     )}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.name}</div>
-                    <div style={{ display: 'flex', gap: '3px', marginTop: '2px' }}>
+                    <div style={{ display: 'flex', gap: '3px', marginTop: '2px', justifyContent: 'flex-end' }}>
                       {npc.npc_type && (() => {
                         const tc = TYPE_COLORS[npc.npc_type] ?? TYPE_COLORS.goon
                         return <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.npc_type}</span>
@@ -694,7 +694,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginTop: '3px', paddingLeft: '42px' }}>
+                <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginTop: '3px', paddingLeft: '42px', justifyContent: 'flex-end' }}>
                     <span style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.status}</span>
                     <button onClick={e => quickReveal(npc.id, e)}
                       style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: revealedNpcIds.has(npc.id) ? '#2a1210' : '#1a2e10', border: `1px solid ${revealedNpcIds.has(npc.id) ? '#c0392b' : '#2d5a1b'}`, color: revealedNpcIds.has(npc.id) ? '#f5a89a' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
