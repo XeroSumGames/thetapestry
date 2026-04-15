@@ -308,10 +308,22 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       ctx.shadowColor = 'transparent'
       ctx.shadowBlur = 0
 
-      // Name below
-      ctx.font = `${Math.max(13, cellSize * 0.32)}px Barlow Condensed`
-      ctx.fillStyle = 'rgba(255,255,255,0.7)'
-      ctx.fillText(t.name.split(' ')[0], cx, cy + radius + Math.max(8, cellSize * 0.2))
+      // Name below — with dark background for legibility
+      const nameFont = `bold ${Math.max(12, cellSize * 0.3)}px Barlow Condensed`
+      ctx.font = nameFont
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'top'
+      const nameText = t.name.split(' ')[0]
+      const nameY = cy + radius + 2
+      const nameMetrics = ctx.measureText(nameText)
+      const namePadX = 3
+      const namePadY = 1
+      const nameW = nameMetrics.width + namePadX * 2
+      const nameH = Math.max(12, cellSize * 0.3) + namePadY * 2
+      ctx.fillStyle = 'rgba(0,0,0,0.7)'
+      ctx.fillRect(cx - nameW / 2, nameY - namePadY, nameW, nameH)
+      ctx.fillStyle = '#f5f2ee'
+      ctx.fillText(nameText, cx, nameY)
 
       ctx.globalAlpha = 1
     })
