@@ -309,7 +309,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       ctx.shadowBlur = 0
 
       // Name below — with dark background for legibility
-      const fontSize = Math.max(12, cellSize * 0.3)
+      const fontSize = Math.max(14, cellSize * 0.34)
       ctx.font = `bold ${fontSize}px Barlow Condensed`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
@@ -335,19 +335,27 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         const cx = offsetX + selTok.grid_x * cellSize + cellSize / 2
         const cy = offsetY + selTok.grid_y * cellSize + cellSize / 2
         const bands = [
-          { cells: 1, color: 'rgba(127,196,88,0.1)', label: 'Engaged' },
-          { cells: 3, color: 'rgba(239,159,39,0.06)', label: 'Close' },
-          { cells: 6, color: 'rgba(239,159,39,0.04)', label: 'Medium' },
-          { cells: 10, color: 'rgba(192,57,43,0.03)', label: 'Long' },
+          { cells: 1, fill: 'rgba(127,196,88,0.15)', stroke: '#7fc458', label: 'Engaged' },
+          { cells: 3, fill: 'rgba(52,152,219,0.1)', stroke: '#3498db', label: 'Close' },
+          { cells: 6, fill: 'rgba(241,196,15,0.08)', stroke: '#f1c40f', label: 'Medium' },
+          { cells: 10, fill: 'rgba(192,57,43,0.06)', stroke: '#c0392b', label: 'Long' },
         ]
         bands.reverse().forEach(b => {
           ctx.beginPath()
           ctx.arc(cx, cy, b.cells * cellSize, 0, Math.PI * 2)
-          ctx.fillStyle = b.color
+          ctx.fillStyle = b.fill
           ctx.fill()
-          ctx.strokeStyle = 'rgba(255,255,255,0.1)'
-          ctx.lineWidth = 0.5
+          ctx.strokeStyle = b.stroke
+          ctx.globalAlpha = 0.4
+          ctx.lineWidth = 1.5
           ctx.stroke()
+          ctx.globalAlpha = 1
+          // Label
+          ctx.font = `bold 11px Barlow Condensed`
+          ctx.fillStyle = b.stroke
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(b.label, cx, cy - b.cells * cellSize + 10)
         })
       }
     }
