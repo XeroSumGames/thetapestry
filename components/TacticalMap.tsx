@@ -332,11 +332,12 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       if (selTok) {
         const cx = offsetX + selTok.grid_x * cellSize + cellSize / 2
         const cy = offsetY + selTok.grid_y * cellSize + cellSize / 2
+        const ft = s.cell_feet ?? 3
         const bands = [
-          { cells: 1, fill: 'rgba(127,196,88,0.15)', stroke: '#7fc458', label: 'Engaged' },
-          { cells: 3, fill: 'rgba(52,152,219,0.1)', stroke: '#3498db', label: 'Close' },
-          { cells: 6, fill: 'rgba(241,196,15,0.08)', stroke: '#f1c40f', label: 'Medium' },
-          { cells: 10, fill: 'rgba(192,57,43,0.06)', stroke: '#c0392b', label: 'Long' },
+          { cells: Math.max(1, Math.ceil(3 / ft)), fill: 'rgba(127,196,88,0.15)', stroke: '#7fc458', label: 'Engaged' },
+          { cells: Math.max(2, Math.ceil(15 / ft)), fill: 'rgba(52,152,219,0.1)', stroke: '#3498db', label: 'Close' },
+          { cells: Math.max(3, Math.ceil(30 / ft)), fill: 'rgba(241,196,15,0.08)', stroke: '#f1c40f', label: 'Medium' },
+          { cells: Math.max(4, Math.ceil(60 / ft)), fill: 'rgba(192,57,43,0.06)', stroke: '#c0392b', label: 'Long' },
         ]
         bands.reverse().forEach(b => {
           ctx.beginPath()
@@ -739,7 +740,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onDoubleClick={handleDoubleClick}
-          onWheel={e => { e.preventDefault(); setZoom(z => Math.max(0.1, Math.min(4, z + (e.deltaY < 0 ? 0.1 : -0.1)))) }}
+          onWheel={undefined}
           style={{ display: 'block', cursor: panning ? 'grabbing' : spaceHeld ? 'grab' : resizing ? 'nwse-resize' : dragging ? 'grabbing' : 'default' }}
         />
 
