@@ -3137,7 +3137,7 @@ export default function TablePage() {
                           placeTokenOnMap(entry.character.name, 'pc', entry.character.id, undefined, getCharPhoto(entry) || undefined)
                         }
                       }}
-                        style={{ padding: '1px 4px', background: onMap ? '#1a2e10' : '#1a1a2e', border: `1px solid ${onMap ? '#2d5a1b' : '#2e2e5a'}`, borderRadius: '2px', color: onMap ? '#7fc458' : '#7ab3d4', fontSize: '8px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.2 }}>
+                        style={{ padding: '3px 8px', background: onMap ? '#1a2e10' : '#1a1a2e', border: `1px solid ${onMap ? '#2d5a1b' : '#2e2e5a'}`, borderRadius: '3px', color: onMap ? '#7fc458' : '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.2 }}>
                         Map
                       </div>
                     )
