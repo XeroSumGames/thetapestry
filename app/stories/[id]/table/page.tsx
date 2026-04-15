@@ -15,7 +15,7 @@ const TacticalMap = dynamic(() => import('../../../../components/TacticalMap'), 
 import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { logEvent } from '../../../../lib/events'
 import { rollDamage, calculateDamage } from '../../../../lib/damage'
-import { getWeaponByName, getTraitValue } from '../../../../lib/weapons'
+import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/weapons'
 import { SKILLS } from '../../../../lib/xse-schema'
 
 interface Campaign {
@@ -2449,7 +2449,8 @@ export default function TablePage() {
 
             // Determine combatant's weapon for conditional buttons
             const charEntry = entries.find(e => e.character.name === activeEntry.character_name)
-            const weaponData = charEntry?.character.data?.weaponPrimary ?? null
+            const npcForWeapon = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+            const weaponData = charEntry?.character.data?.weaponPrimary ?? (npcForWeapon?.skills?.weapon ? { weaponName: npcForWeapon.skills.weapon.weaponName, condition: 'Used' } : null)
             const w = weaponData ? getWeaponByName(weaponData.weaponName) : null
             const hasBurst = w ? getTraitValue(w.traits, 'Automatic Burst') !== null : false
             const isMelee = w?.category === 'melee'
@@ -2476,7 +2477,22 @@ export default function TablePage() {
                   style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
                   Aim{(activeEntry.aim_bonus ?? 0) > 0 ? ` (+${activeEntry.aim_bonus})` : ''}
                 </button>
-                <span style={{ ...actBtn('#7a1f16', '#f5a89a', '#c0392b'), cursor: 'default', opacity: 0.7 }} title="Use weapon buttons on character sheet">Attack</span>
+                <button onClick={() => {
+                  if (!w || !weaponData) { alert('No weapon readied.'); return }
+                  const rapid = charEntry?.character.data?.rapid ?? {}
+                  const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+                  const attrKey = isMelee ? 'PHY' : (w.skill === 'Ranged Combat' ? 'DEX' : 'ACU')
+                  const amod = npcAttacker ? (isMelee ? npcAttacker.physicality : npcAttacker.dexterity) ?? 0 : rapid[attrKey] ?? 0
+                  const smod = npcAttacker
+                    ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === w.skill)?.level ?? 0 : 0)
+                    : charEntry?.character.data?.skills?.find((s: any) => s.skillName === w.skill)?.level ?? 0
+                  const condCmod = weaponData.condition ? (CONDITION_CMOD as any)[weaponData.condition] ?? 0 : 0
+                  handleRollRequest(`${activeEntry.character_name} — Attack (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: condCmod !== -99 ? condCmod : 0, traits: w.traits })
+                }}
+                  style={w ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}
+                  disabled={!w}>
+                  Attack{w ? ` (${w.name})` : ''}
+                </button>
                 {isMelee && w ? (
                   <button onClick={has2Actions ? () => {
                     const rapid = charEntry?.character.data?.rapid ?? {}

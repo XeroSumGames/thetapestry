@@ -374,6 +374,7 @@
 - [ ] Initiative order numbered badges on tokens
 - [ ] Range band auto-select from token positions in attack modal
 - [ ] NPC cards as draggable floating windows over tactical map (like PC sheet overlay mode)
+- [ ] Move action highlights reachable cells (3 squares in any direction) on tactical map
 
 ---
 
