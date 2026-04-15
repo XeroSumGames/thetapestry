@@ -33,7 +33,10 @@ interface Scene {
   grid_cols: number
   grid_rows: number
   cell_feet: number
+  cell_px: number
+  img_scale: number
   is_active: boolean
+  is_locked: boolean
   has_grid: boolean
 }
 
@@ -89,7 +92,14 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     const { data } = await supabase.from('tactical_scenes').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: false })
     setScenes(data ?? [])
     const active = (data ?? []).find((s: Scene) => s.is_active)
-    if (active) { setScene(active); loadTokens(active.id) }
+    if (active) {
+      setScene(active)
+      loadTokens(active.id)
+      // Apply saved visual settings
+      if (active.cell_px) setCellPx(active.cell_px)
+      if (active.img_scale) setImgScale(active.img_scale)
+      setMapLocked(active.is_locked ?? false)
+    }
   }
 
   async function loadTokens(sceneId: string) {
@@ -737,7 +747,20 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
               Fit to Screen
           </button>
-          <button onClick={() => setMapLocked(prev => !prev)}
+          <button onClick={async () => {
+            const newLocked = !mapLocked
+            setMapLocked(newLocked)
+            if (newLocked && scene) {
+              // Save all visual settings to DB so players get the same view
+              await supabase.from('tactical_scenes').update({
+                is_locked: true, cell_px: cellPx, img_scale: imgScale,
+              }).eq('id', scene.id)
+              setScene(prev => prev ? { ...prev, is_locked: true, cell_px: cellPx, img_scale: imgScale } : prev)
+            } else if (scene) {
+              await supabase.from('tactical_scenes').update({ is_locked: false }).eq('id', scene.id)
+              setScene(prev => prev ? { ...prev, is_locked: false } : prev)
+            }
+          }}
             style={{ padding: '4px 10px', background: mapLocked ? '#2a1210' : 'rgba(15,15,15,.85)', border: `1px solid ${mapLocked ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: mapLocked ? '#f5a89a' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
             {mapLocked ? 'Unlock Map' : 'Lock Map'}
           </button>
