@@ -510,6 +510,7 @@ export default function TablePage() {
         .on('broadcast', { event: 'combat_started' }, () => { loadInitiative(id); loadRolls(id) })
         .on('broadcast', { event: 'tactical_shared' }, (msg: any) => { setTacticalShared(msg.payload?.shared ?? false); setShowTacticalMap(msg.payload?.shared ?? false) })
         .on('broadcast', { event: 'tactical_unshared' }, () => { setTacticalShared(false); setShowTacticalMap(false) })
+        .on('broadcast', { event: 'token_changed' }, () => { setTokenRefreshKey(k => k + 1) })
         .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id); loadRolls(id) })
         .on('broadcast', { event: 'npc_damaged' }, (msg: any) => {
           // Another client dealt damage to an NPC — apply the patch locally
@@ -1147,10 +1148,10 @@ export default function TablePage() {
     await supabase.from('scene_tokens').delete().eq('scene_id', activeScene.id).eq('name', name)
     setTokenRefreshKey(k => k + 1)
     await refreshMapTokenIds()
+    initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
   }
 
   async function placeTokenOnMap(name: string, type: 'pc' | 'npc', characterId?: string, npcId?: string, portraitUrl?: string) {
-    // Find the active tactical scene
     const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
     if (!activeScene) { alert('No active tactical scene. Create a scene first.'); return }
     // Toggle: if token already exists, remove it
@@ -1159,9 +1160,10 @@ export default function TablePage() {
       await supabase.from('scene_tokens').delete().eq('id', existing[0].id)
       setTokenRefreshKey(k => k + 1)
       await refreshMapTokenIds()
+      initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
       return
     }
-    // Place at top-right, away from the GM controls strip on the left
+    // Place at top-right of the grid
     const cols = (activeScene as any).grid_cols ?? 20
     const { error: tokenErr } = await supabase.from('scene_tokens').insert({
       scene_id: activeScene.id,
@@ -1178,6 +1180,7 @@ export default function TablePage() {
     if (tokenErr) { console.error('[placeToken] error:', tokenErr.message); alert('Failed to place token: ' + tokenErr.message); return }
     setTokenRefreshKey(k => k + 1)
     await refreshMapTokenIds()
+    initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
   }
 
   async function addNpcsToCombat(npcsToAdd: any[]) {
@@ -3455,6 +3458,7 @@ export default function TablePage() {
                           if (activeScene) {
                             await supabase.from('scene_tokens').delete().eq('scene_id', activeScene.id).eq('name', entry.character.name)
                             setTokenRefreshKey(k => k + 1)
+                            initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
                           }
                         } else {
                           placeTokenOnMap(entry.character.name, 'pc', entry.character.id, undefined, getCharPhoto(entry) || undefined)
