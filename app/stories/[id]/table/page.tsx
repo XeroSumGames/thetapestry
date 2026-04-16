@@ -1151,11 +1151,13 @@ export default function TablePage() {
 
   async function placeTokenOnMap(name: string, type: 'pc' | 'npc', characterId?: string, npcId?: string, portraitUrl?: string) {
     // Find the active tactical scene
-    const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
+    const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
     if (!activeScene) { alert('No active tactical scene. Create a scene first.'); return }
     // Check if token already exists
     const { data: existing } = await supabase.from('scene_tokens').select('id').eq('scene_id', activeScene.id).eq('name', name).limit(1)
     if (existing && existing.length > 0) { alert(`${name} is already on the map.`); return }
+    // Place at top-right corner
+    const cols = (activeScene as any).grid_cols ?? 20
     const { error: tokenErr } = await supabase.from('scene_tokens').insert({
       scene_id: activeScene.id,
       name,
@@ -1163,7 +1165,7 @@ export default function TablePage() {
       character_id: characterId || null,
       npc_id: npcId || null,
       portrait_url: portraitUrl || null,
-      grid_x: 1,
+      grid_x: cols - 2,
       grid_y: 1,
       is_visible: true,
       color: type === 'pc' ? '#7ab3d4' : '#c0392b',
