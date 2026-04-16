@@ -99,7 +99,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [showRangeOverlay, setShowRangeOverlay] = useState(false)
   const [gridOpacity, setGridOpacity] = useState(0.4)
   const [spaceHeld, setSpaceHeld] = useState(false)
-  const [cellPx, setCellPx] = useState(70)
+  const [cellPx, setCellPx] = useState(35)
   const [resizing, setResizing] = useState<{ corner: string; startX: number; startY: number; startZoom: number } | null>(null)
   const mapDrawRef = useRef<{ x: number; y: number; w: number; h: number }>({ x: 0, y: 0, w: 0, h: 0 })
   const tokensRef = useRef<Token[]>([])
@@ -678,7 +678,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     }
     // Spacebar held = always pan
     if (spaceHeld) {
-      setPanning({ startX: e.clientX, startY: e.clientY, startPanX: panX, startPanY: panY })
+      setPanning({ startX: e.clientX, startY: e.clientY, startPanX: containerRef.current?.scrollLeft ?? 0, startPanY: containerRef.current?.scrollTop ?? 0 })
       return
     }
     const pos = getGridPos(e)
@@ -717,7 +717,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     // No token or handle clicked — start panning (unless locked)
     setSelectedToken(null)
     if (!mapLocked) {
-      setPanning({ startX: e.clientX, startY: e.clientY, startPanX: panX, startPanY: panY })
+      setPanning({ startX: e.clientX, startY: e.clientY, startPanX: containerRef.current?.scrollLeft ?? 0, startPanY: containerRef.current?.scrollTop ?? 0 })
     }
   }
 
@@ -728,9 +728,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       setImgScale(Math.max(0.1, Math.min(5, resizing.startZoom + scaleDelta)))
       return
     }
-    if (panning) {
-      setPanX(panning.startPanX + (e.clientX - panning.startX))
-      setPanY(panning.startPanY + (e.clientY - panning.startY))
+    if (panning && containerRef.current) {
+      const dx = e.clientX - panning.startX
+      const dy = e.clientY - panning.startY
+      containerRef.current.scrollLeft = panning.startPanX - dx
+      containerRef.current.scrollTop = panning.startPanY - dy
     }
   }
 
@@ -881,9 +883,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
 
   return (
     <div style={{ flex: 1, display: 'flex', background: '#111', overflow: 'hidden' }}>
-      {/* GM Controls — left strip */}
+      {/* GM Controls — right strip */}
       {isGM && (
-        <div style={{ width: '130px', flexShrink: 0, background: '#0d0d0d', borderRight: '1px solid #2e2e2e', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden' }}>
+        <div style={{ width: '130px', flexShrink: 0, background: '#0d0d0d', borderLeft: '1px solid #2e2e2e', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden', order: 2 }}>
           <select value={scene.id} onChange={e => {
             if (e.target.value === '__new__') { setShowSetup(true); e.target.value = scene.id }
             else activateScene(e.target.value)
@@ -1056,7 +1058,16 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       )}
 
       {/* Map canvas area — scrollable when zoomed */}
-      <div ref={containerRef} style={{ flex: 1, position: 'relative', overflow: 'auto' }}>
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        {/* Zoom control — top left, fixed over scroll area */}
+        <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ fontSize: '10px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Zoom</div>
+          <input type="range" min={25} max={400} step={25} value={Math.round(zoom * 100)}
+            onChange={e => setZoom(Number(e.target.value) / 100)}
+            style={{ width: '80px', accentColor: '#7ab3d4', cursor: 'pointer' }} />
+          <div style={{ fontSize: '11px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center' }}>{Math.round(zoom * 100)}%</div>
+        </div>
+        <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'auto' }}>
         <canvas ref={canvasRef}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -1065,6 +1076,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           onWheel={undefined}
           style={{ display: 'block', cursor: panning ? 'grabbing' : spaceHeld ? 'grab' : resizing ? 'nwse-resize' : dragging ? 'grabbing' : 'default' }}
         />
+        </div>
 
       {/* Selected token info — bottom left */}
       {selectedToken && (() => {
