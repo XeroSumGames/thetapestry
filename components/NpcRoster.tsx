@@ -416,19 +416,26 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
 
   async function applyGenerated(typeOverride: string) {
     const npc = generateRandomNpc(typeOverride)
-    // Pick a random UNUSED portrait for this gender — only recycles once all have been used.
+    // Pick a random UNUSED portrait — "used" = previously auto-assigned in THIS campaign.
+    // Manual Library picks on the NPC edit form don't count. Recycles once exhausted.
     let portraitUrl: string | null = null
     try {
       const [allRes, usedRes] = await Promise.all([
         supabase.from('portrait_bank').select('url_256').eq('gender', npc.gender),
-        supabase.from('campaign_npcs').select('portrait_url').eq('campaign_id', campaignId).not('portrait_url', 'is', null),
+        supabase.from('campaign_portrait_usage').select('portrait_url').eq('campaign_id', campaignId).eq('gender', npc.gender),
       ])
       const all = (allRes.data ?? []) as { url_256: string }[]
       if (all.length > 0) {
         const usedSet = new Set((usedRes.data ?? []).map((r: any) => r.portrait_url))
-        const unused = all.filter(p => !usedSet.has(p.url_256))
-        const pool = unused.length > 0 ? unused : all // recycle once exhausted
-        portraitUrl = pool[Math.floor(Math.random() * pool.length)].url_256
+        let unused = all.filter(p => !usedSet.has(p.url_256))
+        if (unused.length === 0) {
+          // Cycle exhausted — reset the log for this gender so we start fresh
+          await supabase.from('campaign_portrait_usage').delete().eq('campaign_id', campaignId).eq('gender', npc.gender)
+          unused = all
+        }
+        portraitUrl = unused[Math.floor(Math.random() * unused.length)].url_256
+        // Log the assignment so we don't pick it again this cycle
+        await supabase.from('campaign_portrait_usage').insert({ campaign_id: campaignId, portrait_url: portraitUrl, gender: npc.gender })
       }
     } catch { /* bank unavailable — skip portrait */ }
     setForm(f => ({
