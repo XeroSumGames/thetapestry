@@ -98,6 +98,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [ping, setPing] = useState<{ gx: number; gy: number; t: number } | null>(null)
   const pingChannelRef = useRef<any>(null)
   const [showRangeOverlay, setShowRangeOverlay] = useState(false)
+  const tacticalChannelRef = useRef<any>(null)
   const [gridOpacity, setGridOpacity] = useState(0.4)
   const [spaceHeld, setSpaceHeld] = useState(false)
   const [cellPx, setCellPx] = useState(35)
@@ -143,7 +144,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tactical_scenes', filter: `campaign_id=eq.${campaignId}` }, () => {
         loadScenes()
       })
+      .on('broadcast', { event: 'token_moved' }, () => {
+        if (sceneRef.current) loadTokens(sceneRef.current.id)
+      })
       .subscribe()
+    tacticalChannelRef.current = channel
     const pingCh = supabase.channel(`ping_${campaignId}`)
       .on('broadcast', { event: 'gm_ping' }, (msg: any) => {
         const { gx, gy } = msg.payload ?? {}
@@ -669,6 +674,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
             tokenAnimRef.current.set(moveTok.id, { fromX, fromY, toX, toY, t: 0 })
             setTokens(prev => prev.map(t => t.id === moveTok.id ? { ...t, grid_x: pos.gx, grid_y: pos.gy } : t))
             supabase.from('scene_tokens').update({ grid_x: pos.gx, grid_y: pos.gy }).eq('id', moveTok.id).then(() => {
+              tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
               onMoveComplete?.()
             })
             return
@@ -761,6 +767,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       }
       await supabase.from('scene_tokens').update({ grid_x: pos.gx, grid_y: pos.gy }).eq('id', dragging.tokenId)
       setTokens(prev => prev.map(t => t.id === dragging.tokenId ? { ...t, grid_x: pos.gx, grid_y: pos.gy } : t))
+      tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
     }
     setDragging(null)
   }
