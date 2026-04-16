@@ -1059,8 +1059,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
 
       {/* Map canvas area — scrollable when zoomed */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        {/* Zoom control — top left, fixed over scroll area */}
-        <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        {/* Zoom control — top right, fixed over scroll area */}
+        <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ fontSize: '10px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Zoom</div>
           <input type="range" min={25} max={400} step={25} value={Math.round(zoom * 100)}
             onChange={e => setZoom(Number(e.target.value) / 100)}
