@@ -64,13 +64,14 @@ interface Props {
   tokenRefreshKey?: number
   campaignNpcs?: any[]
   entries?: any[]
+  myCharacterId?: string | null
   moveMode?: { characterId?: string; npcId?: string; feet: number } | null
   onMoveComplete?: () => void
   onMoveCancel?: () => void
   onTokensUpdate?: (tokens: { id: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number }[], cellFeet: number) => void
 }
 
-export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, tokenRefreshKey, campaignNpcs, entries, moveMode, onMoveComplete, onMoveCancel, onTokensUpdate }: Props) {
+export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, onTokensUpdate }: Props) {
   const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -686,7 +687,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       const tok = getTokenAt(pos.gx, pos.gy)
       if (tok) {
         setSelectedToken(tok.id)
-        if (isGM) {
+        const canDrag = isGM || (myCharacterId && tok.character_id === myCharacterId)
+        if (canDrag) {
           setDragging({ tokenId: tok.id, offsetX: 0, offsetY: 0 })
         }
         return
@@ -1061,11 +1063,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         {/* Zoom control — top right */}
         <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{ fontSize: '9px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif' }}>0%</span>
+          <span style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif' }}>0%</span>
           <input type="range" min={25} max={400} step={25} value={Math.round(zoom * 100)}
             onChange={e => setZoom(Number(e.target.value) / 100)}
-            style={{ width: '50px', accentColor: '#7ab3d4', cursor: 'pointer' }} />
-          <span style={{ fontSize: '9px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif' }}>100%</span>
+            style={{ width: '60px', accentColor: '#7ab3d4', cursor: 'pointer' }} />
+          <span style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif' }}>100%</span>
         </div>
         <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'auto' }}>
         <canvas ref={canvasRef}

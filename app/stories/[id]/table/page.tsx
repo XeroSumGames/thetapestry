@@ -3136,6 +3136,7 @@ export default function TablePage() {
               tokenRefreshKey={tokenRefreshKey}
               campaignNpcs={campaignNpcs}
               entries={entries}
+              myCharacterId={myCharIdRef.current}
               onTokenClick={(token: any) => {
                 if (token.npc_id) {
                   const npc = campaignNpcs.find((n: any) => n.id === token.npc_id)
