@@ -1153,9 +1153,14 @@ export default function TablePage() {
     // Find the active tactical scene
     const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
     if (!activeScene) { alert('No active tactical scene. Create a scene first.'); return }
-    // Check if token already exists
+    // Toggle: if token already exists, remove it
     const { data: existing } = await supabase.from('scene_tokens').select('id').eq('scene_id', activeScene.id).eq('name', name).limit(1)
-    if (existing && existing.length > 0) { alert(`${name} is already on the map.`); return }
+    if (existing && existing.length > 0) {
+      await supabase.from('scene_tokens').delete().eq('id', existing[0].id)
+      setTokenRefreshKey(k => k + 1)
+      await refreshMapTokenIds()
+      return
+    }
     // Place at top-right, away from the GM controls strip on the left
     const cols = (activeScene as any).grid_cols ?? 20
     const { error: tokenErr } = await supabase.from('scene_tokens').insert({
