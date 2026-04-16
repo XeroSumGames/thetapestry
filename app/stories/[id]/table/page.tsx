@@ -206,6 +206,8 @@ export default function TablePage() {
   const [mapTokenNpcIds, setMapTokenNpcIds] = useState<Set<string>>(new Set())
   const [showNpcPicker, setShowNpcPicker] = useState(false)
   const [dropCharacter, setDropCharacter] = useState<string>('')
+  const dropPhaseRef = useRef(false)
+  const pendingCombatantsRef = useRef<any[]>([])
   const [selectedNpcIds, setSelectedNpcIds] = useState<Set<string>>(new Set())
   const [rosterNpcs, setRosterNpcs] = useState<any[]>([])
   const [showRestorePicker, setShowRestorePicker] = useState(false)
@@ -740,53 +742,66 @@ export default function TablePage() {
     const allRows = [...pcRows, ...npcRows]
     const sorted = [...initDetails].sort((a, b) => b.total - a.total)
 
-    // Getting the Drop: drop character gets a SOLO round before initiative.
-    // Everyone else starts with 0 actions (inactive). After the drop character
-    // uses their 1 action, nextTurn triggers the first real initiative round.
-    let firstCharName = sorted[0]?.name
-    let firstActions = 2
-    if (dropCharacter) {
-      const dropExists = allRows.some(r => r.character_name === dropCharacter)
-      if (dropExists) { firstCharName = dropCharacter; firstActions = 1 }
-    }
-    const toInsert = allRows.map(r => {
-      if (r.character_name === firstCharName) return { ...r, is_active: true, actions_remaining: firstActions }
-      if (dropCharacter) return { ...r, is_active: false, actions_remaining: 0 } // frozen until drop round ends
-      return r
-    })
-
-    // Combatant name list for the new "Combat Started" box (PCs and NPCs in roll order).
     const combatants = sorted.map(s => s.name)
-
-    // Build log entries — explicit timestamps for ordering
     const now = Date.now()
-    const logEntries: any[] = [
-      { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Started',
-        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'combat_start',
-        damage_json: { combatants } as any,
-        created_at: new Date(now).toISOString() },
-    ]
-    // If someone Gets the Drop, log it before initiative
+
+    // ── Getting the Drop: solo mini-round BEFORE initiative ──
     if (dropCharacter) {
-      logEntries.push({
-        campaign_id: id, user_id: userId, character_name: 'System',
-        label: `⚡ ${dropCharacter} Gets the Drop!`,
-        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'drop',
-        created_at: new Date(now + 1).toISOString(),
-      })
+      const dropRow = allRows.find(r => r.character_name === dropCharacter)
+      if (dropRow) {
+        // Store all combatants for phase 2 (after drop round ends)
+        pendingCombatantsRef.current = allRows
+        dropPhaseRef.current = true
+
+        // Insert ONLY the drop character with 1 action
+        const [{ data: insertedDrop, error: dropInsertErr }, { error: dropLogErr }] = await Promise.all([
+          supabase.from('initiative_order').insert([{ ...dropRow, is_active: true, actions_remaining: 1 }]).select(),
+          supabase.from('roll_log').insert([
+            { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Started',
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'combat_start',
+              damage_json: { combatants } as any, created_at: new Date(now).toISOString() },
+            { campaign_id: id, user_id: userId, character_name: 'System',
+              label: `⚡ ${dropCharacter} Gets the Drop!`,
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'drop',
+              created_at: new Date(now + 1).toISOString() },
+          ]),
+        ])
+        if (dropInsertErr) console.error('[confirmStartCombat] drop insert error:', dropInsertErr.message)
+        if (dropLogErr) console.error('[confirmStartCombat] drop log error:', dropLogErr.message)
+        const sortedDrop = (insertedDrop ?? []).slice().sort((a: any, b: any) => b.roll - a.roll)
+        setInitiativeOrder(sortedDrop)
+        setCombatActive(sortedDrop.length > 0)
+        setDropCharacter('')
+        setStartingCombat(false)
+        if (!tacticalShared) {
+          setTacticalShared(true); setShowTacticalMap(true)
+          initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_shared', payload: { shared: true } })
+        }
+        await loadRolls(id)
+        initChannelRef.current?.send({ type: 'broadcast', event: 'combat_started', payload: {} })
+        return // Phase 2 happens in nextTurn when the drop action is consumed
+      }
     }
-    logEntries.push({
-      campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
-      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
-      damage_json: { initiative: sorted } as any,
-      created_at: new Date(now + 2).toISOString(),
-    })
+
+    // ── Normal start (no drop) ──
+    let firstCharName = sorted[0]?.name
+    const toInsert = allRows.map(r => r.character_name === firstCharName
+      ? { ...r, is_active: true, actions_remaining: 2 }
+      : r
+    )
 
     // Insert initiative rows + log combat start in parallel.
     if (toInsert.length > 0) {
       const [{ data: insertedInit, error: initInsertErr }, { error: rollInsertErr }] = await Promise.all([
         supabase.from('initiative_order').insert(toInsert).select(),
-        supabase.from('roll_log').insert(logEntries),
+        supabase.from('roll_log').insert([
+          { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Started',
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'combat_start',
+            damage_json: { combatants } as any, created_at: new Date(now).toISOString() },
+          { campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
+            damage_json: { initiative: sorted } as any, created_at: new Date(now + 1).toISOString() },
+        ]),
       ])
       if (initInsertErr) console.error('[confirmStartCombat] initiative insert error:', initInsertErr.message)
       if (rollInsertErr) console.error('[confirmStartCombat] roll_log insert error:', rollInsertErr.message)
@@ -823,6 +838,46 @@ export default function TablePage() {
 
   async function nextTurn() {
     console.warn('[nextTurn] called')
+
+    // ── Drop phase transition: drop round is over, start full combat ──
+    if (dropPhaseRef.current && pendingCombatantsRef.current.length > 0) {
+      dropPhaseRef.current = false
+      // Clear the solo drop entry
+      await supabase.from('initiative_order').delete().eq('campaign_id', id)
+
+      // Re-roll initiative for ALL combatants
+      const allRows = pendingCombatantsRef.current
+      pendingCombatantsRef.current = []
+      const rerollDetails: { name: string; d1: number; d2: number; acu: number; dex: number; drop: number; total: number; is_npc: boolean }[] = []
+      const fullRows = allRows.map((r: any) => {
+        const d1 = rollD6(), d2 = rollD6()
+        const acu = r.is_npc ? (rosterNpcs.find((n: any) => n.id === r.npc_id)?.acumen ?? 0) : (entries.find(e => e.character.id === r.character_id)?.character.data?.rapid?.ACU ?? 0)
+        const dex = r.is_npc ? (rosterNpcs.find((n: any) => n.id === r.npc_id)?.dexterity ?? 0) : (entries.find(e => e.character.id === r.character_id)?.character.data?.rapid?.DEX ?? 0)
+        const roll = d1 + d2 + acu + dex
+        rerollDetails.push({ name: r.character_name, d1, d2, acu, dex, drop: 0, total: roll, is_npc: !!r.is_npc })
+        return { ...r, roll, is_active: false, actions_remaining: 2 }
+      })
+      const sortedReroll = [...rerollDetails].sort((a, b) => b.total - a.total)
+
+      // Determine who goes first
+      const sortedRows = [...fullRows].sort((a: any, b: any) => b.roll - a.roll)
+      if (sortedRows.length > 0) sortedRows[0].is_active = true
+
+      const [{ data: insertedFull }, _logRes] = await Promise.all([
+        supabase.from('initiative_order').insert(sortedRows).select(),
+        supabase.from('roll_log').insert({
+          campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
+          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
+          damage_json: { initiative: sortedReroll } as any,
+        }),
+      ])
+      const sortedInit = (insertedFull ?? []).slice().sort((a: any, b: any) => b.roll - a.roll)
+      setInitiativeOrder(sortedInit)
+      await loadRolls(id)
+      initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+      return
+    }
+
     // Fetch fresh initiative order from DB to avoid stale state
     const { data: freshOrder, error: orderErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false })
     if (orderErr) console.warn('[nextTurn] order fetch error:', orderErr.message)
