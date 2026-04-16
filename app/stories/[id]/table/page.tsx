@@ -119,6 +119,12 @@ interface InitiativeEntry {
   is_npc: boolean
   actions_remaining: number
   aim_bonus: number
+  defense_bonus: number
+  has_cover: boolean
+  winded: boolean
+  last_attack_target: string | null
+  inspired_this_round: boolean
+  aim_active: boolean
 }
 
 
@@ -815,7 +821,7 @@ export default function TablePage() {
     // Guard: if no active entry found, forcibly activate the first alive combatant
     if (currentIdx < 0) {
       console.warn('[nextTurn] no active entry found — activating first combatant as fallback')
-      await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', order[0].id)
+      await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false }).eq('id', order[0].id)
       await loadInitiative(id)
       initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       return
@@ -912,7 +918,7 @@ export default function TablePage() {
         const d1 = rollD6(), d2 = rollD6()
         const newRoll = d1 + d2 + acu + dex
         rerollDetails.push({ name: entry.character_name, d1, d2, acu, dex, drop: 0, total: newRoll, is_npc: !!entry.is_npc })
-        await supabase.from('initiative_order').update({ roll: newRoll, actions_remaining: 2, aim_bonus: 0, is_active: false }).eq('id', entry.id)
+        await supabase.from('initiative_order').update({ roll: newRoll, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, inspired_this_round: false, winded: false, is_active: false }).eq('id', entry.id)
       }
 
       // Log new round initiative
@@ -982,7 +988,7 @@ export default function TablePage() {
       const { error: deactErr } = await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('id', currentEntry.id)
       if (deactErr) console.warn('[nextTurn] deactivate error:', deactErr.message)
     }
-    const { error: actErr } = await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', order[nextIdx].id)
+    const { error: actErr } = await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false }).eq('id', order[nextIdx].id)
     if (actErr) console.warn('[nextTurn] activate error:', actErr.message)
     await Promise.all([loadInitiative(id), loadEntries(id)])
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
@@ -1036,9 +1042,24 @@ export default function TablePage() {
   async function handleAim(entryId: string) {
     const entry = initiativeOrder.find(e => e.id === entryId)
     if (!entry || entry.actions_remaining <= 0) return
-    const newAim = (entry.aim_bonus ?? 0) + 1
-    await supabase.from('initiative_order').update({ aim_bonus: newAim }).eq('id', entryId)
-    await consumeAction(entryId, `${entry.character_name} — Aim (+${newAim} CMod)`)
+    const newAim = (entry.aim_bonus ?? 0) + 2
+    await supabase.from('initiative_order').update({ aim_bonus: newAim, aim_active: true }).eq('id', entryId)
+    await consumeAction(entryId, `${entry.character_name} — Aim (+${newAim} CMod). Must Attack next or Aim is lost.`)
+  }
+
+  // Activate a combatant — handles winded (1 action instead of 2)
+  function activateUpdate(entry: InitiativeEntry) {
+    const actions = entry.winded ? 1 : 2
+    return { is_active: true, actions_remaining: actions, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, winded: false }
+  }
+
+  // Clear aim if next action isn't Attack (called before non-attack actions)
+  async function clearAimIfActive(entryId: string) {
+    const entry = initiativeOrder.find(e => e.id === entryId)
+    if (entry?.aim_active) {
+      await supabase.from('initiative_order').update({ aim_bonus: 0, aim_active: false }).eq('id', entryId)
+      setInitiativeOrder(prev => prev.map(e => e.id === entryId ? { ...e, aim_bonus: 0, aim_active: false } : e))
+    }
   }
 
   async function handleReadyWeapon(entryId: string) {
@@ -1264,7 +1285,7 @@ export default function TablePage() {
     if (wasActive) {
       updates.push(
         supabase.from('initiative_order').update({ is_active: false, actions_remaining: current.actions_remaining ?? 2, aim_bonus: 0 }).eq('id', current.id),
-        supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0 }).eq('id', next.id),
+        supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false }).eq('id', next.id),
       )
     }
     await Promise.all(updates)
@@ -1542,11 +1563,34 @@ export default function TablePage() {
     if (!activeEntry) return
     const targetEntry = initiativeOrder.find(e => e.id === targetEntryId)
     if (!targetEntry) return
-    const isBoost = action === 'Coordinate' || action === 'Inspire'
-    const delta = isBoost ? 1 : -1
-    const newBonus = (targetEntry.aim_bonus ?? 0) + delta
-    await supabase.from('initiative_order').update({ aim_bonus: newBonus }).eq('id', targetEntryId)
-    await consumeAction(activeEntry.id, `${activeEntry.character_name} — ${action} → ${targetEntry.character_name}`)
+    await clearAimIfActive(activeEntry.id)
+
+    if (action === 'Coordinate') {
+      // SRD: Tactics* check → +2 to ally attacking that target. Wild Success → +1 next round.
+      // For now: apply +2 aim_bonus to ally (GM adjudicates the Tactics check result)
+      const newBonus = (targetEntry.aim_bonus ?? 0) + 2
+      await supabase.from('initiative_order').update({ aim_bonus: newBonus }).eq('id', targetEntryId)
+      await consumeAction(activeEntry.id, `${activeEntry.character_name} — Coordinate → ${targetEntry.character_name} (+2 CMod)`)
+    } else if (action === 'Cover Fire') {
+      // SRD: Successful attack → -2 CMod to target's next action
+      const newBonus = (targetEntry.aim_bonus ?? 0) - 2
+      await supabase.from('initiative_order').update({ aim_bonus: newBonus }).eq('id', targetEntryId)
+      await consumeAction(activeEntry.id, `${activeEntry.character_name} — Cover Fire → ${targetEntry.character_name} (-2 CMod)`)
+    } else if (action === 'Distract') {
+      // SRD: Intimidation/Psychology*/Tactics* check → target loses next Combat Action
+      const newActions = Math.max(0, (targetEntry.actions_remaining ?? 0) - 1)
+      await supabase.from('initiative_order').update({ actions_remaining: newActions }).eq('id', targetEntryId)
+      await consumeAction(activeEntry.id, `${activeEntry.character_name} — Distract → ${targetEntry.character_name} (lost 1 action)`)
+    } else if (action === 'Inspire') {
+      // SRD: Inspiration check → target gains +1 Combat Action. Once per round.
+      if (targetEntry.inspired_this_round) {
+        alert(`${targetEntry.character_name} has already been Inspired this round.`)
+        return
+      }
+      const newActions = (targetEntry.actions_remaining ?? 0) + 1
+      await supabase.from('initiative_order').update({ actions_remaining: newActions, inspired_this_round: true }).eq('id', targetEntryId)
+      await consumeAction(activeEntry.id, `${activeEntry.character_name} — Inspire → ${targetEntry.character_name} (+1 action)`)
+    }
     setSocialTarget(null)
   }
 
@@ -1745,9 +1789,14 @@ export default function TablePage() {
         ? (rosterNpcs.find(n => n.id === targetInitEntry.npc_id) ?? campaignNpcs.find((n: any) => n.id === targetInitEntry.npc_id))
         : null
       const targetRapid = targetEntry?.character.data?.rapid ?? (targetNpc ? { PHY: targetNpc.physicality ?? 0, DEX: targetNpc.dexterity ?? 0 } : {})
-      const defensiveMod = isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)
+      const targetDefBonus = targetInitEntry?.defense_bonus ?? 0
+      const defensiveMod = (isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)) + targetDefBonus
 
       let { finalWP, finalRP, mitigated } = calculateDamage(totalWP + unarmedBonus, weapon.rpPercent, defensiveMod)
+      // After taking a hit, clear Defend bonus (one-time) but keep Take Cover bonus
+      if (targetInitEntry && targetDefBonus > 0 && !targetInitEntry.has_cover) {
+        supabase.from('initiative_order').update({ defense_bonus: 0 }).eq('id', targetInitEntry.id)
+      }
 
       // Stun: zero WP damage
       if (isStun) {
@@ -2070,7 +2119,8 @@ export default function TablePage() {
       const targetEntry = entries.find(e => e.character.name === targetName) ?? (targetInitEntry?.character_id ? entries.find(e => e.character.id === targetInitEntry.character_id) : undefined)
       const targetNpcObj = targetInitEntry?.is_npc ? (rosterNpcs.find(n => n.id === targetInitEntry.npc_id) ?? campaignNpcs.find((n: any) => n.id === targetInitEntry.npc_id)) : null
       const targetRapid = targetEntry?.character.data?.rapid ?? (targetNpcObj ? { PHY: targetNpcObj.physicality ?? 0, DEX: targetNpcObj.dexterity ?? 0 } : {})
-      const defensiveMod = isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)
+      const targetDefBonus2 = targetInitEntry?.defense_bonus ?? 0
+      const defensiveMod = (isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)) + targetDefBonus2
 
       const attackerPhy = myEntry.character.data?.rapid?.PHY ?? 0
       const dmg = rollDamage(weapon.damage, attackerPhy, !!isMelee)
@@ -2205,9 +2255,6 @@ export default function TablePage() {
             {sessionActing ? 'Starting...' : 'Start Session'}
           </button>
         )}
-        <a href="/dashboard" target="_blank" rel="noreferrer" style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), textDecoration: 'none' }}>
-          Dashboard
-        </a>
         {isGM && sessionStatus === 'active' && (
           <button onClick={async () => {
             // Fetch any submitted player notes so the GM sees them in the modal.
@@ -2288,6 +2335,9 @@ export default function TablePage() {
             <option value="opposed">Opposed Check</option>
           </select>
         )}
+        <a href="/dashboard" target="_blank" rel="noreferrer" style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), textDecoration: 'none' }}>
+          Dashboard
+        </a>
         {campaign?.invite_code && (
           <button onClick={() => {
             navigator.clipboard.writeText(`${window.location.origin}/join/${campaign.invite_code}`)
@@ -2512,7 +2562,7 @@ export default function TablePage() {
 
             const actBtn = (bg: string, color: string, border: string): React.CSSProperties => ({
               padding: '2px 8px', background: bg, border: `1px solid ${border}`, borderRadius: '3px',
-              color, fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif',
+              color, fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif',
               letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer',
             })
 
@@ -2527,10 +2577,14 @@ export default function TablePage() {
                   <span style={{ color: (activeEntry.actions_remaining ?? 0) >= 1 ? '#7fc458' : '#EF9F27', fontSize: '24px', lineHeight: 0, position: 'relative', top: '-1px' }}>●</span>
                   <span style={{ color: (activeEntry.actions_remaining ?? 0) >= 2 ? '#7fc458' : '#EF9F27', fontSize: '24px', lineHeight: 0, position: 'relative', top: '-1px' }}>●</span>
                 </span>
+                {/* ── AIM: +2 CMod, must Attack next or lost ── */}
                 <button onClick={() => handleAim(activeEntry.id)}
                   style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
                   Aim{(activeEntry.aim_bonus ?? 0) > 0 ? ` (+${activeEntry.aim_bonus})` : ''}
                 </button>
+                {activeEntry.aim_active && <span style={{ fontSize: '9px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif' }}>Must Attack</span>}
+
+                {/* ── ATTACK: weapon attack, +1 CMod if same target as last attack ── */}
                 <button onClick={() => {
                   if (!w || !weaponData) { alert('No weapon readied.'); return }
                   const rapid = charEntry?.character.data?.rapid ?? {}
@@ -2547,12 +2601,21 @@ export default function TablePage() {
                   disabled={!w}>
                   Attack{w ? ` (${w.name})` : ''}
                 </button>
-                {isMelee && w ? (
+
+                {/* ── CHARGE: both actions, melee/unarmed attack ── */}
+                {(isMelee || !w) ? (
                   <button onClick={has2Actions ? () => {
+                    clearAimIfActive(activeEntry.id)
                     const rapid = charEntry?.character.data?.rapid ?? {}
-                    const amod = rapid.PHY ?? 0
-                    const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Melee Combat')?.level ?? 0
-                    handleRollRequest(`${activeEntry.character_name} — Charge (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: 1, traits: w.traits })
+                    const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+                    const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
+                    const smod = npcAttacker
+                      ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === (w ? 'Melee Combat' : 'Unarmed Combat'))?.level ?? 0 : 0)
+                      : charEntry?.character.data?.skills?.find((s: any) => s.skillName === (w ? 'Melee Combat' : 'Unarmed Combat'))?.level ?? 0
+                    const wName = w?.name ?? 'Unarmed'
+                    const wDmg = w?.damage ?? '1d3'
+                    const wRp = w?.rpPercent ?? 100
+                    handleRollRequest(`${activeEntry.character_name} — Charge (${wName})`, amod, smod, { weaponName: wName, damage: wDmg, rpPercent: wRp, conditionCmod: 0, traits: w?.traits ?? [] })
                     actionPreConsumedRef.current = true
                     consumeAction(activeEntry.id, undefined, 2)
                   } : undefined} disabled={!has2Actions}
@@ -2560,6 +2623,8 @@ export default function TablePage() {
                 ) : (
                   <button disabled style={disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Charge</button>
                 )}
+
+                {/* ── COORDINATE, COVER FIRE, DISTRACT, INSPIRE ── */}
                 {['Coordinate', 'Cover Fire', 'Distract', 'Inspire'].map(action => {
                   const isBoost = action === 'Coordinate' || action === 'Inspire'
                   const targets = initiativeOrder.filter(e => {
@@ -2569,7 +2634,7 @@ export default function TablePage() {
                   const isOpen = socialTarget?.action === action
                   return (
                     <span key={action} style={{ position: 'relative' }}>
-                      <button onClick={() => setSocialTarget(isOpen ? null : { action })}
+                      <button onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(isOpen ? null : { action }) }}
                         style={actBtn(isOpen ? '#1a2e10' : '#242424', isOpen ? '#7fc458' : '#d4cfc9', isOpen ? '#2d5a1b' : '#3a3a3a')}>{action}</button>
                       {isOpen && targets.length > 0 && (
                         <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 100, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', minWidth: '120px', marginTop: '2px' }}>
@@ -2586,24 +2651,68 @@ export default function TablePage() {
                     </span>
                   )
                 })}
-                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Defend`)}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Defend</button>
+
+                {/* ── DEFEND: +2 defensive modifier for next incoming attack ── */}
+                <button onClick={async () => {
+                  clearAimIfActive(activeEntry.id)
+                  await supabase.from('initiative_order').update({ defense_bonus: (activeEntry.defense_bonus ?? 0) + 2 }).eq('id', activeEntry.id)
+                  await consumeAction(activeEntry.id, `${activeEntry.character_name} — Defend (+2 Defensive Modifier, next attack only)`)
+                }}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Defend{(activeEntry.defense_bonus ?? 0) > 0 ? ` (+${activeEntry.defense_bonus})` : ''}</button>
+
+                {/* ── FIRE FROM COVER: both actions, fire weapon + keep cover defense ── */}
+                {activeEntry.has_cover && w ? (
+                  <button onClick={has2Actions ? () => {
+                    const rapid = charEntry?.character.data?.rapid ?? {}
+                    const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+                    const attrKey = isMelee ? 'PHY' : 'DEX'
+                    const amod = npcAttacker ? (npcAttacker[attrKey.toLowerCase() === 'phy' ? 'physicality' : 'dexterity'] ?? 0) : (rapid[attrKey] ?? 0)
+                    const smod = npcAttacker
+                      ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === w.skill)?.level ?? 0 : 0)
+                      : charEntry?.character.data?.skills?.find((s: any) => s.skillName === w.skill)?.level ?? 0
+                    const condCmod = weaponData?.condition ? (CONDITION_CMOD as any)[weaponData.condition] ?? 0 : 0
+                    handleRollRequest(`${activeEntry.character_name} — Fire from Cover (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: condCmod !== -99 ? condCmod : 0, traits: w.traits })
+                    actionPreConsumedRef.current = true
+                    consumeAction(activeEntry.id, undefined, 2)
+                  } : undefined} disabled={!has2Actions}
+                    style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Fire from Cover</button>
+                ) : null}
+
+                {/* ── GRAPPLING: Unarmed Combat opposed check ── */}
                 <button onClick={() => {
+                  clearAimIfActive(activeEntry.id)
+                  const rapid = charEntry?.character.data?.rapid ?? {}
+                  const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+                  const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
+                  const smod = npcAttacker
+                    ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Unarmed Combat')?.level ?? 0 : 0)
+                    : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Unarmed Combat')?.level ?? 0
+                  handleRollRequest(`${activeEntry.character_name} — Grapple (Opposed Unarmed)`, amod, smod)
+                }}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Grapple</button>
+
+                {/* ── MOVE: highlight cells + click to move ── */}
+                <button onClick={() => {
+                  clearAimIfActive(activeEntry.id)
                   if (moveMode) { setMoveMode(null); return }
                   const active = initiativeOrder.find(e => e.is_active)
                   if (!active) return
                   setMoveMode({ characterId: active.character_id || undefined, npcId: active.npc_id || undefined, feet: 10 })
                 }}
                   style={moveMode ? actBtn('#1a2e10', '#7fc458', '#2d5a1b') : actBtn('#242424', '#d4cfc9', '#3a3a3a')}>{moveMode ? 'Cancel Move' : 'Move'}</button>
-                {hasBurst && w ? (
+
+                {/* ── RAPID FIRE: -1 CMod first shot, -3 CMod second. Both actions: -2/-4 ── */}
+                {w && !isMelee ? (
                   <button onClick={has2Actions ? () => {
-                    setUseBurst(true)
-                    const skillName = w.skill
-                    const attrKey = w.category === 'melee' ? 'PHY' : 'DEX'
+                    clearAimIfActive(activeEntry.id)
                     const rapid = charEntry?.character.data?.rapid ?? {}
-                    const amod = rapid[attrKey] ?? 0
-                    const smod = charEntry?.character.data?.skills?.find((s: any) => s.skillName === skillName)?.level ?? 0
-                    handleRollRequest(`${activeEntry.character_name} — Rapid Fire (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: 0, traits: w.traits })
+                    const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+                    const amod = npcAttacker ? (npcAttacker.dexterity ?? 0) : (rapid.DEX ?? 0)
+                    const smod = npcAttacker
+                      ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Ranged Combat')?.level ?? 0 : 0)
+                      : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Ranged Combat')?.level ?? 0
+                    const condCmod = weaponData?.condition ? (CONDITION_CMOD as any)[weaponData.condition] ?? 0 : 0
+                    handleRollRequest(`${activeEntry.character_name} — Rapid Fire (${w.name}) [-1 CMod, then -3]`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: (condCmod !== -99 ? condCmod : 0) - 1, traits: w.traits })
                     actionPreConsumedRef.current = true
                     consumeAction(activeEntry.id, undefined, 2)
                   } : undefined} disabled={!has2Actions}
@@ -2611,16 +2720,56 @@ export default function TablePage() {
                 ) : (
                   <button disabled style={disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Rapid Fire</button>
                 )}
-                <button onClick={() => handleReadyWeapon(activeEntry.id)}
+
+                {/* ── READY WEAPON: ready/reload/unjam ── */}
+                <button onClick={() => { clearAimIfActive(activeEntry.id); handleReadyWeapon(activeEntry.id) }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Ready Weapon</button>
-                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Reload`)}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Reload</button>
-                <button onClick={has2Actions ? () => consumeAction(activeEntry.id, `${activeEntry.character_name} — Sprint`, 2) : undefined} disabled={!has2Actions}
+
+                {/* ── REPOSITION: end-of-round positioning ── */}
+                <button onClick={() => { clearAimIfActive(activeEntry.id); consumeAction(activeEntry.id, `${activeEntry.character_name} — Reposition (Resolution phase)`) }}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Reposition</button>
+
+                {/* ── SPRINT: both actions, 3x move. Athletics check or Winded ── */}
+                <button onClick={has2Actions ? async () => {
+                  clearAimIfActive(activeEntry.id)
+                  await supabase.from('initiative_order').update({ winded: true }).eq('id', activeEntry.id)
+                  const rapid = charEntry?.character.data?.rapid ?? {}
+                  const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+                  const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
+                  const smod = npcAttacker
+                    ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Athletics')?.level ?? 0 : 0)
+                    : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Athletics')?.level ?? 0
+                  handleRollRequest(`${activeEntry.character_name} — Sprint (Athletics check or Winded)`, amod, smod)
+                  actionPreConsumedRef.current = true
+                  consumeAction(activeEntry.id, undefined, 2)
+                } : undefined} disabled={!has2Actions}
                   style={has2Actions ? actBtn('#242424', '#d4cfc9', '#3a3a3a') : disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Sprint</button>
-                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Subdue`)}
+
+                {/* ── SUBDUE: unarmed/melee, full RP, 50% WP ── */}
+                <button onClick={() => {
+                  clearAimIfActive(activeEntry.id)
+                  const rapid = charEntry?.character.data?.rapid ?? {}
+                  const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+                  const wName = isMelee && w ? w.name : 'Unarmed'
+                  const wDmg = isMelee && w ? w.damage : '1d3'
+                  const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
+                  const skillName = isMelee && w ? 'Melee Combat' : 'Unarmed Combat'
+                  const smod = npcAttacker
+                    ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === skillName)?.level ?? 0 : 0)
+                    : charEntry?.character.data?.skills?.find((s: any) => s.skillName === skillName)?.level ?? 0
+                  handleRollRequest(`${activeEntry.character_name} — Subdue (${wName})`, amod, smod, { weaponName: wName, damage: wDmg, rpPercent: 100, conditionCmod: 0 })
+                }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Subdue</button>
-                <button onClick={() => consumeAction(activeEntry.id, `${activeEntry.character_name} — Take Cover`)}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Take Cover</button>
+
+                {/* ── TAKE COVER: +2 defensive modifier for all attacks this round ── */}
+                <button onClick={async () => {
+                  clearAimIfActive(activeEntry.id)
+                  await supabase.from('initiative_order').update({ defense_bonus: (activeEntry.defense_bonus ?? 0) + 2, has_cover: true }).eq('id', activeEntry.id)
+                  await consumeAction(activeEntry.id, `${activeEntry.character_name} — Take Cover (+2 Defensive Modifier, all attacks this round)`)
+                }}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Take Cover{activeEntry.has_cover ? ' ✓' : ''}</button>
+
+                {/* ── UNARMED: PHY + Unarmed Combat, 1d3 ── */}
                 <button onClick={() => {
                   const rapid = charEntry?.character.data?.rapid ?? {}
                   const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
@@ -3009,7 +3158,7 @@ export default function TablePage() {
           )}
 
           {/* NPC Card(s) — grid overlay when out of combat, draggable inline when in combat */}
-          {viewingNpcs.length > 0 && !combatActive && (
+          {viewingNpcs.length > 0 && !combatActive && !showTacticalMap && (
             <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '8px', background: 'rgba(26,26,26,0.95)', zIndex: 1100, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px', alignContent: 'start' }}>
               {viewingNpcs.map(npc => {
                 const fresh = campaignNpcs.find((c: any) => c.id === npc.id)
@@ -3027,7 +3176,7 @@ export default function TablePage() {
               )})}
             </div>
           )}
-          {viewingNpcs.length > 0 && combatActive && (() => {
+          {viewingNpcs.length > 0 && (combatActive || showTacticalMap) && (() => {
             const activeIdx = initiativeOrder.findIndex(e => e.is_active)
             const rotated = activeIdx >= 0
               ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
@@ -3056,7 +3205,7 @@ export default function TablePage() {
                     position: 'absolute',
                     left: pos?.x ?? 10 + i * 20,
                     top: pos?.y ?? 10 + i * 20,
-                    width: '340px',
+                    width: '420px',
                     zIndex: 1100 + i,
                     borderRadius: '4px',
                     boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
@@ -3066,7 +3215,10 @@ export default function TablePage() {
                     onMouseDown={e => {
                       const el = e.currentTarget.parentElement as HTMLElement
                       const rect = el.getBoundingClientRect()
-                      npcDragRef.current = { id: npc.id, startX: e.clientX, startY: e.clientY, origX: rect.left, origY: rect.top }
+                      const parentRect = el.offsetParent?.getBoundingClientRect() ?? { left: 0, top: 0 }
+                      const origX = rect.left - parentRect.left
+                      const origY = rect.top - parentRect.top
+                      npcDragRef.current = { id: npc.id, startX: e.clientX, startY: e.clientY, origX, origY }
                       const onMove = (ev: MouseEvent) => {
                         if (!npcDragRef.current) return
                         const dx = ev.clientX - npcDragRef.current.startX
