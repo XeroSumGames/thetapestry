@@ -358,7 +358,10 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       {/* New pin form */}
       {newPin && (
         <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '12px', background: 'rgba(26,26,26,0.95)', border: '1px solid #3a3a3a', borderRadius: '4px', width: '300px' }}>
-          <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>New Pin</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '8px', gap: '8px' }}>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>New Pin</div>
+            <div style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'monospace' }}>{newPin.lat.toFixed(4)}, {newPin.lng.toFixed(4)}</div>
+          </div>
           <input value={pinForm.name} onChange={e => setPinForm(f => ({ ...f, name: e.target.value }))}
             onKeyDown={e => { if (e.key === 'Enter' && pinForm.name.trim()) savePin() }}
             placeholder="Pin name..."
