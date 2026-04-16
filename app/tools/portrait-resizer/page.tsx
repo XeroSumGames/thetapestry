@@ -34,6 +34,7 @@ export default function PortraitResizerPage() {
   const [isDragging, setIsDragging] = useState<boolean>(false)
   const [gender, setGender] = useState<Gender>('man')
   const [counts, setCounts] = useState<{ man: number; woman: number }>({ man: 0, woman: 0 })
+  const [imgSrc, setImgSrc] = useState<string | null>(null) // data URL — survives re-renders
 
   // Fetch global counters on mount
   useEffect(() => {
@@ -90,33 +91,35 @@ export default function PortraitResizerPage() {
       setError(`"${file.name}" is not an image file. Try a JPG, PNG, GIF, or WebP.`)
       return
     }
-    const objectUrl = URL.createObjectURL(file)
-    const img = new Image()
-    img.onload = () => {
-      loadedImageRef.current = img
-      setFileName(file.name)
-      setOrigDims({ w: img.width, h: img.height })
+    // Read as data URL so the source image stays available for both the <img> tag and canvas processing
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      const img = new Image()
+      img.onload = () => {
+        loadedImageRef.current = img
+        setImgSrc(dataUrl)
+        setFileName(file.name)
+        setOrigDims({ w: img.width, h: img.height })
 
-      // Compute display size (fit within DISPLAY_MAX x DISPLAY_MAX)
-      const aspect = img.width / img.height
-      let dw = img.width, dh = img.height
-      if (dw > DISPLAY_MAX || dh > DISPLAY_MAX) {
-        if (aspect >= 1) { dw = DISPLAY_MAX; dh = DISPLAY_MAX / aspect }
-        else { dh = DISPLAY_MAX; dw = DISPLAY_MAX * aspect }
+        // Compute display size (fit within DISPLAY_MAX x DISPLAY_MAX)
+        const aspect = img.width / img.height
+        let dw = img.width, dh = img.height
+        if (dw > DISPLAY_MAX || dh > DISPLAY_MAX) {
+          if (aspect >= 1) { dw = DISPLAY_MAX; dh = DISPLAY_MAX / aspect }
+          else { dh = DISPLAY_MAX; dw = DISPLAY_MAX * aspect }
+        }
+        setDisplayDims({ w: dw, h: dh })
+
+        // Default circle: centered, biggest that fits
+        const r = Math.min(dw, dh) / 2
+        setCircle({ cx: dw / 2, cy: dh / 2, r })
       }
-      setDisplayDims({ w: dw, h: dh })
-
-      // Default circle: centered, biggest that fits
-      const r = Math.min(dw, dh) / 2
-      setCircle({ cx: dw / 2, cy: dh / 2, r })
-
-      URL.revokeObjectURL(objectUrl)
+      img.onerror = () => setError('Failed to load this image. It may be corrupt or an unsupported format.')
+      img.src = dataUrl
     }
-    img.onerror = () => {
-      setError('Failed to load this image. It may be corrupt or an unsupported format.')
-      URL.revokeObjectURL(objectUrl)
-    }
-    img.src = objectUrl
+    reader.onerror = () => setError('Failed to read this file.')
+    reader.readAsDataURL(file)
   }
 
   function handleDragOver(e: React.DragEvent) { e.preventDefault(); setIsDragging(true) }
@@ -180,6 +183,7 @@ export default function PortraitResizerPage() {
 
   function reset() {
     loadedImageRef.current = null
+    setImgSrc(null)
     setFileName(null)
     setOrigDims(null)
     setDisplayDims(null)
@@ -211,8 +215,6 @@ export default function PortraitResizerPage() {
     a.click()
     document.body.removeChild(a)
   }
-
-  const imgSrc = loadedImageRef.current?.src
 
   return (
     <div>
