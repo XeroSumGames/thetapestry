@@ -1,5 +1,6 @@
 'use client'
 // no React hooks needed — HP is derived from props
+import { useState } from 'react'
 import { CampaignNpc } from './NpcRoster'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, Condition, getTraitValue } from '../lib/weapons'
 import { createClient } from '../lib/supabase-browser'
@@ -33,6 +34,7 @@ interface Props {
 
 export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPublished, onPlaceOnMap }: Props) {
   const supabase = createClient()
+  const [enlarged, setEnlarged] = useState(false)
   const rapid: Record<string, number> = { RSN: npc.reason, ACU: npc.acumen, PHY: npc.physicality, INF: npc.influence, DEX: npc.dexterity }
   const tc = TYPE_COLORS[npc.npc_type ?? ''] ?? TYPE_COLORS.goon
 
@@ -116,7 +118,9 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
 
       {/* Header — name, badges, buttons all on one row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+        <div
+          onClick={() => npc.portrait_url && setEnlarged(true)}
+          style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, cursor: npc.portrait_url ? 'zoom-in' : 'default' }}>
           {npc.portrait_url ? (
             <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
@@ -272,6 +276,11 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
               </button>
             )
           })}
+        </div>
+      )}
+      {enlarged && npc.portrait_url && (
+        <div onClick={() => setEnlarged(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}>
+          <img src={npc.portrait_url} alt={npc.name} style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: '4px', border: '2px solid #c0392b' }} />
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@
 import { useState, useRef } from 'react'
 import { WizardState } from '../../lib/xse-engine'
 import { resizeImage } from '../../lib/image-utils'
+import PortraitBankPicker from '../PortraitBankPicker'
 
 const ALL_WORDS = ["Adaptable","Adventurous","Affectionate","Altruistic","Ambitious","Argumentative","Articulate","Assertive","Authentic","Authoritative","Bold","Braggadocious","Calm","Candid","Charismatic","Clever","Collaborative","Combative","Compassionate","Confident","Conscientious","Contrarian","Courageous","Creative","Cultured","Cunning","Curious","Daring","Decisive","Deliberate","Determined","Dignified","Diligent","Diplomatic","Discreet","Eloquent","Empathetic","Energetic","Enterprising","Fair","Fervent","Fierce","Flexible","Focused","Forgiving","Generous","Genuine","Gregarious","Grounded","Honorable","Humble","Idealistic","Imaginative","Independent","Insightful","Intelligent","Intuitive","Inventive","Joyful","Just","Loyal","Mature","Meticulous","Observant","Original","Passionate","Patient","Perceptive","Persuasive","Philanthropic","Pragmatic","Precise","Principled","Prudent","Purposeful","Rational","Realistic","Reflective","Reliable","Resilient","Resourceful","Sensitive","Sincere","Sociable","Steadfast","Strategic","Tactful","Tenacious","Thoughtful","Tolerant","Trusting","Trustworthy","Understanding","Unique","Versatile","Vigilant","Visionary","Wise","Witty","Zealous"]
 
@@ -13,6 +14,7 @@ interface Props {
 export default function StepXero({ state, onChange }: Props) {
   const [search, setSearch] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const [showPicker, setShowPicker] = useState(false)
 
   const used = state.threeWords.map(w => w.toLowerCase())
   const filtered = ALL_WORDS.filter(w =>
@@ -96,10 +98,22 @@ export default function StepXero({ state, onChange }: Props) {
         }
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <button onClick={() => fileRef.current?.click()} style={nbtn}>Upload photo</button>
+          <button onClick={() => setShowPicker(true)} style={nbtn}>Pick from library</button>
           {state.photoDataUrl && <button onClick={() => onChange({ photoDataUrl: '' })} style={nbtn}>Remove</button>}
           <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhoto} />
         </div>
       </div>
+      {showPicker && (
+        <PortraitBankPicker
+          initialGender={
+            /female|woman/i.test(state.gender) ? 'woman'
+              : /male|man|^m$/i.test(state.gender) ? 'man'
+              : 'all'
+          }
+          onPick={url => onChange({ photoDataUrl: url })}
+          onClose={() => setShowPicker(false)}
+        />
+      )}
 
       {/* Three words */}
       <div style={sh}>Three words</div>

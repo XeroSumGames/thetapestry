@@ -412,8 +412,14 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   const [generatedSummary, setGeneratedSummary] = useState<string>('')
   const [showGenerateTypePicker, setShowGenerateTypePicker] = useState(false)
 
-  function applyGenerated(typeOverride: string) {
+  async function applyGenerated(typeOverride: string) {
     const npc = generateRandomNpc(typeOverride)
+    // Pick a random portrait from the bank for this gender (if any exist)
+    let portraitUrl: string | null = null
+    try {
+      const { data } = await supabase.rpc('random_portrait', { g: npc.gender })
+      if (Array.isArray(data) && data.length > 0) portraitUrl = (data[0] as any).url_256
+    } catch { /* bank unavailable — skip portrait */ }
     setForm(f => ({
       ...f,
       name: npc.name,
@@ -429,6 +435,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       complication: npc.complication,
       threeWords: npc.words,
       weapon: npc.weapon ?? null,
+      portrait_url: portraitUrl ?? f.portrait_url,
     } as any))
     setGeneratedSummary(`Generated as ${npc.profession} — ${npc.motivation} / ${npc.complication}`)
     setShowGenerateTypePicker(false)

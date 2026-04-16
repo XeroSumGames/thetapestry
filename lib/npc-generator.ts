@@ -132,6 +132,7 @@ export interface SkillEntry { name: string; level: number }
 export interface GeneratedNpc {
   name: string
   npc_type: string
+  gender: 'man' | 'woman'
   reason: number
   acumen: number
   physicality: number
@@ -147,9 +148,10 @@ export interface GeneratedNpc {
 }
 
 export function generateRandomNpc(typeOverride?: string): GeneratedNpc {
-  // Name
-  const allFirstNames = [...MALE_NAMES, ...FEMALE_NAMES, ...NEUTRAL_NAMES]
-  const firstName = pick(allFirstNames)
+  // Name + gender — 50/50 male/female. Neutral names pooled into whichever is picked.
+  const gender: 'man' | 'woman' = chance(50) ? 'man' : 'woman'
+  const namePool = gender === 'man' ? [...MALE_NAMES, ...NEUTRAL_NAMES] : [...FEMALE_NAMES, ...NEUTRAL_NAMES]
+  const firstName = pick(namePool)
   const lastName = pick(LAST_NAMES)
   const name = `${firstName} ${lastName}`
 
@@ -275,7 +277,7 @@ export function generateRandomNpc(typeOverride?: string): GeneratedNpc {
   // Friendly: no weapon assigned by default
 
   return {
-    name, npc_type: npcType,
+    name, npc_type: npcType, gender,
     reason, acumen, physicality, influence, dexterity,
     skillEntries, notes, profession, motivation, complication, words, weapon,
   }

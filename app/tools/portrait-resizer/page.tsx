@@ -35,6 +35,7 @@ export default function PortraitResizerPage() {
   const [gender, setGender] = useState<Gender>('man')
   const [counts, setCounts] = useState<{ man: number; woman: number }>({ man: 0, woman: 0 })
   const [imgSrc, setImgSrc] = useState<string | null>(null) // data URL — survives re-renders
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success'>('idle')
 
   // Fetch global counters on mount
   useEffect(() => {
@@ -198,22 +199,81 @@ export default function PortraitResizerPage() {
   const genderLabel = gender === 'man' ? 'MAN' : 'WOMAN'
   const nextDownloadName = `NPC-${genderLabel}-${pad3(nextNumber)}.jpg`
 
+  async function renderCanvasAt(size: number): Promise<Blob | null> {
+    const img = loadedImageRef.current
+    if (!img || !circle || !displayDims || !origDims) return null
+    const scale = origDims.w / displayDims.w
+    const sx = (circle.cx - circle.r) * scale
+    const sy = (circle.cy - circle.r) * scale
+    const sSize = circle.r * 2 * scale
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.fillStyle = '#000'
+    ctx.fillRect(0, 0, size, size)
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, size, size)
+    return await new Promise(resolve => canvas.toBlob(b => resolve(b), 'image/jpeg', quality))
+  }
+
   async function handleDownload() {
     if (!outputUrl) return
-    // Atomically increment the global counter, then download using the number the server returned.
+    setUploadStatus('uploading')
+
+    // 1. Atomic counter increment — gets our unique number
     const { data, error: rpcErr } = await supabase.rpc('increment_portrait_counter', { g: gender })
-    if (rpcErr) { setError(`Counter error: ${rpcErr.message}`); return }
+    if (rpcErr) { setError(`Counter error: ${rpcErr.message}`); setUploadStatus('idle'); return }
     const n: number = typeof data === 'number' ? data : nextNumber
-    const filename = `NPC-${genderLabel}-${pad3(n)}.jpg`
-    // Update local counts so the button shows the next number without a round-trip
+    const base = `NPC-${genderLabel}-${pad3(n)}`
+    const filename256 = `${base}.jpg`
     setCounts(prev => ({ ...prev, [gender]: n }))
-    // Trigger download
+
+    // 2. Render 3 sizes
+    const [blob256, blob56, blob32] = await Promise.all([
+      renderCanvasAt(256),
+      renderCanvasAt(56),
+      renderCanvasAt(32),
+    ])
+    if (!blob256 || !blob56 || !blob32) { setError('Failed to render one or more sizes.'); setUploadStatus('idle'); return }
+
+    // 3. Upload to portrait-bank bucket
+    try {
+      const path256 = `${gender}/256/${filename256}`
+      const path56 = `${gender}/56/${base}.jpg`
+      const path32 = `${gender}/32/${base}.jpg`
+      const uploads = await Promise.all([
+        supabase.storage.from('portrait-bank').upload(path256, blob256, { contentType: 'image/jpeg', upsert: true }),
+        supabase.storage.from('portrait-bank').upload(path56, blob56, { contentType: 'image/jpeg', upsert: true }),
+        supabase.storage.from('portrait-bank').upload(path32, blob32, { contentType: 'image/jpeg', upsert: true }),
+      ])
+      const upErr = uploads.find(u => u.error)
+      if (upErr?.error) { setError(`Upload failed: ${upErr.error.message}`); setUploadStatus('idle'); return }
+      const url256 = supabase.storage.from('portrait-bank').getPublicUrl(path256).data.publicUrl
+      const url56 = supabase.storage.from('portrait-bank').getPublicUrl(path56).data.publicUrl
+      const url32 = supabase.storage.from('portrait-bank').getPublicUrl(path32).data.publicUrl
+
+      // 4. Insert metadata row
+      const { error: insErr } = await supabase.from('portrait_bank').insert({
+        number: n, gender, url_256: url256, url_56: url56, url_32: url32,
+      })
+      if (insErr) { setError(`Metadata insert failed: ${insErr.message}`); setUploadStatus('idle'); return }
+    } catch (err: any) {
+      setError(`Upload error: ${err?.message ?? 'unknown'}`); setUploadStatus('idle'); return
+    }
+
+    // 5. Trigger local download of the 256 version
     const a = document.createElement('a')
     a.href = outputUrl
-    a.download = filename
+    a.download = filename256
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
+
+    setUploadStatus('success')
+    setTimeout(() => setUploadStatus('idle'), 2500)
   }
 
   return (
@@ -420,11 +480,18 @@ export default function PortraitResizerPage() {
                 )
               })}
             </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button type="button" onClick={handleDownload} style={btnPrimary}>
-                ⬇ Download {nextDownloadName}
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <button type="button" onClick={handleDownload} disabled={uploadStatus === 'uploading'}
+                style={{ ...btnPrimary, opacity: uploadStatus === 'uploading' ? 0.6 : 1, cursor: uploadStatus === 'uploading' ? 'wait' : 'pointer' }}>
+                {uploadStatus === 'uploading' ? '⏳ Uploading...' : `⬇ Download ${nextDownloadName}`}
               </button>
               <button type="button" onClick={reset} style={btnSecondary}>Process Another</button>
+              {uploadStatus === 'success' && (
+                <span style={{ color: '#7fc458', fontSize: '12px', fontFamily: '"Barlow Condensed", sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✓ Added to portrait bank</span>
+              )}
+            </div>
+            <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '8px' }}>
+              Each download uploads 256/56/32px versions to the shared portrait bank for random NPC assignment.
             </div>
           </div>
         </>
