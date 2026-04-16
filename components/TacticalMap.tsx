@@ -1059,13 +1059,13 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
 
       {/* Map canvas area — scrollable when zoomed */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        {/* Zoom control — top right, fixed over scroll area */}
-        <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <div style={{ fontSize: '10px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Zoom</div>
+        {/* Zoom control — top right */}
+        <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '9px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif' }}>0%</span>
           <input type="range" min={25} max={400} step={25} value={Math.round(zoom * 100)}
             onChange={e => setZoom(Number(e.target.value) / 100)}
-            style={{ width: '80px', accentColor: '#7ab3d4', cursor: 'pointer' }} />
-          <div style={{ fontSize: '11px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center' }}>{Math.round(zoom * 100)}%</div>
+            style={{ width: '50px', accentColor: '#7ab3d4', cursor: 'pointer' }} />
+          <span style={{ fontSize: '9px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif' }}>100%</span>
         </div>
         <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'auto' }}>
         <canvas ref={canvasRef}
