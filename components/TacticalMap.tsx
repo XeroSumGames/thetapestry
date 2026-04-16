@@ -695,8 +695,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     // Check if clicking a resize handle (corners of the map image)
     if (isGM && !mapLocked && bgImageRef.current && canvasRef.current && containerRef.current) {
       const rect = canvasRef.current.getBoundingClientRect()
-      const mx = e.clientX - rect.left + containerRef.current.scrollLeft
-      const my = e.clientY - rect.top + containerRef.current.scrollTop
+      // Convert to canvas-space (undo zoom so coordinates match where handles are drawn)
+      const mx = (e.clientX - rect.left) / zoom
+      const my = (e.clientY - rect.top) / zoom
       const m = mapDrawRef.current
       const hs = 14 // hit area slightly larger than visual handle
       const corners = [
