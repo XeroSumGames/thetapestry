@@ -22,16 +22,14 @@
 -- DELETE FROM campaign_portrait_usage;
 
 
--- ── OPTION C: FULL WIPE — counter + metadata + storage files ──
--- Clears everything. The storage file delete requires that you
--- list the files first. Use the Supabase dashboard Storage UI
--- to select all files in portrait-bank/ and delete them, OR
--- run the object query below.
+-- ── OPTION C: Full metadata wipe (recommended) ──
+-- Clears all DB metadata and resets counters. Orphaned storage
+-- files remain but don't break anything — re-uploads use
+-- upsert=true, so the same path overwrites cleanly.
+-- To clean storage too: Supabase Dashboard → Storage →
+-- portrait-bank bucket → select folders → delete.
+-- (Direct DELETE from storage.objects is blocked by Supabase.)
 
--- Reset metadata + counters:
 UPDATE portrait_counters SET count = 0;
 DELETE FROM portrait_bank;
 DELETE FROM campaign_portrait_usage;
-
--- Delete storage objects (requires storage.objects access — run in SQL editor):
-DELETE FROM storage.objects WHERE bucket_id = 'portrait-bank';
