@@ -740,41 +740,53 @@ export default function TablePage() {
     const allRows = [...pcRows, ...npcRows]
     const sorted = [...initDetails].sort((a, b) => b.total - a.total)
 
-    // Determine who goes first and mark them active in the insert
+    // Getting the Drop: drop character gets a SOLO round before initiative.
+    // Everyone else starts with 0 actions (inactive). After the drop character
+    // uses their 1 action, nextTurn triggers the first real initiative round.
     let firstCharName = sorted[0]?.name
     let firstActions = 2
     if (dropCharacter) {
       const dropExists = allRows.some(r => r.character_name === dropCharacter)
       if (dropExists) { firstCharName = dropCharacter; firstActions = 1 }
     }
-    const toInsert = allRows.map(r => r.character_name === firstCharName
-      ? { ...r, is_active: true, actions_remaining: firstActions }
-      : r
-    )
+    const toInsert = allRows.map(r => {
+      if (r.character_name === firstCharName) return { ...r, is_active: true, actions_remaining: firstActions }
+      if (dropCharacter) return { ...r, is_active: false, actions_remaining: 0 } // frozen until drop round ends
+      return r
+    })
 
     // Combatant name list for the new "Combat Started" box (PCs and NPCs in roll order).
     const combatants = sorted.map(s => s.name)
+
+    // Build log entries — explicit timestamps for ordering
+    const now = Date.now()
+    const logEntries: any[] = [
+      { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Started',
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'combat_start',
+        damage_json: { combatants } as any,
+        created_at: new Date(now).toISOString() },
+    ]
+    // If someone Gets the Drop, log it before initiative
+    if (dropCharacter) {
+      logEntries.push({
+        campaign_id: id, user_id: userId, character_name: 'System',
+        label: `⚡ ${dropCharacter} Gets the Drop!`,
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'drop',
+        created_at: new Date(now + 1).toISOString(),
+      })
+    }
+    logEntries.push({
+      campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
+      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
+      damage_json: { initiative: sorted } as any,
+      created_at: new Date(now + 2).toISOString(),
+    })
 
     // Insert initiative rows + log combat start in parallel.
     if (toInsert.length > 0) {
       const [{ data: insertedInit, error: initInsertErr }, { error: rollInsertErr }] = await Promise.all([
         supabase.from('initiative_order').insert(toInsert).select(),
-        // Explicit timestamps so Combat Started always renders above Initiative.
-        // A multi-row insert otherwise gives both rows the same NOW() and the
-        // tie-break is non-deterministic.
-        (() => {
-          const now = Date.now()
-          return supabase.from('roll_log').insert([
-            { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Started',
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'combat_start',
-              damage_json: { combatants } as any,
-              created_at: new Date(now).toISOString() },
-            { campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
-              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
-              damage_json: { initiative: sorted } as any,
-              created_at: new Date(now + 1).toISOString() },
-          ])
-        })(),
+        supabase.from('roll_log').insert(logEntries),
       ])
       if (initInsertErr) console.error('[confirmStartCombat] initiative insert error:', initInsertErr.message)
       if (rollInsertErr) console.error('[confirmStartCombat] roll_log insert error:', rollInsertErr.message)
@@ -2885,6 +2897,14 @@ export default function TablePage() {
                         </span>
                       ))}
                     </div>
+                  </div>
+                ) : r.outcome === 'drop' ? (
+                  <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a2010', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.label}</span>
+                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
                   </div>
                 ) : (r.outcome === 'death' || r.character_name === 'Death is in the air') ? (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a0a0a', border: '1px solid #5a1b1b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
