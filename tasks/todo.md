@@ -146,6 +146,7 @@
 - [x] Death prevention via Insight Die — trade ALL dice, regain 1 WP + 1 RP (per SRD)
 - [x] Lasting Wounds — PHY check first, Table 12 only on failure (per SRD)
 - [x] Healing rates — Rest button with hours/days/weeks, SRD rates (1 WP/day, 1 WP/2 days mortally wounded, 1 RP/hour)
+- [x] **Mortally Wounded → +1 Stress at end of combat** — any PC with WP=0 (not dead) at endCombat() automatically gains +1 Stress (capped at 5), logged to feed as "😰 <Name> gains +1 Stress from being mortally wounded."
 - [x] Auto-decrement ammo on ranged attacks (burst count for Automatic Burst)
 - [x] Environmental Damage buttons — Falling (3 per 10ft), Drowning (3+3), Subsistence (1 RP)
 - [x] Reduce Stress button — 8+ hours narrative downtime
@@ -191,7 +192,7 @@
 - [x] Share button in table header — copies invite link to clipboard
 - [x] GM Notes attachments — jsonb `attachments` column on `campaign_notes`, `note-attachments` storage bucket with RLS, file picker in add form and on each expanded note, image thumbnails inline
 - [x] Campaign creation surfaces seed errors — no more silent swallowing on schema mismatch
-- [ ] **Author Mongrels NPCs** — `lib/setting-npcs.ts` has no `mongrels` entry, so Mongrels campaigns get 0 NPCs even though they have 28 pins seeded
+- [x] **Author Mongrels NPCs** — 4 NPCs (Frankie, Kincaid, Justice Morse, soldiers), 2 scenes (Minnie interior, Barn), 3 handouts (Session Zero, Vehicle Sheet, Route), equipment in DB column
 
 ### Campaign Pins
 - [x] campaign_pins table with reveal/hide per pin
@@ -372,9 +373,25 @@
 - [ ] Token status badges — Wounded, Stressed, Incapacitated, Dead
 - [ ] GM ping — flash a location on everyone's screen
 - [ ] Initiative order numbered badges on tokens
-- [ ] Range band auto-select from token positions in attack modal
-- [ ] NPC cards as draggable floating windows over tactical map (like PC sheet overlay mode)
-- [ ] Move action highlights reachable cells (3 squares in any direction) on tactical map
+- [x] Range band auto-select from token positions in attack modal
+- [x] Range enforcement — targets filtered by range (all weapons), "Out of range" blocks Roll button
+- [x] Range CMod displayed prominently in roll modal
+- [x] Range circle shows longest-range weapon from all equipment (primary + secondary + NPC equipment)
+- [x] **Per-weapon range CMod profile tables** (`lib/range-profiles.ts`) — each weapon has CMod per band, null = blocked. Shotgun falloff, hunting rifle point-blank penalty, sniper bonuses at long/distant, etc.
+- [x] **New range band thresholds** — Engaged ≤5ft, Close ≤30ft, Medium ≤100ft, Long ≤300ft, Distant >300ft (per spec)
+- [x] **Color-coded range overlay** — GM "Show Ranges" toggle; each grid cell colored by band from selected token (red/orange/yellow/blue/grey)
+- [x] WP bar beneath each token (color-graded green/yellow/red)
+- [x] Initiative order numbered badges on tokens (green for active)
+- [x] GM ping — double-click empty cell to flash orange pulse on all clients
+- [x] NPC cards as draggable floating windows over tactical map during combat
+- [x] Move action highlights reachable cells (10ft Chebyshev) on tactical map, click to move
+- [x] Unarmed Attack button on combat action bar
+- [x] Token death visuals — red X for mortal wound, 50% opacity for dead
+- [x] NPC cards show all equipment weapons as attack buttons
+- [x] GM Notes share toggle — players see shared notes as read-only handouts
+- [x] NotificationBell on table page header
+- [x] Start Combat auto-shares tactical map to all players
+- [x] Session join race condition fix (await ensureCharacterStates before loadEntries)
 
 ---
 

@@ -17,6 +17,7 @@ import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { logEvent } from '../../../../lib/events'
 import { rollDamage, calculateDamage } from '../../../../lib/damage'
 import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/weapons'
+import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
 import { SKILLS } from '../../../../lib/xse-schema'
 
 interface Campaign {
@@ -435,7 +436,7 @@ export default function TablePage() {
       setRosterNpcs(cnpcs.filter((n: any) => {
           if (n.status !== 'active') return false
           const wp = n.wp_current ?? n.wp_max ?? 10
-          return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+          return wp > 0
         }))
       if (pubDataResult.data) setPublishedNpcIds(new Set(pubDataResult.data.map((d: any) => d.source_campaign_npc_id!)))
 
@@ -492,7 +493,7 @@ export default function TablePage() {
 
       initChannelRef.current = supabase.channel(`initiative_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
-        .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]) })
+        .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]); setShowTacticalMap(true) })
         .on('broadcast', { event: 'player_kicked' }, (msg: any) => {
           console.warn('[kick] received player_kicked broadcast:', msg.payload, 'myId:', user.id)
           if (msg.payload?.userId === user.id) {
@@ -639,7 +640,7 @@ export default function TablePage() {
       .order('name')
     const aliveRoster = (roster ?? []).filter((n: any) => {
       const wp = n.wp_current ?? n.wp_max ?? 10
-      return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+      return wp > 0
     })
     setRosterNpcs(aliveRoster)
     setSelectedNpcIds(new Set(aliveRoster.map((n: any) => n.id)))
@@ -1068,6 +1069,21 @@ export default function TablePage() {
       damage_json: { combatants } as any,
     })
     if (endLogErr) console.error('[endCombat] roll_log insert error:', endLogErr.message)
+    // Mortally Wounded PCs gain +1 Stress at end of combat
+    for (const e of entries) {
+      const wp = e.liveState.wp_current ?? e.liveState.wp_max ?? 10
+      const dc = (e.liveState as any).death_countdown
+      const isMortal = wp === 0 && (dc == null || dc > 0)
+      if (isMortal) {
+        const newStress = Math.min(5, (e.liveState.stress ?? 0) + 1)
+        await supabase.from('character_states').update({ stress: newStress, updated_at: new Date().toISOString() }).eq('id', e.stateId)
+        await supabase.from('roll_log').insert({
+          campaign_id: id, user_id: userId, character_name: 'System',
+          label: `😰 ${e.character.name} gains +1 Stress from being mortally wounded.`,
+          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
+        })
+      }
+    }
     await supabase.from('initiative_order').delete().eq('campaign_id', id)
     setInitiativeOrder([])
     setCombatActive(false)
@@ -1075,6 +1091,7 @@ export default function TablePage() {
     // Stay on tactical map after combat ends
     setShowTacticalMap(true)
     await loadRolls(id)
+    await loadEntries(id)
     initChannelRef.current?.send({ type: 'broadcast', event: 'combat_ended', payload: {} })
   }
 
@@ -1467,23 +1484,16 @@ export default function TablePage() {
     setGroupCheckSkill('')
   }
 
-  const RANGE_ORDER = ['engaged', 'close', 'medium', 'long', 'distant']
-  const RANGE_FEET: Record<string, number> = { engaged: 3, close: 15, medium: 30, long: 60, distant: 120 }
-
   function getAutoRangeBand(attackerCharId?: string, attackerNpcId?: string, targetName?: string): 'engaged' | 'close' | 'medium' | 'long' | 'distant' | null {
     if (!targetName || mapTokens.length === 0) return null
-    // Find attacker token
     const aTok = mapTokens.find(t =>
       (attackerCharId && t.character_id === attackerCharId) ||
       (attackerNpcId && t.npc_id === attackerNpcId)
     )
     if (!aTok) return null
-    // Find target token — match by character_id, npc_id, or name
     const tTok = mapTokens.find(t => {
-      // Match by name against entries
       const entry = entries.find(e => e.character.name === targetName)
       if (entry && t.character_id === entry.character.id) return true
-      // Match by name against NPCs
       const npc = campaignNpcs.find((n: any) => n.name === targetName)
       if (npc && t.npc_id === npc.id) return true
       return false
@@ -1491,34 +1501,17 @@ export default function TablePage() {
     if (!tTok) return null
     const dist = Math.max(Math.abs(aTok.grid_x - tTok.grid_x), Math.abs(aTok.grid_y - tTok.grid_y))
     const feet = dist * mapCellFeet
-    if (feet <= 3) return 'engaged'
-    if (feet <= 15) return 'close'
-    if (feet <= 30) return 'medium'
-    if (feet <= 60) return 'long'
-    return 'distant'
+    return getRangeBandFromFeet(feet)
   }
 
   function isInRange(weaponName: string, currentRangeBand: string): boolean {
-    if (weaponName === 'Unarmed') return currentRangeBand === 'engaged'
-    const w = getWeaponByName(weaponName)
-    if (!w) return true // unknown weapon, allow
-    const weaponIdx = RANGE_ORDER.indexOf(w.range.toLowerCase())
-    const targetIdx = RANGE_ORDER.indexOf(currentRangeBand)
-    if (weaponIdx < 0 || targetIdx < 0) return true
-    return targetIdx <= weaponIdx
+    return canHitAtRange(weaponName, currentRangeBand as any)
   }
 
   function getRangeCMod(): number {
     if (!pendingRoll?.weapon) return 0
-    const w = getWeaponByName(pendingRoll.weapon.weaponName)
-    if (!w) return 0
-    const isMelee = w.category === 'melee'
-    const isPistol = w.name.toLowerCase().includes('pistol')
-    const isRifle = w.name.toLowerCase().includes('rifle') || w.name.toLowerCase().includes('carbine')
-    if (rangeBand === 'engaged') return isMelee ? 1 : -1
-    if (rangeBand === 'close') return isMelee ? -1 : 1
-    if (rangeBand === 'long') return isPistol ? -5 : isRifle ? 1 : 0
-    return 0
+    const cmod = getWeaponRangeCMod(pendingRoll.weapon.weaponName, rangeBand as any)
+    return cmod ?? 0
   }
 
   async function handleInsightSave(spend: boolean) {
@@ -2246,6 +2239,12 @@ export default function TablePage() {
         )}
         {isGM && !combatActive && (
           <button onClick={() => { setShowTacticalMap(prev => !prev); refreshMapTokenIds() }}
+            style={hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a')}>
+            {showTacticalMap ? 'Campaign Map' : 'Tactical Map'}
+          </button>
+        )}
+        {!isGM && !combatActive && (
+          <button onClick={() => { setShowTacticalMap(prev => !prev); if (tacticalShared) setTacticalShared(false) }}
             style={hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a')}>
             {showTacticalMap ? 'Campaign Map' : 'Tactical Map'}
           </button>
@@ -3465,16 +3464,12 @@ export default function TablePage() {
                           // Filter out dead PCs
                           const pcEntry = entries.find(e => e.character.id === entry.character_id)
                           if (pcEntry?.liveState && pcEntry.liveState.wp_current === 0 && (pcEntry.liveState as any).death_countdown != null && (pcEntry.liveState as any).death_countdown <= 0) return false
-                          // Filter out targets out of range for melee/unarmed
+                          // Filter out targets the weapon can't hit at their range
                           if (pendingRoll.weapon && mapTokens.length > 0) {
-                            const pw = pendingRoll.weapon.weaponName === 'Unarmed' ? null : getWeaponByName(pendingRoll.weapon.weaponName)
-                            const isMeleeOrUnarmed = pendingRoll.weapon.weaponName === 'Unarmed' || pw?.category === 'melee'
-                            if (isMeleeOrUnarmed) {
-                              const active = initiativeOrder.find(ie => ie.is_active)
-                              if (active) {
-                                const autoRange = getAutoRangeBand(active.character_id || undefined, active.npc_id || undefined, entry.character_name)
-                                if (autoRange && !isInRange(pendingRoll.weapon.weaponName, autoRange)) return false
-                              }
+                            const active = initiativeOrder.find(ie => ie.is_active)
+                            if (active) {
+                              const autoRange = getAutoRangeBand(active.character_id || undefined, active.npc_id || undefined, entry.character_name)
+                              if (autoRange && !isInRange(pendingRoll.weapon.weaponName, autoRange)) return false
                             }
                           }
                           return true

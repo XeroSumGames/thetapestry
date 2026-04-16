@@ -2,13 +2,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getWeaponByName } from '../lib/weapons'
+import { getRangeBand, RANGE_BAND_COLOR } from '../lib/range-profiles'
 
 const RANGE_BAND_FEET: Record<string, number> = {
-  'Engaged': 3,
-  'Close': 15,
-  'Medium': 30,
-  'Long': 60,
-  'Distant': 120,
+  'Engaged': 5,
+  'Close': 30,
+  'Medium': 100,
+  'Long': 300,
+  'Distant': 600,
 }
 
 const RANGE_BAND_ORDER = ['Engaged', 'Close', 'Medium', 'Long', 'Distant']
@@ -93,6 +94,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [showGrid, setShowGrid] = useState(true)
   const [imgScale, setImgScale] = useState(1)
   const [gridColor, setGridColor] = useState('white')
+  const [ping, setPing] = useState<{ gx: number; gy: number; t: number } | null>(null)
+  const pingChannelRef = useRef<any>(null)
+  const [showRangeOverlay, setShowRangeOverlay] = useState(false)
   const [gridOpacity, setGridOpacity] = useState(0.4)
   const [spaceHeld, setSpaceHeld] = useState(false)
   const [cellPx, setCellPx] = useState(70)
@@ -139,7 +143,14 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         loadScenes()
       })
       .subscribe()
-    return () => { supabase.removeChannel(channel) }
+    const pingCh = supabase.channel(`ping_${campaignId}`)
+      .on('broadcast', { event: 'gm_ping' }, (msg: any) => {
+        const { gx, gy } = msg.payload ?? {}
+        if (gx != null && gy != null) setPing({ gx, gy, t: 0 })
+      })
+      .subscribe()
+    pingChannelRef.current = pingCh
+    return () => { supabase.removeChannel(channel); supabase.removeChannel(pingCh) }
   }, [campaignId])
 
   // Load background image when scene changes
@@ -155,7 +166,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
 
   // Redraw on token/scene changes
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, campaignNpcs, entries, showRangeOverlay])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
@@ -312,6 +323,24 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       }
     }
 
+    // Range overlay — color-coded bands from selected token
+    if (showRangeOverlay && selectedToken) {
+      const selTok = tokensRef.current.find(t => t.id === selectedToken)
+      if (selTok) {
+        const ft = s.cell_feet ?? 3
+        for (let gx = 0; gx < s.grid_cols; gx++) {
+          for (let gy = 0; gy < s.grid_rows; gy++) {
+            if (gx === selTok.grid_x && gy === selTok.grid_y) continue
+            const dist = Math.max(Math.abs(gx - selTok.grid_x), Math.abs(gy - selTok.grid_y))
+            const feet = dist * ft
+            const band = getRangeBand(feet)
+            ctx.fillStyle = RANGE_BAND_COLOR[band]
+            ctx.fillRect(offsetX + gx * cellSize, offsetY + gy * cellSize, cellSize, cellSize)
+          }
+        }
+      }
+    }
+
     // Tokens
     const toks = tokensRef.current
     const activeEntry = initiativeOrder.find((e: any) => e.is_active)
@@ -457,8 +486,82 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       ctx.fillStyle = '#f5f2ee'
       ctx.fillText(nameText, cx, nameY)
 
+      // WP bar beneath name
+      let wpCur = 0, wpMax = 0
+      if (t.npc_id && campaignNpcs) {
+        const npc = campaignNpcs.find((n: any) => n.id === t.npc_id)
+        if (npc) { wpCur = npc.wp_current ?? npc.wp_max ?? 10; wpMax = npc.wp_max ?? 10 }
+      } else if (t.character_id && entries) {
+        const entry = entries.find((e: any) => e.character.id === t.character_id)
+        if (entry) { wpCur = entry.liveState.wp_current ?? entry.liveState.wp_max ?? 10; wpMax = entry.liveState.wp_max ?? 10 }
+      }
+      if (wpMax > 0) {
+        const barW = radius * 1.6
+        const barH = 4
+        const barY = nameY + nameH / 2 + 3
+        ctx.fillStyle = 'rgba(0,0,0,0.6)'
+        ctx.fillRect(Math.round(cx - barW / 2), Math.round(barY), Math.round(barW), barH)
+        const wpPct = Math.max(0, Math.min(1, wpCur / wpMax))
+        const wpColor = wpPct > 0.5 ? '#7fc458' : wpPct > 0.25 ? '#EF9F27' : '#c0392b'
+        ctx.fillStyle = wpColor
+        ctx.fillRect(Math.round(cx - barW / 2), Math.round(barY), Math.round(barW * wpPct), barH)
+      }
+
+      // Initiative order badge (top-left of token)
+      if (initiativeOrder.length > 0) {
+        const initIdx = initiativeOrder.findIndex((e: any) =>
+          (t.character_id && e.character_id === t.character_id) ||
+          (t.npc_id && e.npc_id === t.npc_id) ||
+          (t.name === e.character_name)
+        )
+        if (initIdx >= 0) {
+          const badgeR = Math.max(8, radius * 0.35)
+          const bx = cx - radius * 0.7
+          const by = cy - radius * 0.7
+          ctx.beginPath()
+          ctx.arc(bx, by, badgeR, 0, Math.PI * 2)
+          ctx.fillStyle = initiativeOrder[initIdx].is_active ? '#7fc458' : '#242424'
+          ctx.fill()
+          ctx.strokeStyle = '#f5f2ee'
+          ctx.lineWidth = 1
+          ctx.stroke()
+          ctx.fillStyle = '#f5f2ee'
+          ctx.font = `bold ${Math.max(8, badgeR * 1.2)}px Barlow Condensed`
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(String(initIdx + 1), bx, by)
+        }
+      }
+
       ctx.globalAlpha = 1
     })
+
+    // GM ping — pulsing ring that fades out
+    if (ping) {
+      const pingCx = offsetX + ping.gx * cellSize + cellSize / 2
+      const pingCy = offsetY + ping.gy * cellSize + cellSize / 2
+      const pingProgress = Math.min(1, ping.t)
+      const pingRadius = cellSize * 0.5 + cellSize * 1.5 * pingProgress
+      const pingAlpha = 1 - pingProgress
+      ctx.beginPath()
+      ctx.arc(pingCx, pingCy, pingRadius, 0, Math.PI * 2)
+      ctx.strokeStyle = '#EF9F27'
+      ctx.lineWidth = 3
+      ctx.globalAlpha = pingAlpha
+      ctx.stroke()
+      // Inner solid dot
+      if (pingProgress < 0.3) {
+        ctx.beginPath()
+        ctx.arc(pingCx, pingCy, cellSize * 0.2, 0, Math.PI * 2)
+        ctx.fillStyle = '#EF9F27'
+        ctx.globalAlpha = pingAlpha
+        ctx.fill()
+      }
+      ctx.globalAlpha = 1
+      ping.t += 0.02
+      if (ping.t >= 1) setPing(null)
+      else hasActiveAnim = true
+    }
 
     // Range circles for selected token: Engaged, Movement, Weapon Range
     if (selectedToken) {
@@ -661,7 +764,12 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     const pos = getGridPos(e)
     if (!pos) return
     const tok = getTokenAt(pos.gx, pos.gy)
-    if (tok && onTokenClick) onTokenClick(tok)
+    if (tok && onTokenClick) { onTokenClick(tok); return }
+    // GM double-click on empty cell = ping
+    if (isGM && !tok) {
+      setPing({ gx: pos.gx, gy: pos.gy, t: 0 })
+      pingChannelRef.current?.send({ type: 'broadcast', event: 'gm_ping', payload: { gx: pos.gx, gy: pos.gy } })
+    }
   }
 
   // Scene management
@@ -916,6 +1024,10 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           }}
             style={{ padding: '4px 10px', background: mapLocked ? '#2a1210' : 'rgba(15,15,15,.85)', border: `1px solid ${mapLocked ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: mapLocked ? '#f5a89a' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
             {mapLocked ? 'Unlock Map' : 'Lock Map'}
+          </button>
+          <button onClick={() => setShowRangeOverlay(v => !v)}
+            style={{ padding: '4px 10px', background: showRangeOverlay ? '#1a2e10' : 'rgba(15,15,15,.85)', border: `1px solid ${showRangeOverlay ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: showRangeOverlay ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
+            {showRangeOverlay ? 'Hide Ranges' : 'Show Ranges'}
           </button>
           {scene.background_url && (
             <button onClick={async () => {
