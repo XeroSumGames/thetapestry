@@ -457,6 +457,16 @@
 
 ---
 
+## 🛠 Tools
+- [x] **Portrait Resizer** (`/tools/portrait-resizer`) — drag-drop image → 256×256 JPEG with center-crop, quality slider (0.5-1.0), live previews at 256/56/32px, optional dashed circle overlay showing token clip area, live file size display, download button
+
+### Future enhancements for the tools suite
+- [ ] **Batch mode** — multi-file upload, process and download as zip
+- [ ] **Manual crop control** — drag-to-select crop area instead of auto center-crop (useful for off-center subjects)
+- [ ] **Upload to Supabase Storage** — shared portrait bank across campaigns; random assignment during NPC creation
+- [ ] **Auth gating** — currently `/tools/*` is public; may want to restrict to signed-in Survivors
+- [ ] **More tools** — handout generator, token template maker, roll table randomizer
+
 ## 📝 Technical Debt
 - [x] Auto-resize uploaded photos to 256x256
 - [ ] Migrate character photos from base64 to Supabase Storage (low priority — already compressed to 256x256 JPEG)

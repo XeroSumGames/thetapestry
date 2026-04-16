@@ -16,6 +16,13 @@
 - **Layout flash on conditional rendering**: If a layout element (sidebar) depends on async state, the page will flash/jump when that state resolves. Fix by either always showing or always hiding the element on that route, not conditionally based on async data.
 - **`return null` during loading causes layout shifts**: Use `return <div style={{ background: '#0f0f0f' }} />` instead to maintain the DOM structure.
 
+## Client-Side Image Processing
+- **Canvas center-crop pattern**: `const srcSize = Math.min(w, h); sx = (w - srcSize) / 2; sy = (h - srcSize) / 2` then `ctx.drawImage(img, sx, sy, srcSize, srcSize, 0, 0, OUTPUT, OUTPUT)` — crops to square from center before resizing. Set `ctx.imageSmoothingQuality = 'high'` for the downscale.
+- **Quality slider live-update**: Keep the loaded `HTMLImageElement` in a ref so changing quality can re-run `processImage` without re-reading the file. A `useEffect([quality])` triggers re-processing only when quality changes.
+- **File input re-selection**: After `onChange`, reset `e.target.value = ''` so the user can pick the same file again (e.g., after resetting state).
+- **`<input type="file">` click-to-browse on drop zone**: Hide the input with `display: none`, use a ref, and call `fileInputRef.current?.click()` from the drop zone's `onClick`. Clicking anywhere in the zone opens the picker.
+- **`canvas.toBlob` vs `canvas.toDataURL`**: `toBlob` is async and gives you the exact file size for display; `toDataURL` is synchronous and gives a string suitable for `<img src>` and `<a download>`. Use both in parallel when you need both size stats and a preview URL.
+
 ## Styling
 - **Header buttons must all be the same size**: The campaign table header bar uses the `hdrBtn()` helper for uniform 28px height, 11px Barlow Condensed buttons. When adding new buttons to this bar, ALWAYS use `hdrBtn()` — never inline custom styles. This has been broken and fixed before. Check `hdrBtn` usage before adding any button to the header.
 

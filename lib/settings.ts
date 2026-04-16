@@ -1,5 +1,5 @@
 export const SETTINGS: Record<string, string> = {
-  custom: 'New Setting',
+  custom: 'Custom Setting',
   district_zero: 'District Zero',
   mongrels: 'Minnie & The Magnificent Mongrels',
   chased: 'Chased',
