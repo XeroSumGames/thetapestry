@@ -4,6 +4,7 @@ import { createClient } from '../lib/supabase-browser'
 import { generateRandomNpc, ALL_SKILLS, SkillEntry } from '../lib/npc-generator'
 import { resizeImage } from '../lib/image-utils'
 import { MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getWeaponByName } from '../lib/weapons'
+import PortraitBankPicker from './PortraitBankPicker'
 
 function parseSkillText(text: string): SkillEntry[] {
   if (!text.trim()) return []
@@ -168,6 +169,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [showPortraitPicker, setShowPortraitPicker] = useState(false)
 
   async function loadNpcs() {
     const { data } = await supabase
@@ -414,11 +416,20 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
 
   async function applyGenerated(typeOverride: string) {
     const npc = generateRandomNpc(typeOverride)
-    // Pick a random portrait from the bank for this gender (if any exist)
+    // Pick a random UNUSED portrait for this gender — only recycles once all have been used.
     let portraitUrl: string | null = null
     try {
-      const { data } = await supabase.rpc('random_portrait', { g: npc.gender })
-      if (Array.isArray(data) && data.length > 0) portraitUrl = (data[0] as any).url_256
+      const [allRes, usedRes] = await Promise.all([
+        supabase.from('portrait_bank').select('url_256').eq('gender', npc.gender),
+        supabase.from('campaign_npcs').select('portrait_url').eq('campaign_id', campaignId).not('portrait_url', 'is', null),
+      ])
+      const all = (allRes.data ?? []) as { url_256: string }[]
+      if (all.length > 0) {
+        const usedSet = new Set((usedRes.data ?? []).map((r: any) => r.portrait_url))
+        const unused = all.filter(p => !usedSet.has(p.url_256))
+        const pool = unused.length > 0 ? unused : all // recycle once exhausted
+        portraitUrl = pool[Math.floor(Math.random() * pool.length)].url_256
+      }
     } catch { /* bank unavailable — skip portrait */ }
     setForm(f => ({
       ...f,
@@ -600,6 +611,12 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
 
   return (
     <>
+      {showPortraitPicker && (
+        <PortraitBankPicker
+          onPick={url => setForm(f => ({ ...f, portrait_url: url }))}
+          onClose={() => setShowPortraitPicker(false)}
+        />
+      )}
       <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
         <button onClick={openAdd}
           style={{ padding: '2px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
@@ -795,6 +812,10 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                 {uploading ? '...' : 'Upload'}
                 <input type="file" accept="image/*" hidden onChange={e => { if (e.target.files?.[0]) handlePortraitUpload(e.target.files[0]) }} />
               </label>
+              <button type="button" onClick={() => setShowPortraitPicker(true)}
+                style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>
+                Library
+              </button>
               {form.portrait_url && (
                 <button onClick={() => setForm(f => ({ ...f, portrait_url: null }))}
                   style={{ background: 'none', border: 'none', color: '#cce0f5', fontSize: '11px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif', flexShrink: 0 }}>×</button>
