@@ -961,7 +961,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
             </button>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cols</div>
+                <div style={{ fontSize: '11px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cols</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
                   <button onClick={async () => { const v = Math.max(1, scene.grid_cols - 1); setScene(p => p ? { ...p, grid_cols: v } : p); await supabase.from('tactical_scenes').update({ grid_cols: v }).eq('id', scene.id) }}
                     style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
@@ -971,7 +971,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
                 </div>
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Rows</div>
+                <div style={{ fontSize: '11px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Rows</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
                   <button onClick={async () => { const v = Math.max(1, scene.grid_rows - 1); setScene(p => p ? { ...p, grid_rows: v } : p); await supabase.from('tactical_scenes').update({ grid_rows: v }).eq('id', scene.id) }}
                     style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
@@ -982,7 +982,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               </div>
             </div>
             <div>
-              <div style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cell (ft)</div>
+              <div style={{ fontSize: '11px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cell (ft)</div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
                 <button onClick={async () => { const v = Math.max(1, (scene.cell_feet ?? 3) - 1); setScene(p => p ? { ...p, cell_feet: v } : p); await supabase.from('tactical_scenes').update({ cell_feet: v }).eq('id', scene.id) }}
                   style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
@@ -992,7 +992,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               </div>
             </div>
             <div>
-              <div style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cell (px)</div>
+              <div style={{ fontSize: '11px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cell (px)</div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
                 <button onClick={() => setCellPx(p => Math.max(20, p - 5))}
                   style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
@@ -1063,11 +1063,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         {/* Zoom control — top right */}
         <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif' }}>0%</span>
+          <span style={{ fontSize: '11px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>0%</span>
           <input type="range" min={25} max={400} step={25} value={Math.round(zoom * 100)}
             onChange={e => setZoom(Number(e.target.value) / 100)}
             style={{ width: '60px', accentColor: '#7ab3d4', cursor: 'pointer' }} />
-          <span style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif' }}>100%</span>
+          <span style={{ fontSize: '11px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>100%</span>
         </div>
         <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'auto' }}>
         <canvas ref={canvasRef}
