@@ -883,9 +883,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
 
   return (
     <div style={{ flex: 1, display: 'flex', background: '#111', overflow: 'hidden' }}>
-      {/* GM Controls — rendered after canvas (right side) */}
+      {/* GM Controls — left strip */}
       {isGM && (
-        <div style={{ width: '130px', flexShrink: 0, background: '#0d0d0d', borderLeft: '1px solid #2e2e2e', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden', order: 9 }}>
+        <div style={{ width: '130px', flexShrink: 0, background: '#0d0d0d', borderRight: '1px solid #2e2e2e', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden' }}>
           <select value={scene.id} onChange={e => {
             if (e.target.value === '__new__') { setShowSetup(true); e.target.value = scene.id }
             else activateScene(e.target.value)
@@ -1058,7 +1058,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       )}
 
       {/* Map canvas area — scrollable when zoomed */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', order: 1 }}>
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         {/* Zoom control — top left, fixed over scroll area */}
         <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ fontSize: '10px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Zoom</div>
