@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
 import { useRouter, useParams } from 'next/navigation'
 import { SETTINGS } from '../../../../lib/settings'
@@ -25,6 +25,10 @@ export default function EditCampaignPage() {
   const [setting, setSetting] = useState('')
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [locationQuery, setLocationQuery] = useState('')
+  const [locationSuggestions, setLocationSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -37,6 +41,9 @@ export default function EditCampaignPage() {
       setDescription(camp.description ?? '')
       setMapStyle(camp.map_style ?? 'street')
       setSetting(camp.setting ?? 'custom')
+      if (camp.map_center_lat != null && camp.map_center_lng != null) {
+        setMapCenter({ lat: camp.map_center_lat, lng: camp.map_center_lng })
+      }
       setLoading(false)
     }
     load()
@@ -50,6 +57,8 @@ export default function EditCampaignPage() {
       name: name.trim(),
       description: description.trim() || null,
       map_style: mapStyle,
+      map_center_lat: mapCenter?.lat ?? null,
+      map_center_lng: mapCenter?.lng ?? null,
     }).eq('id', id)
     if (err) { setError(err.message); setSaving(false); return }
     setSaved(true)
@@ -91,6 +100,55 @@ export default function EditCampaignPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div style={{ marginBottom: '20px', position: 'relative' }}>
+          <label style={lbl}>Map Center Location</label>
+          <div style={{ position: 'relative' }}>
+            <input value={locationQuery} onChange={e => {
+              setLocationQuery(e.target.value)
+              if (debounceRef.current) clearTimeout(debounceRef.current)
+              if (e.target.value.length >= 3) {
+                debounceRef.current = setTimeout(async () => {
+                  try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(e.target.value)}&limit=5`)
+                    const data = await res.json()
+                    setLocationSuggestions(data)
+                  } catch { setLocationSuggestions([]) }
+                }, 300)
+              } else { setLocationSuggestions([]) }
+            }} placeholder="Search for a new center location..." style={inp} />
+            {locationSuggestions.length > 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '0 0 3px 3px', maxHeight: '200px', overflowY: 'auto', zIndex: 10 }}>
+                {locationSuggestions.map((s, i) => (
+                  <div key={i} onClick={() => {
+                    setMapCenter({ lat: parseFloat(s.lat), lng: parseFloat(s.lon) })
+                    setLocationQuery(s.display_name.split(',').slice(0, 2).join(','))
+                    setLocationSuggestions([])
+                  }}
+                    style={{ padding: '8px 10px', fontSize: '13px', color: '#d4cfc9', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                    {s.display_name.length > 80 ? s.display_name.slice(0, 80) + '...' : s.display_name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {mapCenter && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+              <span style={{ fontSize: '12px', color: '#7fc458', fontFamily: 'monospace' }}>
+                {mapCenter.lat.toFixed(4)}, {mapCenter.lng.toFixed(4)}
+              </span>
+              <button type="button" onClick={() => { setMapCenter(null); setLocationQuery('') }}
+                style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', textTransform: 'uppercase' }}>
+                Clear
+              </button>
+            </div>
+          )}
+          {!mapCenter && (
+            <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '4px' }}>No custom center — map uses default view</div>
+          )}
         </div>
 
         {error && (
