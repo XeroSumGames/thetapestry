@@ -596,9 +596,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         const weaponCells = Math.max(1, Math.ceil(weaponRangeFt / ft))
 
         const circles = [
-          { cells: weaponCells, fill: 'rgba(192,57,43,0.18)', stroke: '#c0392b', label: `${weaponRangeBand} (${weaponRangeFt}ft)` },
-          { cells: 3, fill: 'rgba(52,152,219,0.18)', stroke: '#3498db', label: 'Move (9ft)' },
-          { cells: Math.max(1, Math.ceil(3 / ft)), fill: 'rgba(127,196,88,0.25)', stroke: '#7fc458', label: 'Engaged' },
+          { cells: weaponCells, fill: 'rgba(192,57,43,0.35)', stroke: '#ff4040', label: `${weaponRangeBand} (${weaponRangeFt}ft)` },
+          { cells: 3, fill: 'rgba(52,152,219,0.30)', stroke: '#5dade2', label: 'Move (9ft)' },
+          { cells: Math.max(1, Math.ceil(3 / ft)), fill: 'rgba(127,196,88,0.35)', stroke: '#7fc458', label: 'Engaged' },
         ]
         // Draw largest first
         circles.sort((a, b) => b.cells - a.cells)
@@ -608,8 +608,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           ctx.fillStyle = c.fill
           ctx.fill()
           ctx.strokeStyle = c.stroke
-          ctx.globalAlpha = 0.85
-          ctx.lineWidth = 2.5
+          ctx.globalAlpha = 1
+          ctx.lineWidth = 3
           ctx.stroke()
           ctx.globalAlpha = 1
           // Label at top of circle
