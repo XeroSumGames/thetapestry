@@ -205,15 +205,13 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
               ) : (
                 /* View mode */
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  {isGM && (
-                    <div
-                      draggable
-                      onDragStart={() => setDragId(pin.id)}
-                      onDragEnd={() => { setDragId(null); setDragOverId(null) }}
-                      title="Drag to reorder"
-                      style={{ cursor: 'grab', color: '#3a3a3a', fontSize: '14px', lineHeight: 1, userSelect: 'none', padding: '0 2px' }}
-                    >⠿</div>
-                  )}
+                  <div
+                    draggable
+                    onDragStart={() => setDragId(pin.id)}
+                    onDragEnd={() => { setDragId(null); setDragOverId(null) }}
+                    title="Drag to reorder"
+                    style={{ cursor: 'grab', color: '#3a3a3a', fontSize: '14px', lineHeight: 1, userSelect: 'none', padding: '0 2px' }}
+                  >⠿</div>
                   <div
                     style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
                     onClick={() => { toggleExpand(pin.id); onPinFocus?.({ id: pin.id, lat: pin.lat, lng: pin.lng }) }}
