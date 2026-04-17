@@ -1124,7 +1124,7 @@ export default function TablePage() {
   // Activate a combatant — handles winded (1 action instead of 2)
   function activateUpdate(entry: InitiativeEntry) {
     const actions = entry.winded ? 1 : 2
-    return { is_active: true, actions_remaining: actions, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, winded: false }
+    return { is_active: true, actions_remaining: actions, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, winded: false, last_attack_target: null }
   }
 
   // Clear aim if next action isn't Attack (called before non-attack actions)
@@ -2278,6 +2278,10 @@ export default function TablePage() {
         const isGMRollingNPC = isGM && activeEntry.is_npc
         const isGMRollingPC = isGM && !activeEntry.is_npc
         if (isMyTurn || isGMRollingNPC || isGMRollingPC) {
+          // Track last attack target for same-target +1 CMod bonus
+          if (pendingRoll?.weapon && targetName) {
+            await supabase.from('initiative_order').update({ last_attack_target: targetName }).eq('id', activeEntry.id)
+          }
           await consumeAction(activeEntry.id)
         } else {
           console.warn('[closeRollModal] not consuming — not my turn / not GM authority')
@@ -2685,27 +2689,29 @@ export default function TablePage() {
                   Attack{w ? ` (${w.name})` : ''}
                 </button>
 
-                {/* ── CHARGE: both actions, melee/unarmed attack ── */}
-                {(isMelee || !w) ? (
-                  <button onClick={has2Actions ? () => {
-                    clearAimIfActive(activeEntry.id)
-                    const rapid = charEntry?.character.data?.rapid ?? {}
-                    const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
-                    const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
-                    const smod = npcAttacker
-                      ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === (w ? 'Melee Combat' : 'Unarmed Combat'))?.level ?? 0 : 0)
-                      : charEntry?.character.data?.skills?.find((s: any) => s.skillName === (w ? 'Melee Combat' : 'Unarmed Combat'))?.level ?? 0
-                    const wName = w?.name ?? 'Unarmed'
-                    const wDmg = w?.damage ?? '1d3'
-                    const wRp = w?.rpPercent ?? 100
-                    handleRollRequest(`${activeEntry.character_name} — Charge (${wName})`, amod, smod, { weaponName: wName, damage: wDmg, rpPercent: wRp, conditionCmod: 0, traits: w?.traits ?? [] })
-                    actionPreConsumedRef.current = true
-                    consumeAction(activeEntry.id, undefined, 2)
-                  } : undefined} disabled={!has2Actions}
-                    style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Charge</button>
-                ) : (
-                  <button disabled style={disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Charge</button>
-                )}
+                {/* ── CHARGE: both actions, melee/unarmed attack (always available) ── */}
+                {(() => {
+                  const chargeW = isMelee ? w : null // ranged weapon = charge unarmed
+                  const chargeSkill = chargeW ? 'Melee Combat' : 'Unarmed Combat'
+                  const chargeWName = chargeW?.name ?? 'Unarmed'
+                  const chargeWDmg = chargeW?.damage ?? '1d3'
+                  const chargeWRp = chargeW?.rpPercent ?? 100
+                  return (
+                    <button onClick={has2Actions ? () => {
+                      clearAimIfActive(activeEntry.id)
+                      const rapid = charEntry?.character.data?.rapid ?? {}
+                      const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+                      const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
+                      const smod = npcAttacker
+                        ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === chargeSkill)?.level ?? 0 : 0)
+                        : charEntry?.character.data?.skills?.find((s: any) => s.skillName === chargeSkill)?.level ?? 0
+                      handleRollRequest(`${activeEntry.character_name} — Charge (${chargeWName})`, amod, smod, { weaponName: chargeWName, damage: chargeWDmg, rpPercent: chargeWRp, conditionCmod: 0, traits: chargeW?.traits ?? [] })
+                      actionPreConsumedRef.current = true
+                      consumeAction(activeEntry.id, undefined, 2)
+                    } : undefined} disabled={!has2Actions}
+                      style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Charge</button>
+                  )
+                })()}
 
                 {/* ── COORDINATE, COVER FIRE, DISTRACT, INSPIRE ── */}
                 {['Coordinate', 'Cover Fire', 'Distract', 'Inspire'].map(action => {
@@ -3680,7 +3686,7 @@ export default function TablePage() {
                     <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Target</div>
                     <select value={targetName} onChange={e => {
                       setTargetName(e.target.value)
-                      // Auto-apply target's defensive modifier for weapon attacks
+                      // Auto-apply target's defensive modifier + same-target bonus
                       if (pendingRoll.weapon && e.target.value) {
                         const w = getWeaponByName(pendingRoll.weapon.weaponName)
                         const isMelee = w?.category === 'melee'
@@ -3688,7 +3694,10 @@ export default function TablePage() {
                         const targetRapid = targetEntry?.character.data?.rapid ?? {}
                         const defensiveMod = isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)
                         const baseCmod = pendingRoll.weapon.conditionCmod ?? 0
-                        setCmod(String(baseCmod - defensiveMod))
+                        // SRD: +1 CMod if attacking the same target as your last attack this turn
+                        const activeForBonus = initiativeOrder.find(ie => ie.is_active)
+                        const sameTargetBonus = (activeForBonus?.last_attack_target === e.target.value) ? 1 : 0
+                        setCmod(String(baseCmod - defensiveMod + sameTargetBonus))
                         // Auto-calculate range band from token positions
                         const active = initiativeOrder.find(ie => ie.is_active)
                         if (active) {
@@ -3701,14 +3710,16 @@ export default function TablePage() {
                       <option value="" style={{ color: '#cce0f5' }}>No target</option>
                       {[...initiativeOrder].sort((a, b) => (a.is_npc === b.is_npc ? 0 : a.is_npc ? -1 : 1))
                         .filter(entry => {
-                          // Filter out dead NPCs (only if wp_current has been set and is 0)
+                          // Filter out dead or mortally wounded NPCs
                           if (entry.is_npc) {
-                            const npc = rosterNpcs.find((n: any) => n.id === entry.npc_id)
+                            const npc = campaignNpcs.find((n: any) => n.id === entry.npc_id)
                             if (npc && npc.wp_current != null && npc.wp_current <= 0) return false
                           }
-                          // Filter out dead PCs
-                          const pcEntry = entries.find(e => e.character.id === entry.character_id)
-                          if (pcEntry?.liveState && pcEntry.liveState.wp_current === 0 && (pcEntry.liveState as any).death_countdown != null && (pcEntry.liveState as any).death_countdown <= 0) return false
+                          // Filter out dead or mortally wounded PCs (WP = 0)
+                          if (!entry.is_npc) {
+                            const pcEntry = entries.find(e => e.character.id === entry.character_id)
+                            if (pcEntry?.liveState && pcEntry.liveState.wp_current === 0) return false
+                          }
                           // Filter out targets the weapon can't hit at their range
                           if (pendingRoll.weapon && mapTokens.length > 0) {
                             const active = initiativeOrder.find(ie => ie.is_active)
