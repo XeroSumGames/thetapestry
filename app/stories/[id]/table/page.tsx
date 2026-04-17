@@ -3386,7 +3386,14 @@ export default function TablePage() {
                 }
               }}
               moveMode={moveMode}
-              onTokensUpdate={(toks, cellFeet) => { setMapTokens(toks); setMapCellFeet(cellFeet) }}
+              onTokensUpdate={(toks, cellFeet) => {
+                // Only update if positions actually changed to avoid re-render churn
+                setMapTokens(prev => {
+                  const same = prev.length === toks.length && prev.every((p, i) => p.id === toks[i].id && p.grid_x === toks[i].grid_x && p.grid_y === toks[i].grid_y)
+                  return same ? prev : toks
+                })
+                setMapCellFeet(cellFeet)
+              }}
               onMoveComplete={() => {
                 const active = initiativeOrder.find((e: any) => e.is_active)
                 if (active) consumeAction(active.id, `${active.character_name} — Move`)
@@ -3851,8 +3858,8 @@ export default function TablePage() {
                             const pcEntry = entries.find(e => e.character.id === entry.character_id)
                             if (pcEntry?.liveState && pcEntry.liveState.wp_current === 0) return false
                           }
-                          // Filter out targets the weapon can't hit at their range
-                          if (pendingRoll.weapon && mapTokens.length > 0) {
+                          // Filter out targets the weapon can't hit at their range (skip for Charge — it includes movement)
+                          if (pendingRoll.weapon && mapTokens.length > 0 && !pendingRoll.label.includes('Charge')) {
                             const active = initiativeOrder.find(ie => ie.is_active)
                             if (active) {
                               const autoRange = getAutoRangeBand(active.character_id || undefined, active.npc_id || undefined, entry.character_name)
@@ -3873,8 +3880,8 @@ export default function TablePage() {
                               })
                               if (aTok && tTok) {
                                 const dist = Math.max(Math.abs(aTok.grid_x - tTok.grid_x), Math.abs(aTok.grid_y - tTok.grid_y))
-                                const feet = dist * mapCellFeet
-                                if (feet > 20) return false
+                                const chargeFeet = dist * mapCellFeet
+                                if (chargeFeet > 20) return false
                               }
                             }
                           }
