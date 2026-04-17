@@ -576,6 +576,21 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
         <div ref={mapRef} style={{ flex: 1, height: '100%', background: '#aad3df' }} />
 
+        {/* Copy Position — Thriver only */}
+        {userRole === 'thriver' && (
+          <button onClick={() => {
+            const map = mapInstanceRef.current
+            if (!map) return
+            const c = map.getCenter()
+            const z = map.getZoom()
+            const text = `center: [${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}], zoom: ${z}`
+            navigator.clipboard.writeText(text)
+            alert(`Copied: ${text}`)
+          }} style={{ position: 'absolute', bottom: '10px', left: '10px', zIndex: 1000, padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            Copy Position
+          </button>
+        )}
+
         {(!embedded || showSidebarProp) && sidebarOpen && (
           <div style={{ width: '300px', flexShrink: 0, background: '#1a1a1a', borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', zIndex: 500 }}>
             {/* Search + regions header */}
