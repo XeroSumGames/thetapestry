@@ -520,8 +520,13 @@ export default function TablePage() {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
         .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]); setShowTacticalMap(true) })
         .on('broadcast', { event: 'player_kicked' }, (msg: any) => {
-          console.warn('[kick] received player_kicked broadcast:', msg.payload, 'myId:', user.id)
           if (msg.payload?.userId === user.id) {
+            alert('You have been removed from this session by the GM.')
+            window.location.href = `/stories/${id}`
+          }
+        })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, (payload: any) => {
+          if (payload.new?.type === 'session_kick') {
             alert('You have been removed from this session by the GM.')
             window.location.href = `/stories/${id}`
           }
@@ -3609,10 +3614,20 @@ export default function TablePage() {
                   const kickUserId = syncedSelectedEntry.userId
                   const kickName = syncedSelectedEntry.character.name
                   if (!confirm(`Remove ${kickName} from this session?`)) return
-                  // Broadcast so the player's client redirects to the campaign page
+                  // Write a kick notification to DB so the player's client detects it reliably
+                  await supabase.from('notifications').insert({
+                    user_id: kickUserId,
+                    type: 'session_kick',
+                    title: 'Removed from session',
+                    body: `You have been removed from the session by the GM.`,
+                    link: `/stories/${id}`,
+                  })
+                  // Also broadcast for immediate effect
                   if (initChannelRef.current) {
                     await initChannelRef.current.send({ type: 'broadcast', event: 'player_kicked', payload: { userId: kickUserId } })
                   }
+                  // Remove their character from the entries list locally
+                  setEntries(prev => prev.filter(e => e.userId !== kickUserId))
                   setSelectedEntry(null)
                 } : undefined}
                 onPlaceOnMap={(combatActive || showTacticalMap || tacticalShared) && syncedSelectedEntry.userId === userId ? () => placeTokenOnMap(syncedSelectedEntry.character.name, 'pc', syncedSelectedEntry.character.id, undefined, getCharPhoto(syncedSelectedEntry) || undefined) : undefined}
