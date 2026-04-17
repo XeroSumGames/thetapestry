@@ -9,13 +9,7 @@ export default function WelcomePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
-      // Logged-in users go to dashboard; ghosts stay here
-      if (user) { router.push('/dashboard'); return }
-      setLoading(false)
-    }
-    load()
+    setLoading(false)
   }, [])
 
   if (loading) return <div style={{ minHeight: '100vh', background: '#0f0f0f' }} />
