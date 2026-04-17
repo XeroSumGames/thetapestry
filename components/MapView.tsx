@@ -573,8 +573,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                     folderMap[cat].sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''))
                   }
                 }
-                // Sort categories: ones with pins first, then alphabetically by label
+                // Sort categories: Distemper Timeline first, then the rest in PIN_CATEGORIES order
                 const sortedCats = PIN_CATEGORIES.filter(c => folderMap[c.value] && folderMap[c.value].length > 0)
+                  .sort((a, b) => a.value === 'world_event' ? -1 : b.value === 'world_event' ? 1 : 0)
                 if (sortedCats.length === 0) {
                   return <div style={{ padding: '2rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>{pinSearch.trim() ? 'No pins match your search.' : 'No pins to display.'}</div>
                 }
