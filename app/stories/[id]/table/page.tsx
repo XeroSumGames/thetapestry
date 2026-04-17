@@ -4429,7 +4429,7 @@ export default function TablePage() {
 
       {/* Grapple Modal */}
       {showGrappleModal && (() => {
-        const active = initiativeOrder.find(e => e.is_active)
+        const active = initiativeOrder.find(e => e.is_active)!
         if (!active) return null
         const charEntry = entries.find(e => e.character.name === active.character_name)
         const npcAttacker = active.is_npc ? campaignNpcs.find((n: any) => n.name === active.character_name) : null
