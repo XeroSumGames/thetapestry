@@ -14,17 +14,24 @@ const RANGE_BAND_FEET: Record<string, number> = {
 
 const RANGE_BAND_ORDER = ['Engaged', 'Close', 'Medium', 'Long', 'Distant']
 
-function bestWeaponRange(names: string[]): string {
+function bestWeaponRange(names: string[]): { band: string; isMelee: boolean } {
   let best = 'Engaged'
   let bestIdx = 0
+  let isMelee = true
   for (const name of names) {
     if (!name) continue
     const w = getWeaponByName(name)
     if (!w) continue
     const idx = RANGE_BAND_ORDER.indexOf(w.range)
-    if (idx > bestIdx) { best = w.range; bestIdx = idx }
+    if (idx > bestIdx) { best = w.range; bestIdx = idx; isMelee = w.category === 'melee' }
   }
-  return best
+  return { band: best, isMelee }
+}
+
+// Melee "Close" means reach (~10ft), not the ranged Close band (30ft)
+const MELEE_RANGE_FEET: Record<string, number> = {
+  'Engaged': 5,
+  'Close': 10,
 }
 
 interface Token {
@@ -579,20 +586,23 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
 
         // Look up weapon range for this token — use longest-range weapon available
         let weaponRangeBand = 'Engaged' // default unarmed
+        let weaponIsMelee = true
         if (selTok.npc_id && campaignNpcs) {
           const npc = campaignNpcs.find((n: any) => n.id === selTok.npc_id)
           const names: string[] = []
           if (npc?.skills?.weapon?.weaponName) names.push(npc.skills.weapon.weaponName)
           if (Array.isArray(npc?.equipment)) npc.equipment.forEach((eq: any) => { if (eq.name) names.push(eq.name) })
-          if (names.length > 0) weaponRangeBand = bestWeaponRange(names)
+          if (names.length > 0) { const wr = bestWeaponRange(names); weaponRangeBand = wr.band; weaponIsMelee = wr.isMelee }
         } else if (selTok.character_id && entries) {
           const entry = entries.find((e: any) => e.character.id === selTok.character_id)
           const names: string[] = []
           if (entry?.character.data?.weaponPrimary?.weaponName) names.push(entry.character.data.weaponPrimary.weaponName)
           if (entry?.character.data?.weaponSecondary?.weaponName) names.push(entry.character.data.weaponSecondary.weaponName)
-          if (names.length > 0) weaponRangeBand = bestWeaponRange(names)
+          if (names.length > 0) { const wr = bestWeaponRange(names); weaponRangeBand = wr.band; weaponIsMelee = wr.isMelee }
         }
-        const weaponRangeFt = RANGE_BAND_FEET[weaponRangeBand] ?? 3
+        const weaponRangeFt = weaponIsMelee
+          ? (MELEE_RANGE_FEET[weaponRangeBand] ?? 5)
+          : (RANGE_BAND_FEET[weaponRangeBand] ?? 5)
         const weaponCells = Math.max(1, Math.ceil(weaponRangeFt / ft))
 
         const circles = [
