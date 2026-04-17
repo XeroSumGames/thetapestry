@@ -443,9 +443,6 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const timelineOnly = activeFilters.has('timeline') && activeFilters.size === 1
 
   const filteredPins = pins.filter(matchesFilter).filter(p => {
-    if (activeRegions.size === 0) return true
-    return [...activeRegions].some(r => pinInRegion(p, r))
-  }).filter(p => {
     if (!pinSearch.trim()) return true
     const q = pinSearch.trim().toLowerCase()
     return (p.title?.toLowerCase().includes(q)) || (p.notes?.toLowerCase().includes(q)) || (p.category?.toLowerCase().includes(q))
@@ -534,18 +531,6 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   Sign up to add your own story to this world.
                 </div>
               )}
-              <div style={{ display: 'flex', gap: '4px' }}>
-                {REGION_KEYS.map(key => {
-                  const r = REGION_BOUNDS[key]
-                  const active = activeRegions.has(key)
-                  return (
-                    <button key={key} onClick={() => toggleRegion(key)}
-                      style={{ flex: 1, padding: '3px 4px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : '#242424', color: active ? '#f5a89a' : '#d4cfc9', whiteSpace: 'nowrap' }}>
-                      {r.label}
-                    </button>
-                  )
-                })}
-              </div>
             </div>
             {/* Folder tree */}
             <div style={{ flex: 1, overflowY: 'auto' }}>
