@@ -124,6 +124,12 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
   const [editForm, setEditForm] = useState({ title: '', notes: '', category: 'location' })
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      try { const saved = localStorage.getItem('tapestry_folder_state'); if (saved) return new Set(JSON.parse(saved)) } catch {}
+    }
+    return new Set<string>()
+  })
   const [mapLayer, setMapLayer] = useState<string>('street')
   const [searchQuery, setSearchQuery] = useState('')
   const [suggestions, setSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
@@ -514,189 +520,119 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
         {(!embedded || showSidebarProp) && sidebarOpen && (
           <div style={{ width: '300px', flexShrink: 0, background: '#1a1a1a', borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', zIndex: 500 }}>
-            {/* Filter chips + sort */}
+            {/* Search + regions header */}
             <div style={{ padding: '8px', borderBottom: '1px solid #2e2e2e' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
                 <button onClick={() => setSidebarOpen(false)}
                   style={{ padding: '2px 6px', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '14px', cursor: 'pointer', lineHeight: 1, marginRight: '4px' }}
                   onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
                   onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>✕</button>
-                <span style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Filters</span>
-                <button onClick={() => setSortMode(s => s === 'name' as any ? 'newest' : 'name' as any)}
-                  style={{ marginLeft: 'auto', padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  Sort: {sortMode === ('name' as any) ? 'A–Z' : 'Date'}
-                </button>
+                <span style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Pins</span>
+                <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{displayedPins.length} total</span>
               </div>
               <input value={pinSearch} onChange={e => setPinSearch(e.target.value)} placeholder="Search pins..."
                 style={{ width: '100%', padding: '5px 8px', marginBottom: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
-              <div style={{ display: 'flex', gap: '4px' }}>
-                <button onClick={() => {
-                  const next = !pinsVisible
-                  setPinsVisible(next)
-                  if (next) {
-                    setActiveFilters(new Set(FILTER_CHIPS))
-                  } else {
-                    setActiveFilters(new Set())
-                  }
-                }}
-                  style={{ padding: '3px 8px', flex: 1, fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${pinsVisible ? '#3a3a3a' : '#c0392b'}`, background: pinsVisible ? 'transparent' : '#2a1210', color: pinsVisible ? '#d4cfc9' : '#f5a89a', whiteSpace: 'nowrap' }}>
-                  {pinsVisible ? 'Show' : 'Hidden'}
-                </button>
-                {FILTER_CHIPS_ROW1.map(chip => {
-                  const active = chip === 'all' ? allFiltersActive || activeFilters.has('all') : activeFilters.has(chip)
-                  const label = chip.charAt(0).toUpperCase() + chip.slice(1)
-                  return (
-                    <button key={chip} onClick={() => toggleFilter(chip)}
-                      style={{ padding: '3px 8px', flex: chip === 'all' ? '0 0 auto' : 1, fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : 'transparent', color: active ? '#f5a89a' : '#d4cfc9', whiteSpace: 'nowrap' }}>
-                      {label} ({chipCount(chip)})
-                    </button>
-                  )
-                })}
-              </div>
-              <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                {FILTER_CHIPS_ROW2.map(chip => {
-                  const active = activeFilters.has(chip)
-                  const label = chip === 'timeline' ? '🕐 Timeline' : chip.charAt(0).toUpperCase() + chip.slice(1)
-                  return (
-                    <button key={chip} onClick={() => toggleFilter(chip)}
-                      style={{ padding: '3px 8px', flex: chip === 'timeline' ? '0 0 auto' : 1, fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : 'transparent', color: active ? '#f5a89a' : '#d4cfc9', whiteSpace: 'nowrap' }}>
-                      {label} ({chipCount(chip)})
-                    </button>
-                  )
-                })}
-              </div>
-              {!userId && timelineOnly && (
+              {!userId && (
                 <div onClick={() => { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('tapestry-ghost-wall')) }}
-                  style={{ marginTop: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', cursor: 'pointer', fontStyle: 'italic' }}>
+                  style={{ marginBottom: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', cursor: 'pointer', fontStyle: 'italic' }}>
                   Sign up to add your own story to this world.
                 </div>
               )}
-              {/* Setting regions — toggle filters */}
-              <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
+              <div style={{ display: 'flex', gap: '4px' }}>
                 {REGION_KEYS.map(key => {
                   const r = REGION_BOUNDS[key]
                   const active = activeRegions.has(key)
                   return (
                     <button key={key} onClick={() => toggleRegion(key)}
                       style={{ flex: 1, padding: '3px 4px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`, background: active ? '#2a1210' : '#242424', color: active ? '#f5a89a' : '#d4cfc9', whiteSpace: 'nowrap' }}>
-                      {r.label} ({regionCount(key)})
+                      {r.label}
                     </button>
                   )
                 })}
               </div>
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-              {displayedPins.length === 0 && (
-                <div style={{ padding: '2rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>
-                  {pinSearch.trim() ? 'No pins match your search.' : 'No pins match your current filters.'}
-                </div>
-              )}
-              {displayedPins.map(p => {
-                const tier = getPinTier(p)
-                const ts = getTierStyles(tier)
-                const isExpanded = expandedPinId === p.id
-                const nearSetting = getNearSetting(p.lat, p.lng)
-                const nearbyPins = isExpanded ? pins.filter(np => np.id !== p.id && Math.abs(np.lat - p.lat) < 0.1 && Math.abs(np.lng - p.lng) < 0.1).slice(0, 5) : []
-                return (
-                <div key={p.id} onClick={() => {
-                  if (isExpanded) { setExpandedPinId(null) }
-                  else {
-                    setExpandedPinId(p.id)
-                    flyToPin(p)
-                    supabase.from('map_pins').update({ view_count: ((p as any).view_count ?? 0) + 1 }).eq('id', p.id)
-                    // Fetch attachments if not already loaded
-                    if (!pinAttachments[p.id]) {
-                      supabase.storage.from('pin-attachments').list(`${p.user_id}/${p.id}`).then(({ data: files }: any) => {
-                        if (files && files.length > 0) {
-                          const atts = files.map((f: any) => {
-                            const { data: urlData } = supabase.storage.from('pin-attachments').getPublicUrl(`${p.user_id}/${p.id}/${f.name}`)
-                            return { name: f.name, url: urlData.publicUrl }
-                          })
-                          setPinAttachments(prev => ({ ...prev, [p.id]: atts }))
-                        } else {
-                          setPinAttachments(prev => ({ ...prev, [p.id]: [] }))
-                        }
-                      })
-                    }
-                  }
-                }}
-                  style={{ padding: '8px 10px', marginBottom: '3px', background: tier === 'landmark' ? '#1a1a1a' : tier === 'event' ? '#1a1a10' : '#242424', border: `1px solid ${isExpanded ? '#c0392b' : '#2e2e2e'}`, borderLeft: `3px solid ${pinColor(p)}`, borderRadius: '3px', cursor: 'pointer' }}>
-                  <div style={{ fontSize: ts.sidebarSize, fontWeight: ts.sidebarWeight, color: '#f5f2ee', overflow: isExpanded ? 'visible' : 'hidden', textOverflow: isExpanded ? 'unset' : 'ellipsis', whiteSpace: isExpanded ? 'normal' : 'nowrap' }}>
-                    {getCategoryEmoji(p.category ?? 'location')} {p.title}
-                  </div>
-                  {!isExpanded && p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{p.notes}</div>}
-                  {isExpanded && (
-                    <div style={{ marginTop: '6px' }}>
-                      {p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, marginBottom: '8px' }}>{p.notes}</div>}
-                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '11px', padding: '1px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{p.category ?? 'location'}</span>
-                        <span style={{ fontSize: '11px', padding: '1px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{p.pin_type === 'rumor' ? 'Rumor' : p.pin_type === 'gm' ? 'GM' : 'Private'}</span>
-                        {nearSetting && <span style={{ fontSize: '11px', padding: '1px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>Near {nearSetting}</span>}
+            {/* Folder tree */}
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {(() => {
+                // Group displayed pins by category
+                const folderMap: Record<string, Pin[]> = {}
+                for (const p of displayedPins) {
+                  const cat = p.category ?? 'location'
+                  if (!folderMap[cat]) folderMap[cat] = []
+                  folderMap[cat].push(p)
+                }
+                // Sort categories: ones with pins first, then alphabetically by label
+                const sortedCats = PIN_CATEGORIES.filter(c => folderMap[c.value] && folderMap[c.value].length > 0)
+                if (sortedCats.length === 0) {
+                  return <div style={{ padding: '2rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>{pinSearch.trim() ? 'No pins match your search.' : 'No pins to display.'}</div>
+                }
+                // If searching, auto-expand all folders with matches
+                const isSearching = pinSearch.trim().length > 0
+                return sortedCats.map(cat => {
+                  const folderPins = folderMap[cat.value] ?? []
+                  const isOpen = isSearching || expandedFolders.has(cat.value)
+                  return (
+                    <div key={cat.value}>
+                      <div onClick={() => {
+                        setExpandedFolders(prev => {
+                          const next = new Set(prev)
+                          next.has(cat.value) ? next.delete(cat.value) : next.add(cat.value)
+                          if (typeof window !== 'undefined') localStorage.setItem('tapestry_folder_state', JSON.stringify([...next]))
+                          return next
+                        })
+                      }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                        <span style={{ fontSize: '10px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
+                        <span style={{ fontSize: '14px' }}>{cat.emoji}</span>
+                        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>{cat.label}</span>
+                        <span style={{ fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{folderPins.length}</span>
                       </div>
-                      <div style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
-                        {usernames[p.user_id] ? `Placed by ${usernames[p.user_id]}` : ''}{p.created_at ? ` · ${new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
-                        {(p as any).view_count ? ` · 👁 ${(p as any).view_count} views` : ''}
-                      </div>
-                      {nearbyPins.length > 0 && (
-                        <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #2e2e2e' }}>
-                          <div style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Nearby</div>
-                          {nearbyPins.map(np => (
-                            <div key={np.id} onClick={e => { e.stopPropagation(); setExpandedPinId(np.id); flyToPin(np) }}
-                              style={{ fontSize: '12px', color: '#d4cfc9', padding: '2px 0', cursor: 'pointer' }}
-                              onMouseEnter={e => (e.currentTarget.style.color = '#f5f2ee')}
-                              onMouseLeave={e => (e.currentTarget.style.color = '#d4cfc9')}>
-                              {getCategoryEmoji(np.category ?? 'location')} {np.title}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {/* Attachments */}
-                      {pinAttachments[p.id] && pinAttachments[p.id].length > 0 && (
-                        <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #2e2e2e' }}>
-                          <div style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Attachments</div>
-                          {pinAttachments[p.id].map(att => {
-                            const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(att.name)
-                            return isImage ? (
-                              <a key={att.name} href={att.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
-                                <img src={att.url} alt={att.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '3px', marginBottom: '4px', border: '1px solid #2e2e2e' }} />
-                              </a>
-                            ) : (
-                              <a key={att.name} href={att.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
-                                style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#7ab3d4', textDecoration: 'none', marginBottom: '3px' }}>
-                                📎 {att.name}
-                              </a>
+                      {isOpen && (
+                        <div style={{ padding: '2px 0 4px' }}>
+                          {folderPins.map(p => {
+                            const isExpanded = expandedPinId === p.id
+                            return (
+                              <div key={p.id} onClick={() => {
+                                if (isExpanded) { setExpandedPinId(null) }
+                                else { setExpandedPinId(p.id); flyToPin(p); supabase.from('map_pins').update({ view_count: ((p as any).view_count ?? 0) + 1 }).eq('id', p.id) }
+                              }}
+                                style={{ padding: '4px 10px 4px 34px', cursor: 'pointer', borderLeft: `2px solid ${isExpanded ? '#c0392b' : 'transparent'}`, background: isExpanded ? '#1a1a1a' : 'transparent' }}
+                                onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = '#1a1a1a' }}
+                                onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = 'transparent' }}>
+                                <div style={{ fontSize: '13px', color: '#f5f2ee', overflow: isExpanded ? 'visible' : 'hidden', textOverflow: 'ellipsis', whiteSpace: isExpanded ? 'normal' : 'nowrap' }}>{p.title}</div>
+                                {isExpanded && (
+                                  <div style={{ marginTop: '4px' }}>
+                                    {p.notes && <div style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.5, marginBottom: '6px' }}>{p.notes}</div>}
+                                    <div style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
+                                      {usernames[p.user_id] ? `By ${usernames[p.user_id]}` : ''}{p.created_at ? ` · ${new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
+                                    </div>
+                                    {(p.user_id === userId || userRole === 'thriver') && (
+                                      <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+                                        {userRole === 'thriver' && (
+                                          <button onClick={e => { e.stopPropagation(); handleTogglePublic(p) }}
+                                            style={{ background: 'none', border: 'none', color: p.status === 'approved' ? '#7fc458' : '#cce0f5', cursor: 'pointer', fontSize: '11px', padding: '0', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                                            {p.status === 'approved' ? 'Public' : 'Private'}
+                                          </button>
+                                        )}
+                                        <button onClick={e => { e.stopPropagation(); startEdit(p) }}
+                                          style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '11px', padding: '0', fontFamily: 'Barlow Condensed, sans-serif' }}>Edit</button>
+                                        <button onClick={e => { e.stopPropagation(); if (confirm('Delete this pin?')) handleDeletePin(p.id) }}
+                                          style={{ background: 'none', border: 'none', color: '#f5a89a', cursor: 'pointer', fontSize: '13px', padding: '0' }}>×</button>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             )
                           })}
                         </div>
                       )}
                     </div>
-                  )}
-                  {!isExpanded && (
-                    <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px', gap: '6px' }}>
-                      {(p.user_id === userId || userRole === 'thriver') && (
-                        <>
-                          <span style={{ flex: 1 }} />
-                          {userRole === 'thriver' && (
-                            <button onClick={e => { e.stopPropagation(); handleTogglePublic(p) }}
-                              style={{ background: 'none', border: 'none', color: p.status === 'approved' ? '#7fc458' : '#cce0f5', cursor: 'pointer', fontSize: '11px', padding: '0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
-                              {p.status === 'approved' ? 'Public' : 'Private'}
-                            </button>
-                          )}
-                          <button onClick={e => { e.stopPropagation(); startEdit(p) }}
-                            style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '11px', padding: '0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
-                            Edit
-                          </button>
-                          <button onClick={e => { e.stopPropagation(); if (confirm('Delete this pin?')) handleDeletePin(p.id) }} disabled={deletingId === p.id}
-                            style={{ background: 'none', border: 'none', color: '#f5a89a', cursor: 'pointer', fontSize: '13px', padding: '0', opacity: deletingId === p.id ? 0.4 : 1 }}>
-                            ×
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-                )
-              })}
+                  )
+                })
+              })()}
             </div>
           </div>
         )}
