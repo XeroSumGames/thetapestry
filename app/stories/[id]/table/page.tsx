@@ -3756,7 +3756,12 @@ export default function TablePage() {
               </div>
               )
             })()}
-            {gmTab === 'assets' && <CampaignPins campaignId={id} isGM={isGM} onPinFocus={p => setFocusPin({ ...p })} />}
+            {gmTab === 'assets' && <CampaignPins campaignId={id} isGM={isGM} onPinFocus={p => setFocusPin({ ...p })} onOpenScene={async (sceneId) => {
+              await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', id)
+              await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', sceneId)
+              setShowTacticalMap(true)
+              setTokenRefreshKey(k => k + 1)
+            }} />}
             {gmTab === 'notes' && isGM && <GmNotes campaignId={id} />}
             {gmTab === 'notes' && !isGM && <PlayerNotes campaignId={id} />}
           </div>

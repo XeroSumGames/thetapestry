@@ -13,15 +13,22 @@ interface CampaignPin {
   revealed: boolean
   created_at: string
   sort_order: number | null
+  tactical_scene_id: string | null
+}
+
+interface TacticalScene {
+  id: string
+  name: string
 }
 
 interface Props {
   campaignId: string
   isGM: boolean
   onPinFocus?: (pin: { id: string; lat: number; lng: number }) => void
+  onOpenScene?: (sceneId: string) => void
 }
 
-export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
+export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene }: Props) {
   const supabase = createClient()
   const [pins, setPins] = useState<CampaignPin[]>([])
   const [loading, setLoading] = useState(true)
@@ -32,6 +39,8 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
   const [editLng, setEditLng] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [pinImages, setPinImages] = useState<Record<string, string[]>>({})
+  const [scenes, setScenes] = useState<TacticalScene[]>([])
+  const [editSceneId, setEditSceneId] = useState<string | null>(null)
 
   async function loadPins() {
     let query = supabase
@@ -69,7 +78,12 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
     ))
   }
 
-  useEffect(() => { loadPins() }, [campaignId])
+  useEffect(() => { loadPins(); loadScenes() }, [campaignId])
+
+  async function loadScenes() {
+    const { data } = await supabase.from('tactical_scenes').select('id, name').eq('campaign_id', campaignId).order('created_at', { ascending: false })
+    setScenes(data ?? [])
+  }
 
   async function toggleReveal(pin: CampaignPin) {
     await supabase.from('campaign_pins').update({ revealed: !pin.revealed }).eq('id', pin.id)
@@ -92,6 +106,7 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
     setEditNotes(pin.notes ?? '')
     setEditLat(String(pin.lat))
     setEditLng(String(pin.lng))
+    setEditSceneId(pin.tactical_scene_id ?? null)
   }
 
   async function saveEdit() {
@@ -99,7 +114,7 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
     const lat = parseFloat(editLat)
     const lng = parseFloat(editLng)
     if (Number.isNaN(lat) || Number.isNaN(lng)) { alert('Latitude and longitude must be numbers'); return }
-    const update = { name: editName.trim(), notes: editNotes.trim() || null, lat, lng }
+    const update = { name: editName.trim(), notes: editNotes.trim() || null, lat, lng, tactical_scene_id: editSceneId || null }
     await supabase.from('campaign_pins').update(update).eq('id', editingId)
     setPins(prev => prev.map(p => p.id === editingId ? { ...p, ...update } : p))
     setEditingId(null)
@@ -197,6 +212,17 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
                         style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'monospace', boxSizing: 'border-box' }} />
                     </div>
                   </div>
+                  {/* Tactical Map link */}
+                  {isGM && scenes.length > 0 && (
+                    <div style={{ marginBottom: '4px' }}>
+                      <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Tactical Map</div>
+                      <select value={editSceneId ?? ''} onChange={e => setEditSceneId(e.target.value || null)}
+                        style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
+                        <option value="">— None —</option>
+                        {scenes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', gap: '4px' }}>
                     <button onClick={saveEdit} style={{ flex: 1, padding: '3px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Save</button>
                     <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: '3px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
@@ -215,9 +241,13 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
                   <div
                     style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
                     onClick={() => { toggleExpand(pin.id); onPinFocus?.({ id: pin.id, lat: pin.lat, lng: pin.lng }) }}
-                    title="Show on map"
+                    onDoubleClick={() => { if (pin.tactical_scene_id && onOpenScene) onOpenScene(pin.tactical_scene_id) }}
+                    title={pin.tactical_scene_id ? 'Double-click to open tactical map' : 'Show on map'}
                   >
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pin.name}</div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {pin.name}
+                      {pin.tactical_scene_id && <span title="Has tactical map" style={{ fontSize: '11px', color: '#7ab3d4' }}>🗺️</span>}
+                    </div>
                     {pin.notes && <div style={{ fontSize: '13px', color: '#cce0f5', overflow: expandedId === pin.id ? 'visible' : 'hidden', textOverflow: expandedId === pin.id ? 'unset' : 'ellipsis', whiteSpace: expandedId === pin.id ? 'normal' : 'nowrap' }}>{pin.notes}</div>}
                     {expandedId === pin.id && pinImages[pin.id] && pinImages[pin.id].length > 0 && (
                       <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
