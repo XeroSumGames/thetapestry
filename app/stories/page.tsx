@@ -19,6 +19,7 @@ export default function CampaignsPage() {
   const [gmCampaigns, setGmCampaigns] = useState<Campaign[]>([])
   const [playerCampaigns, setPlayerCampaigns] = useState<Campaign[]>([])
   const [userId, setUserId] = useState<string | null>(null)
+  const [gmNames, setGmNames] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const supabase = createClient()
@@ -49,6 +50,12 @@ export default function CampaignsPage() {
           .neq('gm_user_id', user.id)
           .order('created_at', { ascending: false })
         setPlayerCampaigns(player ?? [])
+        // Fetch GM usernames for player campaigns
+        const gmIds = [...new Set((player ?? []).map((c: any) => c.gm_user_id))]
+        if (gmIds.length > 0) {
+          const { data: profiles } = await supabase.from('profiles').select('id, username').in('id', gmIds)
+          if (profiles) setGmNames(Object.fromEntries(profiles.map((p: any) => [p.id, p.username])))
+        }
       }
       setLoading(false)
     }
@@ -135,7 +142,7 @@ export default function CampaignsPage() {
                 <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>{c.name}</div>
                   <div style={{ fontSize: '11px', color: '#d4cfc9', marginTop: '2px' }}>
-                    {SETTINGS[c.setting] ?? c.setting} &middot; Joined {formatDate(c.created_at)}
+                    {SETTINGS[c.setting] ?? c.setting}{gmNames[c.gm_user_id] ? <> &middot; <span style={{ color: '#c0392b' }}>GM: {gmNames[c.gm_user_id]}</span></> : ''} &middot; Joined {formatDate(c.created_at)}
                   </div>
                   {c.description && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '6px', lineHeight: 1.5 }}>{c.description}</div>}
                 </div>
