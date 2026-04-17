@@ -127,6 +127,15 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [editAttachments, setEditAttachments] = useState<File[]>([])
   const [editExistingFiles, setEditExistingFiles] = useState<{ name: string; url: string }[]>([])
   const [editUploading, setEditUploading] = useState(false)
+  const [hiddenFolders, setHiddenFolders] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      try { const saved = localStorage.getItem('tapestry_hidden_folders'); if (saved) return new Set(JSON.parse(saved)) } catch {}
+    }
+    return new Set<string>()
+  })
+
+  // Re-render map markers when folder visibility changes
+  useEffect(() => { if (mapInstanceRef.current) loadPins() }, [hiddenFolders])
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => {
     if (typeof window !== 'undefined') {
       try { const saved = localStorage.getItem('tapestry_folder_state'); if (saved) return new Set(JSON.parse(saved)) } catch {}
@@ -240,7 +249,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       },
     })
 
-    const visibleData = userId ? data : data.filter((p: Pin) => p.category === 'world_event')
+    const visibleData = (userId ? data : data.filter((p: Pin) => p.category === 'world_event'))
+      .filter((p: Pin) => !hiddenFolders.has(p.category ?? 'location'))
     visibleData.forEach((pin: Pin) => {
       const emoji = getCategoryEmoji(pin.category ?? 'location')
       const tier = getPinTier(pin)
@@ -584,8 +594,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                 return sortedCats.map(cat => {
                   const folderPins = folderMap[cat.value] ?? []
                   const isOpen = isSearching || expandedFolders.has(cat.value)
+                  const isHidden = hiddenFolders.has(cat.value)
                   return (
-                    <div key={cat.value}>
+                    <div key={cat.value} style={{ opacity: isHidden ? 0.4 : 1 }}>
                       <div onClick={() => {
                         setExpandedFolders(prev => {
                           const next = new Set(prev)
@@ -600,7 +611,20 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                         <span style={{ fontSize: '10px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                         <span style={{ fontSize: '14px' }}>{cat.emoji}</span>
                         <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>{cat.label}</span>
-                        <span style={{ fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{folderPins.length}</span>
+                        <span style={{ fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginRight: '4px' }}>{folderPins.length}</span>
+                        <span onClick={e => {
+                          e.stopPropagation()
+                          setHiddenFolders(prev => {
+                            const next = new Set(prev)
+                            next.has(cat.value) ? next.delete(cat.value) : next.add(cat.value)
+                            if (typeof window !== 'undefined') localStorage.setItem('tapestry_hidden_folders', JSON.stringify([...next]))
+                            return next
+                          })
+                        }}
+                          title={isHidden ? 'Show on map' : 'Hide from map'}
+                          style={{ fontSize: '12px', cursor: 'pointer', color: isHidden ? '#5a5550' : '#7fc458', lineHeight: 1 }}>
+                          {isHidden ? '👁‍🗨' : '👁'}
+                        </span>
                       </div>
                       {isOpen && (
                         <div style={{ padding: '2px 0 4px' }}>
