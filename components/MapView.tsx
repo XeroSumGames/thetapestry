@@ -535,12 +535,20 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             {/* Folder tree */}
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {(() => {
-                // Group displayed pins by category
+                // Group displayed pins by category, sorted within each folder
                 const folderMap: Record<string, Pin[]> = {}
                 for (const p of displayedPins) {
                   const cat = p.category ?? 'location'
                   if (!folderMap[cat]) folderMap[cat] = []
                   folderMap[cat].push(p)
+                }
+                // Sort within each folder: timeline by sort_order, others by name
+                for (const cat of Object.keys(folderMap)) {
+                  if (cat === 'world_event') {
+                    folderMap[cat].sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999))
+                  } else {
+                    folderMap[cat].sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''))
+                  }
                 }
                 // Sort categories: ones with pins first, then alphabetically by label
                 const sortedCats = PIN_CATEGORIES.filter(c => folderMap[c.value] && folderMap[c.value].length > 0)
