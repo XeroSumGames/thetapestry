@@ -2238,8 +2238,18 @@ export default function TablePage() {
       if (outcome === 'Failure' || outcome === 'Dire Failure') {
         if (activeInit) await supabase.from('initiative_order').update({ winded: true }).eq('id', activeInit.id)
         sprintResult = `${characterName} is winded — loses 1 action next round.`
+        await supabase.from('roll_log').insert({
+          campaign_id: id, user_id: userId, character_name: 'System',
+          label: `🏃 ${characterName} sprinted but is now winded — loses 1 Combat Action next round.`,
+          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'sprint',
+        })
       } else {
         sprintResult = `${characterName} sprinted successfully.`
+        await supabase.from('roll_log').insert({
+          campaign_id: id, user_id: userId, character_name: 'System',
+          label: `🏃 ${characterName} sprinted successfully — not winded.`,
+          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'sprint',
+        })
       }
     }
 
@@ -2560,9 +2570,6 @@ export default function TablePage() {
             <option value="opposed">Opposed Check</option>
           </select>
         )}
-        <a href="/dashboard" target="_blank" rel="noreferrer" style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), textDecoration: 'none' }}>
-          Dashboard
-        </a>
         {campaign?.invite_code && (
           <button onClick={() => {
             navigator.clipboard.writeText(`${window.location.origin}/join/${campaign.invite_code}`)
@@ -2604,6 +2611,9 @@ export default function TablePage() {
         )}
         <a href={`/stories/${id}`} style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
           Back
+        </a>
+        <a href="/dashboard" target="_blank" rel="noreferrer" style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), textDecoration: 'none' }}>
+          Dashboard
         </a>
         <a href="/stories" style={{ ...hdrBtn('#7a1f16', '#f5a89a', '#c0392b'), textDecoration: 'none' }}>
           Exit
