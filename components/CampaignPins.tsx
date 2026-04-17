@@ -30,6 +30,8 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
   const [editNotes, setEditNotes] = useState('')
   const [editLat, setEditLat] = useState('')
   const [editLng, setEditLng] = useState('')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [pinImages, setPinImages] = useState<Record<string, string[]>>({})
 
   async function loadPins() {
     let query = supabase
@@ -120,6 +122,31 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
     })
   }
 
+  async function loadPinImages(pinId: string) {
+    if (pinImages[pinId]) return // already loaded
+    const { data: files } = await supabase.storage.from('pin-attachments').list(`${campaignId}/${pinId}`)
+    if (files && files.length > 0) {
+      const urls = files
+        .filter((f: any) => /\.(jpg|jpeg|png|gif|webp)$/i.test(f.name))
+        .map((f: any) => {
+          const { data: urlData } = supabase.storage.from('pin-attachments').getPublicUrl(`${campaignId}/${pinId}/${f.name}`)
+          return urlData.publicUrl
+        })
+      setPinImages(prev => ({ ...prev, [pinId]: urls }))
+    } else {
+      setPinImages(prev => ({ ...prev, [pinId]: [] }))
+    }
+  }
+
+  function toggleExpand(pinId: string) {
+    if (expandedId === pinId) {
+      setExpandedId(null)
+    } else {
+      setExpandedId(pinId)
+      loadPinImages(pinId)
+    }
+  }
+
   const allRevealed = pins.length > 0 && pins.every(p => p.revealed)
 
   if (loading) return <div style={{ padding: '1rem', color: '#cce0f5', fontSize: '13px' }}>Loading pins...</div>
@@ -188,12 +215,21 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus }: Props) {
                     >⠿</div>
                   )}
                   <div
-                    style={{ flex: 1, minWidth: 0, cursor: onPinFocus ? 'pointer' : 'default' }}
-                    onClick={() => onPinFocus?.({ id: pin.id, lat: pin.lat, lng: pin.lng })}
-                    title={onPinFocus ? 'Show on map' : undefined}
+                    style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
+                    onClick={() => { toggleExpand(pin.id); onPinFocus?.({ id: pin.id, lat: pin.lat, lng: pin.lng }) }}
+                    title="Show on map"
                   >
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pin.name}</div>
-                    {pin.notes && <div style={{ fontSize: '13px', color: '#cce0f5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pin.notes}</div>}
+                    {pin.notes && <div style={{ fontSize: '13px', color: '#cce0f5', overflow: expandedId === pin.id ? 'visible' : 'hidden', textOverflow: expandedId === pin.id ? 'unset' : 'ellipsis', whiteSpace: expandedId === pin.id ? 'normal' : 'nowrap' }}>{pin.notes}</div>}
+                    {expandedId === pin.id && pinImages[pin.id] && pinImages[pin.id].length > 0 && (
+                      <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {pinImages[pin.id].map((url, i) => (
+                          <img key={i} src={url} alt="" loading="lazy"
+                            onClick={e => { e.stopPropagation(); window.open(url, '_blank') }}
+                            style={{ width: '100%', borderRadius: '3px', border: '1px solid #3a3a3a', cursor: 'zoom-in' }} />
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end', flexShrink: 0 }}>
                     {isGM && (
