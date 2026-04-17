@@ -232,9 +232,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     if (bgImageRef.current) {
       const img = bgImageRef.current
       const imgAspect = img.naturalWidth / img.naturalHeight
-      // Scale based on grid width for consistency across GM/player screens
-      imgW = gridW * imgScale
-      imgH = (gridW / imgAspect) * imgScale
+      // Scale based on container width — independent of grid cols
+      imgW = baseW * imgScale
+      imgH = (baseW / imgAspect) * imgScale
     }
     canvas.width = Math.max(baseW, baseW * zoom, imgW)
     canvas.height = Math.max(baseH, baseH * zoom, imgH)
@@ -252,12 +252,12 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     ctx.save()
     ctx.scale(zoom, zoom)
 
-    // Background image — scale based on grid width for consistency across clients
+    // Background image — scale based on container width, independent of grid
     if (bgImageRef.current) {
       const img = bgImageRef.current
       const imgAspect = img.naturalWidth / img.naturalHeight
-      const drawW = gridW
-      const drawH = gridW / imgAspect
+      const drawW = baseW
+      const drawH = baseW / imgAspect
       const scaledW = drawW * imgScale
       const scaledH = drawH * imgScale
       ctx.drawImage(img, 0, 0, scaledW, scaledH)
