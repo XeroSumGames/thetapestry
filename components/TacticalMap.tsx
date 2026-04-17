@@ -807,7 +807,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   // Scene management
   async function createScene() {
     const { data, error } = await supabase.from('tactical_scenes').insert({
-      campaign_id: campaignId, name: setupName, grid_cols: setupCols, grid_rows: setupRows, cell_feet: 3, is_active: true, has_grid: setupHasGrid,
+      campaign_id: campaignId, name: setupName, grid_cols: setupCols, grid_rows: setupRows, cell_feet: 3, cell_px: 35, is_active: true, has_grid: setupHasGrid,
     }).select().single()
     if (error) { console.error('[TacticalMap] createScene error:', error.message); alert('Failed to create scene: ' + error.message); return }
     if (data) {
