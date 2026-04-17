@@ -152,6 +152,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     return () => window.removeEventListener('tapestry-copy-map-position', handleCopyPosition)
   }, [])
 
+  const hiddenFoldersRef = useRef(hiddenFolders)
+  hiddenFoldersRef.current = hiddenFolders
+
   // Re-render map markers when folder visibility changes
   useEffect(() => { if (mapInstanceRef.current) loadPins() }, [hiddenFolders])
   // Load campaign pins when tab switches to campaign
@@ -281,8 +284,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       },
     })
 
-    const visibleData = (userId ? data : data.filter((p: Pin) => p.category === 'world_event'))
-      .filter((p: Pin) => !hiddenFolders.has(p.category ?? 'location'))
+    const currentHidden = hiddenFoldersRef.current
+    const visibleData = (userId ? data : data.filter((p: Pin) => p.category === 'world_event' || p.category === 'settlement'))
+      .filter((p: Pin) => !currentHidden.has(p.category ?? 'location'))
     visibleData.forEach((pin: Pin) => {
       const emoji = getCategoryEmoji(pin.category ?? 'location')
       const tier = getPinTier(pin)
