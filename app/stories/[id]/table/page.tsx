@@ -3812,7 +3812,7 @@ export default function TablePage() {
                   </div>
                 )}
                 {/* Range band auto-calculated in background — no manual selector */}
-                {(combatActive || pendingRoll.weapon) && initiativeOrder.length > 0 && (
+                {(combatActive || pendingRoll.weapon) && initiativeOrder.length > 0 && !pendingRoll.label.includes('Coordinate') && (
                   <div style={{ marginBottom: '1.25rem' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Target</div>
                     <select value={targetName} onChange={e => {
