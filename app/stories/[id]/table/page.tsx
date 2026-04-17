@@ -187,6 +187,7 @@ export default function TablePage() {
   const [pendingRoll, setPendingRoll] = useState<PendingRoll | null>(null)
   const actionPreConsumedRef = useRef(false)  // Set when Stabilize pre-consumes before the roll modal
   const actionCostRef = useRef(1)             // Action cost for the current roll (2 for Charge/Rapid Fire)
+  const pendingChargeRef = useRef<{ label: string; amod: number; smod: number; weapon: any } | null>(null)
   const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal — refs survive React batching
   const [insightSavePrompt, setInsightSavePrompt] = useState<{ stateId: string; targetName: string; newWP: number; newRP: number; phyAmod: number; insightDice: number } | null>(null)
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
@@ -1877,6 +1878,11 @@ export default function TablePage() {
       const defensiveMod = (isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)) + targetDefBonus
 
       let { finalWP, finalRP, mitigated } = calculateDamage(totalWP + unarmedBonus, weapon.rpPercent, defensiveMod)
+      // Subdue: full RP but 50% WP
+      if (pendingRoll.label.includes('Subdue')) {
+        finalWP = Math.max(1, Math.floor(finalWP / 2))
+        traitNotes.push(`Subdue — WP halved to ${finalWP}`)
+      }
       // After taking a hit, clear Defend bonus (one-time) but keep Take Cover bonus
       if (targetInitEntry && targetDefBonus > 0 && !targetInitEntry.has_cover) {
         supabase.from('initiative_order').update({ defense_bonus: 0 }).eq('id', targetInitEntry.id)
@@ -2790,8 +2796,9 @@ export default function TablePage() {
                       const smod = npcAttacker
                         ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === chargeSkill)?.level ?? 0 : 0)
                         : charEntry?.character.data?.skills?.find((s: any) => s.skillName === chargeSkill)?.level ?? 0
-                      actionCostRef.current = 2
-                      handleRollRequest(`${activeEntry.character_name} — Charge (${chargeWName})`, amod, smod, { weaponName: chargeWName, damage: chargeWDmg, rpPercent: chargeWRp, conditionCmod: 0, traits: chargeW?.traits ?? [] })
+                      // Store charge roll params and enter move mode (20ft = 2 moves)
+                      pendingChargeRef.current = { label: `${activeEntry.character_name} — Charge (${chargeWName})`, amod, smod, weapon: { weaponName: chargeWName, damage: chargeWDmg, rpPercent: chargeWRp, conditionCmod: 0, traits: chargeW?.traits ?? [] } }
+                      setMoveMode({ characterId: activeEntry.character_id || undefined, npcId: activeEntry.npc_id || undefined, feet: 20 })
                     } : undefined} disabled={!has2Actions}
                       style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Charge</button>
                   )
@@ -3403,10 +3410,19 @@ export default function TablePage() {
               }}
               onMoveComplete={() => {
                 const active = initiativeOrder.find((e: any) => e.is_active)
-                if (active) consumeAction(active.id, `${active.character_name} — Move`)
-                setMoveMode(null)
+                const charge = pendingChargeRef.current
+                if (charge) {
+                  // Charge: token moved, now open the attack roll
+                  pendingChargeRef.current = null
+                  setMoveMode(null)
+                  actionCostRef.current = 2
+                  handleRollRequest(charge.label, charge.amod, charge.smod, charge.weapon)
+                } else {
+                  if (active) consumeAction(active.id, `${active.character_name} — Move`)
+                  setMoveMode(null)
+                }
               }}
-              onMoveCancel={() => setMoveMode(null)}
+              onMoveCancel={() => { pendingChargeRef.current = null; setMoveMode(null) }}
             />
           ) : (
             <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} revealedNpcIds={revealedNpcIds} focusPin={focusPin} />
@@ -3960,14 +3976,14 @@ export default function TablePage() {
                     Select a target or damage will not be applied
                   </div>
                 )}
-                {pendingRoll.weapon && targetName && !isInRange(pendingRoll.weapon.weaponName, rangeBand) && (
+                {pendingRoll.weapon && targetName && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand) && (
                   <div style={{ padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
                     Out of range
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={closeRollModal} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-                  <button onClick={executeRoll} disabled={rolling || (!!pendingRoll.weapon && !!targetName && !isInRange(pendingRoll.weapon.weaponName, rangeBand))} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: (rolling || (!!pendingRoll.weapon && !!targetName && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 'not-allowed' : 'pointer', opacity: (rolling || (!!pendingRoll.weapon && !!targetName && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 0.6 : 1 }}>
+                  <button onClick={executeRoll} disabled={rolling || (!!pendingRoll.weapon && !!targetName && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: (rolling || (!!pendingRoll.weapon && !!targetName && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 'not-allowed' : 'pointer', opacity: (rolling || (!!pendingRoll.weapon && !!targetName && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 0.6 : 1 }}>
                     {rolling ? 'Rolling...' : preRollInsight === '3d6' ? '🎲 Roll 3d6' : '🎲 Roll'}
                   </button>
                 </div>
@@ -4376,6 +4392,8 @@ export default function TablePage() {
           if (!charEntry || !canSwitch) return
           const newData = { ...charData, weaponPrimary: secondary, weaponSecondary: primary }
           await supabase.from('characters').update({ data: newData }).eq('id', charEntry.character.id)
+          // Update local entries so combat bar reflects the new weapon immediately
+          setEntries(prev => prev.map(e => e.character.id === charEntry.character.id ? { ...e, character: { ...e.character, data: newData } } : e))
           clearAimIfActive(active.id)
           consumeAction(active.id, `${active.character_name} — Switch to ${secondary.weaponName}`)
           setShowReadyWeaponModal(false)
@@ -4384,7 +4402,9 @@ export default function TablePage() {
         async function doReload() {
           if (!charEntry || !canReload || !primaryW) return
           const reloaded = { ...primary, ammoCurrent: primaryW.clip, reloads: Math.max(0, (primary.reloads ?? 0) - 1) }
-          await supabase.from('characters').update({ data: { ...charData, weaponPrimary: reloaded } }).eq('id', charEntry.character.id)
+          const newData = { ...charData, weaponPrimary: reloaded }
+          await supabase.from('characters').update({ data: newData }).eq('id', charEntry.character.id)
+          setEntries(prev => prev.map(e => e.character.id === charEntry.character.id ? { ...e, character: { ...e.character, data: newData } } : e))
           clearAimIfActive(active.id)
           consumeAction(active.id, `${active.character_name} — Reload ${primary.weaponName}`)
           setShowReadyWeaponModal(false)
