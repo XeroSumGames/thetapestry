@@ -844,40 +844,42 @@ export default function TablePage() {
     console.warn('[nextTurn] called')
 
     // ── Drop phase transition: drop round is over, start full combat ──
-    if (dropPhaseRef.current && pendingCombatantsRef.current.length > 0) {
+    if (dropPhaseRef.current) {
       dropPhaseRef.current = false
-      // Clear the solo drop entry
-      await supabase.from('initiative_order').delete().eq('campaign_id', id)
-
-      // Re-roll initiative for ALL combatants
-      const allRows = pendingCombatantsRef.current
       pendingCombatantsRef.current = []
+
+      // Fetch ALL combatants already in initiative_order (inserted during drop phase)
+      const { data: dropEntries } = await supabase.from('initiative_order').select('*').eq('campaign_id', id)
+      const allEntries = dropEntries ?? []
+      if (allEntries.length === 0) return
+
+      // Re-roll initiative for everyone
       const rerollDetails: { name: string; d1: number; d2: number; acu: number; dex: number; drop: number; total: number; is_npc: boolean }[] = []
-      const fullRows = allRows.map((r: any) => {
+      for (const entry of allEntries) {
         const d1 = rollD6(), d2 = rollD6()
-        const acu = r.is_npc ? (rosterNpcs.find((n: any) => n.id === r.npc_id)?.acumen ?? 0) : (entries.find(e => e.character.id === r.character_id)?.character.data?.rapid?.ACU ?? 0)
-        const dex = r.is_npc ? (rosterNpcs.find((n: any) => n.id === r.npc_id)?.dexterity ?? 0) : (entries.find(e => e.character.id === r.character_id)?.character.data?.rapid?.DEX ?? 0)
+        const acu = entry.is_npc ? (rosterNpcs.find((n: any) => n.id === entry.npc_id)?.acumen ?? 0) : (entries.find(e => e.character.id === entry.character_id)?.character.data?.rapid?.ACU ?? 0)
+        const dex = entry.is_npc ? (rosterNpcs.find((n: any) => n.id === entry.npc_id)?.dexterity ?? 0) : (entries.find(e => e.character.id === entry.character_id)?.character.data?.rapid?.DEX ?? 0)
         const roll = d1 + d2 + acu + dex
-        rerollDetails.push({ name: r.character_name, d1, d2, acu, dex, drop: 0, total: roll, is_npc: !!r.is_npc })
-        return { ...r, roll, is_active: false, actions_remaining: 2 }
-      })
+        rerollDetails.push({ name: entry.character_name, d1, d2, acu, dex, drop: 0, total: roll, is_npc: !!entry.is_npc })
+        await supabase.from('initiative_order').update({ roll, is_active: false, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, winded: false, inspired_this_round: false }).eq('id', entry.id)
+      }
       const sortedReroll = [...rerollDetails].sort((a, b) => b.total - a.total)
 
-      // Determine who goes first
-      const sortedRows = [...fullRows].sort((a: any, b: any) => b.roll - a.roll)
-      if (sortedRows.length > 0) sortedRows[0].is_active = true
+      // Activate the highest roller
+      const firstCharName = sortedReroll[0]?.name
+      const firstEntry = allEntries.find((e: any) => e.character_name === firstCharName)
+      if (firstEntry) {
+        await supabase.from('initiative_order').update({ is_active: true }).eq('id', firstEntry.id)
+      }
 
-      const [{ data: insertedFull }, _logRes] = await Promise.all([
-        supabase.from('initiative_order').insert(sortedRows).select(),
-        supabase.from('roll_log').insert({
-          campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
-          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
-          damage_json: { initiative: sortedReroll } as any,
-        }),
-      ])
-      const sortedInit = (insertedFull ?? []).slice().sort((a: any, b: any) => b.roll - a.roll)
-      setInitiativeOrder(sortedInit)
-      await loadRolls(id)
+      // Log Initiative
+      await supabase.from('roll_log').insert({
+        campaign_id: id, user_id: userId, character_name: 'System', label: 'Initiative',
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
+        damage_json: { initiative: sortedReroll } as any,
+      })
+
+      await Promise.all([loadInitiative(id), loadRolls(id)])
       initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       return
     }
