@@ -2180,7 +2180,7 @@ export default function TablePage() {
         let appliedTo: string[] = []
         for (const ally of initiativeOrder) {
           if (ally.id === activeInit?.id) continue // skip self
-          if (ally.is_npc === activeInit?.is_npc && ally.is_npc) continue // NPC can't coordinate with other NPCs against NPCs
+          if (ally.character_name === coordTarget) continue // skip the target
           // Check range if tokens exist
           if (coordTok && mapTokens.length > 0) {
             const allyTok = mapTokens.find(t =>
@@ -2771,14 +2771,9 @@ export default function TablePage() {
                   )
                 })}
                 {socialTarget && (() => {
-                  // Coordinate targets ENEMIES (you pick who to coordinate against)
-                  // Inspire targets ALLIES (you pick who to inspire)
-                  // Cover Fire / Distract target ENEMIES
-                  const showAllies = socialTarget.action === 'Inspire'
-                  const targets = initiativeOrder.filter(e => {
-                    if (e.id === activeEntry.id) return false
-                    return showAllies ? !e.is_npc : e.is_npc
-                  })
+                  // Show all other combatants — GM/player picks the correct target.
+                  // NPCs can be allies or enemies, so we can't filter by is_npc.
+                  const targets = initiativeOrder.filter(e => e.id !== activeEntry.id)
                   return (
                     <div onClick={() => setSocialTarget(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', minWidth: '220px', maxWidth: '320px' }}>
