@@ -158,8 +158,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     tacticalChannelRef.current = channel
     const pingCh = supabase.channel(`ping_${campaignId}`)
       .on('broadcast', { event: 'gm_ping' }, (msg: any) => {
-        const { gx, gy, color } = msg.payload ?? {}
-        if (gx != null && gy != null) setPing({ gx, gy, t: 0, color: color ?? '#EF9F27', count: 2 })
+        const p = msg?.payload ?? {}
+        const gx = p.gx ?? p.payload?.gx
+        const gy = p.gy ?? p.payload?.gy
+        const color = p.color ?? p.payload?.color ?? '#EF9F27'
+        if (gx != null && gy != null) setPing({ gx, gy, t: 0, color, count: 2 })
       })
       .subscribe()
     pingChannelRef.current = pingCh
