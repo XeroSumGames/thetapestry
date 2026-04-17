@@ -225,24 +225,22 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     // Canvas must be large enough for the zoomed view AND the scaled image
     const baseW = container.clientWidth
     const baseH = container.clientHeight
+    const cellSize = getCellSize()
+    const gridW = s.grid_cols * cellSize
+    const gridH = s.grid_rows * cellSize
     let imgW = 0, imgH = 0
     if (bgImageRef.current) {
       const img = bgImageRef.current
       const imgAspect = img.naturalWidth / img.naturalHeight
-      // Always fit to container width — scroll vertically if needed
-      imgW = baseW
-      imgH = baseW / imgAspect
-      imgW *= imgScale
-      imgH *= imgScale
+      // Scale based on grid width for consistency across GM/player screens
+      imgW = gridW * imgScale
+      imgH = (gridW / imgAspect) * imgScale
     }
     canvas.width = Math.max(baseW, baseW * zoom, imgW)
     canvas.height = Math.max(baseH, baseH * zoom, imgH)
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const cellSize = getCellSize()
-    const gridW = s.grid_cols * cellSize
-    const gridH = s.grid_rows * cellSize
     const offsetX = 0
     const offsetY = 0
 
@@ -254,12 +252,12 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     ctx.save()
     ctx.scale(zoom, zoom)
 
-    // Background image — always fit to canvas width, scroll vertically if needed
+    // Background image — scale based on grid width for consistency across clients
     if (bgImageRef.current) {
       const img = bgImageRef.current
       const imgAspect = img.naturalWidth / img.naturalHeight
-      const drawW = canvas.width
-      const drawH = canvas.width / imgAspect
+      const drawW = gridW
+      const drawH = gridW / imgAspect
       const scaledW = drawW * imgScale
       const scaledH = drawH * imgScale
       ctx.drawImage(img, 0, 0, scaledW, scaledH)

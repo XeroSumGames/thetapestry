@@ -126,10 +126,13 @@ export default function CharacterCard({
   const [weaponPrimary, setWeaponPrimary] = useState(c.data?.weaponPrimary ?? { weaponName: '', condition: 'Used', ammoCurrent: 0, ammoMax: 0, reloads: 0 })
   const [weaponSecondary, setWeaponSecondary] = useState(c.data?.weaponSecondary ?? { weaponName: '', condition: 'Used', ammoCurrent: 0, ammoMax: 0, reloads: 0 })
 
+  const latestDataRef = useRef(c.data)
+  useEffect(() => { latestDataRef.current = c.data }, [c.data])
+
   async function saveWeapon(slot: 'weaponPrimary' | 'weaponSecondary', data: any) {
-    if (slot === 'weaponPrimary') setWeaponPrimary(data)
-    else setWeaponSecondary(data)
-    await supabase.from('characters').update({ data: { ...c.data, [slot]: data } }).eq('id', c.id)
+    if (slot === 'weaponPrimary') { setWeaponPrimary(data); latestDataRef.current = { ...latestDataRef.current, weaponPrimary: data } }
+    else { setWeaponSecondary(data); latestDataRef.current = { ...latestDataRef.current, weaponSecondary: data } }
+    await supabase.from('characters').update({ data: { ...latestDataRef.current, [slot]: data } }).eq('id', c.id)
   }
 
   function changeWeapon(slot: 'weaponPrimary' | 'weaponSecondary', weaponName: string) {

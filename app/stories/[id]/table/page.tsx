@@ -545,9 +545,9 @@ export default function TablePage() {
           loadEntries(id)
         })
         .on('broadcast', { event: 'pc_mortal_wound' }, (msg: any) => {
-          // Show insight save modal on the PLAYER's screen when their PC is mortally wounded
+          // Show insight save modal on the player's screen or GM's screen
           const data = msg.payload
-          if (data && data.targetUserId === userId) {
+          if (data && (data.targetUserId === userId || isGM)) {
             setInsightSavePrompt(data)
           }
         })
@@ -1983,7 +1983,7 @@ export default function TablePage() {
             phyAmod: targetEntry.character.data?.rapid?.PHY ?? 0,
             insightDice: currentInsight,
           }
-          // Show modal only on the PLAYER's screen (or GM if they own the PC)
+          // Show modal on the PLAYER's screen — they decide whether to trade insight
           if (targetEntry.userId === userId) {
             setInsightSavePrompt(insightData)
           }
@@ -1999,7 +1999,16 @@ export default function TablePage() {
               label: `${targetEntry.character.name} is mortally wounded by ${characterName} and will die if not stabilized in ${update.death_countdown} rounds.`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
             })
-            // Notify the player whose PC is dying (even without insight dice)
+            // Show modal on the player's screen if they're the one executing
+            if (targetEntry.userId === userId) {
+              setInsightSavePrompt({
+                stateId: targetEntry.stateId,
+                targetName: targetEntry.character.name,
+                newWP, newRP,
+                phyAmod: targetEntry.character.data?.rapid?.PHY ?? 0,
+                insightDice: 0,
+              })
+            }
             initChannelRef.current?.send({ type: 'broadcast', event: 'pc_mortal_wound', payload: {
               stateId: targetEntry.stateId,
               targetName: targetEntry.character.name,
@@ -3598,12 +3607,19 @@ export default function TablePage() {
                 onClose={() => { setSelectedEntry(null); setSheetPos(null) }}
                 onKick={isGM && syncedSelectedEntry.userId !== userId ? async () => {
                   const kickUserId = syncedSelectedEntry.userId
+                  const kickName = syncedSelectedEntry.character.name
+                  if (!confirm(`Remove ${kickName}'s player from this campaign? They will need a new invite to rejoin.`)) return
                   console.warn('[kick] kicking userId:', kickUserId, 'channel:', !!initChannelRef.current)
+                  // Remove from campaign_members
+                  await supabase.from('campaign_members').delete().eq('campaign_id', id).eq('user_id', kickUserId)
+                  // Broadcast so the player's client redirects
                   if (initChannelRef.current) {
                     await initChannelRef.current.send({ type: 'broadcast', event: 'player_kicked', payload: { userId: kickUserId } })
                     console.warn('[kick] broadcast sent')
                   }
                   setSelectedEntry(null)
+                  // Refresh entries to remove the kicked player
+                  await loadEntries(id)
                 } : undefined}
                 onPlaceOnMap={(combatActive || showTacticalMap || tacticalShared) && syncedSelectedEntry.userId === userId ? () => placeTokenOnMap(syncedSelectedEntry.character.name, 'pc', syncedSelectedEntry.character.id, undefined, getCharPhoto(syncedSelectedEntry) || undefined) : undefined}
                 inline={true}
@@ -4850,7 +4866,9 @@ export default function TablePage() {
       )}
 
       {/* Insight Die Save Modal */}
-      {insightSavePrompt && (
+      {insightSavePrompt && (() => {
+        const isMyPC = (insightSavePrompt as any).targetUserId === userId
+        return (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div style={{ background: '#1a1a1a', border: '1px solid #c0392b', borderRadius: '4px', padding: '1.5rem', width: '340px', textAlign: 'center' }}>
             <div style={{ fontSize: '20px', marginBottom: '8px' }}>🩸</div>
@@ -4860,37 +4878,54 @@ export default function TablePage() {
             <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', marginBottom: '6px' }}>
               <strong>{insightSavePrompt.targetName}</strong> is mortally wounded!
             </div>
-            {insightSavePrompt.insightDice > 0 ? (
+            {isMyPC ? (
+              /* Player's own PC — they choose */
+              insightSavePrompt.insightDice > 0 ? (
+                <>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1.5rem' }}>
+                    Trade ALL Insight Dice to survive with 1 WP and 1 RP?
+                    <br /><span style={{ fontSize: '13px', color: '#7fc458' }}>({insightSavePrompt.insightDice} Insight {insightSavePrompt.insightDice === 1 ? 'Die' : 'Dice'} will be lost)</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => handleInsightSave(true)}
+                      style={{ flex: 1, padding: '10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      Trade All Dice — Survive
+                    </button>
+                    <button onClick={() => handleInsightSave(false)}
+                      style={{ flex: 1, padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      Accept Fate
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: '14px', color: '#f5a89a', fontFamily: 'Barlow, sans-serif', marginBottom: '1.5rem' }}>
+                    No Insight Dice available to trade. {insightSavePrompt.targetName} will die if not stabilized.
+                  </div>
+                  <button onClick={() => { setInsightSavePrompt(null); initChannelRef.current?.send({ type: 'broadcast', event: 'pc_mortal_wound_resolved', payload: {} }) }}
+                    style={{ width: '100%', padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Understood
+                  </button>
+                </>
+              )
+            ) : (
+              /* GM or other player — read-only view */
               <>
                 <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1.5rem' }}>
-                  Trade ALL Insight Dice to survive with 1 WP and 1 RP?
-                  <br /><span style={{ fontSize: '13px', color: '#7fc458' }}>({insightSavePrompt.insightDice} Insight {insightSavePrompt.insightDice === 1 ? 'Die' : 'Dice'} will be lost)</span>
+                  {insightSavePrompt.insightDice > 0
+                    ? `Waiting for ${insightSavePrompt.targetName}'s player to decide whether to trade ${insightSavePrompt.insightDice} Insight ${insightSavePrompt.insightDice === 1 ? 'Die' : 'Dice'}...`
+                    : `${insightSavePrompt.targetName} has no Insight Dice. Waiting for player to acknowledge...`}
                 </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={() => handleInsightSave(true)}
-                    style={{ flex: 1, padding: '10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    Trade All Dice — Survive
-                  </button>
-                  <button onClick={() => handleInsightSave(false)}
-                    style={{ flex: 1, padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    Accept Fate
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={{ fontSize: '14px', color: '#f5a89a', fontFamily: 'Barlow, sans-serif', marginBottom: '1.5rem' }}>
-                  No Insight Dice available to trade. {insightSavePrompt.targetName} will die if not stabilized.
-                </div>
-                <button onClick={() => { setInsightSavePrompt(null); initChannelRef.current?.send({ type: 'broadcast', event: 'pc_mortal_wound_resolved', payload: {} }) }}
-                  style={{ width: '100%', padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  Understood
+                <button onClick={() => setInsightSavePrompt(null)}
+                  style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Dismiss
                 </button>
               </>
             )}
           </div>
         </div>
-      )}
+        )
+      })()}
 
     </div>
   )

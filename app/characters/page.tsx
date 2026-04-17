@@ -37,6 +37,8 @@ export default function CharactersPage() {
   }, [])
 
   async function handleDelete(id: string) {
+    const char = characters.find(c => c.id === id)
+    if (!confirm(`Are you sure you want to delete ${char?.name || 'this character'}? This cannot be undone.`)) return
     await supabase.from('characters').delete().eq('id', id)
     setCharacters(prev => prev.filter(c => c.id !== id))
   }

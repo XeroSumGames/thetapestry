@@ -748,6 +748,11 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       )
                     })()}
                     {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>}
+                    <button onClick={e => { e.stopPropagation(); handleDelete(npc.id, npc.name) }}
+                      title="Remove NPC"
+                      style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', marginLeft: 'auto' }}>
+                      ×
+                    </button>
                 </div>
                 </div>
               )
@@ -758,7 +763,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       {/* Add/Edit NPC Modal */}
       {showForm && (
         <div onClick={() => setShowForm(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '420px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '430px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
               <span style={{ fontSize: '11px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>
                 {editingId ? 'Edit NPC' : 'Add NPC'}

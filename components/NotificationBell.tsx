@@ -188,7 +188,7 @@ export default function NotificationBell() {
 
       {open && (
         <div style={{
-          position: 'fixed', top: '140px', left: '10px',
+          position: 'fixed', top: (ref.current?.getBoundingClientRect().bottom ?? 40) + 4 + 'px', left: '10px',
           width: '320px', maxHeight: '400px', overflowY: 'auto',
           background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px',
           boxShadow: '0 8px 24px rgba(0,0,0,0.6)', zIndex: 9999,
@@ -227,6 +227,7 @@ export default function NotificationBell() {
                   cursor: n.link ? 'pointer' : 'default',
                   borderLeft: n.read ? '3px solid transparent' : '3px solid #c0392b',
                   transition: 'background 0.15s',
+                  textAlign: 'left',
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                 onMouseLeave={e => (e.currentTarget.style.background = n.read ? 'transparent' : '#111')}
@@ -243,7 +244,7 @@ export default function NotificationBell() {
                     </button>
                   </div>
                 </div>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.4 }}>{colorizeBody(n.body, n.type)}</div>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.4, textAlign: 'left' }}>{colorizeBody(n.body, n.type)}</div>
               </div>
             ))
           )}
