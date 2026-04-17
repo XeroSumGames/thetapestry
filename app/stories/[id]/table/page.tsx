@@ -749,13 +749,17 @@ export default function TablePage() {
     if (dropCharacter) {
       const dropRow = allRows.find(r => r.character_name === dropCharacter)
       if (dropRow) {
-        // Store all combatants for phase 2 (after drop round ends)
+        // Insert ALL combatants — drop character gets 1 action, everyone else gets 0 (frozen)
         pendingCombatantsRef.current = allRows
         dropPhaseRef.current = true
 
-        // Insert ONLY the drop character with 1 action
+        const dropInsertRows = allRows.map(r =>
+          r.character_name === dropCharacter
+            ? { ...r, is_active: true, actions_remaining: 1 }
+            : { ...r, is_active: false, actions_remaining: 0 }
+        )
         const [{ data: insertedDrop, error: dropInsertErr }, { error: dropLogErr }] = await Promise.all([
-          supabase.from('initiative_order').insert([{ ...dropRow, is_active: true, actions_remaining: 1 }]).select(),
+          supabase.from('initiative_order').insert(dropInsertRows).select(),
           supabase.from('roll_log').insert([
             { campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Started',
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'combat_start',
