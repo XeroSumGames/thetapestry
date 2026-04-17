@@ -2213,6 +2213,18 @@ export default function TablePage() {
       }
     }
 
+    // Sprint result — failure = winded next round
+    let sprintResult = ''
+    if (pendingRoll.label.includes('Sprint')) {
+      const activeInit = initiativeOrder.find(e => e.is_active)
+      if (outcome === 'Failure' || outcome === 'Dire Failure') {
+        if (activeInit) await supabase.from('initiative_order').update({ winded: true }).eq('id', activeInit.id)
+        sprintResult = `${characterName} is winded — loses 1 action next round.`
+      } else {
+        sprintResult = `${characterName} sprinted successfully.`
+      }
+    }
+
     // Coordinate result — apply +2 to allies within Close range when attacking that target
     let coordinateResult = ''
     if (coordinateTargetRef.current && pendingRoll.label.includes('Coordinate')) {
@@ -2267,7 +2279,7 @@ export default function TablePage() {
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, spent: preRollSpent,
-      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
+      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
     } as any)
 
     setRolling(false)
@@ -3002,18 +3014,21 @@ export default function TablePage() {
                 <button onClick={() => { clearAimIfActive(activeEntry.id); consumeAction(activeEntry.id, `${activeEntry.character_name} — Reposition (Resolution phase)`) }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Reposition</button>
 
-                {/* ── SPRINT: both actions, 3x move. Athletics check or Winded ── */}
+                {/* ── SPRINT: both actions, 3x move (30ft). Athletics check — fail = Winded ── */}
                 <button onClick={has2Actions ? async () => {
                   clearAimIfActive(activeEntry.id)
-                  await supabase.from('initiative_order').update({ winded: true }).eq('id', activeEntry.id)
+                  // 3x movement range
+                  setMoveMode({ characterId: activeEntry.character_id || undefined, npcId: activeEntry.npc_id || undefined, feet: 30 })
+                  // Athletics check — failure = winded next round
                   const rapid = charEntry?.character.data?.rapid ?? {}
                   const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
                   const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
                   const smod = npcAttacker
                     ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Athletics')?.level ?? 0 : 0)
                     : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Athletics')?.level ?? 0
-                  actionCostRef.current = 2
-                  handleRollRequest(`${activeEntry.character_name} — Sprint (Athletics check or Winded)`, amod, smod)
+                  handleRollRequest(`${activeEntry.character_name} — Sprint (Athletics)`, amod, smod)
+                  actionPreConsumedRef.current = true
+                  consumeAction(activeEntry.id, undefined, 2)
                 } : undefined} disabled={!has2Actions}
                   style={has2Actions ? actBtn('#242424', '#d4cfc9', '#3a3a3a') : disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Sprint</button>
 
@@ -3877,7 +3892,7 @@ export default function TablePage() {
                   </div>
                 )}
                 {/* Range band auto-calculated in background — no manual selector */}
-                {(combatActive || pendingRoll.weapon) && initiativeOrder.length > 0 && !pendingRoll.label.includes('Coordinate') && (
+                {(combatActive || pendingRoll.weapon) && initiativeOrder.length > 0 && !pendingRoll.label.includes('Coordinate') && !pendingRoll.label.includes('Sprint') && (
                   <div style={{ marginBottom: '1.25rem' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Target</div>
                     <select value={targetName} onChange={e => {
@@ -4438,7 +4453,7 @@ export default function TablePage() {
             const pe = entries.find(e => e.character.id === entry.character_id)
             if (pe?.liveState && pe.liveState.wp_current === 0) return false
           }
-          // Check engaged range (≤5ft)
+          // Check engaged range (≤5ft) — require tokens on map
           if (aTok && mapTokens.length > 0) {
             const tTok = mapTokens.find(t => {
               const pe = entries.find(e => e.character.name === entry.character_name)
@@ -4447,10 +4462,9 @@ export default function TablePage() {
               if (npc && t.npc_id === npc.id) return true
               return false
             })
-            if (tTok) {
-              const dist = Math.max(Math.abs(aTok.grid_x - tTok.grid_x), Math.abs(aTok.grid_y - tTok.grid_y))
-              if (dist * mapCellFeet > 5) return false
-            }
+            if (!tTok) return false // no token on map = can't target
+            const dist = Math.max(Math.abs(aTok.grid_x - tTok.grid_x), Math.abs(aTok.grid_y - tTok.grid_y))
+            if (dist * mapCellFeet > 5) return false
           }
           return true
         })
