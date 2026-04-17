@@ -317,7 +317,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
   function flyToPin(pin: Pin) {
     if (!mapInstanceRef.current) return
-    mapInstanceRef.current.flyTo([pin.lat, pin.lng], 14, { duration: 1.2 })
+    const zoom = (pin.category === 'world_event' || pin.category === 'settlement') ? 8 : 14
+    mapInstanceRef.current.flyTo([pin.lat, pin.lng], zoom, { duration: 1.2 })
     setTimeout(() => markersRef.current[pin.id]?.openPopup(), 1300)
   }
 
@@ -402,15 +403,10 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   }
 
   function matchesFilter(p: Pin): boolean {
-    // Ghosts can only see Timeline (world_event) pins
-    if (!userId) return p.category === 'world_event'
-    if (activeFilters.has('all') || allFiltersActive) return true
-    if (activeFilters.has('public') && p.status === 'approved') return true
-    if (activeFilters.has('mine') && p.user_id === userId) return true
-    if (activeFilters.has('canon') && (p.category === 'world_event' || p.category === 'settlement' || p.pin_type === 'gm')) return true
-    if (activeFilters.has('rumors') && p.pin_type === 'rumor') return true
-    if (activeFilters.has('timeline') && p.category === 'world_event') return true
-    return false
+    // Ghosts see world_event + settlement pins only
+    if (!userId) return p.category === 'world_event' || p.category === 'settlement'
+    // Logged-in users see everything (folders handle grouping)
+    return true
   }
 
   function chipCount(chip: string): number {
