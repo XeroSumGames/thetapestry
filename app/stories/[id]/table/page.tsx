@@ -127,6 +127,7 @@ interface InitiativeEntry {
   aim_active: boolean
   coordinate_target: string | null
   coordinate_bonus: number
+  grappled_by: string | null
 }
 
 
@@ -229,6 +230,14 @@ export default function TablePage() {
   const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null; character_name: string }[]>([])
   const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | null>(null)
   const [showReadyWeaponModal, setShowReadyWeaponModal] = useState(false)
+  const [showGrappleModal, setShowGrappleModal] = useState(false)
+  const [grappleResult, setGrappleResult] = useState<{
+    attackerName: string; defenderName: string
+    aDie1: number; aDie2: number; aTotal: number; aOutcome: string
+    dDie1: number; dDie2: number; dTotal: number; dOutcome: string
+    result: 'grappled' | 'failed' | 'no_victor'
+    rpTarget: string | null
+  } | null>(null)
   const [groupCheckParticipants, setGroupCheckParticipants] = useState<Set<string>>(new Set())
   const [groupCheckSkill, setGroupCheckSkill] = useState('')
   const [opposedTarget, setOpposedTarget] = useState('')
@@ -2229,13 +2238,14 @@ export default function TablePage() {
           appliedTo.push(ally.character_name)
         }
         if (appliedTo.length > 0) {
-          const coordMsg = `${appliedTo.join(', ')} get${appliedTo.length === 1 ? 's' : ''} +${bonus} CMod when attacking ${coordTarget}${outcome === 'Wild Success' ? ' (carries +1 next round)' : ''}.`
-          coordinateResult = coordMsg
-          supabase.from('roll_log').insert({
+          coordinateResult = `${appliedTo.join(', ')} get${appliedTo.length === 1 ? 's' : ''} +${bonus} CMod when attacking ${coordTarget}${outcome === 'Wild Success' ? ' (carries +1 next round)' : ''}.`
+          // Log each ally who benefits so it's clear in the feed
+          const coordLogs = appliedTo.map(name => ({
             campaign_id: id, user_id: userId, character_name: 'System',
-            label: `🎯 ${characterName} coordinated against ${coordTarget} — ${coordMsg}`,
+            label: `🎯 ${name} gets +${bonus} CMod when attacking ${coordTarget}`,
             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'coordinate',
-          })
+          }))
+          await supabase.from('roll_log').insert(coordLogs)
         } else {
           coordinateResult = 'No allies within Close range to receive the bonus.'
         }
@@ -2737,6 +2747,9 @@ export default function TablePage() {
             const hasBurst = w ? getTraitValue(w.traits, 'Automatic Burst') !== null : false
             const isMelee = w?.category === 'melee'
             const has2Actions = (activeEntry.actions_remaining ?? 0) >= 2
+            const isGrappled = !!activeEntry.grappled_by
+            const isGrappling = initiativeOrder.some(e => e.grappled_by === activeEntry.character_name)
+            const grappledTarget = isGrappling ? initiativeOrder.find(e => e.grappled_by === activeEntry.character_name) : null
 
             const actBtn = (bg: string, color: string, border: string): React.CSSProperties => ({
               padding: '2px 8px', background: bg, border: `1px solid ${border}`, borderRadius: '3px',
@@ -2755,6 +2768,36 @@ export default function TablePage() {
                   <span style={{ color: (activeEntry.actions_remaining ?? 0) >= 1 ? '#7fc458' : '#EF9F27', fontSize: '24px', lineHeight: 0, position: 'relative', top: '-1px' }}>●</span>
                   <span style={{ color: (activeEntry.actions_remaining ?? 0) >= 2 ? '#7fc458' : '#EF9F27', fontSize: '24px', lineHeight: 0, position: 'relative', top: '-1px' }}>●</span>
                 </span>
+                {/* ── GRAPPLED STATE: only Break Free available ── */}
+                {isGrappled && (
+                  <>
+                    <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '3px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.06em' }}>
+                      Grappled by {activeEntry.grappled_by}
+                    </span>
+                    <button onClick={() => { setGrappleResult(null); setShowGrappleModal(true) }}
+                      style={actBtn('#2a2010', '#EF9F27', '#5a4a1b')}>Break Free</button>
+                  </>
+                )}
+                {/* ── GRAPPLING STATE: only Release available ── */}
+                {isGrappling && grappledTarget && (
+                  <>
+                    <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '3px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.06em' }}>
+                      Grappling {grappledTarget.character_name}
+                    </span>
+                    <button onClick={async () => {
+                      await supabase.from('initiative_order').update({ grappled_by: null }).eq('id', grappledTarget.id)
+                      await supabase.from('roll_log').insert({
+                        campaign_id: id, user_id: userId, character_name: activeEntry.character_name,
+                        label: `${activeEntry.character_name} released ${grappledTarget.character_name}`,
+                        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action',
+                      })
+                      await loadInitiative(id)
+                    }}
+                      style={actBtn('#1a1a2e', '#7ab3d4', '#2e2e5a')}>Release</button>
+                  </>
+                )}
+                {/* ── Normal combat actions (hidden when grappled/grappling) ── */}
+                {!isGrappled && !isGrappling && <>
                 {/* ── AIM: +2 CMod, must Attack next or lost ── */}
                 <button onClick={() => handleAim(activeEntry.id)}
                   style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
@@ -2911,17 +2954,8 @@ export default function TablePage() {
                     style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Fire from Cover</button>
                 ) : null}
 
-                {/* ── GRAPPLING: Unarmed Combat opposed check ── */}
-                <button onClick={() => {
-                  clearAimIfActive(activeEntry.id)
-                  const rapid = charEntry?.character.data?.rapid ?? {}
-                  const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
-                  const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
-                  const smod = npcAttacker
-                    ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Unarmed Combat')?.level ?? 0 : 0)
-                    : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Unarmed Combat')?.level ?? 0
-                  handleRollRequest(`${activeEntry.character_name} — Grapple (Opposed Unarmed)`, amod, smod)
-                }}
+                {/* ── GRAPPLING: Opposed Unarmed Combat check ── */}
+                <button onClick={() => { setGrappleResult(null); setShowGrappleModal(true) }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Grapple</button>
 
                 {/* ── MOVE: highlight cells + click to move ── */}
@@ -3060,6 +3094,7 @@ export default function TablePage() {
                     </>
                   )
                 })()}
+                </>}
               </div>
             )
           })()}
@@ -4369,6 +4404,212 @@ export default function TablePage() {
           </div>
         </div>
       )}
+
+      {/* Grapple Modal */}
+      {showGrappleModal && (() => {
+        const active = initiativeOrder.find(e => e.is_active)
+        if (!active) return null
+        const charEntry = entries.find(e => e.character.name === active.character_name)
+        const npcAttacker = active.is_npc ? campaignNpcs.find((n: any) => n.name === active.character_name) : null
+
+        // Get attacker mods
+        const aRapid = charEntry ? (charEntry.character.data?.rapid ?? {}) : { PHY: npcAttacker?.physicality ?? 0 }
+        const aPhyMod = (aRapid.PHY ?? 0)
+        const aUnarmed = charEntry
+          ? charEntry.character.data?.skills?.find((s: any) => s.skillName === 'Unarmed Combat')?.level ?? 0
+          : (npcAttacker && Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Unarmed Combat')?.level ?? 0 : 0)
+
+        // Build engaged target list (within 5ft)
+        const aTok = mapTokens.find(t => (active.character_id && t.character_id === active.character_id) || (active.npc_id && t.npc_id === active.npc_id))
+        const engagedTargets = initiativeOrder.filter(entry => {
+          if (entry.id === active.id) return false
+          // Filter dead/mortally wounded
+          if (entry.is_npc) {
+            const npc = campaignNpcs.find((n: any) => n.id === entry.npc_id)
+            if (npc && npc.wp_current != null && npc.wp_current <= 0) return false
+          } else {
+            const pe = entries.find(e => e.character.id === entry.character_id)
+            if (pe?.liveState && pe.liveState.wp_current === 0) return false
+          }
+          // Check engaged range (≤5ft)
+          if (aTok && mapTokens.length > 0) {
+            const tTok = mapTokens.find(t => {
+              const pe = entries.find(e => e.character.name === entry.character_name)
+              if (pe && t.character_id === pe.character.id) return true
+              const npc = campaignNpcs.find((n: any) => n.name === entry.character_name)
+              if (npc && t.npc_id === npc.id) return true
+              return false
+            })
+            if (tTok) {
+              const dist = Math.max(Math.abs(aTok.grid_x - tTok.grid_x), Math.abs(aTok.grid_y - tTok.grid_y))
+              if (dist * mapCellFeet > 5) return false
+            }
+          }
+          return true
+        })
+
+        function getOutcome(total: number): string {
+          if (total >= 14) return 'Wild Success'
+          if (total >= 9) return 'Success'
+          if (total >= 4) return 'Failure'
+          return 'Dire Failure'
+        }
+
+        function isSuccess(outcome: string) { return outcome === 'Success' || outcome === 'Wild Success' }
+
+        async function executeGrapple(targetEntry: InitiativeEntry) {
+          // Get defender mods
+          const defCharEntry = entries.find(e => e.character.name === targetEntry.character_name)
+          const defNpc = targetEntry.is_npc ? campaignNpcs.find((n: any) => n.name === targetEntry.character_name) : null
+          const dRapid = defCharEntry ? (defCharEntry.character.data?.rapid ?? {}) : { PHY: defNpc?.physicality ?? 0 }
+          const dPhyMod = (dRapid.PHY ?? 0)
+          const dUnarmed = defCharEntry
+            ? defCharEntry.character.data?.skills?.find((s: any) => s.skillName === 'Unarmed Combat')?.level ?? 0
+            : (defNpc && Array.isArray(defNpc.skills?.entries) ? defNpc.skills.entries.find((s: any) => s.name === 'Unarmed Combat')?.level ?? 0 : 0)
+          const dAthletics = defCharEntry
+            ? defCharEntry.character.data?.skills?.find((s: any) => s.skillName === 'Athletics')?.level ?? 0
+            : (defNpc && Array.isArray(defNpc.skills?.entries) ? defNpc.skills.entries.find((s: any) => s.name === 'Athletics')?.level ?? 0 : 0)
+          const dSmod = Math.max(dUnarmed, dAthletics)
+
+          // Roll both sides
+          const aDie1 = Math.ceil(Math.random() * 6)
+          const aDie2 = Math.ceil(Math.random() * 6)
+          const aTotal = aDie1 + aDie2 + aPhyMod + aUnarmed
+          const aOutcome = getOutcome(aTotal)
+
+          const dDie1 = Math.ceil(Math.random() * 6)
+          const dDie2 = Math.ceil(Math.random() * 6)
+          const dTotal = dDie1 + dDie2 + dPhyMod + dSmod
+          const dOutcome = getOutcome(dTotal)
+
+          // Determine result
+          const attackerWins = isSuccess(aOutcome) && !isSuccess(dOutcome)
+          const defenderWins = !isSuccess(aOutcome) && isSuccess(dOutcome)
+          const result = attackerWins ? 'grappled' as const : defenderWins ? 'failed' as const : 'no_victor' as const
+
+          // Apply effects
+          if (attackerWins) {
+            // Target is grappled, take 1 RP
+            await supabase.from('initiative_order').update({ grappled_by: active.character_name }).eq('id', targetEntry.id)
+            // Apply 1 RP to target
+            if (defCharEntry?.liveState) {
+              const newRP = Math.max(0, defCharEntry.liveState.rp_current - 1)
+              await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', defCharEntry.stateId)
+            } else if (defNpc) {
+              const newRP = Math.max(0, (defNpc.rp_current ?? defNpc.rp_max ?? 6) - 1)
+              await supabase.from('campaign_npcs').update({ rp_current: newRP }).eq('id', defNpc.id)
+            }
+          } else if (defenderWins) {
+            // Attacker takes 1 RP
+            if (charEntry?.liveState) {
+              const newRP = Math.max(0, charEntry.liveState.rp_current - 1)
+              await supabase.from('character_states').update({ rp_current: newRP, updated_at: new Date().toISOString() }).eq('id', charEntry.stateId)
+            } else if (npcAttacker) {
+              const newRP = Math.max(0, (npcAttacker.rp_current ?? npcAttacker.rp_max ?? 6) - 1)
+              await supabase.from('campaign_npcs').update({ rp_current: newRP }).eq('id', npcAttacker.id)
+            }
+          }
+
+          // Log to roll_log
+          await supabase.from('roll_log').insert({
+            campaign_id: id, user_id: userId, character_name: active.character_name,
+            label: `${active.character_name} — Grapple ${targetEntry.character_name}`,
+            die1: aDie1, die2: aDie2, amod: aPhyMod, smod: aUnarmed, cmod: 0,
+            total: aTotal, outcome: result === 'grappled' ? 'Grappled!' : result === 'failed' ? 'Failed — 1 RP' : 'No clear victor',
+          })
+
+          setGrappleResult({
+            attackerName: active.character_name, defenderName: targetEntry.character_name,
+            aDie1, aDie2, aTotal, aOutcome, dDie1, dDie2, dTotal, dOutcome,
+            result, rpTarget: attackerWins ? targetEntry.character_name : defenderWins ? active.character_name : null,
+          })
+
+          // Consume action
+          consumeAction(active.id)
+          await loadInitiative(id)
+        }
+
+        return (
+          <div onClick={() => { if (!grappleResult) { setShowGrappleModal(false) } }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '400px' }}>
+              <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Grapple — Opposed Check</div>
+              <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>{active.character_name}</div>
+              <div style={{ fontSize: '11px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '1rem' }}>
+                PHY {aPhyMod >= 0 ? '+' : ''}{aPhyMod} · Unarmed {aUnarmed >= 0 ? '+' : ''}{aUnarmed}
+              </div>
+
+              {!grappleResult ? (
+                <>
+                  <div style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>Select Target (Engaged)</div>
+                  {engagedTargets.length === 0 ? (
+                    <div style={{ padding: '1rem', textAlign: 'center', color: '#3a3a3a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>No targets within Engaged range</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '1rem' }}>
+                      {engagedTargets.map(target => (
+                        <button key={target.id} onClick={() => executeGrapple(target)}
+                          style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: target.is_npc ? '#7fc458' : '#c0392b', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'left' }}>
+                          {target.character_name}{target.is_npc ? ' (NPC)' : ''}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button onClick={() => setShowGrappleModal(false)}
+                    style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Results */}
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
+                    {/* Attacker roll */}
+                    <div style={{ flex: 1, padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                      <div style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '4px' }}>Attacker</div>
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{grappleResult.attackerName}</div>
+                      <div style={{ fontSize: '20px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
+                        {grappleResult.aDie1} + {grappleResult.aDie2} = {grappleResult.aTotal}
+                      </div>
+                      <div style={{ fontSize: '12px', color: isSuccess(grappleResult.aOutcome) ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', fontWeight: 700 }}>{grappleResult.aOutcome}</div>
+                    </div>
+                    {/* Defender roll */}
+                    <div style={{ flex: 1, padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                      <div style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '4px' }}>Defender</div>
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{grappleResult.defenderName}</div>
+                      <div style={{ fontSize: '20px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
+                        {grappleResult.dDie1} + {grappleResult.dDie2} = {grappleResult.dTotal}
+                      </div>
+                      <div style={{ fontSize: '12px', color: isSuccess(grappleResult.dOutcome) ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', fontWeight: 700 }}>{grappleResult.dOutcome}</div>
+                    </div>
+                  </div>
+
+                  {/* Result banner */}
+                  <div style={{
+                    padding: '10px', borderRadius: '3px', textAlign: 'center', marginBottom: '1rem',
+                    fontSize: '16px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase',
+                    background: grappleResult.result === 'grappled' ? '#1a2e10' : grappleResult.result === 'failed' ? '#2a1210' : '#242424',
+                    border: `1px solid ${grappleResult.result === 'grappled' ? '#2d5a1b' : grappleResult.result === 'failed' ? '#c0392b' : '#3a3a3a'}`,
+                    color: grappleResult.result === 'grappled' ? '#7fc458' : grappleResult.result === 'failed' ? '#f5a89a' : '#d4cfc9',
+                  }}>
+                    {grappleResult.result === 'grappled' && `${grappleResult.defenderName} is Grappled!`}
+                    {grappleResult.result === 'failed' && 'Grapple Failed!'}
+                    {grappleResult.result === 'no_victor' && 'No Clear Victor'}
+                  </div>
+                  {grappleResult.rpTarget && (
+                    <div style={{ fontSize: '12px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', marginBottom: '8px' }}>
+                      {grappleResult.rpTarget} takes 1 RP damage
+                    </div>
+                  )}
+
+                  <button onClick={() => { setShowGrappleModal(false); setGrappleResult(null) }}
+                    style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Close
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Ready Weapon Modal */}
       {showReadyWeaponModal && (() => {
