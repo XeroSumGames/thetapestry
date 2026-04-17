@@ -555,6 +555,19 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
           <button onClick={() => setSidebarOpen(p => !p)} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             {sidebarOpen ? 'Hide Pins' : 'Show Pins'}
           </button>
+          {userRole === 'thriver' && (
+            <button onClick={() => {
+              const map = mapInstanceRef.current
+              if (!map) return
+              const c = map.getCenter()
+              const z = map.getZoom()
+              const text = `center: [${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}], zoom: ${z}`
+              navigator.clipboard.writeText(text)
+              alert(`Copied: ${text}`)
+            }} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              Copy Position
+            </button>
+          )}
           <a href="/dashboard" style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Dashboard</a>
         </div>
       )}
