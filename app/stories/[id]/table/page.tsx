@@ -199,6 +199,7 @@ export default function TablePage() {
   // Initiative
   const [initiativeOrder, setInitiativeOrder] = useState<InitiativeEntry[]>([])
   const [combatActive, setCombatActive] = useState(false)
+  const [combatRound, setCombatRound] = useState(1)
   const [showAddNPC, setShowAddNPC] = useState(false)
   const [npcName, setNpcName] = useState('')
   const [startingCombat, setStartingCombat] = useState(false)
@@ -836,6 +837,7 @@ export default function TablePage() {
       const sortedInit = (insertedInit ?? []).slice().sort((a: any, b: any) => b.roll - a.roll)
       setInitiativeOrder(sortedInit)
       setCombatActive(sortedInit.length > 0)
+      setCombatRound(1)
     }
     setDropCharacter('')
 
@@ -1018,6 +1020,7 @@ export default function TablePage() {
         await supabase.from('initiative_order').update({ roll: newRoll, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, inspired_this_round: false, winded: false, coordinate_target: null, coordinate_bonus: 0, is_active: false }).eq('id', entry.id)
       }
 
+      setCombatRound(prev => prev + 1)
       // Log new round initiative
       const sortedReroll = [...rerollDetails].sort((a, b) => b.total - a.total)
       await supabase.from('roll_log').insert({
@@ -2798,7 +2801,7 @@ export default function TablePage() {
             return (
               <div style={{ display: 'flex', gap: '3px', alignItems: 'center', flexWrap: 'wrap', marginTop: '6px' }}>
                 <span style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '2px', display: 'flex', alignItems: 'center', gap: '3px', lineHeight: 1 }}>
-                  Actions
+                  Round {combatRound}
                   <span style={{ color: (activeEntry.actions_remaining ?? 0) >= 1 ? '#7fc458' : '#EF9F27', fontSize: '24px', lineHeight: 0, position: 'relative', top: '-1px' }}>●</span>
                   <span style={{ color: (activeEntry.actions_remaining ?? 0) >= 2 ? '#7fc458' : '#EF9F27', fontSize: '24px', lineHeight: 0, position: 'relative', top: '-1px' }}>●</span>
                 </span>
