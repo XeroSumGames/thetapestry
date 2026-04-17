@@ -179,7 +179,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
 
   // Redraw on token/scene changes
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, campaignNpcs, entries, showRangeOverlay])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, campaignNpcs, entries, showRangeOverlay, ping])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
