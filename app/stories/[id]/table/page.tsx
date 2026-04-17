@@ -185,7 +185,8 @@ export default function TablePage() {
   const [selectedEntry, setSelectedEntry] = useState<TableEntry | null>(null)
   const [rolls, setRolls] = useState<RollEntry[]>([])
   const [pendingRoll, setPendingRoll] = useState<PendingRoll | null>(null)
-  const actionPreConsumedRef = useRef(false)  // Set when Charge/Rapid Fire/Stabilize pre-consume before the roll modal
+  const actionPreConsumedRef = useRef(false)  // Set when Stabilize pre-consumes before the roll modal
+  const actionCostRef = useRef(1)             // Action cost for the current roll (2 for Charge/Rapid Fire)
   const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal — refs survive React batching
   const [insightSavePrompt, setInsightSavePrompt] = useState<{ stateId: string; targetName: string; newWP: number; newRP: number; phyAmod: number; insightDice: number } | null>(null)
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
@@ -2221,9 +2222,17 @@ export default function TablePage() {
           await supabase.from('initiative_order').update({ coordinate_target: coordTarget, coordinate_bonus: bonus }).eq('id', ally.id)
           appliedTo.push(ally.character_name)
         }
-        coordinateResult = appliedTo.length > 0
-          ? `${appliedTo.join(', ')} get${appliedTo.length === 1 ? 's' : ''} +${bonus} CMod when attacking ${coordTarget}${outcome === 'Wild Success' ? ' (carries +1 next round)' : ''}.`
-          : 'No allies within Close range to receive the bonus.'
+        if (appliedTo.length > 0) {
+          const coordMsg = `${appliedTo.join(', ')} get${appliedTo.length === 1 ? 's' : ''} +${bonus} CMod when attacking ${coordTarget}${outcome === 'Wild Success' ? ' (carries +1 next round)' : ''}.`
+          coordinateResult = coordMsg
+          supabase.from('roll_log').insert({
+            campaign_id: id, user_id: userId, character_name: 'System',
+            label: `🎯 ${characterName} coordinated against ${coordTarget} — ${coordMsg}`,
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'coordinate',
+          })
+        } else {
+          coordinateResult = 'No allies within Close range to receive the bonus.'
+        }
       } else {
         coordinateResult = 'Coordination failed — no bonus applied.'
       }
@@ -2333,14 +2342,16 @@ export default function TablePage() {
     // was actually executed — rollResult state can be stale in closures.
     const didRoll = rollExecutedRef.current
     const preConsumed = actionPreConsumedRef.current
+    const cost = actionCostRef.current
     rollExecutedRef.current = false
     actionPreConsumedRef.current = false
+    actionCostRef.current = 1
     setPendingRoll(null)
     setRollResult(null)
 
-    console.warn('[closeRollModal] didRoll:', didRoll, 'combatActive:', combatActive, 'preConsumed:', preConsumed)
-    // Consume an action if a roll was actually executed.
-    // Skip if the action was already pre-consumed (Charge/Rapid Fire/Stabilize).
+    console.warn('[closeRollModal] didRoll:', didRoll, 'combatActive:', combatActive, 'preConsumed:', preConsumed, 'cost:', cost)
+    // Consume action(s) if a roll was actually executed.
+    // Skip if the action was already pre-consumed (Stabilize/Unjam).
     if (didRoll && combatActive && !preConsumed) {
       // Re-fetch active entry from DB to avoid stale closure state
       const { data: freshOrder, error: foErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).eq('is_active', true).limit(1)
@@ -2356,7 +2367,7 @@ export default function TablePage() {
           if (pendingRoll?.weapon && targetName) {
             await supabase.from('initiative_order').update({ last_attack_target: targetName }).eq('id', activeEntry.id)
           }
-          await consumeAction(activeEntry.id)
+          await consumeAction(activeEntry.id, undefined, cost)
         } else {
           console.warn('[closeRollModal] not consuming — not my turn / not GM authority')
         }
@@ -2779,9 +2790,8 @@ export default function TablePage() {
                       const smod = npcAttacker
                         ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === chargeSkill)?.level ?? 0 : 0)
                         : charEntry?.character.data?.skills?.find((s: any) => s.skillName === chargeSkill)?.level ?? 0
+                      actionCostRef.current = 2
                       handleRollRequest(`${activeEntry.character_name} — Charge (${chargeWName})`, amod, smod, { weaponName: chargeWName, damage: chargeWDmg, rpPercent: chargeWRp, conditionCmod: 0, traits: chargeW?.traits ?? [] })
-                      actionPreConsumedRef.current = true
-                      consumeAction(activeEntry.id, undefined, 2)
                     } : undefined} disabled={!has2Actions}
                       style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Charge</button>
                   )
@@ -2888,9 +2898,8 @@ export default function TablePage() {
                       ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === w.skill)?.level ?? 0 : 0)
                       : charEntry?.character.data?.skills?.find((s: any) => s.skillName === w.skill)?.level ?? 0
                     const condCmod = weaponData?.condition ? (CONDITION_CMOD as any)[weaponData.condition] ?? 0 : 0
+                    actionCostRef.current = 2
                     handleRollRequest(`${activeEntry.character_name} — Fire from Cover (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: condCmod !== -99 ? condCmod : 0, traits: w.traits })
-                    actionPreConsumedRef.current = true
-                    consumeAction(activeEntry.id, undefined, 2)
                   } : undefined} disabled={!has2Actions}
                     style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Fire from Cover</button>
                 ) : null}
@@ -2929,9 +2938,8 @@ export default function TablePage() {
                       ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Ranged Combat')?.level ?? 0 : 0)
                       : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Ranged Combat')?.level ?? 0
                     const condCmod = weaponData?.condition ? (CONDITION_CMOD as any)[weaponData.condition] ?? 0 : 0
+                    actionCostRef.current = 2
                     handleRollRequest(`${activeEntry.character_name} — Rapid Fire (${w.name}) [-1 CMod, then -3]`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: (condCmod !== -99 ? condCmod : 0) - 1, traits: w.traits })
-                    actionPreConsumedRef.current = true
-                    consumeAction(activeEntry.id, undefined, 2)
                   } : undefined} disabled={!has2Actions}
                     style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Rapid Fire</button>
                 ) : (
@@ -2956,9 +2964,8 @@ export default function TablePage() {
                   const smod = npcAttacker
                     ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Athletics')?.level ?? 0 : 0)
                     : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Athletics')?.level ?? 0
+                  actionCostRef.current = 2
                   handleRollRequest(`${activeEntry.character_name} — Sprint (Athletics check or Winded)`, amod, smod)
-                  actionPreConsumedRef.current = true
-                  consumeAction(activeEntry.id, undefined, 2)
                 } : undefined} disabled={!has2Actions}
                   style={has2Actions ? actBtn('#242424', '#d4cfc9', '#3a3a3a') : disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Sprint</button>
 
