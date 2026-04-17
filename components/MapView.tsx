@@ -4,7 +4,7 @@ import { createClient } from '../lib/supabase-browser'
 import { logFirstEvent } from '../lib/events'
 
 const PIN_CATEGORIES = [
-  { value: 'rumor',      label: 'Rumor',      emoji: '🎒' },
+  { value: 'rumor',      label: 'Rumor',      emoji: '❓' },
   { value: 'location',   label: 'Location',   emoji: '📍' },
   { value: 'residence',  label: 'Residence',  emoji: '🏠' },
   { value: 'business',   label: 'Business',   emoji: '🏪' },
