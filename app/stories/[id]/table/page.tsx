@@ -3608,18 +3608,12 @@ export default function TablePage() {
                 onKick={isGM && syncedSelectedEntry.userId !== userId ? async () => {
                   const kickUserId = syncedSelectedEntry.userId
                   const kickName = syncedSelectedEntry.character.name
-                  if (!confirm(`Remove ${kickName}'s player from this campaign? They will need a new invite to rejoin.`)) return
-                  console.warn('[kick] kicking userId:', kickUserId, 'channel:', !!initChannelRef.current)
-                  // Remove from campaign_members
-                  await supabase.from('campaign_members').delete().eq('campaign_id', id).eq('user_id', kickUserId)
-                  // Broadcast so the player's client redirects
+                  if (!confirm(`Remove ${kickName} from this session?`)) return
+                  // Broadcast so the player's client redirects to the campaign page
                   if (initChannelRef.current) {
                     await initChannelRef.current.send({ type: 'broadcast', event: 'player_kicked', payload: { userId: kickUserId } })
-                    console.warn('[kick] broadcast sent')
                   }
                   setSelectedEntry(null)
-                  // Refresh entries to remove the kicked player
-                  await loadEntries(id)
                 } : undefined}
                 onPlaceOnMap={(combatActive || showTacticalMap || tacticalShared) && syncedSelectedEntry.userId === userId ? () => placeTokenOnMap(syncedSelectedEntry.character.name, 'pc', syncedSelectedEntry.character.id, undefined, getCharPhoto(syncedSelectedEntry) || undefined) : undefined}
                 inline={true}
