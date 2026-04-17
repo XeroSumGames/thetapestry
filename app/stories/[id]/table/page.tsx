@@ -125,6 +125,8 @@ interface InitiativeEntry {
   last_attack_target: string | null
   inspired_this_round: boolean
   aim_active: boolean
+  coordinate_target: string | null
+  coordinate_bonus: number
 }
 
 
@@ -208,6 +210,7 @@ export default function TablePage() {
   const [dropCharacter, setDropCharacter] = useState<string>('')
   const dropPhaseRef = useRef(false)
   const pendingCombatantsRef = useRef<any[]>([])
+  const coordinateTargetRef = useRef<string | null>(null)
   const [selectedNpcIds, setSelectedNpcIds] = useState<Set<string>>(new Set())
   const [rosterNpcs, setRosterNpcs] = useState<any[]>([])
   const [showRestorePicker, setShowRestorePicker] = useState(false)
@@ -992,7 +995,7 @@ export default function TablePage() {
         const d1 = rollD6(), d2 = rollD6()
         const newRoll = d1 + d2 + acu + dex
         rerollDetails.push({ name: entry.character_name, d1, d2, acu, dex, drop: 0, total: newRoll, is_npc: !!entry.is_npc })
-        await supabase.from('initiative_order').update({ roll: newRoll, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, inspired_this_round: false, winded: false, is_active: false }).eq('id', entry.id)
+        await supabase.from('initiative_order').update({ roll: newRoll, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, inspired_this_round: false, winded: false, coordinate_target: null, coordinate_bonus: 0, is_active: false }).eq('id', entry.id)
       }
 
       // Log new round initiative
@@ -1124,7 +1127,7 @@ export default function TablePage() {
   // Activate a combatant — handles winded (1 action instead of 2)
   function activateUpdate(entry: InitiativeEntry) {
     const actions = entry.winded ? 1 : 2
-    return { is_active: true, actions_remaining: actions, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, winded: false, last_attack_target: null }
+    return { is_active: true, actions_remaining: actions, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, winded: false, last_attack_target: null, coordinate_target: entry.coordinate_target, coordinate_bonus: entry.coordinate_bonus }
   }
 
   // Clear aim if next action isn't Attack (called before non-attack actions)
@@ -1649,11 +1652,17 @@ export default function TablePage() {
     await clearAimIfActive(activeEntry.id)
 
     if (action === 'Coordinate') {
-      // SRD: Tactics* check → +2 to ally attacking that target. Wild Success → +1 next round.
-      // For now: apply +2 aim_bonus to ally (GM adjudicates the Tactics check result)
-      const newBonus = (targetEntry.aim_bonus ?? 0) + 2
-      await supabase.from('initiative_order').update({ aim_bonus: newBonus }).eq('id', targetEntryId)
-      await consumeAction(activeEntry.id, `${activeEntry.character_name} — Coordinate → ${targetEntry.character_name} (+2 CMod)`)
+      // SRD: Tactics* check → allies within Close range get +2 when attacking that target
+      coordinateTargetRef.current = targetEntry.character_name
+      const charEntry = entries.find(e => e.character.name === activeEntry.character_name)
+      const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+      const amod = npcAttacker ? (npcAttacker.reason ?? 0) : (charEntry?.character.data?.rapid?.RSN ?? 0)
+      const smod = npcAttacker
+        ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Tactics')?.level ?? 0 : 0)
+        : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Tactics')?.level ?? 0
+      handleRollRequest(`${activeEntry.character_name} — Coordinate (vs ${targetEntry.character_name})`, amod, smod)
+      setSocialTarget(null)
+      return // action consumed in closeRollModal; coordinate applied in executeRoll
     } else if (action === 'Cover Fire') {
       // SRD: Successful attack → -2 CMod to target's next action
       const newBonus = (targetEntry.aim_bonus ?? 0) - 2
@@ -2156,12 +2165,52 @@ export default function TablePage() {
       }
     }
 
+    // Coordinate result — apply +2 to allies within Close range when attacking that target
+    let coordinateResult = ''
+    if (coordinateTargetRef.current && pendingRoll.label.includes('Coordinate')) {
+      const coordTarget = coordinateTargetRef.current
+      if (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight') {
+        // Find allies within Close range (≤30ft) of the coordinator
+        const activeInit = initiativeOrder.find(e => e.is_active)
+        const coordTok = mapTokens.find(t =>
+          (activeInit?.character_id && t.character_id === activeInit.character_id) ||
+          (activeInit?.npc_id && t.npc_id === activeInit.npc_id)
+        )
+        const bonus = 2
+        let appliedTo: string[] = []
+        for (const ally of initiativeOrder) {
+          if (ally.id === activeInit?.id) continue // skip self
+          if (ally.is_npc === activeInit?.is_npc && ally.is_npc) continue // NPC can't coordinate with other NPCs against NPCs
+          // Check range if tokens exist
+          if (coordTok && mapTokens.length > 0) {
+            const allyTok = mapTokens.find(t =>
+              (ally.character_id && t.character_id === ally.character_id) ||
+              (ally.npc_id && t.npc_id === ally.npc_id)
+            )
+            if (allyTok) {
+              const dist = Math.max(Math.abs(coordTok.grid_x - allyTok.grid_x), Math.abs(coordTok.grid_y - allyTok.grid_y))
+              const feet = dist * mapCellFeet
+              if (feet > 30) continue // not within Close range
+            }
+          }
+          await supabase.from('initiative_order').update({ coordinate_target: coordTarget, coordinate_bonus: bonus }).eq('id', ally.id)
+          appliedTo.push(ally.character_name)
+        }
+        coordinateResult = appliedTo.length > 0
+          ? `${appliedTo.join(', ')} get${appliedTo.length === 1 ? 's' : ''} +${bonus} CMod when attacking ${coordTarget}${outcome === 'Wild Success' ? ' (carries +1 next round)' : ''}.`
+          : 'No allies within Close range to receive the bonus.'
+      } else {
+        coordinateResult = 'Coordination failed — no bonus applied.'
+      }
+      coordinateTargetRef.current = null
+    }
+
     await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, damageResult)
 
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, spent: preRollSpent,
-      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(stabilizeResult ? [stabilizeResult] : [])],
+      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
     } as any)
 
     setRolling(false)
@@ -2722,10 +2771,13 @@ export default function TablePage() {
                   )
                 })}
                 {socialTarget && (() => {
-                  const isBoost = socialTarget.action === 'Coordinate' || socialTarget.action === 'Inspire'
+                  // Coordinate targets ENEMIES (you pick who to coordinate against)
+                  // Inspire targets ALLIES (you pick who to inspire)
+                  // Cover Fire / Distract target ENEMIES
+                  const showAllies = socialTarget.action === 'Inspire'
                   const targets = initiativeOrder.filter(e => {
                     if (e.id === activeEntry.id) return false
-                    return isBoost ? !e.is_npc : e.is_npc
+                    return showAllies ? !e.is_npc : e.is_npc
                   })
                   return (
                     <div onClick={() => setSocialTarget(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2880,8 +2932,16 @@ export default function TablePage() {
                   handleRollRequest(`${activeEntry.character_name} — Unarmed`, amod, smod, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
                 }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Unarmed</button>
-                {/* Stabilize — PC or NPC with mortal wounds (WP=0, not yet dead) */}
+                {/* Stabilize — PC or NPC with mortal wounds (WP=0, not yet dead), within 20ft + engaged check */}
                 {(() => {
+                  const aTok = mapTokens.find(t => (activeEntry.character_id && t.character_id === activeEntry.character_id) || (activeEntry.npc_id && t.npc_id === activeEntry.npc_id))
+                  const getDistFeet = (targetCharId?: string, targetNpcId?: string): number | null => {
+                    if (!aTok || mapTokens.length === 0) return null // no map
+                    const tTok = mapTokens.find(t => (targetCharId && t.character_id === targetCharId) || (targetNpcId && t.npc_id === targetNpcId))
+                    if (!tTok) return null
+                    const dist = Math.max(Math.abs(aTok.grid_x - tTok.grid_x), Math.abs(aTok.grid_y - tTok.grid_y))
+                    return dist * mapCellFeet
+                  }
                   const woundedPC = entries.find(e => e.liveState && e.liveState.wp_current === 0 && ((e.liveState as any).death_countdown == null || (e.liveState as any).death_countdown > 0))
                   const woundedNPC = campaignNpcs.find((n: any) => {
                     const wp = n.wp_current ?? n.wp_max ?? 10
@@ -2889,29 +2949,36 @@ export default function TablePage() {
                   })
                   if (!woundedPC && !woundedNPC) return null
                   const targetName = woundedPC ? woundedPC.character.name : woundedNPC!.name
+                  const distFeet = woundedPC ? getDistFeet(woundedPC.character.id, undefined) : getDistFeet(undefined, woundedNPC!.id)
+                  // Hide if beyond 20ft
+                  if (distFeet !== null && distFeet > 20) return null
+                  // Show engaged warning if not adjacent (> 5ft)
+                  const notEngaged = distFeet !== null && distFeet > 5
                   return (
-                    <button onClick={() => {
-                      // Determine roller's Medicine stats — use active combatant's stats
-                      // (could be PC via charEntry, or NPC via campaignNpcs)
-                      let amod = 0, smod = 0
-                      if (charEntry) {
-                        const rapid = charEntry.character.data?.rapid ?? {}
-                        amod = rapid.RSN ?? 0
-                        smod = charEntry.character.data?.skills?.find((s: any) => s.skillName === 'Medicine')?.level ?? 0
-                      } else {
-                        const npcRoller = campaignNpcs.find((n: any) => n.name === activeEntry.character_name)
-                        if (npcRoller) {
-                          amod = npcRoller.reason ?? 0
-                          const npcSkills: any[] = Array.isArray(npcRoller.skills?.entries) ? npcRoller.skills.entries : []
-                          smod = npcSkills.find((s: any) => s.name === 'Medicine')?.level ?? 0
+                    <>
+                      <button onClick={notEngaged ? () => alert(`${activeEntry.character_name} must be engaged (adjacent) to ${targetName} to stabilize them. Move closer first.`) : () => {
+                        // Determine roller's Medicine stats — use active combatant's stats
+                        // (could be PC via charEntry, or NPC via campaignNpcs)
+                        let amod = 0, smod = 0
+                        if (charEntry) {
+                          const rapid = charEntry.character.data?.rapid ?? {}
+                          amod = rapid.RSN ?? 0
+                          smod = charEntry.character.data?.skills?.find((s: any) => s.skillName === 'Medicine')?.level ?? 0
+                        } else {
+                          const npcRoller = campaignNpcs.find((n: any) => n.name === activeEntry.character_name)
+                          if (npcRoller) {
+                            amod = npcRoller.reason ?? 0
+                            const npcSkills: any[] = Array.isArray(npcRoller.skills?.entries) ? npcRoller.skills.entries : []
+                            smod = npcSkills.find((s: any) => s.name === 'Medicine')?.level ?? 0
+                          }
                         }
-                      }
-                      // Open roll FIRST (before consumeAction changes the active combatant)
-                      handleRollRequest(`${activeEntry.character_name} — Stabilize ${targetName}`, amod, smod)
-                      actionPreConsumedRef.current = true
-                      consumeAction(activeEntry.id)
-                    }}
-                      style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>🩸 Stabilize {targetName}</button>
+                        // Open roll FIRST (before consumeAction changes the active combatant)
+                        handleRollRequest(`${activeEntry.character_name} — Stabilize ${targetName}`, amod, smod)
+                        actionPreConsumedRef.current = true
+                        consumeAction(activeEntry.id)
+                      }}
+                        style={notEngaged ? actBtn('#2a2010', '#EF9F27', '#5a4a1b') : actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>🩸 Stabilize {targetName}{notEngaged ? ' (not engaged)' : ''}</button>
+                    </>
                   )
                 })()}
               </div>
@@ -3708,7 +3775,14 @@ export default function TablePage() {
                         // SRD: +1 CMod if attacking the same target as your last attack this turn
                         const activeForBonus = initiativeOrder.find(ie => ie.is_active)
                         const sameTargetBonus = (activeForBonus?.last_attack_target === e.target.value) ? 1 : 0
-                        setCmod(String(baseCmod - defensiveMod + sameTargetBonus))
+                        // Coordinate bonus: +2 when attacking the coordinated target
+                        const myInitEntry = initiativeOrder.find(ie =>
+                          (activeForBonus?.character_id && ie.character_id === activeForBonus.character_id) ||
+                          (activeForBonus?.npc_id && ie.npc_id === activeForBonus.npc_id) ||
+                          ie.character_name === activeForBonus?.character_name
+                        )
+                        const coordBonus = (myInitEntry?.coordinate_target === e.target.value) ? (myInitEntry?.coordinate_bonus ?? 0) : 0
+                        setCmod(String(baseCmod - defensiveMod + sameTargetBonus + coordBonus))
                         // Auto-calculate range band from token positions
                         const active = initiativeOrder.find(ie => ie.is_active)
                         if (active) {
