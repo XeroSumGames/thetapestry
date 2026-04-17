@@ -96,11 +96,27 @@
 - [x] Stress Check with CMod when stress hits 5 — success drops to 4, failure triggers Breaking Point
 - [x] Breaking Point modal shows on whichever screen has the sheet open
 
-### Combat Actions
-- [x] Pass 1 — Action slots (2 per turn), simple actions, auto-advance
-- [x] Pass 2 — Aim (+1 CMod carry), Rapid Fire, Charge/Sprint, Ready Weapon + Tracking
-- [x] Pass 3 — Social/contested actions (Coordinate, Cover Fire, Distract, Inspire — cross-player CMod)
-- [x] All 15 combat actions listed alphabetically, greyed when unavailable
+### Combat Actions (SRD Table 10 — all 18 + Unarmed + Stabilize)
+- [x] **Aim** — +2 CMod (SRD-correct), aim_active flag enforces "must Attack next or lost"
+- [x] **Attack** — +1 CMod auto-applied when attacking same target twice in one turn (last_attack_target tracking)
+- [x] **Charge** — both actions, melee/unarmed attack, targets within 20ft, skips weapon range filter
+- [x] **Coordinate** — dedicated modal: dropdown picks enemy → Tactics* roll → allies within Close range get +2 CMod vs that target. Log entry announces recipients.
+- [x] **Cover Fire** — target picker modal → -2 CMod to enemy's next action
+- [x] **Defend** — +2 defense_bonus applied to damage calc, clears after one hit (unless has_cover)
+- [x] **Distract** — target picker modal → steals 1 action from target
+- [x] **Fire from Cover** — both actions, only appears when has_cover, fire weapon + keep defense
+- [x] **Grapple** — Unarmed Combat opposed check
+- [x] **Inspire** — target picker modal → grants +1 action to ally, once per round (inspired_this_round)
+- [x] **Move** — grid highlight + click to move token, 10ft Chebyshev
+- [x] **Rapid Fire** — -1 CMod first shot, costs 2 actions, ranged only
+- [x] **Ready Weapon** — ready/reload/unjam, Tracking +1
+- [x] **Reposition** — end-of-round positioning action
+- [x] **Sprint** — both actions, Athletics check, winded flag (1 action next round)
+- [x] **Subdue** — full RP, attack via melee/unarmed
+- [x] **Take Cover** — +2 defense_bonus for all attacks this round, sets has_cover, enables Fire from Cover
+- [x] **Unarmed** — PHY + Unarmed Combat, 1d3 damage
+- [x] **Stabilize** — Medicine roll on dying target
+- [x] Social action modals show all combatants (no faction filter — NPCs can be allies)
 - [x] Action pips on all initiative entries (green active, orange waiting, grey spent)
 
 ### Combat UI
@@ -124,8 +140,8 @@
 - [x] "Open My Sheet to Roll" button toggles sheet closed if already open
 
 ### Combat Rules — Advanced (SRD)
-- [x] Getting The Drop — GM selects in Start Combat modal, 1 action, -2 init
-- [x] Range Bands — 5-button selector in roll modal with auto CMod
+- [x] Getting The Drop — solo round before initiative: drop character acts alone with 1 action, then full initiative rolls for everyone. "⚡ Gets the Drop!" log entry.
+- [x] Range Bands — fully automatic from token positions, no manual selector. Per-weapon CMod profiles.
 - [x] Initiative re-roll each round (PCs beat NPCs on ties)
 - [x] Delayed Actions — handled by Defer button (same mechanic)
 - [x] Resolution Phase — narrative, handled by GM with existing mechanics
@@ -146,7 +162,10 @@
 - [x] Death prevention via Insight Die — trade ALL dice, regain 1 WP + 1 RP (per SRD)
 - [x] Lasting Wounds — PHY check first, Table 12 only on failure (per SRD)
 - [x] Healing rates — Rest button with hours/days/weeks, SRD rates (1 WP/day, 1 WP/2 days mortally wounded, 1 RP/hour)
-- [x] **Mortally Wounded → +1 Stress at end of combat** — any PC with WP=0 (not dead) at endCombat() automatically gains +1 Stress (capped at 5), logged to feed as "😰 <Name> gains +1 Stress from being mortally wounded."
+- [x] Mortally Wounded → +1 Stress at end of combat
+- [x] Mortally wounded NPCs excluded from combat picker (WP=0 filter)
+- [x] Defend/Take Cover defense_bonus applied to damage calculation
+- [x] Winded combatants get 1 action instead of 2 on next turn
 - [x] Auto-decrement ammo on ranged attacks (burst count for Automatic Burst)
 - [x] Environmental Damage buttons — Falling (3 per 10ft), Drowning (3+3), Subsistence (1 RP)
 - [x] Reduce Stress button — 8+ hours narrative downtime
@@ -207,6 +226,10 @@
 - [x] NPCs tab (renamed from NPC Roster)
 - [x] Assets tab with campaign pins
 - [x] GM Notes tab — campaign_notes table, GmNotes component, add/delete/expand notes
+- [x] GM Notes share toggle — players see shared notes as read-only handouts
+- [x] NPC card click-to-enlarge portrait (lightbox)
+- [x] NPC edit form "Library" button — pick from portrait bank
+- [x] Pin coordinates shown on New Pin modal and Edit Pin form
 - [ ] Maps & Objects — scene images, tactical map assets, tokens
 - [ ] Handouts, Communities, Roll Tables
 - [x] NPC card 3-column grid layout over campaign map
@@ -219,6 +242,13 @@
 ### Campaign Management
 - [x] Launch, Leave, Share buttons
 - [x] Game Feed with Rolls/Chat/Both tabs and Realtime chat
+- [x] Campaign edit page (`/stories/[id]/edit`) — name, description, map style, map center location
+- [x] "Custom Setting" label (was "New Setting")
+- [x] Players get Tactical Map / Campaign Map toggle button in header
+- [x] Combat end stays on tactical map for both GM and players
+- [x] Start Combat auto-shares tactical map to all players
+- [x] NotificationBell on table page header
+- [x] Session join race condition fix (await ensureCharacterStates before loadEntries)
 - [ ] GM private notes, Player kick, CDP awards
 - [ ] Character progression log
 - [ ] Allow characters in multiple campaigns
@@ -369,22 +399,25 @@
 - [x] Corner resize handles for map image (independent of zoom)
 - [x] Map always fits to container width, scroll vertically for tall maps
 - [x] Grid anchored to top-left, adjustable cols/rows/cell size in feet (default 3ft)
-- [ ] WP and stress visible beneath each token
-- [ ] Token status badges — Wounded, Stressed, Incapacitated, Dead
-- [ ] GM ping — flash a location on everyone's screen
-- [ ] Initiative order numbered badges on tokens
-- [x] Range band auto-select from token positions in attack modal
-- [x] Range enforcement — targets filtered by range (all weapons), "Out of range" blocks Roll button
-- [x] Range CMod displayed prominently in roll modal
-- [x] Range circle shows longest-range weapon from all equipment (primary + secondary + NPC equipment)
-- [x] **Per-weapon range CMod profile tables** (`lib/range-profiles.ts`) — each weapon has CMod per band, null = blocked. Shotgun falloff, hunting rifle point-blank penalty, sniper bonuses at long/distant, etc.
-- [x] **New range band thresholds** — Engaged ≤5ft, Close ≤30ft, Medium ≤100ft, Long ≤300ft, Distant >300ft (per spec)
-- [x] **Color-coded range overlay** — GM "Show Ranges" toggle; each grid cell colored by band from selected token (red/orange/yellow/blue/grey)
 - [x] WP bar beneath each token (color-graded green/yellow/red)
+- [x] Token death visuals — red X for mortal wound, 50% opacity for dead
 - [x] Initiative order numbered badges on tokens (green for active)
-- [x] GM ping — double-click empty cell to flash orange pulse on all clients
+- [x] GM + player ping — double-click empty cell, two consecutive pulses (GM=orange, player=green)
+- [x] Range band auto-select from token positions in attack modal (hidden, fully automatic)
+- [x] Range enforcement — targets filtered by range (all weapons), "Out of range" blocks Roll button
+- [x] Range circle shows PRIMARY weapon range (not best-of-all). Melee capped at 5/10ft
+- [x] Per-weapon range CMod profile tables (`lib/range-profiles.ts`) — Shotgun falloff, hunting rifle point-blank penalty, sniper bonuses, etc.
+- [x] New range band thresholds — Engaged ≤5ft, Close ≤30ft, Medium ≤100ft, Long ≤300ft, Distant >300ft
+- [x] Color-coded range overlay — GM "Show Ranges" toggle; each grid cell colored by band
 - [x] NPC cards as draggable floating windows over tactical map during combat
 - [x] Move action highlights reachable cells (10ft Chebyshev) on tactical map, click to move
+- [x] Players can drag their own token on the tactical map
+- [x] Token place/remove broadcasts to all clients for real-time sync
+- [x] Tokens spawn at top-right of grid (away from GM controls)
+- [x] Map button toggles token on/off (was "already on map" alert)
+- [x] Zoom slider moved to top-right, compact (0%/100% labels, white text)
+- [x] Resize handles fixed (zoom-corrected hit-test coordinates)
+- [x] "Select a target or damage will not be applied" warning in attack roll modal
 - [x] Unarmed Attack button on combat action bar
 - [x] Token death visuals — red X for mortal wound, 50% opacity for dead
 - [x] NPC cards show all equipment weapons as attack buttons
