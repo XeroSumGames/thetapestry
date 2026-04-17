@@ -211,6 +211,8 @@ export default function TablePage() {
   const dropPhaseRef = useRef(false)
   const pendingCombatantsRef = useRef<any[]>([])
   const coordinateTargetRef = useRef<string | null>(null)
+  const [showCoordinateModal, setShowCoordinateModal] = useState(false)
+  const [coordinateSelection, setCoordinateSelection] = useState('')
   const [selectedNpcIds, setSelectedNpcIds] = useState<Set<string>>(new Set())
   const [rosterNpcs, setRosterNpcs] = useState<any[]>([])
   const [showRestorePicker, setShowRestorePicker] = useState(false)
@@ -224,6 +226,7 @@ export default function TablePage() {
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
   const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null; character_name: string }[]>([])
   const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | null>(null)
+  const [showReadyWeaponModal, setShowReadyWeaponModal] = useState(false)
   const [groupCheckParticipants, setGroupCheckParticipants] = useState<Set<string>>(new Set())
   const [groupCheckSkill, setGroupCheckSkill] = useState('')
   const [opposedTarget, setOpposedTarget] = useState('')
@@ -1651,19 +1654,7 @@ export default function TablePage() {
     if (!targetEntry) return
     await clearAimIfActive(activeEntry.id)
 
-    if (action === 'Coordinate') {
-      // SRD: Tactics* check → allies within Close range get +2 when attacking that target
-      coordinateTargetRef.current = targetEntry.character_name
-      const charEntry = entries.find(e => e.character.name === activeEntry.character_name)
-      const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
-      const amod = npcAttacker ? (npcAttacker.reason ?? 0) : (charEntry?.character.data?.rapid?.RSN ?? 0)
-      const smod = npcAttacker
-        ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Tactics')?.level ?? 0 : 0)
-        : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Tactics')?.level ?? 0
-      handleRollRequest(`${activeEntry.character_name} — Coordinate (vs ${targetEntry.character_name})`, amod, smod)
-      setSocialTarget(null)
-      return // action consumed in closeRollModal; coordinate applied in executeRoll
-    } else if (action === 'Cover Fire') {
+    if (action === 'Cover Fire') {
       // SRD: Successful attack → -2 CMod to target's next action
       const newBonus = (targetEntry.aim_bonus ?? 0) - 2
       await supabase.from('initiative_order').update({ aim_bonus: newBonus }).eq('id', targetEntryId)
@@ -2131,6 +2122,40 @@ export default function TablePage() {
       }
     }
 
+    // Unjam result — adjust weapon condition (same logic as Upkeep)
+    let unjamResult = ''
+    if (pendingRoll.label.startsWith('Unjam — ') && myEntry) {
+      const weaponName = pendingRoll.label.replace(/^Unjam — (.+?) \(.+\)$/, '$1')
+      const charData = myEntry.character.data ?? {}
+      const conditions = ['Pristine', 'Used', 'Worn', 'Damaged', 'Broken']
+      const slots = ['weaponPrimary', 'weaponSecondary'] as const
+      for (const slot of slots) {
+        if (charData[slot]?.weaponName === weaponName) {
+          const currentIdx = conditions.indexOf(charData[slot].condition ?? 'Used')
+          let newIdx = currentIdx
+          if (outcome === 'Wild Success') { newIdx = Math.max(1, currentIdx - 1); unjamResult = 'Condition improved by 1 level' }
+          else if (outcome === 'High Insight') { newIdx = Math.max(1, currentIdx - 2); unjamResult = 'Condition improved by 2 levels' }
+          else if (outcome === 'Success') { newIdx = Math.max(currentIdx - 1, 2); unjamResult = currentIdx > 2 ? 'Unjammed — condition partially restored' : 'No change' }
+          else if (outcome === 'Failure') { unjamResult = 'Failed to unjam — no change' }
+          else if (outcome === 'Dire Failure') { newIdx = 4; unjamResult = 'Weapon breaks!' }
+          else if (outcome === 'Low Insight') {
+            newIdx = 4; unjamResult = 'Weapon breaks! 1 WP damage.'
+            if (myEntry.liveState) {
+              const newWP = Math.max(0, myEntry.liveState.wp_current - 1)
+              await supabase.from('character_states').update({ wp_current: newWP }).eq('id', myEntry.stateId)
+            }
+          }
+          else { unjamResult = 'No change' }
+          if (newIdx !== currentIdx) {
+            await supabase.from('characters').update({
+              data: { ...charData, [slot]: { ...charData[slot], condition: conditions[newIdx] } }
+            }).eq('id', myEntry.character.id)
+          }
+          break
+        }
+      }
+    }
+
     // Stabilize result — stop death countdown on success (PC or NPC)
     let stabilizeResult = ''
     if (pendingRoll.label.includes('Stabilize ')) {
@@ -2210,7 +2235,7 @@ export default function TablePage() {
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, spent: preRollSpent,
-      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
+      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
     } as any)
 
     setRolling(false)
@@ -2762,8 +2787,12 @@ export default function TablePage() {
                   )
                 })()}
 
-                {/* ── COORDINATE, COVER FIRE, DISTRACT, INSPIRE ── */}
-                {['Coordinate', 'Cover Fire', 'Distract', 'Inspire'].map(action => {
+                {/* ── COORDINATE ── */}
+                <button onClick={() => { clearAimIfActive(activeEntry.id); setShowCoordinateModal(true); setCoordinateSelection('') }}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Coordinate</button>
+
+                {/* ── COVER FIRE, DISTRACT, INSPIRE ── */}
+                {['Cover Fire', 'Distract', 'Inspire'].map(action => {
                   const isOpen = socialTarget?.action === action
                   return (
                     <button key={action} onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(isOpen ? null : { action }) }}
@@ -2794,6 +2823,47 @@ export default function TablePage() {
                         )}
                         <button onClick={() => setSocialTarget(null)}
                           style={{ marginTop: '10px', width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* ── COORDINATE MODAL ── */}
+                {showCoordinateModal && (() => {
+                  const allTargets = initiativeOrder.filter(e => e.id !== activeEntry.id)
+                  return (
+                    <div onClick={() => setShowCoordinateModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
+                        <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Coordinate</div>
+                        <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5, marginBottom: '12px' }}>
+                          Select the enemy to coordinate against. On a successful Tactics* check, allies within Close range get +2 CMod when attacking that target.
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Coordinate Against</div>
+                        <select value={coordinateSelection} onChange={e => setCoordinateSelection(e.target.value)}
+                          style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none', marginBottom: '12px' }}>
+                          <option value="">Select target...</option>
+                          {allTargets.map(t => (
+                            <option key={t.id} value={t.character_name}>{t.character_name}{t.is_npc ? ' (NPC)' : ''}</option>
+                          ))}
+                        </select>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => setShowCoordinateModal(false)}
+                            style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                          <button disabled={!coordinateSelection} onClick={() => {
+                            // Find the target entry and trigger Tactics* roll
+                            const targetEntry = initiativeOrder.find(e => e.character_name === coordinateSelection)
+                            if (!targetEntry) return
+                            coordinateTargetRef.current = coordinateSelection
+                            const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+                            const amod = npcAttacker ? (npcAttacker.reason ?? 0) : (charEntry?.character.data?.rapid?.RSN ?? 0)
+                            const smod = npcAttacker
+                              ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Tactics')?.level ?? 0 : 0)
+                              : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Tactics')?.level ?? 0
+                            handleRollRequest(`${activeEntry.character_name} — Coordinate (vs ${coordinateSelection})`, amod, smod)
+                            setShowCoordinateModal(false)
+                          }}
+                            style={{ flex: 2, padding: '8px', background: coordinateSelection ? '#c0392b' : '#242424', border: `1px solid ${coordinateSelection ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: coordinateSelection ? '#fff' : '#5a5550', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: coordinateSelection ? 'pointer' : 'not-allowed' }}>Roll Tactics*</button>
+                        </div>
                       </div>
                     </div>
                   )
@@ -2868,8 +2938,8 @@ export default function TablePage() {
                   <button disabled style={disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Rapid Fire</button>
                 )}
 
-                {/* ── READY WEAPON: ready/reload/unjam ── */}
-                <button onClick={() => { clearAimIfActive(activeEntry.id); handleReadyWeapon(activeEntry.id) }}
+                {/* ── READY WEAPON: switch/reload/unjam ── */}
+                <button onClick={() => setShowReadyWeaponModal(true)}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Ready Weapon</button>
 
                 {/* ── REPOSITION: end-of-round positioning ── */}
@@ -4288,6 +4358,133 @@ export default function TablePage() {
           </div>
         </div>
       )}
+
+      {/* Ready Weapon Modal */}
+      {showReadyWeaponModal && (() => {
+        const active = initiativeOrder.find(e => e.is_active)!
+        if (!active) return null
+        const charEntry = entries.find(e => e.character.name === active.character_name)
+        const npcForWeapon = active.is_npc ? campaignNpcs.find((n: any) => n.name === active.character_name) : null
+        const charData = charEntry?.character.data ?? {}
+        const primary = charData.weaponPrimary ?? (npcForWeapon?.skills?.weapon ? { weaponName: npcForWeapon.skills.weapon.weaponName, condition: npcForWeapon.skills.weapon.condition ?? 'Used', ammoCurrent: npcForWeapon.skills.weapon.ammoCurrent ?? 0, ammoMax: npcForWeapon.skills.weapon.ammoMax ?? 0, reloads: npcForWeapon.skills.weapon.reloads ?? 0 } : null)
+        const secondary = charData.weaponSecondary ?? null
+        const primaryW = primary ? getWeaponByName(primary.weaponName) : null
+        const secondaryW = secondary ? getWeaponByName(secondary.weaponName) : null
+
+        const canSwitch = !!secondary?.weaponName
+        const canReload = !!primaryW && !!primaryW.clip && primaryW.clip > 0 && (primary?.reloads ?? 0) > 0
+        const conditions = ['Pristine', 'Used', 'Worn', 'Damaged', 'Broken']
+        const condIdx = conditions.indexOf(primary?.condition ?? 'Used')
+        const canUnjam = condIdx >= 3 // Damaged or Broken
+
+        async function doSwitch() {
+          if (!charEntry || !canSwitch) return
+          const newData = { ...charData, weaponPrimary: secondary, weaponSecondary: primary }
+          await supabase.from('characters').update({ data: newData }).eq('id', charEntry.character.id)
+          clearAimIfActive(active.id)
+          consumeAction(active.id, `${active.character_name} — Switch to ${secondary.weaponName}`)
+          setShowReadyWeaponModal(false)
+        }
+
+        async function doReload() {
+          if (!charEntry || !canReload || !primaryW) return
+          const reloaded = { ...primary, ammoCurrent: primaryW.clip, reloads: Math.max(0, (primary.reloads ?? 0) - 1) }
+          await supabase.from('characters').update({ data: { ...charData, weaponPrimary: reloaded } }).eq('id', charEntry.character.id)
+          clearAimIfActive(active.id)
+          consumeAction(active.id, `${active.character_name} — Reload ${primary.weaponName}`)
+          setShowReadyWeaponModal(false)
+        }
+
+        function doUnjam() {
+          if (!primary || !canUnjam) return
+          const isMelee = primaryW?.category === 'melee'
+          // Pick best skill: Tinkerer, Weaponsmith, or Ranged/Melee Combat
+          const combatSkill = isMelee ? 'Melee Combat' : 'Ranged Combat'
+          const attrForCombat = isMelee ? 'PHY' : 'DEX'
+          let bestSkill = combatSkill
+          let bestAttr = attrForCombat
+          let bestLevel = 0
+          const getLevel = (skillName: string) => {
+            if (charEntry) {
+              return charEntry.character.data?.skills?.find((s: any) => s.skillName === skillName)?.level ?? 0
+            }
+            if (npcForWeapon) {
+              const npcSkills: any[] = Array.isArray(npcForWeapon.skills?.entries) ? npcForWeapon.skills.entries : []
+              return npcSkills.find((s: any) => s.name === skillName)?.level ?? 0
+            }
+            return 0
+          }
+          const rapid = charEntry ? (charEntry.character.data?.rapid ?? {}) : { RSN: npcForWeapon?.reason ?? 0, ACU: npcForWeapon?.acumen ?? 0, PHY: npcForWeapon?.physicality ?? 0, INF: npcForWeapon?.influence ?? 0, DEX: npcForWeapon?.dexterity ?? 0 }
+          const candidates = [
+            { skill: 'Tinkerer', attr: 'DEX' },
+            { skill: 'Weaponsmith', attr: 'DEX' },
+            { skill: combatSkill, attr: attrForCombat },
+          ]
+          for (const c of candidates) {
+            const lvl = getLevel(c.skill)
+            if (lvl > bestLevel) { bestLevel = lvl; bestSkill = c.skill; bestAttr = c.attr }
+          }
+          const amod = (rapid as any)[bestAttr] ?? 0
+          clearAimIfActive(active.id)
+          handleRollRequest(`Unjam — ${primary.weaponName} (${bestSkill})`, amod, bestLevel)
+          actionPreConsumedRef.current = true
+          consumeAction(active.id)
+          setShowReadyWeaponModal(false)
+        }
+
+        // Tracking bonus — applied automatically
+        const hasTracking = primaryW ? getTraitValue(primaryW.traits, 'Tracking') !== null : false
+
+        return (
+          <div onClick={() => setShowReadyWeaponModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '380px' }}>
+              <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Ready Weapon</div>
+              <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>{active.character_name}</div>
+
+              {/* Current weapon info */}
+              <div style={{ marginBottom: '1rem', padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                <div style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Primary</div>
+                <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase' }}>{primary?.weaponName ?? 'None'}</div>
+                {primary && <div style={{ fontSize: '11px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  Condition: <span style={{ color: condIdx <= 1 ? '#7fc458' : condIdx === 2 ? '#EF9F27' : '#f5a89a' }}>{primary.condition ?? 'Used'}</span>
+                  {primaryW?.clip ? <> · Ammo: <span style={{ color: '#EF9F27' }}>{primary.ammoCurrent ?? 0}/{primaryW.clip}</span> · Reloads: <span style={{ color: '#7ab3d4' }}>{primary.reloads ?? 0}</span></> : null}
+                </div>}
+                {secondary?.weaponName && <>
+                  <div style={{ fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginTop: '6px', marginBottom: '2px' }}>Secondary</div>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{secondary.weaponName}</div>
+                </>}
+              </div>
+
+              {hasTracking && (
+                <div style={{ fontSize: '11px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', padding: '4px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
+                  Tracking weapon — Ready Weapon grants +1 CMod aim bonus
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <button onClick={canSwitch ? doSwitch : undefined} disabled={!canSwitch}
+                  style={{ padding: '10px', background: canSwitch ? '#1a1a2e' : '#1a1a1a', border: `1px solid ${canSwitch ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: canSwitch ? '#7ab3d4' : '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: canSwitch ? 'pointer' : 'not-allowed', textAlign: 'left' }}>
+                  Switch{secondary?.weaponName ? ` to ${secondary.weaponName}` : ''} {!canSwitch && <span style={{ fontSize: '10px', opacity: 0.5 }}>— no secondary</span>}
+                </button>
+                <button onClick={canReload ? doReload : undefined} disabled={!canReload}
+                  style={{ padding: '10px', background: canReload ? '#2a2010' : '#1a1a1a', border: `1px solid ${canReload ? '#5a4a1b' : '#2e2e2e'}`, borderRadius: '3px', color: canReload ? '#EF9F27' : '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: canReload ? 'pointer' : 'not-allowed', textAlign: 'left' }}>
+                  Reload{primaryW?.clip ? ` (${primary?.reloads ?? 0} remaining)` : ''} {!canReload && !primaryW?.clip && <span style={{ fontSize: '10px', opacity: 0.5 }}>— melee weapon</span>}{!canReload && primaryW?.clip && (primary?.reloads ?? 0) <= 0 && <span style={{ fontSize: '10px', opacity: 0.5 }}>— no reloads left</span>}
+                </button>
+                <button onClick={canUnjam ? doUnjam : undefined} disabled={!canUnjam}
+                  style={{ padding: '10px', background: canUnjam ? '#2a1210' : '#1a1a1a', border: `1px solid ${canUnjam ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', color: canUnjam ? '#f5a89a' : '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: canUnjam ? 'pointer' : 'not-allowed', textAlign: 'left' }}>
+                  Unjam / Repair {!canUnjam && <span style={{ fontSize: '10px', opacity: 0.5 }}>— weapon not damaged</span>}
+                </button>
+              </div>
+
+              <button onClick={() => setShowReadyWeaponModal(false)}
+                style={{ marginTop: '1rem', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Special Check Modal */}
       {showSpecialCheck && (
