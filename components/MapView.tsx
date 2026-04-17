@@ -117,6 +117,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [usernames, setUsernames] = useState<Record<string, string>>({})
   const [pinAttachments, setPinAttachments] = useState<Record<string, { name: string; url: string }[]>>({})
   const [pinsVisible, setPinsVisible] = useState(true)
+  const [sidebarTab, setSidebarTab] = useState<'public' | 'mine' | 'campaign'>('public')
+  const [campaignPins, setCampaignPins] = useState<{ id: string; name: string; notes: string | null; lat: number; lng: number; category: string; campaign_name: string }[]>([])
   const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private', category: 'location' })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -136,6 +138,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
   // Re-render map markers when folder visibility changes
   useEffect(() => { if (mapInstanceRef.current) loadPins() }, [hiddenFolders])
+  // Load campaign pins when tab switches to campaign
+  useEffect(() => { if (sidebarTab === 'campaign' && userId) loadCampaignPins() }, [sidebarTab, userId])
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => {
     if (typeof window !== 'undefined') {
       try { const saved = localStorage.getItem('tapestry_folder_state'); if (saved) return new Set(JSON.parse(saved)) } catch {}
@@ -213,6 +217,18 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null }
     }
   }, [])
+
+  async function loadCampaignPins() {
+    if (!userId) return
+    // Get campaigns the user is a member of
+    const { data: memberships } = await supabase.from('campaign_members').select('campaign_id, campaigns(name)').eq('user_id', userId)
+    if (!memberships || memberships.length === 0) { setCampaignPins([]); return }
+    const campaignIds = memberships.map((m: any) => m.campaign_id)
+    const campaignNames = Object.fromEntries(memberships.map((m: any) => [m.campaign_id, (m.campaigns as any)?.name ?? 'Unknown']))
+    // Get revealed pins from those campaigns
+    const { data: pins } = await supabase.from('campaign_pins').select('*').in('campaign_id', campaignIds).eq('revealed', true)
+    setCampaignPins((pins ?? []).map((p: any) => ({ ...p, campaign_name: campaignNames[p.campaign_id] ?? 'Unknown' })))
+  }
 
   async function loadPins(L?: any, map?: any) {
     const leaflet = L ?? (await import('leaflet')).default
@@ -476,6 +492,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const timelineOnly = activeFilters.has('timeline') && activeFilters.size === 1
 
   const filteredPins = pins.filter(matchesFilter).filter(p => {
+    // Tab filter
+    if (sidebarTab === 'mine' && p.user_id !== userId) return false
+    if (sidebarTab === 'public' && p.status !== 'approved') return false
     if (!pinSearch.trim()) return true
     const q = pinSearch.trim().toLowerCase()
     return (p.title?.toLowerCase().includes(q)) || (p.notes?.toLowerCase().includes(q)) || (p.category?.toLowerCase().includes(q))
@@ -565,9 +584,59 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                 </div>
               )}
             </div>
-            {/* Folder tree */}
+            {/* Tabs */}
+            {userId && (
+              <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e' }}>
+                {(['public', 'mine', 'campaign'] as const).map(tab => (
+                  <button key={tab} onClick={() => setSidebarTab(tab)}
+                    style={{ flex: 1, padding: '6px', background: sidebarTab === tab ? '#242424' : 'transparent', border: 'none', borderBottom: sidebarTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: sidebarTab === tab ? '#f5f2ee' : '#5a5550', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    {tab === 'public' ? 'Public' : tab === 'mine' ? 'My Pins' : 'Campaign'}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Content */}
             <div style={{ flex: 1, overflowY: 'auto' }}>
-              {(() => {
+              {sidebarTab === 'campaign' ? (
+                /* Campaign pins tab */
+                campaignPins.length === 0 ? (
+                  <div style={{ padding: '2rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>No campaign pins shared with you.</div>
+                ) : (
+                  (() => {
+                    const byCampaign: Record<string, typeof campaignPins> = {}
+                    for (const p of campaignPins) {
+                      if (!byCampaign[p.campaign_name]) byCampaign[p.campaign_name] = []
+                      byCampaign[p.campaign_name].push(p)
+                    }
+                    return Object.entries(byCampaign).map(([name, cPins]) => (
+                      <div key={name}>
+                        <div style={{ padding: '6px 10px', borderBottom: '1px solid #2e2e2e', fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 700 }}>
+                          {name}
+                        </div>
+                        {cPins.map(p => (
+                          <div key={p.id} onClick={() => {
+                            if (expandedPinId === p.id) setExpandedPinId(null)
+                            else { setExpandedPinId(p.id); flyToPin({ lat: p.lat, lng: p.lng, category: p.category } as any) }
+                          }}
+                            style={{ padding: '4px 10px 4px 20px', cursor: 'pointer', borderLeft: `2px solid ${expandedPinId === p.id ? '#c0392b' : 'transparent'}`, background: expandedPinId === p.id ? '#1a1a1a' : 'transparent' }}
+                            onMouseEnter={e => { if (expandedPinId !== p.id) e.currentTarget.style.background = '#1a1a1a' }}
+                            onMouseLeave={e => { if (expandedPinId !== p.id) e.currentTarget.style.background = 'transparent' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontSize: '14px' }}>{getCategoryEmoji(p.category)}</span>
+                              <span style={{ fontSize: '13px', color: '#f5f2ee', overflow: expandedPinId === p.id ? 'visible' : 'hidden', textOverflow: 'ellipsis', whiteSpace: expandedPinId === p.id ? 'normal' : 'nowrap' }}>{p.name}</span>
+                            </div>
+                            {expandedPinId === p.id && p.notes && (
+                              <div style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.5, marginTop: '4px', paddingLeft: '20px' }}>{p.notes}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ))
+                  })()
+                )
+              ) : (
+              /* Public / My Pins folder tree */
+              (() => {
                 // Group displayed pins by category, sorted within each folder
                 const folderMap: Record<string, Pin[]> = {}
                 for (const p of displayedPins) {
@@ -669,7 +738,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                     </div>
                   )
                 })
-              })()}
+              })()
+              )}
             </div>
           </div>
         )}
