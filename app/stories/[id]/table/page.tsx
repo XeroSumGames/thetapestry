@@ -2715,31 +2715,42 @@ export default function TablePage() {
 
                 {/* ── COORDINATE, COVER FIRE, DISTRACT, INSPIRE ── */}
                 {['Coordinate', 'Cover Fire', 'Distract', 'Inspire'].map(action => {
-                  const isBoost = action === 'Coordinate' || action === 'Inspire'
+                  const isOpen = socialTarget?.action === action
+                  return (
+                    <button key={action} onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(isOpen ? null : { action }) }}
+                      style={actBtn(isOpen ? '#1a2e10' : '#242424', isOpen ? '#7fc458' : '#d4cfc9', isOpen ? '#2d5a1b' : '#3a3a3a')}>{action}</button>
+                  )
+                })}
+                {socialTarget && (() => {
+                  const isBoost = socialTarget.action === 'Coordinate' || socialTarget.action === 'Inspire'
                   const targets = initiativeOrder.filter(e => {
                     if (e.id === activeEntry.id) return false
                     return isBoost ? !e.is_npc : e.is_npc
                   })
-                  const isOpen = socialTarget?.action === action
                   return (
-                    <span key={action} style={{ position: 'relative' }}>
-                      <button onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(isOpen ? null : { action }) }}
-                        style={actBtn(isOpen ? '#1a2e10' : '#242424', isOpen ? '#7fc458' : '#d4cfc9', isOpen ? '#2d5a1b' : '#3a3a3a')}>{action}</button>
-                      {isOpen && targets.length > 0 && (
-                        <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 100, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', minWidth: '120px', marginTop: '2px' }}>
-                          {targets.map(t => (
-                            <div key={t.id} onClick={() => applySocialAction(action, t.id)}
-                              style={{ padding: '4px 8px', fontSize: '11px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderBottom: '1px solid #2e2e2e' }}
-                              onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-                              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                              {t.character_name}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </span>
+                    <div onClick={() => setSocialTarget(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', minWidth: '220px', maxWidth: '320px' }}>
+                        <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>{socialTarget.action} — Select Target</div>
+                        {targets.length === 0 ? (
+                          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', padding: '1rem 0', textAlign: 'center' }}>No valid targets</div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {targets.map(t => (
+                              <button key={t.id} onClick={() => applySocialAction(socialTarget.action, t.id)}
+                                style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'left' }}
+                                onMouseEnter={e => (e.currentTarget.style.background = '#2a1210')}
+                                onMouseLeave={e => (e.currentTarget.style.background = '#242424')}>
+                                {t.character_name}{t.is_npc ? ' (NPC)' : ''}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        <button onClick={() => setSocialTarget(null)}
+                          style={{ marginTop: '10px', width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                      </div>
+                    </div>
                   )
-                })}
+                })()}
 
                 {/* ── DEFEND: +2 defensive modifier for next incoming attack ── */}
                 <button onClick={async () => {
@@ -3726,6 +3737,25 @@ export default function TablePage() {
                             if (active) {
                               const autoRange = getAutoRangeBand(active.character_id || undefined, active.npc_id || undefined, entry.character_name)
                               if (autoRange && !isInRange(pendingRoll.weapon.weaponName, autoRange)) return false
+                            }
+                          }
+                          // Charge: only targets within 20ft (2 moves × 10ft)
+                          if (pendingRoll.label.includes('Charge') && mapTokens.length > 0) {
+                            const active = initiativeOrder.find(ie => ie.is_active)
+                            if (active) {
+                              const aTok = mapTokens.find(t => (active.character_id && t.character_id === active.character_id) || (active.npc_id && t.npc_id === active.npc_id))
+                              const tTok = mapTokens.find(t => {
+                                const pe = entries.find(e => e.character.name === entry.character_name)
+                                if (pe && t.character_id === pe.character.id) return true
+                                const npc = campaignNpcs.find((n: any) => n.name === entry.character_name)
+                                if (npc && t.npc_id === npc.id) return true
+                                return false
+                              })
+                              if (aTok && tTok) {
+                                const dist = Math.max(Math.abs(aTok.grid_x - tTok.grid_x), Math.abs(aTok.grid_y - tTok.grid_y))
+                                const feet = dist * mapCellFeet
+                                if (feet > 20) return false
+                              }
                             }
                           }
                           return true
