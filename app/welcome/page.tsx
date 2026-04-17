@@ -11,7 +11,8 @@ export default function WelcomePage() {
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
+      // Logged-in users go to dashboard; ghosts stay here
+      if (user) { router.push('/dashboard'); return }
       setLoading(false)
     }
     load()
