@@ -2978,13 +2978,13 @@ export default function TablePage() {
                 }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Subdue</button>
 
-                {/* ── TAKE COVER: +2 defensive modifier for all attacks this round ── */}
-                <button onClick={async () => {
+                {/* ── TAKE COVER: +2 defensive modifier for all attacks this round (once per round) ── */}
+                <button onClick={!activeEntry.has_cover ? async () => {
                   clearAimIfActive(activeEntry.id)
                   await supabase.from('initiative_order').update({ defense_bonus: (activeEntry.defense_bonus ?? 0) + 2, has_cover: true }).eq('id', activeEntry.id)
                   await consumeAction(activeEntry.id, `${activeEntry.character_name} — Take Cover (+2 Defensive Modifier, all attacks this round)`)
-                }}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Take Cover{activeEntry.has_cover ? ' ✓' : ''}</button>
+                } : undefined} disabled={activeEntry.has_cover}
+                  style={activeEntry.has_cover ? disabledBtn('#1a2e10', '#7fc458', '#2d5a1b') : actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Take Cover{activeEntry.has_cover ? ' ✓' : ''}</button>
 
                 {/* ── UNARMED: PHY + Unarmed Combat, 1d3 ── */}
                 <button onClick={() => {
@@ -3804,26 +3804,7 @@ export default function TablePage() {
                     </button>
                   </div>
                 )}
-                {pendingRoll.weapon && (
-                  <div style={{ marginBottom: '1rem' }}>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Range Band</div>
-                    <div style={{ display: 'flex', gap: '3px' }}>
-                      {([['engaged', 'Engaged'], ['close', 'Close'], ['medium', 'Medium'], ['long', 'Long'], ['distant', 'Distant']] as const).map(([band, label]) => (
-                        <button key={band} onClick={() => setRangeBand(band)}
-                          style={{ flex: 1, padding: '4px 2px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${rangeBand === band ? '#c0392b' : '#3a3a3a'}`, background: rangeBand === band ? '#2a1210' : '#242424', color: rangeBand === band ? '#f5a89a' : '#d4cfc9' }}>
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                    {(() => {
-                      const rcmod = getRangeCMod()
-                      if (rcmod === 0) return <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '4px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>No range modifier</div>
-                      return <div style={{ fontSize: '13px', marginTop: '4px', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, color: rcmod > 0 ? '#7fc458' : '#c0392b' }}>
-                        Range CMod: {rcmod > 0 ? '+' : ''}{rcmod}
-                      </div>
-                    })()}
-                  </div>
-                )}
+                {/* Range band auto-calculated in background — no manual selector */}
                 {(combatActive || pendingRoll.weapon) && initiativeOrder.length > 0 && (
                   <div style={{ marginBottom: '1.25rem' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Target</div>
