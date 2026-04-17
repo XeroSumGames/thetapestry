@@ -736,7 +736,23 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                             return (
                               <div key={p.id} onClick={() => {
                                 if (isExpanded) { setExpandedPinId(null) }
-                                else { setExpandedPinId(p.id); flyToPin(p); supabase.from('map_pins').update({ view_count: ((p as any).view_count ?? 0) + 1 }).eq('id', p.id) }
+                                else {
+                                  setExpandedPinId(p.id); flyToPin(p)
+                                  supabase.from('map_pins').update({ view_count: ((p as any).view_count ?? 0) + 1 }).eq('id', p.id)
+                                  if (!pinAttachments[p.id]) {
+                                    supabase.storage.from('pin-attachments').list(`${p.user_id}/${p.id}`).then(({ data: files }: any) => {
+                                      if (files && files.length > 0) {
+                                        const atts = files.map((f: any) => {
+                                          const { data: urlData } = supabase.storage.from('pin-attachments').getPublicUrl(`${p.user_id}/${p.id}/${f.name}`)
+                                          return { name: f.name, url: urlData.publicUrl }
+                                        })
+                                        setPinAttachments(prev => ({ ...prev, [p.id]: atts }))
+                                      } else {
+                                        setPinAttachments(prev => ({ ...prev, [p.id]: [] }))
+                                      }
+                                    })
+                                  }
+                                }
                               }}
                                 style={{ padding: '4px 10px 4px 34px', cursor: 'pointer', borderLeft: `2px solid ${isExpanded ? '#c0392b' : 'transparent'}`, background: isExpanded ? '#1a1a1a' : 'transparent' }}
                                 onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = '#1a1a1a' }}
@@ -748,6 +764,23 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                     <div style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
                                       {usernames[p.user_id] ? `By ${usernames[p.user_id]}` : ''}{p.created_at ? ` · ${new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
                                     </div>
+                                    {pinAttachments[p.id] && pinAttachments[p.id].length > 0 && (
+                                      <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #2e2e2e' }}>
+                                        {pinAttachments[p.id].map(att => {
+                                          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(att.name)
+                                          return isImage ? (
+                                            <a key={att.name} href={att.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
+                                              <img src={att.url} alt={att.name} style={{ width: '100%', maxHeight: '200px', objectFit: 'contain', borderRadius: '3px', marginBottom: '4px', border: '1px solid #2e2e2e', background: '#0a0a0a' }} />
+                                            </a>
+                                          ) : (
+                                            <a key={att.name} href={att.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
+                                              style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#7ab3d4', textDecoration: 'none', marginBottom: '3px' }}>
+                                              📎 {att.name}
+                                            </a>
+                                          )
+                                        })}
+                                      </div>
+                                    )}
                                     {(p.user_id === userId || userRole === 'thriver') && (
                                       <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
                                         {userRole === 'thriver' && (
