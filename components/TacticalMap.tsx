@@ -87,6 +87,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [scenes, setScenes] = useState<Scene[]>([])
   const [tokens, setTokens] = useState<Token[]>([])
   const [dragging, setDragging] = useState<{ tokenId: string; offsetX: number; offsetY: number } | null>(null)
+  const dragPosRef = useRef<{ px: number; py: number } | null>(null) // pixel position of dragged token (canvas coords)
   const [selectedToken, setSelectedToken] = useState<string | null>(null)
   const [showSetup, setShowSetup] = useState(false)
   const [setupName, setSetupName] = useState('Scene')
@@ -182,7 +183,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
 
   // Redraw on token/scene changes
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, campaignNpcs, entries, showRangeOverlay, ping])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, campaignNpcs, entries, showRangeOverlay, ping, dragging])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
@@ -362,12 +363,17 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     let hasActiveAnim = false
     toks.forEach(t => {
       if (!t.is_visible && !isGM) return
-      // Animated position — lerp toward target grid cell
+      // Dragged token follows cursor
       const targetPxX = offsetX + t.grid_x * cellSize + cellSize / 2
       const targetPxY = offsetY + t.grid_y * cellSize + cellSize / 2
       let cx = targetPxX
       let cy = targetPxY
-      const anim = tokenAnimRef.current.get(t.id)
+      const isBeingDragged = dragging?.tokenId === t.id && dragPosRef.current
+      if (isBeingDragged) {
+        cx = dragPosRef.current!.px
+        cy = dragPosRef.current!.py
+      }
+      const anim = !isBeingDragged ? tokenAnimRef.current.get(t.id) : undefined
       if (anim) {
         anim.t = Math.min(1, anim.t + 0.08)
         const ease = 1 - Math.pow(1 - anim.t, 3) // ease-out cubic
@@ -713,8 +719,15 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       if (tok) {
         setSelectedToken(tok.id)
         const canDrag = isGM || (myCharacterId && tok.character_id === myCharacterId)
-        if (canDrag) {
-          setDragging({ tokenId: tok.id, offsetX: 0, offsetY: 0 })
+        if (canDrag && canvasRef.current) {
+          const rect = canvasRef.current.getBoundingClientRect()
+          const mx = (e.clientX - rect.left) / zoom
+          const my = (e.clientY - rect.top) / zoom
+          const cellSize = getCellSize()
+          const tokCx = tok.grid_x * cellSize + cellSize / 2
+          const tokCy = tok.grid_y * cellSize + cellSize / 2
+          setDragging({ tokenId: tok.id, offsetX: tokCx - mx, offsetY: tokCy - my })
+          dragPosRef.current = { px: tokCx, py: tokCy }
         }
         return
       }
@@ -760,6 +773,14 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       const dy = e.clientY - panning.startY
       containerRef.current.scrollLeft = panning.startPanX - dx
       containerRef.current.scrollTop = panning.startPanY - dy
+      return
+    }
+    if (dragging && canvasRef.current) {
+      const rect = canvasRef.current.getBoundingClientRect()
+      const mx = (e.clientX - rect.left) / zoom
+      const my = (e.clientY - rect.top) / zoom
+      dragPosRef.current = { px: mx + dragging.offsetX, py: my + dragging.offsetY }
+      draw()
     }
   }
 
@@ -775,19 +796,17 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     if (!dragging) return
     const pos = getGridPos(e)
     if (pos) {
-      // Start animation from current position to new position
-      const tok = tokens.find(t => t.id === dragging.tokenId)
-      if (tok) {
-        const fromX = tok.grid_x * cellPx + cellPx / 2
-        const fromY = tok.grid_y * cellPx + cellPx / 2
+      // Snap from drag position to target grid cell
+      if (dragPosRef.current) {
         const toX = pos.gx * cellPx + cellPx / 2
         const toY = pos.gy * cellPx + cellPx / 2
-        tokenAnimRef.current.set(dragging.tokenId, { fromX, fromY, toX, toY, t: 0 })
+        tokenAnimRef.current.set(dragging.tokenId, { fromX: dragPosRef.current.px, fromY: dragPosRef.current.py, toX, toY, t: 0 })
       }
       await supabase.from('scene_tokens').update({ grid_x: pos.gx, grid_y: pos.gy }).eq('id', dragging.tokenId)
       setTokens(prev => prev.map(t => t.id === dragging.tokenId ? { ...t, grid_x: pos.gx, grid_y: pos.gy } : t))
       tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
     }
+    dragPosRef.current = null
     setDragging(null)
   }
 
