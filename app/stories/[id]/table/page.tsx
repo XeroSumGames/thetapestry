@@ -216,6 +216,7 @@ export default function TablePage() {
   const coordinateTargetRef = useRef<string | null>(null)
   const [showCoordinateModal, setShowCoordinateModal] = useState(false)
   const [coordinateSelection, setCoordinateSelection] = useState('')
+  const sprintPendingRef = useRef(false)
   const [selectedNpcIds, setSelectedNpcIds] = useState<Set<string>>(new Set())
   const [rosterNpcs, setRosterNpcs] = useState<any[]>([])
   const [showRestorePicker, setShowRestorePicker] = useState(false)
@@ -3028,19 +3029,11 @@ export default function TablePage() {
                 <button onClick={() => { clearAimIfActive(activeEntry.id); consumeAction(activeEntry.id, `${activeEntry.character_name} — Reposition (Resolution phase)`) }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Reposition</button>
 
-                {/* ── SPRINT: both actions, 3x move (30ft). Athletics check — fail = Winded ── */}
+                {/* ── SPRINT: both actions, 3x move (30ft), then Athletics check ── */}
                 <button onClick={has2Actions ? async () => {
                   clearAimIfActive(activeEntry.id)
-                  // 3x movement range
+                  sprintPendingRef.current = true
                   setMoveMode({ characterId: activeEntry.character_id || undefined, npcId: activeEntry.npc_id || undefined, feet: 30 })
-                  // Athletics check — failure = winded next round
-                  const rapid = charEntry?.character.data?.rapid ?? {}
-                  const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
-                  const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
-                  const smod = npcAttacker
-                    ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Athletics')?.level ?? 0 : 0)
-                    : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Athletics')?.level ?? 0
-                  handleRollRequest(`${activeEntry.character_name} — Sprint (Athletics)`, amod, smod)
                   actionPreConsumedRef.current = true
                   consumeAction(activeEntry.id, undefined, 2)
                 } : undefined} disabled={!has2Actions}
@@ -3486,14 +3479,25 @@ export default function TablePage() {
                   // Charge: token moved, now open the attack roll
                   pendingChargeRef.current = null
                   setMoveMode(null)
-                  actionCostRef.current = 2
                   handleRollRequest(charge.label, charge.amod, charge.smod, charge.weapon)
+                } else if (sprintPendingRef.current) {
+                  // Sprint: token moved, now open Athletics check
+                  sprintPendingRef.current = false
+                  setMoveMode(null)
+                  const charEntry = active ? entries.find(e => e.character.name === active.character_name) : null
+                  const npcAttacker = active?.is_npc ? campaignNpcs.find((n: any) => n.name === active.character_name) : null
+                  const rapid = charEntry?.character.data?.rapid ?? {}
+                  const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
+                  const smod = npcAttacker
+                    ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Athletics')?.level ?? 0 : 0)
+                    : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Athletics')?.level ?? 0
+                  handleRollRequest(`${active?.character_name ?? 'Unknown'} — Sprint (Athletics)`, amod, smod)
                 } else {
                   if (active) consumeAction(active.id, `${active.character_name} — Move`)
                   setMoveMode(null)
                 }
               }}
-              onMoveCancel={() => { pendingChargeRef.current = null; setMoveMode(null) }}
+              onMoveCancel={() => { pendingChargeRef.current = null; sprintPendingRef.current = false; setMoveMode(null) }}
             />
           ) : (
             <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} revealedNpcIds={revealedNpcIds} focusPin={focusPin} />
