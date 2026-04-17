@@ -571,7 +571,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         ctx.fill()
       }
       ctx.globalAlpha = 1
-      ping.t += 0.02
+      ping.t += 0.01
       if (ping.t >= 1) setPing(null)
       else hasActiveAnim = true
     }
