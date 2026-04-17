@@ -1782,6 +1782,13 @@ export default function TablePage() {
 
   async function executeRoll() {
     if (!pendingRoll || !userId) return
+    // Self-attack confirmation
+    if (pendingRoll.weapon && targetName) {
+      const activeEntry = initiativeOrder.find(e => e.is_active)
+      if (activeEntry && activeEntry.character_name === targetName) {
+        if (!confirm(`${targetName} is about to attack themselves. Are you sure?`)) return
+      }
+    }
     rollExecutedRef.current = true
     setRolling(true)
     // Determine character name. Most labels containing " — " put the attacker
