@@ -83,7 +83,7 @@ export default function Sidebar() {
           <div style={{ fontFamily: 'Distemper, sans-serif', fontSize: '18px', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1 }}>The Tapestry <span style={{ fontSize: '12px', color: '#f5f2ee' }}>v1.0</span></div>
         </a>
         {onlineCount > 0 && (
-          <div style={{ fontSize: '9px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: '4px' }}>
+          <div style={{ fontSize: '14px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: '4px' }}>
             Survivors present: {onlineCount}
           </div>
         )}
