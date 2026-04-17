@@ -102,7 +102,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [showGrid, setShowGrid] = useState(true)
   const [imgScale, setImgScale] = useState(1)
   const [gridColor, setGridColor] = useState('white')
-  const [ping, setPing] = useState<{ gx: number; gy: number; t: number } | null>(null)
+  const [ping, setPing] = useState<{ gx: number; gy: number; t: number; color: string; count: number } | null>(null)
   const pingChannelRef = useRef<any>(null)
   const [showRangeOverlay, setShowRangeOverlay] = useState(false)
   const tacticalChannelRef = useRef<any>(null)
@@ -158,8 +158,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     tacticalChannelRef.current = channel
     const pingCh = supabase.channel(`ping_${campaignId}`)
       .on('broadcast', { event: 'gm_ping' }, (msg: any) => {
-        const { gx, gy } = msg.payload ?? {}
-        if (gx != null && gy != null) setPing({ gx, gy, t: 0 })
+        const { gx, gy, color } = msg.payload ?? {}
+        if (gx != null && gy != null) setPing({ gx, gy, t: 0, color: color ?? '#EF9F27', count: 2 })
       })
       .subscribe()
     pingChannelRef.current = pingCh
@@ -549,7 +549,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       ctx.globalAlpha = 1
     })
 
-    // GM ping — pulsing ring that fades out
+    // Ping — double pulsing ring that fades out (GM=orange, player=green)
     if (ping) {
       const pingCx = offsetX + ping.gx * cellSize + cellSize / 2
       const pingCy = offsetY + ping.gy * cellSize + cellSize / 2
@@ -558,22 +558,28 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       const pingAlpha = 1 - pingProgress
       ctx.beginPath()
       ctx.arc(pingCx, pingCy, pingRadius, 0, Math.PI * 2)
-      ctx.strokeStyle = '#EF9F27'
+      ctx.strokeStyle = ping.color
       ctx.lineWidth = 3
       ctx.globalAlpha = pingAlpha
       ctx.stroke()
-      // Inner solid dot
       if (pingProgress < 0.3) {
         ctx.beginPath()
         ctx.arc(pingCx, pingCy, cellSize * 0.2, 0, Math.PI * 2)
-        ctx.fillStyle = '#EF9F27'
+        ctx.fillStyle = ping.color
         ctx.globalAlpha = pingAlpha
         ctx.fill()
       }
       ctx.globalAlpha = 1
-      ping.t += 0.01
-      if (ping.t >= 1) setPing(null)
-      else hasActiveAnim = true
+      ping.t += 0.02
+      if (ping.t >= 1) {
+        if (ping.count > 1) {
+          setPing({ ...ping, t: 0, count: ping.count - 1 })
+        } else {
+          setPing(null)
+        }
+      } else {
+        hasActiveAnim = true
+      }
     }
 
     // Range circles for selected token: Engaged, Movement, Weapon Range
@@ -787,10 +793,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     if (!pos) return
     const tok = getTokenAt(pos.gx, pos.gy)
     if (tok && onTokenClick) { onTokenClick(tok); return }
-    // GM double-click on empty cell = ping
-    if (isGM && !tok) {
-      setPing({ gx: pos.gx, gy: pos.gy, t: 0 })
-      pingChannelRef.current?.send({ type: 'broadcast', event: 'gm_ping', payload: { gx: pos.gx, gy: pos.gy } })
+    // Double-click on empty cell = ping (GM=orange, player=green)
+    if (!tok) {
+      const color = isGM ? '#EF9F27' : '#7fc458'
+      setPing({ gx: pos.gx, gy: pos.gy, t: 0, color, count: 2 })
+      pingChannelRef.current?.send({ type: 'broadcast', event: 'gm_ping', payload: { gx: pos.gx, gy: pos.gy, color } })
     }
   }
 
