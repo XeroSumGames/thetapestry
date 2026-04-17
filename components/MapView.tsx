@@ -671,7 +671,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                 // Group displayed pins by category — pins with multiple categories appear in multiple folders
                 const folderMap: Record<string, Pin[]> = {}
                 for (const p of displayedPins) {
-                  const cats = Array.isArray(p.categories) && p.categories.length > 0 ? p.categories : [p.category ?? 'location']
+                  const rawCats = p.categories
+                  const cats: string[] = Array.isArray(rawCats) && rawCats.length > 0 ? rawCats.map(String) : [p.category ?? 'location']
                   for (const cat of cats) {
                     if (!folderMap[cat]) folderMap[cat] = []
                     folderMap[cat].push(p)
@@ -856,8 +857,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                 {form.categories.map(cat => {
                   const catInfo = PIN_CATEGORIES.find(c => c.value === cat)
                   return (
-                    <span key={cat} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '12px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
-                      {catInfo?.emoji} {catInfo?.label ?? cat}
+                    <span key={cat} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                      {catInfo?.emoji ?? '📍'} {catInfo?.label ?? cat}
                       {form.categories.length > 1 && (
                         <button onClick={() => setForm(p => ({ ...p, categories: p.categories.filter(c => c !== cat) }))}
                           style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 1px', lineHeight: 1 }}>×</button>
@@ -937,8 +938,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         {editForm.categories.map(cat => {
           const catInfo = PIN_CATEGORIES.find(c => c.value === cat)
           return (
-            <span key={cat} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#0f2035', border: '1px solid #7ab3d4', borderRadius: '3px', fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
-              {catInfo?.emoji} {catInfo?.label ?? cat}
+            <span key={cat} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', background: '#0f2035', border: '1px solid #7ab3d4', borderRadius: '3px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+              {catInfo?.emoji ?? '📍'} {catInfo?.label ?? cat}
               {editForm.categories.length > 1 && (
                 <button onClick={() => setEditForm(p => ({ ...p, categories: p.categories.filter(c => c !== cat) }))}
                   style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 1px', lineHeight: 1 }}>×</button>
