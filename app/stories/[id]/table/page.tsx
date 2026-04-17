@@ -3895,6 +3895,11 @@ export default function TablePage() {
                     </div>
                   </div>
                 )}
+                {pendingRoll.weapon && !targetName && (
+                  <div style={{ padding: '6px 10px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
+                    Select a target or damage will not be applied
+                  </div>
+                )}
                 {pendingRoll.weapon && targetName && !isInRange(pendingRoll.weapon.weaponName, rangeBand) && (
                   <div style={{ padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
                     Out of range
