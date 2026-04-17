@@ -124,6 +124,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
   const [editForm, setEditForm] = useState({ title: '', notes: '', category: 'location' })
+  const [editAttachments, setEditAttachments] = useState<File[]>([])
+  const [editExistingFiles, setEditExistingFiles] = useState<{ name: string; url: string }[]>([])
+  const [editUploading, setEditUploading] = useState(false)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => {
     if (typeof window !== 'undefined') {
       try { const saved = localStorage.getItem('tapestry_folder_state'); if (saved) return new Set(JSON.parse(saved)) } catch {}
@@ -365,17 +368,37 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     await loadPins()
   }
 
-  function startEdit(pin: Pin) {
+  async function startEdit(pin: Pin) {
   setEditingPin(pin)
   setEditForm({ title: pin.title, notes: pin.notes, category: pin.category ?? 'location' })
+  setEditAttachments([])
   setShowForm(false)
+  // Load existing attachments
+  const { data: files } = await supabase.storage.from('pin-attachments').list(`${pin.user_id}/${pin.id}`)
+  if (files && files.length > 0) {
+    setEditExistingFiles(files.map((f: any) => {
+      const { data: urlData } = supabase.storage.from('pin-attachments').getPublicUrl(`${pin.user_id}/${pin.id}/${f.name}`)
+      return { name: f.name, url: urlData.publicUrl }
+    }))
+  } else {
+    setEditExistingFiles([])
+  }
 }
 
   async function handleSaveEdit() {
   if (!editingPin || !editForm.title.trim()) return
+  setEditUploading(true)
   const { error } = await supabase.from('map_pins').update({ title: editForm.title, notes: editForm.notes, category: editForm.category }).eq('id', editingPin.id)
-  if (!error) { setEditingPin(null); await loadPins() }
-  else alert('Error: ' + error.message)
+  if (error) { alert('Error: ' + error.message); setEditUploading(false); return }
+  // Upload new attachments
+  for (const file of editAttachments) {
+    await supabase.storage.from('pin-attachments').upload(`${editingPin.user_id}/${editingPin.id}/${file.name}`, file, { upsert: true })
+  }
+  setEditUploading(false)
+  setEditingPin(null)
+  setEditAttachments([])
+  setEditExistingFiles([])
+  await loadPins()
 }
 
   // Filter chips
@@ -790,10 +813,42 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         </div>
       </div>
     )}
+    {/* Existing attachments */}
+    {editExistingFiles.length > 0 && (
+      <div style={{ marginBottom: '10px' }}>
+        <label style={lbl}>Attachments</label>
+        {editExistingFiles.map(att => {
+          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(att.name)
+          return (
+            <div key={att.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', padding: '4px 6px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+              {isImage && <img src={att.url} alt="" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '2px' }} />}
+              <a href={att.url} target="_blank" rel="noreferrer" style={{ flex: 1, fontSize: '12px', color: '#7ab3d4', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.name}</a>
+              <button onClick={async () => {
+                await supabase.storage.from('pin-attachments').remove([`${editingPin!.user_id}/${editingPin!.id}/${att.name}`])
+                setEditExistingFiles(prev => prev.filter(a => a.name !== att.name))
+              }} style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '14px', cursor: 'pointer', padding: '0 2px' }}>×</button>
+            </div>
+          )
+        })}
+      </div>
+    )}
+    {/* New file upload */}
+    <div style={{ marginBottom: '12px' }}>
+      <label style={{ display: 'block', padding: '8px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '12px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
+        {editAttachments.length > 0 ? <span style={{ color: '#7fc458' }}>{editAttachments.length} file{editAttachments.length > 1 ? 's' : ''} to upload</span> : '+ Add files'}
+        <input type="file" multiple hidden onChange={e => { if (e.target.files) setEditAttachments(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = '' }} />
+      </label>
+      {editAttachments.map((f, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3px 6px', fontSize: '11px', color: '#cce0f5', marginTop: '2px' }}>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+          <button onClick={() => setEditAttachments(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}>×</button>
+        </div>
+      ))}
+    </div>
     <div style={{ display: 'flex', gap: '6px' }}>
-      <button onClick={handleSaveEdit} disabled={!editForm.title.trim()}
-        style={{ flex: 1, padding: '8px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-        Save
+      <button onClick={handleSaveEdit} disabled={!editForm.title.trim() || editUploading}
+        style={{ flex: 1, padding: '8px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', cursor: editUploading ? 'wait' : 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', opacity: editUploading ? 0.6 : 1 }}>
+        {editUploading ? 'Saving...' : 'Save'}
       </button>
       <button onClick={() => { handleDeletePin(editingPin.id); setEditingPin(null) }}
         style={{ padding: '8px 12px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
