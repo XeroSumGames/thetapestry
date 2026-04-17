@@ -78,6 +78,7 @@ interface Pin {
   status: string
   user_id: string
   category: string
+  categories?: string[]
   created_at?: string
   sort_order?: number
 }
@@ -88,7 +89,7 @@ interface PinForm {
   title: string
   notes: string
   pin_type: 'private' | 'rumor'
-  category: string
+  categories: string[]
 }
 
 interface MapViewProps {
@@ -119,13 +120,13 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [pinsVisible, setPinsVisible] = useState(true)
   const [sidebarTab, setSidebarTab] = useState<'public' | 'mine' | 'campaign'>('public')
   const [campaignPins, setCampaignPins] = useState<{ id: string; name: string; notes: string | null; lat: number; lng: number; category: string; campaign_name: string }[]>([])
-  const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private', category: 'location' })
+  const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private', categories: ['location'] })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [attachments, setAttachments] = useState<File[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
-  const [editForm, setEditForm] = useState({ title: '', notes: '', category: 'location' })
+  const [editForm, setEditForm] = useState({ title: '', notes: '', categories: ['location'] as string[] })
   const [editAttachments, setEditAttachments] = useState<File[]>([])
   const [editExistingFiles, setEditExistingFiles] = useState<{ name: string; url: string }[]>([])
   const [editUploading, setEditUploading] = useState(false)
@@ -200,7 +201,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
       map.on('click', (e: any) => {
         if (!user) return // Ghost mode — read only
-        setForm({ lat: e.latlng.lat, lng: e.latlng.lng, title: '', notes: '', pin_type: 'private', category: 'location' })
+        setForm({ lat: e.latlng.lat, lng: e.latlng.lng, title: '', notes: '', pin_type: 'private', categories: ['location'] })
         setAttachments([])
         setShowForm(true)
         setEditingPin(null)
@@ -376,7 +377,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       title: form.title, notes: form.notes,
       pin_type: isThriver ? 'gm' : 'rumor',
       status: isThriver ? 'approved' : 'pending',
-      category: form.category,
+      category: form.categories[0] ?? 'location',
+      categories: form.categories,
     }).select().single()
     if (error) { alert('Error: ' + error.message); setSaving(false); return }
     logFirstEvent('first_pin_placed', { pin_id: data.id, title: form.title })
@@ -411,7 +413,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
   async function startEdit(pin: Pin) {
   setEditingPin(pin)
-  setEditForm({ title: pin.title, notes: pin.notes, category: pin.category ?? 'location' })
+  const cats = Array.isArray(pin.categories) && pin.categories.length > 0 ? pin.categories : [pin.category ?? 'location']
+  setEditForm({ title: pin.title, notes: pin.notes, categories: cats })
   setEditAttachments([])
   setShowForm(false)
   // Load existing attachments
@@ -429,7 +432,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   async function handleSaveEdit() {
   if (!editingPin || !editForm.title.trim()) return
   setEditUploading(true)
-  const { error } = await supabase.from('map_pins').update({ title: editForm.title, notes: editForm.notes, category: editForm.category }).eq('id', editingPin.id)
+  const { error } = await supabase.from('map_pins').update({ title: editForm.title, notes: editForm.notes, category: editForm.categories[0] ?? 'location', categories: editForm.categories }).eq('id', editingPin.id)
   if (error) { alert('Error: ' + error.message); setEditUploading(false); return }
   // Upload new attachments
   for (const file of editAttachments) {
@@ -665,12 +668,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               ) : (
               /* Public / My Pins folder tree */
               (() => {
-                // Group displayed pins by category, sorted within each folder
+                // Group displayed pins by category — pins with multiple categories appear in multiple folders
                 const folderMap: Record<string, Pin[]> = {}
                 for (const p of displayedPins) {
-                  const cat = p.category ?? 'location'
-                  if (!folderMap[cat]) folderMap[cat] = []
-                  folderMap[cat].push(p)
+                  const cats = Array.isArray(p.categories) && p.categories.length > 0 ? p.categories : [p.category ?? 'location']
+                  for (const cat of cats) {
+                    if (!folderMap[cat]) folderMap[cat] = []
+                    folderMap[cat].push(p)
+                  }
                 }
                 // Sort within each folder: timeline by sort_order, others by name
                 for (const cat of Object.keys(folderMap)) {
@@ -846,16 +851,33 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   />
 </div>
             <div style={{ marginBottom: '10px' }}>
-              <label style={lbl}>Category</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
-                {PIN_CATEGORIES.map(cat => (
-                  <button key={cat.value} onClick={() => setForm(p => ({ ...p, category: cat.value }))}
-                    style={{ padding: '6px 4px', border: `1px solid ${form.category === cat.value ? '#c0392b' : '#3a3a3a'}`, background: form.category === cat.value ? '#2a1210' : '#242424', borderRadius: '3px', cursor: 'pointer', textAlign: 'center', fontFamily: 'Barlow, sans-serif' }}>
-                    <div style={{ fontSize: '18px', marginBottom: '2px' }}>{cat.emoji}</div>
-                    <div style={{ fontSize: '11px', color: '#f5f2ee', lineHeight: 1.2 }}>{cat.label}</div>
-                  </button>
-                ))}
+              <label style={lbl}>Categories</label>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                {form.categories.map(cat => {
+                  const catInfo = PIN_CATEGORIES.find(c => c.value === cat)
+                  return (
+                    <span key={cat} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '12px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
+                      {catInfo?.emoji} {catInfo?.label ?? cat}
+                      {form.categories.length > 1 && (
+                        <button onClick={() => setForm(p => ({ ...p, categories: p.categories.filter(c => c !== cat) }))}
+                          style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 1px', lineHeight: 1 }}>×</button>
+                      )}
+                    </span>
+                  )
+                })}
               </div>
+              <select value="" onChange={e => {
+                if (e.target.value && !form.categories.includes(e.target.value)) {
+                  setForm(p => ({ ...p, categories: [...p.categories, e.target.value] }))
+                }
+                e.target.value = ''
+              }}
+                style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                <option value="">+ Add category...</option>
+                {PIN_CATEGORIES.filter(c => !form.categories.includes(c.value)).map(c => (
+                  <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>
+                ))}
+              </select>
             </div>
             <div style={{ marginBottom: '8px' }}>
               <label style={lbl}>Title</label>
@@ -910,16 +932,33 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       <textarea style={{ ...inp, minHeight: '60px', resize: 'vertical' }} value={editForm.notes} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} />
     </div>
     <div style={{ marginBottom: '12px' }}>
-      <label style={lbl}>Category</label>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
-        {PIN_CATEGORIES.map(cat => (
-          <button key={cat.value} onClick={() => setEditForm(p => ({ ...p, category: cat.value }))}
-            style={{ padding: '6px 4px', border: `1px solid ${editForm.category === cat.value ? '#7ab3d4' : '#3a3a3a'}`, background: editForm.category === cat.value ? '#0f2035' : '#242424', borderRadius: '3px', cursor: 'pointer', textAlign: 'center' }}>
-            <div style={{ fontSize: '16px', marginBottom: '2px' }}>{cat.emoji}</div>
-            <div style={{ fontSize: '8px', color: editForm.category === cat.value ? '#7ab3d4' : '#d4cfc9', lineHeight: 1.2 }}>{cat.label.split('/')[0].trim()}</div>
-          </button>
-        ))}
+      <label style={lbl}>Categories</label>
+      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
+        {editForm.categories.map(cat => {
+          const catInfo = PIN_CATEGORIES.find(c => c.value === cat)
+          return (
+            <span key={cat} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#0f2035', border: '1px solid #7ab3d4', borderRadius: '3px', fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
+              {catInfo?.emoji} {catInfo?.label ?? cat}
+              {editForm.categories.length > 1 && (
+                <button onClick={() => setEditForm(p => ({ ...p, categories: p.categories.filter(c => c !== cat) }))}
+                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 1px', lineHeight: 1 }}>×</button>
+              )}
+            </span>
+          )
+        })}
       </div>
+      <select value="" onChange={e => {
+        if (e.target.value && !editForm.categories.includes(e.target.value)) {
+          setEditForm(p => ({ ...p, categories: [...p.categories, e.target.value] }))
+        }
+        e.target.value = ''
+      }}
+        style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+        <option value="">+ Add category...</option>
+        {PIN_CATEGORIES.filter(c => !editForm.categories.includes(c.value)).map(c => (
+          <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>
+        ))}
+      </select>
     </div>
     {userRole === 'thriver' && editingPin && (
       <div style={{ marginBottom: '12px' }}>
