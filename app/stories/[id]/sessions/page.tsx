@@ -79,7 +79,18 @@ export default function SessionHistoryPage() {
     setDeleting(sessionId)
     await supabase.from('session_attachments').delete().eq('session_id', sessionId)
     await supabase.from('sessions').delete().eq('id', sessionId)
-    setSessions(prev => prev.filter(s => s.id !== sessionId))
+    // Renumber remaining sessions so there are no gaps
+    const remaining = sessions.filter(s => s.id !== sessionId).sort((a, b) => a.session_number - b.session_number)
+    for (let i = 0; i < remaining.length; i++) {
+      const newNum = i + 1
+      if (remaining[i].session_number !== newNum) {
+        await supabase.from('sessions').update({ session_number: newNum }).eq('id', remaining[i].id)
+        remaining[i] = { ...remaining[i], session_number: newNum }
+      }
+    }
+    // Update campaign session_count to match
+    await supabase.from('campaigns').update({ session_count: remaining.length }).eq('id', id)
+    setSessions(remaining.sort((a, b) => b.session_number - a.session_number))
     setAttachments(prev => prev.filter(a => a.session_id !== sessionId))
     setDeleting(null)
   }
