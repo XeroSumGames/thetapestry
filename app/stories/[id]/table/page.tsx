@@ -1262,8 +1262,7 @@ export default function TablePage() {
       initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
       return
     }
-    // Place at top-right of the grid
-    const cols = (activeScene as any).grid_cols ?? 20
+    // Place at top-left of the grid
     const { error: tokenErr } = await supabase.from('scene_tokens').insert({
       scene_id: activeScene.id,
       name,
@@ -1271,8 +1270,8 @@ export default function TablePage() {
       character_id: characterId || null,
       npc_id: npcId || null,
       portrait_url: portraitUrl || null,
-      grid_x: cols - 2,
-      grid_y: 1,
+      grid_x: 0,
+      grid_y: 0,
       is_visible: true,
       color: type === 'pc' ? '#7ab3d4' : '#c0392b',
     })
