@@ -1,56 +1,109 @@
-# Test Plan — Tactical Map: Sticky-Drag Fix + Attack Roll Auto-Target
+# Test Plan — Map selection → Attack target pre-pop + Object card on double-click
 
-## Part 1: Sticky mouse after clicking a token
+## Changes under test
 
-### Setup
-- [ ] Open a campaign with a tactical scene and at least one token
-- [ ] Launch the table: `npm run dev` then navigate to `/stories/[id]/table`
+1. Single-clicking a token on the tactical map now reports the selection up to the table page.
+2. When the active combatant clicks ATTACK, the target dropdown is pre-populated with the map-selected token (if valid). Map selection overrides `last_attack_target`.
+3. Double-clicking an object token on the map now opens an **Object Card** with name, WP/integrity bar, portrait/color, and (revealed) properties. GM also sees hidden properties and contents.
 
-### Step 1: Single click on own token (GM)
-- [ ] Log in as GM
-- [ ] On the tactical map, click ONCE on a token (mousedown + mouseup in place, no drag)
-- [ ] Move the mouse around the canvas
-- [ ] **Expected:** token stays at its grid cell; the cursor is no longer "grabbing"; nothing follows the mouse
-- [ ] **Fail case (before fix):** token floats with the cursor until next click
+## Setup
 
-### Step 2: Real drag still works
-- [ ] Click-and-drag the token to a new cell
-- [ ] Release on a different cell
-- [ ] **Expected:** token snaps to new cell with ease-out animation; other clients see it move within ~1s
+- `npm run dev` running on `http://localhost:3000` (or 3001).
+- Open the campaign's table page in two browsers:
+  - **GM** — signed in as campaign GM.
+  - **Player** — a player with a PC in the story.
+- Have a tactical scene active with: the player's PC, at least 2 NPCs ("Goon 1", "Goon 2"), and at least one object token with WP (e.g., a "Crate" with wp_max > 0).
+- Start combat.
 
-### Step 3: Drag outside grid
-- [ ] Click-drag a token and release the mouse OUTSIDE the canvas
-- [ ] Return the cursor to the canvas
-- [ ] **Expected:** token is back at its original cell; drag state cleared; no sticky cursor
+---
 
-### Step 4: Player drags own token
-- [ ] Log in as a player whose character has a token
-- [ ] Single-click own token → not sticky
-- [ ] Drag own token to a new cell → moves and syncs to GM
-- [ ] Single-click an NPC/other token → selects (shows info panel) but not sticky
+## Test cases
 
-### Step 5: DB write failure does not orphan drag
-- [ ] (Optional) Throttle DevTools network to "Offline"
-- [ ] Drag a token to a new cell
-- [ ] **Expected:** drag state still clears; warning appears in console (`[TacticalMap] token move failed:`); token reverts to last known cell on next refresh
+### 1. Selection pre-pop — PC attacker targets an NPC
+- **Setup:** Player's PC is the active combatant. Equipped weapon ready.
+- **Steps:**
+  1. Player single-clicks "Goon 1" on the map (selection ring appears).
+  2. Player clicks ATTACK.
+- **Expect:**
+  - Target dropdown shows "Goon 1" pre-selected.
+  - CMod reflects Goon 1's rapid defensive modifier (DEX for ranged, PHY for melee), any coord bonus.
+  - Range band auto-set from token distance.
 
-## Part 2: Attack Roll auto-populate last target
+### 2. Selection pre-pop — object target
+- **Setup:** Player's PC active, crate visible with WP.
+- **Steps:** Click the "Crate" token, then click ATTACK.
+- **Expect:**
+  - Target dropdown shows "Crate" pre-selected.
+  - CMod has defensive mod = 0 (objects don't dodge).
+  - Range band auto-set.
 
-### Setup
-- [ ] Active combat with at least one character + 2 NPC targets
-- [ ] Complete one turn where you attack Target A
+### 3. Selection overrides `last_attack_target`
+- **Setup:** Active PC has already attacked "Goon 1" this turn (so `last_attack_target === "Goon 1"`).
+- **Steps:** Click "Goon 2" on map, click ATTACK again.
+- **Expect:**
+  - Target = "Goon 2" (not Goon 1).
+  - No +1 same-target bonus (different target than last attack).
 
-### Step 6: Next turn — same character
-- [ ] On your next turn, open the Attack Roll modal
-- [ ] **Expected:** the Target dropdown is pre-populated with "Target A" (the last target hit this round)
-- [ ] You can still change the target via the dropdown
+### 4. Invalid selection falls back to last target
+- **Setup:** A dead NPC token remains visible (wp_current = 0), `last_attack_target = "Goon 1"` (alive).
+- **Steps:** Click the dead NPC, click ATTACK.
+- **Expect:** Target pre-populates to "Goon 1" (the last target) — dead selection is rejected, fallback kicks in. No crash.
 
-### Step 7: New round clears memory
-- [ ] Advance to a new round
-- [ ] Open the Attack Roll modal
-- [ ] **Expected:** Target dropdown is empty / default (no stale target from previous round)
+### 5. Attacker cannot target themselves
+- **Setup:** Active PC.
+- **Steps:** Click own PC token, click ATTACK.
+- **Expect:** Target dropdown falls back to `last_attack_target` or empty. Never pre-selects the attacker's own name.
 
-### Step 8: Character who hasn't attacked yet
-- [ ] Switch to a character who has not attacked this round
-- [ ] Open Attack Roll modal
-- [ ] **Expected:** Target dropdown is empty / default
+### 6. Clearing selection
+- **Setup:** No previous attack this turn.
+- **Steps:** Select Goon 1, then click an empty cell on the map (selection clears). Click ATTACK.
+- **Expect:** Target dropdown empty (no pre-pop).
+
+### 7. Regression — double-click NPC opens NpcCard
+- **Steps:** Double-click any NPC token.
+- **Expect:** Existing behavior — `NpcCard` opens. Close button works. No new object card appears.
+
+### 8. Regression — double-click character opens sheet
+- **Steps:** Double-click a PC token.
+- **Expect:** Existing behavior — `CharacterCard` / sheet opens.
+
+### 9. Double-click object opens ObjectCard (GM)
+- **Setup:** Crate with properties including some `revealed: false`.
+- **Steps:** GM double-clicks the crate.
+- **Expect:**
+  - Draggable inline card appears: name, WP bar, portrait/color swatch.
+  - All properties visible, hidden ones labeled `(hidden)`.
+  - Contents list shown under "Contents (GM)".
+  - Close button dismisses.
+
+### 10. Double-click object opens ObjectCard (player)
+- **Setup:** Same crate.
+- **Steps:** Player double-clicks the crate.
+- **Expect:**
+  - Card shows name, WP bar, portrait/color.
+  - Only **revealed** properties shown. No hidden properties. No contents list.
+
+### 11. Live WP sync on ObjectCard
+- **Steps:** Open ObjectCard for Crate (WP 10/10). GM damages the crate via any existing flow so its `wp_current` updates.
+- **Expect:** The open card's WP bar decreases without re-opening the card.
+
+### 12. Multiple ObjectCards simultaneously
+- **Steps:** Double-click two different objects.
+- **Expect:** Both cards visible, each draggable and closeable independently.
+
+### 13. Toggle-off by re-double-clicking same object
+- **Steps:** Double-click an object (card opens). Double-click the same object again.
+- **Expect:** Card closes.
+
+### 14. Selection ring still drawn in TacticalMap
+- **Steps:** Single-click any token.
+- **Expect:** Existing selection ring appears — no visual regression.
+
+### 15. Manual target change still works
+- **Steps:** Open attack modal with pre-populated target. Use the dropdown to change target.
+- **Expect:** CMod, defensive mod, range band recompute on change (existing `onChange` behavior unchanged).
+
+---
+
+## Pass criteria
+All 15 cases behave as described with no console errors related to the new code path and no regressions in the combat flow.

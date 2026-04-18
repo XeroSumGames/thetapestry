@@ -6,6 +6,7 @@ import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
 import type { InventoryItem } from '../../../../components/InventoryPanel'
 import NpcRoster from '../../../../components/NpcRoster'
 import NpcCard from '../../../../components/NpcCard'
+import ObjectCard from '../../../../components/ObjectCard'
 import CampaignPins from '../../../../components/CampaignPins'
 import CampaignObjects from '../../../../components/CampaignObjects'
 import GmNotes from '../../../../components/GmNotes'
@@ -179,6 +180,8 @@ export default function TablePage() {
 
   const [campaign, setCampaign] = useState<Campaign | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const userIdRef = useRef<string | null>(null)
+  useEffect(() => { userIdRef.current = userId }, [userId])
   const [myUsername, setMyUsername] = useState<string>('')
   const [isGM, setIsGM] = useState(false)
   const [entries, setEntries] = useState<TableEntry[]>([])
@@ -259,6 +262,10 @@ export default function TablePage() {
   const chatChannelRef = useRef<any>(null)
   const [whisperTarget, setWhisperTarget] = useState<{ userId: string; characterName: string } | null>(null)
   const [viewingNpcs, setViewingNpcs] = useState<CampaignNpc[]>([])
+  const [viewingObjects, setViewingObjects] = useState<{ tokenId: string; name: string; color: string; portraitUrl: string | null }[]>([])
+  const objectDragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null)
+  const [objectPositions, setObjectPositions] = useState<Record<string, { x: number; y: number }>>({})
+  const [selectedMapTargetName, setSelectedMapTargetName] = useState<string | null>(null)
   const [publishedNpcIds, setPublishedNpcIds] = useState<Set<string>>(new Set())
   const [pendingEditNpcId, setPendingEditNpcId] = useState<string | null>(null)
   const [sheetPos, setSheetPos] = useState<{ x: number; y: number } | null>(null)
@@ -362,14 +369,24 @@ export default function TablePage() {
   }
 
   async function loadChat(campaignId: string) {
+    // Use ref, not state — the realtime subscription's closure captures the initial render's null
+    const uid = userIdRef.current
+    if (!uid) return
     const { data } = await supabase
       .from('chat_messages')
       .select('*')
       .eq('campaign_id', campaignId)
-      .or(`is_whisper.eq.false,is_whisper.is.null,and(is_whisper.eq.true,user_id.eq.${userId}),and(is_whisper.eq.true,recipient_user_id.eq.${userId})`)
+      .or(`is_whisper.eq.false,is_whisper.is.null,and(is_whisper.eq.true,user_id.eq.${uid}),and(is_whisper.eq.true,recipient_user_id.eq.${uid})`)
       .order('created_at', { ascending: false })
       .limit(50)
-    setChatMessages((data ?? []).reverse())
+    const next = (data ?? []).reverse()
+    // Auto-switch to Chat tab if a NEW whisper just landed addressed to me
+    setChatMessages(prev => {
+      const prevIds = new Set(prev.map(m => m.id))
+      const incomingWhisper = next.find((m: any) => !prevIds.has(m.id) && m.is_whisper && m.recipient_user_id === uid && m.user_id !== uid)
+      if (incomingWhisper && prev.length > 0) setFeedTab('chat')
+      return next
+    })
     setTimeout(() => { rollFeedRef.current?.scrollTo(0, rollFeedRef.current.scrollHeight) }, 50)
   }
 
@@ -437,6 +454,7 @@ export default function TablePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       setUserId(user.id)
+      userIdRef.current = user.id  // Sync immediately so loadChat's initial call sees it
       const { data: myProfile } = await supabase.from('profiles').select('username, role').eq('id', user.id).single()
       setMyUsername(myProfile?.username ?? '')
 
@@ -1779,11 +1797,15 @@ export default function TablePage() {
     const aimBonus = activeEntry?.aim_bonus ?? 0
     const baseCmod = (weapon?.conditionCmod ?? 0) + aimBonus
     setCmod(baseCmod ? String(baseCmod) : '0')
-    // Auto-populate target dropdown with last_attack_target (this turn)
-    const prevTarget = weapon ? activeEntry?.last_attack_target : null
-    const prevTargetAlive = prevTarget && (
-      initiativeOrder.some(ie => {
-        if (ie.character_name !== prevTarget) return false
+    // Auto-populate target dropdown.  Priority:
+    //   1) Token the attacker selected on the map (explicit user action)
+    //   2) last_attack_target this turn (fallback)
+    function isNameValidLiveTarget(name: string | null | undefined): boolean {
+      if (!name) return false
+      // Attacker can't target themselves
+      if (activeEntry && name === activeEntry.character_name) return false
+      const inInit = initiativeOrder.some(ie => {
+        if (ie.character_name !== name) return false
         if (ie.is_npc) {
           const npc = campaignNpcs.find((n: any) => n.id === ie.npc_id)
           if (npc && npc.wp_current != null && npc.wp_current <= 0) return false
@@ -1792,15 +1814,21 @@ export default function TablePage() {
           if (tEntry && (tEntry.liveState.wp_current ?? tEntry.liveState.wp_max ?? 1) <= 0) return false
         }
         return true
-      }) ||
-      mapTokens.some(t => t.token_type === 'object' && t.name === prevTarget && (t.wp_current ?? t.wp_max ?? 0) > 0)
-    )
-    if (prevTarget && prevTargetAlive && weapon && activeEntry) {
-      setTargetName(prevTarget)
+      })
+      if (inInit) return true
+      return mapTokens.some(t => t.token_type === 'object' && t.name === name && (t.wp_current ?? t.wp_max ?? 0) > 0)
+    }
+    const prevTarget = weapon ? activeEntry?.last_attack_target : null
+    const mapSelection = weapon ? selectedMapTargetName : null
+    const chosenTarget = isNameValidLiveTarget(mapSelection)
+      ? mapSelection
+      : (isNameValidLiveTarget(prevTarget) ? prevTarget : null)
+    if (chosenTarget && weapon && activeEntry) {
+      setTargetName(chosenTarget)
       const w = getWeaponByName(weapon.weaponName)
       const isMelee = w?.category === 'melee'
-      const targetEntry = entries.find(en => en.character.name === prevTarget)
-      const isObjectTarget = !targetEntry && !initiativeOrder.some(ie => ie.character_name === prevTarget) && mapTokens.some(t => t.token_type === 'object' && t.name === prevTarget)
+      const targetEntry = entries.find(en => en.character.name === chosenTarget)
+      const isObjectTarget = !targetEntry && !initiativeOrder.some(ie => ie.character_name === chosenTarget) && mapTokens.some(t => t.token_type === 'object' && t.name === chosenTarget)
       const targetRapid = targetEntry?.character.data?.rapid ?? {}
       const defensiveMod = isObjectTarget ? 0 : (isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0))
       const myInitEntry = initiativeOrder.find(ie =>
@@ -1808,10 +1836,11 @@ export default function TablePage() {
         (activeEntry.npc_id && ie.npc_id === activeEntry.npc_id) ||
         ie.character_name === activeEntry.character_name
       )
-      const coordBonus = (myInitEntry?.coordinate_target === prevTarget) ? (myInitEntry?.coordinate_bonus ?? 0) : 0
-      // +1 same-target bonus: guaranteed since prevTarget IS the last target
-      setCmod(String(baseCmod - defensiveMod + 1 + coordBonus))
-      const autoRange = getAutoRangeBand(activeEntry.character_id || undefined, activeEntry.npc_id || undefined, prevTarget)
+      const coordBonus = (myInitEntry?.coordinate_target === chosenTarget) ? (myInitEntry?.coordinate_bonus ?? 0) : 0
+      // +1 same-target bonus only when this matches last_attack_target
+      const sameTargetBonus = chosenTarget === prevTarget ? 1 : 0
+      setCmod(String(baseCmod - defensiveMod + sameTargetBonus + coordBonus))
+      const autoRange = getAutoRangeBand(activeEntry.character_id || undefined, activeEntry.npc_id || undefined, chosenTarget)
       if (autoRange) setRangeBand(autoRange)
     } else {
       setTargetName('')
@@ -3625,7 +3654,16 @@ export default function TablePage() {
                     if (selectedEntry?.stateId === entry.stateId) { setSelectedEntry(null); setSheetPos(null) }
                     else { setSelectedEntry(entry); setViewingNpcs([]); setSheetPos(null) }
                   }
+                } else if (token.token_type === 'object') {
+                  setViewingObjects(prev =>
+                    prev.some(o => o.tokenId === token.id)
+                      ? prev.filter(o => o.tokenId !== token.id)
+                      : [...prev, { tokenId: token.id, name: token.name, color: token.color, portraitUrl: token.portrait_url }]
+                  )
                 }
+              }}
+              onTokenSelect={(token: any) => {
+                setSelectedMapTargetName(token?.name ?? null)
               }}
               moveMode={moveMode}
               onTokensUpdate={(toks, cellFeet) => {
@@ -3760,6 +3798,60 @@ export default function TablePage() {
               )
             })
           })()}
+
+          {/* Object Card(s) — draggable inline, live WP from mapTokens */}
+          {viewingObjects.map((obj, i) => {
+            const liveTok = mapTokens.find(t => t.id === obj.tokenId)
+            const pos = objectPositions[obj.tokenId]
+            return (
+              <div key={obj.tokenId}
+                style={{
+                  position: 'absolute',
+                  left: pos?.x ?? 40 + i * 22,
+                  top: pos?.y ?? 40 + i * 22,
+                  width: '340px',
+                  zIndex: 1150 + i,
+                  borderRadius: '4px',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
+                }}>
+                <div
+                  onMouseDown={e => {
+                    const el = e.currentTarget.parentElement as HTMLElement
+                    const rect = el.getBoundingClientRect()
+                    const parentRect = el.offsetParent?.getBoundingClientRect() ?? { left: 0, top: 0 }
+                    const origX = rect.left - parentRect.left
+                    const origY = rect.top - parentRect.top
+                    objectDragRef.current = { id: obj.tokenId, startX: e.clientX, startY: e.clientY, origX, origY }
+                    const onMove = (ev: MouseEvent) => {
+                      if (!objectDragRef.current) return
+                      const dx = ev.clientX - objectDragRef.current.startX
+                      const dy = ev.clientY - objectDragRef.current.startY
+                      setObjectPositions(prev => ({ ...prev, [objectDragRef.current!.id]: { x: objectDragRef.current!.origX + dx, y: objectDragRef.current!.origY + dy } }))
+                    }
+                    const onUp = () => {
+                      objectDragRef.current = null
+                      window.removeEventListener('mousemove', onMove)
+                      window.removeEventListener('mouseup', onUp)
+                    }
+                    window.addEventListener('mousemove', onMove)
+                    window.addEventListener('mouseup', onUp)
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3px', cursor: 'grab', borderRadius: '4px 4px 0 0', background: '#242424', border: '1px solid #3a3a3a', borderBottom: 'none', userSelect: 'none' }}>
+                  <div style={{ width: '40px', height: '3px', borderRadius: '2px', background: '#5a5a5a' }} />
+                </div>
+                <ObjectCard
+                  tokenId={obj.tokenId}
+                  name={obj.name}
+                  wpCurrent={liveTok?.wp_current ?? null}
+                  wpMax={liveTok?.wp_max ?? null}
+                  color={obj.color}
+                  portraitUrl={obj.portraitUrl}
+                  isGM={isGM}
+                  onClose={() => setViewingObjects(prev => prev.filter(o => o.tokenId !== obj.tokenId))}
+                />
+              </div>
+            )
+          })}
 
           {/* Inline character sheet — full screen over map */}
           {syncedSelectedEntry && sheetMode === 'inline' && (
