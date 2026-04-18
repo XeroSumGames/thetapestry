@@ -700,59 +700,58 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                   onMouseEnter={e => { if (!dragId) e.currentTarget.style.background = '#242424' }}
                   onMouseLeave={e => { if (!dragId && dragOverId !== npc.id) e.currentTarget.style.background = viewingNpcIds?.has(npc.id) ? '#2a1210' : '#1a1a1a' }}
                 >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div
-                    draggable
-                    onDragStart={e => { e.stopPropagation(); setDragId(npc.id) }}
-                    onDragEnd={() => { setDragId(null); setDragOverId(null) }}
-                    onClick={e => e.stopPropagation()}
-                    title="Drag to reorder"
-                    style={{ cursor: 'grab', color: '#3a3a3a', fontSize: '14px', lineHeight: 1, userSelect: 'none', padding: '0 2px', flexShrink: 0 }}
-                  >⠿</div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {/* Left column: drag handle + delete */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
+                    <div
+                      draggable
+                      onDragStart={e => { e.stopPropagation(); setDragId(npc.id) }}
+                      onDragEnd={() => { setDragId(null); setDragOverId(null) }}
+                      onClick={e => e.stopPropagation()}
+                      title="Drag to reorder"
+                      style={{ cursor: 'grab', color: '#3a3a3a', fontSize: '14px', lineHeight: 1, userSelect: 'none' }}
+                    >⠿</div>
+                    <button onClick={e => { e.stopPropagation(); handleDelete(npc.id, npc.name) }}
+                      title="Remove NPC"
+                      style={{ fontSize: '11px', padding: '0 3px', borderRadius: '2px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.2 }}>
+                      ×
+                    </button>
+                  </div>
+                  {/* Center: name + badges */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.name}</div>
-                    <div style={{ display: 'flex', gap: '3px', marginTop: '2px' }}>
-                      {npc.npc_type && (() => {
-                        const tc = TYPE_COLORS[npc.npc_type] ?? TYPE_COLORS.goon
-                        return <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.npc_type}</span>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', lineHeight: 1.2 }}>{npc.name}</div>
+                    <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginTop: '3px' }}>
+                      <span style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.status}</span>
+                      <button onClick={e => quickReveal(npc.id, e)}
+                        style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: revealedNpcIds.has(npc.id) ? '#2a1210' : '#1a2e10', border: `1px solid ${revealedNpcIds.has(npc.id) ? '#c0392b' : '#2d5a1b'}`, color: revealedNpcIds.has(npc.id) ? '#f5a89a' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        {revealedNpcIds.has(npc.id) ? 'Hide' : 'Show'}
+                      </button>
+                      {combatActive && !initiativeNpcIds?.has(npc.id) && !((npc.wp_current ?? npc.wp_max ?? 10) === 0 && npc.death_countdown != null && npc.death_countdown <= 0) && (
+                        <button onClick={e => { e.stopPropagation(); onAddToCombat?.([npc]) }}
+                          style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: '#7a1f16', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                          Fight
+                        </button>
+                      )}
+                      {onPlaceOnMap && (() => {
+                        const isOnMap = npcIdsOnMap?.has(npc.id) ?? false
+                        return (
+                          <button onClick={e => { e.stopPropagation(); isOnMap && onRemoveFromMap ? onRemoveFromMap(npc) : onPlaceOnMap(npc) }}
+                            style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: isOnMap ? '#1a2e10' : '#1a1a2e', border: `1px solid ${isOnMap ? '#2d5a1b' : '#2e2e5a'}`, color: isOnMap ? '#7fc458' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            Map
+                          </button>
+                        )
                       })()}
+                      {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>}
                     </div>
                   </div>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                  {/* Right: portrait */}
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                     {npc.portrait_url ? (
                       <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(npc.name)}</span>
+                      <span style={{ fontSize: '15px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(npc.name)}</span>
                     )}
                   </div>
-                </div>
-                <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginTop: '3px', paddingLeft: '20px' }}>
-                    <span style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.status}</span>
-                    <button onClick={e => quickReveal(npc.id, e)}
-                      style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: revealedNpcIds.has(npc.id) ? '#2a1210' : '#1a2e10', border: `1px solid ${revealedNpcIds.has(npc.id) ? '#c0392b' : '#2d5a1b'}`, color: revealedNpcIds.has(npc.id) ? '#f5a89a' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
-                      {revealedNpcIds.has(npc.id) ? 'Hide' : 'Show'}
-                    </button>
-                    {combatActive && !initiativeNpcIds?.has(npc.id) && !((npc.wp_current ?? npc.wp_max ?? 10) === 0 && npc.death_countdown != null && npc.death_countdown <= 0) && (
-                      <button onClick={e => { e.stopPropagation(); onAddToCombat?.([npc]) }}
-                        style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: '#7a1f16', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
-                        Fight
-                      </button>
-                    )}
-                    {onPlaceOnMap && (() => {
-                      const isOnMap = npcIdsOnMap?.has(npc.id) ?? false
-                      return (
-                        <button onClick={e => { e.stopPropagation(); isOnMap && onRemoveFromMap ? onRemoveFromMap(npc) : onPlaceOnMap(npc) }}
-                          style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: isOnMap ? '#1a2e10' : '#1a1a2e', border: `1px solid ${isOnMap ? '#2d5a1b' : '#2e2e5a'}`, color: isOnMap ? '#7fc458' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
-                          Map
-                        </button>
-                      )
-                    })()}
-                    {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>}
-                    <button onClick={e => { e.stopPropagation(); handleDelete(npc.id, npc.name) }}
-                      title="Remove NPC"
-                      style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '2px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', marginLeft: 'auto' }}>
-                      ×
-                    </button>
                 </div>
                 </div>
               )
