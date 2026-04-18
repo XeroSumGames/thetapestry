@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
 import { logEvent } from '../lib/events'
+import InventoryPanel, { InventoryItem } from './InventoryPanel'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, CONDITIONS, Condition, ALL_WEAPONS, MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getTraitValue } from '../lib/weapons'
 import PrintSheet from './wizard/PrintSheet'
 import { WizardState, createWizardState } from '../lib/xse-engine'
@@ -118,6 +119,7 @@ export default function CharacterCard({
   const [breakingPointResult, setBreakingPointResult] = useState<{ roll: number; cmod: number; result: { name: string; effect: string }; durationHours: number } | null>(null)
   const [lastingWoundResult, setLastingWoundResult] = useState<{ roll: number; cmod: number; result: { name: string; effect: string } } | null>(null)
   const [showRestModal, setShowRestModal] = useState(false)
+  const [showInventory, setShowInventory] = useState(false)
   const [restHours, setRestHours] = useState(0)
   const [restDays, setRestDays] = useState(0)
   const [restWeeks, setRestWeeks] = useState(0)
@@ -320,6 +322,7 @@ export default function CharacterCard({
             <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
               {onPlaceOnMap && <button onClick={onPlaceOnMap} style={btn('#1a1a2e', '#7ab3d4')}>Map</button>}
               <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={btn('#c0392b', '#f5a89a')}>Edit</button>
+              <button onClick={() => setShowInventory(true)} style={btn('#2a2010', '#EF9F27')}>Inventory</button>
               <button onClick={handlePrint} disabled={printing} style={btn('#2d5a1b', '#7fc458')}>Print</button>
               {!inline && <button onClick={handleDuplicate} disabled={duplicating} style={btn('#1a3a5c', '#7ab3d4')}>{duplicating ? '...' : 'Duplicate'}</button>}
               {!inline && <button onClick={handleDelete} disabled={deleting} style={btn('#2e2e2e', '#d4cfc9')}>{deleting ? '...' : 'Delete'}</button>}
@@ -684,10 +687,14 @@ export default function CharacterCard({
           </div>
           {/* Encumbrance tracker */}
           {(() => {
-            const encLimit = 6 + (rapid.PHY ?? 0)
+            const inv: InventoryItem[] = c.data?.inventory ?? []
+            const invEnc = inv.reduce((sum: number, item: InventoryItem) => sum + item.enc * item.qty, 0)
+            const hasBackpack = inv.some((i: InventoryItem) => i.name === 'Backpack' || i.name === 'Military Backpack')
+            const backpackBonus = hasBackpack ? 2 : 0
+            const encLimit = 6 + (rapid.PHY ?? 0) + backpackBonus
             const wp = getWeaponByName(weaponPrimary.weaponName)
             const ws = getWeaponByName(weaponSecondary.weaponName)
-            const currentEnc = (wp?.enc ?? 0) + (ws?.enc ?? 0)
+            const currentEnc = (wp?.enc ?? 0) + (ws?.enc ?? 0) + invEnc
             const overloaded = currentEnc > encLimit
             return (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif' }}>
@@ -745,6 +752,23 @@ export default function CharacterCard({
       </div>
 
       {/* Rest Modal */}
+      {/* Inventory Panel */}
+      {showInventory && (
+        <InventoryPanel
+          inventory={c.data?.inventory ?? []}
+          weaponPrimaryName={weaponPrimary.weaponName}
+          weaponSecondaryName={weaponSecondary.weaponName}
+          phyMod={rapid.PHY ?? 0}
+          canEdit={canEdit}
+          onUpdate={async (newInventory) => {
+            const newData = { ...latestDataRef.current, inventory: newInventory }
+            latestDataRef.current = newData
+            await supabase.from('characters').update({ data: newData }).eq('id', c.id)
+          }}
+          onClose={() => setShowInventory(false)}
+        />
+      )}
+
       {showRestModal && localState && (
         <div onClick={() => setShowRestModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
