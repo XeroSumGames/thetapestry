@@ -41,6 +41,7 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene
   const [pinImages, setPinImages] = useState<Record<string, string[]>>({})
   const [scenes, setScenes] = useState<TacticalScene[]>([])
   const [editSceneId, setEditSceneId] = useState<string | null>(null)
+  const [editSortOrder, setEditSortOrder] = useState('')
 
   async function loadPins() {
     let query = supabase
@@ -107,6 +108,7 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene
     setEditLat(String(pin.lat))
     setEditLng(String(pin.lng))
     setEditSceneId(pin.tactical_scene_id ?? null)
+    setEditSortOrder(pin.sort_order != null ? String(pin.sort_order) : '')
   }
 
   async function saveEdit() {
@@ -114,9 +116,24 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene
     const lat = parseFloat(editLat)
     const lng = parseFloat(editLng)
     if (Number.isNaN(lat) || Number.isNaN(lng)) { alert('Latitude and longitude must be numbers'); return }
-    const update = { name: editName.trim(), notes: editNotes.trim() || null, lat, lng, tactical_scene_id: editSceneId || null }
+    const sortVal = editSortOrder.trim() ? parseInt(editSortOrder, 10) : null
+    const update = {
+      name: editName.trim(),
+      notes: editNotes.trim() || null,
+      lat, lng,
+      tactical_scene_id: editSceneId || null,
+      sort_order: sortVal != null && !Number.isNaN(sortVal) ? sortVal : null,
+    }
     await supabase.from('campaign_pins').update(update).eq('id', editingId)
-    setPins(prev => prev.map(p => p.id === editingId ? { ...p, ...update } : p))
+    setPins(prev => {
+      const next = prev.map(p => p.id === editingId ? { ...p, ...update } : p)
+      // Re-sort by sort_order so moving a pin updates its position immediately
+      return [...next].sort((a, b) => {
+        const ao = a.sort_order ?? 999999
+        const bo = b.sort_order ?? 999999
+        return ao - bo
+      })
+    })
     setEditingId(null)
   }
 
@@ -223,6 +240,12 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene
                       </select>
                     </div>
                   )}
+                  {/* Sort order — explicit number that decides list position */}
+                  <div style={{ marginBottom: '4px', width: '90px' }}>
+                    <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Order</div>
+                    <input value={editSortOrder} onChange={e => setEditSortOrder(e.target.value)} type="number" min="1" placeholder="#"
+                      style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', textAlign: 'center' }} />
+                  </div>
                   <div style={{ display: 'flex', gap: '4px' }}>
                     <button onClick={saveEdit} style={{ flex: 1, padding: '3px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Save</button>
                     <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: '3px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
