@@ -44,7 +44,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
   const wp = getWeaponByName(weaponPrimaryName)
   const ws = getWeaponByName(weaponSecondaryName)
   const weaponEnc = (wp?.enc ?? 0) + (ws?.enc ?? 0)
-  const invEnc = inventory.reduce((sum, item) => sum + item.enc * item.qty, 0)
+  const invEnc = inventory.reduce((sum, item) => sum + (item.enc ?? 0) * (item.qty ?? 1), 0)
   const hasBackpack = inventory.some(i => i.name === 'Backpack' || i.name === 'Military Backpack')
   const backpackBonus = hasBackpack ? 2 : 0
   const encLimit = 6 + phyMod + backpackBonus
@@ -64,7 +64,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
 
   function addCustomItem() {
     if (!customName.trim()) return
-    const enc = parseFloat(customEnc) || 0
+    const enc = Math.max(0, parseFloat(customEnc) || 0)
     onUpdate([...inventory, { name: customName.trim(), enc, rarity: 'Common', notes: customNotes.trim(), qty: 1, custom: true }])
     setCustomName('')
     setCustomEnc('0')

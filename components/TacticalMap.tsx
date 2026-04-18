@@ -167,7 +167,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       })
       .subscribe()
     pingChannelRef.current = pingCh
-    return () => { supabase.removeChannel(channel); supabase.removeChannel(pingCh) }
+    return () => { supabase.removeChannel(channel); supabase.removeChannel(pingCh); if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current) }
   }, [campaignId])
 
   // Load background image when scene changes
@@ -183,7 +183,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
 
   // Redraw on token/scene changes
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, campaignNpcs, entries, showRangeOverlay, ping, dragging])
+  // Redraw when visual state changes — panX/panY removed (scroll-based), campaignNpcs/entries use refs
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, showRangeOverlay, ping, dragging])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
@@ -546,6 +547,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         img.crossOrigin = 'anonymous'
         img.onload = () => draw()
         img.src = t.portrait_url
+        if (portraitCacheRef.current.size > 100) { const firstKey = portraitCacheRef.current.keys().next().value; if (firstKey) portraitCacheRef.current.delete(firstKey) }
         portraitCacheRef.current.set(t.portrait_url, img)
       }
 

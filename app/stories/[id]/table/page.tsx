@@ -177,6 +177,7 @@ export default function TablePage() {
   const myCharIdRef = useRef<string | null>(null)
   // loadEntries sequence guard — see definition below.
   const loadEntriesSeqRef = useRef(0)
+  const loadInitSeqRef = useRef(0)
 
   const [campaign, setCampaign] = useState<Campaign | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
@@ -428,11 +429,13 @@ export default function TablePage() {
   }
 
   async function loadInitiative(campaignId: string) {
+    const seq = ++loadInitSeqRef.current
     const { data } = await supabase
       .from('initiative_order')
       .select('*')
       .eq('campaign_id', campaignId)
       .order('roll', { ascending: false })
+    if (seq !== loadInitSeqRef.current) return // stale — a newer call is in flight
     const order = data ?? []
     setInitiativeOrder(order)
     setCombatActive(order.length > 0)
@@ -2237,8 +2240,8 @@ export default function TablePage() {
           for (const tok of mapTokens) {
             if (!tok.character_id && !tok.npc_id) continue
             // Skip primary target (already damaged) and attacker
-            const isPrimary = (targetEntry && tok.character_id === targetEntry.character.id) || (targetNpc && tok.npc_id === targetNpc.id)
-            const isAttacker = active && ((active.character_id && tok.character_id === active.character_id) || (active.npc_id && tok.npc_id === active.npc_id))
+            const isPrimary = (targetEntry && tok.character_id && tok.character_id === targetEntry.character.id) || (targetNpc && tok.npc_id && tok.npc_id === targetNpc.id) || (tok.grid_x === targetTok.grid_x && tok.grid_y === targetTok.grid_y)
+            const isAttacker = active && ((active.character_id && tok.character_id && tok.character_id === active.character_id) || (active.npc_id && tok.npc_id && tok.npc_id === active.npc_id))
             if (isPrimary || isAttacker) continue
             const dist = Math.max(Math.abs(tok.grid_x - targetTok.grid_x), Math.abs(tok.grid_y - targetTok.grid_y))
             const feet = dist * ft
@@ -3074,7 +3077,7 @@ export default function TablePage() {
                         ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === chargeSkill)?.level ?? 0 : 0)
                         : charEntry?.character.data?.skills?.find((s: any) => s.skillName === chargeSkill)?.level ?? 0
                       // Store charge roll params and enter move mode (20ft = 2 moves)
-                      pendingChargeRef.current = { label: `${activeEntry.character_name} — Charge (${chargeWName})`, amod, smod, weapon: { weaponName: chargeWName, damage: chargeWDmg, rpPercent: chargeWRp, conditionCmod: 0, traits: chargeW?.traits ?? [] } }
+                      pendingChargeRef.current = { label: `${activeEntry.character_name} — Charge (${chargeWName})`, amod, smod, weapon: { weaponName: chargeWName, damage: chargeWDmg, rpPercent: chargeWRp, conditionCmod: 0, traits: chargeW?.traits ?? [] }, activeId: activeEntry.id }
                       setMoveMode({ characterId: activeEntry.character_id || undefined, npcId: activeEntry.npc_id || undefined, feet: 20 })
                     } : undefined} disabled={!has2Actions}
                       style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Charge</button>
@@ -3235,7 +3238,7 @@ export default function TablePage() {
                   sprintPendingRef.current = true
                   setMoveMode({ characterId: activeEntry.character_id || undefined, npcId: activeEntry.npc_id || undefined, feet: 30 })
                   actionPreConsumedRef.current = true
-                  consumeAction(activeEntry.id, undefined, 2)
+                  await consumeAction(activeEntry.id, undefined, 2)
                 } : undefined} disabled={!has2Actions}
                   style={has2Actions ? actBtn('#242424', '#d4cfc9', '#3a3a3a') : disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Sprint</button>
 
@@ -3317,7 +3320,7 @@ export default function TablePage() {
                         // Open roll FIRST (before consumeAction changes the active combatant)
                         handleRollRequest(`${activeEntry.character_name} — Stabilize ${targetName}`, amod, smod)
                         actionPreConsumedRef.current = true
-                        consumeAction(activeEntry.id)
+                        await consumeAction(activeEntry.id)
                       }}
                         style={notEngaged ? actBtn('#2a2010', '#EF9F27', '#5a4a1b') : actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>🩸 Stabilize {targetName}{notEngaged ? ' (not engaged)' : ''}</button>
                     </>
@@ -3703,7 +3706,13 @@ export default function TablePage() {
                 const active = initiativeOrder.find((e: any) => e.is_active)
                 const charge = pendingChargeRef.current
                 if (charge) {
-                  // Charge: token moved, now open the attack roll
+                  // Validate active combatant hasn't changed since charge was initiated
+                  if (active && charge.activeId && charge.activeId !== active.id) {
+                    console.warn('[charge] active combatant changed — aborting charge')
+                    pendingChargeRef.current = null
+                    setMoveMode(null)
+                    return
+                  }
                   pendingChargeRef.current = null
                   setMoveMode(null)
                   actionCostRef.current = 2
@@ -3953,6 +3962,14 @@ export default function TablePage() {
                     : [...targetInv, { ...item, qty: 1 }]
                   await supabase.from('characters').update({ data: { ...targetData, inventory: newTargetInv } }).eq('id', targetCharId)
                   initChannelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: { targetCharId } })
+                }}
+                onInventoryChange={(newInventory: InventoryItem[]) => {
+                  // Patch our entries state so the new inventory persists when
+                  // the character sheet closes and reopens without a loadEntries.
+                  const charId = syncedSelectedEntry.character.id
+                  setEntries(prev => prev.map(e => e.character.id === charId
+                    ? { ...e, character: { ...e.character, data: { ...e.character.data, inventory: newInventory } } }
+                    : e))
                 }}
               />
             </div>
@@ -4986,8 +5003,7 @@ export default function TablePage() {
           })
 
           // Consume action
-          consumeAction(active.id)
-          await loadInitiative(id)
+          await consumeAction(active.id)
         }
 
         return (
@@ -5145,7 +5161,7 @@ export default function TablePage() {
           clearAimIfActive(active.id)
           handleRollRequest(`Unjam — ${primary.weaponName} (${bestSkill})`, amod, bestLevel)
           actionPreConsumedRef.current = true
-          consumeAction(active.id)
+          await consumeAction(active.id)
           setShowReadyWeaponModal(false)
         }
 
