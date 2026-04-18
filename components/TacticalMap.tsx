@@ -1131,7 +1131,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         {/* Zoom control — top right */}
         <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
           <span style={{ fontSize: '11px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>0%</span>
-          <input type="range" min={25} max={400} step={25} value={Math.round(zoom * 100)}
+          <input type="range" min={25} max={100} step={5} value={Math.round(zoom * 100)}
             onChange={e => setZoom(Number(e.target.value) / 100)}
             style={{ width: '60px', accentColor: '#7ab3d4', cursor: 'pointer' }} />
           <span style={{ fontSize: '11px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>100%</span>

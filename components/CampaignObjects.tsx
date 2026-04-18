@@ -168,6 +168,14 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             </div>
             {isGM && (
               <div style={{ display: 'flex', gap: '3px' }}>
+                <button onClick={async () => {
+                  const newVis = !obj.is_visible
+                  await supabase.from('scene_tokens').update({ is_visible: newVis }).eq('id', obj.id)
+                  setObjects(prev => prev.map(o => o.id === obj.id ? { ...o, is_visible: newVis } : o))
+                }}
+                  style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: obj.is_visible ? '#7fc458' : '#5a5550', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  {obj.is_visible ? 'Show' : 'Hide'}
+                </button>
                 <button onClick={() => onRemoveFromMap?.(obj.name)}
                   style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}>×</button>
               </div>
