@@ -194,7 +194,7 @@ export default function TablePage() {
   const [pendingRoll, setPendingRoll] = useState<PendingRoll | null>(null)
   const actionPreConsumedRef = useRef(false)  // Set when Stabilize pre-consumes before the roll modal
   const actionCostRef = useRef(1)             // Action cost for the current roll (2 for Charge/Rapid Fire)
-  const pendingChargeRef = useRef<{ label: string; amod: number; smod: number; weapon: any } | null>(null)
+  const pendingChargeRef = useRef<{ label: string; amod: number; smod: number; weapon: any; activeId?: string } | null>(null)
   const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal — refs survive React batching
   const [insightSavePrompt, setInsightSavePrompt] = useState<{ stateId: string; targetName: string; newWP: number; newRP: number; phyAmod: number; insightDice: number } | null>(null)
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
