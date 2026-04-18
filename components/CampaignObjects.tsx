@@ -297,20 +297,20 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       {editingObj && (
         <div onClick={() => setEditingObj(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10002, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '280px' }}>
-            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>Edit Object</div>
+            <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>Edit Object</div>
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Name</div>
+              <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Name</div>
               <input value={editName} onChange={e => setEditName(e.target.value)}
+                style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP (leave empty for indestructible)</div>
+              <input value={editWP} onChange={e => setEditWP(e.target.value)} placeholder="e.g. 10"
                 style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
             </div>
-            <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP (leave empty for indestructible)</div>
-              <input value={editWP} onChange={e => setEditWP(e.target.value)} placeholder="e.g. 10"
-                style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
-            </div>
             <div style={{ marginBottom: '10px' }}>
-              <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Image</div>
-              <label style={{ display: 'block', padding: '6px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '11px', textAlign: 'center', cursor: 'pointer' }}>
+              <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Image</div>
+              <label style={{ display: 'block', padding: '6px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '12px', textAlign: 'center', cursor: 'pointer' }}>
                 {uploading ? 'Uploading...' : 'Upload new image'}
                 <input type="file" accept="image/*" hidden onChange={async e => {
                   const file = e.target.files?.[0]
@@ -330,46 +330,46 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             {/* Properties */}
             <div style={{ marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Properties</div>
+                <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Properties</div>
                 <button onClick={() => setEditProps(prev => [...prev, { key: '', value: '', revealed: false }])}
-                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', padding: '1px 6px', cursor: 'pointer' }}>+ Add</button>
+                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', padding: '1px 6px', cursor: 'pointer' }}>+ Add</button>
               </div>
               {editProps.map((prop, i) => (
                 <div key={i} style={{ display: 'flex', gap: '3px', marginBottom: '3px', alignItems: 'center' }}>
                   <input value={prop.key} onChange={e => setEditProps(prev => prev.map((p, j) => j === i ? { ...p, key: e.target.value } : p))}
                     placeholder="Key"
-                    style={{ width: '70px', padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                    style={{ width: '70px', padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
                   <input value={prop.value} onChange={e => setEditProps(prev => prev.map((p, j) => j === i ? { ...p, value: e.target.value } : p))}
                     placeholder="Value"
-                    style={{ flex: 1, padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                    style={{ flex: 1, padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
                   <button onClick={() => setEditProps(prev => prev.map((p, j) => j === i ? { ...p, revealed: !p.revealed } : p))}
                     title={prop.revealed ? 'Visible to players' : 'Hidden from players'}
-                    style={{ background: 'none', border: 'none', fontSize: '12px', cursor: 'pointer', padding: '0 2px', color: prop.revealed ? '#7fc458' : '#5a5550' }}>
+                    style={{ background: 'none', border: 'none', fontSize: '13px', cursor: 'pointer', padding: '0 2px', color: prop.revealed ? '#7fc458' : '#5a5550' }}>
                     {prop.revealed ? '👁' : '👁‍🗨'}
                   </button>
                   <button onClick={() => setEditProps(prev => prev.filter((_, j) => j !== i))}
-                    style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '12px', cursor: 'pointer', padding: '0 2px' }}>×</button>
+                    style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}>×</button>
                 </div>
               ))}
-              {editProps.length === 0 && <div style={{ fontSize: '10px', color: '#5a5550', fontStyle: 'italic' }}>No properties set</div>}
+              {editProps.length === 0 && <div style={{ fontSize: '12px', color: '#5a5550', fontStyle: 'italic' }}>No properties set</div>}
             </div>
 
             {/* Contents — lootable items */}
             <div style={{ marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Contents (Lootable)</div>
+                <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Contents (Lootable)</div>
               </div>
               {editContents.map((item, i) => (
                 <div key={i} style={{ display: 'flex', gap: '3px', marginBottom: '3px', alignItems: 'center' }}>
-                  <span style={{ flex: 1, fontSize: '11px', color: '#f5f2ee' }}>{item.type === 'weapon' ? '🔫' : '🎒'} {item.name}</span>
-                  <span style={{ fontSize: '10px', color: '#cce0f5' }}>×{item.quantity}</span>
+                  <span style={{ flex: 1, fontSize: '12px', color: '#f5f2ee' }}>{item.type === 'weapon' ? '🔫' : '🎒'} {item.name}</span>
+                  <span style={{ fontSize: '12px', color: '#cce0f5' }}>×{item.quantity}</span>
                   <button onClick={() => setEditContents(prev => prev.filter((_, j) => j !== i))}
-                    style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '12px', cursor: 'pointer', padding: '0 2px' }}>×</button>
+                    style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}>×</button>
                 </div>
               ))}
               <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
                 <select value={contentPickerValue} onChange={e => setContentPickerValue(e.target.value)}
-                  style={{ flex: 1, padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                  style={{ flex: 1, padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
                   <option value="">Add item...</option>
                   <optgroup label="Weapons">
                     {ALL_WEAPONS.map(w => <option key={w.name} value={`weapon:${w.name}`}>{w.name}</option>)}
@@ -379,7 +379,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   </optgroup>
                 </select>
                 <input type="number" min={1} max={99} value={contentQty} onChange={e => setContentQty(parseInt(e.target.value) || 1)}
-                  style={{ width: '32px', padding: '3px 2px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '10px', textAlign: 'center' }} />
+                  style={{ width: '32px', padding: '3px 2px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '12px', textAlign: 'center' }} />
                 <button onClick={() => {
                   if (!contentPickerValue) return
                   const [type, ...nameParts] = contentPickerValue.split(':')
@@ -388,7 +388,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   setContentPickerValue('')
                   setContentQty(1)
                 }}
-                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7fc458', fontSize: '10px', padding: '2px 6px', cursor: 'pointer' }}>+</button>
+                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7fc458', fontSize: '12px', padding: '2px 6px', cursor: 'pointer' }}>+</button>
               </div>
             </div>
 
