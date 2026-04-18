@@ -153,6 +153,7 @@ const emptyForm = {
   skillEntries: [] as SkillEntry[], notes: '', status: 'active',
   npc_type: '' as string, motivation: '', complication: '', threeWords: ['', '', ''] as string[],
   weapon: null as any,
+  weapon2: null as any,
 }
 
 export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs, onPlaceOnMap, onRemoveFromMap, npcIdsOnMap }: Props) {
@@ -268,6 +269,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       complication: (npc as any).complication ?? '',
       threeWords: (npc as any).three_words ?? ['', '', ''],
       weapon: npc.skills?.weapon ?? null,
+      weapon2: npc.skills?.weapon2 ?? null,
     })
     setEditingId(npc.id)
     setShowForm(true)
@@ -305,7 +307,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       physicality: form.physicality,
       influence: form.influence,
       dexterity: form.dexterity,
-      skills: { entries: form.skillEntries, text: form.skillEntries.map(s => `${s.name} ${s.level}`).join(', '), weapon: (form as any).weapon ?? null },
+      skills: { entries: form.skillEntries, text: form.skillEntries.map(s => `${s.name} ${s.level}`).join(', '), weapon: (form as any).weapon ?? null, weapon2: (form as any).weapon2 ?? null },
       notes: form.notes.trim() || null,
       status: form.status,
       npc_type: form.npc_type || null,
@@ -990,6 +992,34 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                 ) : null
               })()}
             </div>
+
+            {/* Secondary Weapon (Foe/Antagonist only) */}
+            {(form.npc_type === 'foe' || form.npc_type === 'antagonist') && (
+              <div style={{ marginBottom: '8px' }}>
+                <div style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Secondary Weapon</div>
+                <select value={(form as any).weapon2?.weaponName ?? ''} onChange={e => {
+                  const weaponName = e.target.value
+                  if (!weaponName) { setForm(f => ({ ...f, weapon2: null } as any)); return }
+                  const w = getWeaponByName(weaponName)
+                  setForm(f => ({ ...f, weapon2: { weaponName, condition: 'Used', ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? 2 : 0 } } as any))
+                }}
+                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                  <option value="">— None —</option>
+                  <optgroup label="Melee">{MELEE_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
+                  <optgroup label="Ranged">{RANGED_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
+                  <optgroup label="Explosive">{EXPLOSIVE_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
+                  <optgroup label="Heavy">{HEAVY_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
+                </select>
+                {(form as any).weapon2?.weaponName && (() => {
+                  const w = getWeaponByName((form as any).weapon2.weaponName)
+                  return w ? (
+                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
+                      {w.skill} · {w.range} · DMG <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span> · RP <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span>
+                    </div>
+                  ) : null
+                })()}
+              </div>
+            )}
 
             {/* Notes */}
             <div style={{ marginBottom: '8px' }}>
