@@ -41,7 +41,7 @@ export default function EditCampaignPage() {
       if (!camp) { router.push('/stories'); return }
       if (camp.gm_user_id !== user.id) { router.push('/stories'); return }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-      if (profile?.role === 'thriver') setIsThriver(true)
+      if ((profile?.role as string)?.toLowerCase() === 'thriver') setIsThriver(true)
       setName(camp.name)
       setDescription(camp.description ?? '')
       setMapStyle(camp.map_style ?? 'street')
