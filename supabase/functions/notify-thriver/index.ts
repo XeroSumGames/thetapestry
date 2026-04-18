@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     const { data: thrivers } = await supabase
       .from('profiles')
       .select('email')
-      .eq('role', 'Thriver')
+      .eq('role', 'thriver')
 
     if (!thrivers || thrivers.length === 0 || !RESEND_API_KEY) {
       return new Response(JSON.stringify({ sent: 0, reason: !RESEND_API_KEY ? 'no_api_key' : 'no_thrivers' }))

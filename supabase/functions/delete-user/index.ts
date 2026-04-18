@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
 
     // Verify caller is a Thriver
     const { data: caller } = await supabase.from('profiles').select('role').eq('id', caller_id).single()
-    if (!caller || caller.role !== 'Thriver') {
+    if (!caller || caller.role !== 'thriver') {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } })
     }
 

@@ -1,7 +1,7 @@
 # Lessons Learned
 
 ## Database & Auth
-- **Role is stored capitalized**: `profiles.role` is `'Thriver'` not `'thriver'`. Always use `.toLowerCase()` when comparing roles. NavBar does this — other pages didn't, causing silent redirects.
+- **Role is now normalized to lowercase**: DB trigger `trg_normalize_role` auto-lowercases `profiles.role` on insert/update. All existing rows backfilled. Always compare against `'thriver'` / `'survivor'` (lowercase). No more `.toLowerCase()` needed — but harmless if left in.
 - **RLS blocks everything by default**: When creating new tables, always add RLS policies immediately. Storage buckets need separate policies on `storage.objects` — the bucket existing is not enough.
 - **Supabase Storage buckets must be created manually**: They don't auto-create from code. Each bucket needs INSERT/SELECT/DELETE policies on `storage.objects` filtered by `bucket_id`.
 - **Column must exist before code references it**: Always provide the ALTER TABLE SQL alongside the commit. Don't assume the user has run previous SQL.
