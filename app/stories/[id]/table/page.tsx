@@ -3821,69 +3821,61 @@ export default function TablePage() {
               </div>
               )
             })()}
-            {gmTab === 'assets' && (() => {
-              const [assetsFolder, setAssetsFolder] = [assetsFolderState, setAssetsFolderState] as any
-              return (
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                  {/* Map Pins folder */}
-                  <div>
-                    <div onClick={() => setAssetsFolderState((prev: Set<string>) => { const n = new Set(prev); n.has('pins') ? n.delete('pins') : n.add('pins'); return n })}
-                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                      <span style={{ fontSize: '10px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('pins') ? '▼' : '▶'}</span>
-                      <span style={{ fontSize: '14px' }}>📍</span>
-                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>Map Pins</span>
-                    </div>
-                    {assetsFolderState.has('pins') && (
-                      <CampaignPins campaignId={id} isGM={isGM} onPinFocus={p => setFocusPin({ ...p })} onOpenScene={async (sceneId: string) => {
-                        await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', id)
-                        await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', sceneId)
-                        setShowTacticalMap(true)
-                        setTokenRefreshKey(k => k + 1)
-                      }} />
-                    )}
-                  </div>
-                  {/* Objects folder */}
-                  <div>
-                    <div onClick={() => setAssetsFolderState((prev: Set<string>) => { const n = new Set(prev); n.has('objects') ? n.delete('objects') : n.add('objects'); return n })}
-                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                      <span style={{ fontSize: '10px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('objects') ? '▼' : '▶'}</span>
-                      <span style={{ fontSize: '14px' }}>🎯</span>
-                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>Objects</span>
-                    </div>
-                    {assetsFolderState.has('objects') && (
-                      <CampaignObjects campaignId={id} isGM={isGM} tokenRefreshKey={tokenRefreshKey}
-                        onPlaceOnMap={async (name, portraitUrl, wpMax) => {
-                          const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
-                          if (!activeScene) { alert('No active scene.'); return }
-                          const cols = (activeScene as any).grid_cols ?? 20
-                          const icon = (await import('../../../../components/CampaignObjects')).OBJECT_ICONS.find((i: any) => true)
-                          await supabase.from('scene_tokens').insert({
-                            scene_id: activeScene.id, name, token_type: 'object',
-                            portrait_url: portraitUrl, grid_x: cols - 2, grid_y: 1,
-                            is_visible: true, color: '#EF9F27',
-                            wp_max: wpMax, wp_current: wpMax,
-                          })
-                          setTokenRefreshKey(k => k + 1)
-                          initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
-                        }}
-                        onRemoveFromMap={async (name) => {
-                          const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
-                          if (activeScene) {
-                            await supabase.from('scene_tokens').delete().eq('scene_id', activeScene.id).eq('name', name).eq('token_type', 'object')
-                            setTokenRefreshKey(k => k + 1)
-                            initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
-                          }
-                        }}
-                      />
-                    )}
-                  </div>
+            {gmTab === 'assets' && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+                {/* Map Pins folder */}
+                <div onClick={() => setAssetsFolderState(prev => { const n = new Set(prev); n.has('pins') ? n.delete('pins') : n.add('pins'); return n })}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none', flexShrink: 0 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  <span style={{ fontSize: '10px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('pins') ? '▼' : '▶'}</span>
+                  <span style={{ fontSize: '14px' }}>📍</span>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>Map Pins</span>
                 </div>
-              )
-            })()}
+                {assetsFolderState.has('pins') && (
+                  <CampaignPins campaignId={id} isGM={isGM} onPinFocus={p => setFocusPin({ ...p })} onOpenScene={async (sceneId: string) => {
+                    await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', id)
+                    await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', sceneId)
+                    setShowTacticalMap(true)
+                    setTokenRefreshKey(k => k + 1)
+                  }} />
+                )}
+                {/* Objects folder */}
+                <div onClick={() => setAssetsFolderState(prev => { const n = new Set(prev); n.has('objects') ? n.delete('objects') : n.add('objects'); return n })}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none', flexShrink: 0 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  <span style={{ fontSize: '10px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('objects') ? '▼' : '▶'}</span>
+                  <span style={{ fontSize: '14px' }}>🎯</span>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>Objects</span>
+                </div>
+                {assetsFolderState.has('objects') && (
+                  <CampaignObjects campaignId={id} isGM={isGM} tokenRefreshKey={tokenRefreshKey}
+                    onPlaceOnMap={async (name, portraitUrl, wpMax) => {
+                      const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
+                      if (!activeScene) { alert('No active scene.'); return }
+                      const cols = (activeScene as any).grid_cols ?? 20
+                      await supabase.from('scene_tokens').insert({
+                        scene_id: activeScene.id, name, token_type: 'object',
+                        portrait_url: portraitUrl, grid_x: cols - 2, grid_y: 1,
+                        is_visible: true, color: '#EF9F27',
+                        wp_max: wpMax, wp_current: wpMax,
+                      })
+                      setTokenRefreshKey(k => k + 1)
+                      initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+                    }}
+                    onRemoveFromMap={async (name) => {
+                      const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
+                      if (activeScene) {
+                        await supabase.from('scene_tokens').delete().eq('scene_id', activeScene.id).eq('name', name).eq('token_type', 'object')
+                        setTokenRefreshKey(k => k + 1)
+                        initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+                      }
+                    }}
+                  />
+                )}
+              </div>
+            )}
             {gmTab === 'notes' && isGM && <GmNotes campaignId={id} />}
             {gmTab === 'notes' && !isGM && <PlayerNotes campaignId={id} />}
           </div>
