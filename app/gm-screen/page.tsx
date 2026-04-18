@@ -88,15 +88,15 @@ const SKILLS_MAP = [
 ]
 
 const sectionStyle: React.CSSProperties = { background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '10px 12px' }
-const headingStyle: React.CSSProperties = { fontSize: '12px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }
-const cellStyle: React.CSSProperties = { fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', padding: '2px 6px', borderBottom: '1px solid #2e2e2e' }
+const headingStyle: React.CSSProperties = { fontSize: '15px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }
+const cellStyle: React.CSSProperties = { fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', padding: '2px 6px', borderBottom: '1px solid #2e2e2e' }
 
 export default function GMScreen() {
   return (
     <div style={{ background: '#0f0f0f', color: '#f5f2ee', minHeight: '100vh', padding: '12px', fontFamily: 'Barlow, sans-serif' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '8px' }}>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>GM Screen</div>
-        <div style={{ fontSize: '12px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>XSE SRD v1.1</div>
+        <div style={{ fontSize: '15px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>XSE SRD v1.1</div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
