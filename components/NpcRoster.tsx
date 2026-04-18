@@ -340,20 +340,25 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   }
 
   async function handleClone(npc: CampaignNpc) {
-    // Count existing clones to generate a unique name
     const baseName = npc.name.replace(/\s*#\d+$/, '')
     const existing = npcs.filter(n => n.name === baseName || n.name.startsWith(baseName + ' #'))
     const num = existing.length + 1
     const cloneName = `${baseName} #${num}`
-    const { data: maxRow } = await supabase.from('campaign_npcs').select('sort_order').eq('campaign_id', campaignId).order('sort_order', { ascending: false, nullsFirst: false }).limit(1).maybeSingle()
-    const nextSort = ((maxRow as any)?.sort_order ?? 0) + 1
+    // Insert right after the source NPC — bump everything below down
+    const srcSort = npc.sort_order ?? 0
+    const below = npcs.filter(n => (n.sort_order ?? 0) > srcSort)
+    if (below.length > 0) {
+      await Promise.all(below.map(n =>
+        supabase.from('campaign_npcs').update({ sort_order: (n.sort_order ?? 0) + 1 }).eq('id', n.id)
+      ))
+    }
     await supabase.from('campaign_npcs').insert({
       campaign_id: campaignId, name: cloneName, portrait_url: npc.portrait_url,
       reason: npc.reason, acumen: npc.acumen, physicality: npc.physicality,
       influence: npc.influence, dexterity: npc.dexterity, skills: npc.skills,
       notes: npc.notes, npc_type: npc.npc_type, status: 'active',
       wp_max: npc.wp_max, rp_max: npc.rp_max, wp_current: npc.wp_max, rp_current: npc.rp_max,
-      equipment: npc.equipment, sort_order: nextSort,
+      equipment: npc.equipment, sort_order: srcSort + 1,
     })
     await loadNpcs()
   }
