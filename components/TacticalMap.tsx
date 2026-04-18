@@ -109,7 +109,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [gridColor, setGridColor] = useState('white')
   const [ping, setPing] = useState<{ gx: number; gy: number; t: number; color: string; count: number } | null>(null)
   const pingChannelRef = useRef<any>(null)
-  const [showRangeOverlay, setShowRangeOverlay] = useState(false)
+  const [showRangeOverlay, setShowRangeOverlay] = useState(true)
   const tacticalChannelRef = useRef<any>(null)
   const [gridOpacity, setGridOpacity] = useState(0.4)
   const [spaceHeld, setSpaceHeld] = useState(false)
@@ -354,23 +354,63 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       }
     }
 
-    // Range overlay — color-coded bands from selected token
+    // Range circles for selected token — drawn UNDER tokens so tokens stay crisp
     if (showRangeOverlay && selectedToken) {
       const selTok = tokensRef.current.find(t => t.id === selectedToken)
       if (selTok) {
+        const cx = offsetX + selTok.grid_x * cellSize + cellSize / 2
+        const cy = offsetY + selTok.grid_y * cellSize + cellSize / 2
         const ft = s.cell_feet ?? 3
-        for (let gx = 0; gx < s.grid_cols; gx++) {
-          for (let gy = 0; gy < s.grid_rows; gy++) {
-            if (gx === selTok.grid_x && gy === selTok.grid_y) continue
-            const dist = Math.max(Math.abs(gx - selTok.grid_x), Math.abs(gy - selTok.grid_y))
-            const feet = dist * ft
-            const band = getRangeBand(feet)
-            ctx.fillStyle = RANGE_BAND_COLOR[band]
-            ctx.fillRect(offsetX + gx * cellSize, offsetY + gy * cellSize, cellSize, cellSize)
+
+        // Look up weapon range for this token — PRIMARY weapon
+        let weaponRangeBand = 'Engaged'
+        let weaponIsMelee = true
+        if (selTok.npc_id && campaignNpcs) {
+          const npc = campaignNpcs.find((n: any) => n.id === selTok.npc_id)
+          const weaponName = npc?.skills?.weapon?.weaponName
+          if (weaponName) {
+            const w = getWeaponByName(weaponName)
+            if (w) { weaponRangeBand = w.range; weaponIsMelee = w.category === 'melee' }
+          }
+        } else if (selTok.character_id && entries) {
+          const entry = entries.find((e: any) => e.character.id === selTok.character_id)
+          const weaponName = entry?.character.data?.weaponPrimary?.weaponName
+          if (weaponName) {
+            const w = getWeaponByName(weaponName)
+            if (w) { weaponRangeBand = w.range; weaponIsMelee = w.category === 'melee' }
           }
         }
+        const weaponRangeFt = weaponIsMelee
+          ? (MELEE_RANGE_FEET[weaponRangeBand] ?? 5)
+          : (RANGE_BAND_FEET[weaponRangeBand] ?? 5)
+        const weaponCells = Math.max(1, Math.ceil(weaponRangeFt / ft))
+
+        const circles = [
+          { cells: weaponCells, fill: 'rgba(192,57,43,0.18)', stroke: '#ff4040', label: `${weaponRangeBand} (${weaponRangeFt}ft)` },
+          { cells: 3, fill: 'rgba(52,152,219,0.15)', stroke: '#5dade2', label: 'Move (9ft)' },
+          { cells: Math.max(1, Math.ceil(3 / ft)), fill: 'rgba(127,196,88,0.20)', stroke: '#7fc458', label: 'Engaged' },
+        ]
+        // Largest first so smaller ones layer on top
+        circles.sort((a, b) => b.cells - a.cells)
+        circles.forEach(c => {
+          ctx.beginPath()
+          ctx.arc(cx, cy, c.cells * cellSize, 0, Math.PI * 2)
+          ctx.fillStyle = c.fill
+          ctx.fill()
+          ctx.strokeStyle = c.stroke
+          ctx.globalAlpha = 1
+          ctx.lineWidth = 2
+          ctx.stroke()
+          // Label at top edge of circle
+          ctx.font = `bold 12px Barlow Condensed`
+          ctx.fillStyle = c.stroke
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(c.label, cx, cy - c.cells * cellSize + 12)
+        })
       }
     }
+
 
     // Tokens
     const toks = tokensRef.current
@@ -644,8 +684,6 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         hasActiveAnim = true
       }
     }
-
-    // Range circles removed — range is handled automatically in the roll modal
 
     ctx.restore() // undo zoom scale
 
