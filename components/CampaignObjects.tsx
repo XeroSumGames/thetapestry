@@ -17,6 +17,12 @@ const OBJECT_ICONS = [
   { value: 'generator', emoji: '⚡', label: 'Generator' },
 ]
 
+interface TokenProperty {
+  key: string
+  value: string
+  revealed: boolean // visible to players?
+}
+
 interface ObjectToken {
   id: string
   scene_id: string
@@ -28,6 +34,7 @@ interface ObjectToken {
   wp_max: number | null
   wp_current: number | null
   color: string
+  properties: TokenProperty[]
 }
 
 interface Props {
@@ -51,6 +58,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [editingObj, setEditingObj] = useState<ObjectToken | null>(null)
   const [editName, setEditName] = useState('')
   const [editWP, setEditWP] = useState('')
+  const [editProps, setEditProps] = useState<TokenProperty[]>([])
 
   useEffect(() => { loadObjects() }, [campaignId, tokenRefreshKey])
 
@@ -168,6 +176,11 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   {destroyed ? 'DESTROYED' : `WP ${obj.wp_current}/${obj.wp_max}`}
                 </div>
               )}
+              {Array.isArray(obj.properties) && obj.properties.filter(p => isGM || p.revealed).map((p, i) => (
+                <div key={i} style={{ fontSize: '10px', color: p.revealed ? '#cce0f5' : '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
+                  <span style={{ color: '#EF9F27' }}>{p.key}:</span> {p.value}{!p.revealed && isGM ? ' 🔒' : ''}
+                </div>
+              ))}
             </div>
             {isGM && (
               <div style={{ display: 'flex', gap: '3px' }}>
@@ -179,7 +192,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: obj.is_visible ? '#7fc458' : '#5a5550', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {obj.is_visible ? 'Show' : 'Hide'}
                 </button>
-                <button onClick={() => { setEditingObj(obj); setEditName(obj.name); setEditWP(obj.wp_max != null ? String(obj.wp_max) : '') }}
+                <button onClick={() => { setEditingObj(obj); setEditName(obj.name); setEditWP(obj.wp_max != null ? String(obj.wp_max) : ''); setEditProps(Array.isArray(obj.properties) ? obj.properties : []) }}
                   style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Edit
                 </button>
@@ -225,15 +238,43 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 }} />
               </label>
             </div>
+            {/* Properties */}
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Properties</div>
+                <button onClick={() => setEditProps(prev => [...prev, { key: '', value: '', revealed: false }])}
+                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', padding: '1px 6px', cursor: 'pointer' }}>+ Add</button>
+              </div>
+              {editProps.map((prop, i) => (
+                <div key={i} style={{ display: 'flex', gap: '3px', marginBottom: '3px', alignItems: 'center' }}>
+                  <input value={prop.key} onChange={e => setEditProps(prev => prev.map((p, j) => j === i ? { ...p, key: e.target.value } : p))}
+                    placeholder="Key"
+                    style={{ width: '70px', padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                  <input value={prop.value} onChange={e => setEditProps(prev => prev.map((p, j) => j === i ? { ...p, value: e.target.value } : p))}
+                    placeholder="Value"
+                    style={{ flex: 1, padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '11px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                  <button onClick={() => setEditProps(prev => prev.map((p, j) => j === i ? { ...p, revealed: !p.revealed } : p))}
+                    title={prop.revealed ? 'Visible to players' : 'Hidden from players'}
+                    style={{ background: 'none', border: 'none', fontSize: '12px', cursor: 'pointer', padding: '0 2px', color: prop.revealed ? '#7fc458' : '#5a5550' }}>
+                    {prop.revealed ? '👁' : '👁‍🗨'}
+                  </button>
+                  <button onClick={() => setEditProps(prev => prev.filter((_, j) => j !== i))}
+                    style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '12px', cursor: 'pointer', padding: '0 2px' }}>×</button>
+                </div>
+              ))}
+              {editProps.length === 0 && <div style={{ fontSize: '10px', color: '#5a5550', fontStyle: 'italic' }}>No properties set</div>}
+            </div>
             <div style={{ display: 'flex', gap: '6px' }}>
               <button onClick={async () => {
                 const wpVal = editWP ? parseInt(editWP, 10) : null
+                const cleanProps = editProps.filter(p => p.key.trim())
                 await supabase.from('scene_tokens').update({
                   name: editName.trim() || editingObj.name,
                   wp_max: isNaN(wpVal as number) ? null : wpVal,
                   wp_current: isNaN(wpVal as number) ? null : wpVal,
+                  properties: cleanProps,
                 }).eq('id', editingObj.id)
-                setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, name: editName.trim() || o.name, wp_max: wpVal, wp_current: wpVal } : o))
+                setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, name: editName.trim() || o.name, wp_max: wpVal, wp_current: wpVal, properties: cleanProps } : o))
                 setEditingObj(null)
               }}
                 style={{ ...chipBtn, flex: 1, background: '#c0392b', border: '1px solid #c0392b', color: '#fff' }}>Save</button>
