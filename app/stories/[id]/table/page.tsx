@@ -250,7 +250,7 @@ export default function TablePage() {
   const [sessionFiles, setSessionFiles] = useState<File[]>([])
   const [sessionActing, setSessionActing] = useState(false)
   const [gmTab, setGmTab] = useState<'npcs' | 'assets' | 'notes'>('npcs')
-  const [assetsFolderState, setAssetsFolderState] = useState<Set<string>>(new Set(['pins']))
+  const [assetsFolderState, setAssetsFolderState] = useState<Set<string>>(new Set())
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
   const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
   const [chatMessages, setChatMessages] = useState<{ id: string; user_id: string; character_name: string; message: string; created_at: string }[]>([])
