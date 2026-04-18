@@ -1,7 +1,26 @@
 'use client'
 import { useState } from 'react'
 import { EQUIPMENT, EquipmentItem } from '../lib/xse-schema'
-import { getWeaponByName } from '../lib/weapons'
+import { ALL_WEAPONS, getWeaponByName } from '../lib/weapons'
+
+// Combined inventory catalog — SRD equipment + all weapons.
+// Weapons are normalized into the EquipmentItem shape (name/enc/rarity/notes)
+// so they can be held in inventory alongside gear. Equipping a held weapon
+// (swapping it to Primary/Secondary) is done separately via the character sheet.
+const CATEGORY_LABEL: Record<string, string> = {
+  melee: 'Melee weapon',
+  ranged: 'Ranged weapon',
+  explosive: 'Explosive',
+  heavy: 'Heavy weapon',
+}
+const WEAPON_CATALOG: EquipmentItem[] = ALL_WEAPONS.map(w => ({
+  name: w.name,
+  rarity: w.rarity as any,
+  enc: w.enc,
+  notes: `${CATEGORY_LABEL[w.category] ?? 'Weapon'} · ${w.range} · ${w.damage}${w.rpPercent !== 50 ? ` (${w.rpPercent}% RP)` : ''}`,
+}))
+const COMBINED_CATALOG: EquipmentItem[] = [...EQUIPMENT, ...WEAPON_CATALOG].sort((a, b) => a.name.localeCompare(b.name))
+const WEAPON_NAMES = new Set(ALL_WEAPONS.map(w => w.name))
 
 export interface InventoryItem {
   name: string
@@ -94,7 +113,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
     setGivingItem(null)
   }
 
-  const filteredCatalog = EQUIPMENT.filter(e =>
+  const filteredCatalog = COMBINED_CATALOG.filter(e =>
     e.name.toLowerCase().includes(search.toLowerCase()) ||
     e.notes.toLowerCase().includes(search.toLowerCase())
   )
@@ -201,12 +220,17 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {filteredCatalog.map(item => {
                 const rc = RARITY_COLORS[item.rarity] ?? RARITY_COLORS.Common
+                const isWeapon = WEAPON_NAMES.has(item.name)
                 return (
                   <div key={item.name} onClick={() => addItem(item)}
                     style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', cursor: 'pointer', borderRadius: '2px' }}
                     onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                    <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>{item.name}</span>
+                    <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      {item.name}
+                      {item.notes && <span style={{ fontSize: '10px', color: '#5a5550', marginLeft: '6px' }}>— {item.notes}</span>}
+                    </span>
+                    {isWeapon && <span style={{ fontSize: '9px', color: '#f5a89a', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', padding: '0 3px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>WPN</span>}
                     <span style={{ fontSize: '10px', color: rc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{item.rarity}</span>
                     <span style={{ fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'right' }}>{item.enc > 0 ? item.enc : '—'}</span>
                   </div>
