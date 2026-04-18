@@ -3694,7 +3694,17 @@ export default function TablePage() {
                   const kickUserId = syncedSelectedEntry.userId
                   const kickName = syncedSelectedEntry.character.name
                   if (!confirm(`Remove ${kickName} from this session?`)) return
-                  // Write a kick notification to DB so the player's client detects it reliably
+                  // Delete their character_states row so they don't reload on refresh
+                  // (re-created automatically when they rejoin a future session)
+                  const kickEntry = entries.find(e => e.userId === kickUserId)
+                  if (kickEntry) {
+                    await supabase.from('character_states').delete().eq('id', kickEntry.stateId)
+                  }
+                  // Broadcast for immediate redirect
+                  if (initChannelRef.current) {
+                    await initChannelRef.current.send({ type: 'broadcast', event: 'player_kicked', payload: { userId: kickUserId } })
+                  }
+                  // Notification as fallback
                   await supabase.from('notifications').insert({
                     user_id: kickUserId,
                     type: 'session_kick',
@@ -3702,11 +3712,6 @@ export default function TablePage() {
                     body: `You have been removed from the session by the GM.`,
                     link: `/stories/${id}`,
                   })
-                  // Also broadcast for immediate effect
-                  if (initChannelRef.current) {
-                    await initChannelRef.current.send({ type: 'broadcast', event: 'player_kicked', payload: { userId: kickUserId } })
-                  }
-                  // Remove their character from the entries list locally
                   setEntries(prev => prev.filter(e => e.userId !== kickUserId))
                   setSelectedEntry(null)
                 } : undefined}
