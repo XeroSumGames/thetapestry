@@ -487,7 +487,7 @@
 - [x] **ObjectCard on double-click** — GM + players double-click an object token to open an inline draggable card: name, WP bar, portrait, properties (GM sees hidden ones). Live WP sync.
 - [x] **Map selection pre-populates attack target** — single-click a token, open Attack modal, target dropdown is pre-filled (overrides `last_attack_target` if both exist)
 - [x] **Edit Object modal** — font sizes bumped for readability (10→12, 11→12, 12→13, 13→14)
-- [x] **Range circles restored** — clicking any token auto-draws 3 circles: green Engaged, blue 9ft Move, red primary-weapon range. Drawn under tokens so sprites stay crisp. Show/Hide Ranges button still toggles visibility.
+- [x] **Range circles on selected token** — clicking a PC/NPC auto-draws 3 circles: green Engaged, blue 9ft Move, red primary-weapon range. Object tokens (crates, cars, doors) never show range bands. Drawn under tokens so sprites stay crisp. Show/Hide Ranges toggle in GM strip.
 - [x] **Range band circles REMOVED from tokens** — overlay drawing, Show/Hide Ranges button, `showRangeOverlay` state, and related constants all deleted from `TacticalMap.tsx`. Attack modal's auto range-band logic (`getAutoRangeBand` in page.tsx) still drives CMod + target filtering — just no canvas painting.
 - [x] **ObjectCard loot (GM)** — Contents section shows per-item `Give to [PC]` dropdown + green `Give` button. Transfers one-at-a-time to the chosen character's equipment, decrements (or removes) the crate's quantity in `scene_tokens.contents`, logs `🎒 [name] looted [item] from [crate]` to roll_log. Works on intact crates — no need to destroy first.
 

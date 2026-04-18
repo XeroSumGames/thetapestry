@@ -1,6 +1,22 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { getWeaponByName } from '../lib/weapons'
+
+// Feet per band — used when drawing the primary-weapon range circle for PC/NPC tokens
+const RANGE_BAND_FEET: Record<string, number> = {
+  'Engaged': 5,
+  'Close': 30,
+  'Medium': 100,
+  'Long': 300,
+  'Distant': 600,
+}
+// Melee "Close" means reach (~10ft), not the ranged Close band (30ft)
+const MELEE_RANGE_FEET: Record<string, number> = {
+  'Engaged': 5,
+  'Close': 10,
+}
+
 interface Token {
   id: string
   scene_id: string
@@ -61,6 +77,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [dragging, setDragging] = useState<{ tokenId: string; offsetX: number; offsetY: number } | null>(null)
   const dragPosRef = useRef<{ px: number; py: number } | null>(null) // pixel position of dragged token (canvas coords)
   const [selectedToken, setSelectedToken] = useState<string | null>(null)
+  const [showRangeOverlay, setShowRangeOverlay] = useState(true)
   const [showSetup, setShowSetup] = useState(false)
   const [setupName, setSetupName] = useState('Scene')
   const [setupCols, setSetupCols] = useState(20)
@@ -166,7 +183,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
 
   // Redraw on token/scene changes
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, campaignNpcs, entries, ping, dragging])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, campaignNpcs, entries, showRangeOverlay, ping, dragging])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
@@ -318,6 +335,63 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
             }
           }
         }
+      }
+    }
+
+    // Range circles for selected PC/NPC token — Engaged, Move 9ft, primary weapon range.
+    // Object tokens (crates, cars, doors) don't get circles — they don't attack or move.
+    if (showRangeOverlay && selectedToken) {
+      const selTok = tokensRef.current.find(t => t.id === selectedToken)
+      if (selTok && selTok.token_type !== 'object') {
+        const cx = offsetX + selTok.grid_x * cellSize + cellSize / 2
+        const cy = offsetY + selTok.grid_y * cellSize + cellSize / 2
+        const ft = s.cell_feet ?? 3
+
+        // Look up PRIMARY weapon for this token
+        let weaponRangeBand = 'Engaged'
+        let weaponIsMelee = true
+        if (selTok.npc_id && campaignNpcs) {
+          const npc = campaignNpcs.find((n: any) => n.id === selTok.npc_id)
+          const weaponName = npc?.skills?.weapon?.weaponName
+          if (weaponName) {
+            const w = getWeaponByName(weaponName)
+            if (w) { weaponRangeBand = w.range; weaponIsMelee = w.category === 'melee' }
+          }
+        } else if (selTok.character_id && entries) {
+          const entry = entries.find((e: any) => e.character.id === selTok.character_id)
+          const weaponName = entry?.character.data?.weaponPrimary?.weaponName
+          if (weaponName) {
+            const w = getWeaponByName(weaponName)
+            if (w) { weaponRangeBand = w.range; weaponIsMelee = w.category === 'melee' }
+          }
+        }
+        const weaponRangeFt = weaponIsMelee
+          ? (MELEE_RANGE_FEET[weaponRangeBand] ?? 5)
+          : (RANGE_BAND_FEET[weaponRangeBand] ?? 5)
+        const weaponCells = Math.max(1, Math.ceil(weaponRangeFt / ft))
+
+        const circles = [
+          { cells: weaponCells, fill: 'rgba(192,57,43,0.18)', stroke: '#ff4040', label: `${weaponRangeBand} (${weaponRangeFt}ft)` },
+          { cells: 3, fill: 'rgba(52,152,219,0.15)', stroke: '#5dade2', label: 'Move (9ft)' },
+          { cells: Math.max(1, Math.ceil(3 / ft)), fill: 'rgba(127,196,88,0.20)', stroke: '#7fc458', label: 'Engaged' },
+        ]
+        // Largest first so smaller ones layer on top
+        circles.sort((a, b) => b.cells - a.cells)
+        circles.forEach(c => {
+          ctx.beginPath()
+          ctx.arc(cx, cy, c.cells * cellSize, 0, Math.PI * 2)
+          ctx.fillStyle = c.fill
+          ctx.fill()
+          ctx.strokeStyle = c.stroke
+          ctx.globalAlpha = 1
+          ctx.lineWidth = 2
+          ctx.stroke()
+          ctx.font = `bold 12px Barlow Condensed`
+          ctx.fillStyle = c.stroke
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(c.label, cx, cy - c.cells * cellSize + 12)
+        })
       }
     }
 
@@ -1050,6 +1124,10 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           }}
             style={{ padding: '4px 10px', background: mapLocked ? '#2a1210' : 'rgba(15,15,15,.85)', border: `1px solid ${mapLocked ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: mapLocked ? '#f5a89a' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
             {mapLocked ? 'Unlock Map' : 'Lock Map'}
+          </button>
+          <button onClick={() => setShowRangeOverlay(v => !v)}
+            style={{ padding: '4px 10px', background: showRangeOverlay ? '#1a2e10' : 'rgba(15,15,15,.85)', border: `1px solid ${showRangeOverlay ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: showRangeOverlay ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
+            {showRangeOverlay ? 'Hide Ranges' : 'Show Ranges'}
           </button>
           {scene.background_url && (
             <button onClick={async () => {
