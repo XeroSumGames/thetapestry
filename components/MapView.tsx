@@ -302,7 +302,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       const ts = getTierStyles(tier)
       const icon = leaflet.divIcon({
         html: `<div style="font-size:16px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(26,26,26,0.85);border:2px solid #c0392b;box-shadow:0 0 6px rgba(192,57,43,0.5);" title="${pin.title}">${emoji}</div>`,
-        className: '', iconSize: [28, 28], iconAnchor: [14, 28],
+        className: '', iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -33],
       })
       const nearSetting = getNearSetting(pin.lat, pin.lng)
       const nearbyCount = data.filter((p: Pin) => p.id !== pin.id && Math.abs(p.lat - pin.lat) < 0.1 && Math.abs(p.lng - pin.lng) < 0.1).length
