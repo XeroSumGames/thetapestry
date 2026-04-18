@@ -4,14 +4,11 @@
 -- Run in Supabase SQL Editor. Idempotent.
 -- ============================================================
 
--- 1. Drop the old check constraint
+-- 1. Drop the check constraint entirely (trigger handles normalization)
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
 
--- 2. Backfill: lowercase all existing roles (no constraint blocking now)
+-- 2. Backfill: lowercase all existing roles
 UPDATE public.profiles SET role = LOWER(role);
-
--- 3. Add new check constraint (all rows are lowercase now)
-ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check CHECK (role IN ('survivor', 'thriver'));
 
 -- 2. Trigger: auto-lowercase on insert/update
 CREATE OR REPLACE FUNCTION public.normalize_profile_role()
