@@ -102,6 +102,7 @@ export interface CampaignNpc {
   death_countdown: number | null
   incap_rounds: number | null
   equipment: { name: string; damage?: number; roll?: string; notes?: string }[] | null
+  folder: string | null
 }
 
 interface Relationship {
@@ -166,6 +167,23 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [showPortraitPicker, setShowPortraitPicker] = useState(false)
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      try { const saved = localStorage.getItem(`npc_folders_${campaignId}`); if (saved) return new Set(JSON.parse(saved)) } catch {}
+    }
+    return new Set<string>()
+  })
+  const [folderOrder, setFolderOrder] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      try { const saved = localStorage.getItem(`npc_folder_order_${campaignId}`); if (saved) return JSON.parse(saved) } catch {}
+    }
+    return []
+  })
+  const [renamingFolder, setRenamingFolder] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+  const [dragFolderId, setDragFolderId] = useState<string | null>(null)
+  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null)
+  const [dragNpcToFolder, setDragNpcToFolder] = useState<string | null>(null)
 
   async function loadNpcs() {
     const { data } = await supabase
@@ -335,6 +353,51 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     if (!confirm(`Delete ${name}? This cannot be undone.`)) return
     await supabase.from('campaign_npcs').delete().eq('id', id)
     await loadNpcs()
+  }
+
+  function toggleFolder(folderName: string) {
+    setExpandedFolders(prev => {
+      const next = new Set(prev)
+      next.has(folderName) ? next.delete(folderName) : next.add(folderName)
+      if (typeof window !== 'undefined') localStorage.setItem(`npc_folders_${campaignId}`, JSON.stringify([...next]))
+      return next
+    })
+  }
+
+  async function renameFolder(oldName: string, newName: string) {
+    if (!newName.trim() || newName.trim() === oldName) { setRenamingFolder(null); return }
+    const trimmed = newName.trim()
+    await Promise.all(npcs.filter(n => (n.folder ?? 'Uncategorized') === oldName).map(n =>
+      supabase.from('campaign_npcs').update({ folder: trimmed }).eq('id', n.id)
+    ))
+    setFolderOrder(prev => {
+      const next = prev.map(f => f === oldName ? trimmed : f)
+      if (typeof window !== 'undefined') localStorage.setItem(`npc_folder_order_${campaignId}`, JSON.stringify(next))
+      return next
+    })
+    setRenamingFolder(null)
+    await loadNpcs()
+  }
+
+  async function moveNpcToFolder(npcId: string, folderName: string) {
+    await supabase.from('campaign_npcs').update({ folder: folderName === 'Uncategorized' ? null : folderName }).eq('id', npcId)
+    setNpcs(prev => prev.map(n => n.id === npcId ? { ...n, folder: folderName === 'Uncategorized' ? null : folderName } : n))
+  }
+
+  function handleFolderDrop(targetFolder: string) {
+    if (!dragFolderId || dragFolderId === targetFolder) { setDragFolderId(null); setDragOverFolderId(null); return }
+    setFolderOrder(prev => {
+      const fromIdx = prev.indexOf(dragFolderId!)
+      const toIdx = prev.indexOf(targetFolder)
+      if (fromIdx < 0 || toIdx < 0) return prev
+      const next = [...prev]
+      const [moved] = next.splice(fromIdx, 1)
+      next.splice(toIdx, 0, moved)
+      if (typeof window !== 'undefined') localStorage.setItem(`npc_folder_order_${campaignId}`, JSON.stringify(next))
+      return next
+    })
+    setDragFolderId(null)
+    setDragOverFolderId(null)
   }
 
   function getInitials(name: string) {
@@ -690,17 +753,16 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
             </div>
           ) : (
             (() => {
-              // During combat, float NPCs that are in initiative to the top in
-              // turn order, with the active combatant first. The rest preserve
-              // their existing sort_order order.
               const isDead = (n: CampaignNpc) => {
                 const wp = n.wp_current ?? n.wp_max ?? 10
                 return n.status === 'dead' || (wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
               }
+
+              // Build the sorted NPC list
+              let sortedNpcs: CampaignNpc[]
               if (combatActive && initiativeNpcOrder && initiativeNpcOrder.length > 0) {
                 const idIdx = new Map(initiativeNpcOrder.map((id, i) => [id, i]))
-                return [...npcs].sort((a, b) => {
-                  // Dead NPCs always last
+                sortedNpcs = [...npcs].sort((a, b) => {
                   const ad = isDead(a) ? 1 : 0
                   const bd = isDead(b) ? 1 : 0
                   if (ad !== bd) return ad - bd
@@ -709,14 +771,15 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                   if (ai !== bi) return ai - bi
                   return 0
                 })
+              } else {
+                sortedNpcs = [...npcs].sort((a, b) => {
+                  const ad = isDead(a) ? 1 : 0
+                  const bd = isDead(b) ? 1 : 0
+                  return ad - bd
+                })
               }
-              // Non-combat: dead NPCs sink to bottom
-              return [...npcs].sort((a, b) => {
-                const ad = isDead(a) ? 1 : 0
-                const bd = isDead(b) ? 1 : 0
-                return ad - bd
-              })
-            })().map(npc => {
+
+              const renderNpcCard = (npc: CampaignNpc) => {
               const sc = STATUS_COLORS[npc.status] ?? STATUS_COLORS.active
               return (
                 <div key={npc.id} onClick={() => onViewNpc ? onViewNpc(npc) : openEdit(npc)}
@@ -787,7 +850,67 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                 </div>
                 </div>
               )
-            })
+              }
+
+              // During combat: flat list, no folders
+              if (combatActive) return sortedNpcs.map(renderNpcCard)
+
+              // Non-combat: folder tree
+              const folderMap: Record<string, CampaignNpc[]> = {}
+              for (const npc of sortedNpcs) {
+                const f = npc.folder ?? 'Uncategorized'
+                if (!folderMap[f]) folderMap[f] = []
+                folderMap[f].push(npc)
+              }
+              // Build ordered folder list — saved order first, then any new folders
+              const allFolderNames = Object.keys(folderMap)
+              const ordered = [...folderOrder.filter(f => allFolderNames.includes(f)), ...allFolderNames.filter(f => !folderOrder.includes(f))]
+              // Sync folderOrder if new folders appeared
+              if (ordered.length !== folderOrder.length || ordered.some((f, i) => f !== folderOrder[i])) {
+                setFolderOrder(ordered)
+                if (typeof window !== 'undefined') localStorage.setItem(`npc_folder_order_${campaignId}`, JSON.stringify(ordered))
+              }
+
+              return ordered.map(folderName => {
+                const folderNpcs = folderMap[folderName] ?? []
+                if (folderNpcs.length === 0) return null
+                const isOpen = expandedFolders.has(folderName)
+                return (
+                  <div key={folderName}
+                    onDragOver={e => { if (dragFolderId) { e.preventDefault(); setDragOverFolderId(folderName) } }}
+                    onDragLeave={() => { if (dragOverFolderId === folderName) setDragOverFolderId(null) }}
+                    onDrop={() => {
+                      if (dragFolderId) handleFolderDrop(folderName)
+                      if (dragId) { moveNpcToFolder(dragId, folderName); setDragId(null) }
+                    }}
+                    style={{ marginBottom: '2px' }}>
+                    <div
+                      draggable
+                      onDragStart={() => setDragFolderId(folderName)}
+                      onDragEnd={() => { setDragFolderId(null); setDragOverFolderId(null) }}
+                      onClick={() => toggleFolder(folderName)}
+                      onDoubleClick={e => { e.stopPropagation(); setRenamingFolder(folderName); setRenameValue(folderName) }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', cursor: 'pointer', borderRadius: '3px', background: dragOverFolderId === folderName ? '#242424' : 'transparent', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                      onMouseLeave={e => (e.currentTarget.style.background = dragOverFolderId === folderName ? '#242424' : 'transparent')}>
+                      <span style={{ fontSize: '10px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
+                      {renamingFolder === folderName ? (
+                        <input value={renameValue} onChange={e => setRenameValue(e.target.value)}
+                          onBlur={() => renameFolder(folderName, renameValue)}
+                          onKeyDown={e => { if (e.key === 'Enter') renameFolder(folderName, renameValue); if (e.key === 'Escape') setRenamingFolder(null) }}
+                          onClick={e => e.stopPropagation()}
+                          autoFocus
+                          style={{ flex: 1, padding: '1px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', outline: 'none' }} />
+                      ) : (
+                        <span style={{ flex: 1, fontSize: '12px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{folderName}</span>
+                      )}
+                      <span style={{ fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{folderNpcs.length}</span>
+                    </div>
+                    {isOpen && folderNpcs.map(renderNpcCard)}
+                  </div>
+                )
+              })
+            })()
           )}
       </div>
 
