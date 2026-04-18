@@ -3857,7 +3857,7 @@ export default function TablePage() {
                       const cols = (activeScene as any).grid_cols ?? 20
                       await supabase.from('scene_tokens').insert({
                         scene_id: activeScene.id, name, token_type: 'object',
-                        portrait_url: portraitUrl, grid_x: cols - 2, grid_y: 1,
+                        portrait_url: portraitUrl, grid_x: 1, grid_y: 1,
                         is_visible: true, color: '#EF9F27',
                         wp_max: wpMax, wp_current: wpMax,
                       })

@@ -16,6 +16,9 @@
 - **Layout flash on conditional rendering**: If a layout element (sidebar) depends on async state, the page will flash/jump when that state resolves. Fix by either always showing or always hiding the element on that route, not conditionally based on async data.
 - **`return null` during loading causes layout shifts**: Use `return <div style={{ background: '#0f0f0f' }} />` instead to maintain the DOM structure.
 
+## Tactical Map
+- **Tokens always spawn at top-left (1,1)**: All tokens (PC, NPC, objects) spawn at grid position (1, 1) — top-left of the tactical map. Never top-right. The GM controls strip is on the left but tokens go there anyway — the GM drags them to position. This was changed back and forth; top-left is the final decision.
+
 ## Client-Side Image Processing
 - **Canvas center-crop pattern**: `const srcSize = Math.min(w, h); sx = (w - srcSize) / 2; sy = (h - srcSize) / 2` then `ctx.drawImage(img, sx, sy, srcSize, srcSize, 0, 0, OUTPUT, OUTPUT)` — crops to square from center before resizing. Set `ctx.imageSmoothingQuality = 'high'` for the downscale.
 - **Quality slider live-update**: Keep the loaded `HTMLImageElement` in a ref so changing quality can re-run `processImage` without re-reading the file. A `useEffect([quality])` triggers re-processing only when quality changes.
