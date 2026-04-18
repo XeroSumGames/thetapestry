@@ -54,74 +54,81 @@ export default function NewCampaignPage() {
     })
     // Collect seed errors and surface them in the UI instead of silently swallowing.
     const seedErrors: string[] = []
-    // Seed setting pins into campaign_pins (not world map)
-    const settingPins = SETTING_PINS[setting]
+
+    // ── Seed Pins: DB first, fallback to TS ──
     let pinMap: Record<string, string> = {}
-    if (settingPins && settingPins.length > 0) {
-      const pinRows = settingPins.map((p, i) => ({
-        campaign_id: data.id, name: p.title, lat: p.lat, lng: p.lng,
+    const { data: dbPins } = await supabase.from('setting_seed_pins').select('*').eq('setting', setting).order('sort_order')
+    const pinSource = (dbPins && dbPins.length > 0) ? dbPins : (SETTING_PINS[setting] ?? []).map((p, i) => ({ name: p.title, lat: p.lat, lng: p.lng, notes: p.notes ?? '', category: p.category ?? 'location', sort_order: i + 1 }))
+    if (pinSource.length > 0) {
+      const pinRows = pinSource.map((p: any, i: number) => ({
+        campaign_id: data.id, name: p.name ?? p.title, lat: p.lat, lng: p.lng,
         notes: p.notes ?? '', category: p.category ?? 'location',
-        revealed: false,
-        sort_order: i + 1,
+        revealed: false, sort_order: p.sort_order ?? i + 1,
       }))
       const { data: createdPins, error: pinErr } = await supabase.from('campaign_pins').insert(pinRows).select('id, name')
       if (pinErr) seedErrors.push(`pins: ${pinErr.message}`)
       createdPins?.forEach((p: any) => { pinMap[p.name] = p.id })
     }
-    // Seed setting NPCs into campaign_npcs
-    const settingNpcs = SETTING_NPCS[setting]
-    if (settingNpcs && settingNpcs.length > 0) {
-      const npcRows = settingNpcs.map((n, i) => {
-        // Fold non-column seed fields (role, description, how_to_meet) into the notes column.
-        const notes = [
-          n.role && `Role: ${n.role}`,
-          n.description,
-          n.how_to_meet && `How to meet: ${n.how_to_meet}`,
-        ].filter(Boolean).join('\n\n')
-        return {
-          campaign_id: data.id,
-          campaign_pin_id: n.pin_title ? (pinMap[n.pin_title] ?? null) : null,
-          name: n.name,
-          reason: n.reason,
-          acumen: n.acumen,
-          physicality: n.physicality,
-          influence: n.influence,
-          dexterity: n.dexterity,
-          skills: { entries: n.skills.map(s => ({ name: s.name, level: s.level })), text: n.skills.map(s => `${s.name} ${s.level}`).join(', '), weapon: null },
-          equipment: n.equipment,
-          notes,
-          motivation: n.motivation || null,
-          wp_max: n.wp_max,
-          rp_max: n.rp_max,
-          wp_current: n.wp_max,
-          rp_current: n.rp_max,
-          status: 'active',
-          sort_order: i + 1,
-        }
-      })
+
+    // ── Seed NPCs: DB first, fallback to TS ──
+    const { data: dbNpcs } = await supabase.from('setting_seed_npcs').select('*').eq('setting', setting).order('sort_order')
+    if (dbNpcs && dbNpcs.length > 0) {
+      // DB seeds — already in the right format, just map to campaign_npcs
+      const npcRows = dbNpcs.map((n: any, i: number) => ({
+        campaign_id: data.id,
+        campaign_pin_id: n.pin_title ? (pinMap[n.pin_title] ?? null) : null,
+        name: n.name,
+        reason: n.reason, acumen: n.acumen, physicality: n.physicality,
+        influence: n.influence, dexterity: n.dexterity,
+        skills: n.skills, equipment: n.equipment,
+        notes: n.notes, motivation: n.motivation,
+        portrait_url: n.portrait_url || null,
+        npc_type: n.npc_type || null,
+        wp_max: n.wp_max, rp_max: n.rp_max,
+        wp_current: n.wp_max, rp_current: n.rp_max,
+        status: 'active', sort_order: n.sort_order ?? i + 1,
+      }))
       const { error: npcErr } = await supabase.from('campaign_npcs').insert(npcRows)
       if (npcErr) seedErrors.push(`npcs: ${npcErr.message}`)
+    } else {
+      // Fallback to TS seeds
+      const settingNpcs = SETTING_NPCS[setting]
+      if (settingNpcs && settingNpcs.length > 0) {
+        const npcRows = settingNpcs.map((n, i) => {
+          const notes = [n.role && `Role: ${n.role}`, n.description, n.how_to_meet && `How to meet: ${n.how_to_meet}`].filter(Boolean).join('\n\n')
+          return {
+            campaign_id: data.id,
+            campaign_pin_id: n.pin_title ? (pinMap[n.pin_title] ?? null) : null,
+            name: n.name, reason: n.reason, acumen: n.acumen, physicality: n.physicality,
+            influence: n.influence, dexterity: n.dexterity,
+            skills: { entries: n.skills.map(s => ({ name: s.name, level: s.level })), text: n.skills.map(s => `${s.name} ${s.level}`).join(', '), weapon: null },
+            equipment: n.equipment, notes, motivation: n.motivation || null,
+            wp_max: n.wp_max, rp_max: n.rp_max, wp_current: n.wp_max, rp_current: n.rp_max,
+            status: 'active', sort_order: i + 1,
+          }
+        })
+        const { error: npcErr } = await supabase.from('campaign_npcs').insert(npcRows)
+        if (npcErr) seedErrors.push(`npcs: ${npcErr.message}`)
+      }
     }
-    // Seed tactical scenes
-    const settingScenes = SETTING_SCENES[setting]
-    if (settingScenes && settingScenes.length > 0) {
-      const sceneRows = settingScenes.map(s => ({
-        campaign_id: data.id,
-        name: s.name,
-        grid_cols: s.grid_cols,
-        grid_rows: s.grid_rows,
-        is_active: false,
+
+    // ── Seed Scenes: DB first, fallback to TS ──
+    const { data: dbScenes } = await supabase.from('setting_seed_scenes').select('*').eq('setting', setting)
+    const sceneSource = (dbScenes && dbScenes.length > 0) ? dbScenes : (SETTING_SCENES[setting] ?? [])
+    if (sceneSource.length > 0) {
+      const sceneRows = sceneSource.map((s: any) => ({
+        campaign_id: data.id, name: s.name, grid_cols: s.grid_cols, grid_rows: s.grid_rows, is_active: false,
       }))
       const { error: sceneErr } = await supabase.from('tactical_scenes').insert(sceneRows)
       if (sceneErr) seedErrors.push(`scenes: ${sceneErr.message}`)
     }
-    // Seed GM handouts
-    const settingHandouts = SETTING_HANDOUTS[setting]
-    if (settingHandouts && settingHandouts.length > 0) {
-      const handoutRows = settingHandouts.map(h => ({
-        campaign_id: data.id,
-        title: h.title,
-        content: h.content,
+
+    // ── Seed Handouts: DB first, fallback to TS ──
+    const { data: dbHandouts } = await supabase.from('setting_seed_handouts').select('*').eq('setting', setting)
+    const handoutSource = (dbHandouts && dbHandouts.length > 0) ? dbHandouts : (SETTING_HANDOUTS[setting] ?? [])
+    if (handoutSource.length > 0) {
+      const handoutRows = handoutSource.map((h: any) => ({
+        campaign_id: data.id, title: h.title, content: h.content,
       }))
       const { error: handoutErr } = await supabase.from('campaign_notes').insert(handoutRows)
       if (handoutErr) seedErrors.push(`handouts: ${handoutErr.message}`)

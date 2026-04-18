@@ -25,6 +25,9 @@ export default function EditCampaignPage() {
   const [setting, setSetting] = useState('')
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [isThriver, setIsThriver] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [syncResult, setSyncResult] = useState('')
   const [locationQuery, setLocationQuery] = useState('')
   const [locationSuggestions, setLocationSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null)
@@ -37,6 +40,8 @@ export default function EditCampaignPage() {
       const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
       if (!camp) { router.push('/stories'); return }
       if (camp.gm_user_id !== user.id) { router.push('/stories'); return }
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      if (profile?.role === 'thriver') setIsThriver(true)
       setName(camp.name)
       setDescription(camp.description ?? '')
       setMapStyle(camp.map_style ?? 'street')
@@ -169,6 +174,107 @@ export default function EditCampaignPage() {
             <span style={{ color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✓ Saved</span>
           )}
         </div>
+
+        {/* Sync to Seed — Thriver only, non-custom settings */}
+        {isThriver && setting && setting !== 'custom' && (
+          <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #2e2e2e' }}>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: '#EF9F27', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Seed Management</div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '10px', lineHeight: 1.5 }}>
+              Update the seed data for <strong style={{ color: '#f5f2ee' }}>{SETTINGS[setting] ?? setting}</strong> using this campaign's NPCs, pins, scenes, and handouts. All future campaigns using this setting will start with this data.
+            </div>
+            <button onClick={async () => {
+              if (!confirm(`This will overwrite all seed data for "${SETTINGS[setting] ?? setting}" with this campaign's current NPCs, pins, scenes, and handouts.\n\nAll future campaigns using this setting will inherit these changes.\n\nContinue?`)) return
+              setSyncing(true)
+              setSyncResult('')
+              try {
+                // Clear existing seeds for this setting
+                await Promise.all([
+                  supabase.from('setting_seed_npcs').delete().eq('setting', setting),
+                  supabase.from('setting_seed_pins').delete().eq('setting', setting),
+                  supabase.from('setting_seed_scenes').delete().eq('setting', setting),
+                  supabase.from('setting_seed_handouts').delete().eq('setting', setting),
+                ])
+
+                // Fetch campaign data
+                const [npcsRes, pinsRes, scenesRes, handoutsRes] = await Promise.all([
+                  supabase.from('campaign_npcs').select('*').eq('campaign_id', id).order('sort_order'),
+                  supabase.from('campaign_pins').select('*').eq('campaign_id', id).order('sort_order'),
+                  supabase.from('tactical_scenes').select('*').eq('campaign_id', id),
+                  supabase.from('campaign_notes').select('*').eq('campaign_id', id).order('created_at'),
+                ])
+
+                const counts = { npcs: 0, pins: 0, scenes: 0, handouts: 0 }
+
+                // Sync NPCs — build pin_title from campaign_pin_id
+                const pinIdToName: Record<string, string> = {}
+                ;(pinsRes.data ?? []).forEach((p: any) => { pinIdToName[p.id] = p.name })
+                const npcs = (npcsRes.data ?? []).map((n: any, i: number) => ({
+                  setting,
+                  name: n.name,
+                  reason: n.reason, acumen: n.acumen, physicality: n.physicality,
+                  influence: n.influence, dexterity: n.dexterity,
+                  wp_max: n.wp_max, rp_max: n.rp_max,
+                  skills: n.skills, equipment: n.equipment,
+                  notes: n.notes, motivation: n.motivation,
+                  portrait_url: n.portrait_url, npc_type: n.npc_type,
+                  pin_title: n.campaign_pin_id ? (pinIdToName[n.campaign_pin_id] ?? null) : null,
+                  sort_order: n.sort_order ?? i + 1,
+                }))
+                if (npcs.length > 0) {
+                  const { error } = await supabase.from('setting_seed_npcs').insert(npcs)
+                  if (error) throw new Error(`NPCs: ${error.message}`)
+                  counts.npcs = npcs.length
+                }
+
+                // Sync Pins
+                const pins = (pinsRes.data ?? []).map((p: any, i: number) => ({
+                  setting, name: p.name, lat: p.lat, lng: p.lng,
+                  notes: p.notes, category: p.category ?? 'location',
+                  sort_order: p.sort_order ?? i + 1,
+                }))
+                if (pins.length > 0) {
+                  const { error } = await supabase.from('setting_seed_pins').insert(pins)
+                  if (error) throw new Error(`Pins: ${error.message}`)
+                  counts.pins = pins.length
+                }
+
+                // Sync Scenes
+                const scenes = (scenesRes.data ?? []).map((s: any) => ({
+                  setting, name: s.name, grid_cols: s.grid_cols, grid_rows: s.grid_rows, notes: s.notes ?? '',
+                }))
+                if (scenes.length > 0) {
+                  const { error } = await supabase.from('setting_seed_scenes').insert(scenes)
+                  if (error) throw new Error(`Scenes: ${error.message}`)
+                  counts.scenes = scenes.length
+                }
+
+                // Sync Handouts
+                const handouts = (handoutsRes.data ?? []).map((h: any) => ({
+                  setting, title: h.title, content: h.content ?? '',
+                }))
+                if (handouts.length > 0) {
+                  const { error } = await supabase.from('setting_seed_handouts').insert(handouts)
+                  if (error) throw new Error(`Handouts: ${error.message}`)
+                  counts.handouts = handouts.length
+                }
+
+                setSyncResult(`✓ Synced: ${counts.npcs} NPCs, ${counts.pins} pins, ${counts.scenes} scenes, ${counts.handouts} handouts`)
+              } catch (err: any) {
+                setSyncResult(`Error: ${err?.message ?? 'Unknown error'}`)
+              }
+              setSyncing(false)
+            }}
+              disabled={syncing}
+              style={{ padding: '10px 24px', background: '#EF9F27', border: '1px solid #EF9F27', borderRadius: '3px', color: '#1a1a1a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: syncing ? 'wait' : 'pointer', fontWeight: 700, opacity: syncing ? 0.6 : 1 }}>
+              {syncing ? 'Syncing...' : 'Update Seed Data'}
+            </button>
+            {syncResult && (
+              <div style={{ marginTop: '8px', fontSize: '13px', color: syncResult.startsWith('✓') ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                {syncResult}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
