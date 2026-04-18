@@ -513,6 +513,8 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       await supabase.from('npc_relationships').insert(inserts)
     }
     setRevealedNpcIds(new Set(npcIds))
+    // Show all NPC tokens on tactical map
+    await supabase.from('scene_tokens').update({ is_visible: true }).in('npc_id', npcIds)
   }
 
   async function hideAllNpcs() {
@@ -520,6 +522,8 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     const npcIds = npcs.map(n => n.id)
     await supabase.from('npc_relationships').update({ revealed: false, reveal_level: null }).in('npc_id', npcIds)
     setRevealedNpcIds(new Set())
+    // Hide all NPC tokens on tactical map
+    await supabase.from('scene_tokens').update({ is_visible: false }).in('npc_id', npcIds)
   }
 
   async function quickReveal(npcId: string, e: React.MouseEvent) {
@@ -539,6 +543,8 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       if (isRevealed) next.delete(npcId); else next.add(npcId)
       return next
     })
+    // Sync token visibility on the tactical map
+    await supabase.from('scene_tokens').update({ is_visible: !isRevealed }).eq('npc_id', npcId)
   }
 
   // Publish to World

@@ -1329,7 +1329,7 @@ export default function TablePage() {
       portrait_url: portraitUrl || null,
       grid_x: 0,
       grid_y: 0,
-      is_visible: true,
+      is_visible: type === 'pc' || (npcId ? revealedNpcIds.has(npcId) : true),
       color: type === 'pc' ? '#7ab3d4' : '#c0392b',
     })
     if (tokenErr) { console.error('[placeToken] error:', tokenErr.message); alert('Failed to place token: ' + tokenErr.message); return }
