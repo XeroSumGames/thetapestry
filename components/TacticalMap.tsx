@@ -134,6 +134,18 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       if (active.cell_px) setCellPx(active.cell_px)
       if (active.img_scale) setImgScale(active.img_scale)
       setMapLocked(active.is_locked ?? false)
+    } else if (data && data.length > 0 && isGM) {
+      // No active scene — auto-activate the most recent one
+      const first = data[0]
+      await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', first.id)
+      setScene(first)
+      loadTokens(first.id)
+      if (first.cell_px) setCellPx(first.cell_px)
+      if (first.img_scale) setImgScale(first.img_scale)
+      setMapLocked(first.is_locked ?? false)
+    } else if ((!data || data.length === 0) && isGM) {
+      // No scenes at all — open Create Scene modal
+      setShowSetup(true)
     }
   }
 
@@ -896,19 +908,6 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   if (!scene && isGM) {
     return (
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#111', position: 'relative', zIndex: 1200 }}>
-        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-          <button onClick={() => setShowSetup(true)}
-            style={{ padding: '10px 24px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', width: '220px' }}>
-            Create Scene
-          </button>
-          {scenes.length > 0 && (
-            <select defaultValue="" onChange={e => { if (e.target.value) activateScene(e.target.value) }}
-              style={{ padding: '10px 24px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', width: '220px', appearance: 'none', textAlign: 'center' }}>
-              <option value="" disabled>Open Scene</option>
-              {scenes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          )}
-        </div>
         {showSetup && (
           <div onClick={() => setShowSetup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
