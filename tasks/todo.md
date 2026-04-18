@@ -255,6 +255,8 @@
 - [x] Real-time sync — receiving player's inventory refreshes on transfer
 - [ ] GM loot distribution modal — bulk give items to multiple characters
 - [ ] Inventory migration — auto-convert old string equipment to structured items on load
+- [ ] **Player-initiated loot from ObjectCard** — currently GM-only. Decide policy: always allowed, only on destroyed crates, or requires "unlocked" flag on the object.
+- [ ] **Surface Give loot UI in the GM Assets → Objects panel too** — mirror the per-item Give controls that now live on ObjectCard so GM can loot without placing the object on the map first (current panel loot still requires crate to be destroyed).
 
 ### Campaign Management
 - [x] Launch, Leave, Share buttons
@@ -486,6 +488,8 @@
 - [x] **Map selection pre-populates attack target** — single-click a token, open Attack modal, target dropdown is pre-filled (overrides `last_attack_target` if both exist)
 - [x] **Edit Object modal** — font sizes bumped for readability (10→12, 11→12, 12→13, 13→14)
 - [x] **Range circles restored** — clicking any token auto-draws 3 circles: green Engaged, blue 9ft Move, red primary-weapon range. Drawn under tokens so sprites stay crisp. Show/Hide Ranges button still toggles visibility.
+- [x] **Range band circles REMOVED from tokens** — overlay drawing, Show/Hide Ranges button, `showRangeOverlay` state, and related constants all deleted from `TacticalMap.tsx`. Attack modal's auto range-band logic (`getAutoRangeBand` in page.tsx) still drives CMod + target filtering — just no canvas painting.
+- [x] **ObjectCard loot (GM)** — Contents section shows per-item `Give to [PC]` dropdown + green `Give` button. Transfers one-at-a-time to the chosen character's equipment, decrements (or removes) the crate's quantity in `scene_tokens.contents`, logs `🎒 [name] looted [item] from [crate]` to roll_log. Works on intact crates — no need to destroy first.
 
 ---
 

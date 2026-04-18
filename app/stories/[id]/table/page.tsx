@@ -1475,7 +1475,8 @@ export default function TablePage() {
       }),
       supabase.from('roll_log').delete().eq('campaign_id', id),
       supabase.from('chat_messages').delete().eq('campaign_id', id),
-      supabase.from('character_states').update({ kicked: false }).eq('campaign_id', id).eq('kicked', true),
+      // NOTE: no mass kicked=false reset — kick persists across sessions.
+      // Kicked players must manually Rejoin from the story overview page.
     ]).catch(err => console.error('[startSession] background error:', err))
   }
 

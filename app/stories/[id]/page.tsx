@@ -68,6 +68,8 @@ export default function CampaignPage() {
   const [cloning, setCloning] = useState(false)
   const [showPregens, setShowPregens] = useState(false)
   const [creatingPregen, setCreatingPregen] = useState(false)
+  const [amKicked, setAmKicked] = useState(false)
+  const [rejoining, setRejoining] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -93,6 +95,17 @@ export default function CampaignPage() {
       if (myMembership?.character_id) {
         setSelectedCharId(myMembership.character_id)
         setAssignedCharName((myMembership.characters as any)?.name ?? '')
+      }
+
+      // Check if this player was kicked from the current session
+      if (camp.gm_user_id !== user.id) {
+        const { data: myState } = await supabase
+          .from('character_states')
+          .select('kicked')
+          .eq('campaign_id', id)
+          .eq('user_id', user.id)
+          .maybeSingle()
+        setAmKicked(!!myState?.kicked)
       }
 
       setLoading(false)
@@ -151,6 +164,24 @@ export default function CampaignPage() {
     if (!confirm('Leave this story?')) return
     await supabase.from('campaign_members').delete().eq('campaign_id', id).eq('user_id', userId)
     router.push('/stories')
+  }
+
+  async function handleRejoin() {
+    if (!userId || !campaign || rejoining) return
+    setRejoining(true)
+    const { error } = await supabase
+      .from('character_states')
+      .update({ kicked: false })
+      .eq('campaign_id', id)
+      .eq('user_id', userId)
+    if (error) {
+      console.error('[handleRejoin] failed:', error.message)
+      alert('Could not rejoin — please try again or ask the GM.')
+      setRejoining(false)
+      return
+    }
+    setAmKicked(false)
+    setRejoining(false)
   }
 
   async function handleClone() {
@@ -233,15 +264,29 @@ export default function CampaignPage() {
 
       {/* Action buttons — Player */}
       {!isGM && (
-        <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
-          <a href={`/stories/${id}/table`} target="_blank" rel="noreferrer" style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
-          <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
-            {copied ? 'Copied!' : 'Share'}
-          </button>
-          <button onClick={handleLeave} style={btn('#7a1f16', '#f5a89a', '#7a1f16') as any}>
-            Leave
-          </button>
-        </div>
+        <>
+          {amKicked && (
+            <div style={{ background: '#2a1210', border: '1px solid #c0392b', borderRadius: '4px', padding: '12px 14px', marginBottom: '12px', color: '#f5a89a', fontSize: '13px', lineHeight: 1.5 }}>
+              <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a', marginBottom: '4px' }}>Removed from Session</div>
+              You were removed from this session by the GM. You will not rejoin automatically — click <b>Rejoin Session</b> below when you are ready to return.
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
+            {amKicked ? (
+              <button onClick={handleRejoin} disabled={rejoining} style={{ ...btn('#1a2e10', '#7fc458', '#2d5a1b'), opacity: rejoining ? 0.6 : 1 } as any}>
+                {rejoining ? 'Rejoining…' : 'Rejoin Session'}
+              </button>
+            ) : (
+              <a href={`/stories/${id}/table`} target="_blank" rel="noreferrer" style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
+            )}
+            <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
+              {copied ? 'Copied!' : 'Share'}
+            </button>
+            <button onClick={handleLeave} style={btn('#7a1f16', '#f5a89a', '#7a1f16') as any}>
+              Leave
+            </button>
+          </div>
+        </>
       )}
 
       {/* Invite link — both views */}

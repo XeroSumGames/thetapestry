@@ -1,39 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
-import { getWeaponByName } from '../lib/weapons'
-import { getRangeBand, RANGE_BAND_COLOR } from '../lib/range-profiles'
-
-const RANGE_BAND_FEET: Record<string, number> = {
-  'Engaged': 5,
-  'Close': 30,
-  'Medium': 100,
-  'Long': 300,
-  'Distant': 600,
-}
-
-const RANGE_BAND_ORDER = ['Engaged', 'Close', 'Medium', 'Long', 'Distant']
-
-function bestWeaponRange(names: string[]): { band: string; isMelee: boolean } {
-  let best = 'Engaged'
-  let bestIdx = 0
-  let isMelee = true
-  for (const name of names) {
-    if (!name) continue
-    const w = getWeaponByName(name)
-    if (!w) continue
-    const idx = RANGE_BAND_ORDER.indexOf(w.range)
-    if (idx > bestIdx) { best = w.range; bestIdx = idx; isMelee = w.category === 'melee' }
-  }
-  return { band: best, isMelee }
-}
-
-// Melee "Close" means reach (~10ft), not the ranged Close band (30ft)
-const MELEE_RANGE_FEET: Record<string, number> = {
-  'Engaged': 5,
-  'Close': 10,
-}
-
 interface Token {
   id: string
   scene_id: string
@@ -72,6 +39,7 @@ interface Props {
   isGM: boolean
   initiativeOrder: any[]
   onTokenClick?: (token: Token) => void
+  onTokenSelect?: (token: Token | null) => void
   tokenRefreshKey?: number
   campaignNpcs?: any[]
   entries?: any[]
@@ -82,7 +50,7 @@ interface Props {
   onTokensUpdate?: (tokens: { id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null }[], cellFeet: number) => void
 }
 
-export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, onTokensUpdate }: Props) {
+export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, onTokensUpdate }: Props) {
   const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -109,7 +77,6 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [gridColor, setGridColor] = useState('white')
   const [ping, setPing] = useState<{ gx: number; gy: number; t: number; color: string; count: number } | null>(null)
   const pingChannelRef = useRef<any>(null)
-  const [showRangeOverlay, setShowRangeOverlay] = useState(true)
   const tacticalChannelRef = useRef<any>(null)
   const [gridOpacity, setGridOpacity] = useState(0.4)
   const [spaceHeld, setSpaceHeld] = useState(false)
@@ -199,7 +166,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
 
   // Redraw on token/scene changes
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, campaignNpcs, entries, showRangeOverlay, ping, dragging])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, panX, panY, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, campaignNpcs, entries, ping, dragging])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
@@ -353,64 +320,6 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         }
       }
     }
-
-    // Range circles for selected token — drawn UNDER tokens so tokens stay crisp
-    if (showRangeOverlay && selectedToken) {
-      const selTok = tokensRef.current.find(t => t.id === selectedToken)
-      if (selTok) {
-        const cx = offsetX + selTok.grid_x * cellSize + cellSize / 2
-        const cy = offsetY + selTok.grid_y * cellSize + cellSize / 2
-        const ft = s.cell_feet ?? 3
-
-        // Look up weapon range for this token — PRIMARY weapon
-        let weaponRangeBand = 'Engaged'
-        let weaponIsMelee = true
-        if (selTok.npc_id && campaignNpcs) {
-          const npc = campaignNpcs.find((n: any) => n.id === selTok.npc_id)
-          const weaponName = npc?.skills?.weapon?.weaponName
-          if (weaponName) {
-            const w = getWeaponByName(weaponName)
-            if (w) { weaponRangeBand = w.range; weaponIsMelee = w.category === 'melee' }
-          }
-        } else if (selTok.character_id && entries) {
-          const entry = entries.find((e: any) => e.character.id === selTok.character_id)
-          const weaponName = entry?.character.data?.weaponPrimary?.weaponName
-          if (weaponName) {
-            const w = getWeaponByName(weaponName)
-            if (w) { weaponRangeBand = w.range; weaponIsMelee = w.category === 'melee' }
-          }
-        }
-        const weaponRangeFt = weaponIsMelee
-          ? (MELEE_RANGE_FEET[weaponRangeBand] ?? 5)
-          : (RANGE_BAND_FEET[weaponRangeBand] ?? 5)
-        const weaponCells = Math.max(1, Math.ceil(weaponRangeFt / ft))
-
-        const circles = [
-          { cells: weaponCells, fill: 'rgba(192,57,43,0.18)', stroke: '#ff4040', label: `${weaponRangeBand} (${weaponRangeFt}ft)` },
-          { cells: 3, fill: 'rgba(52,152,219,0.15)', stroke: '#5dade2', label: 'Move (9ft)' },
-          { cells: Math.max(1, Math.ceil(3 / ft)), fill: 'rgba(127,196,88,0.20)', stroke: '#7fc458', label: 'Engaged' },
-        ]
-        // Largest first so smaller ones layer on top
-        circles.sort((a, b) => b.cells - a.cells)
-        circles.forEach(c => {
-          ctx.beginPath()
-          ctx.arc(cx, cy, c.cells * cellSize, 0, Math.PI * 2)
-          ctx.fillStyle = c.fill
-          ctx.fill()
-          ctx.strokeStyle = c.stroke
-          ctx.globalAlpha = 1
-          ctx.lineWidth = 2
-          ctx.stroke()
-          // Label at top edge of circle
-          ctx.font = `bold 12px Barlow Condensed`
-          ctx.fillStyle = c.stroke
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          ctx.fillText(c.label, cx, cy - c.cells * cellSize + 12)
-        })
-      }
-    }
-
 
     // Tokens
     const toks = tokensRef.current
@@ -756,6 +665,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       const tok = getTokenAt(pos.gx, pos.gy)
       if (tok) {
         setSelectedToken(tok.id)
+        onTokenSelect?.(tok)
         const canDrag = isGM || (myCharacterId && tok.character_id === myCharacterId)
         if (canDrag && canvasRef.current) {
           const rect = canvasRef.current.getBoundingClientRect()
@@ -794,6 +704,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     }
     // No token or handle clicked — start panning (unless locked)
     setSelectedToken(null)
+    onTokenSelect?.(null)
     if (!mapLocked) {
       setPanning({ startX: e.clientX, startY: e.clientY, startPanX: containerRef.current?.scrollLeft ?? 0, startPanY: containerRef.current?.scrollTop ?? 0 })
     }
@@ -1139,10 +1050,6 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           }}
             style={{ padding: '4px 10px', background: mapLocked ? '#2a1210' : 'rgba(15,15,15,.85)', border: `1px solid ${mapLocked ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: mapLocked ? '#f5a89a' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
             {mapLocked ? 'Unlock Map' : 'Lock Map'}
-          </button>
-          <button onClick={() => setShowRangeOverlay(v => !v)}
-            style={{ padding: '4px 10px', background: showRangeOverlay ? '#1a2e10' : 'rgba(15,15,15,.85)', border: `1px solid ${showRangeOverlay ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: showRangeOverlay ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
-            {showRangeOverlay ? 'Hide Ranges' : 'Show Ranges'}
           </button>
           {scene.background_url && (
             <button onClick={async () => {
