@@ -91,6 +91,7 @@ interface Props {
   inline?: boolean
   otherCharacters?: { id: string; name: string }[]
   onGiveItem?: (item: InventoryItem, targetCharId: string) => void
+  onInventoryChange?: (newInventory: InventoryItem[]) => void
 }
 
 export default function CharacterCard({
@@ -109,6 +110,7 @@ export default function CharacterCard({
   inline = false,
   otherCharacters,
   onGiveItem,
+  onInventoryChange,
 }: Props) {
   const router = useRouter()
   const supabase = createClient()
@@ -131,6 +133,12 @@ export default function CharacterCard({
   // Weapon local state
   const [weaponPrimary, setWeaponPrimary] = useState(c.data?.weaponPrimary ?? { weaponName: '', condition: 'Used', ammoCurrent: 0, ammoMax: 0, reloads: 0 })
   const [weaponSecondary, setWeaponSecondary] = useState(c.data?.weaponSecondary ?? { weaponName: '', condition: 'Used', ammoCurrent: 0, ammoMax: 0, reloads: 0 })
+
+  // Local inventory mirror. Reads from c.data at mount; updates optimistically
+  // on edits so the InventoryPanel displays changes immediately. Re-syncs when
+  // the character prop changes (e.g. loadEntries on the parent fetched fresh).
+  const [inventoryState, setInventoryState] = useState<InventoryItem[]>(c.data?.inventory ?? [])
+  useEffect(() => { setInventoryState(c.data?.inventory ?? []) }, [c.data?.inventory])
 
   const latestDataRef = useRef(c.data)
   useEffect(() => { latestDataRef.current = c.data }, [c.data])
@@ -759,15 +767,26 @@ export default function CharacterCard({
       {/* Inventory Panel */}
       {showInventory && (
         <InventoryPanel
-          inventory={c.data?.inventory ?? []}
+          inventory={inventoryState}
           weaponPrimaryName={weaponPrimary.weaponName}
           weaponSecondaryName={weaponSecondary.weaponName}
           phyMod={rapid.PHY ?? 0}
           canEdit={canEdit}
           onUpdate={async (newInventory) => {
+            // Optimistic local update first — the panel reads from this.
+            setInventoryState(newInventory)
             const newData = { ...latestDataRef.current, inventory: newInventory }
             latestDataRef.current = newData
-            await supabase.from('characters').update({ data: newData }).eq('id', c.id)
+            const { error } = await supabase.from('characters').update({ data: newData }).eq('id', c.id)
+            if (error) {
+              console.error('[inventory] DB update failed:', error.message)
+              alert(`Failed to save inventory: ${error.message}`)
+              // Roll back local state on failure so UI matches DB.
+              setInventoryState(c.data?.inventory ?? [])
+              return
+            }
+            // Notify parent so entries state stays in sync across close/reopen.
+            onInventoryChange?.(newInventory)
           }}
           onClose={() => setShowInventory(false)}
           otherCharacters={otherCharacters}

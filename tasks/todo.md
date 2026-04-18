@@ -253,6 +253,7 @@
 - [x] Custom item creation — name, enc, notes
 - [x] Give/Trade — give items to other characters at the table via broadcast
 - [x] Real-time sync — receiving player's inventory refreshes on transfer
+- [x] **+ From Catalog now sticks** — InventoryPanel was prop-driven from `c.data?.inventory`, but the parent's `entries` state was never patched on add/remove, so the item only existed in the DB and the UI showed stale data. Fix: `CharacterCard` now keeps a local `inventoryState` mirror (updates optimistically, rolls back on DB error) and fires a new `onInventoryChange` callback that the table page uses to patch `entries` so the change survives close/reopen without a `loadEntries` round-trip.
 - [ ] GM loot distribution modal — bulk give items to multiple characters
 - [ ] Inventory migration — auto-convert old string equipment to structured items on load
 - [ ] **Player-initiated loot from ObjectCard** — currently GM-only. Decide policy: always allowed, only on destroyed crates, or requires "unlocked" flag on the object.
