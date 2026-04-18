@@ -244,7 +244,7 @@
 - [x] NPC form + card compacted (portrait/bank/status on one row)
 - [x] Renamed Friendly → Bystander NPC type
 - [ ] NPC browsing/filtering
-- [ ] GM screen, GM quick-reference panel
+- [x] GM Screen — pop-out /gm-screen page for second monitor (outcomes, combat actions, range bands, conditions, CMods, healing, skills→attrs)
 
 ### Player Inventory System
 - [x] InventoryPanel component — item list, catalog search (33 SRD items + **all 50+ weapons**), custom items, qty tracking
@@ -274,6 +274,7 @@
 - [x] GM private notes
 - [x] Player kick from session (kicked flag on character_states, persists on refresh, resets on new session start)
 - [x] **Kicked players no longer auto-rejoin on session restart** — removed the silent `UPDATE character_states SET kicked=false` in `startSession()`. Kick now persists indefinitely. Kicked player sees a red "Removed from Session" banner + green **Rejoin Session** button on the story overview page — clicking it clears their own `kicked` flag. Kick UPDATE now uses `(campaign_id, user_id)` + `.select()` so silent RLS failures surface as an alert instead of appearing to succeed.
+- [x] **Kicked players excluded from initiative on combat start** — `confirmStartCombat` pulled combatants straight from `campaign_members` and bypassed the `character_states.kicked` filter that `loadEntries` applies. Fix: fetch kicked `user_id`s up front and filter `rawMembers` before rolling initiative so kicked PCs are never inserted into `initiative_order`.
 - [ ] CDP awards
 - [x] Mortal wound insight save — player acts, GM sees read-only
 - [x] Character delete confirmation dialog
@@ -540,7 +541,7 @@
 ## 🔵 Phase 9 — Maturity
 - [ ] Rules reference — full XSE SRD v1.1 searchable and browsable within The Tapestry
 - [ ] Contextual rules links — from character sheet and dice roller to relevant SRD sections
-- [ ] GM quick-reference panel — outcomes table, CMod table, range bands, combat actions at a glance
+- [x] GM quick-reference panel — pop-out /gm-screen with outcomes, CMod, range bands, combat actions, healing, skills→attrs
 - [ ] Mobile optimization pass — dashboard, map, character wizard, table view all responsive
 - [ ] Mobile dice roller — optimized for rolling at a physical table on your phone
 - [ ] Global search — find characters, campaigns, pins, NPCs, Campfire posts
