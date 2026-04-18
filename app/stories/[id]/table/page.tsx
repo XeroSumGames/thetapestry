@@ -1461,6 +1461,7 @@ export default function TablePage() {
     setSessionStatus('active')
     setSessionCount(newCount)
     logEvent('session_started', { campaign_id: id, session_number: newCount })
+    console.warn('[startSession] kick-preserve build — kicks persist across sessions')
     // Fire all four DB calls in parallel — none depend on each other.
     void Promise.all([
       supabase.from('campaigns').update({
@@ -2786,6 +2787,12 @@ export default function TablePage() {
         <a href={`/stories/${id}`} style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
           Stories
         </a>
+        {isGM && (
+          <button onClick={() => window.open('/gm-screen', 'gm-screen', 'width=900,height=700,menubar=no,toolbar=no')}
+            style={hdrBtn('#2a102a', '#d48bd4', '#8b2e8b')}>
+            GM Screen
+          </button>
+        )}
         <a href="/dashboard" target="_blank" rel="noreferrer" style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), textDecoration: 'none' }}>
           Dashboard
         </a>
@@ -3895,13 +3902,25 @@ export default function TablePage() {
                   const kickUserId = syncedSelectedEntry.userId
                   const kickName = syncedSelectedEntry.character.name
                   if (!confirm(`Remove ${kickName} from this session?`)) return
-                  // Mark as kicked so they don't reload on refresh
-                  const kickEntry = entries.find(e => e.userId === kickUserId)
-                  if (kickEntry) {
-                    const { error: kickErr } = await supabase.from('character_states').update({ kicked: true }).eq('id', kickEntry.stateId)
-                    console.warn('[kick] set kicked=true on stateId:', kickEntry.stateId, 'error:', kickErr?.message ?? 'none')
-                  } else {
-                    console.warn('[kick] no entry found for userId:', kickUserId)
+                  // Mark as kicked so they don't reload on refresh.
+                  // Update by (campaign_id, user_id) rather than a cached stateId so a
+                  // stale entry row (e.g. after a character reassignment) can't miss.
+                  // .select() returns the updated rows — a 0-length array here means
+                  // RLS silently blocked the write (Supabase does not surface an error).
+                  const { error: kickErr, data: kickData } = await supabase
+                    .from('character_states')
+                    .update({ kicked: true })
+                    .eq('campaign_id', id)
+                    .eq('user_id', kickUserId)
+                    .select('id')
+                  console.warn('[kick] rows updated:', kickData?.length ?? 0, 'error:', kickErr?.message ?? 'none')
+                  if (kickErr) {
+                    alert(`Kick failed: ${kickErr.message}`)
+                    return
+                  }
+                  if (!kickData || kickData.length === 0) {
+                    alert('Kick did not affect any rows — likely an RLS / permissions issue. Check console.')
+                    return
                   }
                   // Broadcast for immediate redirect
                   if (initChannelRef.current) {
