@@ -288,7 +288,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     const visibleData = (userId ? data : data.filter((p: Pin) => p.category === 'world_event' || p.category === 'settlement'))
       .filter((p: Pin) => !currentHidden.has(p.category ?? 'location'))
     visibleData.forEach((pin: Pin) => {
-      const emoji = getCategoryEmoji(pin.category ?? 'location')
+      const emoji = pin.pin_type === 'rumor' ? '❓' : getCategoryEmoji(pin.category ?? 'location')
       const tier = getPinTier(pin)
       const ts = getTierStyles(tier)
       const icon = leaflet.divIcon({
