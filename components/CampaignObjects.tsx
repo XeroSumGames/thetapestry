@@ -48,6 +48,9 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [addCustomUrl, setAddCustomUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [editingObj, setEditingObj] = useState<ObjectToken | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editWP, setEditWP] = useState('')
 
   useEffect(() => { loadObjects() }, [campaignId, tokenRefreshKey])
 
@@ -176,6 +179,10 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: obj.is_visible ? '#7fc458' : '#5a5550', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {obj.is_visible ? 'Show' : 'Hide'}
                 </button>
+                <button onClick={() => { setEditingObj(obj); setEditName(obj.name); setEditWP(obj.wp_max != null ? String(obj.wp_max) : '') }}
+                  style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Edit
+                </button>
                 <button onClick={() => onRemoveFromMap?.(obj.name)}
                   style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}>×</button>
               </div>
@@ -183,6 +190,59 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
           </div>
         )
       })}
+
+      {/* Edit modal */}
+      {editingObj && (
+        <div onClick={() => setEditingObj(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10002, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '280px' }}>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>Edit Object</div>
+            <div style={{ marginBottom: '8px' }}>
+              <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Name</div>
+              <input value={editName} onChange={e => setEditName(e.target.value)}
+                style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP (leave empty for indestructible)</div>
+              <input value={editWP} onChange={e => setEditWP(e.target.value)} placeholder="e.g. 10"
+                style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Image</div>
+              <label style={{ display: 'block', padding: '6px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '11px', textAlign: 'center', cursor: 'pointer' }}>
+                {uploading ? 'Uploading...' : 'Upload new image'}
+                <input type="file" accept="image/*" hidden onChange={async e => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  setUploading(true)
+                  const path = `${campaignId}/${crypto.randomUUID()}.${file.name.split('.').pop()}`
+                  const { error } = await supabase.storage.from('object-tokens').upload(path, file, { contentType: file.type })
+                  if (!error) {
+                    const { data: urlData } = supabase.storage.from('object-tokens').getPublicUrl(path)
+                    await supabase.from('scene_tokens').update({ portrait_url: urlData.publicUrl }).eq('id', editingObj.id)
+                    setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, portrait_url: urlData.publicUrl } : o))
+                  }
+                  setUploading(false)
+                }} />
+              </label>
+            </div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button onClick={async () => {
+                const wpVal = editWP ? parseInt(editWP, 10) : null
+                await supabase.from('scene_tokens').update({
+                  name: editName.trim() || editingObj.name,
+                  wp_max: isNaN(wpVal as number) ? null : wpVal,
+                  wp_current: isNaN(wpVal as number) ? null : wpVal,
+                }).eq('id', editingObj.id)
+                setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, name: editName.trim() || o.name, wp_max: wpVal, wp_current: wpVal } : o))
+                setEditingObj(null)
+              }}
+                style={{ ...chipBtn, flex: 1, background: '#c0392b', border: '1px solid #c0392b', color: '#fff' }}>Save</button>
+              <button onClick={() => setEditingObj(null)}
+                style={{ ...chipBtn, flex: 1 }}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
