@@ -370,27 +370,23 @@ export default function TablePage() {
 
   async function loadChat(campaignId: string) {
     const uid = userIdRef.current
-    if (!uid || uid === 'null') {
-      // No user yet — load public messages only
-      const { data } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .eq('campaign_id', campaignId)
-        .or('is_whisper.eq.false,is_whisper.is.null')
-        .order('created_at', { ascending: false })
-        .limit(50)
-      setChatMessages((data ?? []).reverse())
-      setTimeout(() => { rollFeedRef.current?.scrollTo(0, rollFeedRef.current.scrollHeight) }, 50)
-      return
-    }
-    const { data } = await supabase
+    // Fetch everything for the campaign — simple query, no complex .or() syntax.
+    // RLS policy on chat_messages enforces whisper privacy server-side.
+    // We additionally filter client-side so a slow-propagating RLS change or
+    // permissive policy doesn't leak whispers into someone else's UI.
+    const { data, error } = await supabase
       .from('chat_messages')
       .select('*')
       .eq('campaign_id', campaignId)
-      .or(`is_whisper.eq.false,is_whisper.is.null,and(is_whisper.eq.true,user_id.eq.${uid}),and(is_whisper.eq.true,recipient_user_id.eq.${uid})`)
       .order('created_at', { ascending: false })
-      .limit(50)
-    const next = (data ?? []).reverse()
+      .limit(100)
+    if (error) { console.warn('[loadChat] fetch error:', error.message); return }
+    const visible = (data ?? []).filter((m: any) => {
+      if (!m.is_whisper) return true
+      if (!uid) return false
+      return m.user_id === uid || m.recipient_user_id === uid
+    })
+    const next = visible.reverse()
     // Auto-switch to Chat tab if a NEW whisper just landed addressed to me
     setChatMessages(prev => {
       const prevIds = new Set(prev.map(m => m.id))
