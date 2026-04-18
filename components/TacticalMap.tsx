@@ -784,7 +784,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     }
   }
 
-  async function handleMouseUp(e: React.MouseEvent) {
+  function handleMouseUp(e: React.MouseEvent) {
     if (resizing) {
       setResizing(null)
       return
@@ -794,20 +794,25 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       return
     }
     if (!dragging) return
+    const tokenId = dragging.tokenId
+    const tok = tokensRef.current.find(t => t.id === tokenId)
     const pos = getGridPos(e)
-    if (pos) {
-      // Snap from drag position to target grid cell
-      if (dragPosRef.current) {
-        const toX = pos.gx * cellPx + cellPx / 2
-        const toY = pos.gy * cellPx + cellPx / 2
-        tokenAnimRef.current.set(dragging.tokenId, { fromX: dragPosRef.current.px, fromY: dragPosRef.current.py, toX, toY, t: 0 })
-      }
-      await supabase.from('scene_tokens').update({ grid_x: pos.gx, grid_y: pos.gy }).eq('id', dragging.tokenId)
-      setTokens(prev => prev.map(t => t.id === dragging.tokenId ? { ...t, grid_x: pos.gx, grid_y: pos.gy } : t))
-      tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
+    const moved = pos && tok && (pos.gx !== tok.grid_x || pos.gy !== tok.grid_y)
+    if (moved && dragPosRef.current) {
+      const toX = pos!.gx * cellPx + cellPx / 2
+      const toY = pos!.gy * cellPx + cellPx / 2
+      tokenAnimRef.current.set(tokenId, { fromX: dragPosRef.current.px, fromY: dragPosRef.current.py, toX, toY, t: 0 })
     }
+    // Clear drag state synchronously — never block cursor release on DB I/O
     dragPosRef.current = null
     setDragging(null)
+    if (moved) {
+      setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, grid_x: pos!.gx, grid_y: pos!.gy } : t))
+      supabase.from('scene_tokens').update({ grid_x: pos!.gx, grid_y: pos!.gy }).eq('id', tokenId).then(({ error }: any) => {
+        if (error) console.warn('[TacticalMap] token move failed:', error)
+        else tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
+      })
+    }
   }
 
   function handleDoubleClick(e: React.MouseEvent) {

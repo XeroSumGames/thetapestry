@@ -99,7 +99,9 @@
 ### Combat Actions (SRD Table 10 — all 18 + Unarmed + Stabilize)
 - [x] **Aim** — +2 CMod (SRD-correct), aim_active flag enforces "must Attack next or lost"
 - [x] **Attack** — +1 CMod auto-applied when attacking same target twice in one turn (last_attack_target tracking)
+- [x] **Attack Roll** auto-populates last-targeted character — target dropdown, CMod, range band all pre-applied when a second attack happens in the same turn
 - [x] **Charge** — both actions, melee/unarmed attack, targets within 20ft, skips weapon range filter
+- [x] **Charge** fix — actually costs 2 actions now (was silently costing 1 because actionCostRef wasn't set)
 - [x] **Coordinate** — dedicated modal: dropdown picks enemy → Tactics* roll → allies within Close range get +2 CMod vs that target. Log entry announces recipients.
 - [x] **Cover Fire** — target picker modal → -2 CMod to enemy's next action
 - [x] **Defend** — +2 defense_bonus applied to damage calc, clears after one hit (unless has_cover)
@@ -110,6 +112,7 @@
 - [x] **Move** — grid highlight + click to move token, 10ft Chebyshev
 - [x] **Rapid Fire** — -1 CMod first shot, costs 2 actions, ranged only
 - [x] **Ready Weapon** — modal with Switch/Reload/Unjam, Tracking +1, weapon swap updates entries state
+- [x] Unjam threshold lowered to Worn (was Damaged/Broken) — jammed melee weapons can be unjammed after one Low-Insight degrade
 - [x] **Charge** — pick destination cell (20ft) on tactical map before attack roll, no pre-consume on cancel
 - [x] **Take Cover** — once per round, no stacking
 - [x] **Reposition** — end-of-round positioning action
@@ -476,6 +479,9 @@
 - [x] NotificationBell on table page header
 - [x] Start Combat auto-shares tactical map to all players
 - [x] Session join race condition fix (await ensureCharacterStates before loadEntries)
+- [x] Sticky-drag fix — handleMouseUp is synchronous; drag state clears before DB write, failures no longer orphan drag
+- [x] Click-without-move skips the DB write (token stayed in same cell — avoids wasted round trip)
+- [x] **Object tokens targetable in attacks** — weapons crates/barrels/doors with WP appear in Attack Roll target dropdown; damage decrements `scene_tokens.wp_current`; no defensive mod, no RP, no death countdown. Works in primary + reroll damage paths.
 
 ---
 
