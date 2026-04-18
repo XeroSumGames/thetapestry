@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import NoteAttachmentsView, { NoteAttachment } from './NoteAttachmentsView'
 
 interface PlayerNote {
   id: string
@@ -15,7 +16,7 @@ interface SharedNote {
   id: string
   title: string
   content: string
-  attachments: { name: string; url: string; size: number; type: string; path: string }[]
+  attachments: NoteAttachment[]
 }
 
 export default function PlayerNotes({ campaignId }: { campaignId: string }) {
@@ -37,6 +38,11 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
     })()
     load()
     loadShared()
+    // Live-refresh shared GM notes when GM toggles share, edits, or attaches.
+    const channel = supabase.channel(`gm_notes_share_${campaignId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_notes', filter: `campaign_id=eq.${campaignId}` }, () => loadShared())
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campaignId])
 
@@ -154,15 +160,7 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
                     {n.content}
                   </pre>
                   {n.attachments.length > 0 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {n.attachments.map(att => (
-                        <a key={att.path} href={att.url} target="_blank" rel="noreferrer"
-                          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow, sans-serif', textDecoration: 'none' }}>
-                          {att.type.startsWith('image/') && <img src={att.url} alt="" style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '2px' }} />}
-                          {att.name}
-                        </a>
-                      ))}
-                    </div>
+                    <NoteAttachmentsView attachments={n.attachments} />
                   )}
                 </div>
               )}

@@ -1,14 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import NoteAttachmentsView, { NoteAttachment } from './NoteAttachmentsView'
 
-interface Attachment {
-  name: string
-  url: string
-  size: number
-  type: string
-  path: string
-}
+type Attachment = NoteAttachment
 
 interface Note {
   id: string
@@ -124,10 +119,6 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`
   }
 
-  function isImage(att: Attachment): boolean {
-    return att.type.startsWith('image/')
-  }
-
   const inp: React.CSSProperties = {
     width: '100%', padding: '8px 10px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px',
@@ -200,24 +191,10 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                 {n.content}
               </pre>
 
-              {/* Attachments list */}
+              {/* Attachments — large inline image previews + lightbox */}
               {n.attachments.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '10px' }}>
-                  {n.attachments.map(att => (
-                    <div key={att.path} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                      {isImage(att) && (
-                        <a href={att.url} target="_blank" rel="noreferrer" style={{ display: 'block', flexShrink: 0 }}>
-                          <img src={att.url} alt="" style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '2px' }} />
-                        </a>
-                      )}
-                      <a href={att.url} target="_blank" rel="noreferrer"
-                        style={{ flex: 1, fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none' }}>
-                        {att.name} <span style={{ color: '#5a5550' }}>({fmtSize(att.size)})</span>
-                      </a>
-                      <button onClick={() => handleDeleteAttachment(n, att)}
-                        style={{ background: 'none', border: '1px solid #7a1f16', borderRadius: '2px', color: '#c0392b', fontSize: '11px', padding: '0 6px', cursor: 'pointer' }}>×</button>
-                    </div>
-                  ))}
+                <div style={{ marginBottom: '10px' }}>
+                  <NoteAttachmentsView attachments={n.attachments} onDelete={att => handleDeleteAttachment(n, att)} />
                 </div>
               )}
 
