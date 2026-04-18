@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { ALL_WEAPONS } from '../lib/weapons'
+import { EQUIPMENT } from '../lib/xse-schema'
 
 const OBJECT_ICONS = [
   { value: 'car', emoji: '🚗', label: 'Car' },
@@ -20,8 +22,20 @@ const OBJECT_ICONS = [
 interface TokenProperty {
   key: string
   value: string
-  revealed: boolean // visible to players?
+  revealed: boolean
 }
+
+interface ContentItem {
+  type: 'weapon' | 'equipment'
+  name: string
+  quantity: number
+}
+
+// All lootable items for the picker
+const ALL_ITEMS = [
+  ...ALL_WEAPONS.map(w => ({ type: 'weapon' as const, name: w.name, label: `🔫 ${w.name}` })),
+  ...EQUIPMENT.map(e => ({ type: 'equipment' as const, name: e.name, label: `🎒 ${e.name}` })),
+]
 
 interface ObjectToken {
   id: string
@@ -35,6 +49,7 @@ interface ObjectToken {
   wp_current: number | null
   color: string
   properties: TokenProperty[]
+  contents: ContentItem[]
 }
 
 interface Props {
@@ -42,10 +57,12 @@ interface Props {
   isGM: boolean
   onPlaceOnMap?: (name: string, portraitUrl: string | null, wpMax: number | null) => void
   onRemoveFromMap?: (name: string) => void
+  onLoot?: (objectName: string, item: ContentItem, characterId: string, characterName: string) => void
   tokenRefreshKey?: number
+  entries?: { character: { id: string; name: string; data: any }; userId: string }[]
 }
 
-export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemoveFromMap, tokenRefreshKey }: Props) {
+export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemoveFromMap, onLoot, tokenRefreshKey, entries }: Props) {
   const supabase = createClient()
   const [objects, setObjects] = useState<ObjectToken[]>([])
   const [showAdd, setShowAdd] = useState(false)
@@ -59,6 +76,11 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [editName, setEditName] = useState('')
   const [editWP, setEditWP] = useState('')
   const [editProps, setEditProps] = useState<TokenProperty[]>([])
+  const [editContents, setEditContents] = useState<ContentItem[]>([])
+  const [contentPickerValue, setContentPickerValue] = useState('')
+  const [contentQty, setContentQty] = useState(1)
+  const [lootingObj, setLootingObj] = useState<ObjectToken | null>(null)
+  const [lootCharId, setLootCharId] = useState('')
 
   useEffect(() => { loadObjects() }, [campaignId, tokenRefreshKey])
 
@@ -176,11 +198,29 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   {destroyed ? 'DESTROYED' : `WP ${obj.wp_current}/${obj.wp_max}`}
                 </div>
               )}
-              {Array.isArray(obj.properties) && obj.properties.filter(p => isGM || p.revealed).map((p, i) => (
-                <div key={i} style={{ fontSize: '10px', color: p.revealed ? '#cce0f5' : '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
-                  <span style={{ color: '#EF9F27' }}>{p.key}:</span> {p.value}{!p.revealed && isGM ? ' 🔒' : ''}
+              {/* Properties — auto-reveal when destroyed */}
+              {Array.isArray(obj.properties) && obj.properties.filter(p => isGM || p.revealed || destroyed).map((p, i) => (
+                <div key={i} style={{ fontSize: '10px', color: (p.revealed || destroyed) ? '#cce0f5' : '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
+                  <span style={{ color: '#EF9F27' }}>{p.key}:</span> {p.value}{!p.revealed && !destroyed && isGM ? ' 🔒' : ''}
                 </div>
               ))}
+              {/* Contents — show when destroyed, with loot buttons */}
+              {Array.isArray(obj.contents) && obj.contents.length > 0 && (destroyed || isGM) && (
+                <div style={{ marginTop: '2px' }}>
+                  {obj.contents.map((item, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#f5f2ee' }}>
+                      <span>{item.type === 'weapon' ? '🔫' : '🎒'} {item.name} ×{item.quantity}</span>
+                      {destroyed && entries && entries.length > 0 && (
+                        <button onClick={e => { e.stopPropagation(); setLootingObj(obj); setLootCharId('') }}
+                          style={{ background: 'none', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', padding: '0 4px', cursor: 'pointer' }}>
+                          Loot
+                        </button>
+                      )}
+                      {!destroyed && isGM && <span style={{ color: '#5a5550' }}>🔒</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             {isGM && (
               <div style={{ display: 'flex', gap: '3px' }}>
@@ -192,7 +232,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: obj.is_visible ? '#7fc458' : '#5a5550', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {obj.is_visible ? 'Show' : 'Hide'}
                 </button>
-                <button onClick={() => { setEditingObj(obj); setEditName(obj.name); setEditWP(obj.wp_max != null ? String(obj.wp_max) : ''); setEditProps(Array.isArray(obj.properties) ? obj.properties : []) }}
+                <button onClick={() => { setEditingObj(obj); setEditName(obj.name); setEditWP(obj.wp_max != null ? String(obj.wp_max) : ''); setEditProps(Array.isArray(obj.properties) ? obj.properties : []); setEditContents(Array.isArray(obj.contents) ? obj.contents : []) }}
                   style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Edit
                 </button>
@@ -203,6 +243,55 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
           </div>
         )
       })}
+
+      {/* Loot modal */}
+      {lootingObj && entries && (
+        <div onClick={() => setLootingObj(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10002, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '280px' }}>
+            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>🎒 Loot from {lootingObj.name}</div>
+            <div style={{ marginBottom: '8px' }}>
+              {lootingObj.contents.map((item, i) => (
+                <div key={i} style={{ fontSize: '12px', color: '#f5f2ee', marginBottom: '2px' }}>
+                  {item.type === 'weapon' ? '🔫' : '🎒'} {item.name} ×{item.quantity}
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Give to</div>
+            <select value={lootCharId} onChange={e => setLootCharId(e.target.value)}
+              style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', marginBottom: '10px' }}>
+              <option value="">Select character...</option>
+              {entries.map(e => <option key={e.character.id} value={e.character.id}>{e.character.name}</option>)}
+            </select>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button disabled={!lootCharId} onClick={async () => {
+                if (!lootCharId) return
+                const charEntry = entries.find(e => e.character.id === lootCharId)
+                if (!charEntry) return
+                // Add items to character equipment
+                const currentEquip: string[] = charEntry.character.data?.equipment ?? []
+                const newItems: string[] = []
+                for (const item of lootingObj.contents) {
+                  for (let q = 0; q < item.quantity; q++) newItems.push(item.name)
+                }
+                const updatedEquip = [...currentEquip, ...newItems]
+                await supabase.from('characters').update({ data: { ...charEntry.character.data, equipment: updatedEquip } }).eq('id', lootCharId)
+                // Clear contents from the object
+                await supabase.from('scene_tokens').update({ contents: [] }).eq('id', lootingObj.id)
+                setObjects(prev => prev.map(o => o.id === lootingObj.id ? { ...o, contents: [] } : o))
+                // Callback for log entry
+                for (const item of lootingObj.contents) {
+                  onLoot?.(lootingObj.name, item, lootCharId, charEntry.character.name)
+                }
+                setLootingObj(null)
+              }}
+                style={{ ...chipBtn, flex: 1, background: lootCharId ? '#1a2e10' : '#242424', border: `1px solid ${lootCharId ? '#2d5a1b' : '#3a3a3a'}`, color: lootCharId ? '#7fc458' : '#5a5550' }}>
+                Loot All
+              </button>
+              <button onClick={() => setLootingObj(null)} style={{ ...chipBtn, flex: 1 }}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit modal */}
       {editingObj && (
@@ -264,6 +353,45 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
               ))}
               {editProps.length === 0 && <div style={{ fontSize: '10px', color: '#5a5550', fontStyle: 'italic' }}>No properties set</div>}
             </div>
+
+            {/* Contents — lootable items */}
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Contents (Lootable)</div>
+              </div>
+              {editContents.map((item, i) => (
+                <div key={i} style={{ display: 'flex', gap: '3px', marginBottom: '3px', alignItems: 'center' }}>
+                  <span style={{ flex: 1, fontSize: '11px', color: '#f5f2ee' }}>{item.type === 'weapon' ? '🔫' : '🎒'} {item.name}</span>
+                  <span style={{ fontSize: '10px', color: '#cce0f5' }}>×{item.quantity}</span>
+                  <button onClick={() => setEditContents(prev => prev.filter((_, j) => j !== i))}
+                    style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '12px', cursor: 'pointer', padding: '0 2px' }}>×</button>
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+                <select value={contentPickerValue} onChange={e => setContentPickerValue(e.target.value)}
+                  style={{ flex: 1, padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                  <option value="">Add item...</option>
+                  <optgroup label="Weapons">
+                    {ALL_WEAPONS.map(w => <option key={w.name} value={`weapon:${w.name}`}>{w.name}</option>)}
+                  </optgroup>
+                  <optgroup label="Equipment">
+                    {EQUIPMENT.map(e => <option key={e.name} value={`equipment:${e.name}`}>{e.name}</option>)}
+                  </optgroup>
+                </select>
+                <input type="number" min={1} max={99} value={contentQty} onChange={e => setContentQty(parseInt(e.target.value) || 1)}
+                  style={{ width: '32px', padding: '3px 2px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '10px', textAlign: 'center' }} />
+                <button onClick={() => {
+                  if (!contentPickerValue) return
+                  const [type, ...nameParts] = contentPickerValue.split(':')
+                  const name = nameParts.join(':')
+                  setEditContents(prev => [...prev, { type: type as 'weapon' | 'equipment', name, quantity: contentQty }])
+                  setContentPickerValue('')
+                  setContentQty(1)
+                }}
+                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7fc458', fontSize: '10px', padding: '2px 6px', cursor: 'pointer' }}>+</button>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', gap: '6px' }}>
               <button onClick={async () => {
                 const wpVal = editWP ? parseInt(editWP, 10) : null
@@ -273,8 +401,9 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   wp_max: isNaN(wpVal as number) ? null : wpVal,
                   wp_current: isNaN(wpVal as number) ? null : wpVal,
                   properties: cleanProps,
+                  contents: editContents,
                 }).eq('id', editingObj.id)
-                setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, name: editName.trim() || o.name, wp_max: wpVal, wp_current: wpVal, properties: cleanProps } : o))
+                setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, name: editName.trim() || o.name, wp_max: wpVal, wp_current: wpVal, properties: cleanProps, contents: editContents } : o))
                 setEditingObj(null)
               }}
                 style={{ ...chipBtn, flex: 1, background: '#c0392b', border: '1px solid #c0392b', color: '#fff' }}>Save</button>

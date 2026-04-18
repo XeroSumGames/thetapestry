@@ -3872,6 +3872,16 @@ export default function TablePage() {
                         initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
                       }
                     }}
+                    onLoot={async (objectName, item, characterId, characterName) => {
+                      await supabase.from('roll_log').insert({
+                        campaign_id: id, user_id: userId, character_name: 'System',
+                        label: `🎒 ${characterName} looted ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} from ${objectName}`,
+                        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
+                      })
+                      await loadEntries(id)
+                      await loadRolls(id)
+                    }}
+                    entries={entries as any}
                   />
                 )}
               </div>
