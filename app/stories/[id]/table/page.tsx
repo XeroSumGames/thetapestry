@@ -6,6 +6,7 @@ import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
 import NpcRoster from '../../../../components/NpcRoster'
 import NpcCard from '../../../../components/NpcCard'
 import CampaignPins from '../../../../components/CampaignPins'
+import CampaignObjects from '../../../../components/CampaignObjects'
 import GmNotes from '../../../../components/GmNotes'
 import PlayerNotes from '../../../../components/PlayerNotes'
 import NotificationBell from '../../../../components/NotificationBell'
@@ -249,6 +250,7 @@ export default function TablePage() {
   const [sessionFiles, setSessionFiles] = useState<File[]>([])
   const [sessionActing, setSessionActing] = useState(false)
   const [gmTab, setGmTab] = useState<'npcs' | 'assets' | 'notes'>('npcs')
+  const [assetsFolderState, setAssetsFolderState] = useState<Set<string>>(new Set(['pins']))
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
   const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
   const [chatMessages, setChatMessages] = useState<{ id: string; user_id: string; character_name: string; message: string; created_at: string }[]>([])
@@ -2105,6 +2107,70 @@ export default function TablePage() {
       } else {
         console.warn('[damage] no target resolved — damage NOT applied. targetName was:', targetName)
       }
+
+      // Blast Radius AoE — apply scaled damage to nearby tokens on the tactical map
+      if (hasBlast && targetName && mapTokens.length > 0) {
+        const active = initiativeOrder.find(ie => ie.is_active)
+        // Find the target's token position as the blast center
+        const targetTok = mapTokens.find(t => {
+          const pe = entries.find(e => e.character.name === targetName)
+          if (pe && t.character_id === pe.character.id) return true
+          const npc = campaignNpcs.find((n: any) => n.name === targetName)
+          if (npc && t.npc_id === npc.id) return true
+          return false
+        })
+        if (targetTok) {
+          const ft = mapCellFeet || 3
+          const blastTargets: string[] = []
+          for (const tok of mapTokens) {
+            if (!tok.character_id && !tok.npc_id) continue
+            // Skip primary target (already damaged) and attacker
+            const isPrimary = (targetEntry && tok.character_id === targetEntry.character.id) || (targetNpc && tok.npc_id === targetNpc.id)
+            const isAttacker = active && ((active.character_id && tok.character_id === active.character_id) || (active.npc_id && tok.npc_id === active.npc_id))
+            if (isPrimary || isAttacker) continue
+            const dist = Math.max(Math.abs(tok.grid_x - targetTok.grid_x), Math.abs(tok.grid_y - targetTok.grid_y))
+            const feet = dist * ft
+            if (feet > 100) continue
+            // Engaged (<=5ft) = full, Close (<=30ft) = 50%, further = 25%
+            const scale = feet <= 5 ? 1.0 : feet <= 30 ? 0.5 : 0.25
+            const splashWP = Math.max(1, Math.floor(finalWP * scale))
+            const splashRP = Math.max(0, Math.floor(finalRP * scale))
+            const splashPC = entries.find(e => e.character.id === tok.character_id)
+            const splashNpc = campaignNpcs.find((n: any) => n.id === tok.npc_id)
+            const splashName = splashPC?.character.name ?? splashNpc?.name ?? tok.name
+            const rangeBandLabel = feet <= 5 ? 'Engaged' : feet <= 30 ? 'Close' : 'Far'
+            if (splashPC?.liveState) {
+              const { data: freshState } = await supabase.from('character_states').select('*').eq('id', splashPC.stateId).single()
+              const curWP = freshState?.wp_current ?? splashPC.liveState.wp_current
+              const curRP = freshState?.rp_current ?? splashPC.liveState.rp_current
+              const nWP = Math.max(0, curWP - splashWP)
+              const nRP = Math.max(0, curRP - splashRP)
+              const update: any = { wp_current: nWP, rp_current: nRP, updated_at: new Date().toISOString() }
+              if (nWP === 0 && curWP > 0) update.death_countdown = Math.max(1, 4 + (splashPC.character.data?.rapid?.PHY ?? 0))
+              if (nRP === 0 && curRP > 0 && nWP > 0) update.incap_rounds = Math.max(1, 4 - (splashPC.character.data?.rapid?.PHY ?? 0))
+              await supabase.from('character_states').update(update).eq('id', splashPC.stateId)
+              setEntries(prev => prev.map(e => e.stateId === splashPC.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
+              initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
+              blastTargets.push(`${splashName} (${rangeBandLabel}): ${splashWP} WP, ${splashRP} RP`)
+            } else if (splashNpc) {
+              const curWP = splashNpc.wp_current ?? splashNpc.wp_max ?? 10
+              const curRP = splashNpc.rp_current ?? splashNpc.rp_max ?? 6
+              const nWP = Math.max(0, curWP - splashWP)
+              const nRP = Math.max(0, curRP - splashRP)
+              const npcUpd: any = { wp_current: nWP, rp_current: nRP }
+              if (nWP === 0 && curWP > 0) npcUpd.death_countdown = Math.max(1, 4 + (splashNpc.physicality ?? 0))
+              if (nRP === 0 && curRP > 0 && nWP > 0) npcUpd.incap_rounds = Math.max(1, 4 - (splashNpc.physicality ?? 0))
+              await supabase.from('campaign_npcs').update(npcUpd).eq('id', splashNpc.id)
+              setCampaignNpcs(prev => prev.map(n => n.id === splashNpc.id ? { ...n, ...npcUpd } : n))
+              initChannelRef.current?.send({ type: 'broadcast', event: 'npc_damaged', payload: { npcId: splashNpc.id, patch: npcUpd } })
+              blastTargets.push(`${splashName} (${rangeBandLabel}): ${splashWP} WP, ${splashRP} RP`)
+            }
+          }
+          if (blastTargets.length > 0) {
+            traitNotes.push(`Blast hit: ${blastTargets.join(' | ')}`)
+          }
+        }
+      }
     }
 
     // Weapon jam/break on Low Insight
@@ -3755,12 +3821,69 @@ export default function TablePage() {
               </div>
               )
             })()}
-            {gmTab === 'assets' && <CampaignPins campaignId={id} isGM={isGM} onPinFocus={p => setFocusPin({ ...p })} onOpenScene={async (sceneId) => {
-              await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', id)
-              await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', sceneId)
-              setShowTacticalMap(true)
-              setTokenRefreshKey(k => k + 1)
-            }} />}
+            {gmTab === 'assets' && (() => {
+              const [assetsFolder, setAssetsFolder] = [assetsFolderState, setAssetsFolderState] as any
+              return (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  {/* Map Pins folder */}
+                  <div>
+                    <div onClick={() => setAssetsFolderState((prev: Set<string>) => { const n = new Set(prev); n.has('pins') ? n.delete('pins') : n.add('pins'); return n })}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      <span style={{ fontSize: '10px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('pins') ? '▼' : '▶'}</span>
+                      <span style={{ fontSize: '14px' }}>📍</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>Map Pins</span>
+                    </div>
+                    {assetsFolderState.has('pins') && (
+                      <CampaignPins campaignId={id} isGM={isGM} onPinFocus={p => setFocusPin({ ...p })} onOpenScene={async (sceneId: string) => {
+                        await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', id)
+                        await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', sceneId)
+                        setShowTacticalMap(true)
+                        setTokenRefreshKey(k => k + 1)
+                      }} />
+                    )}
+                  </div>
+                  {/* Objects folder */}
+                  <div>
+                    <div onClick={() => setAssetsFolderState((prev: Set<string>) => { const n = new Set(prev); n.has('objects') ? n.delete('objects') : n.add('objects'); return n })}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      <span style={{ fontSize: '10px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('objects') ? '▼' : '▶'}</span>
+                      <span style={{ fontSize: '14px' }}>🎯</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>Objects</span>
+                    </div>
+                    {assetsFolderState.has('objects') && (
+                      <CampaignObjects campaignId={id} isGM={isGM} tokenRefreshKey={tokenRefreshKey}
+                        onPlaceOnMap={async (name, portraitUrl, wpMax) => {
+                          const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
+                          if (!activeScene) { alert('No active scene.'); return }
+                          const cols = (activeScene as any).grid_cols ?? 20
+                          const icon = (await import('../../../../components/CampaignObjects')).OBJECT_ICONS.find((i: any) => true)
+                          await supabase.from('scene_tokens').insert({
+                            scene_id: activeScene.id, name, token_type: 'object',
+                            portrait_url: portraitUrl, grid_x: cols - 2, grid_y: 1,
+                            is_visible: true, color: '#EF9F27',
+                            wp_max: wpMax, wp_current: wpMax,
+                          })
+                          setTokenRefreshKey(k => k + 1)
+                          initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+                        }}
+                        onRemoveFromMap={async (name) => {
+                          const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
+                          if (activeScene) {
+                            await supabase.from('scene_tokens').delete().eq('scene_id', activeScene.id).eq('name', name).eq('token_type', 'object')
+                            setTokenRefreshKey(k => k + 1)
+                            initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+                          }
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
             {gmTab === 'notes' && isGM && <GmNotes campaignId={id} />}
             {gmTab === 'notes' && !isGM && <PlayerNotes campaignId={id} />}
           </div>
