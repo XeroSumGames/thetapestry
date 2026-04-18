@@ -81,6 +81,7 @@ interface Pin {
   categories?: string[]
   created_at?: string
   sort_order?: number
+  event_date?: string | null
 }
 
 interface PinForm {
@@ -126,7 +127,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [attachments, setAttachments] = useState<File[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
-  const [editForm, setEditForm] = useState({ title: '', notes: '', categories: ['location'] as string[] })
+  const [editForm, setEditForm] = useState({ title: '', notes: '', categories: ['location'] as string[], event_date: '' })
   const [editAttachments, setEditAttachments] = useState<File[]>([])
   const [editExistingFiles, setEditExistingFiles] = useState<{ name: string; url: string }[]>([])
   const [editUploading, setEditUploading] = useState(false)
@@ -427,7 +428,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   async function startEdit(pin: Pin) {
   setEditingPin(pin)
   const cats = Array.isArray(pin.categories) && pin.categories.length > 0 ? pin.categories : [pin.category ?? 'location']
-  setEditForm({ title: pin.title, notes: pin.notes, categories: cats })
+  setEditForm({ title: pin.title, notes: pin.notes, categories: cats, event_date: (pin as any).event_date ?? '' })
   setEditAttachments([])
   setShowForm(false)
   // Load existing attachments
@@ -445,7 +446,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   async function handleSaveEdit() {
   if (!editingPin || !editForm.title.trim()) return
   setEditUploading(true)
-  const { error } = await supabase.from('map_pins').update({ title: editForm.title, notes: editForm.notes, category: editForm.categories[0] ?? 'location', categories: editForm.categories }).eq('id', editingPin.id)
+  const { error } = await supabase.from('map_pins').update({ title: editForm.title, notes: editForm.notes, category: editForm.categories[0] ?? 'location', categories: editForm.categories, event_date: editForm.event_date.trim() || null }).eq('id', editingPin.id)
   if (error) { alert('Error: ' + error.message); setEditUploading(false); return }
   // Upload new attachments
   for (const file of editAttachments) {
@@ -775,7 +776,10 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                   <div style={{ marginTop: '4px' }}>
                                     {p.notes && <div style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.5, marginBottom: '6px' }}>{p.notes}</div>}
                                     <div style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
-                                      {usernames[p.user_id] ? `By ${usernames[p.user_id]}` : ''}{p.created_at ? ` · ${new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
+                                      {p.category === 'world_event'
+                                        ? (p.event_date ? <span style={{ color: '#EF9F27' }}>{p.event_date}</span> : '')
+                                        : <>{usernames[p.user_id] ? `By ${usernames[p.user_id]}` : ''}{p.created_at ? ` · ${new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}</>
+                                      }
                                     </div>
                                     {pinAttachments[p.id] && pinAttachments[p.id].length > 0 && (
                                       <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #2e2e2e' }}>
@@ -976,7 +980,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     </div>
     <div style={{ marginBottom: '8px' }}>
       <label style={lbl}>Notes</label>
-      <textarea style={{ ...inp, minHeight: '60px', resize: 'vertical' }} value={editForm.notes} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} />
+      <textarea style={{ ...inp, minHeight: '80px', resize: 'both', overflow: 'auto' }} value={editForm.notes} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} />
     </div>
     <div style={{ marginBottom: '12px' }}>
       <label style={lbl}>Categories</label>
@@ -1007,6 +1011,12 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         ))}
       </select>
     </div>
+    {editForm.categories.includes('world_event') && (
+      <div style={{ marginBottom: '12px' }}>
+        <label style={lbl}>Event Date</label>
+        <input style={inp} value={editForm.event_date} onChange={e => setEditForm(p => ({ ...p, event_date: e.target.value }))} placeholder="e.g. March 2024, Day 1, Year Zero + 3" />
+      </div>
+    )}
     {userRole === 'thriver' && editingPin && (
       <div style={{ marginBottom: '12px' }}>
         <label style={lbl}>Pin Type</label>
