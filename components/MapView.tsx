@@ -155,8 +155,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const hiddenFoldersRef = useRef(hiddenFolders)
   hiddenFoldersRef.current = hiddenFolders
 
-  // Re-render map markers when folder visibility changes
-  useEffect(() => { if (mapInstanceRef.current) loadPins() }, [hiddenFolders])
+  // Re-render map markers when folder visibility or auth state changes
+  useEffect(() => { if (mapInstanceRef.current) loadPins() }, [hiddenFolders, userId])
   // Load campaign pins when tab switches to campaign
   useEffect(() => { if (sidebarTab === 'campaign' && userId) loadCampaignPins() }, [sidebarTab, userId])
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => {
@@ -249,6 +249,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     setCampaignPins((pins ?? []).map((p: any) => ({ ...p, campaign_name: campaignNames[p.campaign_id] ?? 'Unknown' })))
   }
 
+  const userIdRef = useRef(userId)
+  userIdRef.current = userId
+
   async function loadPins(L?: any, map?: any) {
     const leaflet = L ?? (await import('leaflet')).default
     const mapInst = map ?? mapInstanceRef.current
@@ -285,16 +288,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     })
 
     const currentHidden = hiddenFoldersRef.current
-    const rumorPins = data.filter((p: Pin) => p.category === 'rumor')
-    console.warn('[loadPins]', { total: data.length, rumorsInData: rumorPins.length, rumorCategories: rumorPins.map((p: Pin) => ({ title: p.title, category: p.category, pin_type: p.pin_type, categories: (p as any).categories })), hiddenFolders: [...currentHidden], userId: !!userId })
-    const visibleData = userId
+    const currentUserId = userIdRef.current
+    const visibleData = currentUserId
       ? data.filter((p: Pin) => {
           const cats: string[] = Array.isArray((p as any).categories) && (p as any).categories.length > 0
             ? (p as any).categories : [p.category ?? 'location']
           return cats.some(c => !currentHidden.has(c))
         })
       : data.filter((p: Pin) => p.category === 'world_event' || p.category === 'settlement')
-    console.warn('[loadPins] visibleData:', visibleData.length, 'rumorsVisible:', visibleData.filter((p: Pin) => p.category === 'rumor').length)
     visibleData.forEach((pin: Pin) => {
       const emoji = pin.pin_type === 'rumor' ? '❓' : getCategoryEmoji(pin.category ?? 'location')
       const tier = getPinTier(pin)
