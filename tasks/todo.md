@@ -105,11 +105,13 @@
 - [x] **Defend** — +2 defense_bonus applied to damage calc, clears after one hit (unless has_cover)
 - [x] **Distract** — target picker modal → steals 1 action from target
 - [x] **Fire from Cover** — both actions, only appears when has_cover, fire weapon + keep defense
-- [x] **Grapple** — Unarmed Combat opposed check
+- [x] **Grapple** — full opposed check system, auto-roll both sides, grappled/grappling states, Break Free/Release actions
 - [x] **Inspire** — target picker modal → grants +1 action to ally, once per round (inspired_this_round)
 - [x] **Move** — grid highlight + click to move token, 10ft Chebyshev
 - [x] **Rapid Fire** — -1 CMod first shot, costs 2 actions, ranged only
-- [x] **Ready Weapon** — ready/reload/unjam, Tracking +1
+- [x] **Ready Weapon** — modal with Switch/Reload/Unjam, Tracking +1, weapon swap updates entries state
+- [x] **Charge** — pick destination cell (20ft) on tactical map before attack roll, no pre-consume on cancel
+- [x] **Take Cover** — once per round, no stacking
 - [x] **Reposition** — end-of-round positioning action
 - [x] **Sprint** — both actions, Athletics check, winded flag (1 action next round)
 - [x] **Subdue** — full RP, attack via melee/unarmed
@@ -178,7 +180,7 @@
 - [x] Weapon jam on Low Insight
 - [x] Traits: Cumbersome, Unwieldy (CMod penalties)
 - [x] Traits: Stun, Automatic Burst (mechanical)
-- [x] Traits: Blast Radius, Burning, Close-Up, Cone-Up (display)
+- [x] Traits: Blast Radius (auto AoE damage), Burning, Close-Up, Cone-Up
 - [x] Tracking +1 CMod via Ready Weapon action
 - [x] Upkeep Checks (Mechanic/Tinkerer/weapon skill, full SRD outcomes)
 - [x] Encumbrance tracker (6 + PHY AMod, OVERLOADED warning)
@@ -249,7 +251,36 @@
 - [x] Start Combat auto-shares tactical map to all players
 - [x] NotificationBell on table page header
 - [x] Session join race condition fix (await ensureCharacterStates before loadEntries)
-- [ ] GM private notes, Player kick, CDP awards
+- [x] GM private notes
+- [x] Player kick from session (broadcast + notification, session only not campaign)
+- [ ] CDP awards
+- [x] Mortal wound insight save — player acts, GM sees read-only
+- [x] Character delete confirmation dialog
+- [x] Mortally wounded characters excluded from target list
+- [x] Stabilize range check — within 20ft, engaged warning if >5ft
+- [x] NPC remove button (red ×) on roster cards
+- [x] NPC clone button (+) — duplicates below source with auto-numbered name
+- [x] NPC secondary weapon (Foe/Antagonist only)
+- [x] NPC portrait bank reduced to 3 (Enemy/Ally/Neutral)
+- [x] NPC portrait library z-index fix (appears above edit modal)
+- [x] NPC edit modal widened to 430px
+- [x] NPC card layout — × under drag handle, larger portrait, wrapping names
+- [x] Floating NPC card widened to 420px, drag offset fixed
+- [x] Combat action button font increased to 12px
+- [x] Combat round counter replaces action pips
+- [x] Dashboard button moved to right side of header
+- [x] Notification text left-aligned, dropdown positioned below bell (locked)
+- [x] Default map cell size 35px
+- [x] Map image consistent between GM/player screens (scales from grid width)
+- [x] Map popup no longer covers pin icon
+- [x] World map default center [8.2316, 13.5352] zoom 3
+- [x] World map sidebar tabs — Public / My Pins / Campaign
+- [x] Rumor pins show ❓ on map regardless of category
+- [x] Copy Map Position button (Thriver only, sidebar)
+- [x] Ghost landing shows world map directly (no splash page)
+- [x] Launch button on Edit Story page
+- [x] Profiles email column + backfill from auth.users
+- [x] User guide at docs/user-guide.txt
 - [ ] Character progression log
 - [ ] Allow characters in multiple campaigns
 - [ ] Transfer GM role, Session scheduling
@@ -413,7 +444,15 @@
 - [x] Move action highlights reachable cells (10ft Chebyshev) on tactical map, click to move
 - [x] Players can drag their own token on the tactical map
 - [x] Token place/remove broadcasts to all clients for real-time sync
-- [x] Tokens spawn at top-right of grid (away from GM controls)
+- [x] Tokens spawn at top-left of grid (0,0)
+- [x] Smooth token dragging — tokens follow cursor during drag, snap to grid on release
+- [x] Zoom slider for all users (GM + players), controls zoom not cell size
+- [x] Spacebar pan scrolls the container correctly
+- [x] Fit to Screen resets zoom and scale
+- [x] Double-click Cols/Rows to type value directly
+- [x] Auto-activate most recent scene when switching to tactical map (no empty screen)
+- [x] Pin-to-tactical-scene linking — edit pin, select scene, double-click to open
+- [x] Blast Radius AoE — grenades/RPGs auto-damage nearby tokens (Engaged=full, Close=50%, Far=25%)
 - [x] Map button toggles token on/off (was "already on map" alert)
 - [x] Zoom slider moved to top-right, compact (0%/100% labels, white text)
 - [x] Resize handles fixed (zoom-corrected hit-test coordinates)
