@@ -339,6 +339,25 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
   }
 
+  async function handleClone(npc: CampaignNpc) {
+    // Count existing clones to generate a unique name
+    const baseName = npc.name.replace(/\s*#\d+$/, '')
+    const existing = npcs.filter(n => n.name === baseName || n.name.startsWith(baseName + ' #'))
+    const num = existing.length + 1
+    const cloneName = `${baseName} #${num}`
+    const { data: maxRow } = await supabase.from('campaign_npcs').select('sort_order').eq('campaign_id', campaignId).order('sort_order', { ascending: false, nullsFirst: false }).limit(1).maybeSingle()
+    const nextSort = ((maxRow as any)?.sort_order ?? 0) + 1
+    await supabase.from('campaign_npcs').insert({
+      campaign_id: campaignId, name: cloneName, portrait_url: npc.portrait_url,
+      reason: npc.reason, acumen: npc.acumen, physicality: npc.physicality,
+      influence: npc.influence, dexterity: npc.dexterity, skills: npc.skills,
+      notes: npc.notes, npc_type: npc.npc_type, status: 'active',
+      wp_max: npc.wp_max, rp_max: npc.rp_max, wp_current: npc.wp_max, rp_current: npc.rp_max,
+      equipment: npc.equipment, sort_order: nextSort,
+    })
+    await loadNpcs()
+  }
+
   const [showCombatPicker, setShowCombatPicker] = useState(false)
   const [combatPickerIds, setCombatPickerIds] = useState<Set<string>>(new Set())
   const [relationships, setRelationships] = useState<Relationship[]>([])
@@ -710,6 +729,11 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       title="Remove NPC"
                       style={{ fontSize: '11px', padding: '0 3px', borderRadius: '2px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.2 }}>
                       ×
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); handleClone(npc) }}
+                      title="Clone NPC"
+                      style={{ fontSize: '9px', padding: '0 3px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.4, textTransform: 'uppercase' }}>
+                      +
                     </button>
                   </div>
                   {/* Center: name + badges */}
