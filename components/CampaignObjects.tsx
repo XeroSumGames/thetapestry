@@ -65,6 +65,7 @@ interface Props {
 export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemoveFromMap, onLoot, tokenRefreshKey, entries }: Props) {
   const supabase = createClient()
   const [objects, setObjects] = useState<ObjectToken[]>([])
+  const [library, setLibrary] = useState<{ id: string; name: string; image_url: string }[]>([])
   const [showAdd, setShowAdd] = useState(false)
   const [addName, setAddName] = useState('')
   const [addIcon, setAddIcon] = useState('crate')
@@ -82,13 +83,36 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [lootingObj, setLootingObj] = useState<ObjectToken | null>(null)
   const [lootCharId, setLootCharId] = useState('')
 
-  useEffect(() => { loadObjects() }, [campaignId, tokenRefreshKey])
+  useEffect(() => { loadObjects(); loadLibrary() }, [campaignId, tokenRefreshKey])
 
   async function loadObjects() {
     const { data: scenes } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', campaignId).eq('is_active', true).limit(1)
     if (!scenes || scenes.length === 0) { setObjects([]); return }
     const { data } = await supabase.from('scene_tokens').select('*').eq('scene_id', scenes[0].id).eq('token_type', 'object')
     setObjects((data ?? []) as ObjectToken[])
+  }
+
+  async function loadLibrary() {
+    const { data } = await supabase
+      .from('object_token_library')
+      .select('id, name, image_url')
+      .eq('campaign_id', campaignId)
+      .order('created_at', { ascending: false })
+    setLibrary(data ?? [])
+  }
+
+  // Save an uploaded image into the campaign's library so it can be reused
+  async function saveToLibrary(imageUrl: string, name: string) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { error } = await supabase.from('object_token_library').insert({
+      campaign_id: campaignId,
+      name: name || 'Untitled',
+      image_url: imageUrl,
+      uploaded_by: user.id,
+    })
+    if (error) console.warn('[CampaignObjects] saveToLibrary:', error.message)
+    else loadLibrary()
   }
 
   async function handleAdd() {
@@ -113,6 +137,9 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     if (!error) {
       const { data: urlData } = supabase.storage.from('object-tokens').getPublicUrl(path)
       setAddCustomUrl(urlData.publicUrl)
+      // Save to library so the image can be reused on future tokens
+      const libName = (addName.trim() || file.name.replace(/\.[^.]+$/, '')).slice(0, 80)
+      await saveToLibrary(urlData.publicUrl, libName)
     }
     setUploading(false)
   }
@@ -160,6 +187,21 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             {uploading ? 'Uploading...' : addCustomUrl ? '✓ Custom image uploaded' : 'Or upload custom image'}
             <input type="file" accept="image/*" hidden onChange={e => { if (e.target.files?.[0]) handleUpload(e.target.files[0]) }} />
           </label>
+
+          {/* Library picker — pick a previously-uploaded image */}
+          {library.length > 0 && (
+            <div style={{ marginBottom: '6px' }}>
+              <div style={{ fontSize: '10px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
+              <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', maxHeight: '72px', overflowY: 'auto', padding: '2px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                {library.map(lib => (
+                  <button key={lib.id} title={lib.name}
+                    onClick={() => setAddCustomUrl(lib.image_url)}
+                    style={{ width: '36px', height: '36px', background: `url(${lib.image_url}) center/cover`, border: addCustomUrl === lib.image_url ? '2px solid #c0392b' : '1px solid #3a3a3a', borderRadius: '2px', cursor: 'pointer', padding: 0 }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
             <div style={{ flex: 1 }}>
@@ -310,7 +352,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             </div>
             <div style={{ marginBottom: '10px' }}>
               <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Image</div>
-              <label style={{ display: 'block', padding: '6px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '12px', textAlign: 'center', cursor: 'pointer' }}>
+              <label style={{ display: 'block', padding: '6px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '12px', textAlign: 'center', cursor: 'pointer', marginBottom: '4px' }}>
                 {uploading ? 'Uploading...' : 'Upload new image'}
                 <input type="file" accept="image/*" hidden onChange={async e => {
                   const file = e.target.files?.[0]
@@ -322,10 +364,30 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                     const { data: urlData } = supabase.storage.from('object-tokens').getPublicUrl(path)
                     await supabase.from('scene_tokens').update({ portrait_url: urlData.publicUrl }).eq('id', editingObj.id)
                     setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, portrait_url: urlData.publicUrl } : o))
+                    // Save to library for reuse
+                    const libName = (editName.trim() || editingObj.name || file.name.replace(/\.[^.]+$/, '')).slice(0, 80)
+                    await saveToLibrary(urlData.publicUrl, libName)
                   }
                   setUploading(false)
                 }} />
               </label>
+              {/* Library picker — reuse any image uploaded before in this campaign */}
+              {library.length > 0 && (
+                <div>
+                  <div style={{ fontSize: '10px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
+                  <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', maxHeight: '80px', overflowY: 'auto', padding: '2px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                    {library.map(lib => (
+                      <button key={lib.id} title={lib.name}
+                        onClick={async () => {
+                          await supabase.from('scene_tokens').update({ portrait_url: lib.image_url }).eq('id', editingObj.id)
+                          setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, portrait_url: lib.image_url } : o))
+                        }}
+                        style={{ width: '36px', height: '36px', background: `url(${lib.image_url}) center/cover`, border: editingObj.portrait_url === lib.image_url ? '2px solid #c0392b' : '1px solid #3a3a3a', borderRadius: '2px', cursor: 'pointer', padding: 0 }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             {/* Properties */}
             <div style={{ marginBottom: '10px' }}>
