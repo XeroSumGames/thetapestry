@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { ALL_WEAPONS } from '../lib/weapons'
 import { EQUIPMENT } from '../lib/xse-schema'
+import ObjectImageCropper from './ObjectImageCropper'
 
 const OBJECT_ICONS = [
   { value: 'car', emoji: '🚗', label: 'Car' },
@@ -82,6 +83,10 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [contentQty, setContentQty] = useState(1)
   const [lootingObj, setLootingObj] = useState<ObjectToken | null>(null)
   const [lootCharId, setLootCharId] = useState('')
+  // Crop modal — selected file waits here until user confirms crop, then uploads.
+  // `target` distinguishes between the Add-object flow and the Edit-object flow
+  // so we know where to apply the resulting URL.
+  const [cropFile, setCropFile] = useState<{ file: File; target: 'add' | 'edit' } | null>(null)
 
   useEffect(() => { loadObjects(); loadLibrary() }, [campaignId, tokenRefreshKey])
 
@@ -130,18 +135,35 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     setSaving(false)
   }
 
-  async function handleUpload(file: File) {
+  // Generic uploader — takes a Blob (cropper outputs JPEG) and returns the public URL.
+  async function uploadBlob(blob: Blob, ext = 'jpg'): Promise<string | null> {
+    const path = `${campaignId}/${crypto.randomUUID()}.${ext}`
+    const { error } = await supabase.storage.from('object-tokens').upload(path, blob, { contentType: blob.type || 'image/jpeg' })
+    if (error) { console.warn('[CampaignObjects] upload error:', error.message); return null }
+    const { data: urlData } = supabase.storage.from('object-tokens').getPublicUrl(path)
+    return urlData.publicUrl
+  }
+
+  // Cropper confirmed — upload the cropped blob and route to the right target.
+  async function handleCropConfirm(blob: Blob) {
+    if (!cropFile) return
     setUploading(true)
-    const path = `${campaignId}/${crypto.randomUUID()}.${file.name.split('.').pop()}`
-    const { error } = await supabase.storage.from('object-tokens').upload(path, file, { contentType: file.type })
-    if (!error) {
-      const { data: urlData } = supabase.storage.from('object-tokens').getPublicUrl(path)
-      setAddCustomUrl(urlData.publicUrl)
-      // Save to library so the image can be reused on future tokens
-      const libName = (addName.trim() || file.name.replace(/\.[^.]+$/, '')).slice(0, 80)
-      await saveToLibrary(urlData.publicUrl, libName)
+    const url = await uploadBlob(blob)
+    if (url) {
+      const defaultName = cropFile.file.name.replace(/\.[^.]+$/, '')
+      if (cropFile.target === 'add') {
+        setAddCustomUrl(url)
+        const libName = (addName.trim() || defaultName).slice(0, 80)
+        await saveToLibrary(url, libName)
+      } else if (cropFile.target === 'edit' && editingObj) {
+        await supabase.from('scene_tokens').update({ portrait_url: url }).eq('id', editingObj.id)
+        setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, portrait_url: url } : o))
+        const libName = (editName.trim() || editingObj.name || defaultName).slice(0, 80)
+        await saveToLibrary(url, libName)
+      }
     }
     setUploading(false)
+    setCropFile(null)
   }
 
   function getIconEmoji(obj: ObjectToken): string {
@@ -185,7 +207,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
 
           <label style={{ display: 'block', padding: '6px', background: addCustomUrl ? '#1a2e10' : '#242424', border: `1px dashed ${addCustomUrl ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: addCustomUrl ? '#7fc458' : '#5a5550', fontSize: '11px', textAlign: 'center', cursor: 'pointer', marginBottom: '6px' }}>
             {uploading ? 'Uploading...' : addCustomUrl ? '✓ Custom image uploaded' : 'Or upload custom image'}
-            <input type="file" accept="image/*" hidden onChange={e => { if (e.target.files?.[0]) handleUpload(e.target.files[0]) }} />
+            <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'add' }); e.target.value = '' }} />
           </label>
 
           {/* Library picker — always visible so GM knows it exists */}
@@ -354,22 +376,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
               <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Image</div>
               <label style={{ display: 'block', padding: '6px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '12px', textAlign: 'center', cursor: 'pointer', marginBottom: '4px' }}>
                 {uploading ? 'Uploading...' : 'Upload new image'}
-                <input type="file" accept="image/*" hidden onChange={async e => {
-                  const file = e.target.files?.[0]
-                  if (!file) return
-                  setUploading(true)
-                  const path = `${campaignId}/${crypto.randomUUID()}.${file.name.split('.').pop()}`
-                  const { error } = await supabase.storage.from('object-tokens').upload(path, file, { contentType: file.type })
-                  if (!error) {
-                    const { data: urlData } = supabase.storage.from('object-tokens').getPublicUrl(path)
-                    await supabase.from('scene_tokens').update({ portrait_url: urlData.publicUrl }).eq('id', editingObj.id)
-                    setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, portrait_url: urlData.publicUrl } : o))
-                    // Save to library for reuse
-                    const libName = (editName.trim() || editingObj.name || file.name.replace(/\.[^.]+$/, '')).slice(0, 80)
-                    await saveToLibrary(urlData.publicUrl, libName)
-                  }
-                  setUploading(false)
-                }} />
+                <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'edit' }); e.target.value = '' }} />
               </label>
               {/* Library picker — always visible so GM knows it exists */}
               <div>
@@ -474,6 +481,15 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             </div>
           </div>
         </div>
+      )}
+
+      {/* Image crop modal — appears when a file is selected via Upload */}
+      {cropFile && (
+        <ObjectImageCropper
+          file={cropFile.file}
+          onCancel={() => setCropFile(null)}
+          onCrop={blob => handleCropConfirm(blob)}
+        />
       )}
     </div>
   )
