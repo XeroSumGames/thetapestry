@@ -188,20 +188,20 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             <input type="file" accept="image/*" hidden onChange={e => { if (e.target.files?.[0]) handleUpload(e.target.files[0]) }} />
           </label>
 
-          {/* Library picker — pick a previously-uploaded image */}
-          {library.length > 0 && (
-            <div style={{ marginBottom: '6px' }}>
-              <div style={{ fontSize: '10px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
-              <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', maxHeight: '72px', overflowY: 'auto', padding: '2px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                {library.map(lib => (
-                  <button key={lib.id} title={lib.name}
-                    onClick={() => setAddCustomUrl(lib.image_url)}
-                    style={{ width: '36px', height: '36px', background: `url(${lib.image_url}) center/cover`, border: addCustomUrl === lib.image_url ? '2px solid #c0392b' : '1px solid #3a3a3a', borderRadius: '2px', cursor: 'pointer', padding: 0 }}
-                  />
-                ))}
-              </div>
+          {/* Library picker — always visible so GM knows it exists */}
+          <div style={{ marginBottom: '6px' }}>
+            <div style={{ fontSize: '10px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
+            <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', minHeight: '40px', maxHeight: '72px', overflowY: 'auto', padding: '2px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+              {library.length === 0 ? (
+                <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#5a5550', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', fontStyle: 'italic' }}>Empty — upload an image and it'll show here</div>
+              ) : library.map(lib => (
+                <button key={lib.id} title={lib.name}
+                  onClick={() => setAddCustomUrl(lib.image_url)}
+                  style={{ width: '36px', height: '36px', background: `url(${lib.image_url}) center/cover`, border: addCustomUrl === lib.image_url ? '2px solid #c0392b' : '1px solid #3a3a3a', borderRadius: '2px', cursor: 'pointer', padding: 0 }}
+                />
+              ))}
             </div>
-          )}
+          </div>
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
             <div style={{ flex: 1 }}>
@@ -371,23 +371,23 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   setUploading(false)
                 }} />
               </label>
-              {/* Library picker — reuse any image uploaded before in this campaign */}
-              {library.length > 0 && (
-                <div>
-                  <div style={{ fontSize: '10px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
-                  <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', maxHeight: '80px', overflowY: 'auto', padding: '2px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                    {library.map(lib => (
-                      <button key={lib.id} title={lib.name}
-                        onClick={async () => {
-                          await supabase.from('scene_tokens').update({ portrait_url: lib.image_url }).eq('id', editingObj.id)
-                          setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, portrait_url: lib.image_url } : o))
-                        }}
-                        style={{ width: '36px', height: '36px', background: `url(${lib.image_url}) center/cover`, border: editingObj.portrait_url === lib.image_url ? '2px solid #c0392b' : '1px solid #3a3a3a', borderRadius: '2px', cursor: 'pointer', padding: 0 }}
-                      />
-                    ))}
-                  </div>
+              {/* Library picker — always visible so GM knows it exists */}
+              <div>
+                <div style={{ fontSize: '10px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
+                <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', minHeight: '40px', maxHeight: '80px', overflowY: 'auto', padding: '2px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                  {library.length === 0 ? (
+                    <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#5a5550', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', fontStyle: 'italic' }}>Empty — upload an image and it'll show here</div>
+                  ) : library.map(lib => (
+                    <button key={lib.id} title={lib.name}
+                      onClick={async () => {
+                        await supabase.from('scene_tokens').update({ portrait_url: lib.image_url }).eq('id', editingObj.id)
+                        setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, portrait_url: lib.image_url } : o))
+                      }}
+                      style={{ width: '36px', height: '36px', background: `url(${lib.image_url}) center/cover`, border: editingObj.portrait_url === lib.image_url ? '2px solid #c0392b' : '1px solid #3a3a3a', borderRadius: '2px', cursor: 'pointer', padding: 0 }}
+                    />
+                  ))}
                 </div>
-              )}
+              </div>
             </div>
             {/* Properties */}
             <div style={{ marginBottom: '10px' }}>
