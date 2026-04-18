@@ -980,7 +980,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     </div>
     <div style={{ marginBottom: '8px' }}>
       <label style={lbl}>Notes</label>
-      <textarea style={{ ...inp, minHeight: '80px', resize: 'both', overflow: 'auto' }} value={editForm.notes} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} />
+      <textarea style={{ ...inp, minHeight: '80px', resize: 'vertical' }} value={editForm.notes} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} />
     </div>
     <div style={{ marginBottom: '12px' }}>
       <label style={lbl}>Categories</label>
