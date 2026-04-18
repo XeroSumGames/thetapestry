@@ -28,14 +28,9 @@ const TYPE_COLORS: Record<string, { bg: string; border: string; color: string }>
 }
 
 const PORTRAIT_BANK = [
-  { label: 'M1', bg: '#2a1210', color: '#c0392b' },
-  { label: 'M2', bg: '#1a2e10', color: '#7fc458' },
-  { label: 'F1', bg: '#1a1a2e', color: '#7ab3d4' },
-  { label: 'F2', bg: '#2a2010', color: '#EF9F27' },
-  { label: 'N1', bg: '#2a102a', color: '#d48bd4' },
-  { label: 'N2', bg: '#1a2e2e', color: '#58c4c4' },
-  { label: 'X1', bg: '#2e2e2e', color: '#d4cfc9' },
-  { label: 'X2', bg: '#1a1a1a', color: '#f5f2ee' },
+  { label: 'Enemy', bg: '#2a1210', color: '#c0392b' },
+  { label: 'Ally', bg: '#1a2e10', color: '#7fc458' },
+  { label: 'Neutral', bg: '#2e2e2e', color: '#d4cfc9' },
 ].map((p, i) => ({
   ...p,
   url: `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="${p.bg}"/><circle cx="32" cy="24" r="12" fill="${p.color}" opacity="0.6"/><ellipse cx="32" cy="52" rx="18" ry="14" fill="${p.color}" opacity="0.4"/></svg>`)}`,
