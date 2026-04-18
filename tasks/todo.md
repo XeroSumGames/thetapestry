@@ -241,6 +241,18 @@
 - [ ] NPC browsing/filtering
 - [ ] GM screen, GM quick-reference panel
 
+### Player Inventory System
+- [x] InventoryPanel component — item list, catalog search (33 SRD items), custom items, qty tracking
+- [x] Inventory button (orange) on CharacterCard
+- [x] Encumbrance updated — counts weapons + all inventory items
+- [x] Backpack / Military Backpack adds +2 to encumbrance limit
+- [x] OVERLOADED warning when over limit
+- [x] Custom item creation — name, enc, notes
+- [x] Give/Trade — give items to other characters at the table via broadcast
+- [x] Real-time sync — receiving player's inventory refreshes on transfer
+- [ ] GM loot distribution modal — bulk give items to multiple characters
+- [ ] Inventory migration — auto-convert old string equipment to structured items on load
+
 ### Campaign Management
 - [x] Launch, Leave, Share buttons
 - [x] Game Feed with Rolls/Chat/Both tabs and Realtime chat
@@ -252,7 +264,7 @@
 - [x] NotificationBell on table page header
 - [x] Session join race condition fix (await ensureCharacterStates before loadEntries)
 - [x] GM private notes
-- [x] Player kick from session (broadcast + notification, session only not campaign)
+- [x] Player kick from session (kicked flag on character_states, persists on refresh, resets on new session start)
 - [ ] CDP awards
 - [x] Mortal wound insight save — player acts, GM sees read-only
 - [x] Character delete confirmation dialog
