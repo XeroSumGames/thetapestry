@@ -438,6 +438,7 @@
 - [ ] Campaign creation overhaul — three-way picker: Custom, Setting, Module
 - [ ] GM toolkit — in-session scene switcher, module NPC roster, handouts panel, roll tables linked to dice roller
 - [ ] Empty — first module, single scene, fully playable, linked to Chased/Delaware setting
+- [ ] **GM Kit Export** — compile all assets for a campaign/adventure into a downloadable package: NPCs (with portraits + stats), map pins, tactical scenes + battle maps, handouts, object tokens, route tables, session notes. Include GM instructions/playbook. Export as PDF, ZIP, or shareable link. Could serve as the distribution format for published modules.
 
 ---
 
