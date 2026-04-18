@@ -127,7 +127,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [attachments, setAttachments] = useState<File[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
-  const [editForm, setEditForm] = useState({ title: '', notes: '', categories: ['location'] as string[], event_date: '' })
+  const [editForm, setEditForm] = useState({ title: '', notes: '', categories: ['location'] as string[], event_date: '', sort_order: '' })
   const [editAttachments, setEditAttachments] = useState<File[]>([])
   const [editExistingFiles, setEditExistingFiles] = useState<{ name: string; url: string }[]>([])
   const [editUploading, setEditUploading] = useState(false)
@@ -428,7 +428,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   async function startEdit(pin: Pin) {
   setEditingPin(pin)
   const cats = Array.isArray(pin.categories) && pin.categories.length > 0 ? pin.categories : [pin.category ?? 'location']
-  setEditForm({ title: pin.title, notes: pin.notes, categories: cats, event_date: (pin as any).event_date ?? '' })
+  setEditForm({ title: pin.title, notes: pin.notes, categories: cats, event_date: (pin as any).event_date ?? '', sort_order: pin.sort_order != null ? String(pin.sort_order) : '' })
   setEditAttachments([])
   setShowForm(false)
   // Load existing attachments
@@ -446,7 +446,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   async function handleSaveEdit() {
   if (!editingPin || !editForm.title.trim()) return
   setEditUploading(true)
-  const { error } = await supabase.from('map_pins').update({ title: editForm.title, notes: editForm.notes, category: editForm.categories[0] ?? 'location', categories: editForm.categories, event_date: editForm.event_date.trim() || null }).eq('id', editingPin.id)
+  const sortVal = editForm.sort_order.trim() ? parseInt(editForm.sort_order) : null
+  const { error } = await supabase.from('map_pins').update({ title: editForm.title, notes: editForm.notes, category: editForm.categories[0] ?? 'location', categories: editForm.categories, event_date: editForm.event_date.trim() || null, sort_order: Number.isNaN(sortVal) ? null : sortVal }).eq('id', editingPin.id)
   if (error) { alert('Error: ' + error.message); setEditUploading(false); return }
   // Upload new attachments
   for (const file of editAttachments) {
@@ -1012,9 +1013,15 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       </select>
     </div>
     {editForm.categories.includes('world_event') && (
-      <div style={{ marginBottom: '12px' }}>
-        <label style={lbl}>Event Date</label>
-        <input style={inp} value={editForm.event_date} onChange={e => setEditForm(p => ({ ...p, event_date: e.target.value }))} placeholder="e.g. March 2024, Day 1, Year Zero + 3" />
+      <div style={{ marginBottom: '12px', display: 'flex', gap: '8px' }}>
+        <div style={{ flex: 1 }}>
+          <label style={lbl}>Event Date</label>
+          <input style={inp} value={editForm.event_date} onChange={e => setEditForm(p => ({ ...p, event_date: e.target.value }))} placeholder="e.g. March 2024" />
+        </div>
+        <div style={{ width: '60px', flexShrink: 0 }}>
+          <label style={lbl}>Order</label>
+          <input style={{ ...inp, textAlign: 'center' }} type="number" min="1" value={editForm.sort_order} onChange={e => setEditForm(p => ({ ...p, sort_order: e.target.value }))} placeholder="#" />
+        </div>
       </div>
     )}
     {userRole === 'thriver' && editingPin && (
