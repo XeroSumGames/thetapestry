@@ -36,16 +36,17 @@ const PROFILES: Record<string, RangeProfile> = {
   shotgun_close:  { engaged: +1, close: 0,    medium: -4,   long: null, distant: null }, // Sawed-off
   shotgun:        { engaged: +1, close: 0,    medium: -2,   long: -4,   distant: null }, // Pump-action
   light_pistol:   { engaged: -1, close: 0,    medium: -2,   long: -4,   distant: null },
-  heavy_pistol:   { engaged: -1, close: 0,    medium: -1,   long: -3,   distant: null },
+  heavy_pistol:   { engaged: -1, close: 0,    medium: 0,    long: -3,   distant: null }, // effective to ~100 ft
   hunting_rifle:  { engaged: -3, close: -1,   medium: 0,    long: 0,    distant: -2 },
-  assault_rifle:  { engaged: -2, close: 0,    medium: 0,    long: 0,    distant: null },
+  assault_rifle:  { engaged: -2, close: 0,    medium: 0,    long: 0,    distant: -3 },   // real AR reaches 1000+ ft
   sniper_rifle:   { engaged: -4, close: -2,   medium: 0,    long: +1,   distant: +1 },
-  bow:            { engaged: -2, close: 0,    medium: 0,    long: -2,   distant: null },
+  bow:            { engaged: -2, close: 0,    medium: 0,    long: -3,   distant: null }, // bow at 300 ft is hard
   slingshot:      { engaged: 0,  close: 0,    medium: -3,   long: null, distant: null },
   thrown:         { engaged: 0,  close: 0,    medium: -3,   long: null, distant: null },
   grenade:        { engaged: -1, close: 0,    medium: -2,   long: null, distant: null },
-  flamethrower:   { engaged: +1, close: 0,    medium: null, long: null, distant: null },
-  heavy_mounted:  { engaged: -1, close: 0,    medium: 0,    long: -2,   distant: null }, // Gatling
+  flamethrower:   { engaged: +1, close: 0,    medium: -4,   long: null, distant: null }, // real M2 ~130 ft max
+  taser_dart:     { engaged: 0,  close: -1,   medium: null, long: null, distant: null }, // probes only work 15-25 ft
+  heavy_mounted:  { engaged: -1, close: 0,    medium: 0,    long: -2,   distant: -4 },   // Gatling, real 1000+ ft
   rpg:            { engaged: null, close: 0,  medium: 0,    long: 0,    distant: -2 }, // Can't fire at own feet
 }
 
@@ -64,7 +65,8 @@ const WEAPON_PROFILE_MAP: Record<string, string> = {
   'Sledgehammer': 'melee',
   'Sword': 'melee',
   'Tactical Baton': 'melee',
-  'Taser': 'melee',
+  'Cattle Prod': 'melee',
+  'Taser': 'taser_dart', // projectile darts, ~15-25 ft
   // Melee — reach (Close range)
   'Bat / Stick': 'melee_reach',
   'Fire Axe': 'melee_reach',

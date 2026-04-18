@@ -210,7 +210,7 @@ export const MELEE_WEAPONS: MeleeWeapon[] = [
   { name: 'Staff',           skill: 'Melee',    range: 'Close',   rarity: 'Common',   damageBase: 2, damageDice: '2d3', rpPercent: 100, enc: 1, traits: [{ name: 'Unwieldy', value: 1 }] },
   { name: 'Sword',           skill: 'Melee',    range: 'Engaged', rarity: 'Uncommon', damageBase: 3, damageDice: '3d3', rpPercent:  50, enc: 1, traits: [] },
   { name: 'Tactical Baton',  skill: 'Melee',    range: 'Engaged', rarity: 'Uncommon', damageBase: 4, damageDice: '2d3', rpPercent: 100, enc: 1, traits: [] },
-  { name: 'Taser',           skill: 'Melee',    range: 'Engaged', rarity: 'Uncommon', damageBase: 2, damageDice: '',    rpPercent: 400, enc: 1, traits: [{ name: 'Stunned' }] },
+  { name: 'Cattle Prod',     skill: 'Melee',    range: 'Engaged', rarity: 'Uncommon', damageBase: 2, damageDice: '',    rpPercent: 400, enc: 1, traits: [{ name: 'Stunned' }] },
   { name: 'Wood Axe',        skill: 'Melee',    range: 'Close',   rarity: 'Uncommon', damageBase: 5, damageDice: '1d3', rpPercent:  50, enc: 1, traits: [{ name: 'Cumbersome', value: 1 }] },
 ];
 
@@ -236,16 +236,17 @@ export const RANGED_WEAPONS: RangedWeapon[] = [
   { name: 'Automatic Rifle',      skill: 'Ranged', range: 'Long',    rarity: 'Uncommon', damageBase: 5, damageDice: '2d6', rpPercent: 50, enc: 2, ammoRarity: 'Uncommon', clipSize: 30, traits: [{ name: 'Automatic Burst', value: 3 }] },
   { name: 'Black Powder Rifle',   skill: 'Ranged', range: 'Long',    rarity: 'Uncommon', damageBase: 5, damageDice: '1d6', rpPercent: 50, enc: 2, ammoRarity: 'Uncommon', clipSize:  1, traits: [] },
   { name: 'Bow',                  skill: 'Ranged', range: 'Medium',  rarity: 'Common',   damageBase: 4, damageDice: '1d6', rpPercent: 50, enc: 1, ammoRarity: 'Common',   clipSize:  1, traits: [{ name: 'Tracking' }] },
-  { name: 'Carbine',              skill: 'Ranged', range: 'Medium',  rarity: 'Uncommon', damageBase: 5, damageDice: '1d6', rpPercent: 50, enc: 1, ammoRarity: 'Uncommon', clipSize: 30, traits: [{ name: 'Automatic Burst' }] },
-  { name: 'Compound Bow',         skill: 'Ranged', range: 'Long',    rarity: 'Common',   damageBase: 4, damageDice: '2d3', rpPercent: 50, enc: 2, ammoRarity: 'Common',   clipSize:  1, traits: [{ name: 'Tracking' }] },
+  { name: 'Carbine',              skill: 'Ranged', range: 'Long',    rarity: 'Uncommon', damageBase: 5, damageDice: '1d6', rpPercent: 50, enc: 1, ammoRarity: 'Uncommon', clipSize: 30, traits: [{ name: 'Automatic Burst' }] },
+  { name: 'Compound Bow',         skill: 'Ranged', range: 'Medium',  rarity: 'Common',   damageBase: 4, damageDice: '2d3', rpPercent: 50, enc: 2, ammoRarity: 'Common',   clipSize:  1, traits: [{ name: 'Tracking' }] },
   { name: 'Crossbow',             skill: 'Ranged', range: 'Medium',  rarity: 'Uncommon', damageBase: 4, damageDice: '1d6', rpPercent: 50, enc: 2, ammoRarity: 'Uncommon', clipSize:  1, traits: [{ name: 'Unwieldy', value: 1 }] },
-  { name: 'Heavy Pistol',         skill: 'Ranged', range: 'Close',   rarity: 'Common',   damageBase: 3, damageDice: '2d3', rpPercent: 50, enc: 1, ammoRarity: 'Uncommon', clipSize:  9, traits: [] },
+  { name: 'Heavy Pistol',         skill: 'Ranged', range: 'Medium',  rarity: 'Common',   damageBase: 3, damageDice: '2d3', rpPercent: 50, enc: 1, ammoRarity: 'Uncommon', clipSize:  9, traits: [] },
   { name: 'Hunting Rifle',        skill: 'Ranged', range: 'Long',    rarity: 'Common',   damageBase: 5, damageDice: '1d6', rpPercent: 50, enc: 2, ammoRarity: 'Uncommon', clipSize: 12, traits: [] },
   { name: 'Light Pistol',         skill: 'Ranged', range: 'Close',   rarity: 'Common',   damageBase: 3, damageDice: '1d6', rpPercent: 50, enc: 1, ammoRarity: 'Common',   clipSize:  6, traits: [] },
   { name: 'Shotgun (Pump-Action)',skill: 'Ranged', range: 'Medium',  rarity: 'Common',   damageBase: 5, damageDice: '2d6', rpPercent: 50, enc: 2, ammoRarity: 'Common',   clipSize:  5, traits: [{ name: 'Close-Up' }] },
   { name: 'Shotgun (Sawed-Off)',  skill: 'Ranged', range: 'Close',   rarity: 'Uncommon', damageBase: 2, damageDice: '3d6', rpPercent: 50, enc: 2, ammoRarity: 'Common',   clipSize:  2, traits: [{ name: 'Close-Up' }] },
   { name: 'Slingshot',            skill: 'Ranged', range: 'Close',   rarity: 'Common',   damageBase: 1, damageDice: '1d3', rpPercent:100, enc: 0, ammoRarity: 'Common',   clipSize:  1, traits: [{ name: 'Tracking' }] },
   { name: "Sniper's Rifle",       skill: 'Ranged', range: 'Distant', rarity: 'Rare',     damageBase: 2, damageDice: '3d6', rpPercent: 50, enc: 2, ammoRarity: 'Uncommon', clipSize: 10, traits: [] },
+  { name: 'Taser',                skill: 'Ranged', range: 'Close',   rarity: 'Uncommon', damageBase: 1, damageDice: '',    rpPercent: 400, enc: 1, ammoRarity: 'Rare',     clipSize:  1, traits: [{ name: 'Stunned' }] },
 ];
 
 // ----------------------------
