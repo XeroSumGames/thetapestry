@@ -285,14 +285,16 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     })
 
     const currentHidden = hiddenFoldersRef.current
+    const rumorPins = data.filter((p: Pin) => p.category === 'rumor')
+    console.warn('[loadPins]', { total: data.length, rumorsInData: rumorPins.length, rumorCategories: rumorPins.map(p => ({ title: p.title, category: p.category, pin_type: p.pin_type, categories: (p as any).categories })), hiddenFolders: [...currentHidden], userId: !!userId })
     const visibleData = userId
       ? data.filter((p: Pin) => {
-          // Check all categories the pin belongs to — show if ANY category is visible
           const cats: string[] = Array.isArray((p as any).categories) && (p as any).categories.length > 0
             ? (p as any).categories : [p.category ?? 'location']
           return cats.some(c => !currentHidden.has(c))
         })
       : data.filter((p: Pin) => p.category === 'world_event' || p.category === 'settlement')
+    console.warn('[loadPins] visibleData:', visibleData.length, 'rumorsVisible:', visibleData.filter(p => p.category === 'rumor').length)
     visibleData.forEach((pin: Pin) => {
       const emoji = pin.pin_type === 'rumor' ? '❓' : getCategoryEmoji(pin.category ?? 'location')
       const tier = getPinTier(pin)
