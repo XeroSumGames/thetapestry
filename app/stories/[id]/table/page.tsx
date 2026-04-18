@@ -3301,7 +3301,7 @@ export default function TablePage() {
                   const notEngaged = distFeet !== null && distFeet > 5
                   return (
                     <>
-                      <button onClick={notEngaged ? () => alert(`${activeEntry.character_name} must be engaged (adjacent) to ${targetName} to stabilize them. Move closer first.`) : () => {
+                      <button onClick={notEngaged ? () => alert(`${activeEntry.character_name} must be engaged (adjacent) to ${targetName} to stabilize them. Move closer first.`) : async () => {
                         // Determine roller's Medicine stats — use active combatant's stats
                         // (could be PC via charEntry, or NPC via campaignNpcs)
                         let amod = 0, smod = 0
@@ -5128,7 +5128,7 @@ export default function TablePage() {
           setShowReadyWeaponModal(false)
         }
 
-        function doUnjam() {
+        async function doUnjam() {
           if (!primary || !canUnjam) return
           const isMelee = primaryW?.category === 'melee'
           // Pick best skill: Tinkerer, Weaponsmith, or Ranged/Melee Combat
