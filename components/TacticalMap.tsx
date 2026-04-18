@@ -175,7 +175,18 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     if (!scene?.background_url) { bgImageRef.current = null; draw(); return }
     const img = new Image()
     img.crossOrigin = 'anonymous'
-    img.onload = () => { bgImageRef.current = img; draw() }
+    img.onload = () => {
+      bgImageRef.current = img
+      // If the scene has no saved img_scale yet (first time), pick a sensible default
+      // so the image fits the GM's container. GM can then Lock Map to persist.
+      if (isGM && (scene.img_scale == null || scene.img_scale === 1) && containerRef.current && img.naturalWidth > 0) {
+        const cw = containerRef.current.clientWidth
+        const fit = cw / img.naturalWidth
+        // Only override if natural is much wider than container (avoid touching existing manual scales)
+        if (img.naturalWidth > cw * 1.1) setImgScale(fit)
+      }
+      draw()
+    }
     img.src = scene.background_url
   }, [scene?.background_url])
 
@@ -230,15 +241,15 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     const cellSize = getCellSize()
     const gridW = s.grid_cols * cellSize
     const gridH = s.grid_rows * cellSize
-    // Image size is derived from the GRID (same for everyone) scaled by img_scale,
-    // NOT from the viewer's container width. This keeps GM and players pixel-
-    // identical in where the background image sits relative to the grid.
+    // Image size is derived from the image's own natural dimensions (same file
+    // → same dims for everyone) scaled by img_scale. This keeps GM and players
+    // pixel-identical AND decouples the image from grid changes — adding a
+    // column or row moves the grid, not the map.
     let imgW = 0, imgH = 0
     if (bgImageRef.current) {
       const img = bgImageRef.current
-      const imgAspect = img.naturalWidth / img.naturalHeight
-      imgW = gridW * imgScale
-      imgH = (gridW / imgAspect) * imgScale
+      imgW = img.naturalWidth * imgScale
+      imgH = img.naturalHeight * imgScale
     }
     canvas.width = Math.max(baseW, baseW * zoom, imgW)
     canvas.height = Math.max(baseH, baseH * zoom, imgH)
@@ -256,12 +267,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     ctx.save()
     ctx.scale(zoom, zoom)
 
-    // Background image — size derived from grid so GM and players align identically.
+    // Background image — natural-dimensions × img_scale, same for every viewer.
     if (bgImageRef.current) {
       const img = bgImageRef.current
-      const imgAspect = img.naturalWidth / img.naturalHeight
-      const scaledW = gridW * imgScale
-      const scaledH = (gridW / imgAspect) * imgScale
+      const scaledW = img.naturalWidth * imgScale
+      const scaledH = img.naturalHeight * imgScale
       ctx.drawImage(img, 0, 0, scaledW, scaledH)
       mapDrawRef.current = { x: 0, y: 0, w: scaledW, h: scaledH }
 
@@ -1097,16 +1107,13 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           </div>
           <div style={{ flex: 1 }} />
           <button onClick={() => {
-              // Calculate imgScale so the image width matches the container width at zoom 1
+              // Image now draws at naturalWidth × imgScale. Compute imgScale so the
+              // image fills the container at zoom=1. GM saves via Lock Map → everyone inherits.
               const container = containerRef.current
               if (container && bgImageRef.current) {
                 const containerW = container.clientWidth
                 const img = bgImageRef.current
-                const imgAspect = img.naturalWidth / img.naturalHeight
-                // At imgScale=1, image draws at baseW (container width). We want that.
-                // But baseW in draw() uses container.clientWidth which changes with canvas size.
-                // So just reset to 1 — the draw function already fits to container width.
-                setImgScale(1)
+                setImgScale(img.naturalWidth > 0 ? containerW / img.naturalWidth : 1)
               } else {
                 setImgScale(1)
               }
