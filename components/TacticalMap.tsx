@@ -896,12 +896,18 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   if (!scene && isGM) {
     return (
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#111', position: 'relative', zIndex: 1200 }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '16px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '1rem' }}>No tactical scene set up</div>
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
           <button onClick={() => setShowSetup(true)}
-            style={{ padding: '10px 24px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '10px 24px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', width: '220px' }}>
             Create Scene
           </button>
+          {scenes.length > 0 && (
+            <select defaultValue="" onChange={e => { if (e.target.value) activateScene(e.target.value) }}
+              style={{ padding: '10px 24px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', width: '220px', appearance: 'none', textAlign: 'center' }}>
+              <option value="" disabled>Open Scene</option>
+              {scenes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          )}
         </div>
         {showSetup && (
           <div onClick={() => setShowSetup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1050,7 +1056,19 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           </div>
           <div style={{ flex: 1 }} />
           <button onClick={() => {
-              setImgScale(1)
+              // Calculate imgScale so the image width matches the container width at zoom 1
+              const container = containerRef.current
+              if (container && bgImageRef.current) {
+                const containerW = container.clientWidth
+                const img = bgImageRef.current
+                const imgAspect = img.naturalWidth / img.naturalHeight
+                // At imgScale=1, image draws at baseW (container width). We want that.
+                // But baseW in draw() uses container.clientWidth which changes with canvas size.
+                // So just reset to 1 — the draw function already fits to container width.
+                setImgScale(1)
+              } else {
+                setImgScale(1)
+              }
               setZoom(1)
               setPanX(0)
               setPanY(0)
