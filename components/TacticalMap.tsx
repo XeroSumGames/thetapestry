@@ -645,63 +645,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       }
     }
 
-    // Range circles for selected token: Engaged, Movement, Weapon Range
-    if (selectedToken) {
-      const selTok = toks.find(t => t.id === selectedToken)
-      if (selTok) {
-        const cx = offsetX + selTok.grid_x * cellSize + cellSize / 2
-        const cy = offsetY + selTok.grid_y * cellSize + cellSize / 2
-        const ft = s.cell_feet ?? 3
-
-        // Look up weapon range for this token — use PRIMARY weapon only
-        let weaponRangeBand = 'Engaged' // default unarmed
-        let weaponIsMelee = true
-        if (selTok.npc_id && campaignNpcs) {
-          const npc = campaignNpcs.find((n: any) => n.id === selTok.npc_id)
-          const weaponName = npc?.skills?.weapon?.weaponName
-          if (weaponName) {
-            const w = getWeaponByName(weaponName)
-            if (w) { weaponRangeBand = w.range; weaponIsMelee = w.category === 'melee' }
-          }
-        } else if (selTok.character_id && entries) {
-          const entry = entries.find((e: any) => e.character.id === selTok.character_id)
-          const weaponName = entry?.character.data?.weaponPrimary?.weaponName
-          if (weaponName) {
-            const w = getWeaponByName(weaponName)
-            if (w) { weaponRangeBand = w.range; weaponIsMelee = w.category === 'melee' }
-          }
-        }
-        const weaponRangeFt = weaponIsMelee
-          ? (MELEE_RANGE_FEET[weaponRangeBand] ?? 5)
-          : (RANGE_BAND_FEET[weaponRangeBand] ?? 5)
-        const weaponCells = Math.max(1, Math.ceil(weaponRangeFt / ft))
-
-        const circles = [
-          { cells: weaponCells, fill: 'rgba(192,57,43,0.35)', stroke: '#ff4040', label: `${weaponRangeBand} (${weaponRangeFt}ft)` },
-          { cells: 3, fill: 'rgba(52,152,219,0.30)', stroke: '#5dade2', label: 'Move (9ft)' },
-          { cells: Math.max(1, Math.ceil(3 / ft)), fill: 'rgba(127,196,88,0.35)', stroke: '#7fc458', label: 'Engaged' },
-        ]
-        // Draw largest first
-        circles.sort((a, b) => b.cells - a.cells)
-        circles.forEach(c => {
-          ctx.beginPath()
-          ctx.arc(cx, cy, c.cells * cellSize, 0, Math.PI * 2)
-          ctx.fillStyle = c.fill
-          ctx.fill()
-          ctx.strokeStyle = c.stroke
-          ctx.globalAlpha = 1
-          ctx.lineWidth = 3
-          ctx.stroke()
-          ctx.globalAlpha = 1
-          // Label at top of circle
-          ctx.font = `bold 12px Barlow Condensed`
-          ctx.fillStyle = c.stroke
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          ctx.fillText(c.label, cx, cy - c.cells * cellSize + 12)
-        })
-      }
-    }
+    // Range circles removed — range is handled automatically in the roll modal
 
     ctx.restore() // undo zoom scale
 
@@ -1227,7 +1171,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', width: '30px' }}>Size</span>
-                  <input type="range" min={0.3} max={3} step={0.1} value={tok.scale ?? 1}
+                  <input type="range" min={0.3} max={5} step={0.1} value={tok.scale ?? 1}
                     onChange={async e => {
                       const v = parseFloat(e.target.value)
                       setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, scale: v } : t))
