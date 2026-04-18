@@ -258,6 +258,20 @@
 - [x] **+ From Catalog now sticks** — InventoryPanel was prop-driven from `c.data?.inventory`, but the parent's `entries` state was never patched on add/remove, so the item only existed in the DB and the UI showed stale data. Fix: `CharacterCard` now keeps a local `inventoryState` mirror (updates optimistically, rolls back on DB error) and fires a new `onInventoryChange` callback that the table page uses to patch `entries` so the change survives close/reopen without a `loadEntries` round-trip.
 - [ ] GM loot distribution modal — bulk give items to multiple characters
 - [ ] Inventory migration — auto-convert old string equipment to structured items on load
+
+### Code Audit (2026-04-18)
+- [x] CRITICAL: Grapple consumeAction awaited
+- [x] CRITICAL: Charge validates active combatant before roll
+- [x] CRITICAL: loadInitiative sequence guard (prevents stale turn order)
+- [x] HIGH: Blast radius primary target check includes position fallback
+- [x] HIGH: Canvas draw dependency array trimmed (5 volatile deps removed)
+- [x] MEDIUM: Sprint/Stabilize/Unjam consumeAction awaited
+- [x] MEDIUM: Custom item encumbrance clamped >= 0, null-safe calc
+- [x] LOW: Animation frame cleanup on TacticalMap unmount
+- [x] LOW: Portrait cache capped at 100 entries (LRU)
+- [ ] DEFERRED: Split table page (5,365 lines) into subcomponents — high risk before game
+- [ ] DEFERRED: Debounce realtime callbacks — works fine, optimization only
+- [ ] DEFERRED: Sequence guards on loadRolls/loadChat — low impact
 - [ ] **Player-initiated loot from ObjectCard** — currently GM-only. Decide policy: always allowed, only on destroyed crates, or requires "unlocked" flag on the object.
 - [ ] **Surface Give loot UI in the GM Assets → Objects panel too** — mirror the per-item Give controls that now live on ObjectCard so GM can loot without placing the object on the map first (current panel loot still requires crate to be destroyed).
 
