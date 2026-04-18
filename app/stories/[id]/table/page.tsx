@@ -208,7 +208,7 @@ export default function TablePage() {
   const [tacticalShared, setTacticalShared] = useState(false)
   const [tokenRefreshKey, setTokenRefreshKey] = useState(0)
   const [moveMode, setMoveMode] = useState<{ characterId?: string; npcId?: string; feet: number } | null>(null)
-  const [mapTokens, setMapTokens] = useState<{ id: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number }[]>([])
+  const [mapTokens, setMapTokens] = useState<{ id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null }[]>([])
   const [mapCellFeet, setMapCellFeet] = useState(3)
   const [mapTokenNpcIds, setMapTokenNpcIds] = useState<Set<string>>(new Set())
   const [showNpcPicker, setShowNpcPicker] = useState(false)

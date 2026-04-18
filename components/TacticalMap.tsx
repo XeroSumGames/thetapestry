@@ -46,6 +46,8 @@ interface Token {
   grid_y: number
   is_visible: boolean
   color: string
+  wp_max: number | null
+  wp_current: number | null
 }
 
 interface Scene {
@@ -75,7 +77,7 @@ interface Props {
   moveMode?: { characterId?: string; npcId?: string; feet: number } | null
   onMoveComplete?: () => void
   onMoveCancel?: () => void
-  onTokensUpdate?: (tokens: { id: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number }[], cellFeet: number) => void
+  onTokensUpdate?: (tokens: { id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null }[], cellFeet: number) => void
 }
 
 export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, onTokensUpdate }: Props) {
@@ -200,7 +202,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   // Notify parent of token positions for range calculations
   useEffect(() => {
     if (onTokensUpdate && scene) {
-      onTokensUpdate(tokens.map(t => ({ id: t.id, character_id: t.character_id, npc_id: t.npc_id, grid_x: t.grid_x, grid_y: t.grid_y })), scene.cell_feet ?? 3)
+      onTokensUpdate(tokens.map(t => ({ id: t.id, name: t.name, token_type: t.token_type, character_id: t.character_id, npc_id: t.npc_id, grid_x: t.grid_x, grid_y: t.grid_y, wp_max: t.wp_max, wp_current: t.wp_current })), scene.cell_feet ?? 3)
     }
   }, [tokens, scene?.cell_feet])
 
@@ -435,48 +437,73 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           tokenDead = wp === 0
           tokenMortal = wp === 0
         }
+      } else if (t.token_type === 'object' && (t as any).wp_max != null) {
+        const wp = (t as any).wp_current ?? (t as any).wp_max ?? 0
+        tokenDead = wp <= 0
       }
 
       if (tokenDead) ctx.globalAlpha = 0.5
 
-      // Token circle — portrait or solid color with initials
-      ctx.beginPath()
-      ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+      // Token shape — circle for PC/NPC, square for objects
+      const isObject = t.token_type === 'object'
       const portraitImg = t.portrait_url ? portraitCacheRef.current.get(t.portrait_url) : null
-      if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
-        // Clip to circle and draw portrait
-        ctx.save()
-        ctx.clip()
-        ctx.drawImage(portraitImg, cx - radius, cy - radius, radius * 2, radius * 2)
-        ctx.restore()
-        // Border
+      if (isObject) {
+        // Square token
+        const half = radius
+        if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
+          ctx.drawImage(portraitImg, cx - half, cy - half, half * 2, half * 2)
+          ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : '#EF9F27'
+          ctx.lineWidth = selectedToken === t.id ? 3 : 1.5
+          ctx.strokeRect(cx - half, cy - half, half * 2, half * 2)
+        } else {
+          ctx.fillStyle = t.is_visible ? (t.color || '#EF9F27') : 'rgba(239,159,39,0.3)'
+          ctx.fillRect(cx - half, cy - half, half * 2, half * 2)
+          ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,0.6)'
+          ctx.lineWidth = selectedToken === t.id ? 3 : 1
+          ctx.strokeRect(cx - half, cy - half, half * 2, half * 2)
+          // Emoji or initials
+          ctx.fillStyle = '#f5f2ee'
+          ctx.font = `${Math.max(12, radius * 1.2)}px sans-serif`
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          const initials = t.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
+          ctx.fillText(initials, cx, cy)
+        }
+      } else {
+        // Circle token (PC/NPC)
         ctx.beginPath()
         ctx.arc(cx, cy, radius, 0, Math.PI * 2)
-        ctx.strokeStyle = isActive ? '#7fc458' : selectedToken === t.id ? '#f5f2ee' : t.color || '#c0392b'
-        ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 2
-        ctx.stroke()
-      } else {
-        // Solid color circle with initials
-        ctx.fillStyle = t.is_visible ? (t.color || '#c0392b') : 'rgba(192,57,43,0.3)'
-        ctx.fill()
-        ctx.strokeStyle = isActive ? '#7fc458' : selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,1)'
-        ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 1.5
-        ctx.stroke()
-        // Initials
-        ctx.fillStyle = '#f5f2ee'
-        ctx.font = `bold ${Math.max(10, radius * 0.8)}px Barlow Condensed`
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        const initials = t.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-        ctx.fillText(initials, cx, cy)
-        // Load portrait for next draw
-        if (t.portrait_url && !portraitCacheRef.current.has(t.portrait_url)) {
-          const img = new Image()
-          img.crossOrigin = 'anonymous'
-          img.onload = () => draw()
-          img.src = t.portrait_url
-          portraitCacheRef.current.set(t.portrait_url, img)
+        if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
+          ctx.save()
+          ctx.clip()
+          ctx.drawImage(portraitImg, cx - radius, cy - radius, radius * 2, radius * 2)
+          ctx.restore()
+          ctx.beginPath()
+          ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+          ctx.strokeStyle = isActive ? '#7fc458' : selectedToken === t.id ? '#f5f2ee' : t.color || '#c0392b'
+          ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 2
+          ctx.stroke()
+        } else {
+          ctx.fillStyle = t.is_visible ? (t.color || '#c0392b') : 'rgba(192,57,43,0.3)'
+          ctx.fill()
+          ctx.strokeStyle = isActive ? '#7fc458' : selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,1)'
+          ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 1.5
+          ctx.stroke()
+          ctx.fillStyle = '#f5f2ee'
+          ctx.font = `bold ${Math.max(10, radius * 0.8)}px Barlow Condensed`
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          const initials = t.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
+          ctx.fillText(initials, cx, cy)
         }
+      }
+      // Load portrait for next draw
+      if (t.portrait_url && !portraitCacheRef.current.has(t.portrait_url)) {
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        img.onload = () => draw()
+        img.src = t.portrait_url
+        portraitCacheRef.current.set(t.portrait_url, img)
       }
 
       ctx.shadowColor = 'transparent'
@@ -526,6 +553,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       } else if (t.character_id && entries) {
         const entry = entries.find((e: any) => e.character.id === t.character_id)
         if (entry) { wpCur = entry.liveState.wp_current ?? entry.liveState.wp_max ?? 10; wpMax = entry.liveState.wp_max ?? 10 }
+      } else if (t.token_type === 'object' && (t as any).wp_max != null) {
+        wpMax = (t as any).wp_max ?? 0; wpCur = (t as any).wp_current ?? wpMax
       }
       if (wpMax > 0) {
         const barW = radius * 1.6
