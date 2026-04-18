@@ -478,8 +478,10 @@ export default function TablePage() {
 
       if (members && members.length > 0) await ensureCharacterStates(id, members as any[])
       // Check if this player was kicked from the session
-      if (!isGM) {
-        const { data: myState } = await supabase.from('character_states').select('kicked').eq('campaign_id', id).eq('user_id', user.id).maybeSingle()
+      const amGM = camp.gm_user_id === user.id
+      if (!amGM) {
+        const { data: myState, error: kickCheckErr } = await supabase.from('character_states').select('kicked').eq('campaign_id', id).eq('user_id', user.id).maybeSingle()
+        console.warn('[kickCheck] myState:', myState, 'error:', kickCheckErr?.message ?? 'none')
         if (myState?.kicked) {
           alert('You have been removed from this session by the GM.')
           window.location.href = `/stories/${id}`
@@ -3878,7 +3880,10 @@ export default function TablePage() {
                   // Mark as kicked so they don't reload on refresh
                   const kickEntry = entries.find(e => e.userId === kickUserId)
                   if (kickEntry) {
-                    await supabase.from('character_states').update({ kicked: true }).eq('id', kickEntry.stateId)
+                    const { error: kickErr } = await supabase.from('character_states').update({ kicked: true }).eq('id', kickEntry.stateId)
+                    console.warn('[kick] set kicked=true on stateId:', kickEntry.stateId, 'error:', kickErr?.message ?? 'none')
+                  } else {
+                    console.warn('[kick] no entry found for userId:', kickUserId)
                   }
                   // Broadcast for immediate redirect
                   if (initChannelRef.current) {
