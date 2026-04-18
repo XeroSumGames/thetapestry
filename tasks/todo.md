@@ -272,7 +272,7 @@
 - [ ] DEFERRED: Split table page (5,365 lines) into subcomponents — high risk before game
 - [ ] DEFERRED: Debounce realtime callbacks — works fine, optimization only
 - [ ] DEFERRED: Sequence guards on loadRolls/loadChat — low impact
-- [ ] **Player-initiated loot from ObjectCard** — currently GM-only. Decide policy: always allowed, only on destroyed crates, or requires "unlocked" flag on the object.
+- [x] **Player-initiated loot from ObjectCard (destroyed-only v1)** — players can open an ObjectCard for a destroyed crate (`wp_max > 0 && wp_current <= 0`) and click a per-item **Take** button; item lands in their own `character.data.equipment`, crate contents decrement, loot log entry written. Matches the existing CampaignObjects policy exactly. Follow-ups: `lootable` flag for pre-destroyed unlock, always-allowed policy, inventory-vs-equipment reconciliation (loot currently appends to legacy string[] equipment, not the new InventoryItem[] inventory).
 - [ ] **Surface Give loot UI in the GM Assets → Objects panel too** — mirror the per-item Give controls that now live on ObjectCard so GM can loot without placing the object on the map first (current panel loot still requires crate to be destroyed).
 
 ### Campaign Management
@@ -572,6 +572,10 @@
 
 ## 🔵 Phase 11 — Cross-Platform Parity
 - [ ] **Campaign Calendar** — date-gated lore events, GM-controlled include/ignore/pending states. Build for Displaced first, backport to Tapestry using same schema pattern if player demand exists. Potential Distemper uses: seasonal/anniversary events tied to collapse timeline, campaign duration tracking, faction state changes over time. Schema: `campaign_date timestamptz` on campaigns table (default year TBD — confirm canonical Distemper present year).
+- [ ] **Roll20 Export** — one-way migration for GMs/players who want to take a campaign to Roll20. Accepts loss of Tapestry-specific features (tactical ranges, realtime, insight/stress automation). Three parts:
+  1. **Minimal "Distemper" Roll20 character sheet** (HTML/CSS/sheet-worker JS): Rapid attrs → amod, skill table, weapons, WP/RP, one roll button per skill/weapon (`2d6 + @{amod} + @{skill_level} + @{weapon_cmod}`). Hosted in a Pro game or submitted to Roll20's public sheet repo.
+  2. **Exporter in Tapestry** (GM-only): per-campaign ZIP download — `characters/<name>.json` (Roll20 Character Vault format: name, bio, avatar, attribs[], abilities[]), `npcs/<name>.json`, `handouts/` (scenes, pins, GM/player notes, cliffhangers), `manifest.json`.
+  3. **Ingest paths**: Pro GMs drag JSONs into the Character Vault or run a small API script that batch-creates characters + handouts from the manifest; free-tier GMs paste bios into handouts and manually click "Create Character." Scope estimate: sheet ~2–4 days, exporter ~1 day, API import script ~half a day; add calendar time if submitting the sheet to Roll20's public library.
 
 ---
 

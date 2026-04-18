@@ -3882,6 +3882,10 @@ export default function TablePage() {
                   portraitUrl={obj.portraitUrl}
                   isGM={isGM}
                   entries={entries as any}
+                  myCharacter={(() => {
+                    const me = entries.find(e => e.userId === userId)
+                    return me ? { id: me.character.id, name: me.character.name, data: me.character.data } : null
+                  })()}
                   onLoot={async (objectName, item, characterId, characterName) => {
                     await supabase.from('roll_log').insert({
                       campaign_id: id, user_id: userId, character_name: 'System',

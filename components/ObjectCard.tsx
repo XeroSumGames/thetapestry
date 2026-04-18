@@ -27,6 +27,9 @@ interface Props {
   portraitUrl: string | null
   isGM: boolean
   entries?: LootEntry[]
+  // Player's own character — when set and the object is destroyed, the player
+  // can self-loot items without going through the GM.
+  myCharacter?: { id: string; name: string; data?: any } | null
   onLoot?: (objectName: string, item: ContentItem, characterId: string, characterName: string) => void | Promise<void>
   onClose: () => void
 }
@@ -37,7 +40,7 @@ function wpBarColor(pct: number): string {
   return '#c0392b'
 }
 
-export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, portraitUrl, isGM, entries, onLoot, onClose }: Props) {
+export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, portraitUrl, isGM, entries, myCharacter, onLoot, onClose }: Props) {
   const supabase = createClient()
   const [properties, setProperties] = useState<TokenProperty[]>([])
   const [contents, setContents] = useState<ContentItem[]>([])
@@ -65,7 +68,36 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
 
   const visibleProps = isGM ? properties : properties.filter(p => p.revealed)
 
+  // Destroyed objects expose their contents to everyone; matches the existing
+  // CampaignObjects panel policy. Intact objects are GM-only for now.
+  const destroyed = wpM > 0 && wpC <= 0
+  const canPlayerLoot = !isGM && destroyed && !!myCharacter
+
   const itemKey = (c: ContentItem) => `${c.type}:${c.name}`
+
+  async function takeOne(item: ContentItem) {
+    if (!myCharacter) return
+    setGiving(itemKey(item))
+    try {
+      const currentEquip: string[] = myCharacter.data?.equipment ?? []
+      const updatedEquip = [...currentEquip, item.name]
+      const { error: charErr } = await supabase.from('characters').update({ data: { ...myCharacter.data, equipment: updatedEquip } }).eq('id', myCharacter.id)
+      if (charErr) {
+        alert(`Couldn't take item: ${charErr.message}`)
+        return
+      }
+      const newContents = contents
+        .map(c => (c.type === item.type && c.name === item.name)
+          ? { ...c, quantity: c.quantity - 1 }
+          : c)
+        .filter(c => c.quantity > 0)
+      await supabase.from('scene_tokens').update({ contents: newContents }).eq('id', tokenId)
+      setContents(newContents)
+      await onLoot?.(name, { ...item, quantity: 1 }, myCharacter.id, myCharacter.name)
+    } finally {
+      setGiving(null)
+    }
+  }
 
   async function giveOne(item: ContentItem) {
     if (!entries) return
@@ -142,15 +174,17 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
         </div>
       )}
 
-      {/* Contents — GM only. Per-item Give-to-PC picker. */}
-      {isGM && !loading && contents.length > 0 && (
+      {/* Contents — GM always sees; players see only when the object is destroyed. */}
+      {(isGM || canPlayerLoot) && !loading && contents.length > 0 && (
         <div>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '12px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Contents (GM)</div>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '12px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
+            {isGM ? 'Contents (GM)' : 'Loot'}
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {contents.map((c) => {
               const k = itemKey(c)
               const selectedChar = givePick[k] ?? ''
-              const canGive = !!entries && entries.length > 0
+              const canGive = isGM && !!entries && entries.length > 0
               return (
                 <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#f5f2ee' }}>
                   <span style={{ flex: 1 }}>
@@ -176,6 +210,15 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
                         {giving === k ? '…' : 'Give'}
                       </button>
                     </>
+                  )}
+                  {canPlayerLoot && (
+                    <button
+                      disabled={giving === k}
+                      onClick={() => takeOne(c)}
+                      style={{ padding: '2px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: giving === k ? 'wait' : 'pointer' }}
+                    >
+                      {giving === k ? '…' : 'Take'}
+                    </button>
                   )}
                 </div>
               )
