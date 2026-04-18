@@ -3,6 +3,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
+import type { InventoryItem } from '../../../../components/InventoryPanel'
 import NpcRoster from '../../../../components/NpcRoster'
 import NpcCard from '../../../../components/NpcCard'
 import CampaignPins from '../../../../components/CampaignPins'
@@ -560,6 +561,10 @@ export default function TablePage() {
         })
         .on('broadcast', { event: 'pc_damaged' }, () => {
           // Another client dealt damage to a PC — refresh entries to see updated HP
+          loadEntries(id)
+        })
+        .on('broadcast', { event: 'inventory_transfer' }, () => {
+          // Another player gave an item — refresh entries to see updated inventory
           loadEntries(id)
         })
         .on('broadcast', { event: 'pc_mortal_wound' }, (msg: any) => {
@@ -1637,6 +1642,7 @@ export default function TablePage() {
       if (entry && t.character_id === entry.character.id) return true
       const npc = campaignNpcs.find((n: any) => n.name === targetName)
       if (npc && t.npc_id === npc.id) return true
+      if (t.token_type === 'object' && t.name === targetName) return true
       return false
     })
     if (!tTok) return null
@@ -1770,7 +1776,43 @@ export default function TablePage() {
     const aimBonus = activeEntry?.aim_bonus ?? 0
     const baseCmod = (weapon?.conditionCmod ?? 0) + aimBonus
     setCmod(baseCmod ? String(baseCmod) : '0')
-    setTargetName('')
+    // Auto-populate target dropdown with last_attack_target (this turn)
+    const prevTarget = weapon ? activeEntry?.last_attack_target : null
+    const prevTargetAlive = prevTarget && (
+      initiativeOrder.some(ie => {
+        if (ie.character_name !== prevTarget) return false
+        if (ie.is_npc) {
+          const npc = campaignNpcs.find((n: any) => n.id === ie.npc_id)
+          if (npc && npc.wp_current != null && npc.wp_current <= 0) return false
+        } else {
+          const tEntry = entries.find(en => en.character.name === ie.character_name)
+          if (tEntry && (tEntry.liveState.wp_current ?? tEntry.liveState.wp_max ?? 1) <= 0) return false
+        }
+        return true
+      }) ||
+      mapTokens.some(t => t.token_type === 'object' && t.name === prevTarget && (t.wp_current ?? t.wp_max ?? 0) > 0)
+    )
+    if (prevTarget && prevTargetAlive && weapon && activeEntry) {
+      setTargetName(prevTarget)
+      const w = getWeaponByName(weapon.weaponName)
+      const isMelee = w?.category === 'melee'
+      const targetEntry = entries.find(en => en.character.name === prevTarget)
+      const isObjectTarget = !targetEntry && !initiativeOrder.some(ie => ie.character_name === prevTarget) && mapTokens.some(t => t.token_type === 'object' && t.name === prevTarget)
+      const targetRapid = targetEntry?.character.data?.rapid ?? {}
+      const defensiveMod = isObjectTarget ? 0 : (isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0))
+      const myInitEntry = initiativeOrder.find(ie =>
+        (activeEntry.character_id && ie.character_id === activeEntry.character_id) ||
+        (activeEntry.npc_id && ie.npc_id === activeEntry.npc_id) ||
+        ie.character_name === activeEntry.character_name
+      )
+      const coordBonus = (myInitEntry?.coordinate_target === prevTarget) ? (myInitEntry?.coordinate_bonus ?? 0) : 0
+      // +1 same-target bonus: guaranteed since prevTarget IS the last target
+      setCmod(String(baseCmod - defensiveMod + 1 + coordBonus))
+      const autoRange = getAutoRangeBand(activeEntry.character_id || undefined, activeEntry.npc_id || undefined, prevTarget)
+      if (autoRange) setRangeBand(autoRange)
+    } else {
+      setTargetName('')
+    }
     setPreRollInsight('none')
     setUseBurst(false)
     setRangeBand('medium')
@@ -1903,15 +1945,16 @@ export default function TablePage() {
       // Unarmed adds SMod to damage
       const unarmedBonus = weapon.weaponName === 'Unarmed' ? pendingRoll.smod : 0
 
-      // Find target — could be PC (in entries) or NPC (in initiativeOrder + rosterNpcs)
+      // Find target — could be PC (in entries), NPC (in initiativeOrder + rosterNpcs), or object token (mapTokens with WP)
       const targetInitEntry = initiativeOrder.find(e => e.character_name === targetName)
       const targetEntry = entries.find(e => e.character.name === targetName) ?? (targetInitEntry?.character_id ? entries.find(e => e.character.id === targetInitEntry.character_id) : undefined)
       const targetNpc = targetInitEntry?.is_npc
         ? (rosterNpcs.find(n => n.id === targetInitEntry.npc_id) ?? campaignNpcs.find((n: any) => n.id === targetInitEntry.npc_id))
         : null
+      const targetObject = (!targetEntry && !targetNpc) ? mapTokens.find(t => t.token_type === 'object' && t.name === targetName && (t.wp_max ?? 0) > 0) : null
       const targetRapid = targetEntry?.character.data?.rapid ?? (targetNpc ? { PHY: targetNpc.physicality ?? 0, DEX: targetNpc.dexterity ?? 0 } : {})
       const targetDefBonus = targetInitEntry?.defense_bonus ?? 0
-      const defensiveMod = (isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)) + targetDefBonus
+      const defensiveMod = targetObject ? 0 : ((isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)) + targetDefBonus)
 
       let { finalWP, finalRP, mitigated } = calculateDamage(totalWP + unarmedBonus, weapon.rpPercent, defensiveMod)
       // Subdue: full RP but 50% WP
@@ -2114,6 +2157,14 @@ export default function TablePage() {
             initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
           }
         }
+      } else if (targetObject) {
+        // Object token — update scene_tokens.wp_current. No RP, no death countdown, no initiative update.
+        const curWP = targetObject.wp_current ?? targetObject.wp_max ?? 0
+        const newWP = Math.max(0, curWP - finalWP)
+        console.warn('[damage] object target', targetObject.name, 'id:', targetObject.id, 'WP:', curWP, '→', newWP)
+        const { error: objErr } = await supabase.from('scene_tokens').update({ wp_current: newWP }).eq('id', targetObject.id)
+        if (objErr) console.error('[damage] scene_tokens update error:', objErr.message)
+        setMapTokens(prev => prev.map(t => t.id === targetObject.id ? { ...t, wp_current: newWP } : t))
       } else {
         console.warn('[damage] no target resolved — damage NOT applied. targetName was:', targetName)
       }
@@ -2422,9 +2473,10 @@ export default function TablePage() {
       const targetInitEntry = initiativeOrder.find(e => e.character_name === targetName)
       const targetEntry = entries.find(e => e.character.name === targetName) ?? (targetInitEntry?.character_id ? entries.find(e => e.character.id === targetInitEntry.character_id) : undefined)
       const targetNpcObj = targetInitEntry?.is_npc ? (rosterNpcs.find(n => n.id === targetInitEntry.npc_id) ?? campaignNpcs.find((n: any) => n.id === targetInitEntry.npc_id)) : null
+      const targetObjectReroll = (!targetEntry && !targetNpcObj) ? mapTokens.find(t => t.token_type === 'object' && t.name === targetName && (t.wp_max ?? 0) > 0) : null
       const targetRapid = targetEntry?.character.data?.rapid ?? (targetNpcObj ? { PHY: targetNpcObj.physicality ?? 0, DEX: targetNpcObj.dexterity ?? 0 } : {})
       const targetDefBonus2 = targetInitEntry?.defense_bonus ?? 0
-      const defensiveMod = (isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)) + targetDefBonus2
+      const defensiveMod = targetObjectReroll ? 0 : ((isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)) + targetDefBonus2)
 
       const attackerPhy = myEntry.character.data?.rapid?.PHY ?? 0
       const dmg = rollDamage(weapon.damage, attackerPhy, !!isMelee)
@@ -2464,6 +2516,11 @@ export default function TablePage() {
         setViewingNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } as CampaignNpc : n))
         setTimeout(() => { npcFetchInFlightRef.current = false }, 500)
         initChannelRef.current?.send({ type: 'broadcast', event: 'npc_damaged', payload: { npcId, patch } })
+      } else if (targetObjectReroll) {
+        const curWP = targetObjectReroll.wp_current ?? targetObjectReroll.wp_max ?? 0
+        const newWP = Math.max(0, curWP - finalWP)
+        await supabase.from('scene_tokens').update({ wp_current: newWP }).eq('id', targetObjectReroll.id)
+        setMapTokens(prev => prev.map(t => t.id === targetObjectReroll.id ? { ...t, wp_current: newWP } : t))
       }
 
       // Save damage to log
@@ -3565,6 +3622,7 @@ export default function TablePage() {
                   // Charge: token moved, now open the attack roll
                   pendingChargeRef.current = null
                   setMoveMode(null)
+                  actionCostRef.current = 2
                   handleRollRequest(charge.label, charge.amod, charge.smod, charge.weapon)
                 } else if (sprintPendingRef.current) {
                   // Sprint: token moved, now open Athletics check
@@ -3726,6 +3784,19 @@ export default function TablePage() {
                 } : undefined}
                 onPlaceOnMap={(combatActive || showTacticalMap || tacticalShared) && syncedSelectedEntry.userId === userId ? () => placeTokenOnMap(syncedSelectedEntry.character.name, 'pc', syncedSelectedEntry.character.id, undefined, getCharPhoto(syncedSelectedEntry) || undefined) : undefined}
                 inline={true}
+                otherCharacters={entries.filter(e => e.character.id !== syncedSelectedEntry.character.id).map(e => ({ id: e.character.id, name: e.character.name }))}
+                onGiveItem={async (item: InventoryItem, targetCharId: string) => {
+                  const targetEntry = entries.find(e => e.character.id === targetCharId)
+                  if (!targetEntry) return
+                  const targetData = targetEntry.character.data ?? {}
+                  const targetInv: InventoryItem[] = targetData.inventory ?? []
+                  const existing = targetInv.find((i: InventoryItem) => i.name === item.name && i.custom === item.custom)
+                  const newTargetInv = existing
+                    ? targetInv.map((i: InventoryItem) => i === existing ? { ...i, qty: i.qty + 1 } : i)
+                    : [...targetInv, { ...item, qty: 1 }]
+                  await supabase.from('characters').update({ data: { ...targetData, inventory: newTargetInv } }).eq('id', targetCharId)
+                  initChannelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: { targetCharId } })
+                }}
               />
             </div>
           )}
@@ -4085,8 +4156,9 @@ export default function TablePage() {
                         const w = getWeaponByName(pendingRoll.weapon.weaponName)
                         const isMelee = w?.category === 'melee'
                         const targetEntry = entries.find(en => en.character.name === e.target.value)
+                        const isObjectTarget = !targetEntry && !initiativeOrder.some(ie => ie.character_name === e.target.value) && mapTokens.some(t => t.token_type === 'object' && t.name === e.target.value)
                         const targetRapid = targetEntry?.character.data?.rapid ?? {}
-                        const defensiveMod = isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0)
+                        const defensiveMod = isObjectTarget ? 0 : (isMelee ? (targetRapid.PHY ?? 0) : (targetRapid.DEX ?? 0))
                         const baseCmod = pendingRoll.weapon.conditionCmod ?? 0
                         // SRD: +1 CMod if attacking the same target as your last attack this turn
                         const activeForBonus = initiativeOrder.find(ie => ie.is_active)
@@ -4155,6 +4227,25 @@ export default function TablePage() {
                           {entry.character_name}{entry.is_npc ? ' (NPC)' : ''}
                         </option>
                       ))}
+                      {/* Object tokens with WP — weapons crates, doors, barrels, etc. */}
+                      {mapTokens
+                        .filter(t => t.token_type === 'object' && (t.wp_max ?? 0) > 0 && (t.wp_current ?? t.wp_max ?? 0) > 0)
+                        .filter(t => {
+                          // Range filter (skip for Charge)
+                          if (pendingRoll.weapon && !pendingRoll.label.includes('Charge')) {
+                            const active = initiativeOrder.find(ie => ie.is_active)
+                            if (active) {
+                              const autoRange = getAutoRangeBand(active.character_id || undefined, active.npc_id || undefined, t.name)
+                              if (autoRange && !isInRange(pendingRoll.weapon.weaponName, autoRange)) return false
+                            }
+                          }
+                          return true
+                        })
+                        .map(t => (
+                          <option key={t.id} value={t.name} style={{ color: '#EF9F27' }}>
+                            {t.name} (Object)
+                          </option>
+                        ))}
                     </select>
                   </div>
                 )}
@@ -4831,7 +4922,7 @@ export default function TablePage() {
         const canReload = !!primaryW && !!primaryW.clip && primaryW.clip > 0 && (primary?.reloads ?? 0) > 0
         const conditions = ['Pristine', 'Used', 'Worn', 'Damaged', 'Broken']
         const condIdx = conditions.indexOf(primary?.condition ?? 'Used')
-        const canUnjam = condIdx >= 3 // Damaged or Broken
+        const canUnjam = condIdx >= 2 // Worn, Damaged, or Broken — allows unjam after single Low Insight degrade
 
         async function doSwitch() {
           if (!charEntry || !canSwitch) return

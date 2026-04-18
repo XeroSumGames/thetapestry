@@ -89,6 +89,8 @@ interface Props {
   onKick?: () => void
   onPlaceOnMap?: () => void
   inline?: boolean
+  otherCharacters?: { id: string; name: string }[]
+  onGiveItem?: (item: InventoryItem, targetCharId: string) => void
 }
 
 export default function CharacterCard({
@@ -105,6 +107,8 @@ export default function CharacterCard({
   onKick,
   onPlaceOnMap,
   inline = false,
+  otherCharacters,
+  onGiveItem,
 }: Props) {
   const router = useRouter()
   const supabase = createClient()
@@ -766,6 +770,8 @@ export default function CharacterCard({
             await supabase.from('characters').update({ data: newData }).eq('id', c.id)
           }}
           onClose={() => setShowInventory(false)}
+          otherCharacters={otherCharacters}
+          onGiveTo={onGiveItem}
         />
       )}
 
