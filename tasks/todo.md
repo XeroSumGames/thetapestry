@@ -60,7 +60,7 @@
 - [ ] **Player NPC notes + first impressions** — clicking an NPC name in the player's Assets NPCs tab should open a space where the player can write personal notes about that NPC, and show their First Impression results
 - [ ] **Insight Dice pre-roll CMod** — rethink whether spending an Insight Die pre-roll should give +3 or +2 CMod
 - [ ] **Insight Dice sequential reroll** — if rerolling die 1 doesn't improve the result, allow spending a second Insight Die to reroll die 2 (currently locked out after first spend)
-- [ ] **Whisper chat** — clicking another player's name in the bottom portrait bar opens a private whisper chat between the two players (not visible to GM or other players)
+- [x] **Whisper chat** — click a player's portrait → private whisper between you two (GM + other players do not see it). Chat tab auto-switches when a whisper arrives addressed to you. Purple styling distinguishes whispers from group chat.
 - [ ] **NPC health as narrative feeling** — player-facing NPC cards should show WP/RP as a descriptive state (Healthy, Ragged, Beaten, Dying, etc.) instead of exact numbers — GM still sees the dots
 
 ---
@@ -482,6 +482,10 @@
 - [x] Sticky-drag fix — handleMouseUp is synchronous; drag state clears before DB write, failures no longer orphan drag
 - [x] Click-without-move skips the DB write (token stayed in same cell — avoids wasted round trip)
 - [x] **Object tokens targetable in attacks** — weapons crates/barrels/doors with WP appear in Attack Roll target dropdown; damage decrements `scene_tokens.wp_current`; no defensive mod, no RP, no death countdown. Works in primary + reroll damage paths.
+- [x] **ObjectCard on double-click** — GM + players double-click an object token to open an inline draggable card: name, WP bar, portrait, properties (GM sees hidden ones). Live WP sync.
+- [x] **Map selection pre-populates attack target** — single-click a token, open Attack modal, target dropdown is pre-filled (overrides `last_attack_target` if both exist)
+- [x] **Edit Object modal** — font sizes bumped for readability (10→12, 11→12, 12→13, 13→14)
+- [x] **Range circles restored** — clicking any token auto-draws 3 circles: green Engaged, blue 9ft Move, red primary-weapon range. Drawn under tokens so sprites stay crisp. Show/Hide Ranges button still toggles visibility.
 
 ---
 
