@@ -254,9 +254,10 @@ export default function TablePage() {
   const [assetsFolderState, setAssetsFolderState] = useState<Set<string>>(new Set())
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
   const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
-  const [chatMessages, setChatMessages] = useState<{ id: string; user_id: string; character_name: string; message: string; created_at: string }[]>([])
+  const [chatMessages, setChatMessages] = useState<{ id: string; user_id: string; character_name: string; message: string; created_at: string; is_whisper?: boolean; recipient_user_id?: string | null }[]>([])
   const [chatInput, setChatInput] = useState('')
   const chatChannelRef = useRef<any>(null)
+  const [whisperTarget, setWhisperTarget] = useState<{ userId: string; characterName: string } | null>(null)
   const [viewingNpcs, setViewingNpcs] = useState<CampaignNpc[]>([])
   const [publishedNpcIds, setPublishedNpcIds] = useState<Set<string>>(new Set())
   const [pendingEditNpcId, setPendingEditNpcId] = useState<string | null>(null)
@@ -365,6 +366,7 @@ export default function TablePage() {
       .from('chat_messages')
       .select('*')
       .eq('campaign_id', campaignId)
+      .or(`is_whisper.eq.false,is_whisper.is.null,and(is_whisper.eq.true,user_id.eq.${userId}),and(is_whisper.eq.true,recipient_user_id.eq.${userId})`)
       .order('created_at', { ascending: false })
       .limit(50)
     setChatMessages((data ?? []).reverse())
@@ -377,6 +379,7 @@ export default function TablePage() {
     const characterName = myEntry?.character.name ?? (isGM ? 'Game Master' : 'Unknown')
     await supabase.from('chat_messages').insert({
       campaign_id: id, user_id: userId, character_name: characterName, message: chatInput.trim(),
+      is_whisper: !!whisperTarget, recipient_user_id: whisperTarget?.userId ?? null,
     })
     setChatInput('')
   }
@@ -3429,15 +3432,21 @@ export default function TablePage() {
               chatMessages.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>No messages yet</div>
               ) : (
-                chatMessages.map(m => (
-                  <div key={m.id} style={{ marginBottom: '6px', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{m.character_name}</span>
-                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(m.created_at)}</span>
+                chatMessages.map(m => {
+                  const isW = m.is_whisper
+                  const whisperLabel = isW ? (m.user_id === userId ? `Whisper to ${entries.find(e => e.userId === m.recipient_user_id)?.character.name ?? 'someone'}` : `Whisper from ${m.character_name}`) : null
+                  return (
+                    <div key={m.id} style={{ marginBottom: '6px', padding: '6px 8px', background: isW ? '#1a1a2a' : '#1a1a1a', border: `1px solid ${isW ? '#4a2a6a' : '#2e2e2e'}`, borderRadius: '3px', borderLeft: `3px solid ${isW ? '#8b2e8b' : '#7ab3d4'}` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: isW ? '#d48bd4' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                          {isW ? whisperLabel : m.character_name}
+                        </span>
+                        <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(m.created_at)}</span>
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{m.message}</div>
                     </div>
-                    <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{m.message}</div>
-                  </div>
-                ))
+                  )
+                })
               )
             )}
             {/* Both tab — merged chronological feed */}
@@ -3454,14 +3463,18 @@ export default function TablePage() {
                   </div>
                 </div>
               )
-              return merged.map(item => item.type === 'chat' ? (
-                <div key={`chat-${item.data.id}`} style={{ marginBottom: '6px', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
+              return merged.map(item => item.type === 'chat' ? (() => {
+                const mW = item.data.is_whisper
+                const wLabel = mW ? (item.data.user_id === userId ? `Whisper to ${entries.find(e => e.userId === item.data.recipient_user_id)?.character.name ?? 'someone'}` : `Whisper from ${item.data.character_name}`) : null
+                return (
+                <div key={`chat-${item.data.id}`} style={{ marginBottom: '6px', padding: '6px 8px', background: mW ? '#1a1a2a' : '#1a1a1a', border: `1px solid ${mW ? '#4a2a6a' : '#2e2e2e'}`, borderRadius: '3px', borderLeft: `3px solid ${mW ? '#8b2e8b' : '#7ab3d4'}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{item.data.character_name}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: mW ? '#d48bd4' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{mW ? wLabel : item.data.character_name}</span>
                     <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
                   <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{item.data.message}</div>
-                </div>
+                </div>)
+              })()
               ) : item.data.outcome === 'combat_start' && (item.data.damage_json as any)?.combatants ? (
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
@@ -3566,14 +3579,23 @@ export default function TablePage() {
           {/* Bottom: chat input + sheet button */}
           <div style={{ borderTop: '1px solid #2e2e2e', flexShrink: 0 }}>
             {(feedTab === 'chat' || feedTab === 'both') && (
-              <div style={{ display: 'flex', gap: '0', padding: '6px 8px', alignItems: 'stretch' }}>
-                <textarea value={chatInput} onChange={e => setChatInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat() } }}
-                  placeholder="Type a message..."
-                  rows={2}
-                  style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRight: 'none', borderRadius: '3px 0 0 3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', resize: 'none', lineHeight: '1.4' }} />
-                <button onClick={sendChat}
-                  style={{ width: '24px', flexShrink: 0, background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '0 3px 3px 0', color: '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', writingMode: 'vertical-rl', letterSpacing: '.08em', padding: 0, transform: 'rotate(180deg)' }}>Send</button>
+              <div>
+                {whisperTarget && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', background: '#2a102a', borderBottom: '1px solid #8b2e8b' }}>
+                    <span style={{ fontSize: '11px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Whispering to {whisperTarget.characterName}</span>
+                    <button onClick={() => setWhisperTarget(null)}
+                      style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#d48bd4', cursor: 'pointer', fontSize: '13px', padding: '0 4px', lineHeight: 1 }}>×</button>
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '0', padding: '6px 8px', alignItems: 'stretch' }}>
+                  <textarea value={chatInput} onChange={e => setChatInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat() } }}
+                    placeholder={whisperTarget ? `Whisper to ${whisperTarget.characterName}...` : 'Type a message...'}
+                    rows={2}
+                    style={{ flex: 1, padding: '6px 8px', background: whisperTarget ? '#1a1a2a' : '#242424', border: `1px solid ${whisperTarget ? '#8b2e8b' : '#3a3a3a'}`, borderRight: 'none', borderRadius: '3px 0 0 3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', resize: 'none', lineHeight: '1.4' }} />
+                  <button onClick={sendChat}
+                    style={{ width: '24px', flexShrink: 0, background: whisperTarget ? '#2a102a' : '#1a2e10', border: `1px solid ${whisperTarget ? '#8b2e8b' : '#2d5a1b'}`, borderRadius: '0 3px 3px 0', color: whisperTarget ? '#d48bd4' : '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', writingMode: 'vertical-rl', letterSpacing: '.08em', padding: 0, transform: 'rotate(180deg)' }}>Send</button>
+                </div>
               </div>
             )}
           </div>
@@ -4009,8 +4031,17 @@ export default function TablePage() {
             const isActive = combatActive && initiativeOrder.some(o => o.is_active && o.character_id === entry.character.id)
             const isMe = entry.userId === userId
             return (
-              <button key={entry.stateId} onClick={() => { if (isGM || isMe) { if (selectedEntry?.stateId === entry.stateId) { setSelectedEntry(null); setSheetPos(null) } else { setSelectedEntry(entry); setViewingNpcs([]); setSheetPos(null) } } }}
-                style={{ flex: 1, minWidth: 0, background: isActive ? '#1a0f0f' : '#1a1a1a', borderTop: isActive ? '2px solid #c0392b' : isMe ? '2px solid #2d5a1b' : 'none', borderBottom: 'none', borderLeft: 'none', borderRight: i < playerEntries.length - 1 ? '1px solid #2e2e2e' : 'none', cursor: (isGM || isMe) ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: isCompact ? '2px' : '4px', padding: pad, transition: 'background 0.15s' }}
+              <button key={entry.stateId} onClick={() => {
+                if (isGM || isMe) {
+                  if (selectedEntry?.stateId === entry.stateId) { setSelectedEntry(null); setSheetPos(null) }
+                  else { setSelectedEntry(entry); setViewingNpcs([]); setSheetPos(null) }
+                } else {
+                  // Click another player's portrait → whisper mode
+                  if (whisperTarget?.userId === entry.userId) { setWhisperTarget(null) }
+                  else { setWhisperTarget({ userId: entry.userId, characterName: entry.character.name }); setFeedTab('chat') }
+                }
+              }}
+                style={{ flex: 1, minWidth: 0, background: isActive ? '#1a0f0f' : whisperTarget?.userId === entry.userId ? '#2a102a' : '#1a1a1a', borderTop: isActive ? '2px solid #c0392b' : isMe ? '2px solid #2d5a1b' : whisperTarget?.userId === entry.userId ? '2px solid #8b2e8b' : 'none', borderBottom: 'none', borderLeft: 'none', borderRight: i < playerEntries.length - 1 ? '1px solid #2e2e2e' : 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: isCompact ? '2px' : '4px', padding: pad, transition: 'background 0.15s' }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                 onMouseLeave={e => (e.currentTarget.style.background = isActive ? '#1a0f0f' : '#1a1a1a')}
               >
