@@ -368,10 +368,18 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         const weaponRangeFt = weaponIsMelee
           ? (MELEE_RANGE_FEET[weaponRangeBand] ?? 5)
           : (RANGE_BAND_FEET[weaponRangeBand] ?? 5)
-        const weaponCells = Math.max(1, Math.ceil(weaponRangeFt / ft))
+        const rawWeaponCells = Math.max(1, Math.ceil(weaponRangeFt / ft))
+        // Clamp visual radius to the map's own extent — a 300ft/600ft circle on a
+        // 20-cell map just engulfs everything. Label keeps the real range so the
+        // player still knows "Sniper (600ft)" even when the circle stops at the edge.
+        const mapExtentCells = Math.max(s.grid_cols, s.grid_rows)
+        const weaponCells = Math.min(rawWeaponCells, mapExtentCells)
+        const clampedLabel = rawWeaponCells > mapExtentCells
+          ? `${weaponRangeBand} (${weaponRangeFt}ft — reaches map edge)`
+          : `${weaponRangeBand} (${weaponRangeFt}ft)`
 
         const circles = [
-          { cells: weaponCells, fill: 'rgba(192,57,43,0.18)', stroke: '#ff4040', label: `${weaponRangeBand} (${weaponRangeFt}ft)` },
+          { cells: weaponCells, fill: 'rgba(192,57,43,0.18)', stroke: '#ff4040', label: clampedLabel },
           { cells: 3, fill: 'rgba(52,152,219,0.15)', stroke: '#5dade2', label: 'Move (9ft)' },
           { cells: Math.max(1, Math.ceil(3 / ft)), fill: 'rgba(127,196,88,0.20)', stroke: '#7fc458', label: 'Engaged' },
         ]
