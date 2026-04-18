@@ -738,17 +738,25 @@ export default function TablePage() {
     // row — a player who joined moments ago may not be in entries yet, but they
     // still belong in combat. Also ensure their state row exists so damage can
     // be applied to them later.
-    const [, { data: freshMembers }] = await Promise.all([
+    const [, { data: rawMembers }] = await Promise.all([
       supabase.from('initiative_order').delete().eq('campaign_id', id),
       supabase.from('campaign_members')
         .select('user_id, character_id, characters:character_id(id, name, data->rapid)')
         .eq('campaign_id', id)
         .not('character_id', 'is', null),
     ])
-    if (freshMembers && freshMembers.length > 0) {
-      await ensureCharacterStates(id, freshMembers as any[])
+    if (rawMembers && rawMembers.length > 0) {
+      await ensureCharacterStates(id, rawMembers as any[])
     }
-    const charIds = (freshMembers ?? []).map((m: any) => m.character_id)
+    // Filter out kicked players so they don't get re-added to initiative.
+    const { data: kickedStates } = await supabase
+      .from('character_states')
+      .select('user_id')
+      .eq('campaign_id', id)
+      .eq('kicked', true)
+    const kickedUserIds = new Set((kickedStates ?? []).map((k: any) => k.user_id))
+    const freshMembers = (rawMembers ?? []).filter((m: any) => !kickedUserIds.has(m.user_id))
+    const charIds = freshMembers.map((m: any) => m.character_id)
     const { data: freshChars } = charIds.length > 0
       ? await supabase.from('characters').select('id, name, data').in('id', charIds)
       : { data: [] }

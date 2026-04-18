@@ -270,6 +270,7 @@
 - [x] Session join race condition fix (await ensureCharacterStates before loadEntries)
 - [x] GM private notes
 - [x] Player kick from session (kicked flag on character_states, persists on refresh, resets on new session start)
+- [x] **Kicked players no longer auto-rejoin on session restart** — removed the silent `UPDATE character_states SET kicked=false` in `startSession()`. Kick now persists indefinitely. Kicked player sees a red "Removed from Session" banner + green **Rejoin Session** button on the story overview page — clicking it clears their own `kicked` flag. Kick UPDATE now uses `(campaign_id, user_id)` + `.select()` so silent RLS failures surface as an alert instead of appearing to succeed.
 - [ ] CDP awards
 - [x] Mortal wound insight save — player acts, GM sees read-only
 - [x] Character delete confirmation dialog
