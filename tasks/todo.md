@@ -273,6 +273,7 @@
 - [ ] DEFERRED: Debounce realtime callbacks — works fine, optimization only
 - [ ] DEFERRED: Sequence guards on loadRolls/loadChat — low impact
 - [x] **Player-initiated loot from ObjectCard (destroyed-only v1)** — players can open an ObjectCard for a destroyed crate (`wp_max > 0 && wp_current <= 0`) and click a per-item **Take** button; item lands in their own `character.data.equipment`, crate contents decrement, loot log entry written. Matches the existing CampaignObjects policy exactly. Follow-ups: `lootable` flag for pre-destroyed unlock, always-allowed policy, inventory-vs-equipment reconciliation (loot currently appends to legacy string[] equipment, not the new InventoryItem[] inventory).
+- [x] **Lootable flag (GM-controlled unlock)** — new `scene_tokens.lootable boolean` column (`sql/scene-tokens-lootable.sql`). ObjectCard header for GM gets a 🔒 Locked / 🔓 Unlocked toggle (hidden when destroyed since destruction already opens contents). Players can Take items when `destroyed || lootable` is true; Contents header reflects state (Destroyed / Unlocked / Locked for GM, Loot for player). Remaining follow-ups: always-allowed policy, inventory/equipment reconciliation.
 - [ ] **Surface Give loot UI in the GM Assets → Objects panel too** — mirror the per-item Give controls that now live on ObjectCard so GM can loot without placing the object on the map first (current panel loot still requires crate to be destroyed).
 
 ### Campaign Management

@@ -44,7 +44,9 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
   const supabase = createClient()
   const [properties, setProperties] = useState<TokenProperty[]>([])
   const [contents, setContents] = useState<ContentItem[]>([])
+  const [lootable, setLootable] = useState<boolean>(false)
   const [loading, setLoading] = useState(true)
+  const [togglingLock, setTogglingLock] = useState(false)
   // Per-row "give to" character selection, keyed by item name+type to survive index shifts.
   const [givePick, setGivePick] = useState<Record<string, string>>({})
   const [giving, setGiving] = useState<string | null>(null)
@@ -52,15 +54,29 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
   useEffect(() => {
     let cancelled = false
     async function load() {
-      const { data } = await supabase.from('scene_tokens').select('properties, contents').eq('id', tokenId).single()
+      const { data } = await supabase.from('scene_tokens').select('properties, contents, lootable').eq('id', tokenId).single()
       if (cancelled) return
       setProperties(Array.isArray(data?.properties) ? data!.properties : [])
       setContents(Array.isArray(data?.contents) ? data!.contents : [])
+      setLootable(!!data?.lootable)
       setLoading(false)
     }
     load()
     return () => { cancelled = true }
   }, [tokenId])
+
+  async function toggleLootable() {
+    if (!isGM || togglingLock) return
+    const next = !lootable
+    setLootable(next) // optimistic
+    setTogglingLock(true)
+    const { error } = await supabase.from('scene_tokens').update({ lootable: next }).eq('id', tokenId)
+    setTogglingLock(false)
+    if (error) {
+      setLootable(!next) // rollback
+      alert(`Couldn't toggle lock: ${error.message}`)
+    }
+  }
 
   const wpM = wpMax ?? 0
   const wpC = wpCurrent ?? wpM
@@ -68,10 +84,10 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
 
   const visibleProps = isGM ? properties : properties.filter(p => p.revealed)
 
-  // Destroyed objects expose their contents to everyone; matches the existing
-  // CampaignObjects panel policy. Intact objects are GM-only for now.
+  // Destroyed objects always expose contents; intact objects can be opened to
+  // players by GM toggling the lootable flag (locked/unlocked).
   const destroyed = wpM > 0 && wpC <= 0
-  const canPlayerLoot = !isGM && destroyed && !!myCharacter
+  const canPlayerLoot = !isGM && (destroyed || lootable) && !!myCharacter
 
   const itemKey = (c: ContentItem) => `${c.type}:${c.name}`
 
@@ -174,11 +190,23 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
         </div>
       )}
 
-      {/* Contents — GM always sees; players see only when the object is destroyed. */}
+      {/* Contents — GM always sees; players see only when destroyed or unlocked. */}
       {(isGM || canPlayerLoot) && !loading && contents.length > 0 && (
         <div>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '12px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
-            {isGM ? 'Contents (GM)' : 'Loot'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '12px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', flex: 1 }}>
+              {isGM ? (destroyed ? 'Contents (Destroyed)' : lootable ? 'Contents (Unlocked)' : 'Contents (Locked)') : 'Loot'}
+            </span>
+            {isGM && !destroyed && (
+              <button
+                onClick={toggleLootable}
+                disabled={togglingLock}
+                style={{ padding: '2px 8px', background: lootable ? '#1a2e10' : '#242424', border: `1px solid ${lootable ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: lootable ? '#7fc458' : '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: togglingLock ? 'wait' : 'pointer' }}
+                title={lootable ? 'Click to lock — players can no longer loot' : 'Click to unlock — players can loot without destroying'}
+              >
+                {togglingLock ? '…' : lootable ? '🔓 Unlocked' : '🔒 Locked'}
+              </button>
+            )}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {contents.map((c) => {
