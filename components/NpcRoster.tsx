@@ -155,6 +155,7 @@ const emptyForm = {
   npc_type: '' as string, motivation: '', complication: '', threeWords: ['', '', ''] as string[],
   weapon: null as any,
   weapon2: null as any,
+  folder: '' as string,
 }
 
 export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs, onPlaceOnMap, onRemoveFromMap, npcIdsOnMap }: Props) {
@@ -288,6 +289,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       threeWords: (npc as any).three_words ?? ['', '', ''],
       weapon: npc.skills?.weapon ?? null,
       weapon2: npc.skills?.weapon2 ?? null,
+      folder: npc.folder ?? '',
     })
     setEditingId(npc.id)
     setShowForm(true)
@@ -332,6 +334,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       motivation: form.motivation || null,
       complication: form.complication || null,
       three_words: form.threeWords.filter(w => w),
+      folder: form.folder.trim() || null,
       wp_max: 10 + form.physicality + form.dexterity,
       rp_max: 6 + form.physicality,
       ...(!editingId ? { wp_current: 10 + form.physicality + form.dexterity, rp_current: 6 + form.physicality } : {}),
@@ -1149,6 +1152,23 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                 })()}
               </div>
             )}
+
+            {/* Folder */}
+            <div style={{ marginBottom: '8px' }}>
+              <div style={{ fontSize: '11px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Folder</div>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <select value={form.folder} onChange={e => setForm(f => ({ ...f, folder: e.target.value }))}
+                  style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
+                  <option value="">Uncategorized</option>
+                  {[...new Set(npcs.map(n => n.folder).filter(Boolean))].map(f => (
+                    <option key={f} value={f!}>{f}</option>
+                  ))}
+                </select>
+                <input value={form.folder} onChange={e => setForm(f => ({ ...f, folder: e.target.value }))}
+                  placeholder="Or type new..."
+                  style={{ width: '100px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+              </div>
+            </div>
 
             {/* Notes */}
             <div style={{ marginBottom: '8px' }}>
