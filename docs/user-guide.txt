@@ -1,0 +1,630 @@
+THE TAPESTRY — USER GUIDE
+==========================
+The online home of Distemper, a post-apocalyptic tabletop RPG.
+Version 1.0
+
+
+TABLE OF CONTENTS
+-----------------
+1. Getting Started
+2. The Dashboard & World Map
+3. Creating a Character
+4. Managing Your Characters
+5. Campaigns (Stories)
+6. The Table — Playing a Session
+7. The Campaign Map
+8. The Tactical Map
+9. Combat
+10. NPCs (Game Master)
+11. Pins & the World Map
+12. Notifications
+13. Roles: Survivors & Thrivers
+
+
+========================================
+1. GETTING STARTED
+========================================
+
+Visit thetapestry.distemperverse.com to land on the World Map. You can browse
+as a guest ("Ghost"), but to create characters or join campaigns you need an
+account.
+
+CREATING AN ACCOUNT
+- Click "Create Account" in the left sidebar
+- Enter a username, email, and password
+- You start as a Survivor (player role)
+
+SIGNING IN
+- Click "Sign In" in the left sidebar
+- Enter your email and password
+
+THE SIDEBAR
+The left sidebar is your main navigation. It contains:
+
+  THE TAPESTRY
+    Welcome to the Tapestry — introductory page
+    The World — the interactive world map
+    My Stories — your campaigns (GM and player)
+
+  SURVIVORS
+    Creating a Survivor — tutorial page
+    My Survivors — view and manage your characters
+    Backstory Generation — full 10-step character creation
+    Quick Character — fast 6-step build
+    Random Character — instant auto-generated character
+
+  BOTTOM
+    Your username and role badge (Survivor or Thriver)
+    Notification bell (shows unread count)
+    Online survivors counter
+    Log Out button
+
+
+========================================
+2. THE DASHBOARD & WORLD MAP
+========================================
+
+The main page shows the World Map — an interactive Leaflet map centered on
+North America. You can:
+
+- Pan by clicking and dragging
+- Zoom with scroll wheel or +/- buttons
+- Search for locations using the search bar (top right)
+- Switch map styles: Satellite, Topo, Street, Voyager, Humanitarian,
+  Positron, or Dark (buttons top right)
+
+SIDEBAR TABS (right side, click "Pins" to toggle)
+
+  PUBLIC — All approved world pins from all users. These are organized into
+  folders by category. Click a folder to expand it. Click a pin to fly to it
+  on the map and see its details, notes, and any uploaded images.
+
+  MY PINS — Pins you created. You can edit, delete, or toggle them between
+  public and private.
+
+  CAMPAIGN — Revealed pins from campaigns you are a member of, grouped by
+  campaign name. Click to fly to the pin location.
+
+PIN CATEGORIES
+Pins are grouped by type: Rumor, Location, Residence, Business, Church,
+Government, Transport, Hospital, Military, Person, Danger, Resource, Medical,
+Group, Animals, Community, Distemper Timeline, Settlement.
+
+Each category has an emoji icon on the map. Rumor pins always show as a
+question mark.
+
+CREATING A PIN
+Click anywhere on the map to place a pin. Fill in the title, notes, and
+select one or more categories. You can attach images. Survivors' pins are
+submitted for moderation. Thrivers' pins go live immediately.
+
+
+========================================
+3. CREATING A CHARACTER
+========================================
+
+There are three ways to create a character:
+
+BACKSTORY GENERATION (/characters/new)
+The full 10-step process following XSE rules:
+  Step 0: Character Concept — name, age, gender, height, weight, three
+          descriptive words, and a 1-2 sentence concept
+  Step 1: Where They Grew Up — early life background, 1 Attribute CDP,
+          2 Skill CDP
+  Step 2: What They Learned — education, 1 Attribute CDP, 3 Skill CDP
+  Step 3: What They Liked To Do — hobbies, 1 Attribute CDP, 3 Skill CDP
+  Step 4: How They Made Money — profession, 2 Attribute CDP, 4 Skill CDP,
+          vocational skills become available
+  Step 5: What They Learned After — post-apocalypse, 3 Skill CDP
+  Step 6: What Drives Them — pick or roll Complication and Motivation
+  Step 7: Secondary Stats — auto-calculated from attributes
+  Step 8: What They Have — primary weapon, secondary weapon, equipment
+  Step 9: Final Review — print or save
+
+Each step has a CDP budget. Spend points on attributes (RAPID) and skills.
+Use the progress dots at the top to see which step you are on.
+
+QUICK CHARACTER (/characters/quick)
+A faster 6-step build with 5 Attribute CDP and 15 Skill CDP total:
+  Step 0: Concept
+  Step 1: Quick Build — spend all points at once, optional profession preset
+  Step 2: Motivation & Complication
+  Step 3: Secondary Stats
+  Step 4: Equipment
+  Step 5: Review
+
+RANDOM CHARACTER (/characters/random)
+Generates a complete character instantly — random name, stats, skills,
+weapons, equipment, complication, and motivation. Saves automatically and
+opens for editing.
+
+
+========================================
+4. MANAGING YOUR CHARACTERS
+========================================
+
+Go to My Survivors in the sidebar to see all your characters.
+
+Each character card shows:
+- Name, profession, three words, complication, motivation
+- Portrait (click to enlarge)
+- RAPID attributes (Reason, Acumen, Physicality, Influence, Dexterity)
+- Skills grid
+- Weapons (primary and secondary with ammo, condition, traits)
+- Live trackers: WP, RP, Stress, Insight Dice, CDP, Morality
+
+ACTIONS
+- Edit — modify any field
+- Print — printable character sheet
+- Duplicate — copy the character
+- Delete — permanently remove (with confirmation)
+
+WEAPONS
+Each character has two weapon slots (Primary and Secondary). Select from
+Melee, Ranged, Explosive, and Heavy categories. Each weapon shows:
+- Skill used (Melee Combat, Ranged Combat, Athletics, Demolitions)
+- Damage formula
+- RP percentage
+- Range band
+- Condition (Pristine +1, Used 0, Worn -1, Damaged -2, Broken = unusable)
+- Ammo count and reload clips (ranged weapons)
+- Weapon traits
+
+HEALTH TRACKERS
+- Wound Points (WP): Click circles to take/heal damage. At 0 = mortally
+  wounded with death countdown.
+- Resilience Points (RP): Click circles to take/heal. At 0 = unconscious.
+- Stress: 5-segment bar. At 5 = stress check triggered automatically.
+- Insight Dice: Earned on High Insight (double 6s) or Low Insight (double 1s).
+  Can be spent to roll 3d6 or add +3 CMod.
+
+
+========================================
+5. CAMPAIGNS (STORIES)
+========================================
+
+Go to My Stories in the sidebar.
+
+AS A GAME MASTER
+- Click "New Story" to create a campaign
+- Choose a setting (District Zero, Chased, Mongrels, or Custom)
+- Name your campaign and add a description
+- Your campaign gets an invite code — share it with players
+- Edit: change name, description, map style, map center location
+- Launch: opens the Table (the session play area)
+- Share: copies the invite link to clipboard
+- Delete: permanently removes the campaign
+
+AS A PLAYER
+- Get an invite code or link from your GM
+- Go to the join URL or enter the code
+- Select which character to play
+- You appear in the GM's campaign
+
+LEAVING A CAMPAIGN
+- On your Stories page, click "Leave" on any campaign you are playing in
+
+
+========================================
+6. THE TABLE — PLAYING A SESSION
+========================================
+
+The Table is where gameplay happens. It is divided into sections:
+
+HEADER BAR
+From left to right:
+- Campaign name and setting
+- Start Session / End Session (GM only)
+- Session number badge (when active)
+- Tactical Map / Campaign Map toggle
+- Share Map (GM, shares tactical map with players)
+- Start Combat (GM, during active session)
+- End Combat (GM)
+- Checks dropdown (Perception, Gut Instinct, First Impression, Group,
+  Opposed)
+- Dashboard link
+- Share (copy invite link)
+- Overlay/Inline toggle (character sheet display mode)
+- Restore (GM, heal wounded characters/NPCs)
+- Sessions (view session history)
+- Back / Exit
+
+LEFT PANEL — LOGS / CHAT
+Toggle between three views:
+  Logs — chronological feed of all dice rolls, actions, and combat events
+  Chat — in-character messaging
+  Both — combined view
+
+Type a message and click Send or press Enter to chat.
+
+CENTER — THE MAP
+Shows either the Campaign Map (with pins) or the Tactical Map (grid-based
+combat map). Toggle with the header button.
+
+RIGHT PANEL — GM TABS
+The GM sees four tabs:
+  NPCs — the NPC roster (create, edit, manage NPCs)
+  Assets — campaign pins with drag-to-reorder
+  GM Notes — private notes, auto-saved
+  Player Notes (for players) — submit notes to the GM
+
+Players see:
+  NPCs — revealed NPCs only
+  Assets — revealed campaign pins
+  Notes — their own session notes
+
+STARTING A SESSION (GM)
+Click "Start Session" in the header. The session counter increments and all
+players are notified. During a session, dice rolls are logged and combat can
+be started.
+
+ENDING A SESSION (GM)
+Click "End Session." A modal opens where you can write:
+- Session Summary
+- Next Session Notes
+- Cliffhanger
+These are saved to the session history.
+
+CHARACTER SHEETS
+Click a character in the left panel to view their sheet. In Inline mode it
+appears in the center area. In Overlay mode it floats on top.
+
+DICE ROLLING
+During an active session, click any attribute, skill, or weapon on a
+character sheet or NPC card to open the roll modal. The roll is:
+  2d6 + Attribute Modifier + Skill Modifier + Conditional Modifier
+
+OUTCOMES
+  Low Insight (1+1) — Critical failure. +1 Insight Die. Weapon jam possible.
+  Dire Failure (0-3) — Very bad result.
+  Failure (4-8) — Standard failure.
+  Success (9-13) — Standard success.
+  Wild Success (14+) — Exceptional success.
+  High Insight (6+6) — Critical success. +1 Insight Die.
+
+INSIGHT DICE
+Earned on Low or High Insight rolls. Can be spent before a roll:
+- Roll 3d6 (keep best two) instead of 2d6
+- Or add +3 to your Conditional Modifier
+PCs only (NPCs only earn them if they are Antagonist type).
+
+
+========================================
+7. THE CAMPAIGN MAP
+========================================
+
+The Campaign Map shows an interactive world map with campaign-specific pins.
+
+GM FEATURES
+- Click the map to place a new pin
+- Each pin has: name, notes, category, lat/lng
+- Show/Hide pins to reveal them to players
+- Drag pins to reposition
+- Link pins to tactical map scenes (edit pin, select from Tactical Map
+  dropdown)
+- Promote pins to the world map
+
+PLAYER FEATURES
+- View revealed pins
+- Click a pin to see its popup with name and notes
+- Double-click a pin with a linked tactical map to open that scene
+
+MAP LAYERS
+Switch between: Street, Satellite, Dark, Positron, Voyager, Topo,
+Humanitarian. Buttons appear in the top-right corner of the map.
+
+SEARCHING
+Type an address or place name in the search bar. Results appear as
+suggestions. Click one to fly to that location.
+
+PIN IMAGES
+In the Assets tab (right panel), click a pin to expand it. If the pin has
+uploaded images, they appear below the notes. Click an image to open it
+full-size.
+
+
+========================================
+8. THE TACTICAL MAP
+========================================
+
+The Tactical Map is a grid-based canvas for combat positioning.
+
+ACCESSING
+Click "Tactical Map" in the header to switch from the Campaign Map. If no
+scene exists, the Create Scene modal opens automatically. If scenes exist,
+the most recent one activates.
+
+GM CONTROLS (left panel)
+- Scene dropdown — switch between scenes or create new ones
+- Scene Name — editable text field
+- Upload Map — upload a background image (JPG, PNG)
+- Place Tokens — auto-place all initiative combatants on the grid
+- Zoom +/- buttons and percentage display
+- Grid controls:
+    Grid ON/OFF toggle
+    Grid color (White, Black, Grey)
+    Grid opacity slider
+- Cols/Rows — click +/- or double-click the number to type a value
+- Cell (ft) — feet per grid cell (for distance calculations)
+- Cell (px) — pixel size per cell
+- Fit to Screen — reset zoom and scale so the map fills the view
+- Lock/Unlock Map — lock prevents accidental resizing
+- Show/Hide Ranges — color-coded range band overlay from selected token
+- Delete Map — remove the background image
+- Delete Scene — permanently remove the scene and all tokens
+
+TOKENS
+- Tokens represent characters and NPCs on the grid
+- Each token shows: portrait or initials, name, WP bar, initiative badge
+- GM can drag tokens to reposition (smooth drag, snaps to grid)
+- Players can drag their own character's token
+- Click a token to select it (shows info panel at bottom-left)
+- Double-click a token to open its character sheet or NPC card
+- Selected tokens show range circles (Engaged, Move, Weapon Range)
+
+ZOOM & PAN
+- Zoom slider in the top corner (25% to 400%)
+- Hold Spacebar + click-drag to pan/scroll the map
+- Cursor changes to a hand when panning
+
+PINGING
+- GM: double-click an empty cell to ping (orange pulse visible to all)
+- Players: double-click to ping (green pulse)
+
+MOVEMENT
+During combat, click "Move" on the action bar. Valid cells highlight green.
+Click a cell to move your token there.
+
+
+========================================
+9. COMBAT
+========================================
+
+STARTING COMBAT (GM only)
+1. Click "Start Combat" in the header (requires active session)
+2. Select which NPCs to include
+3. Optionally choose a "Drop" character (acts first, alone)
+4. All combatants roll initiative: 2d6 + ACU + DEX
+5. Initiative order appears below the header, sorted highest to lowest
+6. Tactical map auto-shares to players
+
+THE INITIATIVE BAR
+Shows all combatants in turn order with:
+- Portrait, name, initiative roll
+- Active indicator (highlighted)
+- Round counter ("Round 1", "Round 2", etc.)
+- GM can click X to remove a combatant or skip their turn
+
+TURNS
+Each combatant gets 2 actions per turn. The active combatant's action bar
+appears below the initiative order. When both actions are used (or the GM
+clicks Next Turn), play advances to the next combatant.
+
+When all combatants have acted, a new round begins — everyone re-rolls
+initiative and gets 2 fresh actions.
+
+COMBAT ACTIONS (1 action unless noted)
+
+  AIM — +2 CMod on your next attack. Must attack next or the bonus is lost.
+
+  ATTACK — Roll your equipped weapon. Pick a target from the dropdown
+  (filtered by range on the tactical map). Damage auto-applies on success.
+
+  CHARGE (2 actions) — Pick a destination on the map (within 20ft), move
+  there, then roll a melee/unarmed attack. If you have a ranged weapon,
+  the charge uses an unarmed attack instead.
+
+  COORDINATE — Roll Tactics to give allies within Close range (30ft) a +2
+  CMod against a specific target.
+
+  DEFEND — +2 defensive modifier against the next attack. Clears after
+  being hit once.
+
+  GRAPPLE — Opposed check. Pick an Engaged target (within 5ft). Both sides
+  roll 2d6 + PHY + Unarmed Combat (defender can use Athletics if higher).
+  - You win: target is Grappled (1 RP damage to target)
+  - You lose: you take 1 RP damage
+  - Tie: no effect, action consumed
+  Grappled characters can only use "Break Free" (another opposed check).
+  The grappler can only "Release" (free action).
+
+  MOVE — Highlight cells within 10ft. Click to move your token.
+
+  RAPID FIRE (2 actions, ranged only) — Two shots. First at -1 CMod,
+  second at -3 CMod.
+
+  READY WEAPON — Opens a modal with three options:
+  - Switch: swap primary and secondary weapons
+  - Reload: refill ammo from reloads (uses 1 reload clip)
+  - Unjam/Repair: roll Tinkerer, Weaponsmith, or combat skill to fix
+    a Damaged/Broken weapon
+
+  REPOSITION — Free end-of-round positioning.
+
+  SPRINT (2 actions) — Move 30ft (3x normal). Requires Athletics check.
+
+  SUBDUE — Non-lethal attack. Full RP damage but only 50% WP damage.
+
+  TAKE COVER — +2 defensive modifier for ALL attacks this round (not just
+  the next one). Can only be used once per round. Enables "Fire from Cover"
+  (2 actions: shoot while keeping cover defense).
+
+  UNARMED — PHY + Unarmed Combat, 1d3 damage. Always available.
+
+  STABILIZE — Appears when a nearby character (within 20ft) is mortally
+  wounded. Roll Medicine to stop their death countdown. Must be Engaged
+  (within 5ft) to actually perform it.
+
+BLAST RADIUS (Grenades, RPGs, Molotovs)
+When an explosive weapon hits, damage automatically applies to all tokens
+near the blast center on the tactical map:
+- Engaged (within 5ft): full damage
+- Close (within 30ft): 50% damage
+- Further (within 100ft): 25% damage
+The attacker is excluded from splash damage. Results show in the roll notes.
+
+MORTAL WOUNDS
+When a character's WP reaches 0:
+- Death countdown starts (4 + PHY rounds)
+- If the character has Insight Dice, a modal appears asking whether to
+  trade ALL Insight Dice to survive with 1 WP and 1 RP
+- Only the PLAYER who owns the character can make this choice
+- The GM sees a read-only version of the modal
+- If not stabilized before the countdown expires, the character dies
+
+ENDING COMBAT (GM)
+Click "End Combat" in the header. Initiative order clears. All grapple
+states are released. Mortally wounded PCs gain +1 Stress.
+
+
+========================================
+10. NPCs (GAME MASTER)
+========================================
+
+NPCs are managed in the right panel under the NPCs tab.
+
+CREATING AN NPC
+Click "+ Add NPC" to open the creation modal:
+- Name
+- Type: Friendly, Goon, Foe, or Antagonist (auto-sets base attributes)
+- Portrait: choose from the bank (red=enemy, green=ally, white=neutral),
+  upload an image, or pick from the portrait library
+- RAPID attributes (manually adjustable)
+- Skills (add from dropdown, set level)
+- Weapon (primary, all categories available)
+- Secondary Weapon (Foe and Antagonist only)
+- Motivation and Complication (dropdown or random)
+- Three personality words
+- GM Notes (private, never shown to players)
+- Status: Active, Dead, or Unknown
+
+GENERATING AN NPC
+Click "Generate NPC" and pick a type. The system auto-generates a random
+NPC with appropriate stats, skills, weapons, personality, and a portrait
+from the portrait bank.
+
+CLONING AN NPC
+Click the + button on the left side of any NPC card. Creates an exact copy
+with an auto-numbered name (e.g., "Kincaid's Soldier #2"). The clone
+appears directly below the original.
+
+NPC CARD ACTIONS
+Each NPC in the roster shows:
+- Drag handle (reorder by dragging)
+- Delete button (X, with confirmation)
+- Clone button (+)
+- Name (wraps to two lines if long)
+- Status badge (Active/Dead/Unknown)
+- Show/Hide button (reveal to players)
+- Fight button (add to combat initiative, during combat only)
+- Map button (place/remove token on tactical map)
+- Portrait
+
+Click an NPC to open its full card with:
+- RAPID attributes (clickable for rolls during session)
+- WP/RP dot trackers
+- Skills (clickable for rolls)
+- Unarmed attack button
+- Weapon attack button
+- Equipment attacks
+- Stabilize button (if mortally wounded)
+- Restore button (if dead, resets to full HP)
+- Edit, Close buttons
+
+REVEALING NPCs TO PLAYERS
+Click "Show" on an NPC card to reveal them to players. Players will see the
+NPC's name, portrait, and type. Click "Hide" to remove visibility.
+Use "Show All" / "Hide All" in the header to toggle all at once.
+
+PUBLISHING TO WORLD
+From the NPC edit modal, click "Publish to World Library" to submit the NPC
+for inclusion in the shared NPC library. Other GMs can import published NPCs
+into their campaigns.
+
+
+========================================
+11. PINS & THE WORLD MAP
+========================================
+
+CAMPAIGN PINS (Assets tab on the Table)
+- Click the map to place a pin at that location
+- Each pin has: name, notes, category, coordinates
+- GM can show/hide pins to control player visibility
+- Drag pins to reorder in the sidebar
+- Link a pin to a tactical map scene (in edit mode, select from the
+  Tactical Map dropdown). Linked pins show a map icon. Double-click to
+  open that tactical scene.
+- Pin images: click a pin in the sidebar to expand it and view uploaded
+  images
+
+WORLD MAP PINS
+The world map (/map or via "The World" in sidebar) shows all public pins.
+
+Creating a pin:
+1. Click anywhere on the map
+2. Enter title, notes
+3. Select categories
+4. Optionally attach images
+5. Save
+
+Survivors' pins are submitted as Rumors (pending moderation).
+Thrivers' pins go live immediately as GM pins.
+
+Pin visibility on the map can be toggled per-folder using the eye icon
+next to each category folder in the sidebar.
+
+
+========================================
+12. NOTIFICATIONS
+========================================
+
+Click the bell icon next to your username to see notifications.
+
+NOTIFICATION TYPES
+- New Player — someone joined your campaign
+- Player Left — someone left your campaign
+- Session Opened — your GM started a session
+- New Survivor — someone created an account (Thriver only)
+- Pin Submitted — a pin needs moderation (Thriver only)
+- Pin Approved/Rejected — your submitted pin was reviewed
+
+ACTIONS
+- Click a notification to navigate to it
+- Click X to delete a single notification
+- "Mark all read" clears unread indicators
+- "Delete all" removes all notifications
+
+
+========================================
+13. ROLES: SURVIVORS & THRIVERS
+========================================
+
+SURVIVOR
+The default role for all players. Survivors can:
+- Create and manage characters
+- Join campaigns
+- Play at the Table
+- Submit pins as Rumors (pending moderation)
+- View the world map and public pins
+
+THRIVER
+An elevated role granted by administrators. Thrivers get everything
+Survivors have, plus:
+- Moderation Queue — approve or reject submitted pins
+- Pins go live immediately (no moderation wait)
+- Portrait Resizer tool
+- System Logs access
+- Copy Map Position tool
+- User management in /moderate (view emails, change roles, suspend/delete)
+- Toggle pins between Public and Private directly
+
+
+========================================
+END OF GUIDE
+========================================
+
+For questions or feedback, visit:
+https://github.com/anthropics/claude-code/issues
+
+The Tapestry is built by Xero Sum Games.
+https://www.xerosumgames.com
