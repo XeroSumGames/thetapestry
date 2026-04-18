@@ -187,6 +187,8 @@
 - [x] Tracking +1 CMod via Ready Weapon action
 - [x] Upkeep Checks (Mechanic/Tinkerer/weapon skill, full SRD outcomes)
 - [x] Encumbrance tracker (6 + PHY AMod, OVERLOADED warning)
+- [x] **Weapon range realism pass** — nominal bands recalibrated to real-world effective combat range (Heavy Pistol Close→Medium, Carbine Medium→Long, Compact Bow Long→Medium, Molotov Distant→Close, RPG Distant→Long, Mounted Turret Medium→Long). Profile CMods tuned: Assault Rifle gains Distant (-3), Heavy Mounted gains Distant (-4), Flamethrower gains Medium (-4), Heavy Pistol Medium -1→0, Bow Long -2→-3.
+- [x] **Taser split** — old melee Taser renamed **Cattle Prod** (contact stun unchanged); new **Taser** is projectile darts (Close range, clip 1, Rare ammo, Stun). SQL migration `sql/weapon-taser-rename.sql` auto-converts existing characters/NPCs.
 - [ ] **Add Katana to weapon database** — differentiate from Sword (higher damage or different traits, e.g. lighter/faster with lower Cumbersome, or a unique trait like Precise)
 
 ### Additional Check Types (SRD)
@@ -245,7 +247,7 @@
 - [ ] GM screen, GM quick-reference panel
 
 ### Player Inventory System
-- [x] InventoryPanel component — item list, catalog search (33 SRD items), custom items, qty tracking
+- [x] InventoryPanel component — item list, catalog search (33 SRD items + **all 50+ weapons**), custom items, qty tracking
 - [x] Inventory button (orange) on CharacterCard
 - [x] Encumbrance updated — counts weapons + all inventory items
 - [x] Backpack / Military Backpack adds +2 to encumbrance limit
