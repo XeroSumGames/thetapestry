@@ -369,9 +369,20 @@ export default function TablePage() {
   }
 
   async function loadChat(campaignId: string) {
-    // Use ref, not state — the realtime subscription's closure captures the initial render's null
     const uid = userIdRef.current
-    if (!uid) return
+    if (!uid || uid === 'null') {
+      // No user yet — load public messages only
+      const { data } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .or('is_whisper.eq.false,is_whisper.is.null')
+        .order('created_at', { ascending: false })
+        .limit(50)
+      setChatMessages((data ?? []).reverse())
+      setTimeout(() => { rollFeedRef.current?.scrollTo(0, rollFeedRef.current.scrollHeight) }, 50)
+      return
+    }
     const { data } = await supabase
       .from('chat_messages')
       .select('*')
@@ -3849,6 +3860,16 @@ export default function TablePage() {
                   color={obj.color}
                   portraitUrl={obj.portraitUrl}
                   isGM={isGM}
+                  entries={entries as any}
+                  onLoot={async (objectName, item, characterId, characterName) => {
+                    await supabase.from('roll_log').insert({
+                      campaign_id: id, user_id: userId, character_name: 'System',
+                      label: `🎒 ${characterName} looted ${item.name} from ${objectName}`,
+                      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
+                    })
+                    await loadEntries(id)
+                    await loadRolls(id)
+                  }}
                   onClose={() => setViewingObjects(prev => prev.filter(o => o.tokenId !== obj.tokenId))}
                 />
               </div>
@@ -3889,14 +3910,8 @@ export default function TablePage() {
                   if (initChannelRef.current) {
                     await initChannelRef.current.send({ type: 'broadcast', event: 'player_kicked', payload: { userId: kickUserId } })
                   }
-                  // Notification as fallback
-                  await supabase.from('notifications').insert({
-                    user_id: kickUserId,
-                    type: 'session_kick',
-                    title: 'Removed from session',
-                    body: `You have been removed from the session by the GM.`,
-                    link: `/stories/${id}`,
-                  })
+                  // Note: notification insert removed — RLS blocks cross-user inserts.
+                  // The kicked flag + broadcast handle the redirect.
                   setEntries(prev => prev.filter(e => e.userId !== kickUserId))
                   setSelectedEntry(null)
                 } : undefined}
