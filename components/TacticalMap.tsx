@@ -881,8 +881,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       character_id: entry.character_id || null,
       npc_id: entry.npc_id || null,
       portrait_url: entry.portrait_url || null,
-      grid_x: entry.is_npc ? scene.grid_cols - 2 : 1,
-      grid_y: Math.min(i * 2 + 1, scene.grid_rows - 1),
+      grid_x: entry.is_npc ? 2 : 0,
+      grid_y: Math.min(i * 2, scene.grid_rows - 1),
       is_visible: true,
       color: entry.is_npc ? '#c0392b' : '#7ab3d4',
     }))
