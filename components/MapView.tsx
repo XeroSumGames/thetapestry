@@ -294,7 +294,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
           return cats.some(c => !currentHidden.has(c))
         })
       : data.filter((p: Pin) => p.category === 'world_event' || p.category === 'settlement')
-    console.warn('[loadPins] visibleData:', visibleData.length, 'rumorsVisible:', visibleData.filter(p => p.category === 'rumor').length)
+    console.warn('[loadPins] visibleData:', visibleData.length, 'rumorsVisible:', visibleData.filter((p: Pin) => p.category === 'rumor').length)
     visibleData.forEach((pin: Pin) => {
       const emoji = pin.pin_type === 'rumor' ? '❓' : getCategoryEmoji(pin.category ?? 'location')
       const tier = getPinTier(pin)
