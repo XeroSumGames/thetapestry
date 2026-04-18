@@ -48,6 +48,8 @@ interface Token {
   color: string
   wp_max: number | null
   wp_current: number | null
+  scale: number
+  rotation: number
 }
 
 interface Scene {
@@ -396,7 +398,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         if (anim.t >= 1) tokenAnimRef.current.delete(t.id)
         else hasActiveAnim = true
       }
-      const radius = cellSize * 0.4
+      const tokenScale = t.scale ?? 1.0
+      const radius = cellSize * 0.4 * tokenScale
 
       // Active combatant glow
       const isActive = activeEntry && (
@@ -443,6 +446,15 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       }
 
       if (tokenDead) ctx.globalAlpha = 0.5
+
+      // Apply rotation
+      const tokenRotation = (t.rotation ?? 0) * Math.PI / 180
+      if (tokenRotation !== 0) {
+        ctx.save()
+        ctx.translate(cx, cy)
+        ctx.rotate(tokenRotation)
+        ctx.translate(-cx, -cy)
+      }
 
       // Token shape — circle for PC/NPC, square for objects
       const isObject = t.token_type === 'object'
@@ -527,6 +539,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         ctx.stroke()
         ctx.restore()
       }
+
+      // Restore rotation before drawing name (name should be horizontal)
+      if (tokenRotation !== 0) ctx.restore()
 
       // Name below — with dark background for legibility
       const fontSize = Math.max(14, cellSize * 0.34)
@@ -1206,6 +1221,32 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
                   style={{ padding: '2px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Remove
                 </button>
+              </div>
+            )}
+            {isGM && (
+              <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', width: '30px' }}>Size</span>
+                  <input type="range" min={0.3} max={3} step={0.1} value={tok.scale ?? 1}
+                    onChange={async e => {
+                      const v = parseFloat(e.target.value)
+                      setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, scale: v } : t))
+                      await supabase.from('scene_tokens').update({ scale: v }).eq('id', tok.id)
+                    }}
+                    style={{ flex: 1, accentColor: '#7ab3d4', cursor: 'pointer' }} />
+                  <span style={{ fontSize: '10px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', width: '28px', textAlign: 'right' }}>{((tok.scale ?? 1) * 100).toFixed(0)}%</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', width: '30px' }}>Rot</span>
+                  <input type="range" min={0} max={360} step={5} value={tok.rotation ?? 0}
+                    onChange={async e => {
+                      const v = parseFloat(e.target.value)
+                      setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, rotation: v } : t))
+                      await supabase.from('scene_tokens').update({ rotation: v }).eq('id', tok.id)
+                    }}
+                    style={{ flex: 1, accentColor: '#EF9F27', cursor: 'pointer' }} />
+                  <span style={{ fontSize: '10px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', width: '28px', textAlign: 'right' }}>{(tok.rotation ?? 0).toFixed(0)}°</span>
+                </div>
               </div>
             )}
           </div>
