@@ -287,7 +287,7 @@ export default function TablePage() {
     const currentAssignment: Record<string, string> = {}
     for (const m of members) currentAssignment[m.user_id] = m.character_id
 
-    const filteredStates = rawStates.filter((s: any) => currentAssignment[s.user_id] === s.character_id)
+    const filteredStates = rawStates.filter((s: any) => currentAssignment[s.user_id] === s.character_id && !s.kicked)
     if (filteredStates.length === 0) { if (isLatest()) { setEntries([]); setEntriesLoading(false) } return }
 
     const charIds = filteredStates.map((s: any) => s.character_id)
@@ -455,6 +455,15 @@ export default function TablePage() {
       setGmInfo({ userId: camp.gm_user_id, username: (gmProfile as any)?.username ?? 'GM' })
 
       if (members && members.length > 0) await ensureCharacterStates(id, members as any[])
+      // Check if this player was kicked from the session
+      if (!isGM) {
+        const { data: myState } = await supabase.from('character_states').select('kicked').eq('campaign_id', id).eq('user_id', user.id).maybeSingle()
+        if (myState?.kicked) {
+          alert('You have been removed from this session by the GM.')
+          window.location.href = `/stories/${id}`
+          return
+        }
+      }
       const [,,,, cnpcsResult, pubDataResult] = await Promise.all([
         loadEntries(id), loadRolls(id), loadInitiative(id), loadChat(id),
         supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
@@ -1431,6 +1440,7 @@ export default function TablePage() {
       }),
       supabase.from('roll_log').delete().eq('campaign_id', id),
       supabase.from('chat_messages').delete().eq('campaign_id', id),
+      supabase.from('character_states').update({ kicked: false }).eq('campaign_id', id).eq('kicked', true),
     ]).catch(err => console.error('[startSession] background error:', err))
   }
 
@@ -3694,11 +3704,10 @@ export default function TablePage() {
                   const kickUserId = syncedSelectedEntry.userId
                   const kickName = syncedSelectedEntry.character.name
                   if (!confirm(`Remove ${kickName} from this session?`)) return
-                  // Delete their character_states row so they don't reload on refresh
-                  // (re-created automatically when they rejoin a future session)
+                  // Mark as kicked so they don't reload on refresh
                   const kickEntry = entries.find(e => e.userId === kickUserId)
                   if (kickEntry) {
-                    await supabase.from('character_states').delete().eq('id', kickEntry.stateId)
+                    await supabase.from('character_states').update({ kicked: true }).eq('id', kickEntry.stateId)
                   }
                   // Broadcast for immediate redirect
                   if (initChannelRef.current) {
