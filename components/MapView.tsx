@@ -286,7 +286,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
     const currentHidden = hiddenFoldersRef.current
     const rumorPins = data.filter((p: Pin) => p.category === 'rumor')
-    console.warn('[loadPins]', { total: data.length, rumorsInData: rumorPins.length, rumorCategories: rumorPins.map(p => ({ title: p.title, category: p.category, pin_type: p.pin_type, categories: (p as any).categories })), hiddenFolders: [...currentHidden], userId: !!userId })
+    console.warn('[loadPins]', { total: data.length, rumorsInData: rumorPins.length, rumorCategories: rumorPins.map((p: Pin) => ({ title: p.title, category: p.category, pin_type: p.pin_type, categories: (p as any).categories })), hiddenFolders: [...currentHidden], userId: !!userId })
     const visibleData = userId
       ? data.filter((p: Pin) => {
           const cats: string[] = Array.isArray((p as any).categories) && (p as any).categories.length > 0
