@@ -1016,7 +1016,15 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
                   <button onClick={async () => { const v = Math.max(1, scene.grid_cols - 1); setScene(p => p ? { ...p, grid_cols: v } : p); await supabase.from('tactical_scenes').update({ grid_cols: v }).eq('id', scene.id) }}
                     style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
-                  <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'center' }}>{scene.grid_cols}</span>
+                  <span onDoubleClick={e => {
+                    const el = e.currentTarget
+                    const input = document.createElement('input')
+                    input.value = String(scene.grid_cols)
+                    input.style.cssText = 'width:30px;padding:0 2px;background:#242424;border:1px solid #3a3a3a;border-radius:2px;color:#f5f2ee;font-size:13px;font-family:Barlow Condensed,sans-serif;text-align:center;outline:none;'
+                    const save = async () => { const v = Math.max(1, parseInt(input.value) || 1); setScene(p => p ? { ...p, grid_cols: v } : p); await supabase.from('tactical_scenes').update({ grid_cols: v }).eq('id', scene.id); el.style.display = ''; input.remove() }
+                    input.onblur = save; input.onkeydown = (ev) => { if (ev.key === 'Enter') save() }
+                    el.style.display = 'none'; el.parentElement!.insertBefore(input, el); input.focus(); input.select()
+                  }} style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'center', cursor: 'pointer' }} title="Double-click to edit">{scene.grid_cols}</span>
                   <button onClick={async () => { const v = scene.grid_cols + 1; setScene(p => p ? { ...p, grid_cols: v } : p); await supabase.from('tactical_scenes').update({ grid_cols: v }).eq('id', scene.id) }}
                     style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>+</button>
                 </div>
@@ -1026,7 +1034,15 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
                   <button onClick={async () => { const v = Math.max(1, scene.grid_rows - 1); setScene(p => p ? { ...p, grid_rows: v } : p); await supabase.from('tactical_scenes').update({ grid_rows: v }).eq('id', scene.id) }}
                     style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
-                  <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'center' }}>{scene.grid_rows}</span>
+                  <span onDoubleClick={e => {
+                    const el = e.currentTarget
+                    const input = document.createElement('input')
+                    input.value = String(scene.grid_rows)
+                    input.style.cssText = 'width:30px;padding:0 2px;background:#242424;border:1px solid #3a3a3a;border-radius:2px;color:#f5f2ee;font-size:13px;font-family:Barlow Condensed,sans-serif;text-align:center;outline:none;'
+                    const save = async () => { const v = Math.max(1, parseInt(input.value) || 1); setScene(p => p ? { ...p, grid_rows: v } : p); await supabase.from('tactical_scenes').update({ grid_rows: v }).eq('id', scene.id); el.style.display = ''; input.remove() }
+                    input.onblur = save; input.onkeydown = (ev) => { if (ev.key === 'Enter') save() }
+                    el.style.display = 'none'; el.parentElement!.insertBefore(input, el); input.focus(); input.select()
+                  }} style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'center', cursor: 'pointer' }} title="Double-click to edit">{scene.grid_rows}</span>
                   <button onClick={async () => { const v = scene.grid_rows + 1; setScene(p => p ? { ...p, grid_rows: v } : p); await supabase.from('tactical_scenes').update({ grid_rows: v }).eq('id', scene.id) }}
                     style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>+</button>
                 </div>
