@@ -1171,7 +1171,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', width: '30px' }}>Size</span>
-                  <input type="range" min={0.3} max={5} step={0.1} value={tok.scale ?? 1}
+                  <input type="range" min={0.3} max={10} step={0.1} value={tok.scale ?? 1}
                     onChange={async e => {
                       const v = parseFloat(e.target.value)
                       setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, scale: v } : t))
