@@ -230,13 +230,15 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     const cellSize = getCellSize()
     const gridW = s.grid_cols * cellSize
     const gridH = s.grid_rows * cellSize
+    // Image size is derived from the GRID (same for everyone) scaled by img_scale,
+    // NOT from the viewer's container width. This keeps GM and players pixel-
+    // identical in where the background image sits relative to the grid.
     let imgW = 0, imgH = 0
     if (bgImageRef.current) {
       const img = bgImageRef.current
       const imgAspect = img.naturalWidth / img.naturalHeight
-      // Scale based on container width — independent of grid cols
-      imgW = baseW * imgScale
-      imgH = (baseW / imgAspect) * imgScale
+      imgW = gridW * imgScale
+      imgH = (gridW / imgAspect) * imgScale
     }
     canvas.width = Math.max(baseW, baseW * zoom, imgW)
     canvas.height = Math.max(baseH, baseH * zoom, imgH)
@@ -254,14 +256,12 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     ctx.save()
     ctx.scale(zoom, zoom)
 
-    // Background image — scale based on container width, independent of grid
+    // Background image — size derived from grid so GM and players align identically.
     if (bgImageRef.current) {
       const img = bgImageRef.current
       const imgAspect = img.naturalWidth / img.naturalHeight
-      const drawW = baseW
-      const drawH = baseW / imgAspect
-      const scaledW = drawW * imgScale
-      const scaledH = drawH * imgScale
+      const scaledW = gridW * imgScale
+      const scaledH = (gridW / imgAspect) * imgScale
       ctx.drawImage(img, 0, 0, scaledW, scaledH)
       mapDrawRef.current = { x: 0, y: 0, w: scaledW, h: scaledH }
 
