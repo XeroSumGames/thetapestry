@@ -78,7 +78,8 @@ export default function SessionHistoryPage() {
     if (!confirm('Delete this session record? This cannot be undone.')) return
     setDeleting(sessionId)
     await supabase.from('session_attachments').delete().eq('session_id', sessionId)
-    await supabase.from('sessions').delete().eq('id', sessionId)
+    const { error: delErr } = await supabase.from('sessions').delete().eq('id', sessionId)
+    if (delErr) { alert(`Delete failed: ${delErr.message}`); setDeleting(null); return }
     // Renumber remaining sessions so there are no gaps
     const remaining = sessions.filter(s => s.id !== sessionId).sort((a, b) => a.session_number - b.session_number)
     for (let i = 0; i < remaining.length; i++) {
