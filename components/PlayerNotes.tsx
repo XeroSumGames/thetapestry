@@ -162,6 +162,10 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
                   {n.attachments.length > 0 && (
                     <NoteAttachmentsView attachments={n.attachments} />
                   )}
+                  <button onClick={() => window.open(`/handout?id=${n.id}`, `handout-${n.id}`, 'width=800,height=700,menubar=no,toolbar=no')}
+                    style={{ marginTop: '6px', padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Popout
+                  </button>
                 </div>
               )}
             </div>
