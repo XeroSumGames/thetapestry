@@ -273,70 +273,83 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             onDragOver={e => { if (dragObjId) { e.preventDefault(); setDragOverObjId(obj.id) } }}
             onDragLeave={() => { if (dragOverObjId === obj.id) setDragOverObjId(null) }}
             onDrop={() => handleObjDrop(obj.id)}
-            style={{ padding: '4px 6px', marginBottom: '3px', background: dragOverObjId === obj.id ? '#242424' : '#1a1a1a', border: `1px solid ${dragOverObjId === obj.id ? '#7fc458' : '#2e2e2e'}`, borderRadius: '3px', opacity: destroyed ? 0.4 : dragObjId === obj.id ? 0.4 : 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {isGM && (
-              <div draggable onDragStart={() => setDragObjId(obj.id)} onDragEnd={() => { setDragObjId(null); setDragOverObjId(null) }}
-                title="Drag to reorder" style={{ cursor: 'grab', color: '#3a3a3a', fontSize: '14px', lineHeight: 1, userSelect: 'none', flexShrink: 0 }}>⠿</div>
-            )}
-            {obj.portrait_url ? (
-              <img src={obj.portrait_url} alt="" style={{ width: '24px', height: '24px', objectFit: 'cover', borderRadius: '3px' }} />
-            ) : (
-              <span style={{ fontSize: '16px' }}>{getIconEmoji(obj)}</span>
-            )}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{obj.name}</div>
-              {obj.wp_max != null && (
-                <div style={{ fontSize: '12px', color: destroyed ? '#c0392b' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                  {destroyed ? 'DESTROYED' : `WP ${obj.wp_current}/${obj.wp_max}`}
-                </div>
+            style={{ padding: '6px', marginBottom: '3px', background: dragOverObjId === obj.id ? '#242424' : '#1a1a1a', border: `1px solid ${dragOverObjId === obj.id ? '#7fc458' : '#2e2e2e'}`, borderRadius: '3px', opacity: destroyed ? 0.4 : dragObjId === obj.id ? 0.4 : 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {/* Row 1 — identifier: handle, icon, name/WP, remove × */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {isGM && (
+                <div draggable onDragStart={() => setDragObjId(obj.id)} onDragEnd={() => { setDragObjId(null); setDragOverObjId(null) }}
+                  title="Drag to reorder" style={{ cursor: 'grab', color: '#3a3a3a', fontSize: '14px', lineHeight: 1, userSelect: 'none', flexShrink: 0 }}>⠿</div>
               )}
-              {/* Properties — auto-reveal when destroyed */}
-              {Array.isArray(obj.properties) && obj.properties.filter(p => isGM || p.revealed || destroyed).map((p, i) => (
-                <div key={i} style={{ fontSize: '12px', color: (p.revealed || destroyed) ? '#cce0f5' : '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
-                  <span style={{ color: '#EF9F27' }}>{p.key}:</span> {p.value}{!p.revealed && !destroyed && isGM ? ' 🔒' : ''}
-                </div>
-              ))}
-              {/* Contents — show when destroyed, with loot buttons */}
-              {Array.isArray(obj.contents) && obj.contents.length > 0 && (destroyed || isGM) && (
-                <div style={{ marginTop: '2px' }}>
-                  {obj.contents.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#f5f2ee' }}>
-                      <span>{item.type === 'weapon' ? '🔫' : '🎒'} {item.name} ×{item.quantity}</span>
-                      {destroyed && entries && entries.length > 0 && (
-                        <button onClick={e => { e.stopPropagation(); setLootingObj(obj); setLootCharId('') }}
-                          style={{ background: 'none', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', padding: '0 4px', cursor: 'pointer' }}>
-                          Loot
-                        </button>
-                      )}
-                      {!destroyed && isGM && <span style={{ color: '#5a5550' }}>🔒</span>}
-                    </div>
-                  ))}
-                </div>
+              {obj.portrait_url ? (
+                <img src={obj.portrait_url} alt="" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '3px', flexShrink: 0 }} />
+              ) : (
+                <span style={{ fontSize: '18px', flexShrink: 0 }}>{getIconEmoji(obj)}</span>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{obj.name}</div>
+                {obj.wp_max != null && (
+                  <div style={{ fontSize: '12px', color: destroyed ? '#c0392b' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                    {destroyed ? 'DESTROYED' : `WP ${obj.wp_current}/${obj.wp_max}`}
+                    {Array.isArray(obj.contents) && obj.contents.length > 0 && !destroyed && isGM && (
+                      <span style={{ color: '#5a5550', marginLeft: '6px' }}>· 🔒 {obj.contents.length}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+              {isGM && (
+                <button onClick={() => onRemoveFromMap?.(obj.name)}
+                  title="Remove from scene"
+                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '14px', cursor: 'pointer', padding: '0 4px', flexShrink: 0 }}>×</button>
               )}
             </div>
+            {/* Revealed properties (and all properties for GM) — only rendered if any */}
+            {Array.isArray(obj.properties) && obj.properties.filter(p => isGM || p.revealed || destroyed).length > 0 && (
+              <div style={{ paddingLeft: '24px' }}>
+                {obj.properties.filter(p => isGM || p.revealed || destroyed).map((p, i) => (
+                  <div key={i} style={{ fontSize: '12px', color: (p.revealed || destroyed) ? '#cce0f5' : '#5a5550', fontFamily: 'Barlow, sans-serif', lineHeight: 1.3 }}>
+                    <span style={{ color: '#EF9F27' }}>{p.key}:</span> {p.value}{!p.revealed && !destroyed && isGM ? ' 🔒' : ''}
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* Contents loot list — only when destroyed (players can take) */}
+            {destroyed && Array.isArray(obj.contents) && obj.contents.length > 0 && (
+              <div style={{ paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                {obj.contents.map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#f5f2ee' }}>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.type === 'weapon' ? '🔫' : '🎒'} {item.name} ×{item.quantity}</span>
+                    {entries && entries.length > 0 && (
+                      <button onClick={e => { e.stopPropagation(); setLootingObj(obj); setLootCharId('') }}
+                        style={{ background: 'none', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', padding: '0 6px', cursor: 'pointer', flexShrink: 0 }}>
+                        Loot
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* Row 2 — GM action buttons, even-width across the card */}
             {isGM && (
-              <div style={{ display: 'flex', gap: '3px' }}>
+              <div style={{ display: 'flex', gap: '4px' }}>
                 <button onClick={async () => {
                   const newVis = !obj.is_visible
                   await supabase.from('scene_tokens').update({ is_visible: newVis }).eq('id', obj.id)
                   setObjects(prev => prev.map(o => o.id === obj.id ? { ...o, is_visible: newVis } : o))
                 }}
-                  style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: obj.is_visible ? '#7fc458' : '#5a5550', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ flex: 1, padding: '3px 0', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: obj.is_visible ? '#7fc458' : '#5a5550', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {obj.is_visible ? 'Show' : 'Hide'}
                 </button>
                 <button onClick={() => { setEditingObj(obj); setEditName(obj.name); setEditWP(obj.wp_max != null ? String(obj.wp_max) : ''); setEditProps(Array.isArray(obj.properties) ? obj.properties : []); setEditContents(Array.isArray(obj.contents) ? obj.contents : []) }}
-                  style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ flex: 1, padding: '3px 0', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Edit
                 </button>
                 {onDuplicate && (
                   <button onClick={async () => { await onDuplicate(obj); loadObjects() }}
                     title="Duplicate this object (copies properties, contents, WP, lock state)"
-                    style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ flex: 1, padding: '3px 0', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Dup
                   </button>
                 )}
-                <button onClick={() => onRemoveFromMap?.(obj.name)}
-                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}>×</button>
               </div>
             )}
           </div>
