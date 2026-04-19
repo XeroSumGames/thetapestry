@@ -201,7 +201,19 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button onClick={async () => {
                   const next = !n.shared
-                  await supabase.from('campaign_notes').update({ shared: next }).eq('id', n.id)
+                  // .select() returns the updated rows — a 0-length array means
+                  // RLS silently blocked the write (Supabase doesn't surface an error).
+                  const { data, error } = await supabase
+                    .from('campaign_notes')
+                    .update({ shared: next })
+                    .eq('id', n.id)
+                    .select('id')
+                  console.warn('[GmNotes] share toggle:', { noteId: n.id, next, rowsUpdated: data?.length ?? 0, error: error?.message ?? 'none' })
+                  if (error) { alert(`Share failed: ${error.message}`); return }
+                  if (!data || data.length === 0) {
+                    alert('Share did not affect any rows — likely an RLS / permissions issue. Check console.')
+                    return
+                  }
                   setNotes(prev => prev.map(x => x.id === n.id ? { ...x, shared: next } : x))
                 }}
                   style={{ padding: '4px 10px', background: n.shared ? '#1a2e10' : 'transparent', border: `1px solid ${n.shared ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.shared ? '#7fc458' : '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
