@@ -82,7 +82,15 @@
 - [x] Realtime subscriptions listen to all events (INSERT + DELETE) for log clearing propagation
 - [x] Session history page with grid layout, deactivate, delete
 - [x] Session delete renumbers remaining and updates campaign count
+- [x] Session delete RLS fix — GM DELETE/UPDATE policies on sessions table
 - [x] Timeline pins: event_date field, sort_order in Edit Pin UI
+- [x] Character sheet pop-out (/character-sheet) with realtime sync + session notes
+- [x] Vehicle system — VehicleCard, pop-out (/vehicle), WP/stress/fuel/cargo, floorplan, realtime sync
+- [x] Handout pop-out (/handout) for GM Notes + player-side GM Handouts
+- [x] All pop-outs use full-width layout (no sidebar)
+- [x] Pop-out buttons on: character cards, bottom portrait bar, vehicle cards, GM notes, player handouts
+- [x] PC damage broadcasts include optimistic patch for instant client-side updates
+- [x] Object tokens show 2-line names, Edit button in info panel, draggable in Assets sidebar with persistent sort_order
 - [x] Previous Sessions button in table header
 - [x] Cliffhanger field displayed in session history
 - [x] Table auto-refreshes when player joins (Realtime on campaign_members)
