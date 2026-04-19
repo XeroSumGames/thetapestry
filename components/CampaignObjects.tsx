@@ -290,9 +290,19 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 {obj.wp_max != null && (
                   <div style={{ fontSize: '12px', color: destroyed ? '#c0392b' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
                     {destroyed ? 'DESTROYED' : `WP ${obj.wp_current}/${obj.wp_max}`}
-                    {Array.isArray(obj.contents) && obj.contents.length > 0 && !destroyed && isGM && (
-                      <span style={{ color: '#5a5550', marginLeft: '6px' }}>· 🔒 {obj.contents.length}</span>
-                    )}
+                  </div>
+                )}
+                {/* Contents preview for GM on intact crates — chip per item with icon + short name.
+                    Full item name + quantity shown on hover via title. */}
+                {Array.isArray(obj.contents) && obj.contents.length > 0 && !destroyed && isGM && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', marginTop: '3px' }}>
+                    {obj.contents.map((item, i) => (
+                      <span key={i}
+                        title={`${item.name} ×${item.quantity}${item.type === 'weapon' ? ' (weapon)' : ' (equipment)'}`}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', padding: '1px 5px', background: '#2a1d10', border: '1px solid #5a4a1b', borderRadius: '2px', fontSize: '12px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.02em', maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.type === 'weapon' ? '🔫' : '🎒'} {item.name}{item.quantity > 1 ? ` ×${item.quantity}` : ''}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
