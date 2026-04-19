@@ -177,29 +177,29 @@ export default function VehiclePage() {
           {/* Cargo & Equipment */}
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>
-              <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', flex: 1 }}>Cargo & Equipment</div>
+              <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', flex: 1 }}>Cargo & Equipment</div>
               {canEdit && (
                 <button onClick={() => setShowAddCargo(!showAddCargo)}
-                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
+                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
                   {showAddCargo ? 'Cancel' : '+ Add'}
                 </button>
               )}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 12px' }}>
               {vehicle.cargo.map((item, idx) => (
-                <div key={`${item.name}-${idx}`} style={{ display: 'flex', alignItems: 'baseline', gap: '4px', padding: '3px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>
+                <div key={`${item.name}-${idx}`} style={{ display: 'flex', alignItems: 'baseline', gap: '4px', padding: '3px 0', borderBottom: '1px solid #1a1a1a', fontSize: '15px' }}>
                   <span style={{ color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>
                     {item.name}
                     {item.qty > 1 && <span style={{ color: '#7ab3d4' }}> ×{item.qty}</span>}
                   </span>
-                  {item.notes && <span style={{ color: '#5a5550', fontSize: '12px' }}>{item.notes}</span>}
+                  {item.notes && <span style={{ color: '#5a5550', fontSize: '14px' }}>{item.notes}</span>}
                   {canEdit && (
                     <button onClick={() => {
                       const newCargo = item.qty > 1
                         ? vehicle.cargo.map((c, i) => i === idx ? { ...c, qty: c.qty - 1 } : c)
                         : vehicle.cargo.filter((_, i) => i !== idx)
                       updateVehicle({ ...vehicle, cargo: newCargo })
-                    }} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '12px', cursor: 'pointer', padding: '0 2px', flexShrink: 0 }}
+                    }} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '14px', cursor: 'pointer', padding: '0 2px', flexShrink: 0 }}
                       onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
                       onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>×</button>
                   )}
@@ -235,10 +235,10 @@ export default function VehiclePage() {
           {/* Operator Notes */}
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>
-              <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', flex: 1 }}>Operator Notes</div>
+              <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', flex: 1 }}>Operator Notes</div>
               {canEdit && (
                 <button onClick={() => { setEditingNotes(!editingNotes); setNotesValue(vehicle.notes) }}
-                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
+                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
                   {editingNotes ? 'Cancel' : 'Edit'}
                 </button>
               )}
@@ -251,7 +251,7 @@ export default function VehiclePage() {
                   style={{ marginTop: '6px', padding: '6px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Save</button>
               </div>
             ) : (
-              <div style={{ fontSize: '14px', color: '#cce0f5', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{vehicle.notes || 'No notes.'}</div>
+              <div style={{ fontSize: '16px', color: '#cce0f5', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{vehicle.notes || 'No notes.'}</div>
             )}
           </div>
         </div>
