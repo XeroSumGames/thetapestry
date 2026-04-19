@@ -9,6 +9,7 @@ import NpcCard from '../../../../components/NpcCard'
 import ObjectCard from '../../../../components/ObjectCard'
 import CampaignPins from '../../../../components/CampaignPins'
 import CampaignObjects from '../../../../components/CampaignObjects'
+import VehicleCard, { Vehicle } from '../../../../components/VehicleCard'
 import GmNotes from '../../../../components/GmNotes'
 import PlayerNotes from '../../../../components/PlayerNotes'
 import NotificationBell from '../../../../components/NotificationBell'
@@ -254,7 +255,7 @@ export default function TablePage() {
   const [sessionCliffhanger, setSessionCliffhanger] = useState('')
   const [sessionFiles, setSessionFiles] = useState<File[]>([])
   const [sessionActing, setSessionActing] = useState(false)
-  const [gmTab, setGmTab] = useState<'npcs' | 'assets' | 'notes'>('npcs')
+  const [gmTab, setGmTab] = useState<'pins' | 'npcs' | 'assets' | 'notes'>('pins')
   const [assetsFolderState, setAssetsFolderState] = useState<Set<string>>(new Set())
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
   const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
@@ -264,6 +265,8 @@ export default function TablePage() {
   const [whisperTarget, setWhisperTarget] = useState<{ userId: string; characterName: string } | null>(null)
   const [viewingNpcs, setViewingNpcs] = useState<CampaignNpc[]>([])
   const [viewingObjects, setViewingObjects] = useState<{ tokenId: string; name: string; color: string; portraitUrl: string | null }[]>([])
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [expandedVehicleId, setExpandedVehicleId] = useState<string | null>(null)
   const objectDragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null)
   const [objectPositions, setObjectPositions] = useState<Record<string, { x: number; y: number }>>({})
   const [selectedMapTargetName, setSelectedMapTargetName] = useState<string | null>(null)
@@ -471,6 +474,7 @@ export default function TablePage() {
       const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
       if (!camp) { router.push('/stories'); return }
       setCampaign(camp)
+      setVehicles(camp.vehicles ?? [])
       setIsGM(camp.gm_user_id === user.id)
       setSessionStatus(camp.session_status === 'active' ? 'active' : 'idle')
       setSessionCount(camp.session_count ?? 0)
@@ -4009,10 +4013,10 @@ export default function TablePage() {
             NPCs (revealed only) and Assets (read-only). */}
         <div style={{ width: '240px', flexShrink: 0, borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
-            {(['npcs', 'assets', 'notes'] as const).map(tab => (
+            {(['pins', 'npcs', 'assets', 'notes'] as const).map(tab => (
               <button key={tab} onClick={() => setGmTab(tab)}
                 style={{ flex: 1, padding: '8px 0', background: gmTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: gmTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: gmTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '12px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                {tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : isGM ? 'GM Notes' : 'Notes'}
+                {tab === 'pins' ? 'Pins' : tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : isGM ? 'GM Notes' : 'Notes'}
               </button>
             ))}
           </div>
@@ -4109,25 +4113,18 @@ export default function TablePage() {
               </div>
               )
             })()}
+            {gmTab === 'pins' && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+                <CampaignPins campaignId={id} isGM={isGM} onPinFocus={p => setFocusPin({ ...p })} onOpenScene={async (sceneId: string) => {
+                  await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', id)
+                  await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', sceneId)
+                  setShowTacticalMap(true)
+                  setTokenRefreshKey(k => k + 1)
+                }} />
+              </div>
+            )}
             {gmTab === 'assets' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
-                {/* Map Pins folder */}
-                <div onClick={() => setAssetsFolderState(prev => { const n = new Set(prev); n.has('pins') ? n.delete('pins') : n.add('pins'); return n })}
-                  style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none', flexShrink: 0 }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                  <span style={{ fontSize: '10px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('pins') ? '▼' : '▶'}</span>
-                  <span style={{ fontSize: '14px' }}>📍</span>
-                  <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>Map Pins</span>
-                </div>
-                {assetsFolderState.has('pins') && (
-                  <CampaignPins campaignId={id} isGM={isGM} onPinFocus={p => setFocusPin({ ...p })} onOpenScene={async (sceneId: string) => {
-                    await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', id)
-                    await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', sceneId)
-                    setShowTacticalMap(true)
-                    setTokenRefreshKey(k => k + 1)
-                  }} />
-                )}
                 {/* Objects folder */}
                 <div onClick={() => setAssetsFolderState(prev => { const n = new Set(prev); n.has('objects') ? n.delete('objects') : n.add('objects'); return n })}
                   style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none', flexShrink: 0 }}
