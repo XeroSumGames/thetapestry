@@ -93,6 +93,8 @@ export default function VehicleCard({ vehicle: v, campaignId, isGM, onUpdate, on
           <div style={{ fontSize: '12px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{v.type} · {v.rarity}</div>
           {v.three_words && <div style={{ fontSize: '11px', color: '#d4cfc9', fontStyle: 'italic' }}>{v.three_words}</div>}
         </div>
+        <button onClick={() => window.open(`/vehicle?c=${campaignId}&v=${v.id}`, `vehicle-${v.id}`, 'width=900,height=700,menubar=no,toolbar=no')} title="Pop out"
+          style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7ab3d4', fontSize: '10px', cursor: 'pointer', padding: '1px 4px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>↗</button>
         <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '16px', cursor: 'pointer', padding: '0 4px' }}>✕</button>
       </div>
 
