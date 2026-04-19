@@ -81,6 +81,9 @@ export default function CampaignsPage() {
         <a href="/stories/new" style={{ padding: '7px 18px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           New Story
         </a>
+        <a href="/campaigns/new" style={{ padding: '7px 18px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+          New Campaign
+        </a>
       </div>
 
       {gmCampaigns.length === 0 && playerCampaigns.length === 0 && (

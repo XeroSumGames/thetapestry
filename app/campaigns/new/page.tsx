@@ -7,7 +7,7 @@ import { SETTING_PINS } from '../../../lib/setting-pins'
 import { SETTING_NPCS } from '../../../lib/setting-npcs'
 import { SETTING_SCENES } from '../../../lib/setting-scenes'
 import { SETTING_HANDOUTS } from '../../../lib/setting-handouts'
-import { STORY_SETTING_OPTIONS } from '../../../lib/settings'
+import { CAMPAIGN_SETTING_OPTIONS } from '../../../lib/settings'
 
 function generateCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -47,15 +47,9 @@ export default function NewCampaignPage() {
       status: 'active',
     }).select().single()
     if (err) { setError(err.message); setSaving(false); return }
-    // GM auto-joins as member
-    await supabase.from('campaign_members').insert({
-      campaign_id: data.id,
-      user_id: user.id,
-    })
-    // Collect seed errors and surface them in the UI instead of silently swallowing.
-    const seedErrors: string[] = []
+    await supabase.from('campaign_members').insert({ campaign_id: data.id, user_id: user.id })
 
-    // ── Seed Pins: DB first, fallback to TS ──
+    const seedErrors: string[] = []
     let pinMap: Record<string, string> = {}
     const { data: dbPins } = await supabase.from('setting_seed_pins').select('*').eq('setting', setting).order('sort_order')
     const pinSource = (dbPins && dbPins.length > 0) ? dbPins : (SETTING_PINS[setting] ?? []).map((p, i) => ({ name: p.title, lat: p.lat, lng: p.lng, notes: p.notes ?? '', category: p.category ?? 'location', sort_order: i + 1 }))
@@ -70,10 +64,8 @@ export default function NewCampaignPage() {
       createdPins?.forEach((p: any) => { pinMap[p.name] = p.id })
     }
 
-    // ── Seed NPCs: DB first, fallback to TS ──
     const { data: dbNpcs } = await supabase.from('setting_seed_npcs').select('*').eq('setting', setting).order('sort_order')
     if (dbNpcs && dbNpcs.length > 0) {
-      // DB seeds — already in the right format, just map to campaign_npcs
       const npcRows = dbNpcs.map((n: any, i: number) => ({
         campaign_id: data.id,
         campaign_pin_id: n.pin_title ? (pinMap[n.pin_title] ?? null) : null,
@@ -91,7 +83,6 @@ export default function NewCampaignPage() {
       const { error: npcErr } = await supabase.from('campaign_npcs').insert(npcRows)
       if (npcErr) seedErrors.push(`npcs: ${npcErr.message}`)
     } else {
-      // Fallback to TS seeds
       const settingNpcs = SETTING_NPCS[setting]
       if (settingNpcs && settingNpcs.length > 0) {
         const npcRows = settingNpcs.map((n, i) => {
@@ -112,7 +103,6 @@ export default function NewCampaignPage() {
       }
     }
 
-    // ── Seed Scenes: DB first, fallback to TS ──
     const { data: dbScenes } = await supabase.from('setting_seed_scenes').select('*').eq('setting', setting)
     const sceneSource = (dbScenes && dbScenes.length > 0) ? dbScenes : (SETTING_SCENES[setting] ?? [])
     if (sceneSource.length > 0) {
@@ -123,20 +113,16 @@ export default function NewCampaignPage() {
       if (sceneErr) seedErrors.push(`scenes: ${sceneErr.message}`)
     }
 
-    // ── Seed Handouts: DB first, fallback to TS ──
     const { data: dbHandouts } = await supabase.from('setting_seed_handouts').select('*').eq('setting', setting)
     const handoutSource = (dbHandouts && dbHandouts.length > 0) ? dbHandouts : (SETTING_HANDOUTS[setting] ?? [])
     if (handoutSource.length > 0) {
-      const handoutRows = handoutSource.map((h: any) => ({
-        campaign_id: data.id, title: h.title, content: h.content,
-      }))
+      const handoutRows = handoutSource.map((h: any) => ({ campaign_id: data.id, title: h.title, content: h.content }))
       const { error: handoutErr } = await supabase.from('campaign_notes').insert(handoutRows)
       if (handoutErr) seedErrors.push(`handouts: ${handoutErr.message}`)
     }
     logEvent('campaign_created', { id: data.id, name })
     if (seedErrors.length > 0) {
-      // Don't redirect — keep the user here so they can see what failed.
-      setError(`Story created but seeding had errors:\n${seedErrors.join('\n')}\n\nThis usually means a database migration hasn't been run. Check sql/ for pending scripts.`)
+      setError(`Campaign created but seeding had errors:\n${seedErrors.join('\n')}\n\nThis usually means a database migration hasn't been run. Check sql/ for pending scripts.`)
       setSaving(false)
       return
     }
@@ -155,21 +141,21 @@ export default function NewCampaignPage() {
 
       <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
-          New Story
+          New Campaign
         </div>
       </div>
 
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1.5rem', borderLeft: '3px solid #c0392b' }}>
 
         <div style={{ marginBottom: '16px' }}>
-          <label style={lbl}>Story Name</label>
-          <input style={inp} value={name} onChange={e => setName(e.target.value)} placeholder="e.g. The Kansas City Survivors" />
+          <label style={lbl}>Campaign Name</label>
+          <input style={inp} value={name} onChange={e => setName(e.target.value)} placeholder="e.g. The District Zero Chronicles" />
         </div>
 
         <div style={{ marginBottom: '16px' }}>
           <label style={lbl}>Setting</label>
           <div style={{ display: 'flex', gap: '6px' }}>
-            {STORY_SETTING_OPTIONS.map(s => (
+            {CAMPAIGN_SETTING_OPTIONS.map(s => (
               <button key={s.value} onClick={() => setSetting(s.value)}
                 style={{ flex: 1, padding: '8px', border: `1px solid ${setting === s.value ? '#c0392b' : '#3a3a3a'}`, background: setting === s.value ? '#2a1210' : '#242424', borderRadius: '3px', color: setting === s.value ? '#f5a89a' : '#d4cfc9', cursor: 'pointer', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 {s.label}
@@ -224,7 +210,7 @@ export default function NewCampaignPage() {
 
         <div style={{ marginBottom: '16px' }}>
           <label style={lbl}>Description <span style={{ color: '#cce0f5', fontWeight: 400 }}>(optional)</span></label>
-          <textarea style={{ ...inp, minHeight: '80px', resize: 'vertical' }} value={description} onChange={e => setDescription(e.target.value)} placeholder="A brief description of your story..." />
+          <textarea style={{ ...inp, minHeight: '80px', resize: 'vertical' }} value={description} onChange={e => setDescription(e.target.value)} placeholder="A brief description of your campaign..." />
         </div>
 
         <div style={{ marginBottom: '20px' }}>
@@ -248,7 +234,7 @@ export default function NewCampaignPage() {
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={handleCreate} disabled={saving || !name.trim()}
             style={{ flex: 1, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: saving || !name.trim() ? 0.6 : 1 }}>
-            {saving ? 'Creating...' : 'Create Story'}
+            {saving ? 'Creating...' : 'Create Campaign'}
           </button>
           <button onClick={() => router.back()}
             style={{ padding: '10px 20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
