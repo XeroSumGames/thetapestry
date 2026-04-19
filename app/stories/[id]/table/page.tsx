@@ -583,6 +583,14 @@ export default function TablePage() {
         .on('broadcast', { event: 'tactical_unshared' }, () => { setTacticalShared(false); setShowTacticalMap(false) })
         .on('broadcast', { event: 'token_changed' }, () => { setTokenRefreshKey(k => k + 1) })
         .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id); loadRolls(id) })
+        .on('broadcast', { event: 'logs_cleared' }, () => {
+          // GM started/ended a session — clear local chat + roll state, then
+          // refetch from DB so every client converges to the post-clear state.
+          setRolls([])
+          setChatMessages([])
+          loadRolls(id)
+          loadChat(id)
+        })
         .on('broadcast', { event: 'npc_damaged' }, (msg: any) => {
           // Another client dealt damage to an NPC — apply the patch locally
           const { npcId, patch } = msg.payload ?? {}
@@ -1474,6 +1482,7 @@ export default function TablePage() {
     logEvent('session_started', { campaign_id: id, session_number: newCount })
     console.warn('[startSession] kick-preserve build — kicks persist across sessions')
     // Fire all four DB calls in parallel — none depend on each other.
+    // Log delete errors explicitly so we notice if RLS silently blocks a cleanup.
     void Promise.all([
       supabase.from('campaigns').update({
         session_status: 'active',
@@ -1485,11 +1494,18 @@ export default function TablePage() {
         session_number: newCount,
         started_at: startedAt,
       }),
-      supabase.from('roll_log').delete().eq('campaign_id', id),
-      supabase.from('chat_messages').delete().eq('campaign_id', id),
+      supabase.from('roll_log').delete().eq('campaign_id', id).then(({ error }: any) => {
+        if (error) console.warn('[startSession] roll_log delete failed:', error.message)
+      }),
+      supabase.from('chat_messages').delete().eq('campaign_id', id).then(({ error }: any) => {
+        if (error) console.warn('[startSession] chat_messages delete failed:', error.message)
+      }),
       // NOTE: no mass kicked=false reset — kick persists across sessions.
       // Kicked players must manually Rejoin from the story overview page.
     ]).catch(err => console.error('[startSession] background error:', err))
+    // Broadcast to every client so local chat/log state is force-cleared even
+    // if a DELETE realtime event gets dropped or RLS blocks the write.
+    initChannelRef.current?.send({ type: 'broadcast', event: 'logs_cleared', payload: {} })
   }
 
   async function endSession() {
@@ -1505,6 +1521,8 @@ export default function TablePage() {
     setRolls([])
     setChatMessages([])
     setSessionStatus('idle')
+    // Force-clear every other client's chat + log state immediately.
+    initChannelRef.current?.send({ type: 'broadcast', event: 'logs_cleared', payload: {} })
     const endedCount = sessionCount
     setSessionSummary('')
     setNextSessionNotes('')
@@ -1520,8 +1538,12 @@ export default function TablePage() {
       try {
         await Promise.all([
           supabase.from('campaigns').update({ session_status: 'idle', session_started_at: null }).eq('id', id),
-          supabase.from('roll_log').delete().eq('campaign_id', id),
-          supabase.from('chat_messages').delete().eq('campaign_id', id),
+          supabase.from('roll_log').delete().eq('campaign_id', id).then(({ error }: any) => {
+            if (error) console.warn('[endSession] roll_log delete failed:', error.message)
+          }),
+          supabase.from('chat_messages').delete().eq('campaign_id', id).then(({ error }: any) => {
+            if (error) console.warn('[endSession] chat_messages delete failed:', error.message)
+          }),
           combatActive ? Promise.all([
             supabase.from('roll_log').insert({ campaign_id: id, user_id: userId, character_name: 'System', label: '⚔️ Combat Ended', die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'action' }),
             supabase.from('initiative_order').delete().eq('campaign_id', id),
