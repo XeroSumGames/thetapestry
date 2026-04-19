@@ -4332,6 +4332,12 @@ export default function TablePage() {
                       </div>
                     )
                   })()}
+                  {(isGM || isMe) && (
+                    <div onClick={e => { e.stopPropagation(); window.open(`/character-sheet?c=${id}&char=${entry.character.id}`, `char-${entry.character.id}`, 'width=800,height=800,menubar=no,toolbar=no') }}
+                      style={{ padding: '3px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.2 }}>
+                      ↗
+                    </div>
+                  )}
                 </div>
                 <div style={{ fontSize: nameSize, color: isActive ? '#f5a89a' : '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {entry.character.name} <span style={{ color: '#cce0f5', fontWeight: 400 }}>({entry.username})</span>
