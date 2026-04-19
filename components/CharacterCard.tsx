@@ -338,7 +338,7 @@ export default function CharacterCard({
               <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={btn('#c0392b', '#f5a89a')}>Edit</button>
               <button onClick={() => setShowInventory(true)} style={btn('#2a2010', '#EF9F27')}>Inventory</button>
               {campaignIdProp && (
-                <button onClick={() => window.open(`/character-sheet?c=${campaignIdProp}&char=${c.id}`, `char-${c.id}`, 'width=700,height=800,menubar=no,toolbar=no')} title="Pop out" style={btn('#2a102a', '#d48bd4')}>↗</button>
+                <button onClick={() => window.open(`/character-sheet?c=${campaignIdProp}&char=${c.id}`, `char-${c.id}`, 'width=800,height=800,menubar=no,toolbar=no')} title="Pop out" style={btn('#2a102a', '#d48bd4')}>↗</button>
               )}
               <button onClick={handlePrint} disabled={printing} style={btn('#2d5a1b', '#7fc458')}>Print</button>
               {!inline && <button onClick={handleDuplicate} disabled={duplicating} style={btn('#1a3a5c', '#7ab3d4')}>{duplicating ? '...' : 'Duplicate'}</button>}
