@@ -263,6 +263,18 @@
 - [ ] GM loot distribution modal — bulk give items to multiple characters
 - [ ] Inventory migration — auto-convert old string equipment to structured items on load
 
+### Vehicle System
+- [x] VehicleCard component — WP bar, stress, fuel reserves, cargo manifest, operator notes
+- [x] Vehicle pop-out page (/vehicle) — full two-column layout for second monitor
+- [x] Realtime sync via Supabase postgres_changes
+- [x] Editable by all campaign members (not just GM)
+- [x] Cargo add/remove with quantity and notes
+- [x] Operator notes editable
+- [x] Floorplan image support
+- [x] Vehicles folder in Assets tab
+- [x] Pop-out hides sidebar (full-width layout)
+- [x] SQL: campaigns.vehicles jsonb column + Minnie seed data
+
 ### Code Audit (2026-04-18)
 - [x] CRITICAL: Grapple consumeAction awaited
 - [x] CRITICAL: Charge validates active combatant before roll
