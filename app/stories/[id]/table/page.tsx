@@ -184,6 +184,14 @@ export default function TablePage() {
   const [userId, setUserId] = useState<string | null>(null)
   const userIdRef = useRef<string | null>(null)
   useEffect(() => { userIdRef.current = userId }, [userId])
+  // Per-PC stress memory — used to detect the <5 → 5 transition at the
+  // table-page level so the Stress Check modal fires even when the target's
+  // CharacterCard sheet isn't mounted.
+  const prevStressByStateIdRef = useRef<Map<string, number>>(new Map())
+  // Set on load to skip threshold triggers on the initial entries snapshot
+  // (otherwise a PC who's ALREADY at 5 from a previous session would pop the
+  // modal again on every page load).
+  const stressWatchPrimedRef = useRef(false)
   const [myUsername, setMyUsername] = useState<string>('')
   const [isGM, setIsGM] = useState(false)
   const [entries, setEntries] = useState<TableEntry[]>([])
@@ -461,6 +469,35 @@ export default function TablePage() {
       })
     if (toInsert.length > 0) await supabase.from('character_states').insert(toInsert)
   }
+
+  // Watch entries for any PC whose stress transitions <5 → 5. The Stress Check
+  // modal lives inside CharacterCard and only fires when the sheet is mounted;
+  // this guarantees the trigger by auto-opening the affected player's sheet
+  // (their client) or logging a toast for the GM.
+  useEffect(() => {
+    if (!entries || entries.length === 0) return
+    const prev = prevStressByStateIdRef.current
+    const primed = stressWatchPrimedRef.current
+    for (const e of entries) {
+      const stateId = e.stateId
+      const curStress = e.liveState?.stress ?? 0
+      const lastSeen = prev.get(stateId)
+      // Only fire on an actual transition, never on the initial snapshot.
+      if (primed && lastSeen != null && lastSeen < 5 && curStress >= 5) {
+        const ownerUserId = e.userId
+        if (ownerUserId && ownerUserId === userIdRef.current) {
+          // It's my PC — open the sheet so CharacterCard's effect fires the modal.
+          setSelectedEntry(e)
+          setViewingNpcs([])
+        } else if (isGM) {
+          // GM-side notice. Player will see the modal on their own client.
+          console.warn(`[stress] ${e.character.name} hit 5 — Stress Check triggered for player`)
+        }
+      }
+      prev.set(stateId, curStress)
+    }
+    stressWatchPrimedRef.current = true
+  }, [entries, isGM])
 
   useEffect(() => {
     async function load() {
@@ -4335,7 +4372,7 @@ export default function TablePage() {
                   {(isGM || isMe) && (
                     <div onClick={e => { e.stopPropagation(); window.open(`/character-sheet?c=${id}&char=${entry.character.id}`, `char-${entry.character.id}`, 'width=800,height=800,menubar=no,toolbar=no') }}
                       style={{ padding: '3px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.2 }}>
-                      ↗
+                      Popout
                     </div>
                   )}
                 </div>
