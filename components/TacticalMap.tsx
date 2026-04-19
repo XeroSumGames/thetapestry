@@ -586,22 +586,45 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       // Restore rotation before drawing name (name should be horizontal)
       if (tokenRotation !== 0) ctx.restore()
 
-      // Name below — with dark background for legibility
+      // Name below — objects get up to 2 lines, characters get first word only
       const fontSize = Math.max(14, cellSize * 0.34)
       ctx.font = `bold ${fontSize}px Barlow Condensed`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      const nameText = t.name.split(' ')[0]
-      const nameY = cy + radius + fontSize / 2 + 4
-      const nameMetrics = ctx.measureText(nameText)
+      const isObj = t.token_type === 'object'
       const namePadX = 4
       const namePadY = 2
-      const nameW = nameMetrics.width + namePadX * 2
-      const nameH = fontSize + namePadY * 2
-      ctx.fillStyle = 'rgba(0,0,0,0.75)'
-      ctx.fillRect(Math.round(cx - nameW / 2), Math.round(nameY - nameH / 2), Math.round(nameW), Math.round(nameH))
-      ctx.fillStyle = '#f5f2ee'
-      ctx.fillText(nameText, cx, nameY)
+      let nameY: number
+      let nameH: number
+      if (isObj && t.name.includes(' ')) {
+        // Two-line name for objects
+        const words = t.name.split(' ')
+        const mid = Math.ceil(words.length / 2)
+        const line1 = words.slice(0, mid).join(' ')
+        const line2 = words.slice(mid).join(' ')
+        const lineH = fontSize + 2
+        const nameY1 = cy + radius + lineH / 2 + 4
+        const nameY2 = nameY1 + lineH
+        const maxW = Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width) + namePadX * 2
+        const blockH = lineH * 2 + namePadY * 2
+        ctx.fillStyle = 'rgba(0,0,0,0.75)'
+        ctx.fillRect(Math.round(cx - maxW / 2), Math.round(nameY1 - lineH / 2 - namePadY), Math.round(maxW), Math.round(blockH))
+        ctx.fillStyle = '#f5f2ee'
+        ctx.fillText(line1, cx, nameY1)
+        ctx.fillText(line2, cx, nameY2)
+        nameY = nameY2
+        nameH = lineH
+      } else {
+        const nameText = t.name.split(' ')[0]
+        nameY = cy + radius + fontSize / 2 + 4
+        const nameMetrics = ctx.measureText(nameText)
+        const nameW = nameMetrics.width + namePadX * 2
+        nameH = fontSize + namePadY * 2
+        ctx.fillStyle = 'rgba(0,0,0,0.75)'
+        ctx.fillRect(Math.round(cx - nameW / 2), Math.round(nameY - nameH / 2), Math.round(nameW), Math.round(nameH))
+        ctx.fillStyle = '#f5f2ee'
+        ctx.fillText(nameText, cx, nameY)
+      }
 
       // WP bar beneath name
       let wpCur = 0, wpMax = 0
@@ -1213,6 +1236,12 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
                   style={{ padding: '2px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Remove
                 </button>
+                {tok.token_type === 'object' && onTokenClick && (
+                  <button onClick={() => { onTokenClick(tok); setSelectedToken(null) }}
+                    style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Edit
+                  </button>
+                )}
               </div>
             )}
             {isGM && (
