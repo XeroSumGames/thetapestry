@@ -4307,7 +4307,24 @@ export default function TablePage() {
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = gmEntry ? '#1a1a1a' : '#111' }}
         >
           <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-            {gmEntry && getCharPhoto(gmEntry) ? <img src={getCharPhoto(gmEntry)!} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '12px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>GM</span>}
+            {gmEntry && getCharPhoto(gmEntry) ? (
+              <img src={getCharPhoto(gmEntry)!} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <img
+                src="/gm-icon.png"
+                alt="GM"
+                loading="lazy"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                onError={e => {
+                  // File missing or broken — swap to the text fallback so the
+                  // circle never renders as a silent empty badge.
+                  const parent = (e.currentTarget.parentElement as HTMLElement | null)
+                  if (parent) {
+                    parent.innerHTML = '<span style="font-size:12px;font-weight:700;color:#c0392b;font-family:\'Barlow Condensed\',sans-serif;letter-spacing:.04em">GM</span>'
+                  }
+                }}
+              />
+            )}
           </div>
           <div style={{ fontSize: '12px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {gmEntry ? gmEntry.character.name : (gmInfo?.username ?? 'GM')}
