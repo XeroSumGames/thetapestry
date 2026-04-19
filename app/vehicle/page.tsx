@@ -162,6 +162,14 @@ export default function VehiclePage() {
               ))}
             </div>
           </div>
+
+          {/* Floorplan */}
+          {(vehicle as any).floorplan_url && (
+            <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginTop: '12px' }}>
+              <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Floorplan</div>
+              <img src={(vehicle as any).floorplan_url} alt="Floorplan" style={{ width: '100%', borderRadius: '3px', border: '1px solid #2e2e2e' }} />
+            </div>
+          )}
         </div>
 
         {/* Right column */}
