@@ -62,7 +62,8 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
   }
 
   async function handleSave() {
-    if (!title.trim()) return
+    console.warn('[GmNotes] handleSave: entered', { title: title.trim(), pendingFiles: pendingFiles.length })
+    if (!title.trim()) { console.warn('[GmNotes] handleSave: aborted — no title'); return }
     setSaving(true)
     // 1. Insert the note row to get an id.
     const { data: inserted, error } = await supabase.from('campaign_notes').insert({
@@ -71,13 +72,21 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
       content: content.trim(),
       attachments: [],
     }).select('id').single()
-    if (error || !inserted) { console.error('[GmNotes] insert error:', error?.message); setSaving(false); return }
+    if (error || !inserted) {
+      console.error('[GmNotes] insert error:', error?.message)
+      alert(`Note save failed: ${error?.message ?? 'unknown error'}`)
+      setSaving(false)
+      return
+    }
+    console.warn('[GmNotes] handleSave: note inserted', inserted.id, 'uploading', pendingFiles.length, 'file(s)')
     // 2. Upload any attached files into a folder keyed by the new note id.
     let attachments: Attachment[] = []
     if (pendingFiles.length > 0) {
       attachments = await uploadFiles(inserted.id, pendingFiles)
+      console.warn('[GmNotes] handleSave: uploaded', attachments.length, 'of', pendingFiles.length)
       if (attachments.length > 0) {
-        await supabase.from('campaign_notes').update({ attachments }).eq('id', inserted.id)
+        const { error: updErr } = await supabase.from('campaign_notes').update({ attachments }).eq('id', inserted.id)
+        if (updErr) console.error('[GmNotes] attachments update error:', updErr.message)
       }
     }
     setTitle('')
