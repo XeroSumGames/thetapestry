@@ -11,6 +11,7 @@ export default function VehiclePage() {
   const vehicleId = params.get('v')
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [isGM, setIsGM] = useState(false)
+  const [canEdit, setCanEdit] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -21,11 +22,25 @@ export default function VehiclePage() {
       const { data: camp } = await supabase.from('campaigns').select('gm_user_id, vehicles').eq('id', campaignId).single()
       if (!camp) { setLoading(false); return }
       setIsGM(camp.gm_user_id === user.id)
+      // Check if user is a campaign member or GM
+      const { data: membership } = await supabase.from('campaign_members').select('id').eq('campaign_id', campaignId).eq('user_id', user.id).maybeSingle()
+      setCanEdit(camp.gm_user_id === user.id || !!membership)
       const v = (camp.vehicles ?? []).find((v: Vehicle) => v.id === vehicleId)
       setVehicle(v ?? null)
       setLoading(false)
     }
     load()
+
+    // Realtime sync — refresh when campaign.vehicles changes
+    if (!campaignId) return
+    const channel = supabase.channel(`vehicle_${campaignId}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'campaigns', filter: `id=eq.${campaignId}` }, (payload: any) => {
+        const vehicles = payload.new?.vehicles ?? []
+        const v = vehicles.find((v: Vehicle) => v.id === vehicleId)
+        if (v) setVehicle(v)
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
   }, [campaignId, vehicleId])
 
   if (loading) return <div style={{ background: '#0f0f0f', color: '#cce0f5', minHeight: '100vh', padding: '2rem', fontFamily: 'Barlow, sans-serif' }}>Loading...</div>
@@ -92,7 +107,7 @@ export default function VehiclePage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
               <span style={lbl}>Wound Points</span>
               <span style={{ fontSize: '18px', color: wpColor, fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{vehicle.wp_current} / {vehicle.wp_max}</span>
-              {isGM && (
+              {canEdit && (
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
                   <button onClick={() => updateVehicle({ ...vehicle, wp_current: Math.max(0, vehicle.wp_current - 1) })} style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif' }}>-1</button>
                   <button onClick={() => updateVehicle({ ...vehicle, wp_current: Math.min(vehicle.wp_max, vehicle.wp_current + 1) })} style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif' }}>+1</button>
@@ -109,7 +124,7 @@ export default function VehiclePage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
               <span style={lbl}>Stress</span>
               <span style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: vehicle.stress >= 4 ? '#c0392b' : vehicle.stress >= 2 ? '#EF9F27' : '#7fc458' }}>{vehicle.stress} / 5</span>
-              {isGM && (
+              {canEdit && (
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
                   <button onClick={() => updateVehicle({ ...vehicle, stress: Math.max(0, vehicle.stress - 1) })} style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif' }}>-</button>
                   <button onClick={() => updateVehicle({ ...vehicle, stress: Math.min(5, vehicle.stress + 1) })} style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif' }}>+</button>
@@ -128,7 +143,7 @@ export default function VehiclePage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
               <span style={lbl}>Fuel Reserves</span>
               <span style={{ fontSize: '18px', color: '#EF9F27', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{vehicle.fuel_current} / {vehicle.fuel_max} days</span>
-              {isGM && (
+              {canEdit && (
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
                   <button onClick={() => updateVehicle({ ...vehicle, fuel_current: Math.max(0, vehicle.fuel_current - 1) })} style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif' }}>-1</button>
                   <button onClick={() => updateVehicle({ ...vehicle, fuel_current: Math.min(vehicle.fuel_max, vehicle.fuel_current + 1) })} style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif' }}>+1</button>
@@ -156,7 +171,7 @@ export default function VehiclePage() {
                     {item.qty > 1 && <span style={{ color: '#7ab3d4' }}> ×{item.qty}</span>}
                   </span>
                   {item.notes && <span style={{ color: '#5a5550', fontSize: '11px' }}>{item.notes}</span>}
-                  {isGM && (
+                  {canEdit && (
                     <button onClick={() => {
                       const newCargo = item.qty > 1
                         ? vehicle.cargo.map((c, i) => i === idx ? { ...c, qty: c.qty - 1 } : c)

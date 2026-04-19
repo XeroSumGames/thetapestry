@@ -4224,7 +4224,7 @@ export default function TablePage() {
                         {vehicles.map((v: Vehicle) => (
                           <div key={v.id} style={{ marginBottom: '4px' }}>
                             {expandedVehicleId === v.id ? (
-                              <VehicleCard vehicle={v} campaignId={id} isGM={isGM}
+                              <VehicleCard vehicle={v} campaignId={id} canEdit={true}
                                 onUpdate={async (updated: Vehicle) => {
                                   const newVehicles = vehicles.map(vv => vv.id === updated.id ? updated : vv)
                                   setVehicles(newVehicles)
