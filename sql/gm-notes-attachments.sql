@@ -35,6 +35,10 @@ CREATE POLICY "Campaign members read note attachments"
   );
 
 -- Allow GMs to upload to their campaign folder.
+-- IMPORTANT: `name` MUST be qualified as `storage.objects.name`. An unqualified
+-- `name` inside the `FROM campaigns c` subquery resolves to `c.name` (the
+-- campaign's display name), not the upload path — that silently breaks the
+-- folder check and every INSERT gets rejected. Same applies to DELETE below.
 DROP POLICY IF EXISTS "GM uploads note attachments" ON storage.objects;
 CREATE POLICY "GM uploads note attachments"
   ON storage.objects FOR INSERT TO authenticated
@@ -42,7 +46,7 @@ CREATE POLICY "GM uploads note attachments"
     bucket_id = 'note-attachments'
     AND EXISTS (
       SELECT 1 FROM public.campaigns c
-      WHERE c.id::text = (storage.foldername(name))[1]
+      WHERE c.id::text = (storage.foldername(storage.objects.name))[1]
         AND c.gm_user_id = auth.uid()
     )
   );
@@ -55,7 +59,7 @@ CREATE POLICY "GM deletes note attachments"
     bucket_id = 'note-attachments'
     AND EXISTS (
       SELECT 1 FROM public.campaigns c
-      WHERE c.id::text = (storage.foldername(name))[1]
+      WHERE c.id::text = (storage.foldername(storage.objects.name))[1]
         AND c.gm_user_id = auth.uid()
     )
   );
