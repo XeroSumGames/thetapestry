@@ -81,6 +81,8 @@
 - [x] Start session clears rolls/chat from DB + local state (clean slate each session)
 - [x] Realtime subscriptions listen to all events (INSERT + DELETE) for log clearing propagation
 - [x] Session history page with grid layout, deactivate, delete
+- [x] Session delete renumbers remaining and updates campaign count
+- [x] Timeline pins: event_date field, sort_order in Edit Pin UI
 - [x] Previous Sessions button in table header
 - [x] Cliffhanger field displayed in session history
 - [x] Table auto-refreshes when player joins (Realtime on campaign_members)
