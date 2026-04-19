@@ -171,7 +171,24 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
           {/* File picker for new note */}
           <label style={{ ...chipBtn, display: 'inline-block', alignSelf: 'flex-start', cursor: 'pointer' }}>
             + Attach Files
-            <input type="file" multiple onChange={e => { if (e.target.files) setPendingFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = '' }} style={{ display: 'none' }} />
+            <input type="file" multiple accept="image/*,application/pdf"
+              onChange={e => {
+                const files = e.target.files
+                console.warn('[GmNotes] file input change — files:', files?.length ?? 0)
+                if (files && files.length > 0) {
+                  const arr = Array.from(files)
+                  console.warn('[GmNotes] adding to pendingFiles:', arr.map(f => `${f.name} (${f.size}B)`))
+                  setPendingFiles(prev => {
+                    const next = [...prev, ...arr]
+                    console.warn('[GmNotes] pendingFiles now:', next.length)
+                    return next
+                  })
+                } else {
+                  console.warn('[GmNotes] no files in FileList — dialog was cancelled?')
+                }
+                e.target.value = ''
+              }}
+              style={{ display: 'none' }} />
           </label>
           {pendingFiles.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
