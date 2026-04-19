@@ -10,7 +10,7 @@ const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/stories', '/campa
 // Pages that always hide the sidebar
 const NO_SIDEBAR_PAGES = ['/login', '/signup', '/firsttimers', '/welcome']
 // Pages that use their own full-width layout
-const FULL_WIDTH_PATTERN = /^\/stories\/[^/]+\/table$|^\/vehicle$|^\/gm-screen$|^\/character-sheet$/
+const FULL_WIDTH_PATTERN = /^\/stories\/[^/]+\/table$|^\/vehicle$|^\/gm-screen$|^\/character-sheet$|^\/handout$/
 
 function MobileBanner() {
   const [dismissed, setDismissed] = useState(false)

@@ -16,6 +16,8 @@ export default function CharacterSheetPage() {
   const [isGM, setIsGM] = useState(false)
   const [isMySheet, setIsMySheet] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [notes, setNotes] = useState('')
+  const [notesSaving, setNotesSaving] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -28,6 +30,7 @@ export default function CharacterSheetPage() {
       const { data: char } = await supabase.from('characters').select('*').eq('id', characterId).single()
       if (!char) { setLoading(false); return }
       setCharacter(char)
+      setNotes(char.data?.session_notes ?? '')
 
       // Check GM status
       if (campaignId) {
@@ -93,6 +96,24 @@ export default function CharacterSheetPage() {
           await supabase.from('character_states').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', stateId)
         } : undefined}
       />
+
+      {/* Session Notes */}
+      <div style={{ marginTop: '16px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px' }}>
+        <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Session Notes</div>
+        <textarea value={notes} onChange={e => setNotes(e.target.value)}
+          placeholder="Keep track of what's happening..."
+          rows={6}
+          style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }} />
+        <button onClick={async () => {
+          if (!character) return
+          setNotesSaving(true)
+          await supabase.from('characters').update({ data: { ...character.data, session_notes: notes } }).eq('id', character.id)
+          setNotesSaving(false)
+        }} disabled={notesSaving}
+          style={{ marginTop: '6px', padding: '6px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: notesSaving ? 'not-allowed' : 'pointer', opacity: notesSaving ? 0.5 : 1 }}>
+          {notesSaving ? 'Saving...' : 'Save Notes'}
+        </button>
+      </div>
     </div>
   )
 }

@@ -223,6 +223,10 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                   {uploadingNoteId === n.id ? 'Uploading...' : '+ Attach'}
                   <input type="file" multiple disabled={uploadingNoteId === n.id} onChange={e => { handleAddAttachments(n, e.target.files); e.target.value = '' }} style={{ display: 'none' }} />
                 </label>
+                <button onClick={() => window.open(`/handout?id=${n.id}`, `handout-${n.id}`, 'width=800,height=700,menubar=no,toolbar=no')}
+                  style={{ padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Popout
+                </button>
                 <button onClick={() => handleDelete(n)}
                   style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Delete Note
