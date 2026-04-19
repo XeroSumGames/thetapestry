@@ -13,6 +13,8 @@ export default function VehiclePage() {
   const [isGM, setIsGM] = useState(false)
   const [canEdit, setCanEdit] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [editingNotes, setEditingNotes] = useState(false)
+  const [notesValue, setNotesValue] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -188,8 +190,25 @@ export default function VehiclePage() {
 
           {/* Operator Notes */}
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px' }}>
-            <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Operator Notes</div>
-            <div style={{ fontSize: '14px', color: '#cce0f5', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{vehicle.notes || 'No notes.'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>
+              <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', flex: 1 }}>Operator Notes</div>
+              {canEdit && (
+                <button onClick={() => { setEditingNotes(!editingNotes); setNotesValue(vehicle.notes) }}
+                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
+                  {editingNotes ? 'Cancel' : 'Edit'}
+                </button>
+              )}
+            </div>
+            {editingNotes ? (
+              <div>
+                <textarea value={notesValue} onChange={e => setNotesValue(e.target.value)} rows={6}
+                  style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }} />
+                <button onClick={() => { updateVehicle({ ...vehicle, notes: notesValue }); setEditingNotes(false) }}
+                  style={{ marginTop: '6px', padding: '6px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Save</button>
+              </div>
+            ) : (
+              <div style={{ fontSize: '14px', color: '#cce0f5', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{vehicle.notes || 'No notes.'}</div>
+            )}
           </div>
         </div>
       </div>
