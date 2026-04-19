@@ -24,7 +24,7 @@
 ### Known Issues (needs testing)
 - [ ] NPC action pips not consuming on use — likely fixed by consumeAction DB write + loadInitiative, needs live testing to confirm
 - [ ] PC damage from NPC attacks — needs verification with latest character_id fallback
-- [ ] Manipulation rolls should auto-include First Impression CMod
+- [x] Manipulation rolls auto-include First Impression CMod — "Interacting with NPC?" dropdown on social skill rolls auto-sets CMod from relationship_cmod
 - [ ] Add to Combat modal should filter NPCs already in initiative
 - [ ] Self-attack should apply damage to self
 - [x] **Stafford → Staff** — typo in weapon database, renamed
@@ -243,6 +243,8 @@
 - [x] Publish to Library button on NPC card (GM only)
 - [x] NPC form + card compacted (portrait/bank/status on one row)
 - [x] Renamed Friendly → Bystander NPC type
+- [x] NPC folder tree — collapsible folders, drag NPCs between, drag to reorder, double-click rename, folder field on edit form
+- [x] NPC Show/Hide syncs token visibility on tactical map
 - [ ] NPC browsing/filtering
 - [x] GM Screen — pop-out /gm-screen page for second monitor (outcomes, combat actions, range bands, conditions, CMods, healing, skills→attrs)
 
@@ -511,6 +513,12 @@
 - [x] **Range circles on selected token** — clicking a PC/NPC auto-draws 3 circles: green Engaged, blue 9ft Move, red primary-weapon range. Object tokens (crates, cars, doors) never show range bands. Drawn under tokens so sprites stay crisp. Show/Hide Ranges toggle in GM strip.
 - [x] **Range band circles REMOVED from tokens** — overlay drawing, Show/Hide Ranges button, `showRangeOverlay` state, and related constants all deleted from `TacticalMap.tsx`. Attack modal's auto range-band logic (`getAutoRangeBand` in page.tsx) still drives CMod + target filtering — just no canvas painting.
 - [x] **ObjectCard loot (GM)** — Contents section shows per-item `Give to [PC]` dropdown + green `Give` button. Transfers one-at-a-time to the chosen character's equipment, decrements (or removes) the crate's quantity in `scene_tokens.contents`, logs `🎒 [name] looted [item] from [crate]` to roll_log. Works on intact crates — no need to destroy first.
+- [x] **Object-token image library** — every uploaded image is saved to `object_token_library` (campaign-scoped, RLS: members read, GM insert/delete). Add + Edit object flows show "Or pick from library (N)" thumbnail strip for reuse. Run `sql/object-token-library.sql`.
+- [x] **Image crop modal on upload** — new `ObjectImageCropper` component: drag-to-move + corner-resize (aspect-locked square). Output is 512×512 JPEG. Tokens render square, so pre-cropping prevents the old stretch.
+- [x] **GM/player map alignment fix** — image size now derives from `image.naturalWidth × img_scale` (viewer-independent) instead of `container.clientWidth × img_scale` (viewer-dependent). Everyone sees pixel-identical positioning.
+- [x] **Cols/Rows changes no longer resize the image** — grid and image are fully decoupled; Cols+ only moves the grid.
+- [x] **Rescale Tactical Scenes tool** (`/tools/rescale-tactical-scenes`, Thriver only) — one-time migration that probes each scene's image naturalWidth and converts legacy container-based `img_scale` to the new baseline. Per-row + bulk rescale.
+- [x] **Order box on Assets → Map Pins edit form** — parity with /map sidebar. GM sets explicit numeric `sort_order`; list resorts immediately on save.
 
 ---
 

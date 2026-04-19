@@ -59,11 +59,12 @@ interface Props {
   onPlaceOnMap?: (name: string, portraitUrl: string | null, wpMax: number | null) => void
   onRemoveFromMap?: (name: string) => void
   onLoot?: (objectName: string, item: ContentItem, characterId: string, characterName: string) => void
+  onDuplicate?: (source: ObjectToken) => void | Promise<void>
   tokenRefreshKey?: number
   entries?: { character: { id: string; name: string; data: any }; userId: string }[]
 }
 
-export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemoveFromMap, onLoot, tokenRefreshKey, entries }: Props) {
+export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemoveFromMap, onLoot, onDuplicate, tokenRefreshKey, entries }: Props) {
   const supabase = createClient()
   const [objects, setObjects] = useState<ObjectToken[]>([])
   const [library, setLibrary] = useState<{ id: string; name: string; image_url: string }[]>([])
@@ -300,6 +301,13 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Edit
                 </button>
+                {onDuplicate && (
+                  <button onClick={async () => { await onDuplicate(obj); loadObjects() }}
+                    title="Duplicate this object (copies properties, contents, WP, lock state)"
+                    style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7ab3d4', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Dup
+                  </button>
+                )}
                 <button onClick={() => onRemoveFromMap?.(obj.name)}
                   style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}>×</button>
               </div>
