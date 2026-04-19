@@ -104,6 +104,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const portraitCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
   const tokenAnimRef = useRef<Map<string, { fromX: number; fromY: number; toX: number; toY: number; t: number }>>(new Map())
   const animFrameRef = useRef<number>(0)
+  // Which scene we've already auto-centered the scroll for — prevents
+  // stealing the user's scroll after they've moved around.
+  const centeredSceneIdRef = useRef<string | null>(null)
   const sceneRef = useRef<Scene | null>(null)
 
   // Keep refs in sync for canvas drawing
@@ -170,9 +173,36 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     return () => { supabase.removeChannel(channel); supabase.removeChannel(pingCh); if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current) }
   }, [campaignId])
 
+  // Center the viewport on the middle of the current map content (image or
+  // grid, whichever is larger). Only runs once per scene id so it doesn't
+  // steal the user's scroll after they've panned around. Called after draw()
+  // has sized the canvas.
+  function centerViewport() {
+    const container = containerRef.current
+    const canvas = canvasRef.current
+    if (!container || !canvas) return
+    // Use setTimeout(0) so the canvas dimensions written inside draw() have
+    // settled into the DOM before we read scroll dimensions.
+    setTimeout(() => {
+      if (!container || !canvas) return
+      const scrollX = Math.max(0, (canvas.width - container.clientWidth) / 2)
+      const scrollY = Math.max(0, (canvas.height - container.clientHeight) / 2)
+      container.scrollLeft = scrollX
+      container.scrollTop = scrollY
+    }, 0)
+  }
+
   // Load background image when scene changes
   useEffect(() => {
-    if (!scene?.background_url) { bgImageRef.current = null; draw(); return }
+    if (!scene?.background_url) {
+      bgImageRef.current = null
+      draw()
+      if (scene && centeredSceneIdRef.current !== scene.id) {
+        centeredSceneIdRef.current = scene.id
+        centerViewport()
+      }
+      return
+    }
     const img = new Image()
     img.crossOrigin = 'anonymous'
     img.onload = () => {
@@ -186,6 +216,12 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         if (img.naturalWidth > cw * 1.1) setImgScale(fit)
       }
       draw()
+      // Center once per scene. After the image loads, canvas dimensions are
+      // final — this is the right moment to scroll to the middle.
+      if (centeredSceneIdRef.current !== scene.id) {
+        centeredSceneIdRef.current = scene.id
+        centerViewport()
+      }
     }
     img.src = scene.background_url
   }, [scene?.background_url])
