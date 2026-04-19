@@ -15,6 +15,10 @@ export default function VehiclePage() {
   const [loading, setLoading] = useState(true)
   const [editingNotes, setEditingNotes] = useState(false)
   const [notesValue, setNotesValue] = useState('')
+  const [showAddCargo, setShowAddCargo] = useState(false)
+  const [addName, setAddName] = useState('')
+  const [addQty, setAddQty] = useState('1')
+  const [addNotes, setAddNotes] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -164,7 +168,15 @@ export default function VehiclePage() {
         <div>
           {/* Cargo & Equipment */}
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginBottom: '12px' }}>
-            <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Cargo & Equipment</div>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>
+              <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', flex: 1 }}>Cargo & Equipment</div>
+              {canEdit && (
+                <button onClick={() => setShowAddCargo(!showAddCargo)}
+                  style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
+                  {showAddCargo ? 'Cancel' : '+ Add'}
+                </button>
+              )}
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 12px' }}>
               {vehicle.cargo.map((item, idx) => (
                 <div key={`${item.name}-${idx}`} style={{ display: 'flex', alignItems: 'baseline', gap: '4px', padding: '3px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>
@@ -186,6 +198,30 @@ export default function VehiclePage() {
                 </div>
               ))}
             </div>
+            {showAddCargo && (
+              <div style={{ marginTop: '8px', padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+                  <input value={addName} onChange={e => setAddName(e.target.value)} placeholder="Item name"
+                    autoFocus style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+                  <input value={addQty} onChange={e => setAddQty(e.target.value)} type="number" min="1" placeholder="Qty"
+                    style={{ width: '50px', padding: '5px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
+                </div>
+                <input value={addNotes} onChange={e => setAddNotes(e.target.value)} placeholder="Notes (e.g. 300 rounds each)"
+                  style={{ width: '100%', padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', marginBottom: '6px' }} />
+                <button onClick={() => {
+                  if (!addName.trim() || !vehicle) return
+                  const existing = vehicle.cargo.find(c => c.name === addName.trim())
+                  const newCargo = existing
+                    ? vehicle.cargo.map(c => c === existing ? { ...c, qty: c.qty + (parseInt(addQty) || 1) } : c)
+                    : [...vehicle.cargo, { name: addName.trim(), qty: parseInt(addQty) || 1, notes: addNotes.trim() }]
+                  updateVehicle({ ...vehicle, cargo: newCargo })
+                  setAddName(''); setAddQty('1'); setAddNotes(''); setShowAddCargo(false)
+                }} disabled={!addName.trim()}
+                  style={{ width: '100%', padding: '6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: addName.trim() ? 'pointer' : 'not-allowed', opacity: addName.trim() ? 1 : 0.5 }}>
+                  Add Item
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Operator Notes */}
