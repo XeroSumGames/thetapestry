@@ -97,8 +97,6 @@ export default function ImportGmKitPage() {
       }
 
       // ── Scenes ─────────────────────────────────────────────
-      // setting_seed_scenes only carries name + grid right now (no background URL),
-      // so background images from the kit don't propagate. Filed as a follow-up.
       if (scenes.length > 0) {
         const rows = scenes.map((s: any) => ({
           setting,
@@ -106,18 +104,22 @@ export default function ImportGmKitPage() {
           grid_cols: s.grid_cols ?? 20,
           grid_rows: s.grid_rows ?? 15,
           notes: null,
+          background_url: s.background_url ?? null,
         }))
         const { error: e } = await supabase.from('setting_seed_scenes').upsert(rows, { onConflict: 'setting,name' })
         if (e) errors.scenes = e.message; else counts.scenes = rows.length
       }
 
       // ── Handouts ───────────────────────────────────────────
-      // setting_seed_handouts has only title + content. Attachments lost on seed.
       if (handouts.length > 0) {
         const rows = handouts.map((h: any) => ({
           setting,
           title: h.title,
           content: h.content ?? '',
+          // Strip url_local so seed rows match campaign_notes.attachments shape exactly.
+          attachments: (Array.isArray(h.attachments) ? h.attachments : []).map((a: any) => ({
+            name: a.name, url: a.url, size: a.size, type: a.type, path: a.path,
+          })),
         }))
         const { error: e } = await supabase.from('setting_seed_handouts').upsert(rows, { onConflict: 'setting,title' })
         if (e) errors.handouts = e.message; else counts.handouts = rows.length
@@ -178,7 +180,7 @@ export default function ImportGmKitPage() {
         </div>
 
         <div style={{ background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', padding: '10px 12px', fontSize: '12px', color: '#EF9F27', lineHeight: 1.5 }}>
-          <b>v1 limitations:</b> scene background images and handout attachments are NOT carried over to the seed (their tables don't have those columns yet). NPC portrait URLs are preserved as-is — they'll keep working as long as the source campaign's images stay reachable.
+          <b>Note:</b> NPC portraits, scene backgrounds, and handout attachments are stored as URLs pointing at the source campaign's Supabase bucket. They'll keep working as long as the source campaign's images stay reachable. Delete the source campaign and the seed images will 404.
         </div>
 
         {error && (

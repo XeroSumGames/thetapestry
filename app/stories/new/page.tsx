@@ -117,7 +117,9 @@ export default function NewCampaignPage() {
     const sceneSource = (dbScenes && dbScenes.length > 0) ? dbScenes : (SETTING_SCENES[setting] ?? [])
     if (sceneSource.length > 0) {
       const sceneRows = sceneSource.map((s: any) => ({
-        campaign_id: data.id, name: s.name, grid_cols: s.grid_cols, grid_rows: s.grid_rows, is_active: false,
+        campaign_id: data.id, name: s.name, grid_cols: s.grid_cols, grid_rows: s.grid_rows,
+        is_active: false,
+        background_url: s.background_url ?? null,
       }))
       const { error: sceneErr } = await supabase.from('tactical_scenes').insert(sceneRows)
       if (sceneErr) seedErrors.push(`scenes: ${sceneErr.message}`)
@@ -129,6 +131,7 @@ export default function NewCampaignPage() {
     if (handoutSource.length > 0) {
       const handoutRows = handoutSource.map((h: any) => ({
         campaign_id: data.id, title: h.title, content: h.content,
+        attachments: Array.isArray(h.attachments) ? h.attachments : [],
       }))
       const { error: handoutErr } = await supabase.from('campaign_notes').insert(handoutRows)
       if (handoutErr) seedErrors.push(`handouts: ${handoutErr.message}`)
