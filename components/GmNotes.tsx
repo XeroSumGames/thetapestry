@@ -246,39 +246,45 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <button onClick={async () => {
-                  const next = !n.shared
-                  // .select() returns the updated rows — a 0-length array means
-                  // RLS silently blocked the write (Supabase doesn't surface an error).
-                  const { data, error } = await supabase
-                    .from('campaign_notes')
-                    .update({ shared: next })
-                    .eq('id', n.id)
-                    .select('id')
-                  console.warn('[GmNotes] share toggle:', { noteId: n.id, next, rowsUpdated: data?.length ?? 0, error: error?.message ?? 'none' })
-                  if (error) { alert(`Share failed: ${error.message}`); return }
-                  if (!data || data.length === 0) {
-                    alert('Share did not affect any rows — likely an RLS / permissions issue. Check console.')
-                    return
-                  }
-                  setNotes(prev => prev.map(x => x.id === n.id ? { ...x, shared: next } : x))
-                }}
-                  style={{ padding: '4px 10px', background: n.shared ? '#1a2e10' : 'transparent', border: `1px solid ${n.shared ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.shared ? '#7fc458' : '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  {n.shared ? '✓ Shared' : 'Share'}
-                </button>
-                <label style={{ ...chipBtn, display: 'inline-block', cursor: uploadingNoteId === n.id ? 'wait' : 'pointer', opacity: uploadingNoteId === n.id ? 0.6 : 1 }}>
-                  {uploadingNoteId === n.id ? 'Uploading...' : '+ Attach'}
-                  <input type="file" multiple disabled={uploadingNoteId === n.id} onChange={e => { handleAddAttachments(n, e.target.files); e.target.value = '' }} style={{ display: 'none' }} />
-                </label>
-                <button onClick={() => window.open(`/handout?id=${n.id}`, `handout-${n.id}`, 'width=800,height=700,menubar=no,toolbar=no')}
-                  style={{ padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  Popout
-                </button>
-                <button onClick={() => handleDelete(n)}
-                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  Delete Note
-                </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {/* Row 1 — Share + Attach */}
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={async () => {
+                    const next = !n.shared
+                    // .select() returns the updated rows — a 0-length array means
+                    // RLS silently blocked the write (Supabase doesn't surface an error).
+                    const { data, error } = await supabase
+                      .from('campaign_notes')
+                      .update({ shared: next })
+                      .eq('id', n.id)
+                      .select('id')
+                    console.warn('[GmNotes] share toggle:', { noteId: n.id, next, rowsUpdated: data?.length ?? 0, error: error?.message ?? 'none' })
+                    if (error) { alert(`Share failed: ${error.message}`); return }
+                    if (!data || data.length === 0) {
+                      alert('Share did not affect any rows — likely an RLS / permissions issue. Check console.')
+                      return
+                    }
+                    setNotes(prev => prev.map(x => x.id === n.id ? { ...x, shared: next } : x))
+                  }}
+                    style={{ flex: 1, padding: '4px 10px', background: n.shared ? '#1a2e10' : 'transparent', border: `1px solid ${n.shared ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.shared ? '#7fc458' : '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    {n.shared ? '✓ Shared' : 'Share'}
+                  </button>
+                  <label style={{ ...chipBtn, flex: 1, textAlign: 'center' as const, display: 'inline-block', cursor: uploadingNoteId === n.id ? 'wait' : 'pointer', opacity: uploadingNoteId === n.id ? 0.6 : 1 }}>
+                    {uploadingNoteId === n.id ? 'Uploading...' : '+ Attach'}
+                    <input type="file" multiple disabled={uploadingNoteId === n.id} onChange={e => { handleAddAttachments(n, e.target.files); e.target.value = '' }} style={{ display: 'none' }} />
+                  </label>
+                </div>
+                {/* Row 2 — Popout + Delete */}
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={() => window.open(`/handout?id=${n.id}`, `handout-${n.id}`, 'width=800,height=700,menubar=no,toolbar=no')}
+                    style={{ flex: 1, padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Popout
+                  </button>
+                  <button onClick={() => handleDelete(n)}
+                    style={{ flex: 1, padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Delete Note
+                  </button>
+                </div>
               </div>
             </div>
           )}
