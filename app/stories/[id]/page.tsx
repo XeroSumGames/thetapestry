@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { SETTINGS } from '../../../lib/settings'
 import { SETTING_PREGENS, type PregenSeed } from '../../../lib/setting-npcs'
 import { buildCharacterFromPregen } from '../../../lib/xse-schema'
+import { exportGmKit } from '../../../lib/gm-kit'
 
 interface Campaign {
   id: string
@@ -70,6 +71,7 @@ export default function CampaignPage() {
   const [creatingPregen, setCreatingPregen] = useState(false)
   const [amKicked, setAmKicked] = useState(false)
   const [rejoining, setRejoining] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -204,6 +206,14 @@ export default function CampaignPage() {
     setCloning(false)
   }
 
+  async function handleExportKit() {
+    if (!campaign || exporting) return
+    setExporting(true)
+    const result = await exportGmKit(supabase, id)
+    setExporting(false)
+    if (!result.ok) alert(`GM Kit export failed: ${result.error ?? 'unknown error'}`)
+  }
+
   async function handleDelete() {
     if (!confirm('Permanently delete this story? This cannot be undone.')) return
     await supabase.from('campaigns').delete().eq('id', id)
@@ -255,6 +265,10 @@ export default function CampaignPage() {
           </button>
           <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
             {copied ? 'Copied!' : 'Share'}
+          </button>
+          <button onClick={handleExportKit} disabled={exporting} style={{ ...btn('#1a2e10', '#7fc458', '#2d5a1b'), opacity: exporting ? 0.6 : 1 } as any}
+            title="Download every pin, NPC, scene, token, handout (with images) as a portable .zip">
+            {exporting ? 'Packaging…' : 'GM Kit'}
           </button>
           <button onClick={handleDelete} style={btn('#7a1f16', '#f5a89a', '#7a1f16') as any}>
             Delete
