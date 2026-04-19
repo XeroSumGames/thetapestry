@@ -149,7 +149,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       const npcSection = npcsHere.length === 0 ? '' :
         `<div style="margin-top:8px;padding-top:6px;border-top:1px solid #2e2e2e;">
            <div style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:3px;">Also Here</div>
-           ${npcsHere.map(n => `<div style="font-size:15px;color:#d4cfc9;${n.status === 'dead' ? 'text-decoration:line-through;opacity:.6;' : ''}">${escapeHtml(n.name)}${n.npc_type ? ` <span style="color:#888;font-size:13px;">· ${escapeHtml(n.npc_type)}</span>` : ''}</div>`).join('')}
+           ${npcsHere.map(n => `<div style="font-size:15px;color:#d4cfc9;${n.status === 'dead' ? 'text-decoration:line-through;opacity:.6;' : ''}">${escapeHtml(n.name)}</div>`).join('')}
          </div>`
       const popupHtml =
         `<div style="font-family:Barlow Condensed,sans-serif;min-width:180px;">` +
