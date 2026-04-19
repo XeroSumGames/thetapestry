@@ -4144,6 +4144,44 @@ export default function TablePage() {
                       await loadEntries(id)
                       await loadRolls(id)
                     }}
+                    onDuplicate={async (source) => {
+                      // Pull lootable too — the source object passed in only carries the
+                      // ObjectToken type fields; we read it fresh so the clone matches DB state.
+                      const { data: full } = await supabase
+                        .from('scene_tokens')
+                        .select('lootable')
+                        .eq('id', source.id)
+                        .maybeSingle()
+                      // Bump suffix so we don't collide with the source name.
+                      const baseName = source.name.replace(/\s*\(copy(?:\s+\d+)?\)$/i, '')
+                      // Find next available "(copy)", "(copy 2)", "(copy 3)" suffix.
+                      const { data: existing } = await supabase
+                        .from('scene_tokens')
+                        .select('name')
+                        .eq('scene_id', source.scene_id)
+                        .eq('token_type', 'object')
+                      const taken = new Set((existing ?? []).map((r: any) => r.name))
+                      let candidate = `${baseName} (copy)`
+                      let n = 2
+                      while (taken.has(candidate)) candidate = `${baseName} (copy ${n++})`
+                      const { error } = await supabase.from('scene_tokens').insert({
+                        scene_id: source.scene_id,
+                        name: candidate,
+                        token_type: 'object',
+                        portrait_url: source.portrait_url,
+                        grid_x: 1, grid_y: 1, // top-left per memory rule
+                        is_visible: source.is_visible,
+                        color: source.color,
+                        wp_max: source.wp_max,
+                        wp_current: source.wp_max, // restore to full integrity
+                        properties: source.properties ?? [],
+                        contents: source.contents ?? [],
+                        lootable: full?.lootable ?? false,
+                      })
+                      if (error) { alert(`Duplicate failed: ${error.message}`); return }
+                      setTokenRefreshKey(k => k + 1)
+                      initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+                    }}
                     entries={entries as any}
                   />
                 )}
