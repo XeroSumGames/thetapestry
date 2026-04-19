@@ -3940,6 +3940,7 @@ export default function TablePage() {
               zIndex: 1100,
             }}>
               <CharacterCard
+                campaignId={id}
                 character={syncedSelectedEntry.character}
                 liveState={syncedSelectedEntry.liveState}
                 canEdit={isGM || syncedSelectedEntry.userId === userId}
@@ -4379,6 +4380,7 @@ export default function TablePage() {
               <div style={{ width: '40px', height: '4px', borderRadius: '2px', background: '#5a5a5a' }} />
             </div>
             <CharacterCard
+              campaignId={id}
               character={syncedSelectedEntry.character}
               liveState={syncedSelectedEntry.liveState}
               canEdit={isGM || syncedSelectedEntry.userId === userId}
