@@ -3692,6 +3692,9 @@ export default function TablePage() {
               entries={entries}
               myCharacterId={myCharIdRef.current}
               onTokenClick={(token: any) => {
+                // Double-click = opens a card AND selects the token as attack target,
+                // so hitting ATTACK right after peeking at a zombie pre-populates it.
+                setSelectedMapTargetName(token?.name ?? null)
                 if (token.npc_id) {
                   const npc = campaignNpcs.find((n: any) => n.id === token.npc_id)
                   if (npc) {
