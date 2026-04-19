@@ -563,11 +563,25 @@
 - [ ] Player-facing read-only Community summary (members count, current morale trend, their recruitment/apprentice bonds)
 - [ ] Apprentice task delegation UI — GM assigns off-screen tasks during Activity Blocks
 
+### Phase E — The Tapestry (Persistent World) 🚩 flagship differentiator
+Communities become first-class entities in the Distemperverse. Every published community from every table shares one world.
+- [ ] Day-one schema carries `published_at`, `world_visibility`, `world_community_id` on `communities` so Phase E is additive
+- [ ] `world_communities` mirror table (sanitized public row: name, description, homestead lat/lng, size band, status, faction label, thriver_approved)
+- [ ] Community "Publish to Distemperverse" toggle + Thriver moderation queue (reuse `map_pins` promotion pattern)
+- [ ] World map overlay — published communities render with size-banded icons, status colors, click-to-open public card
+- [ ] GM-to-GM contact handshake — "My campaign encounters Community X" notification + opt-in private-data reveal
+- [ ] Trade / alliance / feud links (narrative edges between two published communities, drawn as colored arcs)
+- [ ] Migration on dissolution — 3-failure collapse offers survivors to nearby published communities
+- [ ] Schism — large communities split; one stays, one founds a new Homestead
+- [ ] World Event CMod propagation — Distemper Timeline pins in a region apply CMods to all published communities in that region
+- [ ] Per-community Campfire feed (weekly outcomes, schisms, dissolutions, GM-curated updates)
+- [ ] Community subscription for players
+- [ ] Campaign-creation wizard "Start inside/around an existing published community"
+
 ### Out of scope (see spec §12)
-- Cross-campaign / setting-wide communities
-- Community-as-combat-entity
-- Inter-community trade/economy
-- Procedural NPC generation for new communities
+- Community-as-single-combat-entity (members still combat individually)
+- Full trade-economy simulation (Phase E has narrative links only)
+- Procedural community generation (GM-authored only)
 
 ---
 
@@ -586,6 +600,9 @@
 ---
 
 ## 🔵 Phase 6 — Community & Retention
+
+> Depends on Phase 4b Phase E shipping — Campfire feeds, subscription, and cross-community features hang off the `world_communities` layer.
+
 - [ ] LFG system — GMs post open campaigns, players post availability, matching by setting and playstyle
 - [ ] Session scheduling — GM proposes times, players confirm, calendar view
 - [ ] The Gazette — auto-generated campaign newsletter after each session pulling from roll log highlights, session summary, GM notes. Shareable link for non-members.

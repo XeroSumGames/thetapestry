@@ -4,6 +4,48 @@
 
 **Status**: Spec — not yet implemented.
 
+**Strategic weight**: 🚩 **Flagship feature** — one of the biggest, most meaningful, and most differentiating elements of Distemper, and a primary pillar of The Tapestry. Every Community created in a campaign becomes a node in a **shared persistent world** where communities from different tables can meet, trade, war, ally, schism, and migrate. Communities are the bridge between a single GM's campaign and the Distemperverse at large.
+
+---
+
+## 0. The Tapestry Layer — Persistent World
+
+This is what lifts Communities above a standard tabletop sub-system. Every Community lives in two contexts:
+
+1. **Campaign-local** — what this spec §1–§11 covers: members, morale, resources, weekly checks.
+2. **World-facing** — a public face visible to other campaigns running in the Distemperverse. Roughly analogous to how `map_pins` already promote from campaign-private to world-visible.
+
+### 0a. World-facing Community record
+
+- Optional opt-in per community (GM toggles "Publish to Distemperverse"). Private by default.
+- Propagates only sanitized, GM-approved data: name, description, Homestead location (world map coords), faction/church/ideology label, approximate size band (Small / Band / Settlement / Enclave / City), current status (Thriving / Holding / Struggling / Dying / Dissolved), Thriver-approved latest public update.
+- Internal roster / exact WP / secret properties never leave the campaign.
+
+### 0b. Cross-campaign interactions
+
+- **Contact** — another GM's campaign can flag "my PCs encounter Community X" at their Homestead location. Triggers a GM-to-GM notification; opt-in handshake before anything shared.
+- **Trade routes / alliances / feuds** — narrative links between two published communities. Shown on the world map as arcs.
+- **Migration** — when a community dissolves (3-failure collapse), survivors can be narratively absorbed into nearby published communities (with consent from those GMs).
+- **Schism** — large communities can split into two, one staying, one founding a new Homestead elsewhere.
+- **World Events** — setting-wide Tapestry events (Distemper Timeline pins) can apply temporary CMod modifiers or resource pressure to all published communities in a region.
+
+### 0c. The Campfire integration
+
+- Published communities get their own feed in The Campfire (Phase 6 layer). Weekly Morale outcomes, notable recruitments, trade-route events, and dissolutions post as entries.
+- GM-curated "state of the community" narrative updates.
+- Players who subscribe to a community follow its story even when not at the table.
+
+### 0d. Why this is the differentiator
+
+- No other TTRPG platform treats communities as first-class, cross-table, shared-world entities. Most VTTs scope everything to a single campaign.
+- Matches the tonal DNA of the setting: Distemper is about groups trying to survive against the dead and each other — the meaningful unit is the community, not the character.
+- Natural onboarding hook for new GMs: pick an existing published community, run a campaign inside its orbit instead of starting from nothing.
+- Organic content engine for the Distemperverse: the world grows as tables play, without requiring Thriver-authored scenarios for every region.
+
+### 0e. Implementation phase for the Tapestry layer
+
+Build the campaign-local system first (Phases A–D). Add the Tapestry / Persistent World layer as **Phase E** (see §11). Don't over-engineer before the local loop is solid — but build the DB with `published_at`, `world_visibility`, and `world_community_id` columns from day one so the migration to published entities is additive.
+
 ---
 
 ## 1. Terminology
@@ -214,6 +256,9 @@ Fed/Clothed sub-check outcomes mirror the Morale scale:
 
 ## 11. Rollout Phases
 
+> Build-order rationale: local loop first (A→D). Once a single table can run a community week-to-week, the Tapestry layer (E) turns on the world-shared magic that makes this a flagship differentiator. Day-one DB should already carry `published_at`, `world_visibility`, `world_community_id` so Phase E is additive, not a migration.
+
+
 ### Phase A — Foundation
 - DB tables + RLS.
 - Create Community modal (name, description, Homestead pin).
@@ -242,9 +287,22 @@ Fed/Clothed sub-check outcomes mirror the Morale scale:
 - Player-facing read-only Community summary.
 - Apprentice task delegation UI.
 
+### Phase E — The Tapestry (Persistent World)
+- `world_communities` mirror table — sanitized, public-facing row per published community. Columns: `id`, `source_campaign_id`, `source_community_id`, `name`, `description`, `homestead_lat`, `homestead_lng`, `size_band`, `status`, `faction_label`, `last_public_update_at`, `published_by`, `thriver_approved`.
+- GM "Publish to Distemperverse" toggle on the Community panel — requires Thriver moderation queue approval (reuse existing `map_pins` promotion pattern).
+- **World map overlay** — published communities render on the world map with size-banded icons, status colors, and click-to-open public card.
+- **Community contact handshake** — "My campaign encounters Community X" from another table fires a GM-to-GM notification; both GMs opt in before any private data crosses.
+- **Trade / alliance / feud links** — narrative edges between two published communities, drawn as colored arcs on the world map.
+- **Migration on dissolution** — when a community collapses (3-failure), survivors offered to nearby published communities; receiving GMs choose to absorb.
+- **Schism mechanic** — large community can split into two; one keeps the Homestead, the other founds a new one elsewhere (may be instantly published or remain campaign-private).
+- **World Event CMod propagation** — Distemper Timeline pins in a region can apply temporary CMods to Morale Checks for every published community inside that region.
+- **Campfire feed per community** — Phase 6 Campfire shows a public timeline for each community: weekly outcomes, notable recruitments, schisms, dissolutions. GM-curated narrative updates.
+- **Community subscription** — players follow published communities across sessions and platforms.
+- **New-GM onboarding hook** — campaign-creation wizard offers "Start inside/around an existing published community" as an alternative to blank-slate.
+
 ## 12. Out of Scope (explicit non-goals)
 
-- Cross-campaign / setting-wide communities (handled separately via the existing "Community" pin category + Phase 6 retention features).
-- Community combat as a single entity (individual members still combat normally).
-- Economy / trade between communities.
-- Procedural community generation for NPCs.
+- Community combat as a single entity (individual members still combat normally — community health is tracked via Morale, not HP).
+- Full trade-economy simulation — Phase E supports *narrative* trade/alliance *links* between communities, not a resource-exchange engine.
+- Procedural community generation — every community is GM-authored.
+- The existing world-map "Community" pin category remains as a lightweight flavor pin. Once Phase E ships, GMs will be nudged to promote such pins into full published communities if they're meant to be real entities.
