@@ -265,6 +265,12 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                       return
                     }
                     setNotes(prev => prev.map(x => x.id === n.id ? { ...x, shared: next } : x))
+                    // Broadcast to players — postgres_changes can drop the UPDATE
+                    // event on their client when a row transitions out of their
+                    // RLS-visible set (un-share), so we signal explicitly.
+                    supabase.channel(`gm_notes_share_${campaignId}`).send({
+                      type: 'broadcast', event: 'gm_notes_updated', payload: { id: n.id, shared: next },
+                    })
                   }}
                     style={{ flex: 1, padding: '4px 10px', background: n.shared ? '#1a2e10' : 'transparent', border: `1px solid ${n.shared ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.shared ? '#7fc458' : '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     {n.shared ? '✓ Shared' : 'Share'}

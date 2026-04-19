@@ -38,9 +38,14 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
     })()
     load()
     loadShared()
-    // Live-refresh shared GM notes when GM toggles share, edits, or attaches.
+    // Live-refresh shared GM notes.
+    // postgres_changes alone isn't enough: when the GM un-shares a note, the
+    // UPDATE transitions the row OUT of the player's RLS-visible set, so
+    // Supabase often drops the event on this client. GmNotes emits an
+    // explicit broadcast on every share toggle as a reliable fallback.
     const channel = supabase.channel(`gm_notes_share_${campaignId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_notes', filter: `campaign_id=eq.${campaignId}` }, () => loadShared())
+      .on('broadcast', { event: 'gm_notes_updated' }, () => loadShared())
       .subscribe()
     return () => { supabase.removeChannel(channel) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
