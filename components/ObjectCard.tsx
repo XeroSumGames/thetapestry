@@ -182,7 +182,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
                 <span style={{ color: '#cce0f5', minWidth: '80px' }}>{p.key}:</span>
                 <span style={{ color: '#f5f2ee' }}>{p.value}</span>
                 {isGM && !p.revealed && (
-                  <span style={{ color: '#888', fontSize: '11px', fontStyle: 'italic' }}>(hidden)</span>
+                  <span style={{ color: '#888', fontSize: '12px', fontStyle: 'italic' }}>(hidden)</span>
                 )}
               </div>
             ))}
@@ -201,7 +201,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
               <button
                 onClick={toggleLootable}
                 disabled={togglingLock}
-                style={{ padding: '2px 8px', background: lootable ? '#1a2e10' : '#242424', border: `1px solid ${lootable ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: lootable ? '#7fc458' : '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: togglingLock ? 'wait' : 'pointer' }}
+                style={{ padding: '2px 8px', background: lootable ? '#1a2e10' : '#242424', border: `1px solid ${lootable ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: lootable ? '#7fc458' : '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: togglingLock ? 'wait' : 'pointer' }}
                 title={lootable ? 'Click to lock — players can no longer loot' : 'Click to unlock — players can loot without destroying'}
               >
                 {togglingLock ? '…' : lootable ? '🔓 Unlocked' : '🔒 Locked'}
@@ -233,7 +233,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
                       <button
                         disabled={!selectedChar || giving === k}
                         onClick={() => giveOne(c)}
-                        style={{ padding: '2px 8px', background: selectedChar ? '#1a2e10' : '#242424', border: `1px solid ${selectedChar ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: selectedChar ? '#7fc458' : '#5a5550', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: selectedChar ? 'pointer' : 'not-allowed' }}
+                        style={{ padding: '2px 8px', background: selectedChar ? '#1a2e10' : '#242424', border: `1px solid ${selectedChar ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: selectedChar ? '#7fc458' : '#5a5550', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: selectedChar ? 'pointer' : 'not-allowed' }}
                       >
                         {giving === k ? '…' : 'Give'}
                       </button>
@@ -243,7 +243,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
                     <button
                       disabled={giving === k}
                       onClick={() => takeOne(c)}
-                      style={{ padding: '2px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: giving === k ? 'wait' : 'pointer' }}
+                      style={{ padding: '2px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: giving === k ? 'wait' : 'pointer' }}
                     >
                       {giving === k ? '…' : 'Take'}
                     </button>

@@ -234,7 +234,7 @@ export default function CampaignPage() {
 
       {/* Header */}
       <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1rem' }}>
-        <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+        <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px', fontFamily: 'Barlow Condensed, sans-serif' }}>
           {SETTINGS[campaign.setting] ?? campaign.setting} &mdash; {isGM ? 'Game Master' : 'Player'}
         </div>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
@@ -291,7 +291,7 @@ export default function CampaignPage() {
 
       {/* Invite link — both views */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-        <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Invite Link</div>
+        <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Invite Link</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ flex: 1, fontSize: '13px', color: '#7ab3d4', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', padding: '8px 10px', fontFamily: 'Barlow, sans-serif', wordBreak: 'break-all' }}>
             {inviteLink}
@@ -301,7 +301,7 @@ export default function CampaignPage() {
             {copied ? 'Copied!' : 'Copy Link'}
           </button>
         </div>
-        <div style={{ fontSize: '11px', color: '#cce0f5', marginTop: '6px' }}>
+        <div style={{ fontSize: '12px', color: '#cce0f5', marginTop: '6px' }}>
           Code: <span style={{ color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', fontWeight: 700 }}>{campaign.invite_code}</span>
         </div>
       </div>
@@ -309,7 +309,7 @@ export default function CampaignPage() {
       {/* My Survivor — player only */}
       {!isGM && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-          <div style={{ fontSize: '10px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
             My Survivor
           </div>
           {assignedCharName && (
@@ -366,7 +366,7 @@ export default function CampaignPage() {
 
       {/* Members list — both views */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-        <div style={{ fontSize: '10px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+        <div style={{ fontSize: '12px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Barlow Condensed, sans-serif' }}>
           Members ({members.length})
         </div>
         {members.length === 0 ? (
@@ -379,15 +379,15 @@ export default function CampaignPage() {
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: '#242424', borderRadius: '3px', border: '1px solid #2e2e2e' }}>
                   <div>
                     <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>{(m.profiles as any)?.username ?? 'Unknown'}</span>
-                    {isThisGM && <span style={{ marginLeft: '6px', fontSize: '9px', background: '#c0392b', color: '#fff', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em' }}>GM</span>}
+                    {isThisGM && <span style={{ marginLeft: '6px', fontSize: '12px', background: '#c0392b', color: '#fff', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em' }}>GM</span>}
                     {(m.characters as any)?.name && (
-                      <div style={{ fontSize: '11px', color: '#d4cfc9', marginTop: '2px' }}>Playing: {(m.characters as any).name}</div>
+                      <div style={{ fontSize: '12px', color: '#d4cfc9', marginTop: '2px' }}>Playing: {(m.characters as any).name}</div>
                     )}
                     {!(m.characters as any)?.name && !isThisGM && (
-                      <div style={{ fontSize: '11px', color: '#cce0f5', marginTop: '2px' }}>No character assigned</div>
+                      <div style={{ fontSize: '12px', color: '#cce0f5', marginTop: '2px' }}>No character assigned</div>
                     )}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#cce0f5' }}>Joined {formatDate(m.joined_at)}</div>
+                  <div style={{ fontSize: '12px', color: '#cce0f5' }}>Joined {formatDate(m.joined_at)}</div>
                 </div>
               )
             })}

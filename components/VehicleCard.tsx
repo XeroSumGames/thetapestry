@@ -77,7 +77,7 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
   const wpColor = wpPct > 0.5 ? '#7fc458' : wpPct > 0.25 ? '#EF9F27' : '#c0392b'
   const fuelPct = v.fuel_max > 0 ? v.fuel_current / v.fuel_max : 0
 
-  const lbl: React.CSSProperties = { fontSize: '10px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }
+  const lbl: React.CSSProperties = { fontSize: '12px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }
   const val: React.CSSProperties = { fontSize: '15px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }
 
   return (
@@ -91,10 +91,10 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>{v.name}</div>
           <div style={{ fontSize: '12px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{v.type} · {v.rarity}</div>
-          {v.three_words && <div style={{ fontSize: '11px', color: '#d4cfc9', fontStyle: 'italic' }}>{v.three_words}</div>}
+          {v.three_words && <div style={{ fontSize: '12px', color: '#d4cfc9', fontStyle: 'italic' }}>{v.three_words}</div>}
         </div>
         <button onClick={() => window.open(`/vehicle?c=${campaignId}&v=${v.id}`, `vehicle-${v.id}`, 'width=900,height=700,menubar=no,toolbar=no')} title="Pop out"
-          style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7ab3d4', fontSize: '10px', cursor: 'pointer', padding: '1px 4px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>↗</button>
+          style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7ab3d4', fontSize: '12px', cursor: 'pointer', padding: '1px 4px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>↗</button>
         <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '16px', cursor: 'pointer', padding: '0 4px' }}>✕</button>
       </div>
 
@@ -114,7 +114,7 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
       </div>
 
       {/* Range */}
-      <div style={{ fontSize: '11px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>
+      <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>
         Range: <span style={{ color: '#7ab3d4', fontWeight: 700 }}>{v.range}</span>
       </div>
 
@@ -125,8 +125,8 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
           <span style={{ fontSize: '12px', color: wpColor, fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{v.wp_current}/{v.wp_max}</span>
           {canEdit && (
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '2px' }}>
-              <button onClick={() => update({ wp_current: Math.max(0, v.wp_current - 1) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5a89a', fontSize: '11px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }}>-</button>
-              <button onClick={() => update({ wp_current: Math.min(v.wp_max, v.wp_current + 1) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7fc458', fontSize: '11px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }}>+</button>
+              <button onClick={() => update({ wp_current: Math.max(0, v.wp_current - 1) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5a89a', fontSize: '12px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }}>-</button>
+              <button onClick={() => update({ wp_current: Math.min(v.wp_max, v.wp_current + 1) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7fc458', fontSize: '12px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }}>+</button>
             </div>
           )}
         </div>
@@ -142,8 +142,8 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
           <span style={{ fontSize: '12px', color: v.stress >= 4 ? '#c0392b' : v.stress >= 2 ? '#EF9F27' : '#7fc458', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{v.stress}/5</span>
           {canEdit && (
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '2px' }}>
-              <button onClick={() => update({ stress: Math.max(0, v.stress - 1) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7fc458', fontSize: '11px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }}>-</button>
-              <button onClick={() => update({ stress: Math.min(5, v.stress + 1) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5a89a', fontSize: '11px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }}>+</button>
+              <button onClick={() => update({ stress: Math.max(0, v.stress - 1) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7fc458', fontSize: '12px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }}>-</button>
+              <button onClick={() => update({ stress: Math.min(5, v.stress + 1) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5a89a', fontSize: '12px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }}>+</button>
             </div>
           )}
         </div>
@@ -161,8 +161,8 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
           <span style={{ fontSize: '12px', color: '#EF9F27', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{v.fuel_current}/{v.fuel_max} days</span>
           {canEdit && (
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '2px' }}>
-              <button onClick={() => update({ fuel_current: Math.max(0, v.fuel_current - 1) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5a89a', fontSize: '11px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }}>-</button>
-              <button onClick={() => update({ fuel_current: Math.min(v.fuel_max, v.fuel_current + 1) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7fc458', fontSize: '11px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }}>+</button>
+              <button onClick={() => update({ fuel_current: Math.max(0, v.fuel_current - 1) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5a89a', fontSize: '12px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }}>-</button>
+              <button onClick={() => update({ fuel_current: Math.min(v.fuel_max, v.fuel_current + 1) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7fc458', fontSize: '12px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }}>+</button>
             </div>
           )}
         </div>
@@ -177,20 +177,20 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
       <div style={{ marginBottom: '6px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
           <span style={lbl}>Cargo & Equipment</span>
-          <span style={{ fontSize: '10px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{v.cargo.length} items</span>
+          <span style={{ fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{v.cargo.length} items</span>
           {canEdit && (
-            <button onClick={() => setShowAddCargo(!showAddCargo)} style={{ marginLeft: 'auto', fontSize: '10px', padding: '0 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.4 }}>+</button>
+            <button onClick={() => setShowAddCargo(!showAddCargo)} style={{ marginLeft: 'auto', fontSize: '12px', padding: '0 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.4 }}>+</button>
           )}
         </div>
         {v.cargo.map((item, idx) => (
-          <div key={`${item.name}-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '2px 4px', fontSize: '11px', color: '#d4cfc9', borderBottom: '1px solid #1a1a1a' }}>
+          <div key={`${item.name}-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '2px 4px', fontSize: '12px', color: '#d4cfc9', borderBottom: '1px solid #1a1a1a' }}>
             <span style={{ flex: 1, fontFamily: 'Barlow Condensed, sans-serif' }}>
               {item.name}
               {item.qty > 1 && <span style={{ color: '#7ab3d4' }}> ×{item.qty}</span>}
               {item.notes && <span style={{ color: '#5a5550' }}> — {item.notes}</span>}
             </span>
             {canEdit && (
-              <button onClick={() => removeCargo(idx)} style={{ background: 'none', border: 'none', color: '#3a3a3a', fontSize: '11px', cursor: 'pointer', padding: '0 2px' }}
+              <button onClick={() => removeCargo(idx)} style={{ background: 'none', border: 'none', color: '#3a3a3a', fontSize: '12px', cursor: 'pointer', padding: '0 2px' }}
                 onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
                 onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>×</button>
             )}
@@ -207,8 +207,8 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
             <input value={cargoNotes} onChange={e => setCargoNotes(e.target.value)} placeholder="Notes (e.g. 300 rounds each)"
               style={{ width: '100%', padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', marginBottom: '4px' }} />
             <div style={{ display: 'flex', gap: '4px' }}>
-              <button onClick={addCargo} style={{ flex: 1, padding: '4px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Add</button>
-              <button onClick={() => setShowAddCargo(false)} style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={addCargo} style={{ flex: 1, padding: '4px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Add</button>
+              <button onClick={() => setShowAddCargo(false)} style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
             </div>
           </div>
         )}
@@ -218,14 +218,14 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
           <span style={lbl}>Operator Notes</span>
-          {canEdit && <button onClick={() => { setEditing(!editing); setEditNotes(v.notes) }} style={{ marginLeft: 'auto', fontSize: '10px', padding: '0 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.4 }}>{editing ? 'Cancel' : 'Edit'}</button>}
+          {canEdit && <button onClick={() => { setEditing(!editing); setEditNotes(v.notes) }} style={{ marginLeft: 'auto', fontSize: '12px', padding: '0 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.4 }}>{editing ? 'Cancel' : 'Edit'}</button>}
         </div>
         {editing ? (
           <div>
             <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={4}
               style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box' }} />
             <button onClick={() => { update({ notes: editNotes }); setEditing(false) }}
-              style={{ marginTop: '4px', padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Save</button>
+              style={{ marginTop: '4px', padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Save</button>
           </div>
         ) : (
           <div style={{ fontSize: '12px', color: '#cce0f5', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{v.notes || 'No notes.'}</div>

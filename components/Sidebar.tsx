@@ -112,7 +112,7 @@ export default function Sidebar() {
       <a href="/welcome" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Welcome to the Tapestry</a>
 <a href="/map" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The World</a>
 <a href="/stories" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Stories</a>
-<a href="#" style={soonStyle}>The Campfire <span style={{ fontSize: '9px', color: '#cce0f5' }}>&mdash; soon</span></a>
+<a href="#" style={soonStyle}>The Campfire <span style={{ fontSize: '12px', color: '#cce0f5' }}>&mdash; soon</span></a>
 
       {divider}
 
@@ -139,7 +139,7 @@ export default function Sidebar() {
       <a href="/characters/new" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</a>
       <a href="/characters/quick" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Character</a>
       <a href="/characters/random" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</a>
-      <a href="#" style={soonStyle}>Paradigms <span style={{ fontSize: '9px', color: '#cce0f5' }}>&mdash; soon</span></a>
+      <a href="#" style={soonStyle}>Paradigms <span style={{ fontSize: '12px', color: '#cce0f5' }}>&mdash; soon</span></a>
 
       {divider}
 

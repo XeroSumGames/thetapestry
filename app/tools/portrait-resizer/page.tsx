@@ -13,7 +13,7 @@ const h1Style: React.CSSProperties = { fontFamily: '"Barlow Condensed", sans-ser
 const h2Style: React.CSSProperties = { fontFamily: '"Barlow Condensed", sans-serif', fontSize: '14px', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }
 const btnPrimary: React.CSSProperties = { padding: '10px 20px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: '"Barlow Condensed", sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', textDecoration: 'none', display: 'inline-block' }
 const btnSecondary: React.CSSProperties = { ...btnPrimary, background: '#242424', border: '1px solid #3a3a3a', color: '#d4cfc9' }
-const subLabel: React.CSSProperties = { fontSize: '11px', color: '#cce0f5', fontFamily: '"Barlow Condensed", sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }
+const subLabel: React.CSSProperties = { fontSize: '12px', color: '#cce0f5', fontFamily: '"Barlow Condensed", sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }
 
 interface Circle { cx: number; cy: number; r: number } // in display coords
 
@@ -379,7 +379,7 @@ export default function PortraitResizerPage() {
                       {Math.round(circle.r * 2)}px
                     </div>
                   </div>
-                  <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '4px' }}>
+                  <div style={{ fontSize: '12px', color: '#5a5550', marginTop: '4px' }}>
                     Source area: {Math.round((circle.r * 2 * origDims.w) / displayDims.w)}px
                   </div>
                 </div>
@@ -475,7 +475,7 @@ export default function PortraitResizerPage() {
                       cursor: 'pointer',
                     }}>
                     {g === 'man' ? 'Male' : 'Female'}
-                    <span style={{ fontSize: '11px', marginLeft: '8px', color: '#5a5550', fontWeight: 400 }}>{counts[g]} saved</span>
+                    <span style={{ fontSize: '12px', marginLeft: '8px', color: '#5a5550', fontWeight: 400 }}>{counts[g]} saved</span>
                   </button>
                 )
               })}
@@ -490,7 +490,7 @@ export default function PortraitResizerPage() {
                 <span style={{ color: '#7fc458', fontSize: '12px', fontFamily: '"Barlow Condensed", sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✓ Added to portrait bank</span>
               )}
             </div>
-            <div style={{ fontSize: '11px', color: '#5a5550', marginTop: '8px' }}>
+            <div style={{ fontSize: '12px', color: '#5a5550', marginTop: '8px' }}>
               Each download uploads 256/56/32px versions to the shared portrait bank for random NPC assignment.
             </div>
           </div>

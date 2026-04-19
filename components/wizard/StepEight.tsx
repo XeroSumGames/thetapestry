@@ -84,16 +84,16 @@ export default function StepEight({ state, onChange }: Props) {
                   {w.cat}
                 </div>
                 <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee' }}>{w.name}</div>
-                <div style={{ fontSize: '10px', color: '#d4cfc9', marginTop: '2px' }}>
+                <div style={{ fontSize: '12px', color: '#d4cfc9', marginTop: '2px' }}>
                   {w.range} — {dmg} — RP {'rpPercent' in w ? w.rpPercent : ''}% — ENC {w.enc}
                 </div>
                 {'traits' in w && w.traits.length > 0 && (
-                  <div style={{ fontSize: '10px', color: '#7ab3d4', marginTop: '1px' }}>
+                  <div style={{ fontSize: '12px', color: '#7ab3d4', marginTop: '1px' }}>
                     {w.traits.map(t => t.name).join(', ')}
                   </div>
                 )}
                 {'clipSize' in w && w.clipSize > 0 && (
-                  <div style={{ fontSize: '10px', color: '#7ab3d4', marginTop: '1px' }}>
+                  <div style={{ fontSize: '12px', color: '#7ab3d4', marginTop: '1px' }}>
                     Clip: {w.clipSize}
                   </div>
                 )}
@@ -158,7 +158,7 @@ export default function StepEight({ state, onChange }: Props) {
                 {item.rarity}
               </div>
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee' }}>{item.name}</div>
-              <div style={{ fontSize: '10px', color: '#d4cfc9', marginTop: '2px' }}>
+              <div style={{ fontSize: '12px', color: '#d4cfc9', marginTop: '2px' }}>
                 ENC {item.enc}{item.notes ? ` — ${item.notes}` : ''}
               </div>
             </div>
@@ -185,7 +185,7 @@ export default function StepEight({ state, onChange }: Props) {
         })}
       </div>
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ fontSize: '11px', color: '#f5f2ee', letterSpacing: '.05em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
+        <label style={{ fontSize: '12px', color: '#f5f2ee', letterSpacing: '.05em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
           Enter your own incidental item
         </label>
         <input
@@ -218,7 +218,7 @@ export default function StepEight({ state, onChange }: Props) {
                 {item.rarity}
               </div>
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee' }}>{item.name}</div>
-              <div style={{ fontSize: '10px', color: '#d4cfc9', marginTop: '2px' }}>ENC {item.enc} — {item.notes}</div>
+              <div style={{ fontSize: '12px', color: '#d4cfc9', marginTop: '2px' }}>ENC {item.enc} — {item.notes}</div>
             </div>
           )
         })}
@@ -230,7 +230,7 @@ export default function StepEight({ state, onChange }: Props) {
 
 const sh: React.CSSProperties = {
   fontFamily: 'Barlow Condensed, sans-serif',
-  fontSize: '10px', fontWeight: 600, color: '#f5f2ee',
+  fontSize: '12px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em',
   margin: '1.25rem 0 8px', borderBottom: '1px solid #2e2e2e',
   paddingBottom: '4px',

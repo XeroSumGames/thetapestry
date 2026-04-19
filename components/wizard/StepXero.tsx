@@ -94,7 +94,7 @@ export default function StepXero({ state, onChange }: Props) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
         {state.photoDataUrl
           ? <img src={state.photoDataUrl} alt="Character" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #3a3a3a' }} />
-          : <div style={{ width: '80px', height: '80px', border: '1px dashed #3a3a3a', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#cce0f5' }}>No photo</div>
+          : <div style={{ width: '80px', height: '80px', border: '1px dashed #3a3a3a', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#cce0f5' }}>No photo</div>
         }
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <button onClick={() => fileRef.current?.click()} style={nbtn}>Upload photo</button>
@@ -162,14 +162,14 @@ export default function StepXero({ state, onChange }: Props) {
 
 const sh: React.CSSProperties = {
   fontFamily: 'Barlow Condensed, sans-serif',
-  fontSize: '10px', fontWeight: 600, color: '#f5f2ee',
+  fontSize: '12px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em',
   margin: '1.25rem 0 8px', borderBottom: '1px solid #2e2e2e',
   paddingBottom: '4px',
 }
 
 const lbl: React.CSSProperties = {
-  fontSize: '11px', color: '#f5f2ee',
+  fontSize: '12px', color: '#f5f2ee',
   letterSpacing: '.05em', textTransform: 'uppercase',
 }
 
@@ -198,7 +198,7 @@ const nbtn: React.CSSProperties = {
 
 const chip: React.CSSProperties = {
   background: '#242424', border: '1px solid #2e2e2e',
-  borderRadius: '3px', padding: '4px 6px', fontSize: '11px', cursor: 'pointer',
+  borderRadius: '3px', padding: '4px 6px', fontSize: '12px', cursor: 'pointer',
   textAlign: 'center', lineHeight: 1.3, color: '#f5f2ee',
   fontFamily: 'Barlow, sans-serif',
 }

@@ -112,7 +112,7 @@ export default function StepFour({ state, onChange }: Props) {
                 {gained.length ? gained.join(', ') : 'none'}
               </span>
             </div>
-            {d.note && <div style={{ fontSize: '11px', color: '#d4cfc9', marginTop: '5px', lineHeight: 1.5, fontStyle: 'italic' }}>"{d.note}"</div>}
+            {d.note && <div style={{ fontSize: '12px', color: '#d4cfc9', marginTop: '5px', lineHeight: 1.5, fontStyle: 'italic' }}>"{d.note}"</div>}
           </div>
         )
       })}
@@ -203,14 +203,14 @@ export default function StepFour({ state, onChange }: Props) {
 
 const sh: React.CSSProperties = {
   fontFamily: 'Barlow Condensed, sans-serif',
-  fontSize: '10px', fontWeight: 600, color: '#f5f2ee',
+  fontSize: '12px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em',
   margin: '1.25rem 0 8px', borderBottom: '1px solid #2e2e2e',
   paddingBottom: '4px',
 }
 
 const lbl: React.CSSProperties = {
-  fontSize: '11px', color: '#f5f2ee',
+  fontSize: '12px', color: '#f5f2ee',
   letterSpacing: '.05em', textTransform: 'uppercase',
   display: 'block', marginBottom: '4px',
 }

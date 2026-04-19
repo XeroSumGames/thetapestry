@@ -215,7 +215,7 @@ export default function NewCampaignPage() {
               </div>
             </div>
             {customCenter && (
-              <div style={{ fontSize: '11px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
+              <div style={{ fontSize: '12px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
                 Map will center on {customCenter.lat.toFixed(4)}, {customCenter.lng.toFixed(4)}
               </div>
             )}
@@ -232,7 +232,7 @@ export default function NewCampaignPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
             {[['satellite', 'Satellite'], ['topo', 'Topo'], ['street', 'Street'], ['voyager', 'Voyager'], ['humanitarian', 'Humanitarian'], ['positron', 'Positron'], ['dark', 'Dark']].map(([val, label]) => (
               <button key={val} type="button" onClick={() => setMapStyle(val)}
-                style={{ padding: '6px 4px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapStyle === val ? '#c0392b' : '#3a3a3a'}`, background: mapStyle === val ? '#2a1210' : '#242424', color: mapStyle === val ? '#f5a89a' : '#d4cfc9' }}>
+                style={{ padding: '6px 4px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapStyle === val ? '#c0392b' : '#3a3a3a'}`, background: mapStyle === val ? '#2a1210' : '#242424', color: mapStyle === val ? '#f5a89a' : '#d4cfc9' }}>
                 {label}
               </button>
             ))}
@@ -262,7 +262,7 @@ export default function NewCampaignPage() {
 }
 
 const lbl: React.CSSProperties = {
-  display: 'block', fontSize: '11px', fontWeight: 600,
+  display: 'block', fontSize: '12px', fontWeight: 600,
   color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em',
   marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif',
 }

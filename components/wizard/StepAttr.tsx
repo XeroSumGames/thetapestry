@@ -112,7 +112,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
                 {gained.length ? gained.join(', ') : 'none'}
               </span>
             </div>
-            {d.note && <div style={{ fontSize: '11px', color: '#d4cfc9', marginTop: '5px', lineHeight: 1.5, fontStyle: 'italic' }}>"{d.note}"</div>}
+            {d.note && <div style={{ fontSize: '12px', color: '#d4cfc9', marginTop: '5px', lineHeight: 1.5, fontStyle: 'italic' }}>"{d.note}"</div>}
           </div>
         )
       })}
@@ -145,15 +145,15 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
                   borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
                   transition: 'all .15s',
                 }}>
-                  <div style={{ fontSize: '10px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-                  <div style={{ fontSize: '7px', color: '#d4cfc9', marginBottom: '4px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
+                  <div style={{ fontSize: '12px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                  <div style={{ fontSize: '12px', color: '#d4cfc9', marginBottom: '4px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                     <button onClick={() => pickAttr(k)} disabled={!canDec} style={attrBtn(!canDec)}>-</button>
                     <div>
                       <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', color: isSelected ? '#f5a89a' : val > 0 ? '#f5f2ee' : '#d4cfc9' }}>
                         {val >= 0 ? `+${val}` : val}
                       </div>
-                      <div style={{ fontSize: '7px', color: isSelected ? '#f5a89a' : '#d4cfc9', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
+                      <div style={{ fontSize: '12px', color: isSelected ? '#f5a89a' : '#d4cfc9', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
                     </div>
                     <button onClick={() => pickAttr(k)} disabled={!canInc} style={attrBtn(!canInc)}>+</button>
                   </div>
@@ -236,7 +236,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
 
 const sh: React.CSSProperties = {
   fontFamily: 'Barlow Condensed, sans-serif',
-  fontSize: '10px', fontWeight: 600, color: '#f5f2ee',
+  fontSize: '12px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em',
   margin: '1.25rem 0 8px', borderBottom: '1px solid #2e2e2e',
   paddingBottom: '4px',

@@ -98,7 +98,7 @@ export default function ObjectImageCropper({ file, onCancel, onCrop }: Props) {
     <div onClick={onCancel} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 10003, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', maxWidth: '500px' }}>
         <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Crop Image</div>
-        <div style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>Drag the box to move, drag the corner to resize. Tokens render square.</div>
+        <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>Drag the box to move, drag the corner to resize. Tokens render square.</div>
 
         {srcUrl && imgSize && box ? (
           <div

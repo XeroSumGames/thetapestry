@@ -125,21 +125,21 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
           <div>
-            <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>Inventory</div>
+            <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>Inventory</div>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>Equipment</div>
           </div>
           <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-            <div style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Encumbrance</div>
+            <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Encumbrance</div>
             <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: overloaded ? '#c0392b' : '#7fc458' }}>
               {currentEnc}/{encLimit}
-              {overloaded && <span style={{ fontSize: '11px', marginLeft: '6px', color: '#c0392b' }}>OVERLOADED</span>}
+              {overloaded && <span style={{ fontSize: '12px', marginLeft: '6px', color: '#c0392b' }}>OVERLOADED</span>}
             </div>
-            {backpackBonus > 0 && <div style={{ fontSize: '10px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>+{backpackBonus} from backpack</div>}
+            {backpackBonus > 0 && <div style={{ fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>+{backpackBonus} from backpack</div>}
           </div>
         </div>
 
         {/* Enc breakdown */}
-        <div style={{ fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', display: 'flex', gap: '12px' }}>
+        <div style={{ fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', display: 'flex', gap: '12px' }}>
           <span>Weapons: {weaponEnc}</span>
           <span>Gear: {invEnc}</span>
           <span>Limit: 6 + PHY({phyMod}){backpackBonus > 0 ? ` + Pack(${backpackBonus})` : ''} = {encLimit}</span>
@@ -159,18 +159,18 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <span style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{item.name}</span>
-                      {item.qty > 1 && <span style={{ fontSize: '11px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>×{item.qty}</span>}
-                      {item.custom && <span style={{ fontSize: '9px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>custom</span>}
+                      {item.qty > 1 && <span style={{ fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>×{item.qty}</span>}
+                      {item.custom && <span style={{ fontSize: '12px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>custom</span>}
                     </div>
-                    {item.notes && <div style={{ fontSize: '11px', color: '#cce0f5', lineHeight: 1.3 }}>{item.notes}</div>}
+                    {item.notes && <div style={{ fontSize: '12px', color: '#cce0f5', lineHeight: 1.3 }}>{item.notes}</div>}
                   </div>
-                  <span style={{ fontSize: '11px', color: rc.color, background: rc.bg, border: `1px solid ${rc.border}`, borderRadius: '2px', padding: '0 4px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', flexShrink: 0 }}>{item.rarity}</span>
-                  <span style={{ fontSize: '11px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', flexShrink: 0, minWidth: '24px', textAlign: 'center' }}>{item.enc > 0 ? `${item.enc}` : '—'}</span>
+                  <span style={{ fontSize: '12px', color: rc.color, background: rc.bg, border: `1px solid ${rc.border}`, borderRadius: '2px', padding: '0 4px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', flexShrink: 0 }}>{item.rarity}</span>
+                  <span style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', flexShrink: 0, minWidth: '24px', textAlign: 'center' }}>{item.enc > 0 ? `${item.enc}` : '—'}</span>
                   {canEdit && onGiveTo && otherCharacters && otherCharacters.length > 0 && (
-                    <button onClick={() => giveItem(idx)} style={{ fontSize: '10px', padding: '0 4px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Give</button>
+                    <button onClick={() => giveItem(idx)} style={{ fontSize: '12px', padding: '0 4px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Give</button>
                   )}
                   {canEdit && (
-                    <button onClick={() => removeItem(idx)} style={{ fontSize: '11px', padding: '0 3px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.2 }}>×</button>
+                    <button onClick={() => removeItem(idx)} style={{ fontSize: '12px', padding: '0 3px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.2 }}>×</button>
                   )}
                 </div>
               )
@@ -181,7 +181,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
         {/* Give modal */}
         {givingItem && (
           <div style={{ padding: '8px', background: '#111', border: '1px solid #2e2e5a', borderRadius: '3px', marginBottom: '8px' }}>
-            <div style={{ fontSize: '11px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '4px' }}>Give {givingItem.name} to:</div>
+            <div style={{ fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '4px' }}>Give {givingItem.name} to:</div>
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
               {(otherCharacters ?? []).map(ch => (
                 <button key={ch.id} onClick={() => confirmGive(ch.id)}
@@ -228,11 +228,11 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                     <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>
                       {item.name}
-                      {item.notes && <span style={{ fontSize: '10px', color: '#5a5550', marginLeft: '6px' }}>— {item.notes}</span>}
+                      {item.notes && <span style={{ fontSize: '12px', color: '#5a5550', marginLeft: '6px' }}>— {item.notes}</span>}
                     </span>
-                    {isWeapon && <span style={{ fontSize: '9px', color: '#f5a89a', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', padding: '0 3px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>WPN</span>}
-                    <span style={{ fontSize: '10px', color: rc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{item.rarity}</span>
-                    <span style={{ fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'right' }}>{item.enc > 0 ? item.enc : '—'}</span>
+                    {isWeapon && <span style={{ fontSize: '12px', color: '#f5a89a', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', padding: '0 3px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>WPN</span>}
+                    <span style={{ fontSize: '12px', color: rc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{item.rarity}</span>
+                    <span style={{ fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'right' }}>{item.enc > 0 ? item.enc : '—'}</span>
                   </div>
                 )
               })}
@@ -248,12 +248,12 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
               style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box', marginBottom: '4px' }} />
             <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
               <div style={{ width: '60px' }}>
-                <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>ENC</div>
+                <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>ENC</div>
                 <input value={customEnc} onChange={e => setCustomEnc(e.target.value)} type="number" min="0" max="5" step="0.5"
                   style={{ width: '100%', padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Notes</div>
+                <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Notes</div>
                 <input value={customNotes} onChange={e => setCustomNotes(e.target.value)} placeholder="Effect or description"
                   style={{ width: '100%', padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
               </div>

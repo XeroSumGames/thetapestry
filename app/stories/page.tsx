@@ -99,7 +99,7 @@ export default function CampaignsPage() {
 
       {gmCampaigns.length > 0 && (
         <div style={{ marginBottom: '2rem' }}>
-          <div style={{ fontSize: '10px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '8px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '8px', fontFamily: 'Barlow Condensed, sans-serif' }}>
             Running as GM
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -108,13 +108,13 @@ export default function CampaignsPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                   <div>
                     <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>{c.name}</div>
-                    <div style={{ fontSize: '11px', color: '#d4cfc9', marginTop: '2px' }}>
+                    <div style={{ fontSize: '12px', color: '#d4cfc9', marginTop: '2px' }}>
                       {SETTINGS[c.setting] ?? c.setting} &middot; Created {formatDate(c.created_at)}
                     </div>
                     {c.description && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '6px', lineHeight: 1.5 }}>{c.description}</div>}
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '12px' }}>
-                    <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>Invite Code</div>
+                    <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>Invite Code</div>
                     <div style={{ fontSize: '16px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em' }}>{c.invite_code}</div>
                   </div>
                 </div>
@@ -133,7 +133,7 @@ export default function CampaignsPage() {
 
       {playerCampaigns.length > 0 && (
         <div>
-          <div style={{ fontSize: '10px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '8px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '8px', fontFamily: 'Barlow Condensed, sans-serif' }}>
             Playing In
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -141,7 +141,7 @@ export default function CampaignsPage() {
               <div key={c.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', borderLeft: '3px solid #7ab3d4' }}>
                 <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>{c.name}</div>
-                  <div style={{ fontSize: '11px', color: '#d4cfc9', marginTop: '2px' }}>
+                  <div style={{ fontSize: '12px', color: '#d4cfc9', marginTop: '2px' }}>
                     {SETTINGS[c.setting] ?? c.setting}{gmNames[c.gm_user_id] ? <> &middot; <span style={{ color: '#c0392b' }}>GM: {gmNames[c.gm_user_id]}</span></> : ''} &middot; Joined {formatDate(c.created_at)}
                   </div>
                   {c.description && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '6px', lineHeight: 1.5 }}>{c.description}</div>}

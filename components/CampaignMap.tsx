@@ -342,7 +342,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         </form>
         {[['satellite', 'Satellite'], ['topo', 'Topo'], ['street', 'Street'], ['voyager', 'Voyager'], ['humanitarian', 'Humanitarian'], ['positron', 'Positron'], ['dark', 'Dark']].map(([layer, label]) => (
           <button key={layer} onClick={() => switchLayer(layer)}
-            style={{ padding: '3px 0', width: '100px', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#d4cfc9' }}>
+            style={{ padding: '3px 0', width: '100px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#d4cfc9' }}>
             {label}
           </button>
         ))}
@@ -360,7 +360,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '12px', background: 'rgba(26,26,26,0.95)', border: '1px solid #3a3a3a', borderRadius: '4px', width: '300px' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '8px', gap: '8px' }}>
             <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>New Pin</div>
-            <div style={{ fontSize: '11px', color: '#cce0f5', fontFamily: 'monospace' }}>{newPin.lat.toFixed(4)}, {newPin.lng.toFixed(4)}</div>
+            <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'monospace' }}>{newPin.lat.toFixed(4)}, {newPin.lng.toFixed(4)}</div>
           </div>
           <input value={pinForm.name} onChange={e => setPinForm(f => ({ ...f, name: e.target.value }))}
             onKeyDown={e => { if (e.key === 'Enter' && pinForm.name.trim()) savePin() }}
@@ -394,7 +394,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               {saving ? '...' : 'Save Pin'}
             </button>
           </div>
-          <div style={{ fontSize: '11px', color: '#666', marginTop: '6px', fontFamily: 'Barlow, sans-serif' }}>
+          <div style={{ fontSize: '12px', color: '#666', marginTop: '6px', fontFamily: 'Barlow, sans-serif' }}>
             Pin will be hidden from players until revealed in Assets.
           </div>
         </div>

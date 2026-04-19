@@ -175,7 +175,7 @@ export default function NotificationBell() {
         {unreadCount > 0 && (
           <span style={{
             position: 'absolute', top: '-2px', right: '0',
-            background: '#c0392b', color: '#fff', fontSize: '9px',
+            background: '#c0392b', color: '#fff', fontSize: '12px',
             fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700,
             minWidth: '16px', height: '16px', borderRadius: '8px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -195,17 +195,17 @@ export default function NotificationBell() {
         }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #2e2e2e' }}>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>Notifications</span>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>Notifications</span>
             <div style={{ display: 'flex', gap: '8px' }}>
               {unreadCount > 0 && (
                 <button onClick={markAllAsRead}
-                  style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Mark all read
                 </button>
               )}
               {notifications.length > 0 && (
                 <button onClick={deleteAll}
-                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Delete all
                 </button>
               )}
@@ -214,7 +214,7 @@ export default function NotificationBell() {
 
           {/* List */}
           {notifications.length === 0 ? (
-            <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#3a3a3a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+            <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#3a3a3a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
               No notifications yet
             </div>
           ) : (

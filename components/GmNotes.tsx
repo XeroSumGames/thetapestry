@@ -128,7 +128,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
 
   const chipBtn: React.CSSProperties = {
     padding: '4px 10px', background: 'transparent', border: '1px solid #3a3a3a',
-    borderRadius: '3px', color: '#7ab3d4', fontSize: '11px',
+    borderRadius: '3px', color: '#7ab3d4', fontSize: '12px',
     fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', cursor: 'pointer',
   }
@@ -180,10 +180,10 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', cursor: 'pointer' }}>
             <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>
               {n.title}
-              {n.shared && <span style={{ marginLeft: '6px', fontSize: '10px', color: '#7fc458' }}>SHARED</span>}
-              {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '11px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
+              {n.shared && <span style={{ marginLeft: '6px', fontSize: '12px', color: '#7fc458' }}>SHARED</span>}
+              {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '12px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
             </span>
-            <span style={{ fontSize: '11px', color: '#5a5550' }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
+            <span style={{ fontSize: '12px', color: '#5a5550' }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
           </div>
           {expanded.has(n.id) && (
             <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
@@ -216,7 +216,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                   }
                   setNotes(prev => prev.map(x => x.id === n.id ? { ...x, shared: next } : x))
                 }}
-                  style={{ padding: '4px 10px', background: n.shared ? '#1a2e10' : 'transparent', border: `1px solid ${n.shared ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.shared ? '#7fc458' : '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '4px 10px', background: n.shared ? '#1a2e10' : 'transparent', border: `1px solid ${n.shared ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.shared ? '#7fc458' : '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {n.shared ? '✓ Shared' : 'Share'}
                 </button>
                 <label style={{ ...chipBtn, display: 'inline-block', cursor: uploadingNoteId === n.id ? 'wait' : 'pointer', opacity: uploadingNoteId === n.id ? 0.6 : 1 }}>
@@ -224,7 +224,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                   <input type="file" multiple disabled={uploadingNoteId === n.id} onChange={e => { handleAddAttachments(n, e.target.files); e.target.value = '' }} style={{ display: 'none' }} />
                 </label>
                 <button onClick={() => handleDelete(n)}
-                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Delete Note
                 </button>
               </div>

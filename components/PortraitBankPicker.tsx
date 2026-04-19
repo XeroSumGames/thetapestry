@@ -70,7 +70,7 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
           ) : portraits.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#5a5550', fontFamily: '"Barlow Condensed", sans-serif', fontSize: '13px' }}>
               No portraits in the bank yet.<br />
-              <span style={{ fontSize: '11px' }}>Thrivers can add portraits via the Resize Portraits tool.</span>
+              <span style={{ fontSize: '12px' }}>Thrivers can add portraits via the Resize Portraits tool.</span>
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))', gap: '8px' }}>

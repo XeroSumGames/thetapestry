@@ -143,16 +143,16 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
 
       {sharedNotes.length > 0 && (
         <>
-          <div style={{ fontSize: '11px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '4px 0' }}>GM Handouts</div>
+          <div style={{ fontSize: '12px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '4px 0' }}>GM Handouts</div>
           {sharedNotes.map(n => (
             <div key={`shared-${n.id}`} style={{ background: '#1a1a1a', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
               <div onClick={() => toggle(`shared-${n.id}`)}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', cursor: 'pointer' }}>
                 <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {n.title}
-                  {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '11px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
+                  {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '12px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
                 </span>
-                <span style={{ fontSize: '11px', color: '#5a5550' }}>{expanded.has(`shared-${n.id}`) ? '▲' : '▼'}</span>
+                <span style={{ fontSize: '12px', color: '#5a5550' }}>{expanded.has(`shared-${n.id}`) ? '▲' : '▼'}</span>
               </div>
               {expanded.has(`shared-${n.id}`) && (
                 <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
@@ -181,9 +181,9 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', cursor: 'pointer' }}>
             <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {n.title || n.content.slice(0, 40) + (n.content.length > 40 ? '…' : '')}
-              {n.submitted_to_summary && <span style={{ marginLeft: '6px', fontSize: '10px', color: '#7fc458' }}>✓ SUBMITTED</span>}
+              {n.submitted_to_summary && <span style={{ marginLeft: '6px', fontSize: '12px', color: '#7fc458' }}>✓ SUBMITTED</span>}
             </span>
-            <span style={{ fontSize: '11px', color: '#5a5550' }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
+            <span style={{ fontSize: '12px', color: '#5a5550' }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
           </div>
           {expanded.has(n.id) && (
             <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
@@ -192,11 +192,11 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
               </pre>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button onClick={() => toggleSubmit(n)}
-                  style={{ padding: '4px 10px', background: n.submitted_to_summary ? '#1a2e10' : 'transparent', border: `1px solid ${n.submitted_to_summary ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.submitted_to_summary ? '#7fc458' : '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '4px 10px', background: n.submitted_to_summary ? '#1a2e10' : 'transparent', border: `1px solid ${n.submitted_to_summary ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.submitted_to_summary ? '#7fc458' : '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {n.submitted_to_summary ? '✓ In Session Summary' : '+ Add to Session Summary'}
                 </button>
                 <button onClick={() => handleDelete(n)}
-                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Delete
                 </button>
               </div>

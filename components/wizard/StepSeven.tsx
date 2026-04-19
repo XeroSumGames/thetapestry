@@ -42,12 +42,12 @@ export default function StepSeven({ state }: Props) {
               border: `1px solid ${val > 0 ? '#c0392b' : '#3a3a3a'}`,
               borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
             }}>
-              <div style={{ fontSize: '10px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-              <div style={{ fontSize: '7px', color: '#d4cfc9', marginBottom: '5px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
+              <div style={{ fontSize: '12px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+              <div style={{ fontSize: '12px', color: '#d4cfc9', marginBottom: '5px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
               <div style={{ fontSize: '17px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee', margin: '4px 0' }}>
                 {sgn(val)}
               </div>
-              <div style={{ fontSize: '7px', color: val > 0 ? '#f5a89a' : '#d4cfc9' }}>{ATTRIBUTE_LABELS[val]}</div>
+              <div style={{ fontSize: '12px', color: val > 0 ? '#f5a89a' : '#d4cfc9' }}>{ATTRIBUTE_LABELS[val]}</div>
             </div>
           )
         })}
@@ -81,7 +81,7 @@ export default function StepSeven({ state }: Props) {
 
 const sh: React.CSSProperties = {
   fontFamily: 'Barlow Condensed, sans-serif',
-  fontSize: '10px', fontWeight: 600, color: '#f5f2ee',
+  fontSize: '12px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em',
   margin: '1.25rem 0 8px', borderBottom: '1px solid #2e2e2e',
   paddingBottom: '4px',

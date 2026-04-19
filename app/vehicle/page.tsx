@@ -58,7 +58,7 @@ export default function VehiclePage() {
     await supabase.from('campaigns').update({ vehicles }).eq('id', campaignId)
   }
 
-  const lbl: React.CSSProperties = { fontSize: '11px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }
+  const lbl: React.CSSProperties = { fontSize: '12px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em' }
   const bigVal: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }
 
   return (
@@ -66,7 +66,7 @@ export default function VehiclePage() {
 
       {/* Header — Vehicle Inspection Record style */}
       <div style={{ borderBottom: '2px solid #c0392b', paddingBottom: '12px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '11px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Vehicle Inspection Record</div>
+        <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Vehicle Inspection Record</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px', flexWrap: 'wrap' }}>
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>{vehicle.name}</div>
           <span style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{vehicle.type}</span>
@@ -170,14 +170,14 @@ export default function VehiclePage() {
                     {item.name}
                     {item.qty > 1 && <span style={{ color: '#7ab3d4' }}> ×{item.qty}</span>}
                   </span>
-                  {item.notes && <span style={{ color: '#5a5550', fontSize: '11px' }}>{item.notes}</span>}
+                  {item.notes && <span style={{ color: '#5a5550', fontSize: '12px' }}>{item.notes}</span>}
                   {canEdit && (
                     <button onClick={() => {
                       const newCargo = item.qty > 1
                         ? vehicle.cargo.map((c, i) => i === idx ? { ...c, qty: c.qty - 1 } : c)
                         : vehicle.cargo.filter((_, i) => i !== idx)
                       updateVehicle({ ...vehicle, cargo: newCargo })
-                    }} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '11px', cursor: 'pointer', padding: '0 2px', flexShrink: 0 }}
+                    }} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '12px', cursor: 'pointer', padding: '0 2px', flexShrink: 0 }}
                       onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
                       onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>×</button>
                   )}

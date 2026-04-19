@@ -20,7 +20,7 @@ export default function CreatingACharacterPage() {
 
         {/* Three methods */}
         <div style={{ marginBottom: '4rem' }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#2d5a1b', marginBottom: '1rem' }}>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '12px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#2d5a1b', marginBottom: '1rem' }}>
             Three Ways to Build
           </div>
 
@@ -59,8 +59,8 @@ export default function CreatingACharacterPage() {
             <div key={label} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '1.25rem', marginBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                 <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>{label}</div>
-                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '2px', background: tagColor, color: tagText, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{tag}</span>
-                <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#cce0f5' }}>{time}</span>
+                <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '2px', background: tagColor, color: tagText, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{tag}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#cce0f5' }}>{time}</span>
               </div>
               <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.7, margin: '0 0 8px' }}>{desc}</p>
               <p style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.6, margin: '0 0 14px' }}><span style={{ color: '#cce0f5' }}>Best for:</span> {bestFor}</p>
@@ -133,7 +133,7 @@ export default function CreatingACharacterPage() {
               { step: 'Step Nine', title: 'Final Review', desc: 'Review, adjust, and save.' },
             ].map(({ step, title, desc }) => (
               <div key={step} style={{ display: 'flex', gap: '12px', padding: '10px 14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '11px', fontWeight: 700, color: '#c0392b', textTransform: 'uppercase', letterSpacing: '.06em', minWidth: '80px', paddingTop: '2px' }}>{step}</div>
+                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '12px', fontWeight: 700, color: '#c0392b', textTransform: 'uppercase', letterSpacing: '.06em', minWidth: '80px', paddingTop: '2px' }}>{step}</div>
                 <div>
                   <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '15px', fontWeight: 700, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '2px' }}>{title}</div>
                   <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6 }}>{desc}</div>

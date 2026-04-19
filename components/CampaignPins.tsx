@@ -198,7 +198,7 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene
       {/* Pin list */}
       <div style={{ overflowY: 'auto', padding: '4px' }}>
         {pins.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '8px', color: '#3a3a3a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
+          <div style={{ textAlign: 'center', padding: '8px', color: '#3a3a3a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
             {isGM ? 'No campaign pins' : 'No pins revealed yet'}
           </div>
         ) : (
@@ -219,12 +219,12 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene
                     style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical', marginBottom: '4px' }} />
                   <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Latitude</div>
+                      <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Latitude</div>
                       <input value={editLat} onChange={e => setEditLat(e.target.value)} placeholder="Lat"
                         style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'monospace', boxSizing: 'border-box' }} />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Longitude</div>
+                      <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Longitude</div>
                       <input value={editLng} onChange={e => setEditLng(e.target.value)} placeholder="Lng"
                         style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'monospace', boxSizing: 'border-box' }} />
                     </div>
@@ -232,7 +232,7 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene
                   {/* Tactical Map link */}
                   {isGM && scenes.length > 0 && (
                     <div style={{ marginBottom: '4px' }}>
-                      <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Tactical Map</div>
+                      <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Tactical Map</div>
                       <select value={editSceneId ?? ''} onChange={e => setEditSceneId(e.target.value || null)}
                         style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
                         <option value="">— None —</option>
@@ -242,7 +242,7 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene
                   )}
                   {/* Sort order — explicit number that decides list position */}
                   <div style={{ marginBottom: '4px', width: '90px' }}>
-                    <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Order</div>
+                    <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Order</div>
                     <input value={editSortOrder} onChange={e => setEditSortOrder(e.target.value)} type="number" min="1" placeholder="#"
                       style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', textAlign: 'center' }} />
                   </div>
@@ -269,7 +269,7 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene
                   >
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       {pin.name}
-                      {pin.tactical_scene_id && <span title="Has tactical map" style={{ fontSize: '11px', color: '#7ab3d4' }}>🗺️</span>}
+                      {pin.tactical_scene_id && <span title="Has tactical map" style={{ fontSize: '12px', color: '#7ab3d4' }}>🗺️</span>}
                     </div>
                     {pin.notes && <div style={{ fontSize: '13px', color: '#cce0f5', overflow: expandedId === pin.id ? 'visible' : 'hidden', textOverflow: expandedId === pin.id ? 'unset' : 'ellipsis', whiteSpace: expandedId === pin.id ? 'normal' : 'nowrap' }}>{pin.notes}</div>}
                     {expandedId === pin.id && pinImages[pin.id] && pinImages[pin.id].length > 0 && (

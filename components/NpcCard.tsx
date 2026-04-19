@@ -130,14 +130,14 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
           )}
         </div>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '15px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>{npc.name}</div>
-        {npc.npc_type && <span style={{ fontSize: '11px', padding: '0 4px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
-        <span style={{ fontSize: '11px', padding: '0 4px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{displayStatus}</span>
+        {npc.npc_type && <span style={{ fontSize: '12px', padding: '0 4px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
+        <span style={{ fontSize: '12px', padding: '0 4px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{displayStatus}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '3px', flexShrink: 0 }}>
           {onPublish && !isPublished && (
-            <button onClick={onPublish} style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Publish</button>
+            <button onClick={onPublish} style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Publish</button>
           )}
           {isPublished && (
-            <span style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>
+            <span style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>
           )}
           {displayStatus === 'mortally wounded' && onRoll && (
             <button onClick={() => {
@@ -145,18 +145,18 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
               const npcSkills: any[] = Array.isArray(npc.skills?.entries) ? npc.skills.entries : []
               const smod = npcSkills.find((s: any) => s.name === 'Medicine')?.level ?? 0
               onRoll(`${npc.name} — Stabilize ${npc.name}`, amod, smod)
-            }} style={{ padding: '2px 6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Stabilize</button>
+            }} style={{ padding: '2px 6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Stabilize</button>
           )}
           {(displayStatus === 'dead' || displayStatus === 'mortally wounded') && (
             <button onClick={async () => {
               await supabase.from('campaign_npcs').update({ wp_current: wpMax, rp_current: rpMax, status: 'active', death_countdown: null, incap_rounds: null }).eq('id', npc.id)
-            }} style={{ padding: '2px 6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Restore</button>
+            }} style={{ padding: '2px 6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Restore</button>
           )}
           {onPlaceOnMap && (
-            <button onClick={onPlaceOnMap} style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Map</button>
+            <button onClick={onPlaceOnMap} style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Map</button>
           )}
-          <button onClick={onEdit} style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Edit</button>
-          <button onClick={onClose} style={{ padding: '2px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Close</button>
+          <button onClick={onEdit} style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Edit</button>
+          <button onClick={onClose} style={{ padding: '2px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Close</button>
         </div>
       </div>
 
@@ -169,7 +169,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
             return (
               <div key={k} onClick={() => handleAttrRoll(k)}
                 style={{ width: '36px', background: v > 0 ? '#1a2e10' : '#242424', border: `1px solid ${v > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '2px', padding: '1px 0', textAlign: 'center', cursor: onRoll ? 'pointer' : 'default' }}>
-                <div style={{ fontSize: '10px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
                 <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: v > 0 ? '#7fc458' : '#d4cfc9' }}>{sgn(v)}</div>
               </div>
             )
@@ -179,8 +179,8 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
-              <span style={{ fontSize: '11px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>WP</span>
-              <span style={{ fontSize: '11px', color: '#c0392b', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{wpCurrent}/{wpMax}</span>
+              <span style={{ fontSize: '12px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>WP</span>
+              <span style={{ fontSize: '12px', color: '#c0392b', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{wpCurrent}/{wpMax}</span>
             </div>
             <div style={{ display: 'flex', gap: '1px', flexWrap: 'wrap' }}>
               {Array.from({ length: wpMax }).map((_, i) => (
@@ -188,12 +188,12 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
                   style={{ width: '9px', height: '9px', borderRadius: '50%', border: `1.5px solid ${i < wpCurrent ? '#c0392b' : '#3a3a3a'}`, background: i < wpCurrent ? '#c0392b' : 'transparent', cursor: 'pointer' }} />
               ))}
             </div>
-            {wpCurrent === 0 && <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>MORTALLY WOUNDED</div>}
+            {wpCurrent === 0 && <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>MORTALLY WOUNDED</div>}
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
-              <span style={{ fontSize: '11px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>RP</span>
-              <span style={{ fontSize: '11px', color: '#7ab3d4', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{rpCurrent}/{rpMax}</span>
+              <span style={{ fontSize: '12px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>RP</span>
+              <span style={{ fontSize: '12px', color: '#7ab3d4', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{rpCurrent}/{rpMax}</span>
             </div>
             <div style={{ display: 'flex', gap: '1px', flexWrap: 'wrap' }}>
               {Array.from({ length: rpMax }).map((_, i) => (
@@ -201,7 +201,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
                   style={{ width: '9px', height: '9px', borderRadius: '50%', border: `1.5px solid ${i < rpCurrent ? '#7ab3d4' : '#3a3a3a'}`, background: i < rpCurrent ? '#7ab3d4' : 'transparent', cursor: 'pointer' }} />
               ))}
             </div>
-            {rpCurrent === 0 && wpCurrent > 0 && <div style={{ fontSize: '10px', color: '#7ab3d4', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>UNCONSCIOUS</div>}
+            {rpCurrent === 0 && wpCurrent > 0 && <div style={{ fontSize: '12px', color: '#7ab3d4', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>UNCONSCIOUS</div>}
           </div>
         </div>
       </div>
@@ -234,7 +234,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
 
       {/* GM Notes — truncated */}
       {npc.notes && (
-        <div style={{ fontSize: '11px', color: '#cce0f5', fontStyle: 'italic', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.notes}</div>
+        <div style={{ fontSize: '12px', color: '#cce0f5', fontStyle: 'italic', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.notes}</div>
       )}
 
       {/* Combat: unarmed + all equipment weapons */}
@@ -245,12 +245,12 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
             const smod = getSkillLevel('Unarmed Combat')
             onRoll(`${npc.name} — Unarmed`, phyAmod, smod, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
           }}
-            style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
             👊 Unarmed
           </button>
           {w && (
             <button onClick={handleWeaponAttack}
-              style={{ padding: '2px 6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ padding: '2px 6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
               ⚔️ {w.name} ({w.damage})
             </button>
           )}
@@ -271,7 +271,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
             if (unwieldy !== null) { const deficit = unwieldy - (rapid.DEX ?? 0); if (deficit > 0) { traitCmod -= deficit; traitLabel = traitLabel ? `${traitLabel}, Unwieldy -${deficit}` : `Unwieldy -${deficit}` } }
             return (
               <button key={i} onClick={() => onRoll!(`${npc.name} — Attack (${eqWeapon.name})`, amod, smod, { weaponName: eqWeapon.name, damage: eqWeapon.damage, rpPercent: eqWeapon.rpPercent, conditionCmod: traitCmod, traitCmod, traitLabel, traits: eqWeapon.traits })}
-                style={{ padding: '2px 6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ padding: '2px 6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                 ⚔️ {eqWeapon.name} ({eqWeapon.damage})
               </button>
             )

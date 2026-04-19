@@ -195,7 +195,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
 
   const chipBtn: React.CSSProperties = {
     padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a',
-    borderRadius: '3px', color: '#d4cfc9', fontSize: '11px',
+    borderRadius: '3px', color: '#d4cfc9', fontSize: '12px',
     fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em',
     textTransform: 'uppercase', cursor: 'pointer',
   }
@@ -214,7 +214,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
           <input value={addName} onChange={e => setAddName(e.target.value)} placeholder="Object name..."
             style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', marginBottom: '6px' }} />
 
-          <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Icon</div>
+          <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Icon</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '3px', marginBottom: '6px' }}>
             {OBJECT_ICONS.map(icon => (
               <button key={icon.value} onClick={() => { setAddIcon(icon.value); setAddCustomUrl(null) }}
@@ -225,17 +225,17 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             ))}
           </div>
 
-          <label style={{ display: 'block', padding: '6px', background: addCustomUrl ? '#1a2e10' : '#242424', border: `1px dashed ${addCustomUrl ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: addCustomUrl ? '#7fc458' : '#5a5550', fontSize: '11px', textAlign: 'center', cursor: 'pointer', marginBottom: '6px' }}>
+          <label style={{ display: 'block', padding: '6px', background: addCustomUrl ? '#1a2e10' : '#242424', border: `1px dashed ${addCustomUrl ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: addCustomUrl ? '#7fc458' : '#5a5550', fontSize: '12px', textAlign: 'center', cursor: 'pointer', marginBottom: '6px' }}>
             {uploading ? 'Uploading...' : addCustomUrl ? '✓ Custom image uploaded' : 'Or upload custom image'}
             <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'add' }); e.target.value = '' }} />
           </label>
 
           {/* Library picker — always visible so GM knows it exists */}
           <div style={{ marginBottom: '6px' }}>
-            <div style={{ fontSize: '10px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
+            <div style={{ fontSize: '12px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
             <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', minHeight: '40px', maxHeight: '72px', overflowY: 'auto', padding: '2px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
               {library.length === 0 ? (
-                <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#5a5550', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', fontStyle: 'italic' }}>Empty — upload an image and it'll show here</div>
+                <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#5a5550', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', fontStyle: 'italic' }}>Empty — upload an image and it'll show here</div>
               ) : library.map(lib => (
                 <button key={lib.id} title={lib.name}
                   onClick={() => setAddCustomUrl(lib.image_url)}
@@ -247,7 +247,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
 
           <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP (optional)</div>
+              <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP (optional)</div>
               <input value={addWP} onChange={e => setAddWP(e.target.value)} placeholder="e.g. 10"
                 style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
             </div>
@@ -261,7 +261,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       )}
 
       {objects.length === 0 && !showAdd && (
-        <div style={{ color: '#3a3a3a', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', padding: '1rem' }}>
+        <div style={{ color: '#3a3a3a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', padding: '1rem' }}>
           No objects in this scene
         </div>
       )}
@@ -286,13 +286,13 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{obj.name}</div>
               {obj.wp_max != null && (
-                <div style={{ fontSize: '10px', color: destroyed ? '#c0392b' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <div style={{ fontSize: '12px', color: destroyed ? '#c0392b' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   {destroyed ? 'DESTROYED' : `WP ${obj.wp_current}/${obj.wp_max}`}
                 </div>
               )}
               {/* Properties — auto-reveal when destroyed */}
               {Array.isArray(obj.properties) && obj.properties.filter(p => isGM || p.revealed || destroyed).map((p, i) => (
-                <div key={i} style={{ fontSize: '10px', color: (p.revealed || destroyed) ? '#cce0f5' : '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
+                <div key={i} style={{ fontSize: '12px', color: (p.revealed || destroyed) ? '#cce0f5' : '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
                   <span style={{ color: '#EF9F27' }}>{p.key}:</span> {p.value}{!p.revealed && !destroyed && isGM ? ' 🔒' : ''}
                 </div>
               ))}
@@ -300,11 +300,11 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
               {Array.isArray(obj.contents) && obj.contents.length > 0 && (destroyed || isGM) && (
                 <div style={{ marginTop: '2px' }}>
                   {obj.contents.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#f5f2ee' }}>
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#f5f2ee' }}>
                       <span>{item.type === 'weapon' ? '🔫' : '🎒'} {item.name} ×{item.quantity}</span>
                       {destroyed && entries && entries.length > 0 && (
                         <button onClick={e => { e.stopPropagation(); setLootingObj(obj); setLootCharId('') }}
-                          style={{ background: 'none', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', padding: '0 4px', cursor: 'pointer' }}>
+                          style={{ background: 'none', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', padding: '0 4px', cursor: 'pointer' }}>
                           Loot
                         </button>
                       )}
@@ -321,17 +321,17 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   await supabase.from('scene_tokens').update({ is_visible: newVis }).eq('id', obj.id)
                   setObjects(prev => prev.map(o => o.id === obj.id ? { ...o, is_visible: newVis } : o))
                 }}
-                  style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: obj.is_visible ? '#7fc458' : '#5a5550', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: obj.is_visible ? '#7fc458' : '#5a5550', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {obj.is_visible ? 'Show' : 'Hide'}
                 </button>
                 <button onClick={() => { setEditingObj(obj); setEditName(obj.name); setEditWP(obj.wp_max != null ? String(obj.wp_max) : ''); setEditProps(Array.isArray(obj.properties) ? obj.properties : []); setEditContents(Array.isArray(obj.contents) ? obj.contents : []) }}
-                  style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Edit
                 </button>
                 {onDuplicate && (
                   <button onClick={async () => { await onDuplicate(obj); loadObjects() }}
                     title="Duplicate this object (copies properties, contents, WP, lock state)"
-                    style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7ab3d4', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ padding: '2px 6px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Dup
                   </button>
                 )}
@@ -355,7 +355,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 </div>
               ))}
             </div>
-            <div style={{ fontSize: '10px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Give to</div>
+            <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Give to</div>
             <select value={lootCharId} onChange={e => setLootCharId(e.target.value)}
               style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', marginBottom: '10px' }}>
               <option value="">Select character...</option>
@@ -415,10 +415,10 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
               </label>
               {/* Library picker — always visible so GM knows it exists */}
               <div>
-                <div style={{ fontSize: '10px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
+                <div style={{ fontSize: '12px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
                 <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', minHeight: '40px', maxHeight: '80px', overflowY: 'auto', padding: '2px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                   {library.length === 0 ? (
-                    <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#5a5550', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', fontStyle: 'italic' }}>Empty — upload an image and it'll show here</div>
+                    <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#5a5550', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', fontStyle: 'italic' }}>Empty — upload an image and it'll show here</div>
                   ) : library.map(lib => (
                     <button key={lib.id} title={lib.name}
                       onClick={async () => {

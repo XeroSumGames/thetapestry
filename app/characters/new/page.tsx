@@ -109,7 +109,7 @@ export default function NewCharacterPage() {
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Distemper Character Generator
         </div>
-        <div style={{ fontSize: '11px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
+        <div style={{ fontSize: '12px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
           DistemperVerse
         </div>
       </div>
@@ -135,7 +135,7 @@ export default function NewCharacterPage() {
 
       {/* Step card */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1.25rem', marginBottom: '1rem', borderLeft: '3px solid #c0392b' }}>
-        <div style={{ fontSize: '10px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px' }}>
+        <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px' }}>
           Step {step} of 9
         </div>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '26px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '10px', color: '#f5f2ee' }}>
@@ -146,7 +146,7 @@ export default function NewCharacterPage() {
         </p>
         {STEP_INSTRUCTIONS[step] && (
           <div style={{ background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', padding: '10px 14px' }}>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '6px', color: '#7fc458' }}>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '12px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '6px', color: '#7fc458' }}>
               Instructions
             </div>
             {STEP_INSTRUCTIONS[step]!.split('|').map((line, i) => (
@@ -179,9 +179,9 @@ export default function NewCharacterPage() {
           Back
         </button>
         <div style={{ textAlign: 'center' }}>
-          {saveError && <div style={{ fontSize: '11px', color: '#f5a89a', marginBottom: '2px' }}>{saveError}</div>}
-          {saved && <div style={{ fontSize: '11px', color: '#7fc458', marginBottom: '2px' }}>Character saved!</div>}
-          <div style={{ fontSize: '11px', color: '#d4cfc9', letterSpacing: '.05em', textTransform: 'uppercase' }}>
+          {saveError && <div style={{ fontSize: '12px', color: '#f5a89a', marginBottom: '2px' }}>{saveError}</div>}
+          {saved && <div style={{ fontSize: '12px', color: '#7fc458', marginBottom: '2px' }}>Character saved!</div>}
+          <div style={{ fontSize: '12px', color: '#d4cfc9', letterSpacing: '.05em', textTransform: 'uppercase' }}>
             Step {step} of 9
           </div>
         </div>

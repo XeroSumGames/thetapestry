@@ -84,10 +84,10 @@ export default function CharacterViewPage() {
             const val = rapid[k] ?? 0
             return (
               <div key={k} style={{ background: val > 0 ? '#1a2e10' : '#242424', border: `1px solid ${val > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', padding: '8px 4px', textAlign: 'center' }}>
-                <div style={{ fontSize: '10px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-                <div style={{ fontSize: '8px', color: '#d4cfc9', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
+                <div style={{ fontSize: '12px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                <div style={{ fontSize: '12px', color: '#d4cfc9', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
                 <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: val > 0 ? '#7fc458' : '#f5f2ee' }}>{sgn(val)}</div>
-                <div style={{ fontSize: '8px', color: val > 0 ? '#7fc458' : '#d4cfc9' }}>{ATTRIBUTE_LABELS[val]}</div>
+                <div style={{ fontSize: '12px', color: val > 0 ? '#7fc458' : '#d4cfc9' }}>{ATTRIBUTE_LABELS[val]}</div>
               </div>
             )
           })}
@@ -106,7 +106,7 @@ export default function CharacterViewPage() {
             { label: 'Stress Modifier', value: sgn(secondary.stressModifier ?? 0), hi: false },
           ].map(({ label, value, hi }) => (
             <div key={label} style={{ background: '#242424', border: `1px solid ${hi ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', padding: '8px 10px' }}>
-              <div style={{ fontSize: '9px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '2px' }}>{label}</div>
+              <div style={{ fontSize: '12px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '2px' }}>{label}</div>
               <div style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: hi ? '#7fc458' : '#f5f2ee' }}>{value}</div>
             </div>
           ))}
@@ -119,13 +119,13 @@ export default function CharacterViewPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             {d.complication && (
               <div>
-                <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '3px' }}>Complication</div>
+                <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '3px' }}>Complication</div>
                 <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{d.complication}</div>
               </div>
             )}
             {d.motivation && (
               <div>
-                <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '3px' }}>Motivation</div>
+                <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '3px' }}>Motivation</div>
                 <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{d.motivation}</div>
               </div>
             )}
@@ -157,7 +157,7 @@ export default function CharacterViewPage() {
             ['Rations', d.rations],
           ].filter(([, v]) => v).map(([label, value]) => (
             <div key={String(label)}>
-              <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '3px' }}>{label}</div>
+              <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '3px' }}>{label}</div>
               <div style={{ fontSize: '14px', color: '#f5f2ee' }}>{value}</div>
             </div>
           ))}
@@ -173,7 +173,7 @@ export default function CharacterViewPage() {
             { label: 'CDP', value: d.cdp ?? 0 },
           ].map(({ label, value }) => (
             <div key={label}>
-              <div style={{ fontSize: '10px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '3px' }}>{label}</div>
+              <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '3px' }}>{label}</div>
               <div style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: '#f5f2ee' }}>{value}</div>
             </div>
           ))}
@@ -191,6 +191,6 @@ const section: React.CSSProperties = {
 
 const sectionTitle: React.CSSProperties = {
   fontFamily: 'Barlow Condensed, sans-serif',
-  fontSize: '10px', fontWeight: 700, color: '#c0392b',
+  fontSize: '12px', fontWeight: 700, color: '#c0392b',
   textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px',
 }

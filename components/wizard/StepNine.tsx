@@ -54,7 +54,7 @@ export default function StepNine({ state, onChange }: Props) {
                 <div style={{ fontSize: '20px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   {state.name ? state.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?'}
                 </div>
-                <div style={{ fontSize: '9px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '2px' }}>Upload</div>
+                <div style={{ fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '2px' }}>Upload</div>
               </div>
             )}
             <input type="file" accept="image/*" hidden onChange={async e => {
@@ -139,12 +139,12 @@ export default function StepNine({ state, onChange }: Props) {
                 border: `1px solid ${val > 0 ? '#c0392b' : '#3a3a3a'}`,
                 borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
               }}>
-                <div style={{ fontSize: '10px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-                <div style={{ fontSize: '7px', color: '#d4cfc9', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
+                <div style={{ fontSize: '12px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                <div style={{ fontSize: '12px', color: '#d4cfc9', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
                 <div style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee', margin: '3px 0' }}>
                   {sgn(val)}
                 </div>
-                <div style={{ fontSize: '7px', color: val > 0 ? '#f5a89a' : '#d4cfc9' }}>{ATTRIBUTE_LABELS[val]}</div>
+                <div style={{ fontSize: '12px', color: val > 0 ? '#f5a89a' : '#d4cfc9' }}>{ATTRIBUTE_LABELS[val]}</div>
               </div>
             )
           })}
@@ -177,7 +177,7 @@ export default function StepNine({ state, onChange }: Props) {
           <div style={sectionTitle}>Trained skills</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
             {trainedSkills.map(([name, val]) => (
-              <span key={name} style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '3px', background: '#2a1210', border: '1px solid #7a1f16', color: '#f5a89a' }}>
+              <span key={name} style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '3px', background: '#2a1210', border: '1px solid #7a1f16', color: '#f5a89a' }}>
                 {name} {sgn(val)}
               </span>
             ))}
@@ -262,12 +262,12 @@ const section: React.CSSProperties = {
 
 const sectionTitle: React.CSSProperties = {
   fontFamily: 'Barlow Condensed, sans-serif',
-  fontSize: '10px', fontWeight: 700, color: '#c0392b',
+  fontSize: '12px', fontWeight: 700, color: '#c0392b',
   textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px',
 }
 
 const fieldLabel: React.CSSProperties = {
-  fontSize: '10px', fontWeight: 600, color: '#f5f2ee',
+  fontSize: '12px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.07em',
 }
 

@@ -97,7 +97,7 @@ export default function JoinCampaignPage() {
 }
 
 const lbl: React.CSSProperties = {
-  display: 'block', fontSize: '11px', fontWeight: 600,
+  display: 'block', fontSize: '12px', fontWeight: 600,
   color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em',
   marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif',
 }
