@@ -91,7 +91,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [dragObjId, setDragObjId] = useState<string | null>(null)
   const [dragOverObjId, setDragOverObjId] = useState<string | null>(null)
 
-  function handleObjDrop(targetId: string) {
+  async function handleObjDrop(targetId: string) {
     if (!dragObjId || dragObjId === targetId) { setDragObjId(null); setDragOverObjId(null); return }
     const fromIdx = objects.findIndex(o => o.id === dragObjId)
     const toIdx = objects.findIndex(o => o.id === targetId)
@@ -102,6 +102,10 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     setObjects(next)
     setDragObjId(null)
     setDragOverObjId(null)
+    // Persist sort order to DB
+    await Promise.all(next.map((o, i) =>
+      supabase.from('scene_tokens').update({ sort_order: i + 1 }).eq('id', o.id)
+    ))
   }
 
   useEffect(() => { loadObjects(); loadLibrary() }, [campaignId, tokenRefreshKey])
@@ -109,7 +113,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   async function loadObjects() {
     const { data: scenes } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', campaignId).eq('is_active', true).limit(1)
     if (!scenes || scenes.length === 0) { setObjects([]); return }
-    const { data } = await supabase.from('scene_tokens').select('*').eq('scene_id', scenes[0].id).eq('token_type', 'object')
+    const { data } = await supabase.from('scene_tokens').select('*').eq('scene_id', scenes[0].id).eq('token_type', 'object').order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true })
     setObjects((data ?? []) as ObjectToken[])
   }
 
