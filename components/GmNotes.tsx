@@ -38,12 +38,25 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
 
   async function uploadFiles(noteId: string, files: File[]): Promise<Attachment[]> {
     const uploaded: Attachment[] = []
+    const errors: string[] = []
     for (const file of files) {
       const path = `${campaignId}/${noteId}/${Date.now()}-${file.name}`
       const { error: upErr } = await supabase.storage.from('note-attachments').upload(path, file, { contentType: file.type })
-      if (upErr) { console.error('[GmNotes] upload error:', upErr.message); continue }
+      if (upErr) {
+        console.error('[GmNotes] upload error:', upErr.message)
+        errors.push(`${file.name}: ${upErr.message}`)
+        continue
+      }
       const { data: urlData } = supabase.storage.from('note-attachments').getPublicUrl(path)
       uploaded.push({ name: file.name, url: urlData.publicUrl, size: file.size, type: file.type, path })
+    }
+    if (errors.length > 0) {
+      alert(
+        `Upload failed for ${errors.length} file(s):\n\n${errors.join('\n')}\n\n` +
+        `If this says "bucket not found" or "row-level security", run these in Supabase SQL Editor:\n` +
+        `  sql/gm-notes-attachments.sql\n` +
+        `  sql/note-attachments-public.sql`
+      )
     }
     return uploaded
   }
