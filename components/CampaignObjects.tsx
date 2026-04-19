@@ -88,6 +88,21 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   // `target` distinguishes between the Add-object flow and the Edit-object flow
   // so we know where to apply the resulting URL.
   const [cropFile, setCropFile] = useState<{ file: File; target: 'add' | 'edit' } | null>(null)
+  const [dragObjId, setDragObjId] = useState<string | null>(null)
+  const [dragOverObjId, setDragOverObjId] = useState<string | null>(null)
+
+  function handleObjDrop(targetId: string) {
+    if (!dragObjId || dragObjId === targetId) { setDragObjId(null); setDragOverObjId(null); return }
+    const fromIdx = objects.findIndex(o => o.id === dragObjId)
+    const toIdx = objects.findIndex(o => o.id === targetId)
+    if (fromIdx < 0 || toIdx < 0) { setDragObjId(null); setDragOverObjId(null); return }
+    const next = [...objects]
+    const [moved] = next.splice(fromIdx, 1)
+    next.splice(toIdx, 0, moved)
+    setObjects(next)
+    setDragObjId(null)
+    setDragOverObjId(null)
+  }
 
   useEffect(() => { loadObjects(); loadLibrary() }, [campaignId, tokenRefreshKey])
 
@@ -250,7 +265,15 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       {objects.map(obj => {
         const destroyed = obj.wp_max != null && obj.wp_current != null && obj.wp_current <= 0
         return (
-          <div key={obj.id} style={{ padding: '4px 6px', marginBottom: '3px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', opacity: destroyed ? 0.4 : 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div key={obj.id}
+            onDragOver={e => { if (dragObjId) { e.preventDefault(); setDragOverObjId(obj.id) } }}
+            onDragLeave={() => { if (dragOverObjId === obj.id) setDragOverObjId(null) }}
+            onDrop={() => handleObjDrop(obj.id)}
+            style={{ padding: '4px 6px', marginBottom: '3px', background: dragOverObjId === obj.id ? '#242424' : '#1a1a1a', border: `1px solid ${dragOverObjId === obj.id ? '#7fc458' : '#2e2e2e'}`, borderRadius: '3px', opacity: destroyed ? 0.4 : dragObjId === obj.id ? 0.4 : 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {isGM && (
+              <div draggable onDragStart={() => setDragObjId(obj.id)} onDragEnd={() => { setDragObjId(null); setDragOverObjId(null) }}
+                title="Drag to reorder" style={{ cursor: 'grab', color: '#3a3a3a', fontSize: '14px', lineHeight: 1, userSelect: 'none', flexShrink: 0 }}>⠿</div>
+            )}
             {obj.portrait_url ? (
               <img src={obj.portrait_url} alt="" style={{ width: '24px', height: '24px', objectFit: 'cover', borderRadius: '3px' }} />
             ) : (
