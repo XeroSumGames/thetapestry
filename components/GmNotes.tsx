@@ -39,17 +39,8 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
   async function uploadFiles(noteId: string, files: File[]): Promise<Attachment[]> {
     const uploaded: Attachment[] = []
     const errors: string[] = []
-    // Diagnostic: print auth + campaign info so we can compare against DB state.
-    const { data: { user } } = await supabase.auth.getUser()
-    console.warn('[GmNotes] upload diagnostic', {
-      authUid: user?.id,
-      campaignId,
-      noteId,
-      bucket: 'note-attachments',
-    })
     for (const file of files) {
       const path = `${campaignId}/${noteId}/${Date.now()}-${file.name}`
-      console.warn('[GmNotes] upload path:', path)
       const { error: upErr } = await supabase.storage.from('note-attachments').upload(path, file, { contentType: file.type })
       if (upErr) {
         console.error('[GmNotes] upload error:', upErr.message)
@@ -71,8 +62,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
   }
 
   async function handleSave() {
-    console.warn('[GmNotes] handleSave: entered', { title: title.trim(), pendingFiles: pendingFiles.length })
-    if (!title.trim()) { console.warn('[GmNotes] handleSave: aborted — no title'); return }
+    if (!title.trim()) return
     setSaving(true)
     // 1. Insert the note row to get an id.
     const { data: inserted, error } = await supabase.from('campaign_notes').insert({
@@ -87,12 +77,10 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
       setSaving(false)
       return
     }
-    console.warn('[GmNotes] handleSave: note inserted', inserted.id, 'uploading', pendingFiles.length, 'file(s)')
     // 2. Upload any attached files into a folder keyed by the new note id.
     let attachments: Attachment[] = []
     if (pendingFiles.length > 0) {
       attachments = await uploadFiles(inserted.id, pendingFiles)
-      console.warn('[GmNotes] handleSave: uploaded', attachments.length, 'of', pendingFiles.length)
       if (attachments.length > 0) {
         const { error: updErr } = await supabase.from('campaign_notes').update({ attachments }).eq('id', inserted.id)
         if (updErr) console.error('[GmNotes] attachments update error:', updErr.message)
@@ -183,17 +171,8 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
             <input type="file" multiple accept="image/*,application/pdf"
               onChange={e => {
                 const files = e.target.files
-                console.warn('[GmNotes] file input change — files:', files?.length ?? 0)
                 if (files && files.length > 0) {
-                  const arr = Array.from(files)
-                  console.warn('[GmNotes] adding to pendingFiles:', arr.map(f => `${f.name} (${f.size}B)`))
-                  setPendingFiles(prev => {
-                    const next = [...prev, ...arr]
-                    console.warn('[GmNotes] pendingFiles now:', next.length)
-                    return next
-                  })
-                } else {
-                  console.warn('[GmNotes] no files in FileList — dialog was cancelled?')
+                  setPendingFiles(prev => [...prev, ...Array.from(files)])
                 }
                 e.target.value = ''
               }}
@@ -258,7 +237,6 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                       .update({ shared: next })
                       .eq('id', n.id)
                       .select('id')
-                    console.warn('[GmNotes] share toggle:', { noteId: n.id, next, rowsUpdated: data?.length ?? 0, error: error?.message ?? 'none' })
                     if (error) { alert(`Share failed: ${error.message}`); return }
                     if (!data || data.length === 0) {
                       alert('Share did not affect any rows — likely an RLS / permissions issue. Check console.')
