@@ -604,8 +604,12 @@ export default function TablePage() {
             setViewingNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } as CampaignNpc : n))
           }
         })
-        .on('broadcast', { event: 'pc_damaged' }, () => {
-          // Another client dealt damage to a PC — refresh entries to see updated HP
+        .on('broadcast', { event: 'pc_damaged' }, (msg: any) => {
+          // Another client dealt damage to a PC — apply optimistic patch then refresh
+          const { stateId: sid, patch } = msg.payload ?? {}
+          if (sid && patch) {
+            setEntries(prev => prev.map(e => e.stateId === sid ? { ...e, liveState: { ...e.liveState, ...patch } } : e))
+          }
           loadEntries(id)
         })
         .on('broadcast', { event: 'inventory_transfer' }, () => {
@@ -2116,8 +2120,7 @@ export default function TablePage() {
           if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
           else console.warn('[damage] PC character_states update returned', csData?.length, 'rows')
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, rp_current: newRP } } : e))
-          // Broadcast RP change so the player sees updated sheet
-          initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
+          initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: { stateId: targetEntry.stateId, patch: { rp_current: newRP } } })
           const insightData = {
             stateId: targetEntry.stateId,
             targetName: targetEntry.character.name,
@@ -2169,8 +2172,7 @@ export default function TablePage() {
           if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
           else console.warn('[damage] PC character_states update returned', csData?.length, 'rows')
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
-          // Broadcast so other clients (the player whose PC took damage) refresh
-          initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
+          initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: { stateId: targetEntry.stateId, patch: update } })
           // Mortally wounded / incapacitated — zero their actions and auto-advance if active
           if (combatActive && (newWP === 0 || newRP === 0)) {
             const initEntry = initiativeOrder.find(e => e.character_id === targetEntry.character.id)
@@ -2291,7 +2293,7 @@ export default function TablePage() {
               if (nRP === 0 && curRP > 0 && nWP > 0) update.incap_rounds = Math.max(1, 4 - (splashPC.character.data?.rapid?.PHY ?? 0))
               await supabase.from('character_states').update(update).eq('id', splashPC.stateId)
               setEntries(prev => prev.map(e => e.stateId === splashPC.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
-              initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
+              initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: { stateId: splashPC.stateId, patch: update } })
               blastTargets.push(`${splashName} (${rangeBandLabel}): ${splashWP} WP, ${splashRP} RP`)
             } else if (splashNpc) {
               const curWP = splashNpc.wp_current ?? splashNpc.wp_max ?? 10
@@ -2578,7 +2580,7 @@ export default function TablePage() {
         }
         await supabase.from('character_states').update(update).eq('id', targetEntry.stateId)
         setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
-        initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
+        initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: { stateId: targetEntry.stateId, patch: update } })
       } else if (targetNpcObj) {
         const tNpcWP = targetNpcObj.wp_current ?? targetNpcObj.wp_max ?? 10
         const tNpcRP = targetNpcObj.rp_current ?? targetNpcObj.rp_max ?? 6
