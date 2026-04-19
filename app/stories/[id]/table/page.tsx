@@ -4207,6 +4207,48 @@ export default function TablePage() {
                     entries={entries as any}
                   />
                 )}
+                {/* Vehicles folder */}
+                {vehicles.length > 0 && (
+                  <>
+                    <div onClick={() => setAssetsFolderState(prev => { const n = new Set(prev); n.has('vehicles') ? n.delete('vehicles') : n.add('vehicles'); return n })}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none', flexShrink: 0 }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      <span style={{ fontSize: '10px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('vehicles') ? '▼' : '▶'}</span>
+                      <span style={{ fontSize: '14px' }}>🚗</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>Vehicles</span>
+                      <span style={{ fontSize: '11px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{vehicles.length}</span>
+                    </div>
+                    {assetsFolderState.has('vehicles') && (
+                      <div style={{ padding: '4px' }}>
+                        {vehicles.map((v: Vehicle) => (
+                          <div key={v.id} style={{ marginBottom: '4px' }}>
+                            {expandedVehicleId === v.id ? (
+                              <VehicleCard vehicle={v} campaignId={id} isGM={isGM}
+                                onUpdate={async (updated: Vehicle) => {
+                                  const newVehicles = vehicles.map(vv => vv.id === updated.id ? updated : vv)
+                                  setVehicles(newVehicles)
+                                  await supabase.from('campaigns').update({ vehicles: newVehicles }).eq('id', id)
+                                }}
+                                onClose={() => setExpandedVehicleId(null)} />
+                            ) : (
+                              <div onClick={() => setExpandedVehicleId(v.id)}
+                                style={{ padding: '6px 8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                                onMouseLeave={e => (e.currentTarget.style.background = '#1a1a1a')}>
+                                <span style={{ fontSize: '14px' }}>🚗</span>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{v.name}</div>
+                                  <div style={{ fontSize: '10px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif' }}>{v.type} · WP {v.wp_current}/{v.wp_max}</div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             )}
             {gmTab === 'notes' && isGM && <GmNotes campaignId={id} />}
