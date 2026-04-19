@@ -39,8 +39,17 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
   async function uploadFiles(noteId: string, files: File[]): Promise<Attachment[]> {
     const uploaded: Attachment[] = []
     const errors: string[] = []
+    // Diagnostic: print auth + campaign info so we can compare against DB state.
+    const { data: { user } } = await supabase.auth.getUser()
+    console.warn('[GmNotes] upload diagnostic', {
+      authUid: user?.id,
+      campaignId,
+      noteId,
+      bucket: 'note-attachments',
+    })
     for (const file of files) {
       const path = `${campaignId}/${noteId}/${Date.now()}-${file.name}`
+      console.warn('[GmNotes] upload path:', path)
       const { error: upErr } = await supabase.storage.from('note-attachments').upload(path, file, { contentType: file.type })
       if (upErr) {
         console.error('[GmNotes] upload error:', upErr.message)
