@@ -240,7 +240,7 @@
 - [x] NPC edit form "Library" button — pick from portrait bank
 - [x] Pin coordinates shown on New Pin modal and Edit Pin form
 - [ ] Maps & Objects — scene images, tactical map assets, tokens
-- [ ] Handouts, Communities, Roll Tables
+- [ ] Handouts, Roll Tables *(Communities moved to its own Phase — see below)*
 - [x] NPC card 3-column grid layout over campaign map
 - [x] Publish to Library button on NPC card (GM only)
 - [x] NPC form + card compacted (portrait/bank/status on one row)
@@ -522,6 +522,52 @@
 - [x] **Cols/Rows changes no longer resize the image** — grid and image are fully decoupled; Cols+ only moves the grid.
 - [x] **Rescale Tactical Scenes tool** (`/tools/rescale-tactical-scenes`, Thriver only) — one-time migration that probes each scene's image naturalWidth and converts legacy container-based `img_scale` to the new baseline. Per-row + bulk rescale.
 - [x] **Order box on Assets → Map Pins edit form** — parity with /map sidebar. GM sets explicit numeric `sort_order`; list resorts immediately on save.
+
+---
+
+## 🟡 Phase 4b — Communities, Recruitment, Morale (SRD §08)
+
+**Full spec: `tasks/spec-communities.md`.** Implements XSE SRD v1.1 Community Resource & Morale Rules with Distemper Core overlay. Four-phase rollout — A is the foundation, each next phase adds a mechanic layer.
+
+### Phase A — Foundation (DB + manual management)
+- [ ] `communities` table (id, campaign_id, name, description, homestead_pin_id, status, leader_npc_id / leader_user_id, consecutive_failures, created_at, dissolved_at) + RLS
+- [ ] `community_members` table (community_id, npc_id / character_id, role, recruitment_type, apprentice_of_character_id, joined_at, left_at, left_reason) + RLS
+- [ ] Create Community modal (name, description, Homestead pin)
+- [ ] GM Assets tab: Community panel — member list grouped by role with % meter (Gatherers 33% / Maintainers 20% / Safety 5-10%)
+- [ ] Manual add/remove members + role reassignment
+- [ ] 13+ threshold auto-detection (Group → Community status badge)
+
+### Phase B — Recruitment mechanic
+- [ ] `Recruit` button on NPC card (GM + player)
+- [ ] Recruitment modal — approach picker (Cohort / Conscript / Convert), skill auto-suggest, CMod preview
+- [ ] First Impression integration (`npc_relationships.relationship_cmod` flows into Recruitment CMod)
+- [ ] Outcome resolution → auto-insert `community_members` row per SRD table (Success / Wild Success / High Insight / Failure / Dire Failure / Low Insight)
+- [ ] Apprentice toggle on Wild Success / High Insight — one Apprentice per PC, persistent bond
+- [ ] Recruitment log entry in `roll_log` with custom card style
+
+### Phase C — Morale + Resource checks (weekly loop)
+- [ ] `community_morale_checks` table + `community_resource_checks` table + RLS
+- [ ] Fed Check modal (Gatherers roll; outcome → CMod on next Morale)
+- [ ] Clothed Check modal (Maintainers roll; same pattern)
+- [ ] Weekly Morale Check modal — auto-fills 6 modifier slots (Fed, Clothed, Mood, Space, Clear Voice, Someone to Watch Over Me) + ad-hoc GM CMods
+- [ ] Consequence application: Failure removes 25% members (weighted Unassigned → Cohort → Convert → Conscript, Apprentices last), Dire Failure 50%, cmod_for_next accumulates, consecutive_failures counter increments on failure / resets on success
+- [ ] 3-failure dissolution flow with confirm modal + `status='dissolved'`
+- [ ] Log cards for all three check types in `roll_log`
+
+### Phase D — Activity Blocks + Level 4 skills + dashboard
+- [ ] End Week button advances `week_number` (per-community)
+- [ ] Inspiration Lv4 "Beacon of Hope" auto-applies +4 CMod to Morale Check when the rolling character has it
+- [ ] Psychology* Lv4 "Insightful Counselor" auto-applies +3 CMod when the rolling PC has spent time in the community
+- [ ] Conscription pressgang confirmation modal ("this is coercion, requires credible threat")
+- [ ] `/stories/[id]/community` full-screen dashboard (GM): morale history graph, role health over time, recruitment success rate, members-by-recruitment-type breakdown
+- [ ] Player-facing read-only Community summary (members count, current morale trend, their recruitment/apprentice bonds)
+- [ ] Apprentice task delegation UI — GM assigns off-screen tasks during Activity Blocks
+
+### Out of scope (see spec §12)
+- Cross-campaign / setting-wide communities
+- Community-as-combat-entity
+- Inter-community trade/economy
+- Procedural NPC generation for new communities
 
 ---
 
