@@ -25,7 +25,7 @@
 - [ ] NPC action pips not consuming on use — likely fixed by consumeAction DB write + loadInitiative, needs live testing to confirm
 - [ ] PC damage from NPC attacks — needs verification with latest character_id fallback
 - [x] Manipulation rolls auto-include First Impression CMod — "Interacting with NPC?" dropdown on social skill rolls auto-sets CMod from relationship_cmod
-- [ ] Add to Combat modal should filter NPCs already in initiative
+- [x] Add to Combat modal filters NPCs already in initiative (was already working via initiativeNpcIds prop)
 - [ ] Self-attack should apply damage to self
 - [x] **Stafford → Staff** — typo in weapon database, renamed
 - [x] **NPC card HP not updating on damage** — root cause: player deals damage from their browser, setState only updates player's React state. GM is a different client and never received the update. Fixed by broadcasting `npc_damaged` event through the initiative channel (same pattern as turn_changed). Also: NpcCard reads HP from props only (no useState), card grid merges latest campaignNpcs at render, realtime callback suppressed during manual updates to prevent race condition
