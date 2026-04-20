@@ -641,6 +641,7 @@ export default function TablePage() {
         .on('broadcast', { event: 'npc_damaged' }, (msg: any) => {
           // Another client dealt damage to an NPC — apply the patch locally
           const { npcId, patch } = msg.payload ?? {}
+          console.warn('[npc_damaged] RECV', { npcId, patch })
           if (npcId && patch) {
             setCampaignNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
             setRosterNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
@@ -703,19 +704,38 @@ export default function TablePage() {
       // the DB but the GM (and players) keep seeing the old HP because
       // rosterNpcs/campaignNpcs only refresh on combat-start or page reload.
       npcsChannelRef.current = supabase.channel(`campaign_npcs_${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${id}` }, async () => {
-          // Skip if a manual re-fetch is in progress (e.g. after dealing damage)
-          // to avoid a race condition where this stale fetch overwrites fresh data.
-          if (npcFetchInFlightRef.current) return
-          const { data: cnpcs } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
-          if (cnpcs && !npcFetchInFlightRef.current) {
-            setCampaignNpcs(cnpcs)
-            setRosterNpcs(cnpcs.filter((n: any) => {
-              if (n.status !== 'active') return false
-              const wp = n.wp_current ?? n.wp_max ?? 10
-              return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
-            }))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${id}` }, (payload: any) => {
+          console.warn('[campaign_npcs] pgchange', payload.eventType, payload.new?.id, payload.new?.wp_current, payload.new?.rp_current)
+          // For UPDATEs, apply the row from the payload directly — no round trip,
+          // no race with the in-flight-ref guard. INSERT/DELETE fall through to
+          // a full refetch since payload.new may be incomplete/absent.
+          if (payload.eventType === 'UPDATE' && payload.new) {
+            const row = payload.new
+            setCampaignNpcs(prev => prev.map(n => n.id === row.id ? { ...n, ...row } : n))
+            setRosterNpcs(prev => {
+              const alive = (n: any) => {
+                const wp = n.wp_current ?? n.wp_max ?? 10
+                return n.status === 'active' && !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+              }
+              const updated = prev.map(n => n.id === row.id ? { ...n, ...row } : n)
+              // Drop if the update just killed them.
+              return updated.filter(alive)
+            })
+            setViewingNpcs(prev => prev.map(n => n.id === row.id ? { ...n, ...row } as CampaignNpc : n))
+            return
           }
+          // INSERT/DELETE: full refetch.
+          void (async () => {
+            const { data: cnpcs } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+            if (cnpcs) {
+              setCampaignNpcs(cnpcs)
+              setRosterNpcs(cnpcs.filter((n: any) => {
+                if (n.status !== 'active') return false
+                const wp = n.wp_current ?? n.wp_max ?? 10
+                return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+              }))
+            }
+          })()
         })
         .subscribe()
 
@@ -2273,6 +2293,7 @@ export default function TablePage() {
         setTimeout(() => { npcFetchInFlightRef.current = false }, 500)
         // Broadcast to OTHER clients (GM) so they re-fetch NPC data.
         // Without this, a player dealing damage only updates their own state.
+        console.warn('[npc_damaged] SEND primary', { npcId, patch, channel: initChannelRef.current ? 'ready' : 'null' })
         initChannelRef.current?.send({ type: 'broadcast', event: 'npc_damaged', payload: { npcId, patch } })
         // Mortally wounded / incapacitated — zero their actions and auto-advance if active
         if (combatActive && (newWP === 0 || newRP === 0)) {
