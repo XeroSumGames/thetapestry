@@ -103,6 +103,7 @@ export interface CampaignNpc {
   death_countdown: number | null
   incap_rounds: number | null
   equipment: { name: string; damage?: number; roll?: string; notes?: string }[] | null
+  inventory?: { name: string; qty: number; enc?: number; rarity?: string; notes?: string; custom?: boolean }[] | null
   folder: string | null
 }
 
