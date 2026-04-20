@@ -1,109 +1,84 @@
-# Test Plan — Map selection → Attack target pre-pop + Object card on double-click
+# Test Plan — Insight Dice Sequential Reroll
 
-## Changes under test
+**Change:** A player who rerolls one die can now spend a second Insight Die to reroll the OTHER die. After the second spend (or after the "Both" option), they're locked out.
 
-1. Single-clicking a token on the tactical map now reports the selection up to the table page.
-2. When the active combatant clicks ATTACK, the target dropdown is pre-populated with the map-selected token (if valid). Map selection overrides `last_attack_target`.
-3. Double-clicking an object token on the map now opens an **Object Card** with name, WP/integrity bar, portrait/color, and (revealed) properties. GM also sees hidden properties and contents.
+**Files touched:**
+- `app/stories/[id]/table/page.tsx` — RollResult interface, initial roll setup, `spendInsightDie`, post-roll UI gate
 
-## Setup
-
-- `npm run dev` running on `http://localhost:3000` (or 3001).
-- Open the campaign's table page in two browsers:
-  - **GM** — signed in as campaign GM.
-  - **Player** — a player with a PC in the story.
-- Have a tactical scene active with: the player's PC, at least 2 NPCs ("Goon 1", "Goon 2"), and at least one object token with WP (e.g., a "Crate" with wp_max > 0).
-- Start combat.
+**Precondition:** Character with ≥2 Insight Dice is in a campaign (any session, doesn't require active combat).
 
 ---
 
-## Test cases
+## 1. Baseline — no reroll
+1. Open `/stories/[id]/table` as the player.
+2. Roll a skill check (any 2d6 roll from the action bar).
+3. **Expect:** Three buttons appear: `Re-roll Die 1`, `Re-roll Die 2`, `Re-roll Both (2)`.
+4. Close the modal without spending.
+5. **Expect:** Insight Dice count unchanged.
 
-### 1. Selection pre-pop — PC attacker targets an NPC
-- **Setup:** Player's PC is the active combatant. Equipped weapon ready.
-- **Steps:**
-  1. Player single-clicks "Goon 1" on the map (selection ring appears).
-  2. Player clicks ATTACK.
-- **Expect:**
-  - Target dropdown shows "Goon 1" pre-selected.
-  - CMod reflects Goon 1's rapid defensive modifier (DEX for ranged, PHY for melee), any coord bonus.
-  - Range band auto-set from token distance.
+## 2. Single reroll on Die 1, then stop
+1. Roll a skill check.
+2. Click **Re-roll Die 1**.
+3. **Expect:**
+   - Die 1 shows a new value; Die 2 unchanged.
+   - `Re-roll Die 1` button is GONE.
+   - `Re-roll Die 2` button is STILL VISIBLE.
+   - `Re-roll Both (2)` button is GONE.
+4. Click **Done**.
+5. **Expect:** Insight Dice count dropped by 1.
 
-### 2. Selection pre-pop — object target
-- **Setup:** Player's PC active, crate visible with WP.
-- **Steps:** Click the "Crate" token, then click ATTACK.
-- **Expect:**
-  - Target dropdown shows "Crate" pre-selected.
-  - CMod has defensive mod = 0 (objects don't dodge).
-  - Range band auto-set.
+## 3. Single reroll on Die 2, then stop
+Mirror of test 2 but with Die 2. After click, only `Re-roll Die 1` should remain visible.
 
-### 3. Selection overrides `last_attack_target`
-- **Setup:** Active PC has already attacked "Goon 1" this turn (so `last_attack_target === "Goon 1"`).
-- **Steps:** Click "Goon 2" on map, click ATTACK again.
-- **Expect:**
-  - Target = "Goon 2" (not Goon 1).
-  - No +1 same-target bonus (different target than last attack).
+## 4. Sequential: reroll Die 1, then Die 2
+1. Roll a skill check.
+2. Click **Re-roll Die 1**. Confirm only `Re-roll Die 2` remains.
+3. Click **Re-roll Die 2**.
+4. **Expect:**
+   - Both dice show new values (Die 1 from step 2, Die 2 from step 3).
+   - All reroll buttons GONE.
+   - "Insight Dice spent" label shown.
+5. Click **Done**.
+6. **Expect:** Insight Dice count dropped by 2.
 
-### 4. Invalid selection falls back to last target
-- **Setup:** A dead NPC token remains visible (wp_current = 0), `last_attack_target = "Goon 1"` (alive).
-- **Steps:** Click the dead NPC, click ATTACK.
-- **Expect:** Target pre-populates to "Goon 1" (the last target) — dead selection is rejected, fallback kicks in. No crash.
+## 5. Sequential: reroll Die 2, then Die 1
+Mirror of test 4. After both spends, "Insight Dice spent" shows.
 
-### 5. Attacker cannot target themselves
-- **Setup:** Active PC.
-- **Steps:** Click own PC token, click ATTACK.
-- **Expect:** Target dropdown falls back to `last_attack_target` or empty. Never pre-selects the attacker's own name.
+## 6. "Both" button is one-shot
+1. Roll a skill check.
+2. Click **Re-roll Both (2)**.
+3. **Expect:**
+   - Both dice show new values.
+   - All reroll buttons GONE.
+   - "Insight Dice spent" label shown.
+4. Insight Dice count dropped by 2.
 
-### 6. Clearing selection
-- **Setup:** No previous attack this turn.
-- **Steps:** Select Goon 1, then click an empty cell on the map (selection clears). Click ATTACK.
-- **Expect:** Target dropdown empty (no pre-pop).
+## 7. Pre-roll spend locks out post-roll rerolls
+1. Before rolling, spend an Insight Die to roll 3d6 (keep best 2).
+2. After the roll resolves, check the modal.
+3. **Expect:** NO reroll buttons shown. "Insight Die spent" label shown instead.
 
-### 7. Regression — double-click NPC opens NpcCard
-- **Steps:** Double-click any NPC token.
-- **Expect:** Existing behavior — `NpcCard` opens. Close button works. No new object card appears.
+## 8. Insight Dice pool of exactly 1
+1. Start with 1 Insight Die.
+2. Roll a skill check.
+3. **Expect:** `Re-roll Die 1` and `Re-roll Die 2` enabled, `Re-roll Both (2)` disabled/greyed.
+4. Click **Re-roll Die 1**.
+5. **Expect:** Panel disappears entirely (outer `myInsightDice > 0` gate hides it once the pool is empty).
 
-### 8. Regression — double-click character opens sheet
-- **Steps:** Double-click a PC token.
-- **Expect:** Existing behavior — `CharacterCard` / sheet opens.
+## 9. High/Low Insight outcome hides reroll panel
+1. Roll a natural 12 or natural 2.
+2. **Expect:** Reroll panel not shown (outcome-based gate unchanged from before).
 
-### 9. Double-click object opens ObjectCard (GM)
-- **Setup:** Crate with properties including some `revealed: false`.
-- **Steps:** GM double-clicks the crate.
-- **Expect:**
-  - Draggable inline card appears: name, WP bar, portrait/color swatch.
-  - All properties visible, hidden ones labeled `(hidden)`.
-  - Contents list shown under "Contents (GM)".
-  - Close button dismisses.
-
-### 10. Double-click object opens ObjectCard (player)
-- **Setup:** Same crate.
-- **Steps:** Player double-clicks the crate.
-- **Expect:**
-  - Card shows name, WP bar, portrait/color.
-  - Only **revealed** properties shown. No hidden properties. No contents list.
-
-### 11. Live WP sync on ObjectCard
-- **Steps:** Open ObjectCard for Crate (WP 10/10). GM damages the crate via any existing flow so its `wp_current` updates.
-- **Expect:** The open card's WP bar decreases without re-opening the card.
-
-### 12. Multiple ObjectCards simultaneously
-- **Steps:** Double-click two different objects.
-- **Expect:** Both cards visible, each draggable and closeable independently.
-
-### 13. Toggle-off by re-double-clicking same object
-- **Steps:** Double-click an object (card opens). Double-click the same object again.
-- **Expect:** Card closes.
-
-### 14. Selection ring still drawn in TacticalMap
-- **Steps:** Single-click any token.
-- **Expect:** Existing selection ring appears — no visual regression.
-
-### 15. Manual target change still works
-- **Steps:** Open attack modal with pre-populated target. Use the dropdown to change target.
-- **Expect:** CMod, defensive mod, range band recompute on change (existing `onChange` behavior unchanged).
+## 10. Damage re-applies on success flip (regression)
+1. In combat, miss an attack (2d6 total below target number).
+2. Click **Re-roll Die 1** and land a hit.
+3. **Expect:** Damage applies to the target automatically, logged to Logs tab.
+4. Roll another attack that misses, re-roll Die 1 and still miss, then re-roll Die 2 and now hit.
+5. **Expect:** Damage applies on the second reroll that flipped to success.
 
 ---
 
-## Pass criteria
-All 15 cases behave as described with no console errors related to the new code path and no regressions in the combat flow.
+## Smoke Checks
+- Stress/Breaking Point rolls: no reroll panel (not a skill check) — unchanged behavior.
+- Initiative rolls: no reroll panel — unchanged behavior.
+- Roll log entries: post-reroll rows still appear with `is_reroll=true` metadata.
