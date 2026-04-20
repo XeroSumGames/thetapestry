@@ -3956,6 +3956,9 @@ export default function TablePage() {
                 // so hitting ATTACK right after peeking at a zombie pre-populates it.
                 setSelectedMapTargetName(token?.name ?? null)
                 if (token.npc_id) {
+                  // Players only get the selection side-effect — opening the
+                  // NPC card is GM-only until the player-facing NPC card ships.
+                  if (!isGM) return
                   const npc = campaignNpcs.find((n: any) => n.id === token.npc_id)
                   if (npc) {
                     setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc as CampaignNpc])
