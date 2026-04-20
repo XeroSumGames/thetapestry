@@ -300,6 +300,16 @@
 - [ ] DEFERRED: Split table page (5,365 lines) into subcomponents — high risk before game
 - [ ] DEFERRED: Debounce realtime callbacks — works fine, optimization only
 - [ ] DEFERRED: Sequence guards on loadRolls/loadChat — low impact
+
+### Combat Audit (2026-04-20)
+- [x] CRITICAL: Winded mechanic — activateUpdate() now used at all activation points (was hardcoded actions_remaining: 2)
+- [x] CRITICAL: Sprint winded — finds combatant by name, not stale active entry
+- [x] HIGH: PC turn skip — re-fetches fresh state from DB instead of stale entries closure
+- [x] MEDIUM: Aim active warning — prominent "Aimed — Attack or lose it" badge
+- [x] VERIFIED: Coordinate bonus persists through round, clears on re-roll (correct)
+- [x] VERIFIED: Ready Weapon switch updates entries state correctly
+- [x] VERIFIED: Stabilize consumes action on failure (correct per SRD)
+- [x] VERIFIED: Charge cancel — token stays, no action cost (GM discretion)
 - [x] **Player-initiated loot from ObjectCard (destroyed-only v1)** — players can open an ObjectCard for a destroyed crate (`wp_max > 0 && wp_current <= 0`) and click a per-item **Take** button; item lands in their own `character.data.equipment`, crate contents decrement, loot log entry written. Matches the existing CampaignObjects policy exactly. Follow-ups: `lootable` flag for pre-destroyed unlock, always-allowed policy, inventory-vs-equipment reconciliation (loot currently appends to legacy string[] equipment, not the new InventoryItem[] inventory).
 - [x] **Lootable flag (GM-controlled unlock)** — new `scene_tokens.lootable boolean` column (`sql/scene-tokens-lootable.sql`). ObjectCard header for GM gets a 🔒 Locked / 🔓 Unlocked toggle (hidden when destroyed since destruction already opens contents). Players can Take items when `destroyed || lootable` is true; Contents header reflects state (Destroyed / Unlocked / Locked for GM, Loot for player). Remaining follow-ups: always-allowed policy, inventory/equipment reconciliation.
 - [x] **GM Note image handouts — inline preview + lightbox** — shared GM notes already supported image attachments, but they rendered as 32×32 thumbnails with a filename link, useless for storytelling pages. New shared `NoteAttachmentsView` component renders images inline at full panel width (capped at 600px height), click-to-zoom lightbox at native resolution, non-image files stay as compact chips. Used by both `GmNotes` and `PlayerNotes`. Also added a realtime `campaign_notes` subscription to `PlayerNotes` so a GM toggling Share pushes the handout (or its updates) to players without a page refresh.
