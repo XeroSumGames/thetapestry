@@ -2287,6 +2287,42 @@ export default function TablePage() {
         const { error: objErr } = await supabase.from('scene_tokens').update({ wp_current: newWP }).eq('id', targetObject.id)
         if (objErr) console.error('[damage] scene_tokens update error:', objErr.message)
         setMapTokens(prev => prev.map(t => t.id === targetObject.id ? { ...t, wp_current: newWP } : t))
+
+        // Auto-loot: when object is destroyed, give its contents to the attacker
+        if (newWP === 0 && curWP > 0) {
+          const { data: fullToken } = await supabase.from('scene_tokens').select('contents').eq('id', targetObject.id).single()
+          const contents: { type: string; name: string; quantity: number }[] = fullToken?.contents ?? []
+          if (contents.length > 0) {
+            const active = initiativeOrder.find(ie => ie.is_active)
+            const attackerEntry = active ? entries.find(e => e.character.id === active.character_id) : null
+            if (attackerEntry) {
+              const charData = attackerEntry.character.data ?? {}
+              const inv: InventoryItem[] = charData.inventory ?? []
+              let newInv = [...inv]
+              const lootedNames: string[] = []
+              for (const item of contents) {
+                const existing = newInv.find(i => i.name === item.name)
+                if (existing) {
+                  newInv = newInv.map(i => i === existing ? { ...i, qty: i.qty + item.quantity } : i)
+                } else {
+                  newInv.push({ name: item.name, enc: 0, rarity: 'Common', notes: '', qty: item.quantity, custom: true })
+                }
+                lootedNames.push(`${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''}`)
+              }
+              await supabase.from('characters').update({ data: { ...charData, inventory: newInv } }).eq('id', attackerEntry.character.id)
+              // Clear contents from the destroyed object
+              await supabase.from('scene_tokens').update({ contents: [] }).eq('id', targetObject.id)
+              // Log it
+              await supabase.from('roll_log').insert({
+                campaign_id: id, user_id: userId, character_name: attackerEntry.character.name,
+                label: `🎒 ${attackerEntry.character.name} looted ${lootedNames.join(', ')} from ${targetObject.name}`,
+                die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
+              })
+              initChannelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: {} })
+              traitNotes.push(`Destroyed ${targetObject.name} — looted: ${lootedNames.join(', ')}`)
+            }
+          }
+        }
       } else {
         console.warn('[damage] no target resolved — damage NOT applied. targetName was:', targetName)
       }
