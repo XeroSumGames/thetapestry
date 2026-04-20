@@ -1,5 +1,18 @@
 # Tapestry — To Do & Backlog
 
+## 🟡 Backlog (small wins)
+- [ ] **Destroyed-object portrait swap** — object tokens with WP should optionally carry a `destroyed_portrait_url`; when the token hits 0 WP, the canvas renders that image instead of the intact one. Falls back to the current shatter-crack overlay if no destroyed art exists. Upload UX lives on the object add/edit form in NpcRoster → Objects.
+
+## ✅ Shipped 2026-04-20 (pre-Mongrels game sprint)
+- `f2e708f` Insight Dice sequential reroll — second spend on the OTHER die after first fails
+- `ce50927` Sprint no longer burns actions on silent click-fail — consumeAction deferred to onMoveComplete
+- `46cee3a` Object WP defaults to 3 + explicit "Indestructible (decorative only)" toggle on add/edit
+- `e2c3b7d` Initiative no longer reactivates a combatant mid-round after a kill — skip-walk now detects wrap-past-end and fires new-round
+- `cdcedef` Move button anchors on GM's selected token (not active combatant) + guards consumeAction on non-active move
+- `deccf40` Deleting an NPC auto-cleans orphan scene_tokens + initiative_order rows
+- `875c8d7` NPC folder tree shows during combat too
+- `8b8c347` Initiative bar — fixed roll-descending order (no rotation); pre-selected target range-band no longer clobbered by unconditional medium reset
+
 ## 🔴 Bugs (Fix First)
 - [x] Print character sheet renders blank
 - [x] Distemper font not applying on mobile navbar
@@ -59,7 +72,7 @@
 - [ ] **Player-facing NPC card on Show All click** — clicking a revealed NPC in the player's NPCs tab opens a read-only card (currently opens the same editable view as GM). Design question: should the player card just show Name, First Impression role, and description? Or more?
 - [ ] **Player NPC notes + first impressions** — clicking an NPC name in the player's Assets NPCs tab should open a space where the player can write personal notes about that NPC, and show their First Impression results
 - [x] **Insight Dice pre-roll CMod** — confirmed +3 CMod (per SRD)
-- [ ] **Insight Dice sequential reroll** — if rerolling die 1 doesn't improve the result, allow spending a second Insight Die to reroll die 2 (currently locked out after first spend)
+- [x] **Insight Dice sequential reroll** — `f2e708f` `spent` boolean → `insightUsed: 'pre' | 'die1' | 'die2' | 'both' | null`. After rerolling one die, only the OTHER die's button remains; second spend locks the panel. Pre-roll 3d6 still locks post-roll rerolls.
 - [x] **Whisper chat** — click a player's portrait → private whisper between you two (GM + other players do not see it). Chat tab auto-switches when a whisper arrives addressed to you. Purple styling distinguishes whispers from group chat.
 - [ ] **NPC health as narrative feeling** — player-facing NPC cards should show WP/RP as a descriptive state (Healthy, Ragged, Beaten, Dying, etc.) instead of exact numbers — GM still sees the dots
 
