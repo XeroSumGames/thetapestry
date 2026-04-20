@@ -22,11 +22,11 @@
 - [x] Visitor email suppression for bot cities (San Jose, Ashburn, etc.)
 
 ### Known Issues (needs testing)
-- [ ] NPC action pips not consuming on use — likely fixed by consumeAction DB write + loadInitiative, needs live testing to confirm
-- [ ] PC damage from NPC attacks — needs verification with latest character_id fallback
+- [x] NPC action pips consuming on use (confirmed working, will readdress if not)
+- [x] PC damage from NPC attacks (confirmed fixed)
 - [x] Manipulation rolls auto-include First Impression CMod — "Interacting with NPC?" dropdown on social skill rolls auto-sets CMod from relationship_cmod
 - [x] Add to Combat modal filters NPCs already in initiative (was already working via initiativeNpcIds prop)
-- [ ] Self-attack should apply damage to self
+- [x] Self-attack applies damage to self (confirmed working)
 - [x] **Stafford → Staff** — typo in weapon database, renamed
 - [x] **NPC card HP not updating on damage** — root cause: player deals damage from their browser, setState only updates player's React state. GM is a different client and never received the update. Fixed by broadcasting `npc_damaged` event through the initiative channel (same pattern as turn_changed). Also: NpcCard reads HP from props only (no useState), card grid merges latest campaignNpcs at render, realtime callback suppressed during manual updates to prevent race condition
 - [x] **General Knowledge → Specific Knowledge** — renamed in all NPC seed data (setting-npcs.ts), DB backfill via jsonb_set query
@@ -40,7 +40,7 @@
 - [x] **Out-of-combat stabilize on NPC cards** — Medicine roll from NPC card when mortally wounded
 - [x] **Auto-advance after 2 actions** — root causes: (1) consumeAction didn't write actions_remaining=0 to DB before calling nextTurn, (2) closeRollModal used rollResult state (subject to React batching/stale closures) — switched to rollExecutedRef, (3) Charge/Rapid Fire/Stabilize double-consumed via closeRollModal — added actionPreConsumedRef flag, (4) nextTurn had no fallback when no active entry found in DB
 - [x] **NPC HP display lags until refresh** — NpcRoster had no realtime subscription on campaign_npcs; added Supabase realtime channel that calls loadNpcs() on any change
-- [ ] **Roll modal stuck "Rolling..." for 55s** + **roll result delayed 30s into Logs** — still to investigate. Previously thought it was the same root cause as damage; now that damage is fixed, may be independent. Re-test after HP display fix.
+- [x] **Roll modal stuck "Rolling..."** — confirmed resolved, will readdress if it recurs
 - [x] **Damage bidirectional** — PC→NPC and NPC→PC both work. Root cause was silent RLS rejection on `character_states` and `campaign_npcs` UPDATE policies. Fixed via `sql/character-states-rls-fix.sql` and `sql/campaign-npcs-rls-fix.sql` plus explicit `.select()` on both updates to detect 0-row cases. Biggest diagnostic unlock: `next.config.ts` `compiler.removeConsole` was stripping every `console.log` from production — switched diagnostic logs to `console.warn` to survive the build.
 - [x] Player join 20s → 1-2s — RLS index fix (`sql/campaign-members-indexes.sql`) and `log-visit` edge function unblock
 - [x] Combat start 15s → fast (verified by user)
@@ -94,7 +94,7 @@
 - [x] Previous Sessions button in table header
 - [x] Cliffhanger field displayed in session history
 - [x] Table auto-refreshes when player joins (Realtime on campaign_members)
-- [ ] War Stories — players post memorable moments from sessions
+- [x] War Stories — moved to Phase 4 (Campfire)
 
 ### Stress & Breaking Point (SRD Core Mechanic)
 - [x] Stress bar tracker on character card (5 segments, color-coded green→yellow→red)
