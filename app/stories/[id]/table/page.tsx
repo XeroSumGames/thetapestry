@@ -203,7 +203,7 @@ export default function TablePage() {
   const [pendingRoll, setPendingRoll] = useState<PendingRoll | null>(null)
   const actionPreConsumedRef = useRef(false)  // Set when Stabilize pre-consumes before the roll modal
   const actionCostRef = useRef(1)             // Action cost for the current roll (2 for Charge/Rapid Fire)
-  const pendingChargeRef = useRef<{ label: string; amod: number; smod: number; weapon: any; activeId?: string } | null>(null)
+  const pendingChargeRef = useRef<{ label: string; amod: number; smod: number; weapon: any; activeId?: string; moved?: boolean } | null>(null)
   const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal — refs survive React batching
   const [insightSavePrompt, setInsightSavePrompt] = useState<{ stateId: string; targetName: string; newWP: number; newRP: number; phyAmod: number; insightDice: number } | null>(null)
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
@@ -3252,7 +3252,7 @@ export default function TablePage() {
                   style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
                   Aim{(activeEntry.aim_bonus ?? 0) > 0 ? ` (+${activeEntry.aim_bonus})` : ''}
                 </button>
-                {activeEntry.aim_active && <span style={{ fontSize: '12px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif' }}>Must Attack</span>}
+                {activeEntry.aim_active && <span style={{ fontSize: '12px', padding: '1px 6px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '2px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Aimed — Attack or lose it</span>}
 
                 {/* ── ATTACK: weapon attack, +1 CMod if same target as last attack ── */}
                 <button onClick={() => {
