@@ -523,7 +523,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         tokenDead = wp <= 0
       }
 
-      if (tokenDead) ctx.globalAlpha = 0.5
+      // Destroyed objects fade further than downed PCs/NPCs so they read as
+      // "gone" rather than just "out of the fight".
+      if (tokenDead) ctx.globalAlpha = t.token_type === 'object' ? 0.3 : 0.5
 
       // Apply rotation
       const tokenRotation = (t.rotation ?? 0) * Math.PI / 180
