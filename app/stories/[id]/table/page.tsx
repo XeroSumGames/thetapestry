@@ -3856,11 +3856,18 @@ export default function TablePage() {
                 setMapCellFeet(cellFeet)
               }}
               onMoveComplete={() => {
-                const active = initiativeOrder.find((e: any) => e.is_active)
+                // The mover is whoever moveMode references — NOT necessarily the
+                // current active combatant. Turn could auto-advance between Move
+                // click and target-cell click, leaving stale active state, in
+                // which case the visibly-moved token belongs to a former active.
+                const mover = (moveMode?.characterId
+                  ? initiativeOrder.find((e: any) => e.character_id === moveMode.characterId)
+                  : moveMode?.npcId
+                    ? initiativeOrder.find((e: any) => e.npc_id === moveMode.npcId)
+                    : null) ?? initiativeOrder.find((e: any) => e.is_active)
                 const charge = pendingChargeRef.current
                 if (charge) {
-                  // Validate active combatant hasn't changed since charge was initiated
-                  if (active && charge.activeId && charge.activeId !== active.id) {
+                  if (mover && charge.activeId && charge.activeId !== mover.id) {
                     console.warn('[charge] active combatant changed — aborting charge')
                     pendingChargeRef.current = null
                     setMoveMode(null)
@@ -3874,16 +3881,16 @@ export default function TablePage() {
                   // Sprint: token moved, now open Athletics check
                   sprintPendingRef.current = false
                   setMoveMode(null)
-                  const charEntry = active ? entries.find(e => e.character.name === active.character_name) : null
-                  const npcAttacker = active?.is_npc ? campaignNpcs.find((n: any) => n.name === active.character_name) : null
+                  const charEntry = mover ? entries.find(e => e.character.name === mover.character_name) : null
+                  const npcAttacker = mover?.is_npc ? campaignNpcs.find((n: any) => n.name === mover.character_name) : null
                   const rapid = charEntry?.character.data?.rapid ?? {}
                   const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
                   const smod = npcAttacker
                     ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Athletics')?.level ?? 0 : 0)
                     : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Athletics')?.level ?? 0
-                  handleRollRequest(`${active?.character_name ?? 'Unknown'} — Sprint (Athletics)`, amod, smod)
+                  handleRollRequest(`${mover?.character_name ?? 'Unknown'} — Sprint (Athletics)`, amod, smod)
                 } else {
-                  if (active) consumeAction(active.id, `${active.character_name} — Move`)
+                  if (mover) consumeAction(mover.id, `${mover.character_name} — Move`)
                   setMoveMode(null)
                 }
               }}
