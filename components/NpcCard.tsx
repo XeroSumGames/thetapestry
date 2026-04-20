@@ -246,6 +246,25 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         <div style={{ fontSize: '12px', color: '#cce0f5', fontStyle: 'italic', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.notes}</div>
       )}
 
+      {/* Weapon info — always visible */}
+      {(w || (npc.skills?.weapon2 && getWeaponByName(npc.skills.weapon2.weaponName))) && (
+        <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '4px' }}>
+          {w && (
+            <span style={{ fontSize: '12px', padding: '1px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              {w.name} · {w.damage} · {w.range}{weapon?.condition && weapon.condition !== 'Used' ? ` · ${weapon.condition}` : ''}
+            </span>
+          )}
+          {npc.skills?.weapon2 && (() => {
+            const w2 = getWeaponByName(npc.skills.weapon2.weaponName)
+            return w2 ? (
+              <span style={{ fontSize: '12px', padding: '1px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                {w2.name} · {w2.damage} · {w2.range}
+              </span>
+            ) : null
+          })()}
+        </div>
+      )}
+
       {/* Combat: unarmed + all equipment weapons */}
       {onRoll && (
         <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
