@@ -1079,8 +1079,48 @@ export default function TablePage() {
       return
     }
 
-    // New round when wrapping — re-roll initiative + decrement death countdowns
-    if (currentIdx === order.length - 1) {
+    // Find next combatant who can act — skip dead, mortally wounded, and incapacitated.
+    // Done BEFORE the new-round check so the skip walk's wrap-around is detectable:
+    // if the active combatant isn't the last in the order but every remaining entry
+    // in this round is dead (e.g. Jules kills the tail-end NPC), the walk wraps via
+    // `%` onto a combatant who already acted. Without detecting that, we would
+    // reactivate them mid-round with fresh actions. See `wrappedPastEnd` below.
+    const { data: freshNpcsForSkip } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+    const skipNpcMap = new Map<string, any>((freshNpcsForSkip ?? []).map((n: any) => [n.id, n]))
+    let nextIdx = (currentIdx + 1) % order.length
+    let wrappedPastEnd = false
+    let attempts = 0
+    while (attempts < order.length) {
+      const nextEntry = order[nextIdx]
+      let skipTurn = false
+      if (nextEntry.is_npc && nextEntry.npc_id) {
+        const npc = skipNpcMap.get(nextEntry.npc_id)
+        if (npc) {
+          const npcWP = npc.wp_current ?? npc.wp_max ?? 10
+          const npcRP = npc.rp_current ?? npc.rp_max ?? 6
+          skipTurn = npcWP === 0 || npcRP === 0 || npc.status === 'dead'
+        }
+      } else if (nextEntry.character_id) {
+        // Re-fetch fresh PC state from DB to avoid stale closure
+        const { data: freshPcState } = await supabase.from('character_states').select('wp_current, rp_current').eq('campaign_id', id).eq('character_id', nextEntry.character_id).maybeSingle()
+        if (freshPcState) {
+          skipTurn = freshPcState.wp_current === 0 || freshPcState.rp_current === 0
+        }
+      }
+      if (!skipTurn) break
+      const prev = nextIdx
+      nextIdx = (nextIdx + 1) % order.length
+      // If the increment crossed the end boundary, mark that we lapped around.
+      if (nextIdx <= prev) wrappedPastEnd = true
+      attempts++
+    }
+
+    // New round when wrapping — re-roll initiative + decrement death countdowns.
+    // Two wrap paths: (1) active combatant was the last alive, or (2) all combatants
+    // after the active one are dead, so the skip-walk lapped around to an earlier
+    // position. Either way, time to start a new round instead of reactivating
+    // somebody who already acted.
+    if (currentIdx === order.length - 1 || wrappedPastEnd) {
       // Decrement death countdown + incapacitation + RP recovery
       for (const e of entries) {
         if (!e.liveState) continue
@@ -1208,35 +1248,8 @@ export default function TablePage() {
       return
     }
 
-    // Find next combatant who can act — skip dead, mortally wounded, and incapacitated.
-    // Re-fetch NPC data from DB to avoid stale closure values.
-    const { data: freshNpcsForSkip } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
-    const skipNpcMap = new Map<string, any>((freshNpcsForSkip ?? []).map((n: any) => [n.id, n]))
-    let nextIdx = (currentIdx + 1) % order.length
-    let attempts = 0
-    while (attempts < order.length) {
-      const nextEntry = order[nextIdx]
-      let skipTurn = false
-      if (nextEntry.is_npc && nextEntry.npc_id) {
-        const npc = skipNpcMap.get(nextEntry.npc_id)
-        if (npc) {
-          const npcWP = npc.wp_current ?? npc.wp_max ?? 10
-          const npcRP = npc.rp_current ?? npc.rp_max ?? 6
-          skipTurn = npcWP === 0 || npcRP === 0 || npc.status === 'dead'
-        }
-      } else if (nextEntry.character_id) {
-        // Re-fetch fresh PC state from DB to avoid stale closure
-        const { data: freshPcState } = await supabase.from('character_states').select('wp_current, rp_current').eq('campaign_id', id).eq('character_id', nextEntry.character_id).maybeSingle()
-        if (freshPcState) {
-          skipTurn = freshPcState.wp_current === 0 || freshPcState.rp_current === 0
-        }
-      }
-      if (!skipTurn) break
-      nextIdx = (nextIdx + 1) % order.length
-      attempts++
-    }
-
-    // Deactivate current + activate next
+    // Deactivate current + activate next (nextIdx was computed above, before the
+    // new-round check, so we can detect the skip-walk wrap cleanly).
     const currentEntry = order.find((e: any) => e.is_active)
     console.warn('[nextTurn] deactivating:', currentEntry?.character_name, '→ activating:', order[nextIdx]?.character_name)
     if (currentEntry) {
