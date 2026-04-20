@@ -233,15 +233,20 @@ export default function TablePage() {
   const [showCoordinateModal, setShowCoordinateModal] = useState(false)
   const [coordinateSelection, setCoordinateSelection] = useState('')
   const sprintPendingRef = useRef(false)
-  // When the active combatant changes, drop any in-flight move-mode/charge/sprint
-  // intent. Without this, a Move set up during a previous turn (waiting on a
+  // When the active combatant changes, drop any in-flight move-mode intent.
+  // Without this, a Move set up during a previous turn (waiting on a
   // target-cell click) can fire long after auto-advance, attributing a token
   // move to a former active and silently failing to consume actions.
+  //
+  // EXCEPTION: Sprint pre-consumes 2 actions BEFORE the user clicks the
+  // target cell — which advances the turn immediately. Sprint then needs
+  // its target-cell click to commit the visible token move on the (now
+  // former) active. Charge can in theory be mid-flight too. So skip the
+  // clear if either ref is set.
   const activeIdForReset = initiativeOrder.find(e => e.is_active)?.id ?? null
   useEffect(() => {
+    if (sprintPendingRef.current || pendingChargeRef.current) return
     setMoveMode(null)
-    pendingChargeRef.current = null
-    sprintPendingRef.current = false
   }, [activeIdForReset])
   const [selectedNpcIds, setSelectedNpcIds] = useState<Set<string>>(new Set())
   const [rosterNpcs, setRosterNpcs] = useState<any[]>([])
