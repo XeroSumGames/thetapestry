@@ -71,13 +71,15 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [showAdd, setShowAdd] = useState(false)
   const [addName, setAddName] = useState('')
   const [addIcon, setAddIcon] = useState('crate')
-  const [addWP, setAddWP] = useState('')
+  const [addWP, setAddWP] = useState('3')
+  const [addIndestructible, setAddIndestructible] = useState(false)
   const [addCustomUrl, setAddCustomUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editingObj, setEditingObj] = useState<ObjectToken | null>(null)
   const [editName, setEditName] = useState('')
   const [editWP, setEditWP] = useState('')
+  const [editIndestructible, setEditIndestructible] = useState(false)
   const [editProps, setEditProps] = useState<TokenProperty[]>([])
   const [editContents, setEditContents] = useState<ContentItem[]>([])
   const [contentPickerValue, setContentPickerValue] = useState('')
@@ -145,11 +147,21 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     setSaving(true)
     const icon = OBJECT_ICONS.find(i => i.value === addIcon)
     const portraitUrl = addCustomUrl || null
-    const wpMax = addWP ? parseInt(addWP, 10) : null
-    onPlaceOnMap?.(addName.trim(), portraitUrl, isNaN(wpMax as number) ? null : wpMax)
+    // Indestructible → wp_max=null (no attack target). Otherwise: parse the
+    // field, fall back to 3 if empty/invalid so barrels/crates are destructible
+    // by default without the GM having to remember to fill the field.
+    let wpMax: number | null
+    if (addIndestructible) {
+      wpMax = null
+    } else {
+      const parsed = addWP ? parseInt(addWP, 10) : NaN
+      wpMax = isNaN(parsed) ? 3 : parsed
+    }
+    onPlaceOnMap?.(addName.trim(), portraitUrl, wpMax)
     setAddName('')
     setAddIcon('crate')
-    setAddWP('')
+    setAddWP('3')
+    setAddIndestructible(false)
     setAddCustomUrl(null)
     setShowAdd(false)
     setSaving(false)
@@ -245,13 +257,18 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '4px', alignItems: 'flex-end' }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP (optional)</div>
-              <input value={addWP} onChange={e => setAddWP(e.target.value)} placeholder="e.g. 10"
-                style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+              <div style={{ fontSize: '12px', color: addIndestructible ? '#5a5550' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP {addIndestructible ? '(disabled)' : '(default 3)'}</div>
+              <input value={addIndestructible ? '' : addWP} onChange={e => setAddWP(e.target.value)} placeholder="e.g. 3" disabled={addIndestructible}
+                style={{ width: '100%', padding: '4px 6px', background: addIndestructible ? '#1a1a1a' : '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: addIndestructible ? '#5a5550' : '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
             </div>
           </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', cursor: 'pointer', fontSize: '12px', color: addIndestructible ? '#EF9F27' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+            <input type="checkbox" checked={addIndestructible} onChange={e => setAddIndestructible(e.target.checked)}
+              style={{ cursor: 'pointer' }} />
+            Indestructible (decorative only — not attackable)
+          </label>
 
           <button onClick={handleAdd} disabled={!addName.trim() || saving}
             style={{ ...chipBtn, width: '100%', background: '#c0392b', border: '1px solid #c0392b', color: '#fff' }}>
@@ -349,7 +366,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   style={{ flex: 1, padding: '3px 0', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: obj.is_visible ? '#7fc458' : '#5a5550', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {obj.is_visible ? 'Show' : 'Hide'}
                 </button>
-                <button onClick={() => { setEditingObj(obj); setEditName(obj.name); setEditWP(obj.wp_max != null ? String(obj.wp_max) : ''); setEditProps(Array.isArray(obj.properties) ? obj.properties : []); setEditContents(Array.isArray(obj.contents) ? obj.contents : []) }}
+                <button onClick={() => { setEditingObj(obj); setEditName(obj.name); setEditWP(obj.wp_max != null ? String(obj.wp_max) : '3'); setEditIndestructible(obj.wp_max == null); setEditProps(Array.isArray(obj.properties) ? obj.properties : []); setEditContents(Array.isArray(obj.contents) ? obj.contents : []) }}
                   style={{ flex: 1, padding: '3px 0', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Edit
                 </button>
@@ -425,11 +442,16 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
               <input value={editName} onChange={e => setEditName(e.target.value)}
                 style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
             </div>
-            <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP (leave empty for indestructible)</div>
-              <input value={editWP} onChange={e => setEditWP(e.target.value)} placeholder="e.g. 10"
-                style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+            <div style={{ marginBottom: '4px' }}>
+              <div style={{ fontSize: '12px', color: editIndestructible ? '#5a5550' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP {editIndestructible ? '(disabled)' : ''}</div>
+              <input value={editIndestructible ? '' : editWP} onChange={e => setEditWP(e.target.value)} placeholder="e.g. 3" disabled={editIndestructible}
+                style={{ width: '100%', padding: '4px 6px', background: editIndestructible ? '#1a1a1a' : '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: editIndestructible ? '#5a5550' : '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
             </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', cursor: 'pointer', fontSize: '12px', color: editIndestructible ? '#EF9F27' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+              <input type="checkbox" checked={editIndestructible} onChange={e => setEditIndestructible(e.target.checked)}
+                style={{ cursor: 'pointer' }} />
+              Indestructible (decorative only — not attackable)
+            </label>
             <div style={{ marginBottom: '10px' }}>
               <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Image</div>
               <label style={{ display: 'block', padding: '6px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '12px', textAlign: 'center', cursor: 'pointer', marginBottom: '4px' }}>
@@ -521,12 +543,18 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
 
             <div style={{ display: 'flex', gap: '6px' }}>
               <button onClick={async () => {
-                const wpVal = editWP ? parseInt(editWP, 10) : null
+                let wpVal: number | null
+                if (editIndestructible) {
+                  wpVal = null
+                } else {
+                  const parsed = editWP ? parseInt(editWP, 10) : NaN
+                  wpVal = isNaN(parsed) ? 3 : parsed
+                }
                 const cleanProps = editProps.filter(p => p.key.trim())
                 await supabase.from('scene_tokens').update({
                   name: editName.trim() || editingObj.name,
-                  wp_max: isNaN(wpVal as number) ? null : wpVal,
-                  wp_current: isNaN(wpVal as number) ? null : wpVal,
+                  wp_max: wpVal,
+                  wp_current: wpVal,
                   properties: cleanProps,
                   contents: editContents,
                 }).eq('id', editingObj.id)
