@@ -3539,6 +3539,14 @@ export default function TablePage() {
                     </div>
                     <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
                   </div>
+                ) : r.outcome === 'sprint' ? (
+                  <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a2010', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🏃 Sprint</span>
+                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>{r.label.replace(/^🏃\s*/, '')}</div>
+                  </div>
                 ) : (r.outcome === 'death' || r.character_name === 'Death is in the air') ? (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a0a0a', border: '1px solid #5a1b1b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
