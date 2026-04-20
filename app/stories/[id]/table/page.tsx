@@ -1900,12 +1900,20 @@ export default function TablePage() {
     setSocialTarget(null)
   }
 
-  function handleRollRequest(label: string, amod: number, smod: number, weapon?: WeaponContext) {
+  function handleRollRequest(label: string, amod: number, smod: number, weapon?: WeaponContext, bypassTurnGate = false) {
     // During active combat, ALL rolls (weapon + skill) are gated to the active
     // combatant with actions remaining.  Without this, a player whose turn ended
     // could still open a skill check, and closeRollModal would then consume an
     // action from whichever OTHER combatant is now active — corrupting the turn.
-    if (combatActive) {
+    //
+    // Bypass when:
+    //   - bypassTurnGate=true (explicit, e.g. Sprint Athletics deferred roll), OR
+    //   - actionPreConsumedRef.current=true (Sprint / Stabilize / any flow that
+    //     already consumed actions before requesting the roll — the turn may
+    //     have auto-advanced, so the gate would block the legitimate deferred
+    //     roll. closeRollModal won't double-consume because the same ref tells
+    //     it to skip the post-roll consume).
+    if (combatActive && !bypassTurnGate && !actionPreConsumedRef.current) {
       const active = initiativeOrder.find(e => e.is_active)
       if (!active || (active.actions_remaining ?? 0) <= 0) {
         alert('No actions remaining — wait for your next turn.')
@@ -3953,7 +3961,11 @@ export default function TablePage() {
                   const smod = npcAttacker
                     ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Athletics')?.level ?? 0 : 0)
                     : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Athletics')?.level ?? 0
-                  handleRollRequest(`${mover?.character_name ?? 'Unknown'} — Sprint (Athletics)`, amod, smod)
+                  // bypassTurnGate=true: Sprint pre-consumed 2 actions which
+                  // advanced the turn. The Athletics roll fires for the former
+                  // active combatant after the cell click — bypass the
+                  // active-combatant check that would otherwise block it.
+                  handleRollRequest(`${mover?.character_name ?? 'Unknown'} — Sprint (Athletics)`, amod, smod, undefined, true)
                 } else {
                   if (mover) consumeAction(mover.id, `${mover.character_name} — Move`)
                   setMoveMode(null)
