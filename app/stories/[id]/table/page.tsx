@@ -4327,11 +4327,11 @@ export default function TablePage() {
                     return (
                       <div
                         key={npc.id}
-                        onClick={() => {
+                        onClick={isGM ? () => {
                           setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc])
                           setSelectedEntry(null)
-                        }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: isOpen ? '#2a1210' : npcIsDead ? '#0f0f0f' : '#1a1a1a', border: `1px solid ${isOpen ? '#c0392b' : npcIsDead ? '#3a3a3a' : inCombat ? '#5a1b1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s', opacity: npcIsDead ? 0.5 : 1 }}
+                        } : undefined}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: isOpen ? '#2a1210' : npcIsDead ? '#0f0f0f' : '#1a1a1a', border: `1px solid ${isOpen ? '#c0392b' : npcIsDead ? '#3a3a3a' : inCombat ? '#5a1b1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: isGM ? 'pointer' : 'default', transition: 'background 0.15s', opacity: npcIsDead ? 0.5 : 1 }}
                       >
                         <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                           {npc.portrait_url ? (
