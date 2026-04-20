@@ -509,6 +509,8 @@ export default function TablePage() {
           // GM-side notice. Player will see the modal on their own client.
           console.warn(`[stress] ${e.character.name} hit 5 — Stress Check triggered for player`)
         }
+        // Log to the affected PC's progression log. Fires once per transition.
+        if (e.character?.id) void appendProgressionLog(e.character.id, 'stress', 'Stress reached 5 — Stress Check triggered')
       }
       prev.set(stateId, curStress)
     }
@@ -1240,6 +1242,24 @@ export default function TablePage() {
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
   }
 
+  /** Append an entry to a character's progression_log jsonb. Read-modify-write
+   *  pattern — matches the existing CDP-award and mortal-wound callers. Races
+   *  between concurrent appends are rare (events are user-driven) and the
+   *  worst outcome is one missed entry. Fire-and-forget; errors log to console. */
+  async function appendProgressionLog(characterId: string, type: string, text: string) {
+    try {
+      const { data } = await supabase.from('characters').select('data').eq('id', characterId).single()
+      const base: any = data?.data ?? {}
+      const prev = Array.isArray(base.progression_log) ? base.progression_log : []
+      const entry = { date: new Date().toISOString(), type, text }
+      await supabase.from('characters').update({
+        data: { ...base, progression_log: [entry, ...prev] },
+      }).eq('id', characterId)
+    } catch (err: any) {
+      console.warn('[progression_log] append failed:', err?.message ?? err)
+    }
+  }
+
   async function consumeAction(entryId: string, actionLabel?: string, cost = 1) {
     // Re-fetch from DB to avoid stale state
     const { data: freshEntry, error: freshErr } = await supabase.from('initiative_order').select('*').eq('id', entryId).single()
@@ -1594,6 +1614,10 @@ export default function TablePage() {
     // Broadcast to every client so local chat/log state is force-cleared even
     // if a DELETE realtime event gets dropped or RLS blocks the write.
     initChannelRef.current?.send({ type: 'broadcast', event: 'logs_cleared', payload: {} })
+    // Progression log: session-start marker on every PC's log.
+    for (const e of entries) {
+      if (e.character?.id) void appendProgressionLog(e.character.id, 'session', `Session ${newCount} began`)
+    }
   }
 
   async function endSession() {
@@ -1619,6 +1643,10 @@ export default function TablePage() {
     setSessionFiles([])
     setSessionActing(false)
     logEvent('session_ended', { campaign_id: id, session_number: endedCount })
+    // Progression log: session-end marker on every PC's log.
+    for (const e of entries) {
+      if (e.character?.id) void appendProgressionLog(e.character.id, 'session', `Session ${endedCount} ended`)
+    }
 
     // Fire all DB work in the background — UI is already updated
     const now = new Date().toISOString()
@@ -2047,6 +2075,7 @@ export default function TablePage() {
       const newInsight = myEntry.liveState.insight_dice - 1
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
       preRollSpent = true
+      void appendProgressionLog(myEntry.character.id, 'insight', `Spent 1 Insight Die — rolled 3d6 on ${pendingRoll.label}`)
     } else if (preRollInsight === '+3cmod' && myEntry?.liveState && myEntry.liveState.insight_dice >= 1) {
       die1 = rollD6()
       die2 = rollD6()
@@ -2054,6 +2083,7 @@ export default function TablePage() {
       const newInsight = myEntry.liveState.insight_dice - 1
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
       preRollSpent = true
+      void appendProgressionLog(myEntry.character.id, 'insight', `Spent 1 Insight Die — +3 CMod on ${pendingRoll.label}`)
     } else {
       die1 = rollD6()
       die2 = rollD6()
@@ -2070,6 +2100,7 @@ export default function TablePage() {
       const currentInsight = preRollSpent ? myEntry.liveState.insight_dice - 1 : myEntry.liveState.insight_dice
       const newInsight = currentInsight + 1
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
+      void appendProgressionLog(myEntry.character.id, 'insight', `Gained 1 Insight Die from Moment of ${outcome === 'High Insight' ? 'High' : 'Low'} Insight`)
     }
 
     // Calculate and apply damage for successful weapon attacks
@@ -2288,6 +2319,10 @@ export default function TablePage() {
             label: `${targetNpc.name} is mortally wounded by ${characterName} and will die if not stabilized in ${npcUpdate.death_countdown} rounds.`,
             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
           })
+          // Kill log entry on the attacker's progression log (PCs only).
+          if (myEntry?.character?.id) {
+            void appendProgressionLog(myEntry.character.id, 'kill', `Mortally wounded ${targetNpc.name} with ${weapon.weaponName}`)
+          }
         }
         // Incapacitation — NPC loses consciousness when RP first hits 0
         if (newRP === 0 && npcRP > 0 && newWP > 0) {
@@ -2655,6 +2690,7 @@ export default function TablePage() {
 
     const newInsight = myEntry.liveState.insight_dice - cost
     await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
+    void appendProgressionLog(myEntry.character.id, 'insight', `Spent ${cost} Insight Die${cost > 1 ? 's' : ''} — reroll ${rerollDie === 'both' ? 'both dice' : rerollDie === 'die1' ? 'die 1' : 'die 2'}`)
 
     const newDie1 = rerollDie === 'die2' ? rollResult.die1 : rollD6()
     const newDie2 = rerollDie === 'die1' ? rollResult.die2 : rollD6()
