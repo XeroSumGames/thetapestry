@@ -163,6 +163,9 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   const [npcs, setNpcs] = useState<CampaignNpc[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [npcSearch, setNpcSearch] = useState('')
+  const [npcTypeFilter, setNpcTypeFilter] = useState<string | null>(null)
+  const [npcStatusFilter, setNpcStatusFilter] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
@@ -747,6 +750,41 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
           Library
         </button>
       </div>
+      {/* Search & filter */}
+      {npcs.length > 3 && (
+        <div style={{ padding: '4px 10px 6px' }}>
+          <input value={npcSearch} onChange={e => setNpcSearch(e.target.value)} placeholder="Search NPCs..."
+            style={{ width: '100%', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box', marginBottom: '4px' }} />
+          <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
+            {['friendly', 'goon', 'foe', 'antagonist'].map(t => {
+              const tc = TYPE_COLORS[t]
+              const active = npcTypeFilter === t
+              return (
+                <button key={t} onClick={() => setNpcTypeFilter(active ? null : t)}
+                  style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', background: active ? tc.bg : 'transparent', border: `1px solid ${active ? tc.border : '#3a3a3a'}`, color: active ? tc.color : '#5a5550' }}>
+                  {t}
+                </button>
+              )
+            })}
+            {['active', 'dead'].map(s => {
+              const active = npcStatusFilter === s
+              const sc = STATUS_COLORS[s]
+              return (
+                <button key={s} onClick={() => setNpcStatusFilter(active ? null : s)}
+                  style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', background: active ? sc.bg : 'transparent', border: `1px solid ${active ? sc.border : '#3a3a3a'}`, color: active ? sc.color : '#5a5550' }}>
+                  {s}
+                </button>
+              )
+            })}
+            {(npcSearch || npcTypeFilter || npcStatusFilter) && (
+              <button onClick={() => { setNpcSearch(''); setNpcTypeFilter(null); setNpcStatusFilter(null) }}
+                style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', background: 'none', border: '1px solid #3a3a3a', color: '#f5a89a' }}>
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       <div style={{ flex: 1, overflowY: 'auto', padding: '4px' }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '1rem', color: '#cce0f5', fontSize: '13px' }}>Loading...</div>
@@ -781,6 +819,14 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                   return ad - bd
                 })
               }
+
+              // Apply search and filters
+              if (npcSearch.trim()) {
+                const q = npcSearch.trim().toLowerCase()
+                sortedNpcs = sortedNpcs.filter(n => n.name.toLowerCase().includes(q) || (n.notes ?? '').toLowerCase().includes(q) || (n.folder ?? '').toLowerCase().includes(q))
+              }
+              if (npcTypeFilter) sortedNpcs = sortedNpcs.filter(n => n.npc_type === npcTypeFilter)
+              if (npcStatusFilter) sortedNpcs = sortedNpcs.filter(n => npcStatusFilter === 'dead' ? isDead(n) : !isDead(n))
 
               const renderNpcCard = (npc: CampaignNpc) => {
               const sc = STATUS_COLORS[npc.status] ?? STATUS_COLORS.active
