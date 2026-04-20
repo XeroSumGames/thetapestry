@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { openPopout } from '../lib/popout'
 
 export interface VehicleCargo {
   name: string
@@ -93,7 +94,7 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
           <div style={{ fontSize: '12px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{v.type} · {v.rarity}</div>
           {v.three_words && <div style={{ fontSize: '12px', color: '#d4cfc9', fontStyle: 'italic' }}>{v.three_words}</div>}
         </div>
-        <button onClick={() => window.open(`/vehicle?c=${campaignId}&v=${v.id}`, `vehicle-${v.id}`, 'width=900,height=700,menubar=no,toolbar=no')} title="Pop out"
+        <button onClick={() => openPopout(`/vehicle?c=${campaignId}&v=${v.id}`, `vehicle-${v.id}`, { w: 900, h: 700 })} title="Pop out"
           style={{ background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Popout</button>
         <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '16px', cursor: 'pointer', padding: '0 4px' }}>✕</button>
       </div>

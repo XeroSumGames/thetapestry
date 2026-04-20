@@ -5,6 +5,7 @@ import { createClient } from '../lib/supabase-browser'
 import { logEvent } from '../lib/events'
 import InventoryPanel, { InventoryItem } from './InventoryPanel'
 import ProgressionLog, { LogEntry, createLogEntry } from './ProgressionLog'
+import { openPopout } from '../lib/popout'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, CONDITIONS, Condition, ALL_WEAPONS, MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getTraitValue } from '../lib/weapons'
 import PrintSheet from './wizard/PrintSheet'
 import { WizardState, createWizardState } from '../lib/xse-engine'
@@ -339,7 +340,7 @@ export default function CharacterCard({
               <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={btn('#c0392b', '#f5a89a')}>Edit</button>
               <button onClick={() => setShowInventory(true)} style={btn('#2a2010', '#EF9F27')}>Inventory</button>
               {campaignIdProp && (
-                <button onClick={() => window.open(`/character-sheet?c=${campaignIdProp}&char=${c.id}`, `char-${c.id}`, 'width=800,height=800,menubar=no,toolbar=no')} title="Pop out" style={btn('#2a102a', '#d48bd4')}>Popout</button>
+                <button onClick={() => openPopout(`/character-sheet?c=${campaignIdProp}&char=${c.id}`, `char-${c.id}`, { w: 800, h: 800 })} title="Pop out" style={btn('#2a102a', '#d48bd4')}>Popout</button>
               )}
               <button onClick={handlePrint} disabled={printing} style={btn('#2d5a1b', '#7fc458')}>Print</button>
               {!inline && <button onClick={handleDuplicate} disabled={duplicating} style={btn('#1a3a5c', '#7ab3d4')}>{duplicating ? '...' : 'Duplicate'}</button>}

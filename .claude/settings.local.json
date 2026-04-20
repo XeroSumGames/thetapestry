@@ -40,7 +40,18 @@
       "Bash(git rm:*)",
       "Bash(git reset:*)",
       "Bash(git status:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(ls /c/Python* /c/Users/tony_/AppData/Local/Programs/Python*)",
+      "Bash(node -e \"console.log\\('node works'\\)\")",
+      "Bash(node -e ':*)",
+      "Bash(/c/Users/tony_/AppData/Local/Programs/Python/Python313/python.exe:*)",
+      "Bash(git stash:*)",
+      "Read(//dev/**)",
+      "Bash(sed -n '2225,2227p' \"app/stories/[id]/table/page.tsx\")",
+      "Bash(node:*)",
+      "Bash(unzip -p \"/c/Users/tony_/OneDrive/Xero Sum Engine/XSE SRD 1.1/Xero Sum Engine SRD v1.1.06.docx\" word/document.xml)",
+      "Read(//tmp/**)",
+      "Bash(unzip -p \"/c/Users/tony_/OneDrive/Distemper/01. Rules/01. Core Rules/Distemper Core Rules v0.9.2 \\(edited\\).docx\" word/document.xml)"
     ]
   }
 }

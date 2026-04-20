@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import NoteAttachmentsView, { NoteAttachment } from './NoteAttachmentsView'
+import { openPopout } from '../lib/popout'
 
 type Attachment = NoteAttachment
 
@@ -260,7 +261,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                 </div>
                 {/* Row 2 — Popout + Delete */}
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={() => window.open(`/handout?id=${n.id}`, `handout-${n.id}`, 'width=800,height=700,menubar=no,toolbar=no')}
+                  <button onClick={() => openPopout(`/handout?id=${n.id}`, `handout-${n.id}`, { w: 800, h: 700 })}
                     style={{ flex: 1, padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Popout
                   </button>

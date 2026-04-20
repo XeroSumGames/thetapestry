@@ -19,6 +19,7 @@ const CampaignMap = dynamic(() => import('../../../../components/CampaignMap'), 
 const TacticalMap = dynamic(() => import('../../../../components/TacticalMap'), { ssr: false })
 import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { logEvent } from '../../../../lib/events'
+import { openPopout } from '../../../../lib/popout'
 import { rollDamage, calculateDamage } from '../../../../lib/damage'
 import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/weapons'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
@@ -3035,7 +3036,7 @@ export default function TablePage() {
           Stories
         </a>
         {isGM && (
-          <button onClick={() => window.open('/gm-screen', 'gm-screen', 'width=900,height=700,menubar=no,toolbar=no')}
+          <button onClick={() => openPopout('/gm-screen', 'gm-screen', { w: 900, h: 700 })}
             style={hdrBtn('#2a102a', '#d48bd4', '#8b2e8b')}>
             GM Screen
           </button>
@@ -4295,7 +4296,7 @@ export default function TablePage() {
                 ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
                 : initiativeOrder
               const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
-              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { window.open(`/npc-sheet?c=${id}&npc=${npc.id}`, `npc-${npc.id}`, 'width=600,height=700,menubar=no,toolbar=no') }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} npcIdsOnMap={mapTokenNpcIds} />
+              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}`, `npc-${npc.id}`) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} npcIdsOnMap={mapTokenNpcIds} />
             })()}
             {gmTab === 'npcs' && !isGM && (() => {
               // Merge revealed NPCs with any NPCs currently in combat,
@@ -4614,7 +4615,7 @@ export default function TablePage() {
                     )
                   })()}
                   {(isGM || isMe) && (
-                    <div onClick={e => { e.stopPropagation(); window.open(`/character-sheet?c=${id}&char=${entry.character.id}`, `char-${entry.character.id}`, 'width=800,height=800,menubar=no,toolbar=no') }}
+                    <div onClick={e => { e.stopPropagation(); openPopout(`/character-sheet?c=${id}&char=${entry.character.id}`, `char-${entry.character.id}`, { w: 800, h: 800 }) }}
                       style={{ padding: '3px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.2 }}>
                       Popout
                     </div>
