@@ -255,7 +255,7 @@
 - [x] Renamed Friendly → Bystander NPC type
 - [x] NPC folder tree — collapsible folders, drag NPCs between, drag to reorder, double-click rename, folder field on edit form
 - [x] NPC Show/Hide syncs token visibility on tactical map
-- [ ] NPC browsing/filtering
+- [x] NPC browsing/filtering — search bar + type/status filter chips
 - [x] GM Screen — pop-out /gm-screen page for second monitor (outcomes, combat actions, range bands, conditions, CMods, healing, skills→attrs)
 
 ### Player Inventory System
@@ -316,7 +316,7 @@
 - [x] Player kick from session (kicked flag on character_states, persists on refresh, resets on new session start)
 - [x] **Kicked players no longer auto-rejoin on session restart** — removed the silent `UPDATE character_states SET kicked=false` in `startSession()`. Kick now persists indefinitely. Kicked player sees a red "Removed from Session" banner + green **Rejoin Session** button on the story overview page — clicking it clears their own `kicked` flag. Kick UPDATE now uses `(campaign_id, user_id)` + `.select()` so silent RLS failures surface as an alert instead of appearing to succeed.
 - [x] **Kicked players excluded from initiative on combat start** — `confirmStartCombat` pulled combatants straight from `campaign_members` and bypassed the `character_states.kicked` filter that `loadEntries` applies. Fix: fetch kicked `user_id`s up front and filter `rawMembers` before rolling initiative so kicked PCs are never inserted into `initiative_order`.
-- [ ] CDP awards
+- [x] **CDP awards** — GM bulk-award modal, selected players get CDP with a log entry
 - [x] Mortal wound insight save — player acts, GM sees read-only
 - [x] Character delete confirmation dialog
 - [x] Mortally wounded characters excluded from target list
@@ -344,7 +344,18 @@
 - [x] Launch button on Edit Story page
 - [x] Profiles email column + backfill from auth.users
 - [x] User guide at docs/user-guide.txt
-- [ ] Character progression log
+- [x] **Character progression log** — automatic events + manual journal entries per character
+- [x] **Campaign snapshots** — GM save-point system. Capture full campaign state (NPCs, pins, scenes, tokens, notes, optional party states) into `campaign_snapshots` jsonb, restore in-place (same campaign id, same invite, same players). `lib/campaign-snapshot.ts` + `components/CampaignSnapshots.tsx` on edit page. Shares shape with Module System snapshot — Phase 5A reuse planned. Run `sql/campaign-snapshots.sql`.
+- [x] **Default Assets tab = NPCs** (was Pins)
+- [x] **Tab order in tactical map mode** — NPCs > Assets > Pins > Notes
+- [x] **Edit button (✎) on NPC roster card** — accessible without the overlay
+- [x] **NPC pop-out window from roster** — clicking NPC card opens pop-out instead of floating overlay
+- [x] **NPC pop-out size standardized** — 607×357 with overflow:auto
+- [x] **NPC card shows weapon inline** — name, damage, range, condition always visible
+- [x] **Sprint log entry uses SPRINT header** (was "System")
+- [x] **Move log attributes to mover**, not stale active combatant
+- [x] **NPC damage realtime propagation** — broadcast fires, other clients converge (diagnostic logs retained)
+- [x] **Custom GM icon** on player bar — `public/gm-icon.png`, fallback to GM text if missing
 - [ ] Allow characters in multiple campaigns
 - [ ] Transfer GM role, Session scheduling
 
@@ -549,13 +560,13 @@
 
 **Full spec: `tasks/spec-communities.md`.** Implements XSE SRD v1.1 Community Resource & Morale Rules with Distemper Core overlay. Four-phase rollout — A is the foundation, each next phase adds a mechanic layer.
 
-### Phase A — Foundation (DB + manual management)
-- [ ] `communities` table (id, campaign_id, name, description, homestead_pin_id, status, leader_npc_id / leader_user_id, consecutive_failures, created_at, dissolved_at) + RLS
-- [ ] `community_members` table (community_id, npc_id / character_id, role, recruitment_type, apprentice_of_character_id, joined_at, left_at, left_reason) + RLS
-- [ ] Create Community modal (name, description, Homestead pin)
-- [ ] GM Assets tab: Community panel — member list grouped by role with % meter (Gatherers 33% / Maintainers 20% / Safety 5-10%)
-- [ ] Manual add/remove members + role reassignment
-- [ ] 13+ threshold auto-detection (Group → Community status badge)
+### Phase A — Foundation (DB + manual management) ✅
+- [x] `communities` + `community_members` + `community_morale_checks` + `community_resource_checks` tables with RLS (`sql/communities-phase-a.sql`) — includes day-one Phase E columns (`published_at`, `world_visibility`, `world_community_id`) so the persistent-world migration is additive
+- [x] `components/CampaignCommunity.tsx` — reusable panel with Create flow, member list grouped by role, % bars with SRD min/max thresholds, add/remove/role-change, soft-remove via `left_at`
+- [x] **Sidebar: "My Communities" link** under "My Stories"
+- [x] `/communities` index — grid grouped by campaign with status chip (Group / Community / Dissolved), member count, "N to Community" progress, GM badge
+- [x] `/communities/[id]` detail page — mounts the CampaignCommunity panel scoped to the community's campaign
+- [x] 13+ threshold auto-detection (Group → Community status badge)
 
 ### Phase B — Recruitment mechanic
 - [ ] `Recruit` button on NPC card (GM + player)
