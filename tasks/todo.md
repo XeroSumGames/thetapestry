@@ -605,16 +605,44 @@ Communities become first-class entities in the Distemperverse. Every published c
 
 ---
 
-## 🔵 Phase 5 — Module System
-- [ ] Module data structure — scenes, NPCs, pins, handouts, roll tables as linked Supabase tables
-- [ ] Module builder UI — Thriver only, create and publish modules
-- [ ] Three permission tiers — Module Creator, Licensed GM, Player
-- [ ] Campaign to Module link on creation — GM picks a module when creating campaign
-- [ ] Module versioning — campaigns notified when source module updates
-- [ ] Play stats — how many groups ran it, average session count
-- [ ] Campaign creation overhaul — three-way picker: Custom, Setting, Module
-- [ ] GM toolkit — in-session scene switcher, module NPC roster, handouts panel, roll tables linked to dice roller
-- [ ] Empty — first module, single scene, fully playable, linked to Chased/Delaware setting
+## 🔵 Phase 5 — Module System 🚩 flagship content engine
+
+**Full spec: `tasks/spec-modules.md`.** Supersedes the paused GM Kit v1 seed-table plumbing — unifies authoring (in-campaign), publishing (as a versioned jsonb snapshot), subscribing (campaign creation picks a module), and updates (opt-in diff/merge). Pairs with Phase 4b Communities (modules ship with pre-authored communities).
+
+### Phase A — MVP publish + subscribe loop
+- [ ] `modules` + `module_versions` + `module_subscriptions` tables with jsonb snapshots + RLS
+- [ ] Publish wizard on campaign edit page — metadata, include/exclude content types, visibility (Private / Unlisted / Listed)
+- [ ] Campaign creation third option: **Module** picker alongside Custom + Setting
+- [ ] `cloneModuleIntoCampaign(version, campaign)` — transactional clone of snapshot into campaign_npcs/pins/scenes/tokens/notes
+- [ ] Record `source_module_id` + `source_module_version_id` on cloned rows for Phase B update tracking
+- [ ] Migrate existing Arena seed (`setting_seed_*` tables) into a `modules` row; deprecate seed tables
+
+### Phase B — Versioning + updates
+- [ ] Semver bump on publish (patch/minor/major), changelog field
+- [ ] `/stories/[id]/modules/[id]/versions` history UI with diff summary
+- [ ] Update notifications on subscriber dashboards
+- [ ] Review modal — per-asset accept/reject diff, fork option, conflict resolver for locally-edited rows
+- [ ] `edited_since_clone` flag on cloned content so updates skip customized assets
+
+### Phase C — Marketplace
+- [ ] `/modules` browse + search + filters (setting, tags, rating, subscriber count)
+- [ ] `/modules/[id]` detail page with version history, reviews
+- [ ] Listed-module Thriver moderation queue
+- [ ] Cover image upload, featured-module surface on dashboard
+- [ ] Play stats per module (subscriber count, session count, avg player count)
+
+### Phase D — Monetization + tiers
+- [ ] Free / Paid / Premium module pricing
+- [ ] Licensed GM permission unlocks paid modules
+- [ ] Author payout flow, referral tracking
+
+### Phase E — Ecosystem
+- [ ] GM Kit Export v2 = printable PDF + module zip from a module snapshot
+- [ ] Module + Community cross-publish (depends on Phase 4b Phase E)
+- [ ] In-session GM toolkit — scene switcher, NPC roster, handouts panel, roll tables linked to dice roller
+- [ ] Third-party module import (Roll20 / Foundry → Tapestry module — stretch)
+
+### Legacy GM Kit v1 (for reference)
 - [ ] **GM Kit Export** — compile all assets for a campaign/adventure into a downloadable package: NPCs (with portraits + stats), map pins, tactical scenes + battle maps, handouts, object tokens, route tables, session notes. Include GM instructions/playbook. Export as PDF, ZIP, or shareable link. Could serve as the distribution format for published modules.
 - [~] **GM Kit v1 — export + seed-import loop (DIRECTION UNCERTAIN, paused 2026-04-19)** — Shipped end-to-end: green `GM Kit` button on `/stories/[id]` (`lib/gm-kit.ts`, jszip) downloads a `gm-kit-<slug>-<date>.zip` with manifest, pins/npcs/scenes/tokens/handouts JSON, and an `images/` folder pulled from Supabase. `/tools/import-gm-kit` reads any kit zip and upserts into `setting_seed_*` tables; `/stories/new` and `/campaigns/new` then seed new campaigns with backgrounds + portraits + handout attachments intact (`sql/setting-seeds-extend.sql`). Wired to The Arena story option (`arena` setting key in `lib/settings.ts`). **Why paused:** image URLs in seeds still point to the source campaign's bucket — delete that campaign and seed images 404. Scene `tokens.json` round-trips through the kit but neither the seed schema nor the create flow ingests it (objects placed on tactical maps don't carry to new campaigns). Not yet clear whether the right answer is (a) re-upload kit images to a "shared seed assets" bucket on import, (b) treat seeds as live-linked to the source campaign, (c) abandon the seed approach and lean on a real Module data structure (Phase 5 line 1). **How to apply:** revisit before promoting any setting beyond personal beta use.
 
