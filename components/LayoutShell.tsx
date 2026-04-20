@@ -9,8 +9,10 @@ const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/stories', '/campa
 
 // Pages that always hide the sidebar
 const NO_SIDEBAR_PAGES = ['/login', '/signup', '/firsttimers', '/welcome']
-// Pages that use their own full-width layout
-const FULL_WIDTH_PATTERN = /^\/stories\/[^/]+\/table$|^\/vehicle$|^\/gm-screen$|^\/character-sheet$|^\/handout$/
+// Pages that use their own full-width layout (popouts + the table view).
+// CONVENTION: any new popout route should end in `-sheet` or `-popout`
+// (or live under `/popout/...`) so it's auto-included here without an edit.
+const FULL_WIDTH_PATTERN = /^\/stories\/[^/]+\/table$|^\/vehicle$|^\/gm-screen$|^\/handout$|-sheet$|-popout$|^\/popout\//
 
 function MobileBanner() {
   const [dismissed, setDismissed] = useState(false)
