@@ -3450,12 +3450,15 @@ export default function TablePage() {
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Reposition</button>
 
                 {/* ── SPRINT: both actions, 3x move (30ft), then Athletics check ── */}
-                <button onClick={has2Actions ? async () => {
+                {/* Action consumption happens in onMoveComplete — NOT here. If we */}
+                {/* pre-consumed and the player's cell click was rejected silently */}
+                {/* (too far / occupied / off-grid), actions would vanish with no   */}
+                {/* movement. Deferring consume to the success path makes the click */}
+                {/* reversible via onMoveCancel / second Sprint press.               */}
+                <button onClick={has2Actions ? () => {
                   clearAimIfActive(activeEntry.id)
                   sprintPendingRef.current = true
                   setMoveMode({ characterId: activeEntry.character_id || undefined, npcId: activeEntry.npc_id || undefined, feet: 30 })
-                  actionPreConsumedRef.current = true
-                  await consumeAction(activeEntry.id, undefined, 2)
                 } : undefined} disabled={!has2Actions}
                   style={has2Actions ? actBtn('#242424', '#d4cfc9', '#3a3a3a') : disabledBtn('#242424', '#d4cfc9', '#3a3a3a')}>Sprint</button>
 
@@ -3930,7 +3933,7 @@ export default function TablePage() {
                 })
                 setMapCellFeet(cellFeet)
               }}
-              onMoveComplete={() => {
+              onMoveComplete={async () => {
                 // The mover is whoever moveMode references — NOT necessarily the
                 // current active combatant. Turn could auto-advance between Move
                 // click and target-cell click, leaving stale active state, in
@@ -3960,9 +3963,17 @@ export default function TablePage() {
                   actionCostRef.current = 2
                   handleRollRequest(charge.label, charge.amod, charge.smod, charge.weapon)
                 } else if (sprintPendingRef.current) {
-                  // Sprint: token moved, now open Athletics check
+                  // Sprint: token moved, NOW consume the 2 actions and fire the
+                  // Athletics check. We consume here (not on button click) so that
+                  // a failed cell click can't burn actions without movement.
                   sprintPendingRef.current = false
                   setMoveMode(null)
+                  if (mover) {
+                    // Flag before consume so closeRollModal knows not to
+                    // double-consume when the Athletics roll finishes.
+                    actionPreConsumedRef.current = true
+                    await consumeAction(mover.id, `${mover.character_name} — Sprint`, 2)
+                  }
                   const charEntry = mover ? entries.find(e => e.character.name === mover.character_name) : null
                   const npcAttacker = mover?.is_npc ? campaignNpcs.find((n: any) => n.name === mover.character_name) : null
                   const rapid = charEntry?.character.data?.rapid ?? {}
@@ -3970,10 +3981,9 @@ export default function TablePage() {
                   const smod = npcAttacker
                     ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Athletics')?.level ?? 0 : 0)
                     : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Athletics')?.level ?? 0
-                  // bypassTurnGate=true: Sprint pre-consumed 2 actions which
-                  // advanced the turn. The Athletics roll fires for the former
-                  // active combatant after the cell click — bypass the
-                  // active-combatant check that would otherwise block it.
+                  // bypassTurnGate=true: consumeAction above advanced the turn.
+                  // The Athletics roll fires for the former active combatant —
+                  // bypass the active-combatant check that would otherwise block it.
                   handleRollRequest(`${mover?.character_name ?? 'Unknown'} — Sprint (Athletics)`, amod, smod, undefined, true)
                 } else {
                   if (mover) consumeAction(mover.id, `${mover.character_name} — Move`)
