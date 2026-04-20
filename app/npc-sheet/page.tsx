@@ -23,15 +23,30 @@ export default function NpcSheetPage() {
     load()
 
     if (!npcId) return
-    // Realtime sync — any update to this NPC (HP, status, equipment, etc.)
-    // refreshes the popout window without requiring a manual reload.
-    const channel = supabase.channel(`npcsheet_${npcId}`)
+    // Realtime sync — two channels, both converging to the same setNpc:
+    //   postgres_changes UPDATE — reliable but can lag 0.5-2s on busy projects.
+    //   npc_damaged broadcast — fires instantly from whichever client dealt
+    //     the damage on the campaign's initiative channel. This is how the
+    //     main table page updates in real time; subscribing here too means
+    //     the popout window no longer lags behind the attacker's main tab.
+    const postgresCh = supabase.channel(`npcsheet_${npcId}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'campaign_npcs', filter: `id=eq.${npcId}` }, (payload: any) => {
         if (payload.new) setNpc(payload.new as CampaignNpc)
       })
       .subscribe()
-    return () => { supabase.removeChannel(channel) }
-  }, [npcId])
+    const broadcastCh = campaignId
+      ? supabase.channel(`initiative_${campaignId}`)
+          .on('broadcast', { event: 'npc_damaged' }, (msg: any) => {
+            const { npcId: n, patch } = msg.payload ?? {}
+            if (n === npcId && patch) setNpc(prev => prev ? ({ ...prev, ...patch } as CampaignNpc) : prev)
+          })
+          .subscribe()
+      : null
+    return () => {
+      supabase.removeChannel(postgresCh)
+      if (broadcastCh) supabase.removeChannel(broadcastCh)
+    }
+  }, [npcId, campaignId])
 
   if (loading) {
     return <div style={{ background: '#0f0f0f', color: '#cce0f5', minHeight: '100vh', padding: '2rem', fontFamily: 'Barlow, sans-serif' }}>Loading…</div>
