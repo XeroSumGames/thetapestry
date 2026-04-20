@@ -921,10 +921,9 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
               )
               }
 
-              // During combat: flat list, no folders
-              if (combatActive) return sortedNpcs.map(renderNpcCard)
-
-              // Non-combat: folder tree
+              // Folder tree renders in both combat and non-combat modes — GMs
+              // with lots of NPCs want groupings visible so they can scan by
+              // faction / encounter batch while combat is live.
               const folderMap: Record<string, CampaignNpc[]> = {}
               for (const npc of sortedNpcs) {
                 const f = npc.folder ?? 'Uncategorized'
