@@ -2155,11 +2155,13 @@ export default function TablePage() {
       // Unarmed adds SMod to damage
       const unarmedBonus = weapon.weaponName === 'Unarmed' ? pendingRoll.smod : 0
 
-      // Find target — could be PC (in entries), NPC (in initiativeOrder + rosterNpcs), or object token (mapTokens with WP)
+      // Find target — could be PC (in entries), NPC (in initiativeOrder + rosterNpcs), a non-combat NPC on the map, or object token (mapTokens with WP)
       const targetInitEntry = initiativeOrder.find(e => e.character_name === targetName)
       const targetEntry = entries.find(e => e.character.name === targetName) ?? (targetInitEntry?.character_id ? entries.find(e => e.character.id === targetInitEntry.character_id) : undefined)
-      const targetNpc = targetInitEntry?.is_npc
-        ? (rosterNpcs.find(n => n.id === targetInitEntry.npc_id) ?? campaignNpcs.find((n: any) => n.id === targetInitEntry.npc_id))
+      const targetNpc = !targetEntry
+        ? (targetInitEntry?.is_npc
+            ? (rosterNpcs.find(n => n.id === targetInitEntry.npc_id) ?? campaignNpcs.find((n: any) => n.id === targetInitEntry.npc_id))
+            : (campaignNpcs.find((n: any) => n.name === targetName) ?? rosterNpcs.find(n => n.name === targetName)))
         : null
       const targetObject = (!targetEntry && !targetNpc) ? mapTokens.find(t => t.token_type === 'object' && t.name === targetName && (t.wp_max ?? 0) > 0) : null
       const targetRapid = targetEntry?.character.data?.rapid ?? (targetNpc ? { PHY: targetNpc.physicality ?? 0, DEX: targetNpc.dexterity ?? 0 } : {})
@@ -2728,7 +2730,11 @@ export default function TablePage() {
       const isMelee = w?.category === 'melee' || weapon.weaponName === 'Unarmed'
       const targetInitEntry = initiativeOrder.find(e => e.character_name === targetName)
       const targetEntry = entries.find(e => e.character.name === targetName) ?? (targetInitEntry?.character_id ? entries.find(e => e.character.id === targetInitEntry.character_id) : undefined)
-      const targetNpcObj = targetInitEntry?.is_npc ? (rosterNpcs.find(n => n.id === targetInitEntry.npc_id) ?? campaignNpcs.find((n: any) => n.id === targetInitEntry.npc_id)) : null
+      const targetNpcObj = !targetEntry
+        ? (targetInitEntry?.is_npc
+            ? (rosterNpcs.find(n => n.id === targetInitEntry.npc_id) ?? campaignNpcs.find((n: any) => n.id === targetInitEntry.npc_id))
+            : (campaignNpcs.find((n: any) => n.name === targetName) ?? rosterNpcs.find(n => n.name === targetName)))
+        : null
       const targetObjectReroll = (!targetEntry && !targetNpcObj) ? mapTokens.find(t => t.token_type === 'object' && t.name === targetName && (t.wp_max ?? 0) > 0) : null
       const targetRapid = targetEntry?.character.data?.rapid ?? (targetNpcObj ? { PHY: targetNpcObj.physicality ?? 0, DEX: targetNpcObj.dexterity ?? 0 } : {})
       const targetDefBonus2 = targetInitEntry?.defense_bonus ?? 0
@@ -4788,6 +4794,43 @@ export default function TablePage() {
                           {entry.character_name}{entry.is_npc ? ' (NPC)' : ''}
                         </option>
                       ))}
+                      {/* Non-initiative PCs + NPCs who have map tokens — lets the attacker target bystanders and creatures that haven't joined initiative */}
+                      {mapTokens
+                        .filter(t => {
+                          if (t.token_type === 'object') return false
+                          if (!t.character_id && !t.npc_id) return false
+                          // skip if already listed as an initiative combatant
+                          if (t.character_id && initiativeOrder.some(ie => ie.character_id === t.character_id)) return false
+                          if (t.npc_id && initiativeOrder.some(ie => ie.npc_id === t.npc_id)) return false
+                          // alive check
+                          if (t.character_id) {
+                            const pc = entries.find(e => e.character.id === t.character_id)
+                            if (pc?.liveState && pc.liveState.wp_current === 0) return false
+                          }
+                          if (t.npc_id) {
+                            const npc = campaignNpcs.find((n: any) => n.id === t.npc_id)
+                            if (!npc) return false
+                            if (npc.wp_current != null && npc.wp_current <= 0) return false
+                            if (npc.status === 'dead') return false
+                          }
+                          // range filter (skip for Charge — it includes movement)
+                          if (pendingRoll.weapon && !pendingRoll.label.includes('Charge')) {
+                            const active = initiativeOrder.find(ie => ie.is_active)
+                            if (active) {
+                              const autoRange = getAutoRangeBand(active.character_id || undefined, active.npc_id || undefined, t.name)
+                              if (autoRange && !isInRange(pendingRoll.weapon.weaponName, autoRange)) return false
+                            }
+                          }
+                          return true
+                        })
+                        .map(t => {
+                          const isNpc = !!t.npc_id
+                          return (
+                            <option key={`maptok-${t.id}`} value={t.name} style={{ color: isNpc ? '#7fc458' : '#c0392b' }}>
+                              {t.name}{isNpc ? ' (NPC)' : ''}
+                            </option>
+                          )
+                        })}
                       {/* Object tokens with WP — weapons crates, doors, barrels, etc. */}
                       {mapTokens
                         .filter(t => t.token_type === 'object' && (t.wp_max ?? 0) > 0 && (t.wp_current ?? t.wp_max ?? 0) > 0)
