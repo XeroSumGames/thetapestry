@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS tactical_scenes (
   is_active boolean NOT NULL DEFAULT false,
   has_grid boolean NOT NULL DEFAULT false,
   cell_feet integer NOT NULL DEFAULT 3,
-  cell_px integer NOT NULL DEFAULT 70,
+  cell_px integer NOT NULL DEFAULT 35, -- CANONICAL. Never revert to 70. See sql/cell-px-default-35.sql.
   img_scale real NOT NULL DEFAULT 1,
   is_locked boolean NOT NULL DEFAULT false,
   created_at timestamptz DEFAULT now()

@@ -120,6 +120,8 @@ export default function NewCampaignPage() {
         campaign_id: data.id, name: s.name, grid_cols: s.grid_cols, grid_rows: s.grid_rows,
         is_active: false,
         background_url: s.background_url ?? null,
+        cell_px: s.cell_px ?? 35,   // canonical default; never 70
+        cell_feet: s.cell_feet ?? 3,
       }))
       const { error: sceneErr } = await supabase.from('tactical_scenes').insert(sceneRows)
       if (sceneErr) seedErrors.push(`scenes: ${sceneErr.message}`)
