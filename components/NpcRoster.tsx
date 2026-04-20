@@ -885,6 +885,11 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                           </button>
                         )
                       })()}
+                      <button onClick={e => { e.stopPropagation(); window.open(`/npc-sheet?c=${campaignId}&npc=${npc.id}`, `npc-${npc.id}`, 'width=820,height=820,menubar=no,toolbar=no') }}
+                        title="Pop this NPC out into its own window"
+                        style={{ fontSize: '12px', padding: '1px 4px', borderRadius: '2px', background: '#2a102a', border: '1px solid #8b2e8b', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        Popout
+                      </button>
                       {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '12px', padding: '1px 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>}
                     </div>
                   </div>
