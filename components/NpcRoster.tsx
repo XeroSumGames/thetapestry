@@ -860,6 +860,11 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       style={{ fontSize: '12px', padding: '0 3px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.4, textTransform: 'uppercase' }}>
                       +
                     </button>
+                    <button onClick={e => { e.stopPropagation(); openEdit(npc) }}
+                      title="Edit NPC"
+                      style={{ fontSize: '12px', padding: '0 3px', borderRadius: '2px', background: '#242424', border: '1px solid #3a3a3a', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.4, textTransform: 'uppercase' }}>
+                      ✎
+                    </button>
                   </div>
                   {/* Center: name + badges */}
                   <div style={{ flex: 1, minWidth: 0 }}>
