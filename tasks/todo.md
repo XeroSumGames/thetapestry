@@ -58,7 +58,7 @@
 - [x] Open NpcCard refreshes when underlying NPC HP changes
 - [ ] **Player-facing NPC card on Show All click** — clicking a revealed NPC in the player's NPCs tab opens a read-only card (currently opens the same editable view as GM). Design question: should the player card just show Name, First Impression role, and description? Or more?
 - [ ] **Player NPC notes + first impressions** — clicking an NPC name in the player's Assets NPCs tab should open a space where the player can write personal notes about that NPC, and show their First Impression results
-- [ ] **Insight Dice pre-roll CMod** — rethink whether spending an Insight Die pre-roll should give +3 or +2 CMod
+- [x] **Insight Dice pre-roll CMod** — confirmed +3 CMod (per SRD)
 - [ ] **Insight Dice sequential reroll** — if rerolling die 1 doesn't improve the result, allow spending a second Insight Die to reroll die 2 (currently locked out after first spend)
 - [x] **Whisper chat** — click a player's portrait → private whisper between you two (GM + other players do not see it). Chat tab auto-switches when a whisper arrives addressed to you. Purple styling distinguishes whispers from group chat.
 - [ ] **NPC health as narrative feeling** — player-facing NPC cards should show WP/RP as a descriptive state (Healthy, Ragged, Beaten, Dying, etc.) instead of exact numbers — GM still sees the dots
