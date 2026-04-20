@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { useSearchParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../components/CharacterCard'
+import ProgressionLog, { LogEntry } from '../../components/ProgressionLog'
 
 export default function CharacterSheetPage() {
   const supabase = createClient()
@@ -114,6 +115,23 @@ export default function CharacterSheetPage() {
           {notesSaving ? 'Saving...' : 'Save Notes'}
         </button>
       </div>
+
+      {/* Progression Log — full view */}
+      {character && (
+        <div style={{ marginTop: '16px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px' }}>
+          <ProgressionLog
+            characterId={character.id}
+            log={character.data?.progression_log ?? []}
+            canEdit={isMySheet || isGM}
+            compact={false}
+            onUpdate={async (newLog: LogEntry[]) => {
+              const newData = { ...character.data, progression_log: newLog }
+              await supabase.from('characters').update({ data: newData }).eq('id', character.id)
+              setCharacter({ ...character, data: newData })
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }

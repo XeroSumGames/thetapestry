@@ -2188,6 +2188,10 @@ export default function TablePage() {
               label: `${targetEntry.character.name} is mortally wounded by ${characterName} and will die if not stabilized in ${update.death_countdown} rounds.`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
             })
+            // Auto-log mortal wound to progression log
+            const tCharData = targetEntry.character.data ?? {}
+            const tProgLog = tCharData.progression_log ?? []
+            await supabase.from('characters').update({ data: { ...tCharData, progression_log: [{ date: new Date().toISOString(), type: 'wound', text: `Mortally wounded by ${characterName}` }, ...tProgLog] } }).eq('id', targetEntry.character.id)
             // Show modal on the player's screen if they're the one executing
             if (targetEntry.userId === userId) {
               setInsightSavePrompt({
@@ -4951,6 +4955,10 @@ export default function TablePage() {
                   if (!entry?.liveState) continue
                   const newCdp = Math.min(10, (entry.liveState.cdp ?? 0) + cdpAmount)
                   await supabase.from('character_states').update({ cdp: newCdp, updated_at: new Date().toISOString() }).eq('id', stateId)
+                  // Auto-log to progression log
+                  const charData = entry.character.data ?? {}
+                  const progLog = charData.progression_log ?? []
+                  await supabase.from('characters').update({ data: { ...charData, progression_log: [{ date: new Date().toISOString(), type: 'cdp', text: `+${cdpAmount} CDP awarded` }, ...progLog] } }).eq('id', entry.character.id)
                   names.push(entry.character.name)
                 }
                 await supabase.from('roll_log').insert({

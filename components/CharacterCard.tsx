@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
 import { logEvent } from '../lib/events'
 import InventoryPanel, { InventoryItem } from './InventoryPanel'
+import ProgressionLog, { LogEntry, createLogEntry } from './ProgressionLog'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, CONDITIONS, Condition, ALL_WEAPONS, MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getTraitValue } from '../lib/weapons'
 import PrintSheet from './wizard/PrintSheet'
 import { WizardState, createWizardState } from '../lib/xse-engine'
@@ -721,6 +722,21 @@ export default function CharacterCard({
               </div>
             )
           })()}
+
+          {/* Progression Log — compact */}
+          <div style={{ marginTop: '8px', padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+            <ProgressionLog
+              characterId={c.id}
+              log={c.data?.progression_log ?? []}
+              canEdit={canEdit}
+              compact={true}
+              onUpdate={async (newLog) => {
+                const newData = { ...latestDataRef.current, progression_log: newLog }
+                latestDataRef.current = newData
+                await supabase.from('characters').update({ data: newData }).eq('id', c.id)
+              }}
+            />
+          </div>
 
           {/* GM Actions: Rest, Stress, Environmental Damage */}
           {canEdit && localState && (
