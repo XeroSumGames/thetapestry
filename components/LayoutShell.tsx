@@ -15,19 +15,26 @@ const NO_SIDEBAR_PAGES = ['/login', '/signup', '/firsttimers', '/welcome']
 const FULL_WIDTH_PATTERN = /^\/stories\/[^/]+\/table$|^\/vehicle$|^\/gm-screen$|^\/handout$|-sheet$|-popout$|^\/popout\//
 
 function MobileBanner() {
+  const [isPhone, setIsPhone] = useState(false)
   const [dismissed, setDismissed] = useState(false)
-  if (dismissed) return null
+  useEffect(() => {
+    // Detect actual phones via coarse pointer + small physical screen. A narrow
+    // popout window on a desktop has fine pointer + large screen.width, so it
+    // no longer triggers the banner.
+    const coarse = window.matchMedia('(pointer: coarse)').matches
+    const smallScreen = window.screen.width <= 768
+    setIsPhone(coarse && smallScreen)
+  }, [])
+  if (!isPhone || dismissed) return null
   return (
     <div style={{
-      display: 'none', padding: '16px 20px', background: '#2a1210', borderBottom: '1px solid #c0392b',
+      padding: '16px 20px', background: '#2a1210', borderBottom: '1px solid #c0392b',
       fontSize: '16px', color: '#f5a89a', fontFamily: 'Barlow, sans-serif', textAlign: 'center',
       position: 'relative',
-    }}
-    className="mobile-banner">
+    }}>
       The Tapestry is best experienced on a desktop or tablet.
       <button onClick={() => setDismissed(true)}
         style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#f5a89a', fontSize: '16px', cursor: 'pointer' }}>✕</button>
-      <style>{`@media (max-width: 768px) { .mobile-banner { display: block !important; } }`}</style>
     </div>
   )
 }
