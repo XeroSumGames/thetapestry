@@ -269,7 +269,7 @@ export default function TablePage() {
   const [sessionCliffhanger, setSessionCliffhanger] = useState('')
   const [sessionFiles, setSessionFiles] = useState<File[]>([])
   const [sessionActing, setSessionActing] = useState(false)
-  const [gmTab, setGmTab] = useState<'pins' | 'npcs' | 'assets' | 'notes'>('pins')
+  const [gmTab, setGmTab] = useState<'pins' | 'npcs' | 'assets' | 'notes'>('npcs')
   const [assetsFolderState, setAssetsFolderState] = useState<Set<string>>(new Set())
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
   const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
@@ -1259,10 +1259,17 @@ export default function TablePage() {
 
     // Always persist the new action count to DB first — if nextTurn fails or
     // races, the DB is at least consistent with "this combatant is spent".
-    const { error: updErr } = await supabase.from('initiative_order')
+    // `.select()` so a silent RLS rejection (0 rows affected, no error) is
+    // distinguishable from a real update.
+    const { error: updErr, data: updData } = await supabase.from('initiative_order')
       .update({ actions_remaining: newRemaining, ...(clearAim ? { aim_bonus: 0 } : {}) })
       .eq('id', entryId)
+      .select('id, actions_remaining')
+    console.warn('[consumeAction] update', { entryId, newRemaining, rowsAffected: updData?.length ?? 0, error: updErr?.message ?? 'none', returned: updData })
     if (updErr) console.warn('[consumeAction] update error:', updErr.message)
+    if (!updErr && (!updData || updData.length === 0)) {
+      console.warn('[consumeAction] SILENT RLS FAIL — 0 rows updated, no error. entryId:', entryId)
+    }
 
     if (newRemaining <= 0) {
       console.warn('[consumeAction] newRemaining<=0 → calling nextTurn')
@@ -3860,11 +3867,18 @@ export default function TablePage() {
                 // current active combatant. Turn could auto-advance between Move
                 // click and target-cell click, leaving stale active state, in
                 // which case the visibly-moved token belongs to a former active.
+                const activeNow = initiativeOrder.find((e: any) => e.is_active)
                 const mover = (moveMode?.characterId
                   ? initiativeOrder.find((e: any) => e.character_id === moveMode.characterId)
                   : moveMode?.npcId
                     ? initiativeOrder.find((e: any) => e.npc_id === moveMode.npcId)
-                    : null) ?? initiativeOrder.find((e: any) => e.is_active)
+                    : null) ?? activeNow
+                console.warn('[move] onMoveComplete', {
+                  moveMode,
+                  activeName: activeNow?.character_name, activeId: activeNow?.id, activeActions: activeNow?.actions_remaining,
+                  moverName: mover?.character_name, moverId: mover?.id, moverActions: mover?.actions_remaining,
+                  matched: mover?.id === activeNow?.id,
+                })
                 const charge = pendingChargeRef.current
                 if (charge) {
                   if (mover && charge.activeId && charge.activeId !== mover.id) {
