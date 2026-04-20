@@ -3433,12 +3433,30 @@ export default function TablePage() {
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Grapple</button>
 
                 {/* ── MOVE: highlight cells + click to move ── */}
+                {/* GM-selected-token override: if the GM has clicked a different   */}
+                {/* token on the map (e.g. an NPC not yet in initiative), anchor    */}
+                {/* moveMode on THAT token instead of the active combatant. Lets    */}
+                {/* the GM reposition any NPC without having to drag on the map.   */}
+                {/* Players always move the active combatant (their own PC).       */}
                 <button onClick={() => {
                   clearAimIfActive(activeEntry.id)
                   if (moveMode) { setMoveMode(null); return }
                   const active = initiativeOrder.find(e => e.is_active)
-                  if (!active) return
-                  setMoveMode({ characterId: active.character_id || undefined, npcId: active.npc_id || undefined, feet: 10 })
+                  let moverCharId: string | undefined
+                  let moverNpcId: string | undefined
+                  if (isGM && selectedMapTargetName) {
+                    const selTok = mapTokens.find(t => t.name === selectedMapTargetName && t.token_type !== 'object')
+                    if (selTok) {
+                      moverCharId = selTok.character_id ?? undefined
+                      moverNpcId = selTok.npc_id ?? undefined
+                    }
+                  }
+                  if (!moverCharId && !moverNpcId && active) {
+                    moverCharId = active.character_id || undefined
+                    moverNpcId = active.npc_id || undefined
+                  }
+                  if (!moverCharId && !moverNpcId) return
+                  setMoveMode({ characterId: moverCharId, npcId: moverNpcId, feet: 10 })
                 }}
                   style={moveMode ? actBtn('#1a2e10', '#7fc458', '#2d5a1b') : actBtn('#242424', '#d4cfc9', '#3a3a3a')}>{moveMode ? 'Cancel Move' : 'Move'}</button>
 
@@ -4022,7 +4040,11 @@ export default function TablePage() {
                   // bypass the active-combatant check that would otherwise block it.
                   handleRollRequest(`${mover?.character_name ?? 'Unknown'} — Sprint (Athletics)`, amod, smod, undefined, true)
                 } else {
-                  if (mover) consumeAction(mover.id, `${mover.character_name} — Move`)
+                  // Only consume an action when the combatant we just moved is
+                  // actually the active one. GM-initiated "move this NPC" for an
+                  // off-turn combatant must not silently deduct from their next
+                  // real turn's action budget.
+                  if (mover && mover.is_active) consumeAction(mover.id, `${mover.character_name} — Move`)
                   setMoveMode(null)
                 }
               }}
