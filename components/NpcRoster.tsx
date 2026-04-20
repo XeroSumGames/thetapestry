@@ -358,6 +358,15 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
 
   async function handleDelete(id: string, name: string) {
     if (!confirm(`Delete ${name}? This cannot be undone.`)) return
+    // scene_tokens.npc_id and initiative_order.npc_id have no FK constraint,
+    // so the related rows would otherwise orphan and leave the NPC's token on
+    // the map / initiative list after the campaign_npcs row is gone. Delete
+    // all three tables in the same click. Tokens first so realtime listeners
+    // see the token vanish before the NPC row disappears (cleaner visual).
+    const tokenRes = await supabase.from('scene_tokens').delete().eq('npc_id', id)
+    if (tokenRes.error) console.warn('[handleDelete] scene_tokens delete error:', tokenRes.error.message)
+    const initRes = await supabase.from('initiative_order').delete().eq('npc_id', id)
+    if (initRes.error) console.warn('[handleDelete] initiative_order delete error:', initRes.error.message)
     await supabase.from('campaign_npcs').delete().eq('id', id)
     await loadNpcs()
   }
