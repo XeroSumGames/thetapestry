@@ -4142,7 +4142,7 @@ export default function TablePage() {
             NPCs (revealed only) and Assets (read-only). */}
         <div style={{ width: '240px', flexShrink: 0, borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
-            {(['pins', 'npcs', 'assets', 'notes'] as const).map(tab => (
+            {((combatActive || showTacticalMap) ? ['npcs', 'assets', 'pins', 'notes'] as const : ['pins', 'npcs', 'assets', 'notes'] as const).map(tab => (
               <button key={tab} onClick={() => setGmTab(tab)}
                 style={{ flex: 1, padding: '8px 0', background: gmTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: gmTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: gmTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '12px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 {tab === 'pins' ? 'Pins' : tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : isGM ? 'GM Notes' : 'Notes'}
