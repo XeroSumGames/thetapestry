@@ -2033,10 +2033,14 @@ export default function TablePage() {
       if (autoRange) setRangeBand(autoRange)
     } else {
       setTargetName('')
+      // Only reset to 'medium' when there's no pre-selected target. Previously
+      // this fired unconditionally and clobbered the autoRange just set above,
+      // causing pre-selected map targets (e.g. adjacent Barrel) to show as
+      // "out of range" on the first modal open.
+      setRangeBand('medium')
     }
     setPreRollInsight('none')
     setUseBurst(false)
-    setRangeBand('medium')
     setSocialTarget(null)
     setSocialNpcId('')
     setSocialCmod(null)
@@ -3075,11 +3079,11 @@ export default function TablePage() {
                 }
                 return true
               })
-              // Rotate so active combatant is first (leftmost), rest follow in turn order
-              const activeIdx = alive.findIndex(e => e.is_active)
-              return activeIdx >= 0
-                ? [...alive.slice(activeIdx), ...alive.slice(0, activeIdx)]
-                : alive
+              // Fixed roll-descending order — active combatant keeps their
+              // slot and is identified by the green border. Previous rotation
+              // (active leftmost, rest wrapped) made it unclear why already-
+              // acted combatants could appear to the RIGHT of upcoming ones.
+              return alive
             })().map((entry, idx) => {
               // Green = active (has initiative), Yellow = waiting (hasn't gone yet), Red = already acted
               const hasActed = !entry.is_active && entry.actions_remaining != null && entry.actions_remaining <= 0
