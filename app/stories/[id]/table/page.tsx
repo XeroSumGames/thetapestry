@@ -2839,27 +2839,29 @@ export default function TablePage() {
           {sheetMode === 'inline' ? 'Overlay' : 'Inline'}
         </button>
         {isGM && (
-          <button onClick={() => {
-            // Pre-select everyone who's damaged, dead, or wounded
-            const damagedNpcs = campaignNpcs.filter((n: any) => {
-              const wp = n.wp_current ?? n.wp_max ?? 10
-              const wpMax = n.wp_max ?? 10
-              const rp = n.rp_current ?? n.rp_max ?? 6
-              const rpMax = n.rp_max ?? 6
-              return n.status === 'dead' || wp < wpMax || rp < rpMax
-            }).map(n => `npc:${n.id}`)
-            const damagedPCs = entries.filter(e => e.liveState && (e.liveState.wp_current < e.liveState.wp_max || e.liveState.rp_current < e.liveState.rp_max))
-              .map(e => `pc:${e.stateId}`)
-            setRestoreNpcIds(new Set([...damagedNpcs, ...damagedPCs]))
-            setShowRestorePicker(true)
-          }}
-            style={hdrBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
-            Restore
-          </button>
-          <button onClick={() => { setLootItems([]); setLootRecipients(new Set(entries.map(e => e.character.id))); setShowLootModal(true) }}
-            style={hdrBtn('#2a2010', '#EF9F27', '#5a4a1b')}>
-            Loot
-          </button>
+          <>
+            <button onClick={() => {
+              // Pre-select everyone who's damaged, dead, or wounded
+              const damagedNpcs = campaignNpcs.filter((n: any) => {
+                const wp = n.wp_current ?? n.wp_max ?? 10
+                const wpMax = n.wp_max ?? 10
+                const rp = n.rp_current ?? n.rp_max ?? 6
+                const rpMax = n.rp_max ?? 6
+                return n.status === 'dead' || wp < wpMax || rp < rpMax
+              }).map(n => `npc:${n.id}`)
+              const damagedPCs = entries.filter(e => e.liveState && (e.liveState.wp_current < e.liveState.wp_max || e.liveState.rp_current < e.liveState.rp_max))
+                .map(e => `pc:${e.stateId}`)
+              setRestoreNpcIds(new Set([...damagedNpcs, ...damagedPCs]))
+              setShowRestorePicker(true)
+            }}
+              style={hdrBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
+              Restore
+            </button>
+            <button onClick={() => { setLootItems([]); setLootRecipients(new Set(entries.map(e => e.character.id))); setShowLootModal(true) }}
+              style={hdrBtn('#2a2010', '#EF9F27', '#5a4a1b')}>
+              Loot
+            </button>
+          </>
         )}
         {sessionCount > 0 && (
           <a href={`/stories/${id}/sessions`}
