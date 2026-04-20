@@ -5,6 +5,7 @@ import { generateRandomNpc, ALL_SKILLS, SkillEntry } from '../lib/npc-generator'
 import { resizeImage } from '../lib/image-utils'
 import { MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getWeaponByName } from '../lib/weapons'
 import PortraitBankPicker from './PortraitBankPicker'
+import { openPopout } from '../lib/popout'
 
 function parseSkillText(text: string): SkillEntry[] {
   if (!text.trim()) return []
@@ -890,7 +891,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                           </button>
                         )
                       })()}
-                      <button onClick={e => { e.stopPropagation(); window.open(`/npc-sheet?c=${campaignId}&npc=${npc.id}`, `npc-${npc.id}`, 'width=607,height=357,menubar=no,toolbar=no') }}
+                      <button onClick={e => { e.stopPropagation(); openPopout(`/npc-sheet?c=${campaignId}&npc=${npc.id}`, `npc-${npc.id}`) }}
                         title="Pop this NPC out into its own window"
                         style={{ fontSize: '12px', padding: '1px 4px', borderRadius: '2px', background: '#2a102a', border: '1px solid #8b2e8b', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                         Popout

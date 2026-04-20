@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { CampaignNpc } from './NpcRoster'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, Condition, getTraitValue } from '../lib/weapons'
 import { createClient } from '../lib/supabase-browser'
+import { openPopout } from '../lib/popout'
 
 const TYPE_COLORS: Record<string, { bg: string; border: string; color: string }> = {
   bystander: { bg: '#1a2e10', border: '#2d5a1b', color: '#7fc458' },
@@ -158,7 +159,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
             <button onClick={onPlaceOnMap} style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Map</button>
           )}
           {campaignId && (
-            <button onClick={() => window.open(`/npc-sheet?c=${campaignId}&npc=${npc.id}`, `npc-${npc.id}`, 'width=607,height=357,menubar=no,toolbar=no')}
+            <button onClick={() => openPopout(`/npc-sheet?c=${campaignId}&npc=${npc.id}`, `npc-${npc.id}`)}
               title="Pop out to its own window"
               style={{ padding: '2px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Popout</button>
           )}
