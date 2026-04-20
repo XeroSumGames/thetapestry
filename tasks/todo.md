@@ -268,7 +268,11 @@
 - [x] Give/Trade — give items to other characters at the table via broadcast
 - [x] Real-time sync — receiving player's inventory refreshes on transfer
 - [x] **+ From Catalog now sticks** — InventoryPanel was prop-driven from `c.data?.inventory`, but the parent's `entries` state was never patched on add/remove, so the item only existed in the DB and the UI showed stale data. Fix: `CharacterCard` now keeps a local `inventoryState` mirror (updates optimistically, rolls back on DB error) and fires a new `onInventoryChange` callback that the table page uses to patch `entries` so the change survives close/reopen without a `loadEntries` round-trip.
-- [ ] GM loot distribution modal — bulk give items to multiple characters
+- [x] GM loot distribution modal — bulk give items to multiple players + auto-loot on crate destruction
+- [x] NPC click opens pop-out window (not overlay), Edit button (✎) on roster card
+- [x] NPC card always shows weapon info (name, damage, range) even without active session
+- [x] Tab order: NPCs > Assets > Pins > Notes in tactical map mode
+- [x] Katana added to weapon database (4+3d3, Rare, Unwieldy 1)
 - [ ] Inventory migration — auto-convert old string equipment to structured items on load
 
 ### Vehicle System
