@@ -1073,7 +1073,7 @@ export default function TablePage() {
     // Guard: if no active entry found, forcibly activate the first alive combatant
     if (currentIdx < 0) {
       console.warn('[nextTurn] no active entry found — activating first combatant as fallback')
-      await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false }).eq('id', order[0].id)
+      await supabase.from('initiative_order').update(activateUpdate(order[0])).eq('id', order[0].id)
       await loadInitiative(id)
       initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       return
@@ -1200,7 +1200,7 @@ export default function TablePage() {
           return true
         })
         if (firstAlive) {
-          await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2 }).eq('id', firstAlive.id)
+          await supabase.from('initiative_order').update(activateUpdate(firstAlive)).eq('id', firstAlive.id)
         }
       }
       await Promise.all([loadInitiative(id), loadEntries(id), loadRolls(id)])
@@ -1224,10 +1224,12 @@ export default function TablePage() {
           const npcRP = npc.rp_current ?? npc.rp_max ?? 6
           skipTurn = npcWP === 0 || npcRP === 0 || npc.status === 'dead'
         }
-      } else {
-        const charEntry = entries.find((ce: any) => nextEntry.character_id ? ce.character.id === nextEntry.character_id : ce.character.name === nextEntry.character_name)
-        const ls = charEntry?.liveState
-        skipTurn = !!(ls && (ls.wp_current === 0 || ls.rp_current === 0))
+      } else if (nextEntry.character_id) {
+        // Re-fetch fresh PC state from DB to avoid stale closure
+        const { data: freshPcState } = await supabase.from('character_states').select('wp_current, rp_current').eq('campaign_id', id).eq('character_id', nextEntry.character_id).maybeSingle()
+        if (freshPcState) {
+          skipTurn = freshPcState.wp_current === 0 || freshPcState.rp_current === 0
+        }
       }
       if (!skipTurn) break
       nextIdx = (nextIdx + 1) % order.length
@@ -1241,7 +1243,7 @@ export default function TablePage() {
       const { error: deactErr } = await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('id', currentEntry.id)
       if (deactErr) console.warn('[nextTurn] deactivate error:', deactErr.message)
     }
-    const { error: actErr } = await supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false }).eq('id', order[nextIdx].id)
+    const { error: actErr } = await supabase.from('initiative_order').update(activateUpdate(order[nextIdx])).eq('id', order[nextIdx].id)
     if (actErr) console.warn('[nextTurn] activate error:', actErr.message)
     await Promise.all([loadInitiative(id), loadEntries(id)])
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
@@ -1571,7 +1573,7 @@ export default function TablePage() {
     if (wasActive) {
       updates.push(
         supabase.from('initiative_order').update({ is_active: false, actions_remaining: current.actions_remaining ?? 2, aim_bonus: 0 }).eq('id', current.id),
-        supabase.from('initiative_order').update({ is_active: true, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false }).eq('id', next.id),
+        supabase.from('initiative_order').update(activateUpdate(next)).eq('id', next.id),
       )
     }
     await Promise.all(updates)
@@ -2611,9 +2613,11 @@ export default function TablePage() {
     // Sprint result — failure = winded next round
     let sprintResult = ''
     if (pendingRoll.label.includes('Sprint')) {
-      const activeInit = initiativeOrder.find(e => e.is_active)
+      // Find the sprinting combatant by name (not active entry — turn may have advanced after pre-consume)
+      const sprintName = pendingRoll.label.split(' — ')[0]
+      const sprintInit = initiativeOrder.find(e => e.character_name === sprintName)
       if (outcome === 'Failure' || outcome === 'Dire Failure') {
-        if (activeInit) await supabase.from('initiative_order').update({ winded: true }).eq('id', activeInit.id)
+        if (sprintInit) await supabase.from('initiative_order').update({ winded: true }).eq('id', sprintInit.id)
         sprintResult = `${characterName} is winded — loses 1 action next round.`
         await supabase.from('roll_log').insert({
           campaign_id: id, user_id: userId, character_name: 'System',
