@@ -75,6 +75,7 @@ export const MELEE_WEAPONS: Weapon[] = [
   { name: 'Spear', category: 'melee', skill: 'Melee Combat', range: 'Close', rarity: 'Uncommon', damage: '2+2d6', rpPercent: 50, enc: 1, traits: ['Cumbersome (2)'] },
   { name: 'Staff', category: 'melee', skill: 'Melee Combat', range: 'Close', rarity: 'Common', damage: '2+2d3', rpPercent: 100, enc: 1, traits: ['Unwieldy (1)'] },
   { name: 'Sword', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '3+3d3', rpPercent: 50, enc: 1, traits: [] },
+  { name: 'Katana', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Rare', damage: '4+3d3', rpPercent: 50, enc: 1, traits: ['Unwieldy 1'] },
   { name: 'Tactical Baton', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '4+2d3', rpPercent: 100, enc: 1, traits: [] },
   { name: 'Cattle Prod', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '2', rpPercent: 400, enc: 1, traits: ['Stun'] },
   { name: 'Wood Axe', category: 'melee', skill: 'Melee Combat', range: 'Close', rarity: 'Uncommon', damage: '5+1d3', rpPercent: 50, enc: 1, traits: ['Cumbersome (1)'] },
