@@ -4613,7 +4613,7 @@ export default function TablePage() {
                 onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                 onMouseLeave={e => (e.currentTarget.style.background = isActive ? '#1a0f0f' : '#1a1a1a')}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                   {isGM && (combatActive || showTacticalMap) && (() => {
                     const onMap = initiativeOrder.some(e => e.character_id === entry.character.id) || false
                     return (
