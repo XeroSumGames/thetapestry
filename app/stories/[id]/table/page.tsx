@@ -3832,6 +3832,7 @@ export default function TablePage() {
                   onPublish={isGM ? () => handlePublishNpc(npc) : undefined}
                   isPublished={publishedNpcIds.has(npc.id)}
                   onPlaceOnMap={isGM && (combatActive || showTacticalMap) ? () => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined}
+                  campaignId={id}
                 />
               )})}
             </div>
@@ -3904,6 +3905,7 @@ export default function TablePage() {
                     onPublish={isGM ? () => handlePublishNpc(npc) : undefined}
                     isPublished={publishedNpcIds.has(npc.id)}
                     onPlaceOnMap={isGM ? () => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined}
+                    campaignId={id}
                   />
                 </div>
               )

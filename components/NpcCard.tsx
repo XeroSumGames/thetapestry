@@ -25,14 +25,16 @@ function sgn(v: number) { return v > 0 ? `+${v}` : String(v) }
 interface Props {
   npc: CampaignNpc
   onClose: () => void
-  onEdit: () => void
+  onEdit?: () => void
   onRoll?: (label: string, amod: number, smod: number, weaponContext?: { weaponName: string; damage: string; rpPercent: number; conditionCmod: number; traitCmod?: number; traitLabel?: string; traits?: string[] }) => void
   onPublish?: () => void
   isPublished?: boolean
   onPlaceOnMap?: () => void
+  // Set to enable a "Popout" button that opens this NPC in a standalone window.
+  campaignId?: string
 }
 
-export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPublished, onPlaceOnMap }: Props) {
+export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPublished, onPlaceOnMap, campaignId }: Props) {
   const supabase = createClient()
   const [enlarged, setEnlarged] = useState(false)
   const rapid: Record<string, number> = { RSN: npc.reason, ACU: npc.acumen, PHY: npc.physicality, INF: npc.influence, DEX: npc.dexterity }
@@ -155,7 +157,14 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
           {onPlaceOnMap && (
             <button onClick={onPlaceOnMap} style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Map</button>
           )}
-          <button onClick={onEdit} style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Edit</button>
+          {campaignId && (
+            <button onClick={() => window.open(`/npc-sheet?c=${campaignId}&npc=${npc.id}`, `npc-${npc.id}`, 'width=820,height=820,menubar=no,toolbar=no')}
+              title="Pop out to its own window"
+              style={{ padding: '2px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Popout</button>
+          )}
+          {onEdit && (
+            <button onClick={onEdit} style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Edit</button>
+          )}
           <button onClick={onClose} style={{ padding: '2px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Close</button>
         </div>
       </div>
