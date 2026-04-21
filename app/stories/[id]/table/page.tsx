@@ -3550,10 +3550,29 @@ export default function TablePage() {
                   }}
                     style={{ background: 'none', border: 'none', color: '#7fc458', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Grant +1 action">+</button>
                 )}
-                {/* Done/Remove — player can end own turn, GM can end anyone or remove */}
+                {/* × — GM always removes (active or not). Players only see
+                    this on their own active turn and it ends the turn. */}
                 {(isGM || (entry.user_id === userId && entry.is_active)) && (
                   <button onClick={async () => {
-                    if (isGM && !entry.is_active) { removeFromInitiative(entry.id); return }
+                    if (isGM) {
+                      // If removing the active combatant, hand activity to the
+                      // next combatant in the current round (sorted by roll
+                      // desc) WITHOUT calling nextTurn — that wraps past the
+                      // end and fires "New Round" which isn't what the GM
+                      // wants when they're just removing someone.
+                      if (entry.is_active) {
+                        const sorted = [...initiativeOrder].sort((a, b) => b.roll - a.roll || a.character_name.localeCompare(b.character_name))
+                        const idx = sorted.findIndex(e => e.id === entry.id)
+                        const successor = idx >= 0 ? sorted.slice(idx + 1).concat(sorted.slice(0, idx)).find(e => e.id !== entry.id) : null
+                        if (successor) {
+                          await supabase.from('initiative_order').update({ is_active: true }).eq('id', successor.id)
+                        }
+                      }
+                      await removeFromInitiative(entry.id)
+                      initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+                      return
+                    }
+                    // Player ending their own turn
                     await nextTurn()
                   }}
                     style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '12px', padding: '0 0 0 2px', lineHeight: 1 }}>×</button>
