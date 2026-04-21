@@ -56,10 +56,14 @@ export default function SignupPage() {
       }
     }
     logEvent('signup', { username })
-    // Invite flow: skip `/firsttimers` entirely and land on the target path
-    // (e.g. /join/<code>) so the user can accept the invite without losing
-    // context. No redirect = default onboarding.
-    router.push(redirect ?? '/firsttimers')
+    // Invite flow: land on the target path (e.g. /join/<code>) so the user
+    // can accept the invite without losing context.
+    // No redirect: go straight to /dashboard for now.
+    // `/firsttimers` is DISABLED as a landing until the site is ready to
+    // onboard new users (see tasks/todo.md Long-term / Post-launch). The
+    // page still exists and is reachable if needed; we just don't force
+    // new signups through it.
+    router.push(redirect ?? '/dashboard')
   }
 
   const inp: React.CSSProperties = {

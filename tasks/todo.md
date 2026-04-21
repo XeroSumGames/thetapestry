@@ -703,6 +703,7 @@ Communities become first-class entities in the Distemperverse. Every published c
 - [ ] Ghost-to-Survivor funnel analytics — track where conversions happen
 - [ ] A/B test soft wall messaging
 - [ ] Onboarding flow for physical product QR scanners — different from standard signup
+- [ ] **Reactivate `/firsttimers` onboarding page** — file exists at `app/firsttimers/page.tsx` and remains reachable, but signup no longer auto-redirects new users to it (see `app/signup/page.tsx`, was disabled alongside the `/welcome` forced redirect in 2026-04-20 playtest fix #12). When the site is ready to onboard new users: change signup's fallback from `/dashboard` back to `/firsttimers`, and re-enable the `/dashboard` → `/welcome` redirect in `app/dashboard/page.tsx` (also commented-out under playtest #12).
 
 ---
 
