@@ -41,7 +41,7 @@
 
 ## TIER 2 — Confusion or unfair play. Fix after Tier 1.
 
-- [ ] **#10 — Token lock after both actions used.** Once `actions_remaining === 0`, the player's token should be unmovable until their next turn.
+- [x] **#10 — Token lock after both actions used.** Once `actions_remaining === 0`, the player's token should be unmovable until their next turn. *Fixed in TacticalMap's `handleMouseDown` drag-eligibility check: player-owned tokens now require `actions_remaining > 0` on the owner's initiative row. GM retains unconditional drag authority; out-of-combat drags are unchanged (no initiative row = no lock).*
 - [ ] **#14 — READY WEAPON flow is too clunky.** Redesign the switch/reload/unjam modal for fewer clicks.
 - [ ] **#15 — READY WEAPON immediately equips after loot.** When a weapon is looted, its row in Ready Weapon should offer a one-click equip.
 - [ ] **#16 — Inventory / primary weapon / ready weapon interaction review.** The three are not working together cleanly. Full audit + unified source of truth.

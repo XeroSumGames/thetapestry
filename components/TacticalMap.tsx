@@ -839,7 +839,17 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       if (tok) {
         setSelectedToken(tok.id)
         onTokenSelect?.(tok)
-        const canDrag = isGM || (myCharacterId && tok.character_id === myCharacterId)
+        // Drag permission:
+        //   - GM: always (can reposition any token at any time)
+        //   - Player: only their own PC token, AND only if they still have
+        //     actions remaining this round. Once actions_remaining hits 0,
+        //     their token is locked until their next turn — playtest #10.
+        //     Out of combat (no initiative entry exists), always draggable.
+        const ownInitEntry = tok.character_id
+          ? initiativeOrder.find((e: any) => e.character_id === tok.character_id)
+          : null
+        const playerLocked = ownInitEntry != null && (ownInitEntry.actions_remaining ?? 0) <= 0
+        const canDrag = isGM || (!!myCharacterId && tok.character_id === myCharacterId && !playerLocked)
         if (canDrag && canvasRef.current) {
           const rect = canvasRef.current.getBoundingClientRect()
           const mx = (e.clientX - rect.left) / zoom
