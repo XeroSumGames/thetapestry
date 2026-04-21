@@ -60,11 +60,12 @@ interface Props {
   onRemoveFromMap?: (name: string) => void
   onLoot?: (objectName: string, item: ContentItem, characterId: string, characterName: string) => void
   onDuplicate?: (source: ObjectToken) => void | Promise<void>
+  onTokenChanged?: () => void                                  // Notify parent to broadcast token_changed so other clients re-fetch
   tokenRefreshKey?: number
   entries?: { character: { id: string; name: string; data: any }; userId: string }[]
 }
 
-export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemoveFromMap, onLoot, onDuplicate, tokenRefreshKey, entries }: Props) {
+export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemoveFromMap, onLoot, onDuplicate, onTokenChanged, tokenRefreshKey, entries }: Props) {
   const supabase = createClient()
   const [objects, setObjects] = useState<ObjectToken[]>([])
   const [library, setLibrary] = useState<{ id: string; name: string; image_url: string }[]>([])
@@ -362,6 +363,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   const newVis = !obj.is_visible
                   await supabase.from('scene_tokens').update({ is_visible: newVis }).eq('id', obj.id)
                   setObjects(prev => prev.map(o => o.id === obj.id ? { ...o, is_visible: newVis } : o))
+                  onTokenChanged?.()
                 }}
                   style={{ flex: 1, padding: '3px 0', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: obj.is_visible ? '#7fc458' : '#5a5550', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {obj.is_visible ? 'Show' : 'Hide'}

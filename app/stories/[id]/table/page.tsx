@@ -4046,6 +4046,7 @@ export default function TablePage() {
               isGM={isGM}
               initiativeOrder={initiativeOrder}
               tokenRefreshKey={tokenRefreshKey}
+              onTokenChanged={() => { setTokenRefreshKey(k => k + 1); initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} }) }}
               campaignNpcs={campaignNpcs}
               entries={entries}
               myCharacterId={myCharIdRef.current}
@@ -4527,6 +4528,7 @@ export default function TablePage() {
                 </div>
                 {assetsFolderState.has('objects') && (
                   <CampaignObjects campaignId={id} isGM={isGM} tokenRefreshKey={tokenRefreshKey}
+                    onTokenChanged={() => { setTokenRefreshKey(k => k + 1); initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} }) }}
                     onPlaceOnMap={async (name, portraitUrl, wpMax) => {
                       const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
                       if (!activeScene) { alert('No active scene.'); return }

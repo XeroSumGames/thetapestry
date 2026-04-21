@@ -64,9 +64,10 @@ interface Props {
   onMoveComplete?: () => void
   onMoveCancel?: () => void
   onTokensUpdate?: (tokens: { id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null }[], cellFeet: number) => void
+  onTokenChanged?: () => void                               // Notify parent to broadcast token_changed so other clients re-fetch
 }
 
-export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, onTokensUpdate }: Props) {
+export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, onTokensUpdate, onTokenChanged }: Props) {
   const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -1011,6 +1012,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     if (!tok) return
     await supabase.from('scene_tokens').update({ is_visible: !tok.is_visible }).eq('id', tokenId)
     setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, is_visible: !t.is_visible } : t))
+    // Notify parent so it can broadcast token_changed — previously players had
+    // to hard-refresh to see a Reveal. postgres_changes on scene_tokens may
+    // not fire reliably for all clients (replication/RLS quirks); the
+    // broadcast path is the reliable fallback.
+    onTokenChanged?.()
   }
 
   async function removeToken(tokenId: string) {
