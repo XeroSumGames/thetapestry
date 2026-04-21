@@ -2969,7 +2969,7 @@ export default function TablePage() {
           campaign_id: id, user_id: userId, character_name: 'System',
           label: `🏃 ${characterName} sprinted and seems to be out of breath.`,
           die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'sprint',
-          damage_json: { trimmedRoll } as any,
+          damage_json: { trimmedRoll, winded: outcome === 'Failure' || outcome === 'Dire Failure' } as any,
         })
       } else {
         sprintResult = `${characterName} does not seem to be winded.`
@@ -2977,7 +2977,7 @@ export default function TablePage() {
           campaign_id: id, user_id: userId, character_name: 'System',
           label: `🏃 ${characterName} sprinted and does not seem to be winded.`,
           die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'sprint',
-          damage_json: { trimmedRoll } as any,
+          damage_json: { trimmedRoll, winded: outcome === 'Failure' || outcome === 'Dire Failure' } as any,
         })
       }
     }
@@ -4107,6 +4107,12 @@ export default function TablePage() {
                   </div>
                 ) : r.outcome === 'sprint' ? (() => {
                   const tr = (r.damage_json as any)?.trimmedRoll
+                  // `winded` persisted explicitly on new entries; fall back to
+                  // inferring from rollOutcome for older rows that predate the flag.
+                  const windedFlag = (r.damage_json as any)?.winded
+                  const isWinded = typeof windedFlag === 'boolean'
+                    ? windedFlag
+                    : (tr?.rollOutcome === 'Failure' || tr?.rollOutcome === 'Dire Failure')
                   const isExpanded = expandedRollIds.has(r.id)
                   return (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a2010', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
@@ -4126,12 +4132,17 @@ export default function TablePage() {
                     <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>{r.label.replace(/^🏃\s*/, '')}</div>
                     {tr && isExpanded && (
                       <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                        [{tr.die1}+{tr.die2}]
-                        {tr.amod !== 0 && <span style={{ color: tr.amod > 0 ? '#7fc458' : '#c0392b' }}> {tr.amod > 0 ? '+' : ''}{tr.amod} AMod</span>}
-                        {tr.smod !== 0 && <span style={{ color: tr.smod > 0 ? '#7fc458' : '#c0392b' }}> {tr.smod > 0 ? '+' : ''}{tr.smod} SMod</span>}
-                        {tr.cmod !== 0 && <span style={{ color: tr.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {tr.cmod > 0 ? '+' : ''}{tr.cmod} CMod</span>}
-                        <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {tr.total}</span>
-                        <span style={{ marginLeft: '8px', color: outcomeColor(tr.rollOutcome), fontWeight: 700 }}>{tr.rollOutcome}</span>
+                        <div>
+                          [{tr.die1}+{tr.die2}]
+                          {tr.amod !== 0 && <span style={{ color: tr.amod > 0 ? '#7fc458' : '#c0392b' }}> {tr.amod > 0 ? '+' : ''}{tr.amod} AMod</span>}
+                          {tr.smod !== 0 && <span style={{ color: tr.smod > 0 ? '#7fc458' : '#c0392b' }}> {tr.smod > 0 ? '+' : ''}{tr.smod} SMod</span>}
+                          {tr.cmod !== 0 && <span style={{ color: tr.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {tr.cmod > 0 ? '+' : ''}{tr.cmod} CMod</span>}
+                          <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {tr.total}</span>
+                          <span style={{ marginLeft: '8px', color: outcomeColor(tr.rollOutcome), fontWeight: 700 }}>{tr.rollOutcome}</span>
+                        </div>
+                        <div style={{ marginTop: '4px', color: isWinded ? '#f5a89a' : '#7fc458', fontWeight: 600 }}>
+                          {isWinded ? 'Winded — loses 1 Combat Action next round.' : 'Not winded — full 2 actions next round.'}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -4348,6 +4359,10 @@ export default function TablePage() {
                 </div>
               ) : item.data.outcome === 'sprint' ? (() => {
                 const tr = (item.data.damage_json as any)?.trimmedRoll
+                const windedFlag = (item.data.damage_json as any)?.winded
+                const isWinded = typeof windedFlag === 'boolean'
+                  ? windedFlag
+                  : (tr?.rollOutcome === 'Failure' || tr?.rollOutcome === 'Dire Failure')
                 const isExpanded = expandedRollIds.has(item.data.id)
                 return (
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a2010', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
@@ -4367,12 +4382,17 @@ export default function TablePage() {
                   <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>{item.data.label.replace(/^🏃\s*/, '')}</div>
                   {tr && isExpanded && (
                     <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                      [{tr.die1}+{tr.die2}]
-                      {tr.amod !== 0 && <span style={{ color: tr.amod > 0 ? '#7fc458' : '#c0392b' }}> {tr.amod > 0 ? '+' : ''}{tr.amod} AMod</span>}
-                      {tr.smod !== 0 && <span style={{ color: tr.smod > 0 ? '#7fc458' : '#c0392b' }}> {tr.smod > 0 ? '+' : ''}{tr.smod} SMod</span>}
-                      {tr.cmod !== 0 && <span style={{ color: tr.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {tr.cmod > 0 ? '+' : ''}{tr.cmod} CMod</span>}
-                      <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {tr.total}</span>
-                      <span style={{ marginLeft: '8px', color: outcomeColor(tr.rollOutcome), fontWeight: 700 }}>{tr.rollOutcome}</span>
+                      <div>
+                        [{tr.die1}+{tr.die2}]
+                        {tr.amod !== 0 && <span style={{ color: tr.amod > 0 ? '#7fc458' : '#c0392b' }}> {tr.amod > 0 ? '+' : ''}{tr.amod} AMod</span>}
+                        {tr.smod !== 0 && <span style={{ color: tr.smod > 0 ? '#7fc458' : '#c0392b' }}> {tr.smod > 0 ? '+' : ''}{tr.smod} SMod</span>}
+                        {tr.cmod !== 0 && <span style={{ color: tr.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {tr.cmod > 0 ? '+' : ''}{tr.cmod} CMod</span>}
+                        <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {tr.total}</span>
+                        <span style={{ marginLeft: '8px', color: outcomeColor(tr.rollOutcome), fontWeight: 700 }}>{tr.rollOutcome}</span>
+                      </div>
+                      <div style={{ marginTop: '4px', color: isWinded ? '#f5a89a' : '#7fc458', fontWeight: 600 }}>
+                        {isWinded ? 'Winded — loses 1 Combat Action next round.' : 'Not winded — full 2 actions next round.'}
+                      </div>
                     </div>
                   )}
                 </div>
