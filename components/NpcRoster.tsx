@@ -148,6 +148,10 @@ interface Props {
   onPlaceOnMap?: (npc: CampaignNpc) => void
   onRemoveFromMap?: (npc: CampaignNpc) => void
   npcIdsOnMap?: Set<string>
+  // Fired after an NPC row (and its orphaned map tokens / initiative rows)
+  // are deleted, so the parent page can refresh local state without waiting
+  // on a realtime DELETE event that postgres_changes sometimes drops.
+  onNpcDeleted?: (npcId: string) => void
 }
 
 const emptyForm = {
@@ -160,7 +164,7 @@ const emptyForm = {
   folder: '' as string,
 }
 
-export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs, onPlaceOnMap, onRemoveFromMap, npcIdsOnMap }: Props) {
+export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs, onPlaceOnMap, onRemoveFromMap, npcIdsOnMap, onNpcDeleted }: Props) {
   const supabase = createClient()
   const [npcs, setNpcs] = useState<CampaignNpc[]>([])
   const [loading, setLoading] = useState(true)
@@ -370,6 +374,10 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     if (initRes.error) console.warn('[handleDelete] initiative_order delete error:', initRes.error.message)
     await supabase.from('campaign_npcs').delete().eq('id', id)
     await loadNpcs()
+    // Tell the parent to refresh + broadcast — Supabase Realtime DELETE
+    // events over postgres_changes sometimes drop when REPLICA IDENTITY
+    // isn't FULL, leaving the initiative bar stale until a manual reload.
+    onNpcDeleted?.(id)
   }
 
   function toggleFolder(folderName: string) {

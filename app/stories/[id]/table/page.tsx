@@ -2933,11 +2933,23 @@ export default function TablePage() {
     }
 
     // Sprint result — failure = winded next round
+    // Log trimming: we embed the raw Athletics-roll dice/mods into the
+    // sprint outcome entry's damage_json as a `trimmedRoll` blob, and
+    // skip the normal saveRollToLog write (see `skipSaveRollToLog` flag
+    // below). Renderers show the banner as the default view with a
+    // "more info" expand toggle that unpacks trimmedRoll into the full
+    // breakdown. This is the prototype for the log-trimming pattern —
+    // Stabilize / Coordinate / Unjam / etc. can reuse the same shape.
     let sprintResult = ''
     if (pendingRoll.label.includes('Sprint')) {
       // Find the sprinting combatant by name (not active entry — turn may have advanced after pre-consume)
       const sprintName = pendingRoll.label.split(' — ')[0]
       const sprintInit = initiativeOrder.find(e => e.character_name === sprintName)
+      const trimmedRoll = {
+        die1, die2,
+        amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
+        total, rollOutcome: outcome, rollLabel: pendingRoll.label,
+      }
       if (outcome === 'Failure' || outcome === 'Dire Failure') {
         if (sprintInit) await supabase.from('initiative_order').update({ winded: true }).eq('id', sprintInit.id)
         sprintResult = `${characterName} is winded — loses 1 action next round.`
@@ -2945,6 +2957,7 @@ export default function TablePage() {
           campaign_id: id, user_id: userId, character_name: 'System',
           label: `🏃 ${characterName} sprinted but is now winded — loses 1 Combat Action next round.`,
           die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'sprint',
+          damage_json: { trimmedRoll } as any,
         })
       } else {
         sprintResult = `${characterName} sprinted successfully.`
@@ -2952,6 +2965,7 @@ export default function TablePage() {
           campaign_id: id, user_id: userId, character_name: 'System',
           label: `🏃 ${characterName} sprinted successfully — not winded.`,
           die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'sprint',
+          damage_json: { trimmedRoll } as any,
         })
       }
     }
@@ -3005,7 +3019,15 @@ export default function TablePage() {
       coordinateTargetRef.current = null
     }
 
-    await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, damageResult)
+    // Log trimming (see Sprint block above): some actions consolidate their
+    // dice breakdown INTO the outcome banner's damage_json instead of writing
+    // a separate roll_log row. If this is one of those rolls, skip the
+    // standalone saveRollToLog write — otherwise the feed would show both
+    // the raw Athletics check AND the sprint banner.
+    const isTrimmedRoll = pendingRoll.label.includes('Sprint')
+    if (!isTrimmedRoll) {
+      await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, damageResult)
+    }
 
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
@@ -4045,15 +4067,38 @@ export default function TablePage() {
                     </div>
                     <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
                   </div>
-                ) : r.outcome === 'sprint' ? (
+                ) : r.outcome === 'sprint' ? (() => {
+                  const tr = (r.damage_json as any)?.trimmedRoll
+                  const isExpanded = expandedRollIds.has(r.id)
+                  return (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a2010', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🏃 Sprint</span>
-                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                        <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                        {tr && (
+                          <button onClick={() => setExpandedRollIds(prev => { const next = new Set(prev); isExpanded ? next.delete(r.id) : next.add(r.id); return next })}
+                            title={isExpanded ? 'Hide details' : 'View roll'}
+                            style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }}>
+                            {isExpanded ? '▾' : '▸'}
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>{r.label.replace(/^🏃\s*/, '')}</div>
+                    {tr && isExpanded && (
+                      <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        [{tr.die1}+{tr.die2}]
+                        {tr.amod !== 0 && <span style={{ color: tr.amod > 0 ? '#7fc458' : '#c0392b' }}> {tr.amod > 0 ? '+' : ''}{tr.amod} AMod</span>}
+                        {tr.smod !== 0 && <span style={{ color: tr.smod > 0 ? '#7fc458' : '#c0392b' }}> {tr.smod > 0 ? '+' : ''}{tr.smod} SMod</span>}
+                        {tr.cmod !== 0 && <span style={{ color: tr.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {tr.cmod > 0 ? '+' : ''}{tr.cmod} CMod</span>}
+                        <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {tr.total}</span>
+                        <span style={{ marginLeft: '8px', color: outcomeColor(tr.rollOutcome), fontWeight: 700 }}>{tr.rollOutcome}</span>
+                      </div>
+                    )}
                   </div>
-                ) : (r.outcome === 'death' || r.character_name === 'Death is in the air') ? (
+                  )
+                })() : (r.outcome === 'death' || r.character_name === 'Death is in the air') ? (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a0a0a', border: '1px solid #5a1b1b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.character_name}</span>
@@ -4263,15 +4308,38 @@ export default function TablePage() {
                     )
                   })}
                 </div>
-              ) : item.data.outcome === 'sprint' ? (
+              ) : item.data.outcome === 'sprint' ? (() => {
+                const tr = (item.data.damage_json as any)?.trimmedRoll
+                const isExpanded = expandedRollIds.has(item.data.id)
+                return (
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a2010', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🏃 Sprint</span>
-                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                      {tr && (
+                        <button onClick={() => setExpandedRollIds(prev => { const next = new Set(prev); isExpanded ? next.delete(item.data.id) : next.add(item.data.id); return next })}
+                          title={isExpanded ? 'Hide details' : 'View roll'}
+                          style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }}>
+                          {isExpanded ? '▾' : '▸'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>{item.data.label.replace(/^🏃\s*/, '')}</div>
+                  {tr && isExpanded && (
+                    <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      [{tr.die1}+{tr.die2}]
+                      {tr.amod !== 0 && <span style={{ color: tr.amod > 0 ? '#7fc458' : '#c0392b' }}> {tr.amod > 0 ? '+' : ''}{tr.amod} AMod</span>}
+                      {tr.smod !== 0 && <span style={{ color: tr.smod > 0 ? '#7fc458' : '#c0392b' }}> {tr.smod > 0 ? '+' : ''}{tr.smod} SMod</span>}
+                      {tr.cmod !== 0 && <span style={{ color: tr.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {tr.cmod > 0 ? '+' : ''}{tr.cmod} CMod</span>}
+                      <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {tr.total}</span>
+                      <span style={{ marginLeft: '8px', color: outcomeColor(tr.rollOutcome), fontWeight: 700 }}>{tr.rollOutcome}</span>
+                    </div>
+                  )}
                 </div>
-              ) : item.data.outcome === 'drop' ? (
+                )
+              })() : item.data.outcome === 'drop' ? (
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a2010', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{item.data.label}</span>
@@ -4793,7 +4861,18 @@ export default function TablePage() {
                 ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
                 : initiativeOrder
               const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
-              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}`, `npc-${npc.id}`) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} npcIdsOnMap={mapTokenNpcIds} />
+              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}`, `npc-${npc.id}`) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} npcIdsOnMap={mapTokenNpcIds} onNpcDeleted={async (npcId) => {
+              // Drop the NPC from every local collection immediately so the
+              // initiative bar, roster card overlay, and map token disappear
+              // without waiting on a realtime DELETE event.
+              setCampaignNpcs(prev => prev.filter(n => n.id !== npcId))
+              setRosterNpcs(prev => prev.filter(n => n.id !== npcId))
+              setViewingNpcs(prev => prev.filter(n => n.id !== npcId))
+              await loadInitiative(id)
+              setTokenRefreshKey(k => k + 1)
+              initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+              initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+            }} />
             })()}
             {gmTab === 'npcs' && !isGM && (() => {
               // Merge revealed NPCs with any NPCs currently in combat,
