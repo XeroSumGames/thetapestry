@@ -521,9 +521,36 @@ export default function TablePage() {
     if (!chatInput.trim() || !userId) return
     const myEntry = entries.find(e => e.userId === userId)
     const characterName = myEntry?.character.name ?? (isGM ? 'Game Master' : 'Unknown')
+    // Slash-command parsing (playtest #34): `/whisper gm <msg>` and `/w gm <msg>`
+    // send a whisper to the GM regardless of the current whisperTarget. Also
+    // supports whispering a named player — `/w Avery <msg>` — by matching the
+    // first word after the command against a character name in entries.
+    const trimmed = chatInput.trim()
+    let recipientUserId: string | null = whisperTarget?.userId ?? null
+    let isWhisper = !!whisperTarget
+    let messageBody = trimmed
+    const slashMatch = trimmed.match(/^\/(?:w|whisper)\s+(\S+)\s+([\s\S]+)$/i)
+    if (slashMatch) {
+      const targetRaw = slashMatch[1]
+      const body = slashMatch[2]
+      if (/^gm$/i.test(targetRaw) && campaign?.gm_user_id) {
+        recipientUserId = campaign.gm_user_id
+        isWhisper = true
+        messageBody = body
+      } else {
+        // Match against a player character name (case-insensitive)
+        const hit = entries.find(e => e.character.name.toLowerCase() === targetRaw.toLowerCase())
+        if (hit?.userId) {
+          recipientUserId = hit.userId
+          isWhisper = true
+          messageBody = body
+        }
+      }
+    }
+    if (!messageBody.trim()) return
     await supabase.from('chat_messages').insert({
-      campaign_id: id, user_id: userId, character_name: characterName, message: chatInput.trim(),
-      is_whisper: !!whisperTarget, recipient_user_id: whisperTarget?.userId ?? null,
+      campaign_id: id, user_id: userId, character_name: characterName, message: messageBody,
+      is_whisper: isWhisper, recipient_user_id: recipientUserId,
     })
     setChatInput('')
   }

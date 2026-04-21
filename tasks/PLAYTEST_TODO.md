@@ -68,7 +68,7 @@
 
 ## TIER 4 — Quality of life, do last.
 
-- [ ] **#34 — `/whisper GM`.** Slash command in chat to directly whisper the GM.
+- [x] **#34 — `/whisper GM`.** Slash command in chat to directly whisper the GM. *Shipped: `sendChat` now parses `/whisper <target> <msg>` and `/w <target> <msg>` before the DB insert. If target matches `gm` (case-insensitive), the message is sent as a whisper to `campaign.gm_user_id` regardless of the current whisperTarget. Target can also be any player character name (case-insensitive) — `/w Avery <msg>` whispers Avery. If the body is empty, the send is suppressed. Existing portrait-click whisper flow and is_whisper / recipient_user_id schema untouched.*
 - [ ] **#30 — Portrait upload simplification.** Current flow is too many steps. Consolidate upload → crop → save.
 - [ ] **#31 — Ping click-and-hold.** Ping becomes a long-press (hold) gesture rather than an accidental click.
 - [ ] **#33 — General UI smoothness pass.** Catch-all for animation/transition polish across combat interactions.
