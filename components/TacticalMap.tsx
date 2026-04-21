@@ -166,6 +166,16 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       .on('broadcast', { event: 'token_moved' }, () => {
         if (sceneRef.current) loadTokens(sceneRef.current.id)
       })
+      .on('broadcast', { event: 'tactical_zoom' }, (msg: any) => {
+        // GM zoom snaps players' view to match (playtest #27). Players
+        // can still zoom locally afterwards — the sync only fires when
+        // the GM actively changes zoom, so a player's later adjustment
+        // isn't clobbered until the GM zooms again.
+        if (!isGM) {
+          const nextZoom = msg?.payload?.zoom
+          if (typeof nextZoom === 'number' && nextZoom > 0) setZoom(nextZoom)
+        }
+      })
       .subscribe()
     tacticalChannelRef.current = channel
     const pingCh = supabase.channel(`ping_${campaignId}`)
@@ -247,6 +257,16 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       onTokensUpdate(tokens.map(t => ({ id: t.id, name: t.name, token_type: t.token_type, character_id: t.character_id, npc_id: t.npc_id, grid_x: t.grid_x, grid_y: t.grid_y, wp_max: t.wp_max, wp_current: t.wp_current })), scene.cell_feet ?? 3)
     }
   }, [tokens, scene?.cell_feet])
+
+  // GM-only: broadcast zoom changes so player views snap to match (playtest
+  // #27). The receiving-side listener is in the realtime subscribe block
+  // above; it only runs for non-GM clients, so a GM changing zoom doesn't
+  // echo back to themselves. Broadcast only fires once `tacticalChannelRef`
+  // has subscribed to avoid firing before the channel is ready.
+  useEffect(() => {
+    if (!isGM || !tacticalChannelRef.current) return
+    tacticalChannelRef.current.send({ type: 'broadcast', event: 'tactical_zoom', payload: { zoom } })
+  }, [zoom, isGM])
 
   // Spacebar = pan mode
   useEffect(() => {
