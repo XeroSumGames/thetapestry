@@ -338,6 +338,15 @@ export default function TablePage() {
   const [showCoordinateModal, setShowCoordinateModal] = useState(false)
   const [coordinateSelection, setCoordinateSelection] = useState('')
   const sprintPendingRef = useRef(false)
+  // Set true between Sprint pre-consume and the Athletics roll resolving.
+  // While true, nextTurn's new-round branch holds back — if Frankie is the
+  // last combatant and his 2-action pre-consume would trigger a new round,
+  // we want the Athletics check (and its log entry) to resolve FIRST so
+  // the feed reads "sprinted … / Initiative reroll" instead of the reroll
+  // landing ahead of the sprint outcome. See closeRollModal cleanup + the
+  // executeRoll sprint block for the matching clear / deferred-catchup.
+  const sprintAthleticsPendingRef = useRef(false)
+  const sprintAthleticsRoundDeferredRef = useRef(false)
   // When the active combatant changes, drop any in-flight move-mode intent.
   // Without this, a Move set up during a previous turn (waiting on a
   // target-cell click) can fire long after auto-advance, attributing a token
@@ -1312,6 +1321,19 @@ export default function TablePage() {
     // Keep wrappedPastEnd referenced so the old comment context stays
     // anchored in diffs / git blame — cheap no-op.
     void wrappedPastEnd
+    // Sprint-Athletics race: if the active combatant was the last one
+    // to act AND they did so via Sprint's 2-action pre-consume, their
+    // Athletics check is still outstanding (pending the dice roll in
+    // the modal). Firing the new-round reroll NOW would put the
+    // Initiative log ahead of the Sprint outcome in the feed — visible
+    // to players as "new round started before I finished sprinting".
+    // Defer: mark the pending-transition and return. The Sprint block
+    // in executeRoll will re-invoke nextTurn after its log entry lands.
+    if (everyoneSkipped && sprintAthleticsPendingRef.current) {
+      console.warn('[nextTurn] new round deferred — Sprint Athletics roll still pending')
+      sprintAthleticsRoundDeferredRef.current = true
+      return
+    }
     if (everyoneSkipped) {
       // Decrement death countdown + incapacitation + RP recovery
       for (const e of entries) {
@@ -3036,6 +3058,11 @@ export default function TablePage() {
       const sprintInit = initiativeOrder.find(e => e.character_name === sprintName)
       const trimmedRoll = {
         die1, die2,
+        // Carry the full 3d6 breakdown when an Insight Die was spent —
+        // die2 stores d2+d3 as a sum, which reads wrong in the expand
+        // view (e.g. "[6+10]" instead of "[6+6+4]"). Renderers pick
+        // diceRolled over die1/die2 whenever it's present.
+        diceRolled: insightDiceRolled,
         amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
         total, rollOutcome: outcome, rollLabel: pendingRoll.label,
       }
@@ -3056,6 +3083,18 @@ export default function TablePage() {
           die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'sprint',
           damage_json: { trimmedRoll, winded: outcome === 'Failure' || outcome === 'Dire Failure' } as any,
         })
+      }
+      // Sprint log written — release the pending-Athletics gate. If
+      // nextTurn was holding a round reroll back because this check was
+      // still open, fire it now so the Initiative log lands AFTER the
+      // sprint outcome instead of before it.
+      sprintAthleticsPendingRef.current = false
+      if (sprintAthleticsRoundDeferredRef.current) {
+        sprintAthleticsRoundDeferredRef.current = false
+        // Invoked without awaiting the full chain: executeRoll still has
+        // state to flush (damage, trait notes, etc.). nextTurn's own
+        // in-flight guard prevents overlapping advances.
+        void nextTurn()
       }
     }
 
@@ -3240,6 +3279,18 @@ export default function TablePage() {
     rollExecutedRef.current = false
     actionPreConsumedRef.current = false
     actionCostRef.current = 1
+    // Modal close is the ultimate backstop for clearing Sprint-Athletics
+    // pending flags. Normally the sprint branch inside executeRoll clears
+    // them itself, but if the player cancels the modal without rolling
+    // we'd otherwise leak `true` into the next round's nextTurn and block
+    // the reroll forever.
+    if (sprintAthleticsPendingRef.current) {
+      sprintAthleticsPendingRef.current = false
+      if (sprintAthleticsRoundDeferredRef.current) {
+        sprintAthleticsRoundDeferredRef.current = false
+        void nextTurn()
+      }
+    }
     setPendingRoll(null)
     setRollResult(null)
 
@@ -4274,7 +4325,7 @@ export default function TablePage() {
                     {tr && isExpanded && (
                       <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
                         <div>
-                          [{tr.die1}+{tr.die2}]
+                          [{Array.isArray(tr.diceRolled) && tr.diceRolled.length > 0 ? tr.diceRolled.join('+') : `${tr.die1}+${tr.die2}`}]
                           {tr.amod !== 0 && <span style={{ color: tr.amod > 0 ? '#7fc458' : '#c0392b' }}> {tr.amod > 0 ? '+' : ''}{tr.amod} AMod</span>}
                           {tr.smod !== 0 && <span style={{ color: tr.smod > 0 ? '#7fc458' : '#c0392b' }}> {tr.smod > 0 ? '+' : ''}{tr.smod} SMod</span>}
                           {tr.cmod !== 0 && <span style={{ color: tr.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {tr.cmod > 0 ? '+' : ''}{tr.cmod} CMod</span>}
@@ -4524,7 +4575,7 @@ export default function TablePage() {
                   {tr && isExpanded && (
                     <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
                       <div>
-                        [{tr.die1}+{tr.die2}]
+                        [{Array.isArray(tr.diceRolled) && tr.diceRolled.length > 0 ? tr.diceRolled.join('+') : `${tr.die1}+${tr.die2}`}]
                         {tr.amod !== 0 && <span style={{ color: tr.amod > 0 ? '#7fc458' : '#c0392b' }}> {tr.amod > 0 ? '+' : ''}{tr.amod} AMod</span>}
                         {tr.smod !== 0 && <span style={{ color: tr.smod > 0 ? '#7fc458' : '#c0392b' }}> {tr.smod > 0 ? '+' : ''}{tr.smod} SMod</span>}
                         {tr.cmod !== 0 && <span style={{ color: tr.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {tr.cmod > 0 ? '+' : ''}{tr.cmod} CMod</span>}
@@ -4750,6 +4801,13 @@ export default function TablePage() {
                     // with the final outcome: "sprinted successfully" or
                     // "sprinted but is now winded".
                     actionPreConsumedRef.current = true
+                    // Flag BEFORE consumeAction so nextTurn's new-round
+                    // branch (which runs synchronously inside consumeAction
+                    // when Frankie's 2-action burn empties the round) can
+                    // see it and hold the reroll back until the Athletics
+                    // roll resolves. Otherwise the Initiative log beats the
+                    // Sprint outcome to the feed.
+                    sprintAthleticsPendingRef.current = true
                     await consumeAction(mover.id, undefined, 2)
                   }
                   const charEntry = mover ? entries.find(e => e.character.name === mover.character_name) : null
