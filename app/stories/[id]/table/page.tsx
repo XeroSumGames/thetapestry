@@ -1249,7 +1249,13 @@ export default function TablePage() {
     while (attempts < order.length) {
       const nextEntry = order[nextIdx]
       let skipTurn = false
-      if (nextEntry.is_npc && nextEntry.npc_id) {
+      // Skip anyone who has already acted this round (actions_remaining===0).
+      // This is what makes multi-defer work: a combatant who deferred to the
+      // tail of the sorted order still has actions_remaining>0, so the walk
+      // stops on them instead of wrapping and firing a spurious new round.
+      if ((nextEntry.actions_remaining ?? 0) <= 0) {
+        skipTurn = true
+      } else if (nextEntry.is_npc && nextEntry.npc_id) {
         const npc = skipNpcMap.get(nextEntry.npc_id)
         if (npc) {
           const npcWP = npc.wp_current ?? npc.wp_max ?? 10
@@ -1271,12 +1277,12 @@ export default function TablePage() {
       attempts++
     }
 
-    // New round when wrapping — re-roll initiative + decrement death countdowns.
-    // Two wrap paths: (1) active combatant was the last alive, or (2) all combatants
-    // after the active one are dead, so the skip-walk lapped around to an earlier
-    // position. Either way, time to start a new round instead of reactivating
-    // somebody who already acted.
-    if (currentIdx === order.length - 1 || wrappedPastEnd) {
+    // New round when the skip-walk wraps past the end — i.e. everyone behind
+    // the active combatant has either acted or is dead/mortally wounded. The
+    // previous `currentIdx === order.length - 1` trigger was wrong when
+    // combatants reordered via defer: the last-in-sort-order combatant may
+    // not have acted yet, and we'd have skipped them into a new round.
+    if (wrappedPastEnd) {
       // Decrement death countdown + incapacitation + RP recovery
       for (const e of entries) {
         if (!e.liveState) continue
