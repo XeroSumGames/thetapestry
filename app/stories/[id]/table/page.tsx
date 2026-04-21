@@ -3096,7 +3096,12 @@ export default function TablePage() {
               }).map(n => `npc:${n.id}`)
               const damagedPCs = entries.filter(e => e.liveState && (e.liveState.wp_current < e.liveState.wp_max || e.liveState.rp_current < e.liveState.rp_max))
                 .map(e => `pc:${e.stateId}`)
-              setRestoreNpcIds(new Set([...damagedNpcs, ...damagedPCs]))
+              // Damaged or destroyed objects (crates, barrels, etc.) — only the
+              // destructible ones (wp_max != null) that have taken any damage.
+              const damagedObjects = mapTokens.filter(t =>
+                t.token_type === 'object' && t.wp_max != null && (t.wp_current ?? t.wp_max) < t.wp_max
+              ).map(t => `obj:${t.id}`)
+              setRestoreNpcIds(new Set([...damagedNpcs, ...damagedPCs, ...damagedObjects]))
               setShowRestorePicker(true)
             }}
               style={hdrBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
@@ -5312,7 +5317,13 @@ export default function TablePage() {
         })
         const deadPCs = entries.filter(e => e.liveState)
           .map(e => ({ key: `pc:${e.stateId}`, name: e.character.name, type: 'PC', isPC: true, id: e.stateId, damaged: e.liveState!.wp_current < e.liveState!.wp_max || e.liveState!.rp_current < e.liveState!.rp_max }))
-        const allDead = [...deadPCs, ...deadNpcs]
+        // Destructible map objects — show only those that have taken any
+        // damage (wp_current < wp_max). Indestructible tokens (wp_max=null)
+        // stay out of the list.
+        const damagedObjects = mapTokens
+          .filter(t => t.token_type === 'object' && t.wp_max != null && (t.wp_current ?? t.wp_max) < t.wp_max)
+          .map(t => ({ key: `obj:${t.id}`, name: t.name, type: 'OBJECT', isPC: false, id: t.id, damaged: true }))
+        const allDead = [...deadPCs, ...deadNpcs, ...damagedObjects]
         const allSelected = allDead.length > 0 && allDead.every(d => restoreNpcIds.has(d.key))
         return (
         <div onClick={() => setShowRestorePicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
@@ -5369,6 +5380,18 @@ export default function TablePage() {
                     await supabase.from('character_states').update({ wp_current: entry.liveState.wp_max, rp_current: entry.liveState.rp_max, death_countdown: null, incap_rounds: null, updated_at: new Date().toISOString() }).eq('id', stateId)
                   }
                 }
+                // Restore map objects (crates, barrels, etc.) to full WP. Loot
+                // contents are NOT magically restored — if a player already
+                // looted the crate before you destroyed and restored it, the
+                // contents stay gone. Reset is just "this token is intact
+                // again" so it can be destroyed a second time.
+                for (const key of selected.filter(k => k.startsWith('obj:'))) {
+                  const tokenId = key.slice(4)
+                  const tok = mapTokens.find(t => t.id === tokenId)
+                  if (tok && tok.wp_max != null) {
+                    await supabase.from('scene_tokens').update({ wp_current: tok.wp_max }).eq('id', tokenId)
+                  }
+                }
                 // Refresh all data
                 const { data: freshNpcs } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
                 if (freshNpcs) {
@@ -5385,6 +5408,16 @@ export default function TablePage() {
                 }
                 await loadEntries(id)
                 initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
+                // Optimistic local patch + refresh trigger for restored object tokens
+                const objKeys = selected.filter(k => k.startsWith('obj:'))
+                if (objKeys.length > 0) {
+                  const restoredIds = new Set(objKeys.map(k => k.slice(4)))
+                  setMapTokens(prev => prev.map(t =>
+                    restoredIds.has(t.id) && t.wp_max != null ? { ...t, wp_current: t.wp_max } : t
+                  ))
+                  setTokenRefreshKey(k => k + 1)
+                  initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+                }
                 setShowRestorePicker(false)
                 setRestoreNpcIds(new Set())
               }}
