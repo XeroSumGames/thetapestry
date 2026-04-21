@@ -3200,9 +3200,6 @@ export default function TablePage() {
                 flexShrink: 0,
                 position: 'relative',
               }}>
-                {entry.is_active && (
-                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#c0392b', flexShrink: 0 }} />
-                )}
                 {entry.is_npc && (
                   <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                     {entry.portrait_url ? (
