@@ -468,7 +468,7 @@ export default function TablePage() {
       .from('initiative_order')
       .select('*')
       .eq('campaign_id', campaignId)
-      .order('roll', { ascending: false }).order('id', { ascending: true })
+      .order('roll', { ascending: false }).order('character_name', { ascending: true })
     if (seq !== loadInitSeqRef.current) return // stale — a newer call is in flight
     const order = data ?? []
     setInitiativeOrder(order)
@@ -919,7 +919,9 @@ export default function TablePage() {
 
     // Sort client-side to determine first active combatant (avoids a re-fetch)
     const allRows = [...pcRows, ...npcRows]
-    const sorted = [...initDetails].sort((a, b) => b.total - a.total)
+    // Secondary tiebreak on name so this log ordering matches the initiative
+    // bar's ordering (both now use roll desc, name asc for same-roll ties).
+    const sorted = [...initDetails].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name))
 
     const combatants = sorted.map(s => s.name)
     const now = Date.now()
@@ -951,7 +953,7 @@ export default function TablePage() {
         ])
         if (dropInsertErr) console.error('[confirmStartCombat] drop insert error:', dropInsertErr.message)
         if (dropLogErr) console.error('[confirmStartCombat] drop log error:', dropLogErr.message)
-        const sortedDrop = (insertedDrop ?? []).slice().sort((a: any, b: any) => b.roll - a.roll || String(a.id).localeCompare(String(b.id)))
+        const sortedDrop = (insertedDrop ?? []).slice().sort((a: any, b: any) => b.roll - a.roll || String(a.character_name).localeCompare(String(b.character_name)))
         setInitiativeOrder(sortedDrop)
         setCombatActive(sortedDrop.length > 0)
         setDropCharacter('')
@@ -989,7 +991,7 @@ export default function TablePage() {
       if (initInsertErr) console.error('[confirmStartCombat] initiative insert error:', initInsertErr.message)
       if (rollInsertErr) console.error('[confirmStartCombat] roll_log insert error:', rollInsertErr.message)
       // Optimistic local state — sorted by roll desc to match loadInitiative behavior.
-      const sortedInit = (insertedInit ?? []).slice().sort((a: any, b: any) => b.roll - a.roll || String(a.id).localeCompare(String(b.id)))
+      const sortedInit = (insertedInit ?? []).slice().sort((a: any, b: any) => b.roll - a.roll || String(a.character_name).localeCompare(String(b.character_name)))
       setInitiativeOrder(sortedInit)
       setCombatActive(sortedInit.length > 0)
       setCombatRound(1)
@@ -1054,7 +1056,7 @@ export default function TablePage() {
         rerollDetails.push({ name: entry.character_name, d1, d2, acu, dex, drop: 0, total: roll, is_npc: !!entry.is_npc })
         await supabase.from('initiative_order').update({ roll, is_active: false, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, winded: false, inspired_this_round: false }).eq('id', entry.id)
       }
-      const sortedReroll = [...rerollDetails].sort((a, b) => b.total - a.total)
+      const sortedReroll = [...rerollDetails].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name))
 
       // Activate the highest roller
       const firstCharName = sortedReroll[0]?.name
@@ -1076,7 +1078,7 @@ export default function TablePage() {
     }
 
     // Fetch fresh initiative order from DB to avoid stale state
-    const { data: freshOrder, error: orderErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false }).order('id', { ascending: true })
+    const { data: freshOrder, error: orderErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false }).order('character_name', { ascending: true })
     if (orderErr) console.warn('[nextTurn] order fetch error:', orderErr.message)
     const order = freshOrder ?? initiativeOrder
     if (order.length === 0) { console.warn('[nextTurn] empty order, bailing'); return }
@@ -1228,7 +1230,7 @@ export default function TablePage() {
 
       setCombatRound(prev => prev + 1)
       // Log new round initiative
-      const sortedReroll = [...rerollDetails].sort((a, b) => b.total - a.total)
+      const sortedReroll = [...rerollDetails].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name))
       await supabase.from('roll_log').insert({
         campaign_id: id, user_id: userId, character_name: 'System', label: 'New Round — Initiative',
         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
@@ -1236,11 +1238,11 @@ export default function TablePage() {
       })
 
       // Re-sort and set first ALIVE combatant as active (PCs beat NPCs on ties)
-      const { data: rerolled } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false }).order('id', { ascending: true })
+      const { data: rerolled } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false }).order('character_name', { ascending: true })
       const { data: freshNpcsForRound } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
       const freshNpcMap = new Map<string, any>((freshNpcsForRound ?? []).map((n: any) => [n.id, n]))
       if (rerolled && rerolled.length > 0) {
-        rerolled.sort((a: any, b: any) => b.roll - a.roll || (a.is_npc ? 1 : 0) - (b.is_npc ? 1 : 0) || String(a.id).localeCompare(String(b.id)))
+        rerolled.sort((a: any, b: any) => b.roll - a.roll || (a.is_npc ? 1 : 0) - (b.is_npc ? 1 : 0) || String(a.character_name).localeCompare(String(b.character_name)))
         // Find first combatant who can act (skip dead/mortally wounded/incapacitated)
         const firstAlive = rerolled.find((e: any) => {
           if (e.is_npc && e.npc_id) {
