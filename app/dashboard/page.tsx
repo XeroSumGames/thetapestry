@@ -38,7 +38,11 @@ export default function DashboardPage() {
       trackGhostConversion()
       const { data: profile } = await supabase.from('profiles').select('username, role, onboarded').eq('id', user.id).single()
        if (profile) {
-        if (!profile.onboarded) { router.push('/welcome'); return }
+        // DISABLED per playtest #12 — the forced `/welcome` redirect was
+        // trapping new users (they couldn't navigate away). Leave the
+        // dashboard accessible for everyone while /welcome is redesigned.
+        // Restore this line once the new welcome flow is ready:
+        //   if (!profile.onboarded) { router.push('/welcome'); return }
         setUsername(profile.username)
         setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
         if (profile.role === 'thriver') {
