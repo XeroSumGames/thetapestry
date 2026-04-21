@@ -1389,7 +1389,11 @@ export default function TablePage() {
       if (actionLogErr) console.error('[consumeAction] action log insert error:', actionLogErr.message)
     }
 
-    // Clear aim bonus after a roll (no actionLabel = called from closeRollModal)
+    // Clear aim bonus after a roll (no actionLabel = called from closeRollModal).
+    // Clear BOTH aim_bonus (the numeric +N CMod) and aim_active (the "Aimed —
+    // Attack or lose it" badge). Previously only aim_bonus was cleared, so
+    // the badge lingered after the attack even though the bonus was already
+    // consumed — visually misleading.
     const clearAim = !actionLabel && entry.aim_bonus > 0
 
     // Always persist the new action count to DB first — if nextTurn fails or
@@ -1397,7 +1401,7 @@ export default function TablePage() {
     // `.select()` so a silent RLS rejection (0 rows affected, no error) is
     // distinguishable from a real update.
     const { error: updErr, data: updData } = await supabase.from('initiative_order')
-      .update({ actions_remaining: newRemaining, ...(clearAim ? { aim_bonus: 0 } : {}) })
+      .update({ actions_remaining: newRemaining, ...(clearAim ? { aim_bonus: 0, aim_active: false } : {}) })
       .eq('id', entryId)
       .select('id, actions_remaining')
     console.warn('[consumeAction] update', { entryId, newRemaining, rowsAffected: updData?.length ?? 0, error: updErr?.message ?? 'none', returned: updData })
