@@ -1275,10 +1275,17 @@ export default function TablePage() {
       console.warn('[nextTurn] nextIdx resolves to self — no-op (finally will release lock)')
       return
     }
-    if (currentEntry) {
-      const { error: deactErr } = await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('id', currentEntry.id)
-      if (deactErr) console.warn('[nextTurn] deactivate error:', deactErr.message)
-    }
+    // Deactivate every row currently flagged active EXCEPT the one we're
+    // about to activate. Normally there's exactly one, but a race between
+    // two clients (or a missed realtime broadcast) can leave two rows with
+    // is_active=true, which then confuses findIndex and the turn walk.
+    // Broad-clearing here is idempotent and self-healing.
+    const { error: deactErr } = await supabase.from('initiative_order')
+      .update({ is_active: false, actions_remaining: 0, aim_bonus: 0 })
+      .eq('campaign_id', id)
+      .eq('is_active', true)
+      .neq('id', order[nextIdx].id)
+    if (deactErr) console.warn('[nextTurn] bulk deactivate error:', deactErr.message)
     const { error: actErr } = await supabase.from('initiative_order').update(activateUpdate(order[nextIdx])).eq('id', order[nextIdx].id)
     if (actErr) console.warn('[nextTurn] activate error:', actErr.message)
     await Promise.all([loadInitiative(id), loadEntries(id)])
