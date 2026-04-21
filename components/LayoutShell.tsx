@@ -82,10 +82,16 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
   if (!checked) return <div style={{ flex: 1, background: '#0f0f0f' }} />
 
-  // Redirect unauthenticated users to login for protected pages
+  // Redirect unauthenticated users to login for protected pages.
+  // Preserve the current path (with any query string) as a `?redirect=` param
+  // so deep links — especially invite URLs like /join/<code> — survive the
+  // login round-trip. Previously this pushed to a bare /login and silently
+  // dropped the destination, so invited users ended up at /dashboard.
   const isPublicPage = PUBLIC_PAGES.some(p => pathname === p) || pathname === '/map'
   if (!isAuthenticated && !isPublicPage && !['/login', '/signup', '/firsttimers'].includes(pathname)) {
-    router.push('/login')
+    const search = typeof window !== 'undefined' ? window.location.search : ''
+    const fullPath = pathname + search
+    router.push(`/login?redirect=${encodeURIComponent(fullPath)}`)
     return <div style={{ flex: 1, background: '#0f0f0f' }} />
   }
 
