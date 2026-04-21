@@ -3356,6 +3356,17 @@ export default function TablePage() {
                   <button onClick={() => deferInitiative(entry.id)}
                     style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Defer">↓</button>
                 )}
+                {/* GM-only: grant +1 action to this combatant (playtest #22).
+                    Caps at 2 (max action budget) so it can't stack endlessly. */}
+                {isGM && (entry.actions_remaining ?? 0) < 2 && (
+                  <button onClick={async () => {
+                    const nextCount = Math.min(2, (entry.actions_remaining ?? 0) + 1)
+                    await supabase.from('initiative_order').update({ actions_remaining: nextCount }).eq('id', entry.id)
+                    await loadInitiative(id)
+                    initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+                  }}
+                    style={{ background: 'none', border: 'none', color: '#7fc458', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Grant +1 action">+</button>
+                )}
                 {/* Done/Remove — player can end own turn, GM can end anyone or remove */}
                 {(isGM || (entry.user_id === userId && entry.is_active)) && (
                   <button onClick={async () => {

@@ -56,7 +56,7 @@
 ## TIER 3 — Clarity & polish after core play works.
 
 - [ ] **#21 — Incapacitation client outcome.** When a PC is incapacitated, define what the player sees and what they can do (view log, whisper GM, spectator mode?).
-- [ ] **#22 — GM action grant / undo.** GM can grant an extra action to a character or undo a player's last action.
+- [~] **#22 — GM action grant / undo.** GM can grant an extra action to a character or undo a player's last action. *Grant side shipped: GM-only green `+` button in the initiative bar next to each combatant whose `actions_remaining < 2`. Click increments actions_remaining (capped at 2) and broadcasts turn_changed so other clients refresh. **Undo side not shipped yet** — would need a "last action" log or history to revert from. Adding a `roll_log` reverse-last-entry action is non-trivial (have to figure out what state change the action made — damage? Aim? initiative? — and undo it), so deferred. The +1 button covers the common "player missed their attack roll, GM wants to give them a do-over" case by effectively refunding the action.*
 - [ ] **#23 — Add player to map mid-combat.** Support adding a PC to an already-running combat initiative (roll their init, insert in correct slot, activate on their turn).
 - [ ] **#29 — Combat log redesign.** Roll20-style clean summary default with a toggle for full dice + modifier breakdown. Partly shipped as `19be121` (compact attack/aim lines with ▸ toggle). Extend to cover skill checks, sprint, stabilize, grapple, etc. and polish visual treatment.
 - [ ] **#32 — Initiative tracker responsiveness.** Advancing turns feels slow — likely due to sequential DB writes in `nextTurn`. Batch writes where possible; reduce round-trips.
