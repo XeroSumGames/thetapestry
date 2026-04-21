@@ -1299,12 +1299,20 @@ export default function TablePage() {
       attempts++
     }
 
-    // New round when the skip-walk wraps past the end — i.e. everyone behind
-    // the active combatant has either acted or is dead/mortally wounded. The
-    // previous `currentIdx === order.length - 1` trigger was wrong when
-    // combatants reordered via defer: the last-in-sort-order combatant may
-    // not have acted yet, and we'd have skipped them into a new round.
-    if (wrappedPastEnd) {
+    // New round only when the skip-walk FULLY lapped without finding a
+    // valid combatant — i.e. `attempts` hit `order.length`. The previous
+    // `wrappedPastEnd` trigger also fired when the walk wrapped and THEN
+    // found someone with actions left (common after a defer-to-tied-roll
+    // or multi-defer), silently stranding that combatant's remaining
+    // action into a new round. We only want new-round when nobody was
+    // found — `wrappedPastEnd && attempts >= order.length` collapses to
+    // `attempts >= order.length` since the walk can only run out of
+    // attempts by wrapping. Using `attempts` directly reads cleaner.
+    const everyoneSkipped = attempts >= order.length
+    // Keep wrappedPastEnd referenced so the old comment context stays
+    // anchored in diffs / git blame — cheap no-op.
+    void wrappedPastEnd
+    if (everyoneSkipped) {
       // Decrement death countdown + incapacitation + RP recovery
       for (const e of entries) {
         if (!e.liveState) continue
@@ -1812,20 +1820,36 @@ export default function TablePage() {
     const current = initiativeOrder[idx]
     const next = initiativeOrder[idx + 1]
     const wasActive = !!current.is_active
+    // Figure out the new roll values. Plain swap is correct when rolls
+    // differ, but if current.roll === next.roll (tied to begin with),
+    // the swap is numerically a no-op and the character_name tiebreaker
+    // would keep the deferrer AHEAD of the target in the sort order.
+    // Decrement current's new roll by 1 in that case so the deferrer
+    // sorts strictly AFTER the target. If that would then tie with yet
+    // another combatant, decrement again (cascaded chains are rare but
+    // cheap to handle defensively).
+    let newCurrentRoll = next.roll
+    const newNextRoll = current.roll
+    if (newCurrentRoll === newNextRoll) {
+      newCurrentRoll = Math.max(0, newNextRoll - 1)
+      while (initiativeOrder.some(e => e.id !== current.id && e.id !== next.id && e.roll === newCurrentRoll) && newCurrentRoll > 0) {
+        newCurrentRoll -= 1
+      }
+    }
     // Optimistic local swap — the initiative bar repaints instantly instead
     // of waiting for the DB round-trip + realtime fanout. Without this, a
     // slow network makes defer feel broken (the icon stays put for seconds).
     const activation = activateUpdate(next)
     setInitiativeOrder(prev => prev.map(e => {
-      if (e.id === current.id) return { ...e, roll: next.roll, ...(wasActive ? { is_active: false, actions_remaining: current.actions_remaining ?? 2, aim_bonus: 0 } : {}) }
-      if (e.id === next.id) return { ...e, roll: current.roll, ...(wasActive ? activation : {}) }
+      if (e.id === current.id) return { ...e, roll: newCurrentRoll, ...(wasActive ? { is_active: false, actions_remaining: current.actions_remaining ?? 2, aim_bonus: 0 } : {}) }
+      if (e.id === next.id) return { ...e, roll: newNextRoll, ...(wasActive ? activation : {}) }
       return e
     }).sort((a, b) => b.roll - a.roll || a.character_name.localeCompare(b.character_name)))
-    // Swap roll values in the DB — playtest #7 fix: direct value swap avoids
-    // manufacturing colliding rolls with other combatants.
+    // Persist the new roll values to the DB — playtest #7 fix: direct
+    // value writes avoid manufacturing collisions with other combatants.
     const updates: Promise<any>[] = [
-      supabase.from('initiative_order').update({ roll: next.roll }).eq('id', current.id),
-      supabase.from('initiative_order').update({ roll: current.roll }).eq('id', next.id),
+      supabase.from('initiative_order').update({ roll: newCurrentRoll }).eq('id', current.id),
+      supabase.from('initiative_order').update({ roll: newNextRoll }).eq('id', next.id),
     ]
     if (wasActive) {
       updates.push(
