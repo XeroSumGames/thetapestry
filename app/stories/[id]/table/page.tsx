@@ -2958,18 +2958,18 @@ export default function TablePage() {
       }
       if (outcome === 'Failure' || outcome === 'Dire Failure') {
         if (sprintInit) await supabase.from('initiative_order').update({ winded: true }).eq('id', sprintInit.id)
-        sprintResult = `${characterName} is winded — loses 1 action next round.`
+        sprintResult = `${characterName} seems to be out of breath.`
         await supabase.from('roll_log').insert({
           campaign_id: id, user_id: userId, character_name: 'System',
-          label: `🏃 ${characterName} sprinted but is now winded — loses 1 Combat Action next round.`,
+          label: `🏃 ${characterName} sprinted and seems to be out of breath.`,
           die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'sprint',
           damage_json: { trimmedRoll } as any,
         })
       } else {
-        sprintResult = `${characterName} sprinted successfully.`
+        sprintResult = `${characterName} does not seem to be winded.`
         await supabase.from('roll_log').insert({
           campaign_id: id, user_id: userId, character_name: 'System',
-          label: `🏃 ${characterName} sprinted successfully — not winded.`,
+          label: `🏃 ${characterName} sprinted and does not seem to be winded.`,
           die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'sprint',
           damage_json: { trimmedRoll } as any,
         })
