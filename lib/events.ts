@@ -25,11 +25,24 @@ async function hashIP(ip: string): Promise<string> {
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
+// Emails of accounts whose visits should never be logged or email-alerted.
+// Primarily the project owner — keeps the inbox clean while they're browsing
+// their own site. Ghost-mode visits from these users are suppressed via a
+// localStorage flag (set once in devtools: localStorage.tapestry_no_log = '1').
+const OWNER_EMAILS = ['xerosumgames@gmail.com', 'xerosumstudio@gmail.com']
+
 export async function logVisit(page: string) {
   if (typeof window === 'undefined') return
+  // Device-level opt-out for ghost browsing — set in devtools once per device
+  // (`localStorage.setItem('tapestry_no_log', '1')`) and reload. Survives
+  // logout and stays local to that browser profile.
+  if (localStorage.getItem('tapestry_no_log') === '1') return
   try {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
+    // Auth-level opt-out — if the signed-in user is an owner account, skip
+    // logging entirely so their visits never hit the table or the email hook.
+    if (user?.email && OWNER_EMAILS.includes(user.email.toLowerCase())) return
 
     const rawIP = getCookie('geo_ip') || null
     const ip_hash = rawIP ? await hashIP(rawIP) : null
