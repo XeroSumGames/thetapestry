@@ -72,7 +72,7 @@
 - [ ] **#30 — Portrait upload simplification.** Current flow is too many steps. Consolidate upload → crop → save.
 - [x] **#31 — Ping click-and-hold.** Ping becomes a long-press (hold) gesture rather than an accidental click. *Shipped: replaced the double-click-on-empty-cell ping with a press-and-hold timer. `handleMouseDown` on an empty cell starts both panning (existing) and a 600ms timer that fires a ping at the original cursor position. `handleMouseMove` cancels the timer if the cursor drifts more than ~7px (user was panning, not holding); `handleMouseUp` cancels it if the user releases before the timer expires. Double-click ping removed — accidental double-clicks on empty cells were the problem. Result: hold still on empty cell ~600ms → ping; pan normally → no ping.*
 - [ ] **#33 — General UI smoothness pass.** Catch-all for animation/transition polish across combat interactions.
-- [ ] **#28 — Smooth token drag feel.** Constrained-but-smooth drag — probably requires interpolation and snap-to-grid on drop.
+- [x] **#28 — Smooth token drag feel.** Constrained-but-smooth drag — probably requires interpolation and snap-to-grid on drop. *Shipped: drag-move was calling `draw()` synchronously on every mousemove, forcing a full canvas repaint at mouse-event rate (up to 500+ Hz on gaming mice). Added rAF coalescing — one redraw per animation frame, dragged token stays locked to cursor at browser paint cadence. Cancels pending frame on drop so the final-position draw isn't stale. (Snap-to-grid on drop was already correct — `getGridPos` rounds pixel → cell before the DB write. The issue was just the paint rate.)*
 
 ---
 

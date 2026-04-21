@@ -89,6 +89,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [tokens, setTokens] = useState<Token[]>([])
   const [dragging, setDragging] = useState<{ tokenId: string; offsetX: number; offsetY: number } | null>(null)
   const dragPosRef = useRef<{ px: number; py: number } | null>(null) // pixel position of dragged token (canvas coords)
+  const dragRAFRef = useRef<number | null>(null)                     // rAF handle for drag-move redraws (playtest #28)
   const [selectedToken, setSelectedToken] = useState<string | null>(null)
   const [showRangeOverlay, setShowRangeOverlay] = useState(true)
   const [showSetup, setShowSetup] = useState(false)
@@ -986,7 +987,17 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       const mx = (e.clientX - rect.left) / zoom
       const my = (e.clientY - rect.top) / zoom
       dragPosRef.current = { px: mx + dragging.offsetX, py: my + dragging.offsetY }
-      draw()
+      // Coalesce redraws to one per animation frame (playtest #28). Calling
+      // draw() synchronously on every mousemove forced a full canvas
+      // repaint at whatever rate the mouse fires (can be 500Hz+ on gaming
+      // mice), which visibly stuttered and burnt GPU time. rAF keeps the
+      // dragged token locked to cursor at the browser's paint cadence.
+      if (dragRAFRef.current == null) {
+        dragRAFRef.current = requestAnimationFrame(() => {
+          dragRAFRef.current = null
+          draw()
+        })
+      }
     }
   }
 
@@ -1042,6 +1053,10 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     }
     // Clear drag state synchronously — never block cursor release on DB I/O
     dragPosRef.current = null
+    if (dragRAFRef.current != null) {
+      cancelAnimationFrame(dragRAFRef.current)
+      dragRAFRef.current = null
+    }
     setDragging(null)
     if (moved && !outOfRange) {
       setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, grid_x: pos!.gx, grid_y: pos!.gy } : t))
