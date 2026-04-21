@@ -6,6 +6,7 @@ import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
 import type { InventoryItem } from '../../../../components/InventoryPanel'
 import NpcRoster from '../../../../components/NpcRoster'
 import NpcCard from '../../../../components/NpcCard'
+import PlayerNpcCard from '../../../../components/PlayerNpcCard'
 import ObjectCard from '../../../../components/ObjectCard'
 import CampaignPins from '../../../../components/CampaignPins'
 import CampaignObjects from '../../../../components/CampaignObjects'
@@ -4385,9 +4386,6 @@ export default function TablePage() {
                 // so hitting ATTACK right after peeking at a zombie pre-populates it.
                 setSelectedMapTargetName(token?.name ?? null)
                 if (token.npc_id) {
-                  // Players only get the selection side-effect — opening the
-                  // NPC card is GM-only until the player-facing NPC card ships.
-                  if (!isGM) return
                   const npc = campaignNpcs.find((n: any) => n.id === token.npc_id)
                   if (npc) {
                     setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc as CampaignNpc])
@@ -4498,18 +4496,25 @@ export default function TablePage() {
               {viewingNpcs.map(npc => {
                 const fresh = campaignNpcs.find((c: any) => c.id === npc.id)
                 const liveNpc = fresh ? { ...fresh } as CampaignNpc : npc
-                return (
-                <NpcCard key={`${npc.id}-${liveNpc.wp_current}-${liveNpc.rp_current}-${liveNpc.death_countdown}`}
-                  npc={liveNpc}
-                  onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
-                  onEdit={() => { setViewingNpcs(prev => prev.filter(n => n.id !== npc.id)); setGmTab('npcs'); setPendingEditNpcId(npc.id) }}
-                  onRoll={sessionStatus === 'active' ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
-                  onPublish={isGM ? () => handlePublishNpc(npc) : undefined}
-                  isPublished={publishedNpcIds.has(npc.id)}
-                  onPlaceOnMap={isGM && (combatActive || showTacticalMap) ? () => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined}
-                  campaignId={id}
-                />
-              )})}
+                const cardKey = `${npc.id}-${liveNpc.wp_current}-${liveNpc.rp_current}-${liveNpc.death_countdown}`
+                return isGM ? (
+                  <NpcCard key={cardKey}
+                    npc={liveNpc}
+                    onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
+                    onEdit={() => { setViewingNpcs(prev => prev.filter(n => n.id !== npc.id)); setGmTab('npcs'); setPendingEditNpcId(npc.id) }}
+                    onRoll={sessionStatus === 'active' ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
+                    onPublish={() => handlePublishNpc(npc)}
+                    isPublished={publishedNpcIds.has(npc.id)}
+                    onPlaceOnMap={(combatActive || showTacticalMap) ? () => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined}
+                    campaignId={id}
+                  />
+                ) : (
+                  <PlayerNpcCard key={cardKey}
+                    npc={liveNpc}
+                    onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
+                  />
+                )
+              })}
             </div>
           )}
           {viewingNpcs.length > 0 && (combatActive || showTacticalMap) && (() => {
@@ -4574,16 +4579,23 @@ export default function TablePage() {
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3px', cursor: 'grab', borderRadius: '4px 4px 0 0', background: '#242424', border: '1px solid #3a3a3a', borderBottom: 'none', userSelect: 'none' }}>
                     <div style={{ width: '40px', height: '3px', borderRadius: '2px', background: '#5a5a5a' }} />
                   </div>
-                  <NpcCard
-                    npc={liveNpc}
-                    onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
-                    onEdit={() => { setViewingNpcs(prev => prev.filter(n => n.id !== npc.id)); setGmTab('npcs'); setPendingEditNpcId(npc.id) }}
-                    onRoll={sessionStatus === 'active' ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
-                    onPublish={isGM ? () => handlePublishNpc(npc) : undefined}
-                    isPublished={publishedNpcIds.has(npc.id)}
-                    onPlaceOnMap={isGM ? () => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined}
-                    campaignId={id}
-                  />
+                  {isGM ? (
+                    <NpcCard
+                      npc={liveNpc}
+                      onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
+                      onEdit={() => { setViewingNpcs(prev => prev.filter(n => n.id !== npc.id)); setGmTab('npcs'); setPendingEditNpcId(npc.id) }}
+                      onRoll={sessionStatus === 'active' ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
+                      onPublish={() => handlePublishNpc(npc)}
+                      isPublished={publishedNpcIds.has(npc.id)}
+                      onPlaceOnMap={() => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined)}
+                      campaignId={id}
+                    />
+                  ) : (
+                    <PlayerNpcCard
+                      npc={liveNpc}
+                      onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
+                    />
+                  )}
                 </div>
               )
             })
@@ -4801,11 +4813,11 @@ export default function TablePage() {
                     return (
                       <div
                         key={npc.id}
-                        onClick={isGM ? () => {
+                        onClick={() => {
                           setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc])
                           setSelectedEntry(null)
-                        } : undefined}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: isOpen ? '#2a1210' : npcIsDead ? '#0f0f0f' : '#1a1a1a', border: `1px solid ${isOpen ? '#c0392b' : npcIsDead ? '#3a3a3a' : inCombat ? '#5a1b1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: isGM ? 'pointer' : 'default', transition: 'background 0.15s', opacity: npcIsDead ? 0.5 : 1 }}
+                        }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: isOpen ? '#2a1210' : npcIsDead ? '#0f0f0f' : '#1a1a1a', border: `1px solid ${isOpen ? '#c0392b' : npcIsDead ? '#3a3a3a' : inCombat ? '#5a1b1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s', opacity: npcIsDead ? 0.5 : 1 }}
                       >
                         <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                           {npc.portrait_url ? (

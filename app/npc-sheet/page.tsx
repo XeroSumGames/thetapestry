@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { useSearchParams } from 'next/navigation'
 import NpcCard from '../../components/NpcCard'
+import PlayerNpcCard from '../../components/PlayerNpcCard'
 import type { CampaignNpc } from '../../components/NpcRoster'
 
 export default function NpcSheetPage() {
@@ -12,12 +13,22 @@ export default function NpcSheetPage() {
   const npcId = params.get('npc')
   const [npc, setNpc] = useState<CampaignNpc | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isGM, setIsGM] = useState(false)
 
   useEffect(() => {
     async function load() {
       if (!npcId) { setLoading(false); return }
       const { data } = await supabase.from('campaign_npcs').select('*').eq('id', npcId).maybeSingle()
       setNpc(data as CampaignNpc | null)
+      // Check viewer is the campaign's GM so the popout renders the right
+      // card. Players who pop out should only ever see the read-only view.
+      if (campaignId) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: camp } = await supabase.from('campaigns').select('gm_user_id').eq('id', campaignId).maybeSingle()
+          setIsGM(!!camp && camp.gm_user_id === user.id)
+        }
+      }
       setLoading(false)
     }
     load()
@@ -57,13 +68,17 @@ export default function NpcSheetPage() {
 
   return (
     <div style={{ background: '#0f0f0f', minHeight: '100vh', padding: '12px' }}>
-      <NpcCard
-        npc={npc}
-        onClose={() => window.close()}
-        // Edit / Map / Publish / Popout hidden in the popout itself — they
-        // only make sense back in the table page's Asset panel. Restore and
-        // Stabilize still work because they hit Supabase directly.
-      />
+      {isGM ? (
+        <NpcCard
+          npc={npc}
+          onClose={() => window.close()}
+          // Edit / Map / Publish / Popout hidden in the popout itself — they
+          // only make sense back in the table page's Asset panel. Restore and
+          // Stabilize still work because they hit Supabase directly.
+        />
+      ) : (
+        <PlayerNpcCard npc={npc} onClose={() => window.close()} />
+      )}
     </div>
   )
 }
