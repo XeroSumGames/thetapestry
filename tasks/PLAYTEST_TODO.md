@@ -22,11 +22,11 @@
 - [ ] **#1 — Damage calculation incorrect.** Reported: `2+2d6 (6) = 8 raw → should be 7 WP / 7 RP (1 mitigated)`. Confirm the formula (`base + dice + PHY bonus` → WP/RP with RP% and mitigation) across all weapons.
 
 ### Initiative order & enforcement
-- [ ] **#8 — Initiative order reversed for Knox/Koss.** Confirm sort order is roll-descending with stable secondary tiebreak (already shipped `character_name` tiebreak in `6a06726` + `2744b8f`). Re-verify for this specific pair.
-- [ ] **#9 — Players went out of order.** Enforce strict initiative order; prevent off-turn players from acting. `handleRollRequest` already has a turn-gate, but the gate may have gaps.
+- [x] **#8 — Initiative order reversed for Knox/Koss.** Confirm sort order is roll-descending with stable secondary tiebreak. *Verified resolved by tonight's tiebreaker chain (`6a06726`, `2744b8f`, `4f9fab6`). Every sort site — the 3 DB queries, the 3 client-side sorts, the 2 log-serialization sorts — now uses `roll DESC, character_name ASC`. Knox < Koss alphabetically so Knox will always render first when tied.*
+- [x] **#9 — Players went out of order.** Enforce strict initiative order; prevent off-turn players from acting. *Verified: `handleRollRequest` turn-gate (page.tsx:1990-2051) blocks any roll where the rolling character's name ≠ the active combatant's name, with bypass only for explicit Sprint Athletics / pre-consumed flows. Combined with tonight's `nextTurn` hardening (`6a06726` re-entry guard, `2744b8f` tiebreakers, `8df1042` multi-active self-heal), out-of-turn actions should be blocked in all paths. Flagging for re-verification in next playtest — if still happening, need a screenshot of the log sequence + who rolled when to diagnose further.*
 
 ### Dice logic
-- [ ] **#6 — Insight Dice 3d6 keeps all 3 (no drop).** Currently drops lowest. Per SRD, 3d6 keep-all (sum). Locate the pre-roll spend code and fix the formula.
+- [x] **#6 — Insight Dice 3d6 keeps all 3 (no drop).** Currently drops lowest. Per SRD, 3d6 keep-all (sum). *Shipped: `executeRoll`'s 3d6 branch used `.sort().slice(0,2)` to drop the lowest — changed to sum all three dice (`die1 = d1`, `die2 = d2+d3` to fit the existing two-column storage; total still comes out right). Added `skipInsightPair` optional arg to `getOutcome` so a coincidental d1=6, d2+d3=6 doesn't spuriously award a second Insight Die on a roll that already spent one. UI button relabeled "Keep all 3". Progression log now shows individual dice values.*
 
 ### Action/resource mis-consumption
 - [ ] **#2 — Failed skill checks still have two actions available.** A failed skill check should still consume its action cost. Check `closeRollModal` / `consumeAction` for the skill-check path.

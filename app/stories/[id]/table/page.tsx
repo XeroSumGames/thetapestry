@@ -138,9 +138,15 @@ interface InitiativeEntry {
 
 const MAX_PLAYER_SLOTS = 9
 
-function getOutcome(total: number, die1: number, die2: number): string {
-  if (die1 === 1 && die2 === 1) return 'Low Insight'
-  if (die1 === 6 && die2 === 6) return 'High Insight'
+function getOutcome(total: number, die1: number, die2: number, skipInsightPair = false): string {
+  // `skipInsightPair` suppresses the Low/High Insight (1+1 / 6+6) checks for
+  // roll types where those SRD triggers don't apply — e.g. 3d6 Insight-Die
+  // rolls that were themselves purchased with an Insight Die (awarding or
+  // consuming another Insight Die on top would double-dip).
+  if (!skipInsightPair) {
+    if (die1 === 1 && die2 === 1) return 'Low Insight'
+    if (die1 === 6 && die2 === 6) return 'High Insight'
+  }
   if (total <= 3) return 'Dire Failure'
   if (total <= 8) return 'Failure'
   if (total <= 13) return 'Success'
@@ -2201,14 +2207,20 @@ export default function TablePage() {
     let preRollSpent = false
 
     if (preRollInsight === '3d6' && myEntry?.liveState && myEntry.liveState.insight_dice >= 1) {
-      // Roll 3d6, keep best 2
-      const rolls = [rollD6(), rollD6(), rollD6()].sort((a, b) => b - a)
-      die1 = rolls[0]
-      die2 = rolls[1]
+      // Per SRD: roll 3d6 and KEEP ALL THREE dice (playtest #6 — do NOT
+      // drop lowest). Fit into the existing die1/die2 storage columns by
+      // putting the first die in die1 and the sum of the other two in
+      // die2; total = die1+die2+mods = d1+d2+d3+mods. die2 is always ≥2
+      // so the Low-Insight pair check can't fire here, and we pass the
+      // skipInsightPair flag to getOutcome so a coincidental d1=6, d2+d3=6
+      // doesn't trigger High Insight on a roll that already spent one.
+      const d1 = rollD6(), d2 = rollD6(), d3 = rollD6()
+      die1 = d1
+      die2 = d2 + d3
       const newInsight = myEntry.liveState.insight_dice - 1
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
       preRollSpent = true
-      void appendProgressionLog(myEntry.character.id, 'insight', `Spent 1 Insight Die — rolled 3d6 on ${pendingRoll.label}`)
+      void appendProgressionLog(myEntry.character.id, 'insight', `Spent 1 Insight Die — rolled 3d6 (${d1}+${d2}+${d3}) on ${pendingRoll.label}`)
     } else if (preRollInsight === '+3cmod' && myEntry?.liveState && myEntry.liveState.insight_dice >= 1) {
       die1 = rollD6()
       die2 = rollD6()
@@ -2223,7 +2235,7 @@ export default function TablePage() {
     }
 
     const total = die1 + die2 + pendingRoll.amod + pendingRoll.smod + cmodVal
-    const outcome = getOutcome(total, die1, die2)
+    const outcome = getOutcome(total, die1, die2, preRollInsight === '3d6' && preRollSpent)
     // Award Insight Die — only to PCs, or Antagonist NPCs (Bystanders/Goons/Foes never get Insight Dice)
     const isHighLow = outcome === 'Low Insight' || outcome === 'High Insight'
     const isNPCRoll = isHighLow && pendingRoll.label.includes(' — ') && !entries.some(e => pendingRoll.label.startsWith(e.character.name))
@@ -5125,7 +5137,7 @@ export default function TablePage() {
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <button onClick={() => setPreRollInsight(preRollInsight === '3d6' ? 'none' : '3d6')}
                         style={{ flex: 1, padding: '8px 4px', background: preRollInsight === '3d6' ? '#2d5a1b' : '#1a2e10', border: `1px solid ${preRollInsight === '3d6' ? '#7fc458' : '#2d5a1b'}`, borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                        Roll 3d6<br /><span style={{ fontSize: '12px', color: preRollInsight === '3d6' ? '#7fc458' : '#cce0f5' }}>Keep best 2</span>
+                        Roll 3d6<br /><span style={{ fontSize: '12px', color: preRollInsight === '3d6' ? '#7fc458' : '#cce0f5' }}>Keep all 3</span>
                       </button>
                       <button onClick={() => setPreRollInsight(preRollInsight === '+3cmod' ? 'none' : '+3cmod')}
                         style={{ flex: 1, padding: '8px 4px', background: preRollInsight === '+3cmod' ? '#2d5a1b' : '#1a2e10', border: `1px solid ${preRollInsight === '+3cmod' ? '#7fc458' : '#2d5a1b'}`, borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
