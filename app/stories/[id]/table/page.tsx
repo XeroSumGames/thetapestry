@@ -951,7 +951,7 @@ export default function TablePage() {
         ])
         if (dropInsertErr) console.error('[confirmStartCombat] drop insert error:', dropInsertErr.message)
         if (dropLogErr) console.error('[confirmStartCombat] drop log error:', dropLogErr.message)
-        const sortedDrop = (insertedDrop ?? []).slice().sort((a: any, b: any) => b.roll - a.roll)
+        const sortedDrop = (insertedDrop ?? []).slice().sort((a: any, b: any) => b.roll - a.roll || String(a.id).localeCompare(String(b.id)))
         setInitiativeOrder(sortedDrop)
         setCombatActive(sortedDrop.length > 0)
         setDropCharacter('')
@@ -989,7 +989,7 @@ export default function TablePage() {
       if (initInsertErr) console.error('[confirmStartCombat] initiative insert error:', initInsertErr.message)
       if (rollInsertErr) console.error('[confirmStartCombat] roll_log insert error:', rollInsertErr.message)
       // Optimistic local state — sorted by roll desc to match loadInitiative behavior.
-      const sortedInit = (insertedInit ?? []).slice().sort((a: any, b: any) => b.roll - a.roll)
+      const sortedInit = (insertedInit ?? []).slice().sort((a: any, b: any) => b.roll - a.roll || String(a.id).localeCompare(String(b.id)))
       setInitiativeOrder(sortedInit)
       setCombatActive(sortedInit.length > 0)
       setCombatRound(1)
@@ -1240,7 +1240,7 @@ export default function TablePage() {
       const { data: freshNpcsForRound } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
       const freshNpcMap = new Map<string, any>((freshNpcsForRound ?? []).map((n: any) => [n.id, n]))
       if (rerolled && rerolled.length > 0) {
-        rerolled.sort((a: any, b: any) => b.roll - a.roll || (a.is_npc ? 1 : 0) - (b.is_npc ? 1 : 0))
+        rerolled.sort((a: any, b: any) => b.roll - a.roll || (a.is_npc ? 1 : 0) - (b.is_npc ? 1 : 0) || String(a.id).localeCompare(String(b.id)))
         // Find first combatant who can act (skip dead/mortally wounded/incapacitated)
         const firstAlive = rerolled.find((e: any) => {
           if (e.is_npc && e.npc_id) {
