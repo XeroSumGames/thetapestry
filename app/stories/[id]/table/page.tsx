@@ -206,6 +206,7 @@ export default function TablePage() {
   const actionCostRef = useRef(1)             // Action cost for the current roll (2 for Charge/Rapid Fire)
   const pendingChargeRef = useRef<{ label: string; amod: number; smod: number; weapon: any; activeId?: string; moved?: boolean } | null>(null)
   const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal — refs survive React batching
+  const nextTurnInFlightRef = useRef(false)   // Re-entry guard for nextTurn — prevents races where realtime echo + optimistic call both advance, silently skipping a combatant
   const [insightSavePrompt, setInsightSavePrompt] = useState<{ stateId: string; targetName: string; newWP: number; newRP: number; phyAmod: number; insightDice: number } | null>(null)
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
   const [cmod, setCmod] = useState('0')
@@ -467,7 +468,7 @@ export default function TablePage() {
       .from('initiative_order')
       .select('*')
       .eq('campaign_id', campaignId)
-      .order('roll', { ascending: false })
+      .order('roll', { ascending: false }).order('id', { ascending: true })
     if (seq !== loadInitSeqRef.current) return // stale — a newer call is in flight
     const order = data ?? []
     setInitiativeOrder(order)
@@ -1022,6 +1023,17 @@ export default function TablePage() {
   async function nextTurn() {
     console.warn('[nextTurn] called')
 
+    // Re-entry guard: a rapid-fire consumeAction + realtime echo can fire two
+    // nextTurn calls back-to-back. Without this guard, call #2 reads active
+    // state that call #1 hasn't finished writing yet, then advances the turn
+    // a second time — silently skipping whoever call #1 just activated.
+    if (nextTurnInFlightRef.current) {
+      console.warn('[nextTurn] already in flight — bailing to avoid double-advance')
+      return
+    }
+    nextTurnInFlightRef.current = true
+    try {
+
     // ── Drop phase transition: drop round is over, start full combat ──
     if (dropPhaseRef.current) {
       dropPhaseRef.current = false
@@ -1064,7 +1076,7 @@ export default function TablePage() {
     }
 
     // Fetch fresh initiative order from DB to avoid stale state
-    const { data: freshOrder, error: orderErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false })
+    const { data: freshOrder, error: orderErr } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false }).order('id', { ascending: true })
     if (orderErr) console.warn('[nextTurn] order fetch error:', orderErr.message)
     const order = freshOrder ?? initiativeOrder
     if (order.length === 0) { console.warn('[nextTurn] empty order, bailing'); return }
@@ -1224,7 +1236,7 @@ export default function TablePage() {
       })
 
       // Re-sort and set first ALIVE combatant as active (PCs beat NPCs on ties)
-      const { data: rerolled } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false })
+      const { data: rerolled } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false }).order('id', { ascending: true })
       const { data: freshNpcsForRound } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
       const freshNpcMap = new Map<string, any>((freshNpcsForRound ?? []).map((n: any) => [n.id, n]))
       if (rerolled && rerolled.length > 0) {
@@ -1253,6 +1265,14 @@ export default function TablePage() {
     // new-round check, so we can detect the skip-walk wrap cleanly).
     const currentEntry = order.find((e: any) => e.is_active)
     console.warn('[nextTurn] deactivating:', currentEntry?.character_name, '→ activating:', order[nextIdx]?.character_name)
+    // Defense: if the skip-walk landed on the same combatant we're trying to
+    // advance from (can happen if state is stale or every other combatant is
+    // dead), don't no-op advance — trigger a new round instead. Prevents an
+    // infinite "same combatant reactivates" loop.
+    if (currentEntry && order[nextIdx] && currentEntry.id === order[nextIdx].id) {
+      console.warn('[nextTurn] nextIdx resolves to self — no-op (finally will release lock)')
+      return
+    }
     if (currentEntry) {
       const { error: deactErr } = await supabase.from('initiative_order').update({ is_active: false, actions_remaining: 0, aim_bonus: 0 }).eq('id', currentEntry.id)
       if (deactErr) console.warn('[nextTurn] deactivate error:', deactErr.message)
@@ -1261,6 +1281,9 @@ export default function TablePage() {
     if (actErr) console.warn('[nextTurn] activate error:', actErr.message)
     await Promise.all([loadInitiative(id), loadEntries(id)])
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+    } finally {
+      nextTurnInFlightRef.current = false
+    }
   }
 
   /** Append an entry to a character's progression_log jsonb. Read-modify-write
