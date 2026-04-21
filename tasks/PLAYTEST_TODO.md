@@ -35,7 +35,7 @@
 - [x] **#5 — AIM +2 CMod applies to NEXT attack only, then clears.** *Traced & partially fixed. The numeric `aim_bonus` was already cleared correctly by `consumeAction`'s `clearAim` branch after any roll with no actionLabel (i.e. any roll from `closeRollModal`). But the paired `aim_active` flag — which drives the "Aimed — Attack or lose it" badge — was left at `true` forever. Now the clearAim update clears both together, so the badge disappears the moment the attack resolves. CMod logic was already correct.*
 
 ### Defer
-- [ ] **#7 — Defer moves one step down only.** Not N steps, not to end of round. Current `deferInitiative` swaps with the next combatant; verify roll-swap doesn't move the deferring combatant further than one slot.
+- [x] **#7 — Defer moves one step down only.** *Fixed: old implementation set `current.roll = next.roll - 1`, which could collide with any other combatant already at that value and push the deferrer down 2+ slots via the collision's tiebreak. Changed to a straight roll swap (`current.roll <-> next.roll`). Two adjacent combatants exchange positions exactly; everyone else stays put. Tied-rolls edge case (same roll before defer) remains tiebreak-dependent but was already the status quo and doesn't worsen.*
 
 ---
 

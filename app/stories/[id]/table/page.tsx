@@ -1660,9 +1660,14 @@ export default function TablePage() {
     if (idx < 0 || idx >= initiativeOrder.length - 1) return
     const current = initiativeOrder[idx]
     const next = initiativeOrder[idx + 1]
-    // Set current's roll to 1 below next, and bump next up to current's old roll.
+    // Swap roll values directly so the two adjacent combatants exchange
+    // positions. Previously current's new roll was `next.roll - 1`, which
+    // could collide with other combatants' rolls (e.g. a third combatant
+    // already at that value) and push the deferrer >1 step down the list
+    // — playtest #7. A straight swap guarantees a single-step move in
+    // the common unique-rolls case and doesn't manufacture new ties.
     const updates: Promise<any>[] = [
-      supabase.from('initiative_order').update({ roll: next.roll - 1 }).eq('id', current.id),
+      supabase.from('initiative_order').update({ roll: next.roll }).eq('id', current.id),
       supabase.from('initiative_order').update({ roll: current.roll }).eq('id', next.id),
     ]
     // If the deferring combatant is currently active, hand the turn directly
