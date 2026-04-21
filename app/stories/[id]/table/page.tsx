@@ -2460,8 +2460,15 @@ export default function TablePage() {
         const curWP = targetObject.wp_current ?? targetObject.wp_max ?? 0
         const newWP = Math.max(0, curWP - finalWP)
         console.warn('[damage] object target', targetObject.name, 'id:', targetObject.id, 'WP:', curWP, '→', newWP)
-        const { error: objErr } = await supabase.from('scene_tokens').update({ wp_current: newWP }).eq('id', targetObject.id)
+        // .select() so a silent RLS rejection (0 rows affected, no error) is
+        // distinguishable from a real update. Without this, players attacking
+        // object tokens used to see the dice roll succeed but the barrel/crate
+        // would never actually lose WP. Fixed by sql/scene-tokens-player-update-objects.sql.
+        const { error: objErr, data: objData } = await supabase.from('scene_tokens').update({ wp_current: newWP }).eq('id', targetObject.id).select('id, wp_current')
         if (objErr) console.error('[damage] scene_tokens update error:', objErr.message)
+        if (!objErr && (!objData || objData.length === 0)) {
+          console.warn('[damage] SILENT RLS FAIL — object wp_current not updated. run sql/scene-tokens-player-update-objects.sql. tokenId:', targetObject.id)
+        }
         setMapTokens(prev => prev.map(t => t.id === targetObject.id ? { ...t, wp_current: newWP } : t))
 
         // Auto-loot: when object is destroyed, give its contents to the attacker (PC or NPC)
