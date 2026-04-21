@@ -1,15 +1,31 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { logEvent, logFirstEvent } from '../../lib/events'
+
+// Safe-redirect guard: only accept single-slash relative paths so we don't
+// become an open-redirect vector. Rejects `//example.com`, `http://...`,
+// null/empty, and anything else.
+function readSafeRedirect(): string | null {
+  if (typeof window === 'undefined') return null
+  const target = new URLSearchParams(window.location.search).get('redirect')
+  if (!target || !target.startsWith('/') || target.startsWith('//')) return null
+  return target
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [redirect, setRedirect] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  // Capture `?redirect=/path` from the URL on mount so the invite/deep-link
+  // target survives the login round-trip. Rendering is null on first render
+  // (matches SSR) and populated after mount; no hydration mismatch.
+  useEffect(() => { setRedirect(readSafeRedirect()) }, [])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -18,7 +34,7 @@ export default function LoginPage() {
     if (loginError) { console.error('[Login] auth error:', loginError.message); setError(loginError.message); return }
     logEvent('login')
     logFirstEvent('first_login')
-    router.push('/dashboard')
+    router.push(redirect ?? '/dashboard')
   }
 
   const inp: React.CSSProperties = {
@@ -61,7 +77,7 @@ export default function LoginPage() {
 
         <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>
           No account?{' '}
-          <a href="/signup" style={{ color: '#d4cfc9', textDecoration: 'none' }}>Sign up</a>
+          <a href={redirect ? `/signup?redirect=${encodeURIComponent(redirect)}` : '/signup'} style={{ color: '#d4cfc9', textDecoration: 'none' }}>Sign up</a>
         </p>
 
       </div>
