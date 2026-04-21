@@ -340,6 +340,11 @@ export default function TablePage() {
   const [rosterNpcs, setRosterNpcs] = useState<any[]>([])
   const [showRestorePicker, setShowRestorePicker] = useState(false)
   const [restoreNpcIds, setRestoreNpcIds] = useState<Set<string>>(new Set())
+  // Snapshot of damaged destructible scene_tokens at the moment Restore opens.
+  // We can't rely on mapTokens because it's only populated while TacticalMap
+  // is mounted, so opening Restore from the campaign-map view silently lost
+  // every crate/barrel/vehicle.
+  const [restoreObjects, setRestoreObjects] = useState<{ id: string; name: string; wp_max: number }[]>([])
   const [showLootModal, setShowLootModal] = useState(false)
   const [lootItems, setLootItems] = useState<{ name: string; qty: number; notes: string }[]>([])
   const [lootRecipients, setLootRecipients] = useState<Set<string>>(new Set())
@@ -3300,7 +3305,7 @@ export default function TablePage() {
         </button>
         {isGM && (
           <>
-            <button onClick={() => {
+            <button onClick={async () => {
               // Pre-select everyone who's damaged, dead, or wounded
               const damagedNpcs = campaignNpcs.filter((n: any) => {
                 const wp = n.wp_current ?? n.wp_max ?? 10
@@ -3311,12 +3316,21 @@ export default function TablePage() {
               }).map(n => `npc:${n.id}`)
               const damagedPCs = entries.filter(e => e.liveState && (e.liveState.wp_current < e.liveState.wp_max || e.liveState.rp_current < e.liveState.rp_max))
                 .map(e => `pc:${e.stateId}`)
-              // Damaged or destroyed objects (crates, barrels, etc.) — only the
-              // destructible ones (wp_max != null) that have taken any damage.
-              const damagedObjects = mapTokens.filter(t =>
-                t.token_type === 'object' && t.wp_max != null && (t.wp_current ?? t.wp_max) < t.wp_max
-              ).map(t => `obj:${t.id}`)
-              setRestoreNpcIds(new Set([...damagedNpcs, ...damagedPCs, ...damagedObjects]))
+              // Fetch destructible scene_tokens from the DB directly — mapTokens
+              // only exists when TacticalMap is mounted, so we can't read it
+              // from any other view. This scans ALL scenes in the campaign so
+              // a crate on an inactive scene still shows up.
+              const { data: scenes } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id)
+              const sceneIds = (scenes ?? []).map((s: any) => s.id)
+              const damagedObjRows = sceneIds.length > 0
+                ? (await supabase.from('scene_tokens').select('id, name, wp_max, wp_current').in('scene_id', sceneIds).eq('token_type', 'object').not('wp_max', 'is', null)).data ?? []
+                : []
+              const damagedObjs = damagedObjRows
+                .filter((t: any) => (t.wp_current ?? t.wp_max) < t.wp_max)
+                .map((t: any) => ({ id: t.id as string, name: t.name as string, wp_max: t.wp_max as number }))
+              setRestoreObjects(damagedObjs)
+              const damagedObjectKeys = damagedObjs.map(t => `obj:${t.id}`)
+              setRestoreNpcIds(new Set([...damagedNpcs, ...damagedPCs, ...damagedObjectKeys]))
               setShowRestorePicker(true)
             }}
               style={hdrBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
@@ -4744,6 +4758,17 @@ export default function TablePage() {
                     ? { ...e, character: { ...e.character, data: { ...e.character.data, inventory: newInventory } } }
                     : e))
                 }}
+                onWeaponChange={(slot, newWeapon) => {
+                  // Patch entries immediately so the combat action bar's
+                  // Attack button reflects the new weapon without a round
+                  // trip. Without this, changing the sheet's weapon dropdown
+                  // leaves the bar showing the previous weapon until the
+                  // next loadEntries fires.
+                  const charId = syncedSelectedEntry.character.id
+                  setEntries(prev => prev.map(e => e.character.id === charId
+                    ? { ...e, character: { ...e.character, data: { ...e.character.data, [slot]: newWeapon } } }
+                    : e))
+                }}
               />
             </div>
           )}
@@ -5664,22 +5689,28 @@ export default function TablePage() {
       )}
 
       {showRestorePicker && (() => {
-        const deadNpcs = campaignNpcs.map(n => {
-          const wp = n.wp_current ?? n.wp_max ?? 10
-          const wpMax = n.wp_max ?? 10
-          const rp = n.rp_current ?? n.rp_max ?? 6
-          const rpMax = n.rp_max ?? 6
-          const damaged = n.status === 'dead' || wp < wpMax || rp < rpMax
-          return { key: `npc:${n.id}`, name: n.name, type: n.npc_type ?? 'NPC', isPC: false, id: n.id, damaged }
-        })
-        const deadPCs = entries.filter(e => e.liveState)
-          .map(e => ({ key: `pc:${e.stateId}`, name: e.character.name, type: 'PC', isPC: true, id: e.stateId, damaged: e.liveState!.wp_current < e.liveState!.wp_max || e.liveState!.rp_current < e.liveState!.rp_max }))
-        // Destructible map objects — show only those that have taken any
-        // damage (wp_current < wp_max). Indestructible tokens (wp_max=null)
-        // stay out of the list.
-        const damagedObjects = mapTokens
-          .filter(t => t.token_type === 'object' && t.wp_max != null && (t.wp_current ?? t.wp_max) < t.wp_max)
-          .map(t => ({ key: `obj:${t.id}`, name: t.name, type: 'OBJECT', isPC: false, id: t.id, damaged: true }))
+        const deadNpcs = campaignNpcs
+          .map(n => {
+            const wp = n.wp_current ?? n.wp_max ?? 10
+            const wpMax = n.wp_max ?? 10
+            const rp = n.rp_current ?? n.rp_max ?? 6
+            const rpMax = n.rp_max ?? 6
+            const damaged = n.status === 'dead' || wp < wpMax || rp < rpMax
+            return { key: `npc:${n.id}`, name: n.name, type: n.npc_type ?? 'NPC', damaged }
+          })
+          .filter(d => d.damaged)
+        const deadPCs = entries
+          .filter(e => e.liveState && (e.liveState.wp_current < e.liveState.wp_max || e.liveState.rp_current < e.liveState.rp_max))
+          .map(e => ({ key: `pc:${e.stateId}`, name: e.character.name, type: 'PC' }))
+        // Objects come from restoreObjects — a fresh snapshot taken when
+        // the modal opened, so they show up regardless of which view the GM
+        // was on when they hit Restore.
+        const damagedObjects = restoreObjects.map(t => ({ key: `obj:${t.id}`, name: t.name, type: 'OBJECT' }))
+        const sections: { label: string; items: { key: string; name: string; type: string }[] }[] = [
+          { label: 'Player Characters', items: deadPCs },
+          { label: 'NPCs', items: deadNpcs },
+          { label: 'Objects', items: damagedObjects },
+        ].filter(s => s.items.length > 0)
         const allDead = [...deadPCs, ...deadNpcs, ...damagedObjects]
         const allSelected = allDead.length > 0 && allDead.every(d => restoreNpcIds.has(d.key))
         return (
@@ -5697,21 +5728,44 @@ export default function TablePage() {
               </div>
             )}
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
-              {allDead.length === 0 ? (
-                <div style={{ color: '#cce0f5', fontSize: '12px', textAlign: 'center', padding: '1rem' }}>No characters in this campaign.</div>
-              ) : (
-                allDead.map(d => (
-                  <label key={d.key} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', background: restoreNpcIds.has(d.key) ? '#1a2e10' : '#1a1a1a', border: `1px solid ${restoreNpcIds.has(d.key) ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={restoreNpcIds.has(d.key)} onChange={() => {
-                      setRestoreNpcIds(prev => { const next = new Set(prev); if (next.has(d.key)) next.delete(d.key); else next.add(d.key); return next })
-                    }} style={{ accentColor: '#7fc458' }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{d.name}</div>
-                      <span style={{ fontSize: '12px', color: d.isPC ? '#7ab3d4' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{d.type}</span>
+              {sections.length === 0 ? (
+                <div style={{ color: '#cce0f5', fontSize: '12px', textAlign: 'center', padding: '1rem' }}>Nothing to restore — everyone is at full health.</div>
+              ) : sections.map(section => {
+                const sectionKeys = section.items.map(i => i.key)
+                const sectionAllSelected = sectionKeys.every(k => restoreNpcIds.has(k))
+                return (
+                  <div key={section.label} style={{ marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', padding: '0 2px' }}>
+                      <span style={{ fontSize: '12px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>{section.label} ({section.items.length})</span>
+                      <button onClick={() => {
+                        setRestoreNpcIds(prev => {
+                          const next = new Set(prev)
+                          if (sectionAllSelected) sectionKeys.forEach(k => next.delete(k))
+                          else sectionKeys.forEach(k => next.add(k))
+                          return next
+                        })
+                      }}
+                        style={{ padding: '1px 6px', background: 'none', border: '1px solid #2e2e2e', borderRadius: '2px', color: '#cce0f5', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        {sectionAllSelected ? 'None' : 'All'}
+                      </button>
                     </div>
-                  </label>
-                ))
-              )}
+                    {section.items.map(d => {
+                      const color = section.label === 'Player Characters' ? '#7ab3d4' : section.label === 'Objects' ? '#EF9F27' : '#f5a89a'
+                      return (
+                        <label key={d.key} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', background: restoreNpcIds.has(d.key) ? '#1a2e10' : '#1a1a1a', border: `1px solid ${restoreNpcIds.has(d.key) ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={restoreNpcIds.has(d.key)} onChange={() => {
+                            setRestoreNpcIds(prev => { const next = new Set(prev); if (next.has(d.key)) next.delete(d.key); else next.add(d.key); return next })
+                          }} style={{ accentColor: '#7fc458' }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{d.name}</div>
+                            <span style={{ fontSize: '12px', color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{d.type}</span>
+                          </div>
+                        </label>
+                      )
+                    })}
+                  </div>
+                )
+              })}
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setShowRestorePicker(false)}
@@ -5744,9 +5798,13 @@ export default function TablePage() {
                 // again" so it can be destroyed a second time.
                 for (const key of selected.filter(k => k.startsWith('obj:'))) {
                   const tokenId = key.slice(4)
-                  const tok = mapTokens.find(t => t.id === tokenId)
-                  if (tok && tok.wp_max != null) {
-                    await supabase.from('scene_tokens').update({ wp_current: tok.wp_max }).eq('id', tokenId)
+                  // Prefer the fresh snapshot (works on any view); fall back to
+                  // mapTokens for older callers still relying on it.
+                  const snap = restoreObjects.find(t => t.id === tokenId)
+                  const fromMap = mapTokens.find(t => t.id === tokenId)
+                  const wpMax = snap?.wp_max ?? fromMap?.wp_max
+                  if (wpMax != null) {
+                    await supabase.from('scene_tokens').update({ wp_current: wpMax }).eq('id', tokenId)
                   }
                 }
                 // Refresh all data
