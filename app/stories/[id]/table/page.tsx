@@ -165,12 +165,18 @@ function outcomeColor(outcome: string): string {
   }
 }
 
-/** Compact one-line summary for Attack-like rolls + Aim + Reposition.
- *  Returns null if this roll type should fall through to the verbose view
- *  (skill checks, initiative, etc. render unchanged). */
+/** Compact one-line summary for common roll types. Returns null to fall
+ *  through to the verbose view (initiative, combat_start/end, sprint,
+ *  death, drop, and anything this function doesn't recognize render
+ *  unchanged — some already have their own styled cards, others need
+ *  the full breakdown). */
 function compactRollSummary(r: { label: string; character_name: string; target_name?: string | null; outcome: string }): string | null {
   const suffix = r.label.startsWith(r.character_name + ' — ') ? r.label.slice(r.character_name.length + 3) : r.label
-  // Aim action — no dice, no target. Label: "<name> — Aim (+2 CMod). Must Attack next or Aim is lost."
+  const hit = r.outcome === 'Success' || r.outcome === 'Wild Success' || r.outcome === 'High Insight'
+  const wild = r.outcome === 'Wild Success' || r.outcome === 'High Insight'
+  const outcomeTag = wild ? ' (critical)' : r.outcome === 'Low Insight' ? ' (critical failure)' : ''
+
+  // Aim action — no dice, no target.
   if (r.outcome === 'action' && /^Aim\b/.test(suffix)) {
     return `${r.character_name} takes Aim`
   }
@@ -179,7 +185,6 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
   if (attackMatch && r.target_name) {
     const action = attackMatch[1]
     const weapon = attackMatch[2]
-    const hit = r.outcome === 'Success' || r.outcome === 'Wild Success' || r.outcome === 'High Insight'
     const verbMap: Record<string, { hit: string; miss: string }> = {
       'Attack':          { hit: 'successfully attacks', miss: 'misses' },
       'Rapid Fire':      { hit: 'rapid-fires at', miss: 'rapid-fires and misses' },
@@ -190,7 +195,49 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
     const verb = verbMap[action] ?? (hit ? 'attacks' : 'misses')
     const verbText = hit ? verb.hit : verb.miss
     const weaponText = weapon ? ` with ${/^[aeiouAEIOU]/.test(weapon) ? 'an' : 'a'} ${weapon}` : ''
-    return `${r.character_name} ${verbText} ${r.target_name}${weaponText}`
+    return `${r.character_name} ${verbText} ${r.target_name}${weaponText}${outcomeTag}`
+  }
+  // Stabilize — label "<name> — Stabilize <target>"
+  const stabilizeMatch = suffix.match(/^Stabilize\s+(.+)$/)
+  if (stabilizeMatch) {
+    const tgt = stabilizeMatch[1]
+    return hit ? `${r.character_name} stabilizes ${tgt}${outcomeTag}`
+               : `${r.character_name} fails to stabilize ${tgt}${outcomeTag}`
+  }
+  // Coordinate — "<name> — Coordinate (vs <target>)"
+  const coordMatch = suffix.match(/^Coordinate\s*\(vs\s+([^)]+)\)/)
+  if (coordMatch) {
+    const tgt = coordMatch[1]
+    return hit ? `${r.character_name} coordinates allies against ${tgt}${outcomeTag}`
+               : `${r.character_name} fails to coordinate against ${tgt}${outcomeTag}`
+  }
+  // Unjam — "Unjam — <weaponName> (<skill>)"
+  const unjamMatch = suffix.match(/^Unjam\s+—\s+(.+?)(?:\s*\(|$)/)
+  if (unjamMatch) {
+    const wName = unjamMatch[1].trim()
+    return hit ? `${r.character_name} unjams ${wName}${outcomeTag}`
+               : `${r.character_name} fails to unjam ${wName}${outcomeTag}`
+  }
+  // Special narrative checks — Perception, Gut Instinct, First Impression
+  const narrativeMatch = suffix.match(/^(Perception Check|Gut Instinct|First Impression)/)
+  if (narrativeMatch) {
+    const check = narrativeMatch[1]
+    return hit ? `${r.character_name} — ${check}${outcomeTag}`
+               : `${r.character_name} — ${check} (failed)${outcomeTag}`
+  }
+  // Generic skill / attribute check — label "<skillName> (<attrKey>)" or "<attrKey> Check"
+  // These come in with no "<name> — " prefix when fired from CharacterCard.
+  const skillMatch = suffix.match(/^([A-Z][A-Za-z\s]+?)\s*\(([A-Z]{3})\)$/)
+  if (skillMatch) {
+    const skill = skillMatch[1]
+    return hit ? `${r.character_name} succeeds at ${skill}${outcomeTag}`
+               : `${r.character_name} fails at ${skill}${outcomeTag}`
+  }
+  const attrMatch = suffix.match(/^([A-Z]{3})\s+Check$/)
+  if (attrMatch) {
+    const attr = attrMatch[1]
+    return hit ? `${r.character_name} succeeds at ${attr} check${outcomeTag}`
+               : `${r.character_name} fails ${attr} check${outcomeTag}`
   }
   return null
 }
