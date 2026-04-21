@@ -159,6 +159,36 @@ function outcomeColor(outcome: string): string {
   }
 }
 
+/** Compact one-line summary for Attack-like rolls + Aim + Reposition.
+ *  Returns null if this roll type should fall through to the verbose view
+ *  (skill checks, initiative, etc. render unchanged). */
+function compactRollSummary(r: { label: string; character_name: string; target_name?: string | null; outcome: string }): string | null {
+  const suffix = r.label.startsWith(r.character_name + ' — ') ? r.label.slice(r.character_name.length + 3) : r.label
+  // Aim action — no dice, no target. Label: "<name> — Aim (+2 CMod). Must Attack next or Aim is lost."
+  if (r.outcome === 'action' && /^Aim\b/.test(suffix)) {
+    return `${r.character_name} takes Aim`
+  }
+  // Attack-like rolls against a named target
+  const attackMatch = suffix.match(/^(Attack|Rapid Fire|Charge|Subdue|Fire from Cover)(?:\s*\(([^)]+)\))?/)
+  if (attackMatch && r.target_name) {
+    const action = attackMatch[1]
+    const weapon = attackMatch[2]
+    const hit = r.outcome === 'Success' || r.outcome === 'Wild Success' || r.outcome === 'High Insight'
+    const verbMap: Record<string, { hit: string; miss: string }> = {
+      'Attack':          { hit: 'successfully attacks', miss: 'misses' },
+      'Rapid Fire':      { hit: 'rapid-fires at', miss: 'rapid-fires and misses' },
+      'Charge':          { hit: 'charges and hits', miss: 'charges and misses' },
+      'Subdue':          { hit: 'subdues', miss: 'fails to subdue' },
+      'Fire from Cover': { hit: 'fires from cover at', miss: 'fires from cover and misses' },
+    }
+    const verb = verbMap[action] ?? (hit ? 'attacks' : 'misses')
+    const verbText = hit ? verb.hit : verb.miss
+    const weaponText = weapon ? ` with ${/^[aeiouAEIOU]/.test(weapon) ? 'an' : 'a'} ${weapon}` : ''
+    return `${r.character_name} ${verbText} ${r.target_name}${weaponText}`
+  }
+  return null
+}
+
 function rollD6() { return Math.floor(Math.random() * 6) + 1 }
 
 const SOCIAL_SKILLS = ['Manipulation', 'Inspiration', 'Barter', 'Psychology', 'INF Check']
@@ -201,6 +231,7 @@ export default function TablePage() {
   const [entriesLoading, setEntriesLoading] = useState(true)
   const [selectedEntry, setSelectedEntry] = useState<TableEntry | null>(null)
   const [rolls, setRolls] = useState<RollEntry[]>([])
+  const [expandedRollIds, setExpandedRollIds] = useState<Set<string>>(new Set())
   const [pendingRoll, setPendingRoll] = useState<PendingRoll | null>(null)
   const actionPreConsumedRef = useRef(false)  // Set when Stabilize pre-consumes before the roll modal
   const actionCostRef = useRef(1)             // Action cost for the current roll (2 for Charge/Rapid Fire)
@@ -3812,44 +3843,66 @@ export default function TablePage() {
                       )
                     })}
                   </div>
-                ) : (
+                ) : (() => {
+                  const compact = compactRollSummary(r)
+                  const isExpanded = expandedRollIds.has(r.id)
+                  const useCompact = compact && !isExpanded
+                  return (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: `3px solid ${outcomeColor(r.outcome)}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.character_name}</span>
-                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>
-                      {/* Strip character name prefix from label to avoid redundancy with the header */}
-                      {r.label.startsWith(r.character_name + ' — ') ? r.label.slice(r.character_name.length + 3) : r.label}
-                      {r.target_name && <span style={{ color: '#EF9F27' }}> → {r.target_name}</span>}
-                    </div>
-                    <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
-                      [{r.die1}+{r.die2}]
-                      {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
-                      {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
-                      {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
-                      <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '15px', fontWeight: 700, color: outcomeColor(r.outcome), fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.outcome}</span>
-                      {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
-                    </div>
-                    {r.damage_json && (
-                      <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>
-                        <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '12px' }}>Damage → {r.damage_json.targetName}</span>
-                        <div style={{ marginTop: '2px' }}>
-                          {r.damage_json.base > 0 && <span>{r.damage_json.base}</span>}
-                          {r.damage_json.diceDesc && <span>{r.damage_json.base > 0 ? '+' : ''}{r.damage_json.diceDesc} ({r.damage_json.diceRoll})</span>}
-                          {r.damage_json.phyBonus > 0 && <span> +{r.damage_json.phyBonus} PHY</span>}
-                          <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.damage_json.totalWP} raw</span>
-                          <span style={{ color: '#c0392b' }}> → {r.damage_json.finalWP} WP</span>
-                          <span style={{ color: '#7ab3d4' }}> / {r.damage_json.finalRP} RP</span>
-                          {r.damage_json.mitigated > 0 && <span style={{ color: '#cce0f5' }}> ({r.damage_json.mitigated} mitigated)</span>}
-                        </div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                        <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                        {compact && (
+                          <button onClick={() => setExpandedRollIds(prev => { const next = new Set(prev); isExpanded ? next.delete(r.id) : next.add(r.id); return next })}
+                            title={isExpanded ? 'Hide details' : 'View more'}
+                            style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }}>
+                            {isExpanded ? '▾' : '▸'}
+                          </button>
+                        )}
                       </div>
+                    </div>
+                    {useCompact ? (
+                      <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        {compact}
+                        {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>
+                          {r.label.startsWith(r.character_name + ' — ') ? r.label.slice(r.character_name.length + 3) : r.label}
+                          {r.target_name && <span style={{ color: '#EF9F27' }}> → {r.target_name}</span>}
+                        </div>
+                        <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
+                          [{r.die1}+{r.die2}]
+                          {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+                          {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+                          {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+                          <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '15px', fontWeight: 700, color: outcomeColor(r.outcome), fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.outcome}</span>
+                          {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
+                        </div>
+                        {r.damage_json && (
+                          <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>
+                            <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '12px' }}>Damage → {r.damage_json.targetName}</span>
+                            <div style={{ marginTop: '2px' }}>
+                              {r.damage_json.base > 0 && <span>{r.damage_json.base}</span>}
+                              {r.damage_json.diceDesc && <span>{r.damage_json.base > 0 ? '+' : ''}{r.damage_json.diceDesc} ({r.damage_json.diceRoll})</span>}
+                              {r.damage_json.phyBonus > 0 && <span> +{r.damage_json.phyBonus} PHY</span>}
+                              <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.damage_json.totalWP} raw</span>
+                              <span style={{ color: '#c0392b' }}> → {r.damage_json.finalWP} WP</span>
+                              <span style={{ color: '#7ab3d4' }}> / {r.damage_json.finalRP} RP</span>
+                              {r.damage_json.mitigated > 0 && <span style={{ color: '#cce0f5' }}> ({r.damage_json.mitigated} mitigated)</span>}
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
-                ))
+                  )
+                })())
               )
             )}
             {/* Chat messages (Chat tab only) */}
@@ -3977,43 +4030,67 @@ export default function TablePage() {
                   </div>
                   <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>{item.data.label}</div>
                 </div>
-              ) : (
-                <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: `3px solid ${outcomeColor(item.data.outcome)}` }}>
+              ) : (() => {
+                const r = item.data
+                const compact = compactRollSummary(r)
+                const isExpanded = expandedRollIds.has(r.id)
+                const useCompact = compact && !isExpanded
+                return (
+                <div key={`roll-${r.id}`} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: `3px solid ${outcomeColor(r.outcome)}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{item.data.character_name}</span>
-                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>
-                    {item.data.label}
-                    {item.data.target_name && <span style={{ color: '#EF9F27' }}> → {item.data.target_name}</span>}
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
-                    [{item.data.die1}+{item.data.die2}]
-                    {item.data.amod !== 0 && <span style={{ color: item.data.amod > 0 ? '#7fc458' : '#c0392b' }}> {item.data.amod > 0 ? '+' : ''}{item.data.amod} AMod</span>}
-                    {item.data.smod !== 0 && <span style={{ color: item.data.smod > 0 ? '#7fc458' : '#c0392b' }}> {item.data.smod > 0 ? '+' : ''}{item.data.smod} SMod</span>}
-                    {item.data.cmod !== 0 && <span style={{ color: item.data.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {item.data.cmod > 0 ? '+' : ''}{item.data.cmod} CMod</span>}
-                    <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {item.data.total}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: 700, color: outcomeColor(item.data.outcome), fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{item.data.outcome}</span>
-                    {item.data.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
-                  </div>
-                  {item.data.damage_json && (
-                    <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>
-                      <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '12px' }}>Damage → {item.data.damage_json.targetName}</span>
-                      <div style={{ marginTop: '2px' }}>
-                        {item.data.damage_json.base > 0 && <span>{item.data.damage_json.base}</span>}
-                        {item.data.damage_json.diceDesc && <span>{item.data.damage_json.base > 0 ? '+' : ''}{item.data.damage_json.diceDesc} ({item.data.damage_json.diceRoll})</span>}
-                        {item.data.damage_json.phyBonus > 0 && <span> +{item.data.damage_json.phyBonus} PHY</span>}
-                        <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {item.data.damage_json.totalWP} raw</span>
-                        <span style={{ color: '#c0392b' }}> → {item.data.damage_json.finalWP} WP</span>
-                        <span style={{ color: '#7ab3d4' }}> / {item.data.damage_json.finalRP} RP</span>
-                        {item.data.damage_json.mitigated > 0 && <span style={{ color: '#cce0f5' }}> ({item.data.damage_json.mitigated} mitigated)</span>}
-                      </div>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.character_name}</span>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                      {compact && (
+                        <button onClick={() => setExpandedRollIds(prev => { const next = new Set(prev); isExpanded ? next.delete(r.id) : next.add(r.id); return next })}
+                          title={isExpanded ? 'Hide details' : 'View more'}
+                          style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }}>
+                          {isExpanded ? '▾' : '▸'}
+                        </button>
+                      )}
                     </div>
+                  </div>
+                  {useCompact ? (
+                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      {compact}
+                      {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>
+                        {r.label}
+                        {r.target_name && <span style={{ color: '#EF9F27' }}> → {r.target_name}</span>}
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
+                        [{r.die1}+{r.die2}]
+                        {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+                        {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+                        {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+                        <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '15px', fontWeight: 700, color: outcomeColor(r.outcome), fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.outcome}</span>
+                        {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
+                      </div>
+                      {r.damage_json && (
+                        <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>
+                          <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '12px' }}>Damage → {r.damage_json.targetName}</span>
+                          <div style={{ marginTop: '2px' }}>
+                            {r.damage_json.base > 0 && <span>{r.damage_json.base}</span>}
+                            {r.damage_json.diceDesc && <span>{r.damage_json.base > 0 ? '+' : ''}{r.damage_json.diceDesc} ({r.damage_json.diceRoll})</span>}
+                            {r.damage_json.phyBonus > 0 && <span> +{r.damage_json.phyBonus} PHY</span>}
+                            <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.damage_json.totalWP} raw</span>
+                            <span style={{ color: '#c0392b' }}> → {r.damage_json.finalWP} WP</span>
+                            <span style={{ color: '#7ab3d4' }}> / {r.damage_json.finalRP} RP</span>
+                            {r.damage_json.mitigated > 0 && <span style={{ color: '#cce0f5' }}> ({r.damage_json.mitigated} mitigated)</span>}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
-              ))
+                )
+              })())
             })()}
           </div>
           {/* Bottom: chat input + sheet button */}
