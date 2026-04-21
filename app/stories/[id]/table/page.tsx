@@ -110,6 +110,12 @@ interface RollResult {
   damage?: DamageResult
   weaponJammed?: boolean
   traitNotes?: string[]
+  // When an Insight Die is spent for a 3d6 roll, we keep ALL three dice
+  // per SRD. `diceRolled` surfaces every individual value so the modal
+  // can render three boxes instead of two (die2 would otherwise display
+  // as d2+d3 — misleadingly as a single die value). Length 2 for normal
+  // rolls, length 3 for Insight-die 3d6 rolls.
+  diceRolled?: number[]
 }
 
 interface InitiativeEntry {
@@ -2361,6 +2367,10 @@ export default function TablePage() {
     if (pendingRoll.weapon) cmodVal += getRangeCMod()
     let die1: number, die2: number
     let preRollSpent = false
+    // Populated only on 3d6 Insight rolls — carries all three dice so the
+    // modal render can show three boxes instead of two (die2 would
+    // otherwise read as d2+d3, misleadingly as one die).
+    let insightDiceRolled: number[] | undefined
 
     if (preRollInsight === '3d6' && myEntry?.liveState && myEntry.liveState.insight_dice >= 1) {
       // Per SRD: roll 3d6 and KEEP ALL THREE dice (playtest #6 — do NOT
@@ -2373,6 +2383,7 @@ export default function TablePage() {
       const d1 = rollD6(), d2 = rollD6(), d3 = rollD6()
       die1 = d1
       die2 = d2 + d3
+      insightDiceRolled = [d1, d2, d3]  // surfaced in rollResult so the modal shows all 3 dice boxes
       const newInsight = myEntry.liveState.insight_dice - 1
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
       preRollSpent = true
@@ -3050,6 +3061,7 @@ export default function TablePage() {
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, insightUsed: preRollSpent ? 'pre' : null,
       damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
+      diceRolled: insightDiceRolled,
     } as any)
 
     setRolling(false)
@@ -5672,12 +5684,19 @@ export default function TablePage() {
               <>
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>{rollResult.label}</div>
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', margin: '1rem 0' }}>
-                  {[rollResult.die1, rollResult.die2].map((d, i) => (
+                  {/* Show all three dice on a 3d6 Insight roll; otherwise the
+                      two die-storage columns. diceRolled is populated only
+                      when preRollInsight === '3d6' and the roll happened. */}
+                  {(rollResult.diceRolled && rollResult.diceRolled.length > 2
+                    ? rollResult.diceRolled
+                    : [rollResult.die1, rollResult.die2]).map((d, i) => (
                     <div key={i} style={{ width: '52px', height: '52px', background: '#242424', border: '2px solid #3a3a3a', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, color: '#f5f2ee' }}>{d}</div>
                   ))}
                 </div>
                 <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', marginBottom: '8px' }}>
-                  [{rollResult.die1}+{rollResult.die2}]
+                  [{rollResult.diceRolled && rollResult.diceRolled.length > 2
+                    ? rollResult.diceRolled.join('+')
+                    : `${rollResult.die1}+${rollResult.die2}`}]
                   {rollResult.amod !== 0 && <span style={{ color: rollResult.amod > 0 ? '#7fc458' : '#c0392b' }}> {rollResult.amod > 0 ? '+' : ''}{rollResult.amod}</span>}
                   {rollResult.smod !== 0 && <span style={{ color: rollResult.smod > 0 ? '#7fc458' : '#c0392b' }}> {rollResult.smod > 0 ? '+' : ''}{rollResult.smod}</span>}
                   {rollResult.cmod !== 0 && <span style={{ color: rollResult.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {rollResult.cmod > 0 ? '+' : ''}{rollResult.cmod}</span>}
