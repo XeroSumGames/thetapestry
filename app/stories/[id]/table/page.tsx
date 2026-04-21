@@ -3436,8 +3436,25 @@ export default function TablePage() {
       {combatActive && (
         <div style={{ borderBottom: '1px solid #2e2e2e', background: '#0d0d0d', padding: '8px 12px', flexShrink: 0, overflowX: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 'max-content' }}>
-            <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginRight: '4px', flexShrink: 0 }}>
-              ⚔️ Initiative
+            {/* Sticky left pane — "⚔️ Initiative" label + a "→ Current:
+                <active>" pill that stays pinned when the list scrolls, so
+                the GM can always see whose turn it is even if the active
+                combatant's entry has scrolled off-screen to the right. */}
+            <div style={{ position: 'sticky', left: 0, zIndex: 10, background: '#0d0d0d', display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '8px', borderRight: '1px solid #2e2e2e', marginRight: '4px', flexShrink: 0 }}>
+              <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                ⚔️ Initiative
+              </div>
+              {(() => {
+                const active = initiativeOrder.find(e => e.is_active)
+                if (!active) return null
+                const parts = active.character_name.trim().split(/\s+/)
+                const shortName = parts.length < 2 ? active.character_name : `${parts[0]} ${parts[parts.length - 1][0]}.`
+                return (
+                  <div title={`Current turn: ${active.character_name}`} style={{ fontSize: '12px', padding: '2px 8px', background: '#1a2e10', border: '1px solid #7fc458', borderRadius: '3px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                    → {shortName}
+                  </div>
+                )
+              })()}
             </div>
 
             {(() => {
