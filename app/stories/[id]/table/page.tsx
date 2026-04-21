@@ -1146,8 +1146,23 @@ export default function TablePage() {
     // in this round is dead (e.g. Jules kills the tail-end NPC), the walk wraps via
     // `%` onto a combatant who already acted. Without detecting that, we would
     // reactivate them mid-round with fresh actions. See `wrappedPastEnd` below.
-    const { data: freshNpcsForSkip } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+    //
+    // Performance note (playtest #32): NPC + PC state fetches are BATCHED
+    // up front via two bulk queries instead of one `.maybeSingle()` per PC
+    // inside the loop. Before this change, a campaign with several PCs and a
+    // long skip chain triggered a sequential round trip for each PC — often
+    // ~200-500ms of perceived delay between turns on ordinary latency.
+    // Two parallel bulk queries is one network wait regardless of combatant
+    // count.
+    const pcCharIdsInInit = order.filter((e: any) => !e.is_npc && e.character_id).map((e: any) => e.character_id)
+    const [{ data: freshNpcsForSkip }, { data: freshPcStatesForSkip }] = await Promise.all([
+      supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
+      pcCharIdsInInit.length > 0
+        ? supabase.from('character_states').select('character_id, wp_current, rp_current').eq('campaign_id', id).in('character_id', pcCharIdsInInit)
+        : Promise.resolve({ data: [] as any[] }),
+    ])
     const skipNpcMap = new Map<string, any>((freshNpcsForSkip ?? []).map((n: any) => [n.id, n]))
+    const skipPcStateMap = new Map<string, any>((freshPcStatesForSkip ?? []).map((s: any) => [s.character_id, s]))
     let nextIdx = (currentIdx + 1) % order.length
     let wrappedPastEnd = false
     let attempts = 0
@@ -1162,8 +1177,8 @@ export default function TablePage() {
           skipTurn = npcWP === 0 || npcRP === 0 || npc.status === 'dead'
         }
       } else if (nextEntry.character_id) {
-        // Re-fetch fresh PC state from DB to avoid stale closure
-        const { data: freshPcState } = await supabase.from('character_states').select('wp_current, rp_current').eq('campaign_id', id).eq('character_id', nextEntry.character_id).maybeSingle()
+        // Look up in the pre-batched PC state map (no per-iteration DB call).
+        const freshPcState = skipPcStateMap.get(nextEntry.character_id)
         if (freshPcState) {
           skipTurn = freshPcState.wp_current === 0 || freshPcState.rp_current === 0
         }
