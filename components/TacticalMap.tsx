@@ -389,9 +389,15 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
 
     // Range circles for selected PC/NPC token — Engaged, Move 9ft, primary weapon range.
     // Object tokens (crates, cars, doors) don't get circles — they don't attack or move.
+    // Visibility rule (playtest #19): range bands are attacker-side info. The GM
+    // sees circles on any selected token; a player only sees circles on their
+    // OWN PC token. Clicking an enemy NPC or another player no longer reveals
+    // their weapon range to a non-GM viewer.
     if (showRangeOverlay && selectedToken) {
       const selTok = tokensRef.current.find(t => t.id === selectedToken)
-      if (selTok && selTok.token_type !== 'object') {
+      const isMyToken = !!myCharacterId && selTok?.character_id === myCharacterId
+      const canSeeBands = isGM || isMyToken
+      if (selTok && selTok.token_type !== 'object' && canSeeBands) {
         const cx = offsetX + selTok.grid_x * cellSize + cellSize / 2
         const cy = offsetY + selTok.grid_y * cellSize + cellSize / 2
         const ft = s.cell_feet ?? 3
