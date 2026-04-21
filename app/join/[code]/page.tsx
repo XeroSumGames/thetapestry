@@ -15,6 +15,18 @@ export default function JoinByCodePage() {
 
   useEffect(() => {
     async function find() {
+      // Auth-gate on mount so the invite target survives the login round-trip.
+      // Previously the auth check lived inside handleJoin, meaning a logged-out
+      // user who landed here had to click Join Story first before the
+      // ?redirect=/join/<code> param was ever set — and if any upstream flow
+      // bounced them to /login before they clicked, the target was lost and
+      // they ended up on /dashboard after sign-in. Encoding the target with
+      // encodeURIComponent keeps the slash-in-a-query-value safe across routers.
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push(`/login?redirect=${encodeURIComponent(`/join/${code}`)}`)
+        return
+      }
       const { data } = await supabase.from('campaigns').select('*').eq('invite_code', code).single()
       if (data) { setCampaign(data); setStatus('found') }
       else setStatus('error')
@@ -25,7 +37,7 @@ export default function JoinByCodePage() {
   async function handleJoin() {
     setJoining(true)
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { router.push(`/login?redirect=/join/${code}`); return }
+    if (!user) { router.push(`/login?redirect=${encodeURIComponent(`/join/${code}`)}`); return }
     const { error } = await supabase.from('campaign_members').insert({ campaign_id: campaign.id, user_id: user.id })
     if (error && error.code !== '23505') { setStatus('error'); return }
     if (!error) logFirstEvent('first_campaign_joined', { campaign_id: campaign.id })

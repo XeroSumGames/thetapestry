@@ -14,7 +14,7 @@
 ## TIER 1 — Fix first. Core gameplay blockers and broken mechanics.
 
 ### Navigation & redirect bugs
-- [x] **#11 — Invite link choked at login.** New users following an invite link hit the login page and lose the invite context. Preserve the target path across signup/login so the invite flow actually works for new users. *Shipped: login + signup now read `?redirect=/path` (safe-relative-only guard), honor it on submit, and forward it across the Sign-up / Log-in cross-links. Signup skips `/firsttimers` entirely when a redirect is present so invited users land straight on the join page.*
+- [x] **#11 — Invite link choked at login.** New users following an invite link hit the login page and lose the invite context. Preserve the target path across signup/login so the invite flow actually works for new users. *Shipped: (1) login + signup read `?redirect=/path` (safe-relative-only guard), honor it on submit, and forward it across Sign-up / Log-in cross-links; signup skips `/firsttimers` when a redirect is present. (2) `/join/[code]` now auth-gates on mount — if logged out, bounces to `/login?redirect=/join/<code>` immediately (with `encodeURIComponent`), instead of waiting for a button click that might never happen.*
 - [ ] **#12 — `/welcome` traps new users.** Disable the `/welcome` redirect entirely until further notice. Let new users browse freely.
 - [ ] **#13 — Reload sends players to dashboard.** Reloading during a session redirects to `/dashboard` instead of returning the player to `/stories/[id]/table`. Fix session/route persistence.
 
