@@ -3294,8 +3294,9 @@ export default function TablePage() {
                     return <span key={i} style={{ color }}>●</span>
                   })}
                 </span>
-                {/* Aim/social bonus badge */}
-                {(entry.aim_bonus ?? 0) !== 0 && (
+                {/* Aim/social bonus badge — hidden for NPCs from non-GM viewers
+                    (playtest #20: don't expose NPC conditions to players). */}
+                {(entry.aim_bonus ?? 0) !== 0 && (isGM || !entry.is_npc) && (
                   <span style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: entry.aim_bonus > 0 ? '#7fc458' : '#c0392b' }}>
                     {entry.aim_bonus > 0 ? '+' : ''}{entry.aim_bonus}
                   </span>
@@ -3303,6 +3304,10 @@ export default function TablePage() {
                 {/* Status badges — PCs and NPCs */}
                 {(() => {
                   if (entry.is_npc && entry.npc_id) {
+                    // Wound-state icons (💀 / 🩸 / 💤) are GM-only per playtest
+                    // #20 — players shouldn't see NPC WP/RP state or conditions.
+                    // Non-GM viewers get no status badge on NPC rows.
+                    if (!isGM) return null
                     const npc = campaignNpcs.find((n: any) => n.id === entry.npc_id)
                     if (!npc) return null
                     const npcWP = npc.wp_current ?? npc.wp_max ?? 10
