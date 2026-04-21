@@ -2687,12 +2687,18 @@ export default function TablePage() {
         if (newWP === 0 && curWP > 0) {
           const { data: fullToken } = await supabase.from('scene_tokens').select('contents').eq('id', targetObject.id).single()
           const contents: { type: string; name: string; quantity: number }[] = fullToken?.contents ?? []
+          console.warn('[auto-loot] crate destroyed', targetObject.name, 'contents:', contents.length)
           if (contents.length > 0) {
             const active = initiativeOrder.find(ie => ie.is_active)
-            const attackerEntry = active ? entries.find(e => e.character.id === active.character_id) : null
+            // Prefer the active combatant; fall back to the current user's PC
+            // so out-of-combat attacks (no initiative running) still route
+            // loot into the right inventory instead of dropping it.
+            const attackerEntry = (active ? entries.find(e => e.character.id === active.character_id) : null)
+              ?? entries.find(e => e.userId === userId)
             const attackerNpc = active && !attackerEntry && active.npc_id
               ? (rosterNpcs.find(n => n.id === active.npc_id) ?? campaignNpcs.find((n: any) => n.id === active.npc_id))
               : null
+            console.warn('[auto-loot] attackerEntry:', attackerEntry?.character?.name, 'attackerNpc:', (attackerNpc as any)?.name)
             if (attackerEntry) {
               const charData = attackerEntry.character.data ?? {}
               const inv: InventoryItem[] = charData.inventory ?? []
