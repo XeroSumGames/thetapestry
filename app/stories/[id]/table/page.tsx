@@ -198,6 +198,13 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
     const weaponText = weapon ? `${weapon} ` : ''
     return `${r.character_name} used ${weaponText}${action} on ${r.target_name}`
   }
+  // Unarmed attack — label "<name> — Unarmed" (no Attack() wrapper,
+  // since Unarmed IS the action). Reads "used Unarmed Combat on X" per
+  // the log-trimming playtest spec — "Combat" adds verb weight so the
+  // line parses like a sentence instead of "used Unarmed on X".
+  if (/^Unarmed$/.test(suffix) && r.target_name) {
+    return `${r.character_name} used Unarmed Combat on ${r.target_name}`
+  }
   // Stabilize — label "<name> — Stabilize <target>"
   const stabilizeMatch = suffix.match(/^Stabilize\s+(.+)$/)
   if (stabilizeMatch) {
