@@ -30,6 +30,7 @@ export default function SignupPage() {
       const { error: profileError } = await supabase.from('profiles').upsert({
         id: signUpData.user.id,
         username,
+        email,
         role: 'Survivor',
         onboarded: false,
       }, { onConflict: 'id' })
