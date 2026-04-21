@@ -72,6 +72,12 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  // Pan coalescing — multiple mousemove events per frame get merged into
+  // a single scroll write via requestAnimationFrame. Without this, every
+  // move wrote to scrollLeft/scrollTop synchronously, which thrashed
+  // layout/paint and felt jerky at high mouse rates on large maps.
+  const panTargetRef = useRef<{ x: number; y: number } | null>(null)
+  const panRAFRef = useRef<number | null>(null)
   const bgImageRef = useRef<HTMLImageElement | null>(null)
   const [scene, setScene] = useState<Scene | null>(null)
   const [scenes, setScenes] = useState<Scene[]>([])
@@ -910,8 +916,21 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     if (panning && containerRef.current) {
       const dx = e.clientX - panning.startX
       const dy = e.clientY - panning.startY
-      containerRef.current.scrollLeft = panning.startPanX - dx
-      containerRef.current.scrollTop = panning.startPanY - dy
+      // Buffer the target and let requestAnimationFrame flush it at the
+      // browser's paint cadence. Mousemove can fire hundreds of times per
+      // second; writing scroll every time thrashes layout. rAF coalesces
+      // into one write per frame — smoother pan, no skipped frames.
+      panTargetRef.current = { x: panning.startPanX - dx, y: panning.startPanY - dy }
+      if (panRAFRef.current == null) {
+        panRAFRef.current = requestAnimationFrame(() => {
+          panRAFRef.current = null
+          const t = panTargetRef.current
+          if (t && containerRef.current) {
+            containerRef.current.scrollLeft = t.x
+            containerRef.current.scrollTop = t.y
+          }
+        })
+      }
       return
     }
     if (dragging && canvasRef.current) {
@@ -929,6 +948,17 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       return
     }
     if (panning) {
+      // Flush any pending rAF so the last pan target lands before release
+      if (panRAFRef.current != null) {
+        cancelAnimationFrame(panRAFRef.current)
+        panRAFRef.current = null
+        const t = panTargetRef.current
+        if (t && containerRef.current) {
+          containerRef.current.scrollLeft = t.x
+          containerRef.current.scrollTop = t.y
+        }
+      }
+      panTargetRef.current = null
       setPanning(null)
       return
     }
