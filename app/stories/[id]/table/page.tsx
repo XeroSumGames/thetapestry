@@ -2620,9 +2620,15 @@ export default function TablePage() {
           const ft = mapCellFeet || 3
           const blastTargets: string[] = []
           for (const tok of mapTokens) {
-            if (!tok.character_id && !tok.npc_id) continue
+            // Include PC/NPC tokens AND destructible objects (wp_max != null)
+            // per playtest #17 — grenades should hit barrels/crates in the
+            // blast area too, not just combatants. Indestructible tokens
+            // (wp_max=null, decorative) are still skipped.
+            const isCombatant = !!tok.character_id || !!tok.npc_id
+            const isDestructibleObject = tok.token_type === 'object' && tok.wp_max != null && tok.wp_max > 0
+            if (!isCombatant && !isDestructibleObject) continue
             // Skip primary target (already damaged) and attacker
-            const isPrimary = (targetEntry && tok.character_id && tok.character_id === targetEntry.character.id) || (targetNpc && tok.npc_id && tok.npc_id === targetNpc.id) || (tok.grid_x === targetTok.grid_x && tok.grid_y === targetTok.grid_y)
+            const isPrimary = (targetEntry && tok.character_id && tok.character_id === targetEntry.character.id) || (targetNpc && tok.npc_id && tok.npc_id === targetNpc.id) || (targetObject && tok.id === targetObject.id) || (tok.grid_x === targetTok.grid_x && tok.grid_y === targetTok.grid_y)
             const isAttacker = active && ((active.character_id && tok.character_id && tok.character_id === active.character_id) || (active.npc_id && tok.npc_id && tok.npc_id === active.npc_id))
             if (isPrimary || isAttacker) continue
             const dist = Math.max(Math.abs(tok.grid_x - targetTok.grid_x), Math.abs(tok.grid_y - targetTok.grid_y))
@@ -2661,6 +2667,16 @@ export default function TablePage() {
               setCampaignNpcs(prev => prev.map(n => n.id === splashNpc.id ? { ...n, ...npcUpd } : n))
               initChannelRef.current?.send({ type: 'broadcast', event: 'npc_damaged', payload: { npcId: splashNpc.id, patch: npcUpd } })
               blastTargets.push(`${splashName} (${rangeBandLabel}): ${splashWP} WP, ${splashRP} RP`)
+            } else if (tok.token_type === 'object' && tok.wp_max != null) {
+              // Object splash — barrels, crates, etc. get scaled WP damage
+              // same as combatants. No RP (objects only track integrity).
+              // Per playtest #17.
+              const curWP = tok.wp_current ?? tok.wp_max
+              const nWP = Math.max(0, curWP - splashWP)
+              await supabase.from('scene_tokens').update({ wp_current: nWP }).eq('id', tok.id).select('id')
+              setMapTokens(prev => prev.map(t => t.id === tok.id ? { ...t, wp_current: nWP } : t))
+              initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+              blastTargets.push(`${tok.name} (${rangeBandLabel}): ${splashWP} WP`)
             }
           }
           if (blastTargets.length > 0) {

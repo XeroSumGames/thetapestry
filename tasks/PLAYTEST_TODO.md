@@ -62,7 +62,7 @@
 - [ ] **#32 — Initiative tracker responsiveness.** Advancing turns feels slow — likely due to sequential DB writes in `nextTurn`. Batch writes where possible; reduce round-trips.
 - [ ] **#27 — Player zoom sync to GM zoom.** When the GM zooms the tactical map, players' zoom follows.
 - [ ] **#26 — Spacebar pan smoothness.** Current spacebar-pan is jerky. Use CSS transform or native scroll with requestAnimationFrame.
-- [ ] **#17 — Grenade area logic.** Confirm blast-radius weapons apply attack logic to every valid target within the radius simultaneously. (Existing splash code needs audit.)
+- [~] **#17 — Grenade area logic.** Confirm blast-radius weapons apply attack logic to every valid target within the radius simultaneously. *Audited + partial fix shipped. Findings: scale tiers (Engaged=full, Close=50%, else=25%) correctly match the SRD trait description. Primary/attacker exclusions are correct. **Gap found & fixed**: destructible object tokens (barrels, crates with `wp_max`) were being SKIPPED entirely from the splash loop — now they take scaled WP damage same as combatants. **Gap flagged but not fixed** (needs SRD direction): splash damage is calculated as `floor(primary.finalWP * scale)`, reusing the primary target's already-mitigated value. Per strict reading of SRD, each splash target should mitigate independently with their own PHY/DEX. Current behavior means a blast's effective damage drops once per encounter at the primary, not once per target. If SRD says "each target mitigates independently", this needs a rewrite — let me know.*
 
 ---
 
