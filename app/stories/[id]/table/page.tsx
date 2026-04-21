@@ -3218,7 +3218,7 @@ export default function TablePage() {
                 {entry.is_npc && !entry.npc_type && (
                   <span style={{ fontSize: '12px', color: '#EF9F27', background: '#2a2010', border: '1px solid #EF9F27', padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>NPC</span>
                 )}
-                <span style={{ fontSize: '12px', color: entry.is_active ? '#c0392b' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
+                <span style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
                 <span style={{ fontSize: '12px', letterSpacing: '2px' }}>
                   {Array.from({ length: 2 }).map((_, i) => {
                     const remaining = entry.actions_remaining ?? 0
