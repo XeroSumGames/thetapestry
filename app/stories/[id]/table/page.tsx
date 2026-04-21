@@ -2013,7 +2013,11 @@ export default function TablePage() {
     setCmod(baseCmod ? String(baseCmod) : '0')
     // Auto-populate target dropdown.  Priority:
     //   1) Token the attacker selected on the map (explicit user action)
-    //   2) last_attack_target this turn (fallback)
+    //   2) last_attack_target this turn (short-term memory)
+    //   3) Closest valid target by Chebyshev distance from the attacker's
+    //      token on the tactical map (prefers in-range if weapon is present,
+    //      falls back to absolute closest so the user still sees a target
+    //      with an "out of range" warning they can swap from)
     function isNameValidLiveTarget(name: string | null | undefined): boolean {
       if (!name) return false
       // Attacker can't target themselves
@@ -2032,11 +2036,36 @@ export default function TablePage() {
       if (inInit) return true
       return mapTokens.some(t => t.token_type === 'object' && t.name === name && (t.wp_current ?? t.wp_max ?? 0) > 0)
     }
+    function getClosestValidTargetName(): string | null {
+      if (!activeEntry || mapTokens.length === 0) return null
+      const attackerTok = mapTokens.find(t =>
+        (activeEntry.character_id && t.character_id === activeEntry.character_id) ||
+        (activeEntry.npc_id && t.npc_id === activeEntry.npc_id)
+      )
+      if (!attackerTok) return null
+      // Score every other token: distance, plus whether the weapon can hit it.
+      let bestInRange: { name: string; dist: number } | null = null
+      let bestAny: { name: string; dist: number } | null = null
+      for (const t of mapTokens) {
+        if (t.id === attackerTok.id) continue
+        if (!isNameValidLiveTarget(t.name)) continue
+        const dist = Math.max(Math.abs(t.grid_x - attackerTok.grid_x), Math.abs(t.grid_y - attackerTok.grid_y))
+        if (!bestAny || dist < bestAny.dist) bestAny = { name: t.name, dist }
+        if (weapon) {
+          const band = getAutoRangeBand(activeEntry.character_id || undefined, activeEntry.npc_id || undefined, t.name)
+          if (band && isInRange(weapon.weaponName, band)) {
+            if (!bestInRange || dist < bestInRange.dist) bestInRange = { name: t.name, dist }
+          }
+        }
+      }
+      return (bestInRange ?? bestAny)?.name ?? null
+    }
     const prevTarget = weapon ? activeEntry?.last_attack_target : null
     const mapSelection = weapon ? selectedMapTargetName : null
+    const autoClosest = weapon ? getClosestValidTargetName() : null
     const chosenTarget = isNameValidLiveTarget(mapSelection)
       ? mapSelection
-      : (isNameValidLiveTarget(prevTarget) ? prevTarget : null)
+      : (isNameValidLiveTarget(prevTarget) ? prevTarget : (isNameValidLiveTarget(autoClosest) ? autoClosest : null))
     if (chosenTarget && weapon && activeEntry) {
       setTargetName(chosenTarget)
       const w = getWeaponByName(weapon.weaponName)
