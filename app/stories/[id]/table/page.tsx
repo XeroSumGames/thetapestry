@@ -4324,7 +4324,7 @@ export default function TablePage() {
                       </div>
                     </div>
                     {useCompact ? (
-                      <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
                         {compact}
                         {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
                       </div>
@@ -4551,7 +4551,7 @@ export default function TablePage() {
                     </div>
                   </div>
                   {useCompact ? (
-                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                    <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
                       {compact}
                       {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
                     </div>
