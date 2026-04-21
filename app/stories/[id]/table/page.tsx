@@ -558,7 +558,15 @@ export default function TablePage() {
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
+      if (!user) {
+        // Preserve the current path + query so a session-expired reload on
+        // the tactical map returns the player here after re-login instead
+        // of dumping them at /dashboard. Matches LayoutShell's redirect shape.
+        const search = typeof window !== 'undefined' ? window.location.search : ''
+        const fullPath = `/stories/${id}/table${search}`
+        router.push(`/login?redirect=${encodeURIComponent(fullPath)}`)
+        return
+      }
       setUserId(user.id)
       userIdRef.current = user.id  // Sync immediately so loadChat's initial call sees it
       const { data: myProfile } = await supabase.from('profiles').select('username, role').eq('id', user.id).single()
