@@ -1270,7 +1270,14 @@ export default function TablePage() {
         const d1 = rollD6(), d2 = rollD6()
         const newRoll = d1 + d2 + acu + dex
         rerollDetails.push({ name: entry.character_name, d1, d2, acu, dex, drop: 0, total: newRoll, is_npc: !!entry.is_npc })
-        await supabase.from('initiative_order').update({ roll: newRoll, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, inspired_this_round: false, winded: false, coordinate_target: null, coordinate_bonus: 0, is_active: false }).eq('id', entry.id)
+        // NOTE: `winded` is intentionally NOT reset here. A combatant who
+        // failed their Sprint Athletics check in the previous round had
+        // `winded: true` written to their row. Wiping it at new-round start
+        // would erase the penalty before `activateUpdate` (which gives
+        // winded combatants 1 action instead of 2) could read it. The flag
+        // is cleared correctly inside `activateUpdate` when the combatant's
+        // turn actually arrives.
+        await supabase.from('initiative_order').update({ roll: newRoll, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, inspired_this_round: false, coordinate_target: null, coordinate_bonus: 0, is_active: false }).eq('id', entry.id)
       }
 
       setCombatRound(prev => prev + 1)
@@ -4228,8 +4235,14 @@ export default function TablePage() {
                   if (mover) {
                     // Flag before consume so closeRollModal knows not to
                     // double-consume when the Athletics roll finishes.
+                    // Pass `undefined` for actionLabel: we don't want a
+                    // generic "— Sprint" log entry to land BEFORE the
+                    // Athletics roll resolves (playtest #4). The post-roll
+                    // handler (line ~2780) writes a single combined entry
+                    // with the final outcome: "sprinted successfully" or
+                    // "sprinted but is now winded".
                     actionPreConsumedRef.current = true
-                    await consumeAction(mover.id, `${mover.character_name} — Sprint`, 2)
+                    await consumeAction(mover.id, undefined, 2)
                   }
                   const charEntry = mover ? entries.find(e => e.character.name === mover.character_name) : null
                   const npcAttacker = mover?.is_npc ? campaignNpcs.find((n: any) => n.name === mover.character_name) : null
