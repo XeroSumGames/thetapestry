@@ -4678,10 +4678,7 @@ export default function TablePage() {
             )}
           </div>
           <div style={{ fontSize: '12px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {gmEntry ? gmEntry.character.name : (gmInfo?.username ?? 'GM')}
-          </div>
-          <div style={{ fontSize: '12px', color: '#cce0f5', textAlign: 'center', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {gmEntry ? gmEntry.username : 'Game Master'}
+            {(gmEntry ? gmEntry.username : (gmInfo?.username ?? 'GM'))} (GM)
           </div>
         </button>
 
