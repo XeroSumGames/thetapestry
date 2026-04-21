@@ -3487,8 +3487,17 @@ export default function TablePage() {
                     )}
                   </div>
                 )}
-                <span style={{ fontSize: '12px', fontWeight: entry.is_active ? 700 : 400, color: entry.is_active ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                  {entry.character_name}
+                <span title={entry.character_name} style={{ fontSize: '12px', fontWeight: entry.is_active ? 700 : 400, color: entry.is_active ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                  {(() => {
+                    // Compact name in the initiative bar — "Frankie G."
+                    // instead of "Frankie Gibblets" — to fit more combatants
+                    // on-screen without horizontal scroll. Single-word names
+                    // (common for NPC goons like "Goon 1") render unchanged.
+                    // Full name still visible on hover via the title attribute.
+                    const parts = entry.character_name.trim().split(/\s+/)
+                    if (parts.length < 2) return entry.character_name
+                    return `${parts[0]} ${parts[parts.length - 1][0]}.`
+                  })()}
                 </span>
                 {entry.is_npc && entry.npc_type && (
                   <span style={{ fontSize: '12px', color: entry.npc_type === 'bystander' ? '#7fc458' : entry.npc_type === 'antagonist' ? '#d48bd4' : entry.npc_type === 'foe' ? '#f5a89a' : '#EF9F27', background: entry.npc_type === 'bystander' ? '#1a2e10' : entry.npc_type === 'antagonist' ? '#2a102a' : entry.npc_type === 'foe' ? '#2a1210' : '#2a2010', border: `1px solid ${entry.npc_type === 'bystander' ? '#2d5a1b' : entry.npc_type === 'antagonist' ? '#8b2e8b' : entry.npc_type === 'foe' ? '#c0392b' : '#5a4a1b'}`, padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>{entry.npc_type}</span>
