@@ -255,6 +255,7 @@ export default function TablePage() {
   const [combatActive, setCombatActive] = useState(false)
   const [combatRound, setCombatRound] = useState(1)
   const [showAddNPC, setShowAddNPC] = useState(false)
+  const [showAddPC, setShowAddPC] = useState(false)
   const [npcName, setNpcName] = useState('')
   const [startingCombat, setStartingCombat] = useState(false)
   const [showTacticalMap, setShowTacticalMap] = useState(false)
@@ -1514,6 +1515,33 @@ export default function TablePage() {
     setNpcName('')
     setShowAddNPC(false)
     await loadInitiative(id)
+  }
+
+  // Add a PC to the initiative mid-combat (playtest #23). Used when a player
+  // joins the table after combat started and needs to be slotted in. Rolls
+  // their initiative with ACU+DEX modifiers same as combat-start, inserts
+  // an initiative_order row, broadcasts turn_changed so every client sees
+  // them on the bar. The PC is inactive by default — GM advances to them
+  // when their turn comes up in sort order.
+  async function addPCToCombat(charEntry: TableEntry) {
+    if (!isGM) return
+    const rapid = charEntry.character.data?.rapid ?? {}
+    const acu = rapid.ACU ?? 0
+    const dex = rapid.DEX ?? 0
+    const roll = rollD6() + rollD6() + acu + dex
+    await supabase.from('initiative_order').insert({
+      campaign_id: id,
+      character_name: charEntry.character.name,
+      character_id: charEntry.character.id,
+      user_id: charEntry.userId,
+      roll,
+      is_active: false,
+      is_npc: false,
+      actions_remaining: 2,
+    })
+    setShowAddPC(false)
+    await loadInitiative(id)
+    initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
   }
 
   async function refreshMapTokenIds() {
@@ -3379,7 +3407,35 @@ export default function TablePage() {
             )})}
 
             {isGM && (
-              <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: '4px', flexShrink: 0, position: 'relative' }}>
+                {(() => {
+                  // PCs that are NOT already in the initiative (playtest #23 —
+                  // add a PC to combat mid-session, e.g. a player joins late).
+                  const inInitCharIds = new Set(initiativeOrder.filter(e => e.character_id).map(e => e.character_id))
+                  const addable = entries.filter(e => !inInitCharIds.has(e.character.id))
+                  if (addable.length === 0) return null
+                  return !showAddPC ? (
+                    <button onClick={() => setShowAddPC(true)}
+                      style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+                      title="Add a player to initiative mid-combat">
+                      + PC
+                    </button>
+                  ) : (
+                    <div style={{ position: 'absolute', top: '32px', left: 0, zIndex: 100, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '6px', minWidth: '160px', boxShadow: '0 4px 12px rgba(0,0,0,0.6)' }}>
+                      <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Add PC to Combat</div>
+                      {addable.map(e => (
+                        <button key={e.character.id} onClick={() => addPCToCombat(e)}
+                          style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginBottom: '3px' }}>
+                          {e.character.name}
+                        </button>
+                      ))}
+                      <button onClick={() => setShowAddPC(false)}
+                        style={{ display: 'block', width: '100%', padding: '3px 8px', background: 'none', border: '1px solid #2e2e2e', borderRadius: '2px', color: '#cce0f5', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', marginTop: '2px' }}>
+                        Cancel
+                      </button>
+                    </div>
+                  )
+                })()}
                 {!showAddNPC ? (
                   <button onClick={() => setShowAddNPC(true)}
                     style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
