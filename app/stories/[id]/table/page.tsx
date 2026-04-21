@@ -4164,6 +4164,13 @@ export default function TablePage() {
               initiativeOrder={initiativeOrder}
               tokenRefreshKey={tokenRefreshKey}
               onTokenChanged={() => { setTokenRefreshKey(k => k + 1); initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} }) }}
+              onPlayerDragMove={(characterId) => {
+                // Player dragged their own PC within the Move-action limit.
+                // Consume 1 action via the owner's initiative row. No log
+                // label — the drag animation is self-evident.
+                const entry = initiativeOrder.find(e => e.character_id === characterId)
+                if (entry) consumeAction(entry.id, undefined, 1)
+              }}
               campaignNpcs={campaignNpcs}
               entries={entries}
               myCharacterId={myCharIdRef.current}

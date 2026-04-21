@@ -65,9 +65,10 @@ interface Props {
   onMoveCancel?: () => void
   onTokensUpdate?: (tokens: { id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null }[], cellFeet: number) => void
   onTokenChanged?: () => void                               // Notify parent to broadcast token_changed so other clients re-fetch
+  onPlayerDragMove?: (characterId: string) => void          // Player finished a valid drag-move; parent consumes 1 action
 }
 
-export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, onTokensUpdate, onTokenChanged }: Props) {
+export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, onTokensUpdate, onTokenChanged, onPlayerDragMove }: Props) {
   const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -930,7 +931,22 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     const tok = tokensRef.current.find(t => t.id === tokenId)
     const pos = getGridPos(e)
     const moved = pos && tok && (pos.gx !== tok.grid_x || pos.gy !== tok.grid_y)
-    if (moved && dragPosRef.current) {
+    // Distance gate for player drags (playtest #24): a player dragging their
+    // own PC token is performing a Move action, capped at 1 move = ~10ft =
+    // 3 cells at 3ft/cell (or ceil(10/cell_feet) for other grid scales). GMs
+    // bypass this entirely — they can reposition any token anywhere.
+    // Out-of-combat (no initiative entry) also bypasses.
+    const isPlayerDrag = !isGM && tok && myCharacterId && tok.character_id === myCharacterId
+    const ownInit = isPlayerDrag && tok ? initiativeOrder.find((ie: any) => ie.character_id === tok.character_id) : null
+    const inCombat = !!ownInit
+    const cellFt = sceneRef.current?.cell_feet ?? 3
+    const maxMoveCells = Math.max(1, Math.ceil(10 / cellFt))
+    const dragDistCells = pos && tok ? Math.max(Math.abs(pos.gx - tok.grid_x), Math.abs(pos.gy - tok.grid_y)) : 0
+    const outOfRange = isPlayerDrag && inCombat && moved && dragDistCells > maxMoveCells
+    if (outOfRange) {
+      alert(`Can't move that far — max ${maxMoveCells} cell${maxMoveCells === 1 ? '' : 's'} (${cellFt * maxMoveCells}ft) per Move action.`)
+    }
+    if (moved && dragPosRef.current && !outOfRange) {
       const toX = pos!.gx * cellPx + cellPx / 2
       const toY = pos!.gy * cellPx + cellPx / 2
       tokenAnimRef.current.set(tokenId, { fromX: dragPosRef.current.px, fromY: dragPosRef.current.py, toX, toY, t: 0 })
@@ -938,12 +954,18 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     // Clear drag state synchronously — never block cursor release on DB I/O
     dragPosRef.current = null
     setDragging(null)
-    if (moved) {
+    if (moved && !outOfRange) {
       setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, grid_x: pos!.gx, grid_y: pos!.gy } : t))
       supabase.from('scene_tokens').update({ grid_x: pos!.gx, grid_y: pos!.gy }).eq('id', tokenId).then(({ error }: any) => {
         if (error) console.warn('[TacticalMap] token move failed:', error)
         else tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
       })
+      // Player drag in combat costs 1 action. Parent handles the DB write
+      // via consumeAction (no log entry — drag movement is self-evident from
+      // the token animation on the map).
+      if (isPlayerDrag && inCombat && tok && tok.character_id) {
+        onPlayerDragMove?.(tok.character_id)
+      }
     }
   }
 

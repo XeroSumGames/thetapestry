@@ -48,8 +48,8 @@
 - [ ] **#18 — Range-gated targeting + default closest.** Players can only target things in range, but CAN target everything in range. Default = closest valid. Partly shipped as `0e7da10` (closest-target default); extend to strict range gate.
 - [ ] **#19 — Range band overlays are attacker-only.** Clicking an NPC or another player should NOT reveal range bands. Overlays belong to the currently-active combatant's view, not the inspected token.
 - [ ] **#20 — NPC status visibility rules for players.** Players see: is the NPC armed. Players do NOT see: weapon name, WP/RP numbers, Winded/other conditions.
-- [ ] **#25 — Token ownership enforcement.** A player's token is moveable only by that player (and the GM). Other players cannot drag it.
-- [ ] **#24 — Token drag constrained to move distance.** Dragging a token cannot exceed the character's available move range for their current action.
+- [x] **#25 — Token ownership enforcement.** A player's token is moveable only by that player (and the GM). Other players cannot drag it. *Verified: existing `canDrag` check in TacticalMap.handleMouseDown requires `tok.character_id === myCharacterId` for player-owned drags. Other players' tokens fail the check — only the owner can drag. GM has unconditional override. Confirmed in same codepath touched by #10 fix.*
+- [x] **#24 — Token drag constrained to move distance.** Dragging a token cannot exceed the character's available move range for their current action. *Shipped: `TacticalMap.handleMouseUp` now measures Chebyshev distance on drop for player-owned PC drags during combat. If > 10ft / `ceil(10/cell_feet)` cells, drop is rejected (alert, no DB write, token returns to origin). Valid drops fire a new `onPlayerDragMove(characterId)` callback to the parent, which calls `consumeAction(entry.id, 1)` — drag movement now costs 1 action same as a Move-button move. GM drags bypass both the distance gate and the action cost (administrative reposition). Out-of-combat drags also bypass.*
 
 ---
 
