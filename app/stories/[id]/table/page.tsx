@@ -6389,6 +6389,54 @@ export default function TablePage() {
           setShowReadyWeaponModal(false)
         }
 
+        // Equip a weapon from inventory into the primary slot (playtest #15).
+        // Closes the loot→ready loop: looted weapons land in
+        // `character.data.inventory[]` as InventoryItem rows; previously
+        // there was no pathway to promote them into an active slot short
+        // of hand-editing the character sheet. Now clicking Equip on an
+        // inventory weapon here:
+        //   - decrements that weapon's qty in inventory (removes if 0)
+        //   - pushes the existing primary (if any) back to inventory
+        //     (stacks with matching entry if one exists)
+        //   - writes the inventory weapon into weaponPrimary with Used
+        //     condition, full clip, and rolled reloads
+        //   - consumes the Ready Weapon action
+        // Nothing is ever lost — displaced weapons return to inventory.
+        async function doEquipFromInventory(invItemName: string) {
+          if (!charEntry) return
+          const w = getWeaponByName(invItemName)
+          if (!w) return
+          const inv: InventoryItem[] = (charData.inventory ?? []) as InventoryItem[]
+          // 1) Decrement source inventory entry
+          let newInv: InventoryItem[] = inv
+            .map(i => i.name === invItemName ? { ...i, qty: i.qty - 1 } : i)
+            .filter(i => i.qty > 0)
+          // 2) Return displaced primary to inventory (stacks if a matching entry exists)
+          if (primary?.weaponName) {
+            const existingW = getWeaponByName(primary.weaponName)
+            const idx = newInv.findIndex(i => i.name === primary.weaponName && !i.custom)
+            if (idx >= 0) {
+              newInv = newInv.map((i, j) => j === idx ? { ...i, qty: i.qty + 1 } : i)
+            } else if (existingW) {
+              newInv = [...newInv, { name: primary.weaponName, enc: existingW.enc, rarity: existingW.rarity, notes: '', qty: 1, custom: false }]
+            }
+          }
+          // 3) Build the new primary slot data
+          const newPrimary = {
+            weaponName: invItemName,
+            condition: 'Used',
+            ammoCurrent: w.clip ?? 0,
+            ammoMax: w.clip ?? 0,
+            reloads: w.ammo ? Math.floor(Math.random() * 3) + 1 : 0,
+          }
+          const newData = { ...charData, weaponPrimary: newPrimary, inventory: newInv }
+          await supabase.from('characters').update({ data: newData }).eq('id', charEntry.character.id)
+          setEntries(prev => prev.map(e => e.character.id === charEntry.character.id ? { ...e, character: { ...e.character, data: newData } } : e))
+          clearAimIfActive(active.id)
+          consumeAction(active.id, `${active.character_name} — Ready ${invItemName}`)
+          setShowReadyWeaponModal(false)
+        }
+
         async function doReload() {
           if (!charEntry || !canReload || !primaryW) return
           const reloaded = { ...primary, ammoCurrent: primaryW.clip, reloads: Math.max(0, (primary.reloads ?? 0) - 1) }
@@ -6465,6 +6513,34 @@ export default function TablePage() {
                   Tracking weapon — Ready Weapon grants +1 CMod aim bonus
                 </div>
               )}
+
+              {/* Equip from Inventory — any weapon the character is carrying can
+                  be readied into the primary slot. Primary goes back to inventory
+                  (no loss). Closes the loot→ready gap from playtest #15. */}
+              {(() => {
+                const inv: InventoryItem[] = (charData.inventory ?? []) as InventoryItem[]
+                const invWeapons = inv.filter(i => getWeaponByName(i.name))
+                if (invWeapons.length === 0) return null
+                return (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Equip from Inventory</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '160px', overflowY: 'auto' }}>
+                      {invWeapons.map(item => {
+                        const w = getWeaponByName(item.name)!
+                        return (
+                          <button key={item.name} onClick={() => doEquipFromInventory(item.name)}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'left', cursor: 'pointer' }}>
+                            <span style={{ flex: 1, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em' }}>{item.name}</span>
+                            <span style={{ fontSize: '12px', color: '#cce0f5' }}>{w.damage} · {w.range}</span>
+                            {item.qty > 1 && <span style={{ fontSize: '12px', color: '#cce0f5' }}>×{item.qty}</span>}
+                            <span style={{ fontSize: '12px', color: '#7fc458', fontWeight: 700, letterSpacing: '.04em' }}>READY →</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Action buttons */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
