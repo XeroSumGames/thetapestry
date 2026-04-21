@@ -166,52 +166,92 @@ function stripGenerated(row: any): any {
  *  populated with another campaign's content — e.g. "share The Arena with
  *  a player so they can run it."
  *
- *  Every row's `campaign_id` is rewritten to the target. Internal FK
- *  references (scene_id → tactical_scenes.id, campaign_pin_id →
- *  campaign_pins.id, npc_id → campaign_npcs.id) are preserved as-is from
- *  the snapshot, because we also preserve the original row `id`s during
- *  insert — the target campaign has no existing rows to collide with.
+ *  Every row gets a fresh `id` via crypto.randomUUID(), `campaign_id` is
+ *  rewritten to the target, and internal FK references are remapped
+ *  through in-memory id-maps so pins, NPCs, scenes, and scene_tokens all
+ *  cross-reference correctly after insert. Preserving the original ids
+ *  (as an earlier version did) caused pkey collisions because UUIDs are
+ *  globally unique — a snapshot row's id already exists in the source
+ *  campaign in the same table.
+ *
+ *  Character states are intentionally NOT cloned: they reference PCs in
+ *  the `characters` table which are scoped to specific users. The target
+ *  campaign will have different members, so the source's party state
+ *  doesn't meaningfully transfer.
+ *
+ *  Scene_tokens.character_id (references a player's PC) is nulled during
+ *  clone since the target campaign has different players. NPC tokens
+ *  (token_type='npc') re-link to the newly-cloned NPCs via npcIdMap.
+ *  Object tokens (crates, barrels) carry fine — they're self-contained.
  *
  *  RLS note: the caller must be GM of the TARGET campaign. This function
  *  is intended to be run by the target GM (e.g. a player who just
- *  created an empty campaign and is importing a shared snapshot JSON).
- *  Cross-user "source GM writes into target campaign" would need either
- *  a server-side RPC or a shared-access pattern; that's out of scope. */
+ *  created an empty campaign and is importing a shared snapshot JSON). */
 export async function cloneSnapshotIntoCampaign(
   supabase: SupabaseClient,
   targetCampaignId: string,
   snap: CampaignSnapshot,
 ): Promise<{ ok: boolean; errors: string[] }> {
   const errors: string[] = []
-  const remap = (row: any) => ({ ...row, campaign_id: targetCampaignId })
+  const newId = () => crypto.randomUUID()
 
-  if (snap.npcs.length > 0) {
-    const r = await supabase.from('campaign_npcs').insert(snap.npcs.map(remap))
-    if (r.error) errors.push(`npcs: ${r.error.message}`)
-  }
+  // 1) Build id remap tables up front so FK references can resolve below.
+  const pinIdMap = new Map<string, string>()
+  for (const p of snap.pins) pinIdMap.set(p.id, newId())
+  const npcIdMap = new Map<string, string>()
+  for (const n of snap.npcs) npcIdMap.set(n.id, newId())
+  const sceneIdMap = new Map<string, string>()
+  for (const { scene } of snap.scenes) sceneIdMap.set(scene.id, newId())
+
+  // 2) Pins — fresh id + target campaign_id.
   if (snap.pins.length > 0) {
-    const r = await supabase.from('campaign_pins').insert(snap.pins.map(remap))
+    const rows = snap.pins.map((p: any) => ({ ...p, id: pinIdMap.get(p.id), campaign_id: targetCampaignId }))
+    const r = await supabase.from('campaign_pins').insert(rows)
     if (r.error) errors.push(`pins: ${r.error.message}`)
   }
+
+  // 3) NPCs — fresh id + target campaign_id + remapped campaign_pin_id.
+  if (snap.npcs.length > 0) {
+    const rows = snap.npcs.map((n: any) => ({
+      ...n,
+      id: npcIdMap.get(n.id),
+      campaign_id: targetCampaignId,
+      campaign_pin_id: n.campaign_pin_id ? (pinIdMap.get(n.campaign_pin_id) ?? null) : null,
+    }))
+    const r = await supabase.from('campaign_npcs').insert(rows)
+    if (r.error) errors.push(`npcs: ${r.error.message}`)
+  }
+
+  // 4) Notes — fresh id + target campaign_id.
   if (snap.notes.length > 0) {
-    const r = await supabase.from('campaign_notes').insert(snap.notes.map(remap))
+    const rows = snap.notes.map((n: any) => ({ ...n, id: newId(), campaign_id: targetCampaignId }))
+    const r = await supabase.from('campaign_notes').insert(rows)
     if (r.error) errors.push(`notes: ${r.error.message}`)
   }
-  // Scenes — insert one at a time so one failure doesn't prevent the rest.
-  // scene_tokens have no campaign_id column (scoped via scene_id), so they
-  // don't need remap; their scene_id still points at the scene we just
-  // inserted (which kept its original id).
+
+  // 5) Scenes + their tokens. Scenes first with the remapped id, then
+  //    tokens pointing at that new scene_id and remapped npc_id. Player
+  //    references (token_type='pc', character_id) get nulled — they
+  //    belong to the original campaign's members.
   for (const { scene, tokens } of snap.scenes) {
-    const { error: sErr } = await supabase.from('tactical_scenes').insert([remap(scene)])
+    const newSceneId = sceneIdMap.get(scene.id)!
+    const { error: sErr } = await supabase.from('tactical_scenes').insert([{ ...scene, id: newSceneId, campaign_id: targetCampaignId }])
     if (sErr) { errors.push(`scene ${scene.name}: ${sErr.message}`); continue }
     if (tokens.length > 0) {
-      const { error: tErr } = await supabase.from('scene_tokens').insert(tokens)
+      const remapped = tokens.map((t: any) => {
+        const out = { ...t, id: newId(), scene_id: newSceneId }
+        if (t.npc_id) out.npc_id = npcIdMap.get(t.npc_id) ?? null
+        if (t.character_id) out.character_id = null  // target has different players
+        return out
+      })
+      const { error: tErr } = await supabase.from('scene_tokens').insert(remapped)
       if (tErr) errors.push(`scene ${scene.name} tokens: ${tErr.message}`)
     }
   }
-  if (snap.includes_character_states && snap.character_states && snap.character_states.length > 0) {
-    const r = await supabase.from('character_states').insert(snap.character_states.map(remap))
-    if (r.error) errors.push(`character_states: ${r.error.message}`)
-  }
+
+  // 6) character_states intentionally skipped — they reference PCs owned
+  //    by specific users in the original campaign, not transferable to
+  //    a new campaign with different members.
+
   return { ok: errors.length === 0, errors }
 }
