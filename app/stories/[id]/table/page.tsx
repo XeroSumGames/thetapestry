@@ -3329,7 +3329,7 @@ export default function TablePage() {
                 .filter((t: any) => (t.wp_current ?? t.wp_max) < t.wp_max)
                 .map((t: any) => ({ id: t.id as string, name: t.name as string, wp_max: t.wp_max as number }))
               setRestoreObjects(damagedObjs)
-              const damagedObjectKeys = damagedObjs.map(t => `obj:${t.id}`)
+              const damagedObjectKeys = damagedObjs.map((t: { id: string }) => `obj:${t.id}`)
               setRestoreNpcIds(new Set([...damagedNpcs, ...damagedPCs, ...damagedObjectKeys]))
               setShowRestorePicker(true)
             }}
@@ -5176,6 +5176,16 @@ export default function TablePage() {
               isMySheet={syncedSelectedEntry.userId === userId}
               onStatUpdate={handleStatUpdate}
               onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod, weapon) => { setSelectedEntry(null); handleRollRequest(label, amod, smod, weapon) } : undefined}
+              onWeaponChange={(slot, newWeapon) => {
+                // Same fix as the inline-mode card above — patch entries so
+                // the combat bar's Attack button picks up the new weapon
+                // immediately. Without this, overlay-mode weapon swaps
+                // lagged behind by a loadEntries cycle.
+                const charId = syncedSelectedEntry.character.id
+                setEntries(prev => prev.map(e => e.character.id === charId
+                  ? { ...e, character: { ...e.character, data: { ...e.character.data, [slot]: newWeapon } } }
+                  : e))
+              }}
             />
             <button onClick={() => { setSelectedEntry(null); setSheetPos(null) }} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderTop: 'none', borderRadius: '0 0 4px 4px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Close

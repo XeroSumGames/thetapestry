@@ -95,6 +95,7 @@ interface Props {
   otherCharacters?: { id: string; name: string }[]
   onGiveItem?: (item: InventoryItem, targetCharId: string) => void
   onInventoryChange?: (newInventory: InventoryItem[]) => void
+  onWeaponChange?: (slot: 'weaponPrimary' | 'weaponSecondary', newWeapon: any) => void
 }
 
 export default function CharacterCard({
@@ -115,6 +116,7 @@ export default function CharacterCard({
   otherCharacters,
   onGiveItem,
   onInventoryChange,
+  onWeaponChange,
 }: Props) {
   const router = useRouter()
   const supabase = createClient()
@@ -150,6 +152,12 @@ export default function CharacterCard({
   async function saveWeapon(slot: 'weaponPrimary' | 'weaponSecondary', data: any) {
     if (slot === 'weaponPrimary') { setWeaponPrimary(data); latestDataRef.current = { ...latestDataRef.current, weaponPrimary: data } }
     else { setWeaponSecondary(data); latestDataRef.current = { ...latestDataRef.current, weaponSecondary: data } }
+    // Notify parent synchronously so its `entries` state patches before the
+    // DB write returns — otherwise the combat action bar's Attack button,
+    // which reads `entries[i].character.data.weaponPrimary`, keeps showing
+    // the old weapon until the next loadEntries. Same pattern as
+    // onInventoryChange added for the + From Catalog bug.
+    onWeaponChange?.(slot, data)
     await supabase.from('characters').update({ data: { ...latestDataRef.current, [slot]: data } }).eq('id', c.id)
   }
 
