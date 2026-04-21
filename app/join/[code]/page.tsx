@@ -23,8 +23,10 @@ export default function JoinByCodePage() {
       // they ended up on /dashboard after sign-in. Encoding the target with
       // encodeURIComponent keeps the slash-in-a-query-value safe across routers.
       const { data: { user } } = await supabase.auth.getUser()
+      const target = `/login?redirect=${encodeURIComponent(`/join/${code}`)}`
+      console.warn('[join]', { code, hasUser: !!user, target })
       if (!user) {
-        router.push(`/login?redirect=${encodeURIComponent(`/join/${code}`)}`)
+        router.push(target)
         return
       }
       const { data } = await supabase.from('campaigns').select('*').eq('invite_code', code).single()
