@@ -3327,6 +3327,35 @@ export default function TablePage() {
         </a>
       </div>
 
+      {/* Incapacitation banner — playtest #21.
+          Shown to a PLAYER (not GM) when their own PC is mortally wounded
+          (wp=0 with a countdown) or incapacitated (rp=0 while wp>0). Tells
+          them plainly what happened, what they can still do (watch the
+          map, whisper the GM, wait for stabilization / revival), and
+          what they CAN'T do (take actions). Banner is dismissible only
+          by restoring the PC. Hidden when the PC is fully dead (countdown
+          expired) since that's a different ending. */}
+      {!isGM && combatActive && (() => {
+        const myEntry = entries.find(e => e.userId === userId)
+        if (!myEntry?.liveState) return null
+        const ls = myEntry.liveState as any
+        const isDead = ls.wp_current === 0 && ls.death_countdown != null && ls.death_countdown <= 0
+        const isMortal = ls.wp_current === 0 && !isDead
+        const isUnconscious = ls.rp_current === 0 && ls.wp_current > 0
+        if (isDead || (!isMortal && !isUnconscious)) return null
+        const title = isMortal ? 'Mortally Wounded' : 'Incapacitated'
+        const subtitle = isMortal
+          ? `You're bleeding out — someone needs to Stabilize you within ${ls.death_countdown ?? '?'} round${ls.death_countdown === 1 ? '' : 's'} or you die.`
+          : 'You\'re unconscious — you can\'t take actions until you come to (rest, first aid, or an ally\'s Medicine check).'
+        return (
+          <div style={{ background: '#2a1210', borderBottom: '1px solid #c0392b', padding: '8px 16px', fontFamily: 'Barlow Condensed, sans-serif', color: '#f5a89a', textAlign: 'center', flexShrink: 0 }}>
+            <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a' }}>🩸 {title}</div>
+            <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px' }}>{subtitle}</div>
+            <div style={{ fontSize: '12px', color: '#cce0f5', marginTop: '2px' }}>You can still watch the map, whisper the GM, and read the log.</div>
+          </div>
+        )
+      })()}
+
       {/* Initiative Tracker — shown when combat is active */}
       {combatActive && (
         <div style={{ borderBottom: '1px solid #2e2e2e', background: '#0d0d0d', padding: '8px 12px', flexShrink: 0, overflowX: 'auto' }}>
