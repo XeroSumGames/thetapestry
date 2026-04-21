@@ -1789,34 +1789,40 @@ export default function TablePage() {
     if (idx < 0 || idx >= initiativeOrder.length - 1) return
     const current = initiativeOrder[idx]
     const next = initiativeOrder[idx + 1]
-    // Swap roll values directly so the two adjacent combatants exchange
-    // positions. Previously current's new roll was `next.roll - 1`, which
-    // could collide with other combatants' rolls (e.g. a third combatant
-    // already at that value) and push the deferrer >1 step down the list
-    // — playtest #7. A straight swap guarantees a single-step move in
-    // the common unique-rolls case and doesn't manufacture new ties.
+    const wasActive = !!current.is_active
+    // Optimistic local swap — the initiative bar repaints instantly instead
+    // of waiting for the DB round-trip + realtime fanout. Without this, a
+    // slow network makes defer feel broken (the icon stays put for seconds).
+    const activation = activateUpdate(next)
+    setInitiativeOrder(prev => prev.map(e => {
+      if (e.id === current.id) return { ...e, roll: next.roll, ...(wasActive ? { is_active: false, actions_remaining: current.actions_remaining ?? 2, aim_bonus: 0 } : {}) }
+      if (e.id === next.id) return { ...e, roll: current.roll, ...(wasActive ? activation : {}) }
+      return e
+    }).sort((a, b) => b.roll - a.roll || a.character_name.localeCompare(b.character_name)))
+    // Swap roll values in the DB — playtest #7 fix: direct value swap avoids
+    // manufacturing colliding rolls with other combatants.
     const updates: Promise<any>[] = [
       supabase.from('initiative_order').update({ roll: next.roll }).eq('id', current.id),
       supabase.from('initiative_order').update({ roll: current.roll }).eq('id', next.id),
     ]
-    // If the deferring combatant is currently active, hand the turn directly
-    // to the swap partner. We can't reuse nextTurn() here because after the
-    // swap the deferring combatant is now sorted BELOW the swap partner, so
-    // nextTurn would walk forward from the deferring entry's new position and
-    // land on the wrong combatant. The direct transfer keeps the semantics
-    // clean: "I defer → you go next → I'll act later in the round".
-    const wasActive = !!current.is_active
     if (wasActive) {
       updates.push(
         supabase.from('initiative_order').update({ is_active: false, actions_remaining: current.actions_remaining ?? 2, aim_bonus: 0 }).eq('id', current.id),
-        supabase.from('initiative_order').update(activateUpdate(next)).eq('id', next.id),
+        supabase.from('initiative_order').update(activation).eq('id', next.id),
       )
     }
     await Promise.all(updates)
-    await loadInitiative(id)
-    if (wasActive) {
-      initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
-    }
+    // Log the defer so the table feed reflects player intent.
+    await supabase.from('roll_log').insert({
+      campaign_id: id, user_id: userId, character_name: 'System',
+      label: `↓ ${current.character_name} deferred their turn to after ${next.character_name}`,
+      die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'defer',
+    })
+    await Promise.all([loadInitiative(id), loadRolls(id)])
+    // Always broadcast so other clients refresh whether or not the deferrer
+    // was active — previously non-active defers silently stranded other
+    // viewers on the old order.
+    initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
   }
 
   // ── Session functions ──
@@ -4092,6 +4098,13 @@ export default function TablePage() {
                     </div>
                     <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
                   </div>
+                ) : r.outcome === 'defer' ? (
+                  <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f1a2e', border: '1px solid #7ab3d4', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.label}</span>
+                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                    </div>
+                  </div>
                 ) : r.outcome === 'sprint' ? (() => {
                   const tr = (r.damage_json as any)?.trimmedRoll
                   const isExpanded = expandedRollIds.has(r.id)
@@ -4371,6 +4384,13 @@ export default function TablePage() {
                     <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
                   <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
+                </div>
+              ) : item.data.outcome === 'defer' ? (
+                <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f1a2e', border: '1px solid #7ab3d4', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{item.data.label}</span>
+                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                  </div>
                 </div>
               ) : (item.data.outcome === 'death' || item.data.character_name === 'Death is in the air') ? (
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a0a0a', border: '1px solid #5a1b1b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
