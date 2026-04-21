@@ -226,6 +226,16 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
     return hit ? `${r.character_name} — ${check}${outcomeTag}`
                : `${r.character_name} — ${check} (failed)${outcomeTag}`
   }
+  // Loot — label "🎒 <name> looted <items> from <container>". Narrative
+  // compact banner hides WHAT was looted (keeps players reading the log
+  // without spoiling everyone's hauls); ▸ expand reveals the full list.
+  if (r.outcome === 'loot') {
+    const lootMatch = r.label.match(/^🎒\s+(.+?)\s+looted\s+.+\s+from\s+(.+)$/)
+    if (lootMatch) {
+      const container = lootMatch[2]
+      return `${r.character_name} looked through the remains of ${container} and found something`
+    }
+  }
   // Generic skill / attribute check — label "<skillName> (<attrKey>)" or "<attrKey> Check"
   // These come in with no "<name> — " prefix when fired from CharacterCard.
   const skillMatch = suffix.match(/^([A-Z][A-Za-z\s]+?)\s*\(([A-Z]{3})\)$/)
@@ -3486,9 +3496,46 @@ export default function TablePage() {
                 if (!active) return null
                 const parts = active.character_name.trim().split(/\s+/)
                 const shortName = parts.length < 2 ? active.character_name : `${parts[0]} ${parts[parts.length - 1][0]}.`
+                // Check if the active combatant is dead / mortally wounded /
+                // incapacitated (they'll be filtered from the bar, so the GM
+                // loses their usual row-level advance button). Clicking the
+                // pill always advances — fastest escape hatch from a "stuck
+                // on a dead combatant" state. Non-GMs see a normal pill.
+                let stuck = false
+                if (active.is_npc && active.npc_id) {
+                  const npc = campaignNpcs.find((n: any) => n.id === active.npc_id)
+                  if (npc) {
+                    const wp = npc.wp_current ?? npc.wp_max ?? 10
+                    const rp = npc.rp_current ?? npc.rp_max ?? 6
+                    stuck = wp === 0 || rp === 0 || npc.status === 'dead'
+                  }
+                } else {
+                  const ce = entries.find(e => active.character_id ? e.character.id === active.character_id : e.character.name === active.character_name)
+                  if (ce?.liveState) stuck = ce.liveState.wp_current === 0 || ce.liveState.rp_current === 0
+                }
+                const clickable = isGM
+                const title = clickable
+                  ? (stuck ? `${active.character_name} can't act — click to advance past them` : `Click to advance past ${active.character_name}`)
+                  : `Current turn: ${active.character_name}`
                 return (
-                  <div title={`Current turn: ${active.character_name}`} style={{ fontSize: '12px', padding: '2px 8px', background: '#1a2e10', border: '1px solid #7fc458', borderRadius: '3px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                    → {shortName}
+                  <div
+                    onClick={clickable ? () => nextTurn() : undefined}
+                    title={title}
+                    style={{
+                      fontSize: '12px',
+                      padding: '2px 8px',
+                      background: stuck ? '#2a1210' : '#1a2e10',
+                      border: `1px solid ${stuck ? '#c0392b' : '#7fc458'}`,
+                      borderRadius: '3px',
+                      color: stuck ? '#f5a89a' : '#7fc458',
+                      fontFamily: 'Barlow Condensed, sans-serif',
+                      letterSpacing: '.06em',
+                      textTransform: 'uppercase',
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap',
+                      cursor: clickable ? 'pointer' : 'default',
+                    }}>
+                    → {shortName}{stuck ? ' ⚠' : ''}
                   </div>
                 )
               })()}
