@@ -187,22 +187,16 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
   if (r.outcome === 'action' && /^Aim\b/.test(suffix)) {
     return `${r.character_name} takes Aim`
   }
-  // Attack-like rolls against a named target
+  // Attack-like rolls against a named target. Neutral phrasing per
+  // playtest pattern: "<name> used <weapon> <Action> on <target>" — the
+  // compact line describes the action taken; the ▸ expand reveals the
+  // dice breakdown and outcome (Success / Failure / Wild / Dire / etc.).
   const attackMatch = suffix.match(/^(Attack|Rapid Fire|Charge|Subdue|Fire from Cover)(?:\s*\(([^)]+)\))?/)
   if (attackMatch && r.target_name) {
     const action = attackMatch[1]
     const weapon = attackMatch[2]
-    const verbMap: Record<string, { hit: string; miss: string }> = {
-      'Attack':          { hit: 'successfully attacks', miss: 'misses' },
-      'Rapid Fire':      { hit: 'rapid-fires at', miss: 'rapid-fires and misses' },
-      'Charge':          { hit: 'charges and hits', miss: 'charges and misses' },
-      'Subdue':          { hit: 'subdues', miss: 'fails to subdue' },
-      'Fire from Cover': { hit: 'fires from cover at', miss: 'fires from cover and misses' },
-    }
-    const verb = verbMap[action] ?? (hit ? 'attacks' : 'misses')
-    const verbText = hit ? verb.hit : verb.miss
-    const weaponText = weapon ? ` with ${/^[aeiouAEIOU]/.test(weapon) ? 'an' : 'a'} ${weapon}` : ''
-    return `${r.character_name} ${verbText} ${r.target_name}${weaponText}${outcomeTag}`
+    const weaponText = weapon ? `${weapon} ` : ''
+    return `${r.character_name} used ${weaponText}${action} on ${r.target_name}`
   }
   // Stabilize — label "<name> — Stabilize <target>"
   const stabilizeMatch = suffix.match(/^Stabilize\s+(.+)$/)
@@ -2709,11 +2703,31 @@ export default function TablePage() {
                 if (existing) {
                   newInv = newInv.map(i => i === existing ? { ...i, qty: i.qty + item.quantity } : i)
                 } else {
-                  newInv.push({ name: item.name, enc: 0, rarity: 'Common', notes: '', qty: item.quantity, custom: true })
+                  // If the loot matches a known weapon/gear, copy its enc +
+                  // rarity and set custom=false so the Ready Weapon modal and
+                  // the character sheet treat it as a real weapon, not a
+                  // home-brew string. Previously every loot drop was marked
+                  // custom=true and stripped of its stats.
+                  const knownW = getWeaponByName(item.name)
+                  newInv.push({
+                    name: item.name,
+                    enc: knownW?.enc ?? 0,
+                    rarity: knownW?.rarity ?? 'Common',
+                    notes: '',
+                    qty: item.quantity,
+                    custom: !knownW,
+                  })
                 }
                 lootedNames.push(`${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''}`)
               }
-              await supabase.from('characters').update({ data: { ...charData, inventory: newInv } }).eq('id', attackerEntry.character.id)
+              const newCharData = { ...charData, inventory: newInv }
+              await supabase.from('characters').update({ data: newCharData }).eq('id', attackerEntry.character.id)
+              // Optimistic patch to local entries so the Ready Weapon modal
+              // (and any open character sheet) sees the loot immediately
+              // instead of waiting on the realtime echo.
+              setEntries(prev => prev.map(e => e.character.id === attackerEntry.character.id
+                ? { ...e, character: { ...e.character, data: newCharData } }
+                : e))
               // Clear contents from the destroyed object
               await supabase.from('scene_tokens').update({ contents: [] }).eq('id', targetObject.id)
               // Log it
