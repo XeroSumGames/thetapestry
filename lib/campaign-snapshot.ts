@@ -158,3 +158,60 @@ function stripGenerated(row: any): any {
   const { ...copy } = row
   return copy
 }
+
+/** Clone a snapshot INTO a target campaign (assumed empty / new).
+ *
+ *  Unlike `restoreCampaignSnapshot`, which rewinds state inside the same
+ *  campaign, this is used when the caller wants a FRESH new campaign
+ *  populated with another campaign's content — e.g. "share The Arena with
+ *  a player so they can run it."
+ *
+ *  Every row's `campaign_id` is rewritten to the target. Internal FK
+ *  references (scene_id → tactical_scenes.id, campaign_pin_id →
+ *  campaign_pins.id, npc_id → campaign_npcs.id) are preserved as-is from
+ *  the snapshot, because we also preserve the original row `id`s during
+ *  insert — the target campaign has no existing rows to collide with.
+ *
+ *  RLS note: the caller must be GM of the TARGET campaign. This function
+ *  is intended to be run by the target GM (e.g. a player who just
+ *  created an empty campaign and is importing a shared snapshot JSON).
+ *  Cross-user "source GM writes into target campaign" would need either
+ *  a server-side RPC or a shared-access pattern; that's out of scope. */
+export async function cloneSnapshotIntoCampaign(
+  supabase: SupabaseClient,
+  targetCampaignId: string,
+  snap: CampaignSnapshot,
+): Promise<{ ok: boolean; errors: string[] }> {
+  const errors: string[] = []
+  const remap = (row: any) => ({ ...row, campaign_id: targetCampaignId })
+
+  if (snap.npcs.length > 0) {
+    const r = await supabase.from('campaign_npcs').insert(snap.npcs.map(remap))
+    if (r.error) errors.push(`npcs: ${r.error.message}`)
+  }
+  if (snap.pins.length > 0) {
+    const r = await supabase.from('campaign_pins').insert(snap.pins.map(remap))
+    if (r.error) errors.push(`pins: ${r.error.message}`)
+  }
+  if (snap.notes.length > 0) {
+    const r = await supabase.from('campaign_notes').insert(snap.notes.map(remap))
+    if (r.error) errors.push(`notes: ${r.error.message}`)
+  }
+  // Scenes — insert one at a time so one failure doesn't prevent the rest.
+  // scene_tokens have no campaign_id column (scoped via scene_id), so they
+  // don't need remap; their scene_id still points at the scene we just
+  // inserted (which kept its original id).
+  for (const { scene, tokens } of snap.scenes) {
+    const { error: sErr } = await supabase.from('tactical_scenes').insert([remap(scene)])
+    if (sErr) { errors.push(`scene ${scene.name}: ${sErr.message}`); continue }
+    if (tokens.length > 0) {
+      const { error: tErr } = await supabase.from('scene_tokens').insert(tokens)
+      if (tErr) errors.push(`scene ${scene.name} tokens: ${tErr.message}`)
+    }
+  }
+  if (snap.includes_character_states && snap.character_states && snap.character_states.length > 0) {
+    const r = await supabase.from('character_states').insert(snap.character_states.map(remap))
+    if (r.error) errors.push(`character_states: ${r.error.message}`)
+  }
+  return { ok: errors.length === 0, errors }
+}

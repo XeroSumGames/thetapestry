@@ -1,7 +1,7 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
-import { captureCampaignSnapshot, restoreCampaignSnapshot, CampaignSnapshot } from '../lib/campaign-snapshot'
+import { captureCampaignSnapshot, restoreCampaignSnapshot, cloneSnapshotIntoCampaign, CampaignSnapshot } from '../lib/campaign-snapshot'
 
 interface SnapshotRow {
   id: string
@@ -89,6 +89,49 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
     setRows(prev => prev.filter(r => r.id !== row.id))
   }
 
+  // Download a snapshot as a JSON file. Used to share a campaign's content
+  // state with another user — they import it into their own new campaign
+  // via the Import button below.
+  function handleDownload(row: SnapshotRow) {
+    const blob = new Blob([JSON.stringify(row.snapshot, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${row.name.replace(/[^a-z0-9-_]+/gi, '-').toLowerCase()}.tapestry-snapshot.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  // Import a snapshot file INTO this campaign (which should be empty —
+  // typically a freshly-created blank campaign the player made in their
+  // own account). Validates shape, then calls cloneSnapshotIntoCampaign
+  // to populate npcs/pins/scenes/tokens/notes under the current campaign_id.
+  // Requires the caller to be GM of this campaign (enforced by RLS).
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [importing, setImporting] = useState(false)
+  async function handleImportFile(file: File) {
+    setImporting(true)
+    setStatus(null)
+    try {
+      const text = await file.text()
+      const parsed = JSON.parse(text) as CampaignSnapshot
+      if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.npcs) || !Array.isArray(parsed.pins) || !Array.isArray(parsed.scenes) || !Array.isArray(parsed.notes)) {
+        throw new Error('Not a valid Tapestry snapshot file.')
+      }
+      if (!confirm(`Import snapshot into this campaign?\n\n${parsed.npcs.length} NPCs · ${parsed.pins.length} pins · ${parsed.scenes.length} scenes · ${parsed.notes.length} notes\n\nContent will ADD to whatever's already here. For a clean import, use an empty campaign.`)) {
+        setImporting(false)
+        return
+      }
+      const res = await cloneSnapshotIntoCampaign(supabase, campaignId, parsed)
+      setStatus(res.ok ? `✓ Imported (${parsed.npcs.length} NPCs, ${parsed.pins.length} pins, ${parsed.scenes.length} scenes, ${parsed.notes.length} notes)` : `Partial import — errors:\n${res.errors.join('\n')}`)
+    } catch (err: any) {
+      setStatus(`Error: ${err?.message ?? 'unknown'}`)
+    }
+    setImporting(false)
+  }
+
   if (!isGM) return null
   if (loading) return <div style={{ color: '#cce0f5', fontSize: '13px' }}>Loading snapshots…</div>
 
@@ -116,6 +159,26 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
         <button onClick={handleSave} disabled={saving || !newName.trim()}
           style={{ padding: '8px 20px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: saving ? 'wait' : 'pointer', fontWeight: 700, opacity: saving || !newName.trim() ? 0.5 : 1 }}>
           {saving ? 'Saving…' : 'Save Snapshot'}
+        </button>
+      </div>
+
+      {/* Import snapshot file — populate this campaign from a JSON snapshot
+          shared by another GM. Intended for "my GM sent me their campaign,
+          let me run it" workflow: make an empty campaign, come here, import. */}
+      <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '12px', marginBottom: '12px' }}>
+        <div style={{ fontSize: '14px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Import Snapshot</div>
+        <div style={{ fontSize: '12px', color: '#cce0f5', marginBottom: '8px', lineHeight: 1.4 }}>
+          Load a <code>.tapestry-snapshot.json</code> file into this campaign. Use this to receive a shared campaign from another GM — NPCs, pins, scenes, tactical tokens, and handouts will populate here. Best run in a brand-new empty campaign.
+        </div>
+        <input type="file" accept="application/json,.json" ref={fileInputRef} style={{ display: 'none' }}
+          onChange={e => {
+            const f = e.target.files?.[0]
+            if (f) handleImportFile(f)
+            e.target.value = ''
+          }} />
+        <button onClick={() => fileInputRef.current?.click()} disabled={importing}
+          style={{ padding: '8px 20px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: importing ? 'wait' : 'pointer', fontWeight: 700, opacity: importing ? 0.5 : 1 }}>
+          {importing ? 'Importing…' : 'Choose File…'}
         </button>
       </div>
 
@@ -147,6 +210,11 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
                 <button onClick={() => handleRestore(r)} disabled={!!restoring}
                   style={{ padding: '4px 12px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: restoring ? 'wait' : 'pointer', opacity: restoring ? 0.5 : 1 }}>
                   {restoring === r.id ? 'Restoring…' : 'Restore'}
+                </button>
+                <button onClick={() => handleDownload(r)}
+                  title="Download the snapshot as a JSON file so another GM can import it into their own campaign"
+                  style={{ padding: '4px 12px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Download
                 </button>
                 <button onClick={() => handleDelete(r)} disabled={!!restoring}
                   style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
