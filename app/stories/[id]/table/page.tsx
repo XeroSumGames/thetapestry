@@ -4713,7 +4713,10 @@ export default function TablePage() {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                   {isGM && (combatActive || showTacticalMap) && (() => {
-                    const onMap = initiativeOrder.some(e => e.character_id === entry.character.id) || false
+                    // Read the actual token state — was checking initiativeOrder,
+                    // which meant the button didn't flip color for PCs placed on
+                    // the map outside of combat (or cleared but still in init).
+                    const onMap = mapTokens.some(t => t.character_id === entry.character.id)
                     return (
                       <div onClick={async e => {
                         e.stopPropagation()
