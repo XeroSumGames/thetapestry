@@ -78,6 +78,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   // layout/paint and felt jerky at high mouse rates on large maps.
   const panTargetRef = useRef<{ x: number; y: number } | null>(null)
   const panRAFRef = useRef<number | null>(null)
+  // Press-and-hold ping (playtest #31): press on empty cell and hold still
+  // for ~600ms to drop a ping, instead of the old double-click gesture.
+  // Panning still starts immediately on the same mousedown; mousemove
+  // beyond a small jitter threshold cancels the hold, leaving just a pan.
+  const pingHoldRef = useRef<{ timer: number; gx: number; gy: number; startX: number; startY: number } | null>(null)
   const bgImageRef = useRef<HTMLImageElement | null>(null)
   const [scene, setScene] = useState<Scene | null>(null)
   const [scenes, setScenes] = useState<Scene[]>([])
@@ -924,6 +929,19 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     if (!mapLocked) {
       setPanning({ startX: e.clientX, startY: e.clientY, startPanX: containerRef.current?.scrollLeft ?? 0, startPanY: containerRef.current?.scrollTop ?? 0 })
     }
+    // Start the press-and-hold ping timer (playtest #31). Fires after 600ms
+    // if the cursor hasn't moved beyond the jitter threshold in handleMouseMove.
+    if (pos) {
+      if (pingHoldRef.current) window.clearTimeout(pingHoldRef.current.timer)
+      const holdPos = { gx: pos.gx, gy: pos.gy, startX: e.clientX, startY: e.clientY }
+      const timer = window.setTimeout(() => {
+        const color = isGM ? '#EF9F27' : '#7fc458'
+        setPing({ gx: holdPos.gx, gy: holdPos.gy, t: 0, color, count: 2 })
+        pingChannelRef.current?.send({ type: 'broadcast', event: 'gm_ping', payload: { gx: holdPos.gx, gy: holdPos.gy, color } })
+        pingHoldRef.current = null
+      }, 600)
+      pingHoldRef.current = { timer, ...holdPos }
+    }
   }
 
   function handleMouseMove(e: React.MouseEvent) {
@@ -936,6 +954,16 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     if (panning && containerRef.current) {
       const dx = e.clientX - panning.startX
       const dy = e.clientY - panning.startY
+      // Cancel a pending press-and-hold ping if the cursor drifted more
+      // than a few pixels — means the user was panning, not holding.
+      if (pingHoldRef.current) {
+        const pdx = e.clientX - pingHoldRef.current.startX
+        const pdy = e.clientY - pingHoldRef.current.startY
+        if (pdx * pdx + pdy * pdy > 49) { // >7px
+          window.clearTimeout(pingHoldRef.current.timer)
+          pingHoldRef.current = null
+        }
+      }
       // Buffer the target and let requestAnimationFrame flush it at the
       // browser's paint cadence. Mousemove can fire hundreds of times per
       // second; writing scroll every time thrashes layout. rAF coalesces
@@ -963,6 +991,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   }
 
   function handleMouseUp(e: React.MouseEvent) {
+    // Released before the hold timer fired — cancel any pending ping.
+    if (pingHoldRef.current) {
+      window.clearTimeout(pingHoldRef.current.timer)
+      pingHoldRef.current = null
+    }
     if (resizing) {
       setResizing(null)
       return
@@ -1030,12 +1063,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     if (!pos) return
     const tok = getTokenAt(pos.gx, pos.gy)
     if (tok && onTokenClick) { onTokenClick(tok); return }
-    // Double-click on empty cell = ping (GM=orange, player=green)
-    if (!tok) {
-      const color = isGM ? '#EF9F27' : '#7fc458'
-      setPing({ gx: pos.gx, gy: pos.gy, t: 0, color, count: 2 })
-      pingChannelRef.current?.send({ type: 'broadcast', event: 'gm_ping', payload: { gx: pos.gx, gy: pos.gy, color } })
-    }
+    // Ping is now a press-and-hold gesture (playtest #31). The old double-
+    // click-to-ping branch was removed — accidental double-clicks on empty
+    // cells were firing pings the user didn't intend. Hold ~600ms to ping.
   }
 
   // Scene management

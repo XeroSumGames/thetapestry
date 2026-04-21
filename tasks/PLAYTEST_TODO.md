@@ -70,7 +70,7 @@
 
 - [x] **#34 — `/whisper GM`.** Slash command in chat to directly whisper the GM. *Shipped: `sendChat` now parses `/whisper <target> <msg>` and `/w <target> <msg>` before the DB insert. If target matches `gm` (case-insensitive), the message is sent as a whisper to `campaign.gm_user_id` regardless of the current whisperTarget. Target can also be any player character name (case-insensitive) — `/w Avery <msg>` whispers Avery. If the body is empty, the send is suppressed. Existing portrait-click whisper flow and is_whisper / recipient_user_id schema untouched.*
 - [ ] **#30 — Portrait upload simplification.** Current flow is too many steps. Consolidate upload → crop → save.
-- [ ] **#31 — Ping click-and-hold.** Ping becomes a long-press (hold) gesture rather than an accidental click.
+- [x] **#31 — Ping click-and-hold.** Ping becomes a long-press (hold) gesture rather than an accidental click. *Shipped: replaced the double-click-on-empty-cell ping with a press-and-hold timer. `handleMouseDown` on an empty cell starts both panning (existing) and a 600ms timer that fires a ping at the original cursor position. `handleMouseMove` cancels the timer if the cursor drifts more than ~7px (user was panning, not holding); `handleMouseUp` cancels it if the user releases before the timer expires. Double-click ping removed — accidental double-clicks on empty cells were the problem. Result: hold still on empty cell ~600ms → ping; pan normally → no ping.*
 - [ ] **#33 — General UI smoothness pass.** Catch-all for animation/transition polish across combat interactions.
 - [ ] **#28 — Smooth token drag feel.** Constrained-but-smooth drag — probably requires interpolation and snap-to-grid on drop.
 
