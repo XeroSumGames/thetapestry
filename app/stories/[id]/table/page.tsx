@@ -398,6 +398,11 @@ export default function TablePage() {
   const sheetDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
   const [npcPositions, setNpcPositions] = useState<Record<string, { x: number; y: number }>>({})
   const npcDragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null)
+  // Roll modal position — null means "use default centered placement". Once
+  // the user drags the roll panel, its position persists across re-opens so
+  // attacks don't keep snapping back over the map.
+  const [rollModalPos, setRollModalPos] = useState<{ x: number; y: number } | null>(null)
+  const rollModalDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
   const campaignChannelRef = useRef<any>(null)
 
   async function loadEntries(campaignId: string) {
@@ -5364,10 +5369,56 @@ export default function TablePage() {
         </div>
       )}
 
-      {/* Roll modal */}
+      {/* Roll modal — draggable floating panel so the player can shove it aside
+          to see the tactical map behind it. No backdrop: clicks pass through
+          to the map so they can peek at token positions while deciding. The
+          panel itself is stopPropagation-gated to keep its own clicks local. */}
       {pendingRoll && (
-        <div onClick={closeRollModal} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.1)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '340px' }}>
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            left: rollModalPos?.x ?? '50%',
+            top: rollModalPos?.y ?? '50%',
+            transform: rollModalPos ? 'none' : 'translate(-50%, -50%)',
+            zIndex: 10000,
+            background: '#1a1a1a',
+            border: '1px solid #3a3a3a',
+            borderRadius: '4px',
+            width: '340px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
+          }}
+        >
+          {/* Drag handle — grab strip across the top. */}
+          <div
+            onMouseDown={e => {
+              const el = e.currentTarget.parentElement as HTMLElement
+              const rect = el.getBoundingClientRect()
+              rollModalDragRef.current = {
+                startX: e.clientX,
+                startY: e.clientY,
+                origX: rect.left,
+                origY: rect.top,
+              }
+              const onMove = (ev: MouseEvent) => {
+                if (!rollModalDragRef.current) return
+                const dx = ev.clientX - rollModalDragRef.current.startX
+                const dy = ev.clientY - rollModalDragRef.current.startY
+                setRollModalPos({ x: rollModalDragRef.current.origX + dx, y: rollModalDragRef.current.origY + dy })
+              }
+              const onUp = () => {
+                rollModalDragRef.current = null
+                window.removeEventListener('mousemove', onMove)
+                window.removeEventListener('mouseup', onUp)
+              }
+              window.addEventListener('mousemove', onMove)
+              window.addEventListener('mouseup', onUp)
+            }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', cursor: 'grab', borderRadius: '4px 4px 0 0', background: '#242424', borderBottom: '1px solid #3a3a3a', userSelect: 'none' }}
+          >
+            <div style={{ width: '40px', height: '3px', borderRadius: '2px', background: '#5a5a5a' }} />
+          </div>
+          <div style={{ padding: '1.5rem' }}>
 
             {!rollResult && (
               <>
