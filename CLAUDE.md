@@ -58,3 +58,20 @@
     – **No Laziness**: Find root causes. No temporary fixes. Senior developer standards.
     – **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
 
+## Rulebook references
+
+The authoritative rules for the XSE / Distemper system live as PDFs in `docs/Rules/`. Read them via `pdftotext` (available on the shell) rather than the PDF Read tool — it's faster and doesn't require pdftoppm.
+
+**Precedence when rules conflict** (higher wins):
+
+1. `XSE SRD v1.1.17 (Small).pdf` — **canonical**, most recent. Core mechanics live here (§08 Communities, etc.).
+2. `Distemper CRB v0.9.2.pdf` — Distemper Core Rulebook. Adds setting-flavor rules + Paradigms + Inspiration Lv4 etc. Pre-dates SRD 1.1, so defer to SRD on anything they both cover.
+3. `Distemper Quickstart v0.8.530.pdf` — slim intro, narrative-first. Rule references here are derivative.
+4. `Distemper Chased (Magazine) v0.8.116.pdf` — setting content for Chased (Delaware). Not a rules source; defer to the rulebooks for mechanics.
+5. `The District Zero Sourcebook v0.9.04.pdf` — setting content for District Zero. Narrative + NPCs + pins. Defer to rulebooks for mechanics.
+6. `The District Zero Road to Citizenship Sourcebook v0.1.01.pdf` — supplementary District Zero content.
+
+**Pre-digested extracts** (when written) live in `tasks/rules-extract-*.md` — consult those first for a given subsystem before re-reading the PDFs, and audit them against the source when something feels off.
+
+Existing spec files (`tasks/spec-communities.md`, `tasks/spec-modules.md`) are implementation specs written from these rules. If the spec and the rules disagree, the rules are canonical — update the spec, don't code the wrong thing.
+
