@@ -1,0 +1,20 @@
+# Mark rulebook PDFs and other binary assets as binary so git doesn't
+# try to normalize line endings, attempt text diffs, or treat them as
+# modified when no byte changed. Stops lint passes and editors from
+# corrupting them on Windows CRLF boundaries.
+docs/Rules/*.pdf binary
+docs/**/*.pdf binary
+
+# Image assets — treat as binary (git default usually, but explicit).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+
+# Fonts
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
