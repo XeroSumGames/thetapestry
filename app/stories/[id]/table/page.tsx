@@ -3646,6 +3646,12 @@ export default function TablePage() {
             Sessions
           </a>
         )}
+        {isGM && (
+          <a href={`/stories/${id}/community`}
+            style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
+            Community
+          </a>
+        )}
         <a href={`/stories/${id}`} style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
           Stories
         </a>
