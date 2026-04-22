@@ -625,28 +625,59 @@ export default function TablePage() {
     const myEntry = entries.find(e => e.userId === userId)
     const characterName = myEntry?.character.name ?? (isGM ? 'Game Master' : 'Unknown')
     // Slash-command parsing (playtest #34): `/whisper gm <msg>` and `/w gm <msg>`
-    // send a whisper to the GM regardless of the current whisperTarget. Also
-    // supports whispering a named player — `/w Avery <msg>` — by matching the
-    // first word after the command against a character name in entries.
+    // send a whisper to the GM. For players, the matcher walks the tail of the
+    // command from longest-prefix to shortest and tries each candidate as an
+    // exact, prefix, or substring match against character_name or username
+    // (case-insensitive). This means all of these hit the right player:
+    //   /w Percy hi                    (first name of "Percy Bent")
+    //   /w Percy Bent hi               (full character name)
+    //   /w marv hey                    (prefix of "Marvin")
+    //   /w tony hey                    (username, even if char name differs)
     const trimmed = chatInput.trim()
     let recipientUserId: string | null = whisperTarget?.userId ?? null
     let isWhisper = !!whisperTarget
     let messageBody = trimmed
-    const slashMatch = trimmed.match(/^\/(?:w|whisper)\s+(\S+)\s+([\s\S]+)$/i)
-    if (slashMatch) {
-      const targetRaw = slashMatch[1]
-      const body = slashMatch[2]
-      if (/^gm$/i.test(targetRaw) && campaign?.gm_user_id) {
-        recipientUserId = campaign.gm_user_id
-        isWhisper = true
-        messageBody = body
-      } else {
-        // Match against a player character name (case-insensitive)
-        const hit = entries.find(e => e.character.name.toLowerCase() === targetRaw.toLowerCase())
+    const slashHead = trimmed.match(/^\/(?:w|whisper)\s+([\s\S]+)$/i)
+    if (slashHead) {
+      const rest = slashHead[1].trim()
+      const words = rest.split(/\s+/)
+      // Try longest-prefix-first so "Percy Bent" wins over "Percy" when both
+      // could match different characters.
+      let matched = false
+      for (let take = Math.min(words.length - 1, 5); take >= 1 && !matched; take--) {
+        const target = words.slice(0, take).join(' ')
+        const body = words.slice(take).join(' ')
+        if (!body) continue
+        if (/^gm$/i.test(target) && campaign?.gm_user_id) {
+          recipientUserId = campaign.gm_user_id
+          isWhisper = true
+          messageBody = body
+          matched = true
+          break
+        }
+        const t = target.toLowerCase()
+        const candidates = entries.filter(e => {
+          const name = (e.character.name ?? '').toLowerCase()
+          const user = (e.username ?? '').toLowerCase()
+          return name === t || user === t
+            || name.startsWith(t) || user.startsWith(t)
+            || name.includes(t) || user.includes(t)
+        })
+        // Prefer exact > prefix > substring when multiple candidates match.
+        const rank = (e: typeof entries[number]) => {
+          const name = (e.character.name ?? '').toLowerCase()
+          const user = (e.username ?? '').toLowerCase()
+          if (name === t || user === t) return 0
+          if (name.startsWith(t) || user.startsWith(t)) return 1
+          return 2
+        }
+        candidates.sort((a, b) => rank(a) - rank(b))
+        const hit = candidates[0]
         if (hit?.userId) {
           recipientUserId = hit.userId
           isWhisper = true
           messageBody = body
+          matched = true
         }
       }
     }
