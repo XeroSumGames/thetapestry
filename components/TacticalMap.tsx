@@ -642,9 +642,12 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       ctx.shadowColor = 'transparent'
       ctx.shadowBlur = 0
 
-      // Destroyed objects get a shatter/crack pattern; dead or mortally wounded
-      // PCs/NPCs get the red combat X.
-      if ((tokenMortal || tokenDead) && !(tokenDead && t.token_type === 'object')) {
+      // Dead or mortally wounded — red combat X for everyone (PCs, NPCs,
+      // destroyed objects). Previously objects got a subtle dark-crack
+      // pattern that was too easy to miss at a glance on busy terrain;
+      // the red X matches the PC/NPC "this token is out of the fight"
+      // convention so the map reads consistently.
+      if (tokenMortal || tokenDead) {
         ctx.save()
         ctx.globalAlpha = 1
         ctx.strokeStyle = '#ff2020'
@@ -659,22 +662,6 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         ctx.moveTo(cx + xSize, cy - xSize)
         ctx.lineTo(cx - xSize, cy + xSize)
         ctx.stroke()
-        ctx.restore()
-      } else if (tokenDead && t.token_type === 'object') {
-        ctx.save()
-        ctx.globalAlpha = 1
-        ctx.strokeStyle = '#3a2a1a'
-        ctx.lineWidth = Math.max(2, radius * 0.14)
-        ctx.lineCap = 'round'
-        const reach = radius * 0.85
-        // Six cracks radiating from center at uneven angles for a broken-glass feel
-        const angles = [-1.4, -0.6, 0.2, 0.9, 1.7, 2.5]
-        for (const a of angles) {
-          ctx.beginPath()
-          ctx.moveTo(cx, cy)
-          ctx.lineTo(cx + Math.cos(a) * reach, cy + Math.sin(a) * reach)
-          ctx.stroke()
-        }
         ctx.restore()
       }
 

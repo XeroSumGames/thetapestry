@@ -6730,47 +6730,78 @@ export default function TablePage() {
 
         // Equip a weapon from inventory into the primary slot (playtest #15).
         // Closes the loot→ready loop: looted weapons land in
-        // `character.data.inventory[]` as InventoryItem rows; previously
-        // there was no pathway to promote them into an active slot short
-        // of hand-editing the character sheet. Now clicking Equip on an
-        // inventory weapon here:
+        // `character.data.inventory[]` (PC) or `campaign_npcs.inventory`
+        // (NPC) as InventoryItem rows; previously there was no pathway
+        // to promote them into an active slot short of hand-editing
+        // the sheet. Now clicking Equip on an inventory weapon here:
         //   - decrements that weapon's qty in inventory (removes if 0)
         //   - pushes the existing primary (if any) back to inventory
         //     (stacks with matching entry if one exists)
-        //   - writes the inventory weapon into weaponPrimary with Used
+        //   - writes the inventory weapon into the primary slot with Used
         //     condition, full clip, and rolled reloads
         //   - consumes the Ready Weapon action
         // Nothing is ever lost — displaced weapons return to inventory.
         async function doEquipFromInventory(invItemName: string) {
-          if (!charEntry) return
           const w = getWeaponByName(invItemName)
           if (!w) return
-          const inv: InventoryItem[] = (charData.inventory ?? []) as InventoryItem[]
-          // 1) Decrement source inventory entry
-          let newInv: InventoryItem[] = inv
-            .map(i => i.name === invItemName ? { ...i, qty: i.qty - 1 } : i)
-            .filter(i => i.qty > 0)
-          // 2) Return displaced primary to inventory (stacks if a matching entry exists)
-          if (primary?.weaponName) {
-            const existingW = getWeaponByName(primary.weaponName)
-            const idx = newInv.findIndex(i => i.name === primary.weaponName && !i.custom)
-            if (idx >= 0) {
-              newInv = newInv.map((i, j) => j === idx ? { ...i, qty: i.qty + 1 } : i)
-            } else if (existingW) {
-              newInv = [...newInv, { name: primary.weaponName, enc: existingW.enc, rarity: existingW.rarity, notes: '', qty: 1, custom: false }]
+          // Branch on PC vs NPC. Both carry InventoryItem[]; the target
+          // row (characters.data vs campaign_npcs.*) and the primary slot
+          // shape (weaponPrimary vs skills.weapon) differ.
+          if (charEntry) {
+            const inv: InventoryItem[] = (charData.inventory ?? []) as InventoryItem[]
+            let newInv: InventoryItem[] = inv
+              .map(i => i.name === invItemName ? { ...i, qty: i.qty - 1 } : i)
+              .filter(i => i.qty > 0)
+            if (primary?.weaponName) {
+              const existingW = getWeaponByName(primary.weaponName)
+              const idx = newInv.findIndex(i => i.name === primary.weaponName && !i.custom)
+              if (idx >= 0) {
+                newInv = newInv.map((i, j) => j === idx ? { ...i, qty: i.qty + 1 } : i)
+              } else if (existingW) {
+                newInv = [...newInv, { name: primary.weaponName, enc: existingW.enc, rarity: existingW.rarity, notes: '', qty: 1, custom: false }]
+              }
             }
+            const newPrimary = {
+              weaponName: invItemName,
+              condition: 'Used',
+              ammoCurrent: w.clip ?? 0,
+              ammoMax: w.clip ?? 0,
+              reloads: w.ammo ? Math.floor(Math.random() * 3) + 1 : 0,
+            }
+            const newData = { ...charData, weaponPrimary: newPrimary, inventory: newInv }
+            await supabase.from('characters').update({ data: newData }).eq('id', charEntry.character.id)
+            setEntries(prev => prev.map(e => e.character.id === charEntry.character.id ? { ...e, character: { ...e.character, data: newData } } : e))
+          } else if (npcForWeapon) {
+            const inv: InventoryItem[] = ((npcForWeapon as any).inventory ?? []) as InventoryItem[]
+            let newInv: InventoryItem[] = inv
+              .map(i => i.name === invItemName ? { ...i, qty: i.qty - 1 } : i)
+              .filter(i => i.qty > 0)
+            // Displaced NPC weapon goes back to inventory, same stacking rule.
+            const currentWeapon = (npcForWeapon.skills as any)?.weapon
+            if (currentWeapon?.weaponName) {
+              const existingW = getWeaponByName(currentWeapon.weaponName)
+              const idx = newInv.findIndex(i => i.name === currentWeapon.weaponName && !i.custom)
+              if (idx >= 0) {
+                newInv = newInv.map((i, j) => j === idx ? { ...i, qty: i.qty + 1 } : i)
+              } else if (existingW) {
+                newInv = [...newInv, { name: currentWeapon.weaponName, enc: existingW.enc, rarity: existingW.rarity, notes: '', qty: 1, custom: false }]
+              }
+            }
+            const newWeapon = {
+              weaponName: invItemName,
+              condition: 'Used',
+              ammoCurrent: w.clip ?? 0,
+              ammoMax: w.clip ?? 0,
+              reloads: w.ammo ? Math.floor(Math.random() * 3) + 1 : 0,
+            }
+            const newSkills = { ...(npcForWeapon.skills ?? {}), weapon: newWeapon }
+            await supabase.from('campaign_npcs').update({ skills: newSkills, inventory: newInv }).eq('id', npcForWeapon.id)
+            // Reflect locally so the combat bar / card see the new weapon instantly.
+            setCampaignNpcs(prev => prev.map(n => n.id === npcForWeapon.id ? { ...n, skills: newSkills, inventory: newInv } as any : n))
+            setRosterNpcs(prev => prev.map(n => n.id === npcForWeapon.id ? { ...n, skills: newSkills, inventory: newInv } as any : n))
+          } else {
+            return
           }
-          // 3) Build the new primary slot data
-          const newPrimary = {
-            weaponName: invItemName,
-            condition: 'Used',
-            ammoCurrent: w.clip ?? 0,
-            ammoMax: w.clip ?? 0,
-            reloads: w.ammo ? Math.floor(Math.random() * 3) + 1 : 0,
-          }
-          const newData = { ...charData, weaponPrimary: newPrimary, inventory: newInv }
-          await supabase.from('characters').update({ data: newData }).eq('id', charEntry.character.id)
-          setEntries(prev => prev.map(e => e.character.id === charEntry.character.id ? { ...e, character: { ...e.character, data: newData } } : e))
           clearAimIfActive(active.id)
           consumeAction(active.id, `${active.character_name} — Ready ${invItemName}`)
           setShowReadyWeaponModal(false)
@@ -6853,11 +6884,18 @@ export default function TablePage() {
                 </div>
               )}
 
-              {/* Equip from Inventory — any weapon the character is carrying can
-                  be readied into the primary slot. Primary goes back to inventory
-                  (no loss). Closes the loot→ready gap from playtest #15. */}
+              {/* Equip from Inventory — any weapon the character is carrying
+                  can be readied into the primary slot. Primary goes back to
+                  inventory (no loss). Closes the loot→ready gap from
+                  playtest #15. Reads PC inventory from characters.data or
+                  NPC inventory from campaign_npcs.inventory depending on
+                  whose turn it is. Without the NPC branch an NPC could
+                  loot a fire axe and still show "Primary: None" here with
+                  no way to equip it. */}
               {(() => {
-                const inv: InventoryItem[] = (charData.inventory ?? []) as InventoryItem[]
+                const inv: InventoryItem[] = charEntry
+                  ? ((charData.inventory ?? []) as InventoryItem[])
+                  : (((npcForWeapon as any)?.inventory ?? []) as InventoryItem[])
                 const invWeapons = inv.filter(i => getWeaponByName(i.name))
                 if (invWeapons.length === 0) return null
                 return (
