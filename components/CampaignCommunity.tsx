@@ -243,7 +243,7 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
   // ── Render ───────────────────────────────────────────────
   const chipBtn: React.CSSProperties = {
     padding: '4px 10px', background: 'transparent', border: '1px solid #7ab3d4',
-    borderRadius: '3px', color: '#7ab3d4', fontSize: '12px',
+    borderRadius: '3px', color: '#7ab3d4', fontSize: '14px',
     fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', cursor: 'pointer',
   }
@@ -266,15 +266,15 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
       {showCreate && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div>
-            <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Name</div>
+            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Name</div>
             <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. The Mongrels" style={inp} />
           </div>
           <div>
-            <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Description</div>
+            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Description</div>
             <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} rows={2} style={{ ...inp, resize: 'vertical' }} />
           </div>
           <div>
-            <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Homestead pin (optional)</div>
+            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Homestead pin (optional)</div>
             <select value={newHomestead} onChange={e => setNewHomestead(e.target.value)} style={{ ...inp, appearance: 'none' }}>
               <option value="">— None —</option>
               {pins.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -309,23 +309,23 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
               style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
-                  <span style={{ fontSize: '12px', padding: '1px 6px', borderRadius: '2px', background: c.status === 'dissolved' ? '#2a1210' : isCommunity ? '#1a2e10' : '#2a2010', color: c.status === 'dissolved' ? '#f5a89a' : isCommunity ? '#7fc458' : '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                  <span style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                  <span style={{ fontSize: '14px', padding: '1px 6px', borderRadius: '2px', background: c.status === 'dissolved' ? '#2a1210' : isCommunity ? '#1a2e10' : '#2a2010', color: c.status === 'dissolved' ? '#f5a89a' : isCommunity ? '#7fc458' : '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                     {c.status === 'dissolved' ? 'Dissolved' : isCommunity ? 'Community' : 'Group'}
                   </span>
                 </div>
-                <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   {total} member{total === 1 ? '' : 's'}{!isCommunity && total > 0 ? ` · ${13 - total} more for Community` : ''}
                 </div>
               </div>
-              <span style={{ fontSize: '12px', color: '#5a5550' }}>{isOpen ? '▲' : '▼'}</span>
+              <span style={{ fontSize: '14px', color: '#5a5550' }}>{isOpen ? '▲' : '▼'}</span>
             </div>
 
             {/* Body */}
             {isOpen && (
               <div style={{ padding: '0 10px 10px 10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {c.description && (
-                  <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.4 }}>{c.description}</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.4 }}>{c.description}</div>
                 )}
 
                 {/* Role bars */}
@@ -337,7 +337,7 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
                     const count = mems.filter(m => m.role === r).length
                     const ok = pct >= min && pct <= max
                     return (
-                      <div key={r} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      <div key={r} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif' }}>
                         <span style={{ width: '84px', color: '#cce0f5', letterSpacing: '.04em', textTransform: 'uppercase' }}>{ROLE_LABEL[r]}</span>
                         <div style={{ flex: 1, height: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '2px', overflow: 'hidden' }}>
                           <div style={{ width: `${Math.min(100, pct)}%`, height: '100%', background: ok ? '#7fc458' : '#c0392b', transition: 'width 0.2s' }} />
@@ -345,7 +345,7 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
                         <span style={{ width: '54px', textAlign: 'right', color: ok ? '#7fc458' : '#c0392b' }}>
                           {count} ({pct}%)
                         </span>
-                        <span title={`Target: ${min}${max < 100 ? `-${max}` : '+'}%`} style={{ fontSize: '12px', color: '#5a5550' }}>
+                        <span title={`Target: ${min}${max < 100 ? `-${max}` : '+'}%`} style={{ fontSize: '14px', color: '#5a5550' }}>
                           {min}{max < 100 ? `-${max}` : '+'}%
                         </span>
                       </div>
@@ -359,15 +359,15 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
                   if (list.length === 0) return null
                   return (
                     <div key={r}>
-                      <div style={{ fontSize: '12px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>{ROLE_LABEL[r]}</div>
+                      <div style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>{ROLE_LABEL[r]}</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                         {list.map(m => (
                           <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 6px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '2px' }}>
-                            <span style={{ fontSize: '12px' }}>{m.npc_id ? '👤' : '🎭'}</span>
+                            <span style={{ fontSize: '14px' }}>{m.npc_id ? '👤' : '🎭'}</span>
                             <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberLabel(m)}</span>
-                            <span style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{RECRUITMENT_LABEL[m.recruitment_type]}</span>
+                            <span style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{RECRUITMENT_LABEL[m.recruitment_type]}</span>
                             <select value={m.role} onChange={e => handleChangeRole(m, e.target.value as Role)}
-                              style={{ padding: '1px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                              style={{ padding: '1px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
                               {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
                             </select>
                             <button onClick={() => handleRemoveMember(m)} title="Remove"
@@ -382,31 +382,31 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
                 {/* Add member */}
                 {(availableNpcs.length > 0 || availableChars.length > 0) && (
                   <div style={{ padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                    <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Add Member</div>
+                    <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Add Member</div>
                     <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
                       <select value={addKind} onChange={e => { setAddKind(e.target.value as 'npc' | 'pc'); setAddSubjectId('') }}
-                        style={{ padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                        style={{ padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
                         <option value="npc">NPC</option>
                         <option value="pc">PC</option>
                       </select>
                       <select value={addSubjectId} onChange={e => setAddSubjectId(e.target.value)}
-                        style={{ flex: 1, padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                        style={{ flex: 1, padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
                         <option value="">— choose —</option>
                         {(addKind === 'npc' ? availableNpcs : availableChars).map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
                       </select>
                     </div>
                     <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
                       <select value={addRole} onChange={e => setAddRole(e.target.value as Role)}
-                        style={{ flex: 1, padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                        style={{ flex: 1, padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
                         {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
                       </select>
                       <select value={addType} onChange={e => setAddType(e.target.value as RecruitmentType)}
-                        style={{ flex: 1, padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                        style={{ flex: 1, padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
                         {(Object.keys(RECRUITMENT_LABEL) as RecruitmentType[]).map(rt => <option key={rt} value={rt}>{RECRUITMENT_LABEL[rt]}</option>)}
                       </select>
                     </div>
                     <button onClick={() => handleAddMember(c.id)} disabled={!addSubjectId}
-                      style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: addSubjectId ? 'pointer' : 'not-allowed', opacity: addSubjectId ? 1 : 0.5 }}>
+                      style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: addSubjectId ? 'pointer' : 'not-allowed', opacity: addSubjectId ? 1 : 0.5 }}>
                       + Add
                     </button>
                   </div>
@@ -414,7 +414,7 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
 
                 {/* Danger zone */}
                 <button onClick={() => handleDeleteCommunity(c)}
-                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '2px', color: '#c0392b', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
+                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '2px', color: '#c0392b', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
                   Delete Community
                 </button>
               </div>

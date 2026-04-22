@@ -52,7 +52,7 @@ export default function CommunityDetailPage() {
       <div style={{ marginBottom: '1rem' }}>
         <Link href="/communities" style={{ color: '#7ab3d4', fontSize: '13px', textDecoration: 'none', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>← My Communities</Link>
       </div>
-      <div style={{ fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Campaign</div>
+      <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Campaign</div>
       <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', color: '#EF9F27', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1rem' }}>{campaignName}</div>
       {/* Reuse the per-campaign panel; its list will include this community and
           the GM can open/manage it inline. */}
