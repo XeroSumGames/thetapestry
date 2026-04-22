@@ -1,0 +1,919 @@
+# Tapestry — Commit History
+
+Auto-generated from `git log` on 2026-04-22. Every shipped commit since the project started on 2026-03-29. Grouped by date, newest first.
+
+For phase-organized feature status see `tasks/totallist.md`. For the current sprint and Phase B plan see `tasks/todo.md`.
+
+---
+
+## 2026-04-22
+- `c867be6` fix(docs): restore todo.md backlog that previous commit overwrote
+- `679c0e0` chore: mount Community tab in Assets panel + formalize npc_relationships schema
+
+## 2026-04-21
+- `dd2c72b` feat: destroyed-object portrait swap
+- `518dd39` feat: grenade throw-to-cell + map shows all valid throw squares
+- `933b98b` fix: alert on object-damage silent RLS failure too
+- `51eaf50` fix: alert GM when PC damage is silently dropped by RLS
+- `7d30c31` feat: Attack modal auto-selects last-attacked target
+- `07c1404` feat: refined attack compact log phrasing per playtest spec
+- `00342cd` feat: explosives compact log reads 'X threw a Y at Z'
+- `9022960` feat: Move action gets 'X Moves' compact log line
+- `62daf29` feat: Grapple modal now supports Insight Die spend
+- `5563d04` feat: red X on destroyed objects + NPCs can ready looted weapons
+- `a1d3d4e` fix: attack log lands before loot log when the crate was auto-looted
+- `37a50fb` fix: attack target dropdown surfaces ALL map objects, not just destructible ones
+- `142b4c1` fix: NPC card no longer has empty 'shadow box' around it
+- `deb9f68` fix: player RLS — allow damaging destructible object tokens
+- `97d5b01` fix: Sprint 3d6 log breakdown + Initiative-before-Athletics race
+- `9fe2bb2` fix: stranded deferrers no longer get swallowed by new round
+- `4775578` feat: unarmed attacks get 'used Unarmed Combat on X' compact line
+- `563d8e7` style: compact log narrative lines bump 13 → 15px
+- `83e89ad` feat: clickable 'Current' pill + loot log trimming
+- `f551e88` fix: auto-loot falls back to current user's PC when no active combatant
+- `7913945` fix: auto-looted weapons appear in Ready Weapon modal immediately
+- `3727d97` fix: 3d6 Insight Die roll shows all three dice boxes in the modal
+- `e7d8de4` feat: draggable roll modal — shove aside to see the map
+- `c7bbeed` feat: pinned "→ Current" pill on initiative bar stays visible on scroll
+- `c52d9e1` style: initiative bar abbreviates last name to first initial
+- `aa15d20` feat: sprint expand shows mechanical winded consequence
+- `ae2a239` feat: defer is snappy + logs the action
+- `3a7831b` style: sprint log wording — narrative feel, no mechanical reveal
+- `07e5c5d` fix: snapshot clone regenerates UUIDs + remaps FKs
+- `4118442` feat: snapshot Download + Import — share a campaign with another GM
+- `38451e5` feat: #15 — Equip from Inventory in Ready Weapon modal
+- `98c79c1` fix: multi-defer no longer triggers premature new round
+- `e723ac6` fix: GM's × removes combatant without starting a new round
+- `1adc5a0` feat: log trimming — Sprint prototype
+- `d47ba5b` fix: deleted NPCs disappear from initiative bar immediately
+- `1e36514` fix: weapon dropdown change immediately reflects in combat action bar
+- `e502b7f` fix: Restore modal sees objects regardless of view + grouped UI
+- `94779a7` chore: stop auto-redirecting new signups to /firsttimers
+- `029e9ed` feat: player-facing read-only NPC card
+- `df73062` fix: suppress owner visit logging and email alerts
+- `eb99237` docs: #30 and #33 annotated with reasons they need user direction before coding
+- `32a3cfe` Playtest fix: #28 — token drag redraws coalesced via requestAnimationFrame
+- `d2a0cae` Playtest fix: #31 — ping is now a press-and-hold gesture
+- `09b9d76` Playtest fix: #34 — /whisper GM slash command in chat
+
+## 2026-04-20
+- `0566098` Playtest fix: #21 — player-side banner when their PC is incapacitated
+- `97aba3f` Playtest fix: #29 — compact log lines for more roll types
+- `073423e` Playtest fix: #32 — batch skip-walk state fetches for faster turn advance
+- `7b0be12` Playtest fix: #23 — GM can add a PC to live combat via "+ PC" button
+- `d30a610` Playtest fix: #22 (partial) — GM "+1 action" button in initiative bar
+- `751afd8` Playtest fix: #27 — player zoom snaps to GM's zoom on GM change
+- `11a8cbc` Playtest fix: #26 — spacebar pan smoothed via requestAnimationFrame
+- `6547d67` Playtest fix: #17 (partial) — grenades now damage objects in blast radius
+- `a979389` docs: audit notes for #14/#15/#16 — needs design call, not ready to code
+- `93369fb` Playtest fix: #20 (partial) — hide NPC wound/aim state from non-GM initiative bar
+- `2fb20e6` Playtest verified: #18 — range-gated targeting + default closest already covered by 0e7da10 + existing dropdown range filters + Roll-button disable
+- `ff0cb07` Playtest fix: #19 — range bands only visible to token owner (or GM)
+- `83d3c11` Playtest fixes: #24 drag gated by move range, #25 verified as resolved
+- `fb83d81` Playtest fix: #10 — token locks when owner has no actions left
+- `3e76fc6` Playtest fix: #7 — defer swaps rolls directly, guaranteed 1-step move
+- `a83697c` Playtest fix: #5 — AIM badge clears after the next attack resolves
+- `276dcb3` Playtest fix: #3 + #4 — Sprint winded persists, pre-roll log suppressed
+- `896ac61` Playtest fix: #6 — Insight Dice 3d6 keeps all 3 dice (was: drop lowest)
+- `0fdff9a` Playtest fix: #13 — tactical-map reload returns to the table, not dashboard
+- `ff8d5ab` Playtest fix: #12 — disable forced /welcome redirect for unonboarded users
+- `fce7482` Playtest fix: #11 root cause — LayoutShell preserves path on /login bounce
+- `e276c50` Playtest fix: #11 diag — log /join redirect decision
+- `da3229b` Playtest fix: #11 followup — /join/[code] auth-gates on mount
+- `97210a8` Playtest fix: #11 — invite link survives signup/login redirect
+- `19be121` feat: compact log entries for Attack + Aim rolls, with ▸ expand toggle
+- `d05d18d` style: initiative roll number uses light blue for active too
+- `5598c50` style: drop redundant red dot on active combatant in initiative bar
+- `8b7d5ae` fix: players can now damage destructible object tokens (RLS policy)
+- `1a80349` fix: Reveal/Hide on objects propagates to players without reload
+- `f016012` style: GM slot label collapses to a single line "<username> (GM)"
+- `b807500` style: Attack Roll modal backdrop to 10% opacity
+- `697a0a4` fix: player-bar MAP button reflects actual token presence on the map
+- `8df1042` fix: nextTurn self-heals multi-active combatant state
+- `b04e3e0` feat: Restore button also restores damaged map objects (crates, barrels)
+- `0e7da10` feat: attack modal defaults to closest valid target on the map
+- `4f9fab6` fix: Logs-tab Initiative entry order matches the initiative bar
+- `2744b8f` fix: same-roll combatants no longer jump around in initiative bar
+- `13fe8d6` fix: signup trigger never aborts auth.users creation
+- `6a06726` fix: initiative hardening — re-entry guard + stable tiebreaker + self-no-op
+- `218a0b3` style: shatter overlay for destroyed object tokens
+- `5c24748` style: destroyed object tokens fade to 0.3 opacity
+- `f1f40fa` feat: NPCs auto-loot destroyed crates/barrels
+- `8b8c347` fix: initiative fixed-order display + range clobber when target pre-selected
+- `875c8d7` style: show NPC folder tree during combat too
+- `0854f00` style: player-bar button gap to 15px
+- `672cf83` style: more breathing room between MAP/POPOUT and avatar
+- `4cc3549` style: MAP button on left of player avatar, POPOUT on right
+- `deccf40` fix: deleting an NPC also cleans up their map token + initiative entry
+- `7346c26` fix: player double-click on NPC token only selects, no card
+- `cdcedef` fix: Move button anchors on selected token for GM, not active combatant
+- `2c5a279` fix: mobile banner only shows on actual phones
+- `2ffb006` feat: route all popouts through cascade helper
+- `2cac015` feat: cascade NPC-sheet popouts via shared helper
+- `e2c3b7d` fix: initiative no longer reactivates a combatant mid-round after a kill
+- `75ab44e` fix: disable player clicks on NPCs in Assets tab
+- `46cee3a` feat: default object WP=3 + explicit Indestructible toggle
+- `1beb42b` feat: attack modal lists non-combat PCs/NPCs on the map
+- `df2a333` fix: Notes-tab sprint/drop headers + NPC damage canvas repaint
+- `ce50927` fix: Sprint no longer burns actions on a silent click-fail
+- `f2e708f` feat: Insight Dice sequential reroll — allow second spend on the OTHER die
+- `731c914` docs: update TODO with combat audit fixes (2026-04-20)
+- `8d45c09` fix: combat action side effects — aim warning, coordinate re-roll preserved
+- `5fd0627` fix: combat initiative audit — winded, sprint, turn skip bugs
+
+## 2026-04-19
+- `d84ef19` fix: /npc-sheet popout picks up WP damage instantly via broadcast
+- `3467c94` fix: pre-consumed actions bypass the turn-gate on deferred rolls
+- `661ae86` fix: don't clear moveMode mid-Sprint when actions pre-consume
+- `640c835` feat: auto-log session / stress / insight / kill to progression log
+- `ed08b1e` fix: clear moveMode/charge/sprint when turn changes
+- `2693672` docs: update TODO — NPC filtering, loot modal, auto-loot, CDP, progression log, NPC popout, weapon info, tab order, katana
+- `54c7670` docs: TODO — check off today's Phase 3 polish + Communities Phase A
+- `b60af1a` style: default Assets panel tab is NPCs (was Pins)
+- `67e5fac` fix: add Edit button (✎) to NPC roster card — accessible without overlay
+- `17fe382` fix: Move log attributes to mover, not stale active combatant
+- `d1cac0e` style: tab order changes in tactical map mode — NPCs > Assets > Pins > Notes
+- `409df38` fix: Sprint log entry uses "SPRINT" header instead of "System"
+- `2e32ff8` fix: NPC damage realtime propagation + diagnostic logs
+- `96da512` feat: NPC card always shows weapon info (name, damage, range, condition)
+- `e331183` feat: clicking NPC in roster opens pop-out window instead of overlay
+- `eeb60be` feat: character progression log — automatic + manual journal
+- `0e943c8` fix: tactical_scenes.cell_px default 35, never 70
+- `f93d5e7` feat: CDP Award modal — GM bulk awards CDP to selected players
+- `d3b9f6a` feat: Empty jumpstart — Dylan/Becky NPCs, pins, scene, GM handout
+- `f42eaa9` feat: campaign snapshots — in-place save/restore for GM adventure resets
+- `6d9f7c9` docs: mark Insight Dice CMod as confirmed +3
+- `48f0f2e` style: NPC popout window resized to 607x357
+- `ddf4180` spec: Module System — flagship content engine (Phase 5)
+- `69359f7` style: NPC popout window resized to 607x258 (user-tuned)
+- `4ccbaff` style: NPC popout window resized to 600x800
+- `add1b47` feat: Popout button on NPC Roster rows
+- `0341c4c` fix: hide sidebar on /npc-sheet + auto-hide on future popout routes
+- `08f56f9` feat: auto-loot on crate destruction — contents go to attacker's inventory
+- `4797595` feat: NPC cards pop out into standalone windows
+- `d66348d` fix: wrap Restore + Loot header buttons in a fragment
+- `948fe44` feat: GM Loot Distribution modal — bulk give items to multiple players
+- `8ca5753` feat: NPC search + type/status filter chips on roster
+- `e3ba55d` docs: backlog summary CSV with effort estimates and descriptions
+- `436d6e6` feat: add Katana to weapon database — 4+3d3, Rare, Unwieldy 1
+- `8af7434` docs: mark confirmed bugs as fixed, move War Stories to Phase 4
+- `602de86` feat: Communities Phase A UI — sidebar route + list + detail
+- `237ef6b` docs: TODO — GM Kit v1 shipped but direction uncertain, paused
+- `cea3cb7` docs: update TODO with all 2026-04-19 session work
+- `118f631` feat: GM Kit seeds carry scene backgrounds + handout attachments
+- `da5e289` feat: Communities Phase A — DB schema + RLS
+- `4fd17a8` fix: session delete blocked by RLS — add GM delete/update policies
+- `070b386` chore: yank GM Notes debug tracing
+- `8f3367c` feat: import GM Kit zip into setting seed tables
+- `4543920` feat: GM Kit export + The Arena story option
+- `fc612aa` style: widen Edit/Add NPC modal 430→560px (max 92vw)
+- `900e8da` feat: center viewport on the map's middle when a scene loads
+- `28165f5` style: item-chip preview on locked crates for GM
+- `0aee06f` style: smoother Assets → Objects row layout
+- `0fc3842` assets: add public/gm-icon.png for player-bar GM cell
+- `d5a309b` feat: custom GM icon on the player bar (public/gm-icon.png)
+- `b9e1c88` fix: players see un-share of GM Note in real time
+- `76f500b` style: split GM Note actions into two rows
+- `3106ab3` fix: GM Notes upload RLS — qualify `name` as storage.objects.name
+- `edeac42` debug: print upload path + auth uid for GM Notes attachments
+- `915703c` debug: trace file-picker onChange on GmNotes
+- `18d3833` debug: loud tracing on GmNotes save path
+- `b691a6b` fix: surface GM Notes upload errors instead of swallowing
+- `19aeeac` feat: split New Story and New Campaign flows with distinct setting lists
+- `b18d325` feat: Popout button on player-side GM Handouts
+- `e52d2fe` feat: Popout buttons everywhere + handout page + session notes on char sheet
+- `ac326ba` fix: Stress Check fires even when sheet isn't open
+- `2496691` feat: pop-out button (↗) on bottom portrait bar for character sheets
+- `917c22a` fix: PC damage broadcasts include patch for instant client-side update
+- `7b376d9` fix: character sheet pop-out width 700→800 to avoid mobile banner
+- `5c27407` feat: character sheet pop-out window with realtime sync
+- `03af93c` docs: update TODO with vehicle system completion
+- `a1288e4` style: vehicle pop-out cargo + notes text bumped by 2px
+- `3a190ef` feat: Minnie floorplan image below fuel reserves on vehicle pop-out
+- `eb32c3d` feat: Add Item button on vehicle pop-out cargo section
+- `56f7a22` fix: vehicle and GM screen pop-outs hide sidebar (full-width layout)
+- `7462d02` feat: editable Operator Notes on vehicle pop-out page
+- `01a4b8a` style: enforce 12px minimum inline fontSize sitewide
+- `55e1c5c` feat: vehicle sheet editable by all campaign members + realtime sync
+
+## 2026-04-18
+- `fe1bde9` feat: vehicle sheet pop-out window with full layout
+- `1e21178` spec: Communities — add Tapestry Persistent World layer (Phase E)
+- `28b5ba9` spec: Communities, Recruitment, Morale (XSE SRD §08)
+- `235555a` feat: VehicleCard — interactive vehicle sheet with WP, stress, fuel, cargo
+- `415eb0e` feat: Pins as a top-level Assets-panel tab
+- `ff21118` fix: hide NPC type label in campaign-map pin popups
+- `534ff95` docs: mark Add to Combat filter as done (already working)
+- `181572f` feat: persistent object sort order in Assets sidebar
+- `efafe31` fix: double-clicking a token also selects it as attack target
+- `67d74bd` feat: objects draggable to reorder in Assets sidebar
+- `5397cb0` feat: object tokens show 2-line name + Edit button in info panel
+- `b53e01d` fix: guarantee chat + roll log clear on session start/end
+- `116ac53` docs: update TODO — NPC folders, Show/Hide sync, session renumber, timeline dates, First Impression CMod
+- `ea10d90` feat: Duplicate button for objects in GM Assets panel
+- `68687a6` docs + chore: TODO for today's tactical-map + object-token work
+- `8751841` sql: force note-attachments bucket public for player image handouts
+- `8b195da` fix: GM Note share toggle — surface silent RLS failures
+- `581b8d7` feat: GM note image handouts — inline preview + click-to-zoom lightbox
+- `f16c5cc` feat: Thriver tool — rescale tactical scenes to new img_scale baseline
+- `aad5317` fix: Cols/Rows changes no longer resize the background image
+- `ca46716` fix: GM/player tactical-map alignment — image size derived from grid
+- `59abccb` feat: lootable flag — GM can unlock intact crates for player looting
+- `0ad2ecb` feat: players can Take loot from destroyed crates
+- `79bf6fd` feat: Order box on CampaignPins edit form (parity with /map sidebar)
+- `6d2b820` feat: crop UI for object-token image uploads
+- `338ade2` feat: folder field on NPC edit form — dropdown of existing + type new
+- `e076493` feat: NPC roster folder tree with drag-and-drop
+- `a9939ea` feat: Show/Hide NPC syncs token visibility on tactical map
+- `a15b66f` feat: sort order field on Edit Pin modal for timeline pins
+- `a11eeee` style: always show object-token library picker (even when empty)
+- `0a2c780` docs: SQL to set Distemper Timeline chronological sort order
+- `aefd957` feat: object-token image library — reuse uploaded art across tokens
+- `e1fff34` fix: notes textarea resize vertical only (modal handles both-axis resize)
+- `a47342a` feat: timeline pins show event_date instead of author/created, notes textarea resizable
+- `1b97a69` fix: deleting a session renumbers remaining and updates campaign count
+- `dd8e589` docs: update TODO — GM Screen done, code audit results logged
+- `3f3f019` docs: TODO — kicked players excluded from initiative on combat start
+- `211b227` docs: TODO — weapon range realism pass + Taser split + inventory weapons
+- `079c424` feat: inventory catalog includes all weapons
+- `1595cb1` fix: add activeId to pendingChargeRef type
+- `19d5b03` fix: inventory + From Catalog now persists in the UI
+- `08e11ca` fix: build error — make doUnjam and stabilize onClick async for await
+- `32fc741` fix: code audit — critical, high, medium, and low severity fixes
+- `405e63d` feat: realism pass on weapon ranges + split Taser
+- `3504558` fix: kicked players excluded from initiative on combat start
+- `6a37898` fix: clamp weapon range circle to map extent
+- `ca409e7` fix: range circles on PC/NPC only, never objects
+- `b89daa3` style: GM Screen font size bumped from 12px to 15px
+- `1622b86` feat: GM Screen — pop-out reference panel for second monitor
+- `02f2939` fix: resolve Vercel build — TacticalMap onTokenSelect + session state
+- `b004c26` fix: simplify whisper fetch + RLS enforcement
+- `0c2416f` docs: TODO — whispers shipped + tactical map session updates
+- `68fb85c` fix: chat 400 error when userId null + remove 403 notification insert on kick
+- `6a0ebc6` fix: kick — use local var for GM check, add diagnostic logging
+- `55f1601` fix: add missing ObjectCard component
+- `4d56869` fix: whispers never delivered — stale userId closure in loadChat
+- `d5d5a19` fix: build error — extra paren in merged feed ternary
+- `51ce9a9` feat: whisper chat — private messages between players
+- `15afcd6` fix: restore range circles on selected token (Engaged/Move/Weapon)
+- `52e03a6` style: bump Edit Object modal fonts for readability
+
+## 2026-04-17
+- `dc0be91` fix: tactical map sticky drag + TODO updates for recent session
+- `ddeb2cf` docs: update TODO with inventory system, kick fix, and session changes
+- `a81b0b3` feat: inventory loot/trade — give items between characters at the table
+- `ede68e2` feat: player inventory system
+- `75120d9` fix: kick persists via kicked flag on character_states
+- `60fbffa` fix: kick persists — deletes character_states so player doesn't reload on refresh
+- `915cb47` docs: update TODO with all 2026-04-16/17 session changes
+- `c29d273` docs: comprehensive user guide + updated test plan
+- `0a3ba8a` feat: loot system — item picker, auto-reveal, loot transfer
+- `d7f7395` fix: compact empty state for player Map Pins — no flex:1 stretching
+- `dfee72d` style: Assets tab folders default to closed
+- `b626503` docs: add GM Kit Export to TODO (Phase 5 — Module System)
+- `892916d` fix: add close button (✕) to token info panel for deselecting
+- `615afab` style: token size slider max 1000% (was 500%)
+- `06f28e1` feat: token properties — flexible key-value attributes with visibility
+- `3108a0e` feat: Edit button on object tokens — name, WP, image
+- `4de7778` feat: Show/Hide button on object tokens + zoom slider capped at 100%
+- `0273cf8` style: size slider max 500%, range circles removed
+- `f7061ff` feat: token resize + rotation on tactical map
+- `505b633` fix: object tokens spawn at top-left (1,1), not top-right
+- `96a3fed` fix: Assets tab folder tree — simplified from IIFE to direct JSX
+- `fcafcda` feat: object tokens + Assets tab explorer
+- `a043827` feat: Blast Radius AoE — auto-apply scaled damage to nearby tokens
+- `26a806c` feat: secondary weapon for Foe/Antagonist NPCs
+- `78c1f75` fix: map pin popup appears above the pin icon, not overlapping it
+- `bed59ad` fix: rumor pins not showing — loadPins ran before auth completed
+- `c19666e` fix: type annotation on second debug filter callback
+- `b613291` fix: type annotation on debug log map callback
+- `49adc1e` feat: double-click Cols/Rows values to type a number directly
+- `31b9e2b` debug: add console.warn to loadPins for rumor pin diagnosis
+- `6b3ecc2` fix: cloned NPC appears directly below the source NPC
+- `6a16919` fix: map pin visibility checks all categories, not just primary
+- `b91b009` feat: clone NPC button — duplicates NPC with auto-numbered name
+- `12d0978` style: reduce portrait bank to 3 — Enemy (red), Ally (green), Neutral (white)
+- `6bc6125` fix: portrait library picker appears above NPC edit modal
+- `d794cd4` fix: drop CHECK constraint entirely, rely on trigger for normalization
+- `5c04fb0` fix: backfill lowercase roles BEFORE adding new check constraint
+- `84c9564` fix: drop profiles_role_check constraint before lowercasing roles
+- `a17be7a` style: NPC roster card layout — × under drag handle, larger portrait, wrapping names
+- `1a124d1` feat: add Launch button to Edit Story page
+- `314bb6d` fix: normalize profiles.role to lowercase — eliminates case bugs
+- `4b071c6` fix: Update Seed Data button not showing — role check was case-sensitive
+- `6d5f2c4` fix: rumor pins always show on map regardless of folder visibility
+- `1a03f64` chore: trigger Vercel rebuild for seed changes
+- `758a043` fix: rumor pins show ❓ emoji on map regardless of category
+- `9a3a97d` fix: place new tokens at top-left (0,0) instead of top-right
+- `8024890` fix: auto-populate tokens at top-left of tactical map
+- `3201d8d` feat: DB-backed seeds + Sync to Seed for all settings
+- `a8c9ba2` feat: bypass empty scene screen — auto-activate most recent or open Create modal
+- `1ecc7b7` feat: Open Scene dropdown on empty tactical map screen
+- `06f691f` fix: map popups no longer cover the pin icon
+- `d2d2751` feat: 7 Mongrels road encounter NPCs + SQL to seed existing campaigns
+- `a41670a` fix: map pins use ref for hiddenFolders to avoid stale closure
+- `f12a815` style: rename Back button to Stories in table header
+- `0d9d62f` fix: map pins get dark circle background for visibility
+- `a9e571c` feat: smooth token dragging on tactical map
+- `196c2d1` fix: pin attachments load and display when expanded in folder tree
+- `99ce3cf` fix: category chips show emoji + label clearly (was hard to read)
+- `516fdd9` feat: multi-category pins — create, edit, and folder display
+- `e140eca` fix: ghosts see the world map directly instead of splash page
+- `40a90d7` fix: changing grid cols/rows no longer resizes the map image
+- `7e65cf5` style: map default center [8.2316, 13.5352] zoom 3
+- `9ebd3ff` style: set world map default center to [2.2934, 8.7891] zoom 3
+- `2d0c754` feat: Copy Map Position in sidebar under Logs (Thriver only)
+- `90b18be` fix: move Copy Position to floating button on map (works in embedded view)
+- `49d3067` feat: Copy Position button on world map (Thriver only)
+- `94aaa6f` style: center world map on US (39, -111) at zoom 5
+- `cff656c` fix: new scenes default to 35px cell size (was DB default 70px)
+- `63ee072` feat: link campaign pins to tactical maps
+- `e3a0269` feat: GM name shown on Playing In campaigns
+- `c861ddc` feat: persist email on profiles + backfill from auth.users
+- `61eb075` style: Survivors present font 9px → 14px
+- `d2e8728` feat: world map sidebar tabs — Public, My Pins, Campaign
+- `d70bdf7` feat: visibility toggle on each folder in pin sidebar
+- `553878c` feat: pin images visible on expand + drag reorder for all players
+- `3684253` fix: CampaignPins build error — add type annotations for file params
+- `0fb3fa2` style: Distemper Timeline folder always at top of pin sidebar
+- `c416553` style: Rumor pin icon changed from 🎒 to ❓
+- `8705cc7` feat: file upload on Edit Pin modal
+- `d6e9252` feat: Sprint result logged to feed + Dashboard button moved
+- `382273a` style: remove action pips, increase Round text to 13px
+- `4de6ccc` feat: show Round X instead of Actions on combat bar
+- `53b2e65` chore: trigger Vercel rebuild
+- `678d267` fix: Sprint — move first, then Athletics check after landing
+- `d808ce2` fix: kick player — use DB notification as reliable fallback to broadcast
+- `a15a637` fix: Distemper Timeline pins sorted by sort_order (chronological)
+- `0baab22` style: rename World Event folder to Distemper Timeline
+- `ee53d93` fix: remove region filter buttons — folders handle all grouping
+- `6030a9c` fix: all pins visible in folder tree + timeline pins zoom to level 8
+- `96987c9` fix: kick removes from session only, not campaign
+- `9321d31` feat: Explorer-style folder tree replaces flat pin list on world map
+- `c8d96fb` feat: combat improvements, NPC remove, map fixes, grapple system
+- `da1ee1d` fix: remove worktree submodule ref causing Vercel build failures
+- `816ee11` chore: trigger Vercel rebuild
+- `6406243` fix: build error — 'active' possibly undefined in grapple modal
+- `f0d9183` fix: Sprint — 3x movement + winded only on failure
+
+## 2026-04-16
+- `93f0693` feat: confirm dialog when attacking yourself
+- `71635f6` fix: Coordinate logs one entry PER ally who benefits + awaits insert
+- `a9400ae` fix: root URL renders dashboard inline — no redirect at all
+- `4810665` fix: Subdue halves WP damage + ghosts land on /welcome not /dashboard
+- `b3b00a5` fix: stop bouncing ghosts — remove all auth redirects from landing
+- `726df23` fix: root URL goes to /welcome for ghosts, /dashboard for logged-in
+- `7ba1d3a` docs: comprehensive TODO update for combat actions + tactical map session
+- `e9a317e` fix: range circle shows PRIMARY weapon only, not best of all weapons
+- `78e841d` fix: ping color not propagating — handle nested payload structure
+- `f0a817c` feat: double-ping, player pings, color-coded (GM=orange, player=green)
+- `b5ad835` style: double GM ping pulse duration (0.02 → 0.01 increment)
+- `01874b1` fix: GM ping never rendered — ping not in draw() dependency array
+- `3e39cc6` feat: Coordinate success logs bonus recipients to the feed
+- `1a721fc` fix: Coordinate Tactics* roll hides target dropdown
+- `26d5f9f` fix: Charge target filter — skip weapon range check, stabilize dropdown
+- `ddf6c8e` style: remove Range Band selector from attack roll modal
+- `d5b5187` feat: dedicated Coordinate modal with dropdown + Roll Tactics button
+- `cf30c4c` fix: melee weapon range circles capped at realistic distances
+- `5534719` fix: social action modals show all combatants, not filtered by is_npc
+- `d22eaef` fix: warn when attacking without selecting a target
+- `16a1ade` feat: Coordinate action — full Tactics* roll with spatial ally detection
+- `b721f8e` fix: Coordinate/Cover Fire/Distract/Inspire target picker is now a modal
+- `fc8ace5` feat: auto +1 CMod when attacking same target twice in one turn
+- `d05864e` fix: drop phase transition re-rolls ALL combatants from DB
+- `e9239af` fix: drop phase inserts ALL combatants so NPCs are targetable
+- `96f6011` fix: Getting the Drop — proper solo round before initiative
+- `fe88a9e` feat: Getting the Drop — solo round before initiative
+- `3ee8179` style: range circles much bolder — full opacity strokes, bright colors
+- `312c741` style: range circles more visible — higher fill alpha + thicker stroke
+- `9160033` fix: token place/remove/toggle broadcasts to all clients
+- `bdfe515` fix: token moves broadcast to all clients for real-time sync
+- `e2bc318` fix: player token drag not syncing to GM — RLS UPDATE missing WITH CHECK
+- `6188544` style: zoom slider labels white (#f5f2ee)
+- `1d1ba0c` feat: players can drag their own token on the tactical map
+- `fbfc797` style: compact zoom slider — no label, 0%/100% endpoints, shorter
+- `f646930` style: move zoom slider to top-right of tactical map canvas
+- `7ef8762` fix: Map button toggles token on/off instead of showing alert
+- `ddf509e` fix: revert GM controls to left, tokens spawn top-right
+- `aa0c45e` fix: GM controls strip now renders on right via flex order
+- `b80db43` fix: move GM controls strip to right side of tactical map
+- `b60587d` fix: tokens spawn at top-right of tactical map instead of top-left
+- `c1f598d` fix: players can place and move their own token on tactical map
+- `1a5c78c` feat: SRD-compliant combat actions overhaul
+- `7f79f8e` fix: tactical map resize handles not responding to clicks
+- `0969182` feat: edit campaign map center location
+- `2591373` feat: campaign edit page at /stories/[id]/edit
+- `c0bb4b6` fix: remove storage.objects DELETE from reset SQL
+- `c65f7fd` chore: sql to reset portrait bank counters + storage
+- `e24c874` feat: separate tracking for auto-assigned vs manual portraits
+- `84e87be` feat: Library picker on NPC edit form + no-reuse random portraits
+- `1680a54` feat: shared portrait bank for random NPC portraits + character wizard
+- `f053988` fix: portrait resizer source image not rendering under circle
+- `c06fc85` feat: Resize Portraits link in thriver sidebar
+- `c6f3888` feat: portrait resizer circle crop + gender counter, pin coordinates
+- `7d62469` feat: portrait resizer tool at /tools/portrait-resizer
+- `71f164c` feat: per-weapon range CMod tables, color overlay, token HP/init badges
+
+## 2026-04-15
+- `e48536b` feat: Mongrels campaign seed, combat range enforcement, move mode, GM note sharing
+- `c4387cd` fix: players can place themselves on tactical map via Map button
+- `00be3ce` fix: stay on tactical map after combat ends, NPC portrait 40px centered
+- `55f4de6` style: NPC roster portrait doubled to 56px
+- `8611f6d` style: NPC roster — name/buttons left, portrait right
+- `a2d9cf5` style: NPC roster name and buttons aligned right for more token space
+- `e9d3934` feat(combat): Attack button opens roll modal with primary weapon
+- `01c1203` feat(tactical): smooth animated token movement with ease-out cubic
+- `9e582d9` fix: tokens scale with zoom, NPC roster buttons on second line
+
+## 2026-04-14
+- `8b7c4de` feat(tactical): Lock Map saves settings to DB, players see same view
+- `f3e514b` feat(tactical): weapon range circles, skip NPC card overlay on map
+- `4bef055` fix: range bands scale with cell_feet, disable scroll wheel zoom
+- `9ac4433` feat(tactical): cell size in pixels control (default 70px), NPC card TODO
+- `1a21923` fix: range bands distinct colors with labels, token name +2px
+- `7c18295` fix: token name centered directly beneath token, pixel-aligned
+- `a62817f` fix: token names rendered with dark background pill for legibility
+- `3eea1da` fix: refresh map token IDs when toggling tactical map
+- `56b25b4` feat(tactical): NPC Map button toggles add/remove, green when on map
+- `e4f31f2` fix: Map button on PC portraits 3x larger (11px, more padding)
+- `213e728` fix: Map toggle button on PC portraits — places or removes from map
+- `b00f7ec` fix: move + Map button next to player avatar, character name visible
+- `00dd0d3` feat(tactical): Share Map with players, renamed Map button to + Map
+- `67f89da` fix: Start Combat moved right of Campaign Map, scroll wheel zoom enabled
+- `aff6eff` feat(tactical): token placement from cards, portraits, grid controls
+- `2b1762c` feat(tactical): place tokens from NPC cards and PC portraits
+- `e5f2e70` feat(tactical): grid opacity slider, color picker, delete scene, uniform buttons
+- `3d0f98d` feat(tactical): grid overlay, zoom, pan, resize, fit-to-width
+- `0279aac` feat(tactical): scene dropdown, uniform buttons, UI polish
+- `1a5302c` feat: tactical map integration, GM tools, UI polish
+
+## 2026-04-13
+- `1d6e594` chore: update TODO with combat test status, prep for tactical map + Mongrels
+- `e3d0d6b` fix: Dashboard button opens in new window
+- `ab1db43` feat: Dashboard button in header bar, whisper chat + insight reroll TODO
+- `8b53199` feat: Survivors present count on sidebar under branding
+- `89e661e` fix: remove Open My Sheet to Roll button, add player NPC notes to TODO
+- `411d15f` fix: clicking character portrait toggles sheet open/closed
+- `494b09c` feat: hide sidebar on table page for full-width combat view
+- `eb7dde2` debug: add logging to kick broadcast for diagnosis
+- `c0e7bf9` fix: kick listener uses user.id from closure, not stale userId state
+- `be52852` fix: kick removes player from session, not campaign
+- `bffc95e` feat: GM can kick players from campaign via character sheet
+- `d4a2103` fix(combat): nextTurn re-fetches NPC data from DB, skips mortally wounded
+- `4fed97d` fix: death card rendering in Both tab matches Logs tab
+- `321dce3` style: campaign map pins get dark circle background with red border and glow
+- `51c8bdf` fix: player Assets tab filters by revealed, sidebar links same-window
+- `26a0e78` feat(combat): presence tracking, mortal wound fixes, restore all, fresh HP fetch
+- `700005f` fix(combat): mortal wound notifications, fresh HP fetch, initiative skip, restore all
+- `27e006c` feat(combat): initiative bar filtering, stabilize on PC sheet, restore modal, cross-client sync
+- `db7b817` chore: rename General Knowledge → Specific Knowledge, update TODO
+
+## 2026-04-12
+- `b8f8537` fix(combat): cross-client NPC damage sync, stabilize fix, dead NPC handling
+- `9ddd0bd` feat(combat): initiative bar rotation, dead NPC filtering, death logs, NPC HP sync
+
+## 2026-04-11
+- `99710f0` feat(combat): fix turn progression, gate all rolls, NPC mortal wounds, realtime damage
+- `8190b89` chore: commit all remaining working-tree files (end-of-session catch-all)
+- `6cb9f28` docs: capture session handoff notes and lessons
+- `29cf6ee` feat(table): combat action gating, mid-combat NPC reveal, unarmed fix, player note scoping
+- `9bafb5f` End of Session
+- `816bbc4` style: bump NPC card skill chip font from 11px to 13px
+
+## 2026-04-10
+- `b4d4671` docs: mark damage bidirectional fixed, add HP-render-lag as next issue
+- `06851d8` fix(damage): SQL for PC→NPC damage RLS
+- `2b4a846` fix(damage): RLS was silently blocking GM character_states updates
+- `2526a60` fix: convert diagnostic console.log to console.warn for prod survival
+- `6604f9a` fix: stop 406 spam from npc_relationships .single() calls
+- `42c12aa` fix: NPC center cards capped at 33.3% width
+- `c680b70` docs: add US-first map search and player pin drops to TODO
+- `621a449` docs: add character creation polish items to TODO
+- `2190e4b` chore: suppress visitor emails for signed-in users after their 5th visit
+- `56e6f20` docs: update TODO with combat session results, fix SQL alias
+- `abe8d0f` fix: damage display + Append to Summary prefixes character + player bar order
+- `05b2125` feat: player Notes tab + Add to Session Summary
+- `21d80ba` feat: players see the right-side asset panel with revealed NPCs
+- `d08eedc` fix: move viewingNpcs sync useEffect after campaignNpcs declaration
+- `3d80484` fix: open NpcCard refreshes when underlying NPC HP changes
+- `d689e0d` feat: initiative box shows combined Init mod, PCs in blue
+- `28da557` fix: Combat Started always renders above Initiative
+- `2d93894` fix: set user_id on system roll_log inserts to satisfy RLS
+- `0d2520c` chore: surface roll_log insert errors for combat_start/end
+- `1e08f72` feat(map): make region buttons toggle filters with active state
+- `408a56f` perf: unblock log-visit, add campaign_members RLS indexes
+- `54db2a9` fix(combat): cross-user RLS, NPC realtime, sequence guard, end log, NPC reorder
+- `e3e76b7` fix(combat): missing PCs, add Combat Started box, edit/drag pins
+- `a65592e` perf: player joins appear instantly, Start Combat avoids redundant fetches
+- `df25214` feat: Share button, GM Notes attachments, surface seed errors
+- `e8ed9b9` feat: Select All / Deselect All toggle in Start Combat NPC picker
+- `934c21c` perf: make Start Session instant via fire-and-forget DB writes
+- `3ce0bd7` feat: NPC↔pin links, sort_order with drag-and-drop, NPC seed schema fix
+
+## 2026-04-09
+- `f15ee19` feat: Empty campaign package — Gus pregen, NPCs, pins, scene, GM Notes
+- `6fe6537` feat: Chased campaign package — pregens, NPC fixes, scene seeding, Georgetown
+- `47db566` feat: seed 28 Mongrels campaign pins with notes, landmarks, and encounters
+- `4f7de2e` fix: timeline pins sort chronologically when Timeline filter is active
+- `62501d4` fix: v1.0 color matches The Tapestry (#f5f2ee)
+- `e66f7c2` fix: v1.0 text to 12px
+- `dac3363` fix: v1.0 text bumped to 15px
+- `848d26a` fix: v1.0 uses Distemper font to match The Tapestry
+- `219fc9b` fix: sidebar — remove DistemperVerse line, add v1.0 to The Tapestry
+
+## 2026-04-08
+- `50a3930` chore: update TODO — combat bug fixes marked done, known issues listed
+- `472753c` fix: suppress visitor emails from bot/cloud cities (San Jose, Ashburn, Boardman, Council Bluffs)
+- `e017bd3` chore: trigger Vercel redeploy
+- `3ac19c4` fix: type error — odCharId replaced with character.id
+- `91fd406` fix: nextTurn fetches fresh initiative from DB — eliminates stale state
+- `186482a` fix: initiative box appears in Logs panel, sheet button toggles
+- `6d0fed8` perf: instant turn changes — broadcast turn_changed, parallelize DB updates
+- `aa4dd37` perf: parallelize combat start — cut sequential DB calls from 8 to 3 rounds
+- `024dda3` fix: end session updates UI instantly, DB writes run in background
+- `e0cdd27` fix: auto-advance — use user_id match instead of character_id for turn detection
+- `19ba4f7` feat: add Exit button, chronological Both tab, clear logs on session start
+- `fbc44b2` debug: log combat action visibility check for Survivor player issue
+- `8a1282d` fix: combat broadcasts use subscribed channel ref — players get instant updates
+- `ec19e51` feat: clear logs/chat on session end, moderate UX updates
+- `332957c` fix: broadcast combat_started to players — no refresh needed
+- `0c4c1bd` feat: initiative breakdown in Logs tab — dice, ACU, DEX, Drop per combatant
+- `246f981` fix: combat remediation batch 2 — player X button, dead filter, PC damage, session ends combat
+- `d5bae68` feat: event filters, user deletion cascade, revealed NPCs for GM, moderate UX
+- `758e87c` fix: ending session auto-ends combat if active
+- `8815c1c` fix: combat testing remediation batch — 8 fixes
+- `cd2ce90` feat: damage breakdown in roll feed, visitor log exclude chips, user deletion fix
+- `11ec13a` fix: combat bugs — Unknown player name, NPC pips, initiative from fresh DB data
+- `84a22c0` feat: tactical map v1 + combat bug fixes + type error fixes
+- `0dbf9df` fix: auth lock race condition, user deletion, query optimization
+- `d9d5ae0` feat: rename /campaigns to /stories — URLs, text, and navigation
+- `ae4702e` fix: sidebar links open in same window (except Map & Campaigns), add Time column to visitor logs, fix RLS case mismatch
+- `a1654fa` feat: full SRD combat compliance — 11 fixes and additions
+- `9c74d1a` perf: remove duplicate fonts, parallelize queries, lazy-load images, trim deps
+- `18e89a0` fix: mobile banner bigger — 16px text, more padding
+- `ef0dac0` feat: mobile banner — 'best viewed on desktop' dismissible warning under 768px
+- `35e3aac` fix: damage now applies to NPCs in combat (was only hitting PCs)
+- `0f182c6` fix: auto-advance after 2 actions — re-fetch from DB to avoid stale closure state
+- `686fa06` fix: instant combat end for players via Realtime broadcast
+- `77dd8c3` feat: Ghost sees Timeline only + pin type selector on edit
+- `ab02462` fix: Checks dropdown matches header button size, add lesson about hdrBtn
+
+## 2026-04-07
+- `7968948` chore: update TODO — pin attachments complete
+- `caaf9a4` feat: pin sidebar — search, show/hide toggle, sort, filter chip layout
+- `cf13f8a` feat: pin card attachments — images inline, documents as download links
+- `51a0014` chore: linter fixes, TODO update, pin cards + hierarchy marked complete
+- `35e635d` feat: pin cards — expandable sidebar, enhanced popup, view count, nearby, context
+- `65c6269` fix: remove maxBounds lock, allow scrolling south to Chile, minZoom 2
+- `6dbb784` feat: pin hierarchy — visual weight by tier (landmark/event/location/personal)
+- `4b4f780` feat: setting region fly-to buttons — District Zero, Chased, Mongrels
+- `58224b1` feat: additional check types — Perception, Gut Instinct, First Impression, Group, Opposed
+- `96e104c` feat: initiative re-roll each round per SRD
+- `734e1c0` feat: Getting The Drop + Range Bands
+- `9ea766b` feat: stabilize success handler — stops death countdown, restores WP to 1
+- `d5dddb1` fix: action pips — orange waiting, green active, grey spent
+- `6a02b30` feat: Insight Die save modal + action pips on all initiative entries
+- `46bbca1` feat: combat Pass 3 — social/contested actions with cross-player CMod
+- `f48234f` fix: pin sidebar cards — buttons moved to bottom row, notes get 2 lines, tighter spacing
+- `bca96c4` feat: upkeep checks + encumbrance tracker
+- `82f5213` fix: move visitor map above Top Pages on /logging
+- `bab60ca` feat: damage & health automation — unconscious, mortal wounds, death countdown, status badges
+- `f66443f` docs: comprehensive totallist.md + expanded TODO phases 4-10
+- `24020d1` feat: filter chips replace sidebar tabs, Timeline view, Ghost default
+- `0c6e843` feat: visitor IP hash, visit counter, visual visitor map, action pips aligned
+- `941d4a3` feat: visitor geo-location, email alerts with location, combat action pips
+- `723a909` feat: all combat actions alphabetical, greyed when unavailable, header centered
+- `fc33228` feat: unified map sidebar — dashboard and map pages now identical
+- `5c75bad` fix: map center adjusted to lat 10
+- `3ec19d4` fix: remove Stadia Maps tiles (watercolor, toner, terrain) — require API key
+- `5b7a9a4` feat: combat actions Pass 2 + map center adjustment
+- `ebecc9c` feat: world map default view, world_event/settlement categories
+- `fad4413` feat: combat action slots, world event pins, map UI unification
+- `a17412d` feat: unified header buttons, campaign map matches world map, custom location, UI polish
+- `85ec397` feat: campaign map style selector, NPC edit from card, burst toggle, UI fixes
+- `52faf14` feat: NPC card grid layout, publish button, compact UI, bystander rename
+- `30cd292` feat: weapon traits Pass 2, map auto-center, UI polish
+- `ff07a2a` feat: 10 map tile styles + notification delete buttons
+- `bc5f2e9` feat: pin clustering + signup error fix
+- `3e89bd7` fix: signup error visibility + explicit profile creation fallback
+- `7d8b4d1` feat: weapon traits Pass 1 — Cumbersome/Unwieldy CMod penalties
+- `9ef55f2` refactor: extract shared SETTINGS, eliminate extra DB round-trip, DZ pins campaign-only
+
+## 2026-04-06
+- `5db66d7` feat: District Zero & Chased setting seeds, district0→district_zero rename
+- `048e1c3` fix: Make Thriver button — use correct DB casing (Thriver/Survivor)
+- `e22bcfa` fix: ghost wall copy — "you don't exist if you don't sign up", "go back to stalking"
+- `c7be09f` feat: ghost-to-survivor conversion tracking
+- `0421407` fix: hide non-active print sheets with display:none during print
+- `07b7382` fix: print sheet all black, single page only, ghost wall modal
+- `82ae70d` fix: print sheet — all text black (#111)
+- `d23d954` fix: print sheet — white background, black text, printer-friendly
+- `4440155` feat: redesign print sheet to match in-game dark theme character card
+- `74fa435` fix: unarmed attack button visible on /characters page too
+- `6864a07` fix: unarmed damage includes SMod per SRD, print sheet pips blank
+- `3723940` feat: file upload on pin placement, thinner unarmed attack button
+- `0601e0c` feat: GM can add campaign pins from the map — click to place
+- `71449c9` fix: center unarmed attack button text, update todo list
+- `4b43995` fix: remove unused table-level stress detection — simplify
+- `e89e178` fix: stress check modal shows on whichever screen has the sheet open
+- `15aa57e` fix: move stress useRef/useEffect to top level to fix React hooks order error
+- `29535f7` fix: swap inline/overlay drag, stress modal on player screen, chat names, auto-scroll
+- `a7cd371` fix: roll names, stress check on player screen, overlay not draggable
+- `a6b4c48` feat: Game Feed tabs, draggable inline sheet, stress check + breaking point CMod, NPC combat skills
+- `1e9f10c` fix: campaign map defaults to Street view
+- `3262777` docs: comprehensive TODO update — massive session complete
+- `b0f924f` fix: campaign map search bar positioned left of layer switcher
+- `644cf83` feat: campaign map — search bar with autocomplete + layer switcher
+- `4b8052a` fix: overlay opacity reduced to 30% — map clearly visible behind sheet
+- `dc2f5fa` fix: overlay mode more transparent (0.85→0.7) so map shows through
+- `87ae90b` feat: 4 combat skill buttons on PC character card
+- `16f5258` feat: NPC WP/RP health trackers on NPC Card
+- `f32b1a9` feat: campaign map replaces tactical map placeholder
+- `dea0741` feat: ghost mode — character builders bounce to login on interaction
+- `f8018e2` feat: Campaign Pins — separate from world map, GM controlled
+- `557e8ce` docs: add Campaign Pins spec to TODO — separate from world map
+- `6f82f3a` feat: rename NPC Roster to NPCs, add Assets tab for tokens & maps
+- `787e173` feat: sidebar links open in new tabs
+- `5d30d4e` feat: map autocomplete + ghost mode for character pages
+- `918f38c` feat: session history shows cliffhanger, Ghost label light green
+- `ba52983` feat: Ghost mode expanded — ghosts can browse campaigns, characters, creating
+- `8b6417e` fix: separate Realtime channel for campaign_members without filter
+- `604dc04` feat: Ghost mode — full sidebar experience for unauthenticated visitors
+- `0ead086` fix: table auto-refreshes when player joins campaign
+- `8f302ff` fix: map Ghost mode — only Public tab, no pin placement prompt
+- `1caed77` feat: Mongrels setting pins, ghost landing page polish
+- `59b5f14` add distemper-dogsign-logo.png to git
+- `80ebc57` feat: Ghost Mode — unauthenticated users can browse map and dashboard
+- `786fb90` fix: Show All toggles to red Hide All when all NPCs are revealed
+- `df3d56e` feat: weapon jam/degrade on Moment of Low Insight
+- `f39441f` feat: NPC roster highlights viewed cards, Show All button
+- `4dd44ea` feat: weapon dropdown on NPC Add/Edit form
+- `0c1fc9a` feat: NPC weapons, clickable skills/attrs, stackable cards
+- `f66f6ce` feat: "How did the session end?" field in End Session modal
+- `ba0cfbe` feat: NPC Card view — abbreviated character card for NPCs
+- `ad76be0` docs: TODO update — mark weapons system, combat rolls, damage, UI fixes complete
+- `208f0da` fix: table page uses full viewport height now that navbar is removed
+- `148ff74` fix: portrait strip shows "Character Name (Player)" on one line
+- `01dccd4` fix: player portrait strip — remove dark green background, keep green top border
+- `9cbaaef` fix: move Unarmed Attack button above weapons section
+- `09a9d86` fix: portrait strip fonts +2px, names can wrap, unarmed button visible
+- `c32a216` fix: rename "table" to "The Table" in loading and navigation text
+- `e52a06a` feat: Unarmed Attack button spanning full width below both weapons
+- `41b7139` fix: roll modal — "Attack Roll" for weapon attacks, "Conditional Modifier" label
+- `1353c51` fix: align weapon attack buttons, NPCs first in target dropdown
+- `28af08f` fix: bump roll modal font sizes — all labels 10→13px, title 18→20px, modifiers 13→15px
+- `9206a1f` fix: players can defer their own character in initiative
+- `c17b960` fix: rename Reveal→Show, add Fight button to add NPC to combat
+- `5299ac3` fix: reorder header — Start/End Combat before In Combat badge
+- `65f6a86` feat: Defer button on initiative tracker — move combatant down one slot
+- `5d45b18` fix: all NPCs pre-selected when starting combat
+- `ebda63b` fix: reduce DistemperVerse v1.0 font size 13→11px
+- `cf73d44` add Distemper logo images to public folder
+- `ced38cf` feat: sidebar branding — Distemper logo above The Tapestry title
+- `78b83f9` feat: auto damage calculation and application on successful attacks
+- `280f2c6` fix: update logo filename to distemper-dogsign-logo.png
+- `cd71855` feat: remove navbar, move everything to sidebar
+- `0684448` fix: weapon stats layout — Range aligned with Condition on same line
+- `c8280aa` feat: combat roll types — Attack button on weapons, damage in dice roller
+- `963d3c4` fix: align profession/concept with complication/words in two rows
+- `17c31f0` feat: reorganize character card header — concept/complication/words above RAPID
+- `81503d0` fix: weapons side-by-side layout with aligned rows
+- `7b8e821` feat: Concept shown next to Complication/Motivation on character card
+- `b5bc465` fix: weapon stats line font bumped 13→15px
+- `f80c3c8` fix: Reload button always visible — green when clips available, red when empty
+- `4834521` feat: reload tracker with 5 green pips and +/- buttons
+- `76ec91f` fix: weapon layout — stats+condition on one line, ammo+reload on one line
+- `e4f07f1` fix: weapon cards stack vertically instead of side-by-side
+- `a122943` fix: weapon UI polish — inline dropdown, formatted stats, traits label
+- `bec098d` feat: interactive weapon system — dropdowns, ammo pips, condition, reload
+- `03199d0` feat: weapon system — full SRD database, condition tracking, character display
+- `c73314a` fix: Insight Dice re-roll shows on all rolls except Moments of Insight
+- `472a5c3` fix: player joined shows character name when assigned
+- `930e1d3` feat: notify all campaign members when a player leaves
+- `f260738` feat: player joined notification goes to ALL campaign members
+- `4a92270` feat: inline character sheet in center panel with overlay toggle
+- `4166b9e` docs: comprehensive TODO update from roadmap v7
+- `04365ee` docs: comprehensive TODO update — mark completed items from this session
+- `6d92309` feat: green border and tint on player's own character in portrait strip
+- `021dfcd` fix: NPC reveal button shows Reveal (green) and Hide (red)
+
+## 2026-04-05
+- `fe9f808` feat: Launch button on campaign cards goes directly to table
+- `9cedbfd` feat: revealed NPCs auto-refresh for players via Realtime
+- `7fade43` fix: Reveal to Players defaults all players selected
+- `add5e72` feat: quick Reveal button on NPC roster list
+- `eca995e` fix: portrait aligned to top of character name on Final Review
+- `fc75229` fix: concept and description same color (#cce0f5) and both italic
+- `639932d` fix: test character stores concept as 'notes' matching buildCharacter
+- `ade46af` feat: Insight, CDP, Morality use bar trackers like Stress
+- `d920a66` feat: + Test Character button for Thrivers on My Survivors page
+- `3472bbe` feat: show character concept in Final Review header + test character script
+- `eb414a2` feat: clickable portrait on Final Review to upload photo
+- `31b3eeb` feat: redesign Final Review header — portrait next to name and details
+- `b3d1c51` fix: player joined notification includes character name, Enter opens new tab
+- `9aa46e3` feat: clickable step indicators on all character creation pages
+- `46dc6e2` fix: rumor approved/rejected notification shows pin name correctly
+- `4fce8c1` feat: show character portrait on Final Review page
+- `89eb12c` feat: Leave button on player campaign cards
+- `0ee9a65` fix: rename Thriver Dashboard back to Logs in navbar
+- `b17bb1e` fix: attribute CDP tracker shows 1 box matching 1 CDP available
+- `58e168a` fix: colorize notification body, close on Mark All Read, bump fonts
+- `529b83c` feat: Stress & Breaking Point system + Lasting Wounds
+- `aacce35` fix: top pages resolves campaign UUIDs to campaign names
+- `e4d5c20` feat: consolidate dashboard into /logging, add pin rejection notification
+- `02e1fb5` fix: navbar buttons all same height (32px) with consistent padding
+- `6cfa0e9` feat: IP logging via Edge Function, expanded event tracking
+- `a8679b9` feat: add stats cards and moderation queue to /logging page
+- `96e6810` feat: /logging page for Thrivers with visitor and event logs
+- `f2d59d7` feat: Share button on campaign cards copies invite link to clipboard
+- `fe20fa7` fix: auto-resize uploaded photos to 256x256 max, JPEG 80% quality
+- `3120237` feat: split welcome into /firsttimers (onboarding) and /welcome (new page)
+- `e3c1439` fix: enforce 13px minimum font size across entire NPC Roster
+- `b0c68fb` docs: create tasks/lessons.md with patterns from this session
+- `7722bd2` fix: restore broken emoji icons on welcome page
+- `63aa663` fix: welcome page never shows sidebar, uses inline nav for returning users
+- `9cd3f49` fix: welcome page layout flash, swap NPC roster button positions
+- `f568e25` feat: NPC form overhaul — generate picker, skill dropdowns, portrait bank
+- `ae21fec` fix: restore sidebar on /welcome for returning users, no flash
+- `76ff893` fix: welcome page always hides sidebar to prevent layout shift
+- `c2b3d92` style: header buttons match height of campaign name text block
+- `0818ff8` style: bump font sizes +2px on Roll Feed, GM Assets tabs, NPC buttons
+- `857b4cf` fix: move Start/End Session next to campaign name, fix bell color
+- `d975b21` fix: notification dropdown uses fixed positioning to avoid sidebar clipping
+- `7fe3509` style: notification bell color changes with state, sidebar divider
+- `d06449e` move notification bell from navbar to sidebar next to username
+- `44ee204` fix: session history header shows campaign name with session count below
+- `34364e8` style: replace all #5a5550 muted text with #cce0f5 light blue
+- `8217829` fix: session date/duration text color to light gray for readability
+- `0d0cf8a` fix: bump all font sizes +2px on session history page
+- `501a315` fix: session history grid fixed at 5 columns
+- `3d1f133` fix: remove max-width on session history to use full content area
+- `dc3b99c` fix: session history grid min-width reduced for sidebar layout
+- `ba62dbe` fix: dynamic player strip sizing, session history delete button
+- `0866eef` feat: session history grid layout with deactivate button
+- `6311463` feat: Session History page with summaries, notes, and attachments
+- `525cdd0` fix: expand file types in End Session modal, update todo, remove debug logs
+- `66e7984` feat: expanded End Session modal with notes and file attachments
+- `837daaa` feat: Random NPC Generator with Quick and Guided modes
+- `f87a0ea` feat: Logging & Notifications — Pass 4, Thriver dashboard and email alerts
+- `74b349c` feat: Logging & Notifications — Pass 3, notification bell UI
+- `1edafe2` feat: Logging & Notifications — Pass 2, DB triggers for notifications
+- `4463de2` feat: Logging & Notifications — Pass 1, event logging
+- `0a2c446` feat: NPC Roster — Pass 5, World NPC Library with moderation
+- `16de34e` feat: NPC Roster — Pass 4, relationship CMods and GM reveal
+- `71e2b00` feat: NPC Roster — Pass 3, initiative integration
+- `1e0c835` refactor: NPC Roster into GM Assets tab with sub-tabs
+- `9684dc7` feat: NPC Roster — Pass 2, NPC type and recruitment role
+- `b771626` feat: NPC Roster — Pass 1, basic CRUD and GM panel
+- `cd650ca` fix: print character sheet blank, Distemper font on mobile
+- `a7867d0` fix: insight dice persistence, ESC to close overlays, combat session badge
+
+## 2026-04-04
+- `eadbd15` feat: pre-roll Insight Dice spend — Roll 3d6 or +3 CMod
+- `cf9c072` feat: session open/close with session counter and GM summary
+- `16253f1` feat: roll feed size bump, auto-advance initiative, welcome dual-mode, thriver character viewer
+- `c02753f` feat: combat target selector — pick a target from initiative order during rolls
+- `193a020` fix: remove duplicate borderTop TS error, clean moderation page, email column wired up
+- `1e9f3a9` feat: Insight Dice spend UI — re-roll one or both dice after a roll
+- `dad5d27` fix: remove Insight Dice cap, no longer limited to 9
+- `248200e` fix: restore emoji icons in map pin categories
+- `50ba6f8` perf: optimistic stat updates in CharacterCard, instant dot/counter response
+- `743f864` perf: optimistic stat updates in CharacterCard, instant dot/counter response
+- `6f09337` fix: players can only open own sheet, roll feed updates immediately after roll
+- `daac8aa` style: brighten muted text from #b0aaa4 to #d4cfc9 site-wide
+- `6ac7146` fix: raise overlay z-index above sidebar
+- `b9d1d88` feat: dice roller, roll feed, deferred photo load on table page
+- `2ea948d` feat: dice roller, roll feed, deferred photo load, onRoll prop on CharacterCard
+- `87d2f4f` feat: dice roller, roll feed, deferred photo load, onRoll prop on CharacterCard
+- `98306c4` perf: parallelize loadEntries and loadRolls, unblock ensureCharacterStates
+- `5f4f243` fix: await onStatUpdate so WP/RP dots persist, fix WP formula includes DEX
+- `f2375be` perf: progressive table load, page shell renders immediately
+- `aaaf5e1` fix: CDP minus handler, print sheet blank, WP/RP error logging
+- `7d65be6` chore: trigger redeploy
+- `33205e5` fix: table only shows currently assigned character per player
+- `29be839` fix: My Stories Enter goes to campaign detail, not directly to table
+- `2a4c1ac` fix: table height accounts for 74px navbar
+- `e962dcc` feat: table redesign, portrait strip, character sheet modal, unified campaign layout
+
+## 2026-04-03
+- `9dbe0ab` feat: larger character photo, shorten Specific Knowledge label
+- `01e9963` fix: add age, physdesc, photoDataUrl to XSECharacter interface and buildCharacter
+- `72cab8e` fix: refresh map after pin deletion
+- `b2a9fd4` feat: confirm dialog before deleting pin from sidebar
+- `74288a4` fix: make sidebar delete button more visible
+- `2635420` feat: edit pin now includes category picker and delete button
+- `4409caf` fix: corrupted UTF-8 characters in map sidebar
+- `738b35c` fix: corrupted times symbol in map sidebar delete button
+- `2ae490e` feat: rename Launch to Enter, email on moderation users, editable pin coordinates
+- `aa88be9` fix: skill minus correctly recalculates delta; delete button on My Stories
+- `6bd5bab` fix: skill minus button correctly removes delta when refunding CDP
+- `428e1b7` feat: delete button on campaign detail page
+- `360b50c` feat: green for raised attrs/skills, swap Insight/CDP order
+- `326b90b` feat: raised skills and attributes show green instead of red
+- `115ee9d` feat: skills in 6-column grid layout on character card
+- `c2e05e4` fix: clean CharacterCard — WP/RP side by side, concept/description on one line, CDP tracker
+- `0cfc669` feat: add CDP tracker to character card, concept/physdesc labels
+- `f0b609c` feat: unified card with trackers on My Survivors, concept/physdesc in card, skills in fixed order
+- `3608e8a` feat: unified card layout — trackers below RAPID, counters on one line, unraised skills white
+- `91ebf90` feat: unified CharacterCard component used in My Survivors and Table page
+- `668cb41` feat: redesigned character sheet cards with RAPID attrs, full skill list, dot trackers
+- `2cc36df` content: update welcome page text
+- `9b1d246` fix: refresh states after stat update so WP/RP toggles reflect immediately
+- `54525ae` fix: table page separate profile/character fetch, add debug logging
+- `5cce0b2` fix: fetch usernames separately to fix Unknown member display
+- `0e4c5e4` fix: simplify campaign members query to remove failing profiles join
+- `f2a3c10` feat: live character sheet table page with WP/RP/Stress/Insight/Morality tracking
+- `ec89a10` feat: Launch/Edit/Clone/Share buttons on campaign detail page
+- `2440623` feat: Launch and Edit buttons on My Stories page
+- `9231cff` feat: Distemper font added, creating-a-character page updates
+- `d0443c8` fix: campaign members query, navbar alignment, sidebar reorder, coordinates color, em-dash chars
+- `9806b5d` fix: corrupted em-dash characters in Step 9 backstory labels
+- `7b5a03f` feat: GM/player split view, invite link, fix assign character
+- `d8ff6ff` feat: sidebar cosmetic updates — Creating a Survivor, My Survivors, My Stories
+- `fe840de` fix: New Setting first in campaign settings list (correction)
+- `62b0e42` fix: New Setting first in campaign settings list
+- `66660a3` feat: campaign system — correct settings list with New Setting option
+- `0a6506a` feat: campaign system — create, join, dashboard, invite codes
+- `b10557b` feat: add Group, Animals, Community pins; larger white category labels
+- `7679f56` fix: medical pin category emoji
+- `f95a4b5` feat: Distemper font for The Tapestry navbar title
+
+## 2026-04-02
+- `83d6f78` fix: print sheet visibility - use off-screen positioning instead of display none
+- `3c491ae` fix: print sheet rendering, white background on print
+- `8496c64` content: update step flavor and instruction text
+- `273b728` feat: split step flavor/instructions, fix CDP exploit on skill minus
+- `7e3a030` feat: How to Create a Survivor page content
+- `bef4e20` feat: rename Creating a Character to How to Create a Survivor, move above Backstory Generation, make live
+- `df62149` fix: print sheet CSS — force single page with @page media query
+- `be87c5a` chore: remove loose build scripts from root
+- `f5d4ca8` feat: Creating a Character guide page — three methods, backstory system, XSE dice explainer
+- `6eb1b87` feat: move XSG logo to left beside The Tapestry title, remove Studio logo
+- `32a897d` fix: search bar position — separate from layer switcher
+- `6285c4c` feat: character sheet view page
+- `0f8741d` fix: move map search bar to right side aligned with layer switcher
+- `4eb4441` feat: search bar built into MapView aligned with layer switcher; character sheet view page; cleanup overlays
+- `73f709d` fix: CDP reminder on Step 1; fix vocational skill names in random character
+- `c143368` fix: adjust map page search bar position to match dashboard
+- `3156727` fix: map page uses floating search bar matching dashboard style
+- `063484c` feat: add floating address search bar to dashboard map
+- `be01f34` fix: show header on map page to enable address search bar
+- `85acade` fix: remove bad backtick-escaped [id] folder, restore correct dynamic route
+- `3a08b9e` feat: add Xero Sum Games and Xero Sum Studio logos
+- `d7f714b` feat: map address search bar; fix duplicate search code; sidebar Survivors heading; logos in navbar; character photo in list; age/rations in schema
+- `48118ed` feat: sidebar Survivors heading, welcome link style; logos in navbar; character photo in list; fix age/rations in schema and buildCharacter
+- `37d94db` fix: sidebar cleanup, remove duplicate welcome link; add address search bar to map
+- `a76e056` fix: replace corrupted middle dot character in character list
+- `949cc8a` feat: Random Character redirects to Final Review on edit page
+- `220c5a3` feat: rename Map to The World in navbar; update sidebar section headings to match link style
+- `89b43f2` feat: restructure sidebar — Characters and The World sections, The Map, The Campfire placeholder, Welcome to the Tapestry
+- `c9be1e5` fix: correct pin emojis encoding; add Medical pin category with red cross
+- `415c6b0` feat: add edit character page; add Edit button to character list
+- `20b21e4` feat: show trained skills on character list; fix skill list, professions, paradigms
+- `422df5f` fix: update skill list — remove Astronautics, Computers, Science*, rename Driving/Pilot to Driving; update all profession and paradigm references
+- `1b3c435` fix: reorder sidebar — Backstory, Quick, Random, My Characters; clean up Sidebar component
+
+## 2026-04-01
+- `933cd4c` feat: add Quick Character and Random Character pages; add sidebar links with Paradigms placeholder
+- `36c4039` fix: show layer switcher on dashboard embedded map
+- `eeb5e6f` style: increase welcome page body text — hero 15px→17px, feature sections 14px→16px
+- `d0c56ef` fix: Step 9 backstory formatting — grouped paragraphs, consistent styling, no italics
+- `4120fad` fix: rename Roll 2d6 buttons to Random Complication/Motivation; brighten welcome page text
+- `731031a` content: replace Wasteland references on welcome page
+- `499ebb6` content: add XeroSumStudio.com link, center footer buttons on welcome page
+- `34569b6` content: rewrite welcome page — updated hero text, feature sections, Campfire replaces Survivors & Thrivers
+- `8411bde` fix: remove welcome page auto-redirect for onboarded users; add About The Tapestry link to sidebar
+- `2f0a741` fix: CDP exploit in skill step-down — use skill.vocational instead of hardcoded false
+- `7a98464` Refresh bug fix
+- `6e56841` feat: styled login page to match signup
+- `a885e70` feat: added logo
+- `7ed5272` feat: redirect unboarded users to welcome page from dashboard
+- `8c9a78b` feat: add welcome page
+- `dbda46f` fix: auto-clear stale refresh tokens on auth error
+- `901597b` feat: styled signup page, autofill fix, welcome page layout correction
+- `e961cde` feat: onboarding welcome page with Distemper logo and feature overview
+- `e681eb1` feat: user management — suspend, unsuspend, delete accounts
+- `dbbbe53` fix: signup redirects to dashboard, add user management panel to moderation
+- `7debda5` fix: normalize role to lowercase to match database constraint
+
+## 2026-03-31
+- `625116e` redirect root to dashboard
+- `15552c7` trigger vercel deployment
+- `3298812` Phase 2: global sidebar, layout shell, map page cleanup, attachment display
+- `c416c82` fix: username display in rumor queue
+- `0bd4ce6` Phase 2: file attachments on pins, layer switcher, resizable forms, attachment display in moderation queue
+- `83ef860` Phase 2: map layer switcher, font sizing, role badges, nav order
+
+## 2026-03-30
+- `9f3a2bc` Phase 2: role-based access, Survivor/Thriver pin behaviour, moderation controls
+- `e71fc3e` Phase 2: Survivor/Thriver roles, role-based map pins, moderation access control
+- `2625492` Phase 2: dashboard layout, global nav, pin edit, moderation queue
+- `23cac42` Phase 2: map sidebar with pin list, fly-to, delete
+- `1b76895` Phase 2: world map with Leaflet, pin placement, rumor submission
+- `6718c0a` Phase 1 complete: character list, duplicate, print, dashboard links
+- `9e77974` Phase 1: skill math fixed, attribute pickers updated, Step 4/5 cleaned up, Step 9 backstory paragraph
+- `f59c139` Phase 1: character wizard Steps Xero through Nine complete
+- `504df34` Phase 1: Step Xero complete, styling matched to Distemper source
+
+## 2026-03-29
+- `df15c17` Phase 1: scaffold, auth, xse schema + engine, Step Xero
