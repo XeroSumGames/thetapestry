@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { logFirstEvent } from '../lib/events'
+import QuickAddModal from './QuickAddModal'
 
 const PIN_CATEGORIES = [
   { value: 'rumor',      label: 'Rumor',      emoji: '❓' },
@@ -110,6 +111,13 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [userId, setUserId] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<'survivor' | 'thriver'>('survivor')
   const [showForm, setShowForm] = useState(false)
+  // Quick Add modal — shared with /table. Replaces the old inline
+  // "Add a Pin" panel. The legacy showForm / form / handleSavePin
+  // code path remains only because startEdit() historically used
+  // setShowForm(false) to dismiss it; harmless now.
+  const [showQuickAdd, setShowQuickAdd] = useState(false)
+  const [quickAddLat, setQuickAddLat] = useState<number | null>(null)
+  const [quickAddLng, setQuickAddLng] = useState<number | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(!embedded || showSidebarProp)
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(['all']))
   const [activeRegions, setActiveRegions] = useState<Set<string>>(new Set())
@@ -205,9 +213,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
       map.on('click', (e: any) => {
         if (!user) return // Ghost mode — read only
-        setForm({ lat: e.latlng.lat, lng: e.latlng.lng, title: '', notes: '', pin_type: 'private', categories: ['location'] })
-        setAttachments([])
-        setShowForm(true)
+        setQuickAddLat(e.latlng.lat)
+        setQuickAddLng(e.latlng.lng)
+        setShowQuickAdd(true)
         setEditingPin(null)
       })
 
@@ -887,89 +895,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             ))}
           </div>
 
-        {showForm && (
-          <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 1001, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '1rem', width: '320px', resize: 'both', overflow: 'auto', minWidth: '280px', maxWidth: '600px' }}>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 600, color: '#c0392b', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Add a Pin</div>
-            <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
-  <input
-    value={form.lat.toFixed(4)}
-    onChange={e => setForm(p => ({ ...p, lat: parseFloat(e.target.value) || p.lat }))}
-    style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif' }}
-  />
-  <input
-    value={form.lng.toFixed(4)}
-    onChange={e => setForm(p => ({ ...p, lng: parseFloat(e.target.value) || p.lng }))}
-    style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif' }}
-  />
-</div>
-            <div style={{ marginBottom: '10px' }}>
-              <label style={lbl}>Categories</label>
-              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
-                {form.categories.map(cat => {
-                  const catInfo = PIN_CATEGORIES.find(c => c.value === cat)
-                  return (
-                    <span key={cat} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>
-                      {catInfo?.emoji ?? '📍'} {catInfo?.label ?? cat}
-                      {form.categories.length > 1 && (
-                        <button onClick={() => setForm(p => ({ ...p, categories: p.categories.filter(c => c !== cat) }))}
-                          style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 1px', lineHeight: 1 }}>×</button>
-                      )}
-                    </span>
-                  )
-                })}
-              </div>
-              <select value="" onChange={e => {
-                if (e.target.value && !form.categories.includes(e.target.value)) {
-                  setForm(p => ({ ...p, categories: [...p.categories, e.target.value] }))
-                }
-                e.target.value = ''
-              }}
-                style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
-                <option value="">+ Add category...</option>
-                {PIN_CATEGORIES.filter(c => !form.categories.includes(c.value)).map(c => (
-                  <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>
-                ))}
-              </select>
-            </div>
-            <div style={{ marginBottom: '8px' }}>
-              <label style={lbl}>Title</label>
-              <input style={inp} value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Abandoned hospital" />
-            </div>
-            <div style={{ marginBottom: '8px' }}>
-              <label style={lbl}>Notes</label>
-              <textarea style={{ ...inp, minHeight: '60px', resize: 'vertical' }} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="What did you find here?" />
-            </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label style={lbl}>Attachments</label>
-              <label style={{ display: 'block', padding: '8px 10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: '#d4cfc9' }}>
-                {attachments.length > 0 ? `${attachments.length} file${attachments.length > 1 ? 's' : ''} selected` : 'Click to attach files'}
-                <input type="file" multiple style={{ display: 'none' }} onChange={e => { if (e.target.files) setAttachments(Array.from(e.target.files)) }} />
-              </label>
-              {attachments.length > 0 && (
-                <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                  {attachments.map((f, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#d4cfc9', padding: '3px 6px', background: '#0f0f0f', borderRadius: '2px' }}>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{f.name}</span>
-                      <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '14px', padding: '0 2px', flexShrink: 0 }}>×</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div style={{ marginBottom: '10px', fontSize: '13px', padding: '6px 8px', borderRadius: '3px', background: userRole === 'thriver' ? '#1a2e10' : '#1a1a2e', border: `1px solid ${userRole === 'thriver' ? '#2d5a1b' : '#2e2e5a'}`, color: userRole === 'thriver' ? '#7fc458' : '#d4cfc9', lineHeight: 1.5 }}>
-              {userRole === 'thriver' ? 'As a Thriver, your pins are immediately public on the map.' : 'Your pin will be visible to you and submitted to the Thriver queue. If approved, it will appear as a Rumor for all players.'}
-            </div>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <button onClick={handleSavePin} disabled={saving || uploading || !form.title.trim()}
-                style={{ flex: 1, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', opacity: saving || uploading || !form.title.trim() ? 0.5 : 1 }}>
-                {uploading ? 'Uploading...' : saving ? 'Saving...' : 'Save Pin'}
-              </button>
-              <button onClick={() => { setShowForm(false); setAttachments([]) }}
-                style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                Cancel
-              </button>
-            </div>
-          </div>
+        {/* Legacy {showForm && ...} Add-a-Pin inline panel replaced by <QuickAddModal> below. */}
+        {showQuickAdd && (
+          <QuickAddModal mode="world" onClose={() => setShowQuickAdd(false)} initialLat={quickAddLat ?? undefined} initialLng={quickAddLng ?? undefined} userId={userId} userRole={userRole} onPinSaved={() => loadPins()} />
         )}
 
         {editingPin && (
