@@ -2475,6 +2475,13 @@ export default function TablePage() {
     // Calculate and apply damage for successful weapon attacks
     let damageResult: DamageResult | undefined
     let traitNotes: string[] = []
+    // Auto-loot log rows are COLLECTED here during damage processing and
+    // inserted AFTER saveRollToLog so the attack row ("used Unarmed Combat
+    // on Crate 2") shows up in the feed BEFORE the loot row ("looked through
+    // the remains of Crate 2 and found something"). Previously the loot row
+    // inserted inline and landed ahead of the attack in the feed, reading
+    // as a time-travel paradox to players.
+    const pendingLootLogs: any[] = []
     if (pendingRoll.weapon && targetName && (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight')) {
       const weapon = pendingRoll.weapon
       const w = getWeaponByName(weapon.weaponName)
@@ -2799,8 +2806,9 @@ export default function TablePage() {
                 : e))
               // Clear contents from the destroyed object
               await supabase.from('scene_tokens').update({ contents: [] }).eq('id', targetObject.id)
-              // Log it
-              await supabase.from('roll_log').insert({
+              // Defer log — inserted after saveRollToLog so feed order reads
+              // attack → loot instead of loot → attack (see pendingLootLogs).
+              pendingLootLogs.push({
                 campaign_id: id, user_id: userId, character_name: attackerEntry.character.name,
                 label: `🎒 ${attackerEntry.character.name} looted ${lootedNames.join(', ')} from ${targetObject.name}`,
                 die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
@@ -2822,7 +2830,8 @@ export default function TablePage() {
               }
               await supabase.from('campaign_npcs').update({ inventory: newInv }).eq('id', attackerNpc.id)
               await supabase.from('scene_tokens').update({ contents: [] }).eq('id', targetObject.id)
-              await supabase.from('roll_log').insert({
+              // Defer log — see pendingLootLogs declaration.
+              pendingLootLogs.push({
                 campaign_id: id, user_id: userId, character_name: attackerNpc.name,
                 label: `🎒 ${attackerNpc.name} looted ${lootedNames.join(', ')} from ${targetObject.name}`,
                 die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
@@ -3155,6 +3164,14 @@ export default function TablePage() {
     const isTrimmedRoll = pendingRoll.label.includes('Sprint')
     if (!isTrimmedRoll) {
       await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, damageResult)
+    }
+    // Now that the attack row is in, drain any auto-loot log rows queued
+    // during damage processing. Awaiting this serializes after the attack
+    // insert so the attack row's created_at strictly precedes the loot's,
+    // keeping "used X on Y → looked through the remains of Y" feed order.
+    if (pendingLootLogs.length > 0) {
+      const { error: lootErr } = await supabase.from('roll_log').insert(pendingLootLogs)
+      if (lootErr) console.error('[auto-loot] log insert error:', lootErr.message)
     }
 
     setRollResult({
