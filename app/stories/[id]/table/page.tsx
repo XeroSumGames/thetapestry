@@ -201,6 +201,17 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
   if (attackMatch && r.target_name) {
     const action = attackMatch[1]
     const weapon = attackMatch[2]
+    // Explosives get thrown, not "used". If the named weapon resolves
+    // to category='explosive' in the weapons table (Grenade, Molotov,
+    // RPG Launcher, Shiv-/Flash-Bang Grenade), swap the compact phrase
+    // to "<name> threw a <weapon> at <target>" so the feed reads like
+    // combat narration rather than a mechanical action.
+    if (weapon) {
+      const w = getWeaponByName(weapon)
+      if (w?.category === 'explosive') {
+        return `${r.character_name} threw a ${weapon} at ${r.target_name}`
+      }
+    }
     const weaponText = weapon ? `${weapon} ` : ''
     return `${r.character_name} used ${weaponText}${action} on ${r.target_name}`
   }
