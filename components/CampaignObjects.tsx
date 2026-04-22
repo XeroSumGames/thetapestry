@@ -43,6 +43,7 @@ interface ObjectToken {
   scene_id: string
   name: string
   portrait_url: string | null
+  destroyed_portrait_url: string | null
   grid_x: number
   grid_y: number
   is_visible: boolean
@@ -90,7 +91,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   // Crop modal — selected file waits here until user confirms crop, then uploads.
   // `target` distinguishes between the Add-object flow and the Edit-object flow
   // so we know where to apply the resulting URL.
-  const [cropFile, setCropFile] = useState<{ file: File; target: 'add' | 'edit' } | null>(null)
+  const [cropFile, setCropFile] = useState<{ file: File; target: 'add' | 'edit' | 'edit-destroyed' } | null>(null)
   const [dragObjId, setDragObjId] = useState<string | null>(null)
   const [dragOverObjId, setDragOverObjId] = useState<string | null>(null)
 
@@ -192,6 +193,13 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
         await supabase.from('scene_tokens').update({ portrait_url: url }).eq('id', editingObj.id)
         setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, portrait_url: url } : o))
         const libName = (editName.trim() || editingObj.name || defaultName).slice(0, 80)
+        await saveToLibrary(url, libName)
+      } else if (cropFile.target === 'edit-destroyed' && editingObj) {
+        await supabase.from('scene_tokens').update({ destroyed_portrait_url: url }).eq('id', editingObj.id)
+        setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, destroyed_portrait_url: url } : o))
+        // Save to library too so it's reusable on other objects (broken glass,
+        // scorched crate, etc. tend to repeat across scenes).
+        const libName = `${(editName.trim() || editingObj.name || defaultName).slice(0, 74)} (broken)`
         await saveToLibrary(url, libName)
       }
     }
@@ -477,6 +485,29 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   ))}
                 </div>
               </div>
+            </div>
+            {/* Destroyed image — optional alt portrait shown when WP hits 0 */}
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+                <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Destroyed image (optional)</div>
+                {editingObj.destroyed_portrait_url && (
+                  <button onClick={async () => {
+                    await supabase.from('scene_tokens').update({ destroyed_portrait_url: null }).eq('id', editingObj.id)
+                    setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, destroyed_portrait_url: null } : o))
+                  }}
+                    style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', padding: '1px 6px', cursor: 'pointer' }}>Clear</button>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
+                {editingObj.destroyed_portrait_url && (
+                  <img src={editingObj.destroyed_portrait_url} alt="" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '3px', border: '1px solid #3a3a3a', flexShrink: 0 }} />
+                )}
+                <label style={{ flex: 1, display: 'block', padding: '6px', background: editingObj.destroyed_portrait_url ? '#1a2e10' : '#242424', border: `1px dashed ${editingObj.destroyed_portrait_url ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: editingObj.destroyed_portrait_url ? '#7fc458' : '#5a5550', fontSize: '12px', textAlign: 'center', cursor: 'pointer' }}>
+                  {uploading ? 'Uploading...' : editingObj.destroyed_portrait_url ? 'Replace destroyed image' : 'Upload destroyed image'}
+                  <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'edit-destroyed' }); e.target.value = '' }} />
+                </label>
+              </div>
+              <div style={{ fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', fontStyle: 'italic', marginTop: '3px' }}>Shown on the tactical map when WP hits 0. Leave blank to keep the fade + shatter overlay.</div>
             </div>
             {/* Properties */}
             <div style={{ marginBottom: '10px' }}>

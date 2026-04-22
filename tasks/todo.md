@@ -1,7 +1,9 @@
 # Tapestry — To Do & Backlog
 
-## 🟡 Backlog (small wins)
+## 🎯 Next up (post-combat sprint)
 - [ ] **Destroyed-object portrait swap** — object tokens with WP should optionally carry a `destroyed_portrait_url`; when the token hits 0 WP, the canvas renders that image instead of the intact one. Falls back to the current shatter-crack overlay if no destroyed art exists. Upload UX lives on the object add/edit form in NpcRoster → Objects.
+
+*Inventory migration removed 2026-04-21 — DB audit confirmed every character's `data.inventory` is already an array. Nothing to migrate.*
 
 ## ✅ Shipped 2026-04-20 (pre-Mongrels game sprint)
 - `f2e708f` Insight Dice sequential reroll — second spend on the OTHER die after first fails

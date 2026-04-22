@@ -25,6 +25,7 @@ interface Token {
   character_id: string | null
   npc_id: string | null
   portrait_url: string | null
+  destroyed_portrait_url: string | null
   grid_x: number
   grid_y: number
   is_visible: boolean
@@ -604,8 +605,10 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       }
 
       // Destroyed objects fade further than downed PCs/NPCs so they read as
-      // "gone" rather than just "out of the fight".
-      if (tokenDead) ctx.globalAlpha = t.token_type === 'object' ? 0.3 : 0.5
+      // "gone" rather than just "out of the fight". Keep full opacity when a
+      // destroyed portrait is set — the alt art is the story, don't mute it.
+      const hasDestroyedArt = t.token_type === 'object' && tokenDead && !!t.destroyed_portrait_url
+      if (tokenDead && !hasDestroyedArt) ctx.globalAlpha = t.token_type === 'object' ? 0.3 : 0.5
 
       // Apply rotation
       const tokenRotation = (t.rotation ?? 0) * Math.PI / 180
@@ -618,7 +621,12 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
 
       // Token shape — circle for PC/NPC, square for objects
       const isObject = t.token_type === 'object'
-      const portraitImg = t.portrait_url ? portraitCacheRef.current.get(t.portrait_url) : null
+      // Destroyed objects swap to the alternate portrait if one is set, so
+      // broken crates / wrecked cars visually transform instead of just
+      // fading. Falls back to the regular portrait + shatter overlay.
+      const useDestroyedArt = hasDestroyedArt
+      const activePortraitUrl = useDestroyedArt ? t.destroyed_portrait_url : t.portrait_url
+      const portraitImg = activePortraitUrl ? portraitCacheRef.current.get(activePortraitUrl) : null
       if (isObject) {
         // Square token
         const half = radius
@@ -669,14 +677,18 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           ctx.fillText(initials, cx, cy)
         }
       }
-      // Load portrait for next draw
-      if (t.portrait_url && !portraitCacheRef.current.has(t.portrait_url)) {
-        const img = new Image()
-        img.crossOrigin = 'anonymous'
-        img.onload = () => draw()
-        img.src = t.portrait_url
-        if (portraitCacheRef.current.size > 100) { const firstKey = portraitCacheRef.current.keys().next().value; if (firstKey) portraitCacheRef.current.delete(firstKey) }
-        portraitCacheRef.current.set(t.portrait_url, img)
+      // Load portrait(s) for next draw — both intact and destroyed URLs, so
+      // WP transitions don't flash an empty square while the alt image loads.
+      const urlsToPreload = [t.portrait_url, t.destroyed_portrait_url].filter((u): u is string => !!u)
+      for (const url of urlsToPreload) {
+        if (!portraitCacheRef.current.has(url)) {
+          const img = new Image()
+          img.crossOrigin = 'anonymous'
+          img.onload = () => draw()
+          img.src = url
+          if (portraitCacheRef.current.size > 100) { const firstKey = portraitCacheRef.current.keys().next().value; if (firstKey) portraitCacheRef.current.delete(firstKey) }
+          portraitCacheRef.current.set(url, img)
+        }
       }
 
       ctx.shadowColor = 'transparent'
@@ -686,8 +698,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       // destroyed objects). Previously objects got a subtle dark-crack
       // pattern that was too easy to miss at a glance on busy terrain;
       // the red X matches the PC/NPC "this token is out of the fight"
-      // convention so the map reads consistently.
-      if (tokenMortal || tokenDead) {
+      // convention so the map reads consistently. Skip when a destroyed
+      // portrait is rendering — the portrait itself conveys destruction.
+      if ((tokenMortal || tokenDead) && !useDestroyedArt) {
         ctx.save()
         ctx.globalAlpha = 1
         ctx.strokeStyle = '#ff2020'
