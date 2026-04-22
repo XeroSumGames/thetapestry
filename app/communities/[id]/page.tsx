@@ -48,7 +48,7 @@ export default function CommunityDetailPage() {
   if (!campaignId) return null
 
   return (
-    <div style={{ maxWidth: '760px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
+    <div style={{ maxWidth: '1040px', margin: '0 auto', padding: '1.5rem 1.5rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
       <div style={{ marginBottom: '1rem' }}>
         <Link href="/communities" style={{ color: '#7ab3d4', fontSize: '13px', textDecoration: 'none', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>← My Communities</Link>
       </div>

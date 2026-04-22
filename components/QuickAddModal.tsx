@@ -80,6 +80,11 @@ export default function QuickAddModal({
   const [pinAttachments, setPinAttachments] = useState<File[]>([])
   const [pinSaving, setPinSaving] = useState(false)
   const [pinDone, setPinDone] = useState(false)
+  // World mode only — controls whether the pin goes to the Thriver
+  // queue (public rumor) or stays as a private personal note. Default
+  // off so players aren't spamming the queue with private bookmarks.
+  // Thrivers can also uncheck to keep a pin private to themselves.
+  const [worldShare, setWorldShare] = useState(false)
 
   // ── Community form state (campaign mode only) ────────────────────
   const [commName, setCommName] = useState('')
@@ -136,10 +141,13 @@ export default function QuickAddModal({
       }
       newPinId = data.id
     } else {
-      // World mode — map_pins. Thrivers auto-approve (pin_type='gm',
-      // status='approved'); Survivors go into the rumor queue.
+      // World mode — map_pins. Share flag decides whether this goes
+      // public (Thriver queue for Survivors, auto-approved for
+      // Thrivers) or stays as a private personal note.
       if (!userId) { setPinSaving(false); alert('Sign in to drop a pin'); return }
       const isThriver = userRole === 'thriver'
+      const pinType = !worldShare ? 'private' : (isThriver ? 'gm' : 'rumor')
+      const pinStatus = !worldShare ? 'active' : (isThriver ? 'approved' : 'pending')
       const { data, error } = await supabase.from('map_pins').insert({
         user_id: userId,
         lat, lng,
@@ -147,8 +155,8 @@ export default function QuickAddModal({
         notes: pinNotes.trim() || null,
         category: pinCategory,
         categories: [pinCategory],
-        pin_type: isThriver ? 'gm' : 'rumor',
-        status: isThriver ? 'approved' : 'pending',
+        pin_type: pinType,
+        status: pinStatus,
       }).select('id').single()
       if (error || !data) {
         setPinSaving(false)
@@ -174,6 +182,7 @@ export default function QuickAddModal({
     setPinName('')
     setPinNotes('')
     setPinAttachments([])
+    setWorldShare(false)
     // Refresh the pin list so the Homestead dropdown sees it.
     if (mode === 'campaign' && campaignId) {
       const { data: pins } = await supabase.from('campaign_pins').select('id, name').eq('campaign_id', campaignId).order('name', { ascending: true })
@@ -284,6 +293,26 @@ export default function QuickAddModal({
               )}
             </div>
 
+            {/* World-mode share toggle — off = private note only I can
+                see; on = public rumor (submitted to Thriver queue for
+                Survivors, auto-approved for Thrivers). */}
+            {mode === 'world' && (
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '10px', padding: '8px 10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', cursor: 'pointer' }}>
+                <input type="checkbox" checked={worldShare} onChange={e => setWorldShare(e.target.checked)} style={{ marginTop: '2px' }} />
+                <span style={{ flex: 1 }}>
+                  <span style={{ display: 'block', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>
+                    Make this pin public
+                  </span>
+                  <span style={{ display: 'block', marginTop: '2px', fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', lineHeight: 1.3 }}>
+                    {userRole === 'thriver'
+                      ? 'Auto-approved for Thrivers. Visible to all players as a Rumor.'
+                      : 'Goes to the Thriver queue. If approved, becomes a Rumor visible to all players.'}
+                    {!worldShare && ' Otherwise kept private — only you can see it.'}
+                  </span>
+                </span>
+              </label>
+            )}
+
             <button onClick={handlePinSave} disabled={pinSaving || !pinName.trim()}
               style={{ width: '100%', padding: '9px', background: pinName.trim() ? '#1a1a2e' : '#111', border: `1px solid ${pinName.trim() ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: pinName.trim() ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: pinName.trim() && !pinSaving ? 'pointer' : 'not-allowed' }}>
               {pinSaving ? 'Saving…' : '📍 Save Pin'}
@@ -291,11 +320,6 @@ export default function QuickAddModal({
             {pinDone && (
               <div style={{ marginTop: '8px', padding: '6px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', letterSpacing: '.04em' }}>
                 ✓ Pin saved. Add another or close.
-              </div>
-            )}
-            {mode === 'world' && userRole !== 'thriver' && (
-              <div style={{ marginTop: '8px', padding: '6px 10px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', letterSpacing: '.04em' }}>
-                Submitted to Thriver queue — shown to all players as a Rumor after approval.
               </div>
             )}
           </div>

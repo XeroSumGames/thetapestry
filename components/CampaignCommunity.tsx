@@ -254,7 +254,7 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
   }
 
   return (
-    <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'auto', flex: 1 }}>
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'auto', flex: 1 }}>
       {/* Top controls */}
       <div>
         <button onClick={() => setShowCreate(v => !v)} style={chipBtn}>
@@ -303,10 +303,10 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
         const maintainPct = total > 0 ? Math.round(100 * mems.filter(m => m.role === 'maintainer').length / total) : 0
         const safetyPct = total > 0 ? Math.round(100 * mems.filter(m => m.role === 'safety').length / total) : 0
         return (
-          <div key={c.id} style={{ background: '#1a1a1a', border: `1px solid ${isOpen ? '#7ab3d4' : '#2e2e2e'}`, borderRadius: '3px' }}>
+          <div key={c.id} style={{ background: '#1a1a1a', border: `1px solid ${isOpen ? '#7ab3d4' : '#2e2e2e'}`, borderRadius: '4px' }}>
             {/* Header */}
             <div onClick={() => setOpenId(isOpen ? null : c.id)}
-              style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+              style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
@@ -323,13 +323,13 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
 
             {/* Body */}
             {isOpen && (
-              <div style={{ padding: '0 10px 10px 10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ padding: '0 18px 18px 18px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {c.description && (
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.4 }}>{c.description}</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>{c.description}</div>
                 )}
 
                 {/* Role bars */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {(['gatherer', 'maintainer', 'safety'] as Role[]).map(r => {
                     const pct = r === 'gatherer' ? gatherPct : r === 'maintainer' ? maintainPct : safetyPct
                     const min = ROLE_MIN_PCT[r]
@@ -337,15 +337,15 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
                     const count = mems.filter(m => m.role === r).length
                     const ok = pct >= min && pct <= max
                     return (
-                      <div key={r} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                        <span style={{ width: '84px', color: '#cce0f5', letterSpacing: '.04em', textTransform: 'uppercase' }}>{ROLE_LABEL[r]}</span>
-                        <div style={{ flex: 1, height: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '2px', overflow: 'hidden' }}>
+                      <div key={r} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        <span style={{ width: '110px', color: '#cce0f5', letterSpacing: '.04em', textTransform: 'uppercase' }}>{ROLE_LABEL[r]}</span>
+                        <div style={{ flex: 1, height: '12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', overflow: 'hidden' }}>
                           <div style={{ width: `${Math.min(100, pct)}%`, height: '100%', background: ok ? '#7fc458' : '#c0392b', transition: 'width 0.2s' }} />
                         </div>
-                        <span style={{ width: '54px', textAlign: 'right', color: ok ? '#7fc458' : '#c0392b' }}>
+                        <span style={{ width: '70px', textAlign: 'right', color: ok ? '#7fc458' : '#c0392b' }}>
                           {count} ({pct}%)
                         </span>
-                        <span title={`Target: ${min}${max < 100 ? `-${max}` : '+'}%`} style={{ fontSize: '14px', color: '#5a5550' }}>
+                        <span title={`Target: ${min}${max < 100 ? `-${max}` : '+'}%`} style={{ fontSize: '14px', color: '#5a5550', width: '70px', textAlign: 'right' }}>
                           {min}{max < 100 ? `-${max}` : '+'}%
                         </span>
                       </div>
@@ -381,32 +381,32 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
 
                 {/* Add member */}
                 {(availableNpcs.length > 0 || availableChars.length > 0) && (
-                  <div style={{ padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                    <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Add Member</div>
-                    <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+                  <div style={{ padding: '14px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
+                    <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '10px', fontWeight: 600 }}>Add Member</div>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                       <select value={addKind} onChange={e => { setAddKind(e.target.value as 'npc' | 'pc'); setAddSubjectId('') }}
-                        style={{ padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                        style={{ padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
                         <option value="npc">NPC</option>
                         <option value="pc">PC</option>
                       </select>
                       <select value={addSubjectId} onChange={e => setAddSubjectId(e.target.value)}
-                        style={{ flex: 1, padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                        style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
                         <option value="">— choose —</option>
                         {(addKind === 'npc' ? availableNpcs : availableChars).map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
                       </select>
                     </div>
-                    <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                       <select value={addRole} onChange={e => setAddRole(e.target.value as Role)}
-                        style={{ flex: 1, padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                        style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
                         {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
                       </select>
                       <select value={addType} onChange={e => setAddType(e.target.value as RecruitmentType)}
-                        style={{ flex: 1, padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                        style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
                         {(Object.keys(RECRUITMENT_LABEL) as RecruitmentType[]).map(rt => <option key={rt} value={rt}>{RECRUITMENT_LABEL[rt]}</option>)}
                       </select>
                     </div>
                     <button onClick={() => handleAddMember(c.id)} disabled={!addSubjectId}
-                      style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: addSubjectId ? 'pointer' : 'not-allowed', opacity: addSubjectId ? 1 : 0.5 }}>
+                      style={{ padding: '8px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: addSubjectId ? 'pointer' : 'not-allowed', opacity: addSubjectId ? 1 : 0.5, fontWeight: 600 }}>
                       + Add
                     </button>
                   </div>
