@@ -4897,6 +4897,10 @@ export default function TablePage() {
                 } else if (token.character_id) {
                   const entry = entries.find(e => e.character.id === token.character_id)
                   if (entry) {
+                    // Players can only open their OWN character sheet — seeing
+                    // another PC's sheet leaks stats, inventory, and notes.
+                    // GM keeps full access.
+                    if (!isGM && entry.userId !== userId) return
                     if (selectedEntry?.stateId === entry.stateId) { setSelectedEntry(null); setSheetPos(null) }
                     else { setSelectedEntry(entry); setViewingNpcs([]); setSheetPos(null) }
                   }
