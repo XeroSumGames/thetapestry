@@ -144,11 +144,11 @@ export default function Sidebar() {
         )}
       </div>
 
-      {divider}
-
       {/* The Tapestry — top-level destinations. Section header suppressed
           per user spec: "Welcome to the Tapestry" is the first link so a
-          "THE TAPESTRY" heading right above it reads as redundant. */}
+          "THE TAPESTRY" heading right above it reads as redundant. The
+          user-header above already provides its own borderBottom, so no
+          explicit {divider} is needed here. */}
       <a href="/welcome"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Welcome to the Tapestry</a>
       <a href="/map"         style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The World</a>
       <a href="/characters"  style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Survivors</a>
