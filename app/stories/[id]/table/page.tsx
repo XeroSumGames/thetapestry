@@ -193,27 +193,39 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
   if (r.outcome === 'action' && /^Move\b/.test(suffix)) {
     return `${r.character_name} Moves`
   }
-  // Attack-like rolls against a named target. Neutral phrasing per
-  // playtest pattern: "<name> used <weapon> <Action> on <target>" — the
-  // compact line describes the action taken; the ▸ expand reveals the
-  // dice breakdown and outcome (Success / Failure / Wild / Dire / etc.).
+  // Attack-like rolls against a named target. Phrasing per playtest spec:
+  //   - Explosive thrown (Grenade, Molotov, Shiv-/Flash-Bang):
+  //       "X threw a <weapon> at <target>"
+  //   - Explosive launcher (RPG Launcher etc. — category explosive AND
+  //     name contains 'Launcher'):
+  //       "X fired a <weapon> at <target>"
+  //   - Firearm / melee with single-word action (Attack, Charge, Subdue):
+  //       "X used a <weapon> to <Action> <target>"
+  //   - Multi-word action (Rapid Fire, Fire from Cover) — awkward to
+  //     force into "to X Y" phrasing; falls back to the older neutral
+  //     "X used <weapon> <Action> on <target>" form.
   const attackMatch = suffix.match(/^(Attack|Rapid Fire|Charge|Subdue|Fire from Cover)(?:\s*\(([^)]+)\))?/)
   if (attackMatch && r.target_name) {
     const action = attackMatch[1]
     const weapon = attackMatch[2]
-    // Explosives get thrown, not "used". If the named weapon resolves
-    // to category='explosive' in the weapons table (Grenade, Molotov,
-    // RPG Launcher, Shiv-/Flash-Bang Grenade), swap the compact phrase
-    // to "<name> threw a <weapon> at <target>" so the feed reads like
-    // combat narration rather than a mechanical action.
     if (weapon) {
       const w = getWeaponByName(weapon)
+      // a / an article handling — keeps "an Assault Rifle" from reading
+      // as "a Assault Rifle". Matches first letter against vowel set.
+      const article = /^[aeiouAEIOU]/.test(weapon.trim()) ? 'an' : 'a'
       if (w?.category === 'explosive') {
-        return `${r.character_name} threw a ${weapon} at ${r.target_name}`
+        const verb = /launcher/i.test(weapon) ? 'fired' : 'threw'
+        return `${r.character_name} ${verb} ${article} ${weapon} at ${r.target_name}`
       }
+      if (/^(Attack|Charge|Subdue)$/.test(action)) {
+        return `${r.character_name} used ${article} ${weapon} to ${action} ${r.target_name}`
+      }
+      // Rapid Fire / Fire from Cover — fall back to neutral phrasing
+      return `${r.character_name} used ${weapon} ${action} on ${r.target_name}`
     }
-    const weaponText = weapon ? `${weapon} ` : ''
-    return `${r.character_name} used ${weaponText}${action} on ${r.target_name}`
+    // Bare action with no weapon in parens — rare (Unarmed has its own
+    // branch below); keep the neutral form.
+    return `${r.character_name} used ${action} on ${r.target_name}`
   }
   // Unarmed attack — label "<name> — Unarmed" (no Attack() wrapper,
   // since Unarmed IS the action). Reads "used Unarmed Combat on X" per
