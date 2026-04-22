@@ -333,7 +333,7 @@ export default function CampaignPage() {
           )}
           {myCharacters.length === 0 ? (
             <div style={{ fontSize: '13px', color: '#cce0f5' }}>
-              You have no characters. <a href="/characters/new" style={{ color: '#7ab3d4', textDecoration: 'none' }}>Create one first.</a>
+              You have no characters yet. Pick a creation method below.
             </div>
           ) : (
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -350,6 +350,22 @@ export default function CampaignPage() {
               </button>
             </div>
           )}
+          {/* Shortcut row — three character-creation paths so a new player
+              doesn't have to find the sidebar to make their first survivor. */}
+          <div style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
+            <a href="/characters/new"
+              style={{ flex: 1, padding: '8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', textDecoration: 'none', cursor: 'pointer' }}>
+              Backstory Generation
+            </a>
+            <a href="/characters/quick"
+              style={{ flex: 1, padding: '8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', textDecoration: 'none', cursor: 'pointer' }}>
+              Quick Character
+            </a>
+            <a href="/characters/random"
+              style={{ flex: 1, padding: '8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', textDecoration: 'none', cursor: 'pointer' }}>
+              Random Character
+            </a>
+          </div>
           {/* Pregen selection — only for settings with pregens */}
           {campaign.setting && SETTING_PREGENS[campaign.setting] && (
             <div style={{ marginTop: '10px' }}>
