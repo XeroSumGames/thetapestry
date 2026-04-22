@@ -203,7 +203,10 @@ export default function QuickAddModal({
       }).select('id').single()
       if (error || !data) {
         setPinSaving(false)
-        alert(`Pin save failed: ${error?.message ?? 'unknown'}`)
+        const isRls = /row-level security/i.test(error?.message ?? '')
+        alert(isRls
+          ? `Pin save failed: campaign_pins RLS is blocking non-GM inserts. A GM needs to run sql/campaign-pins-rls-members-insert.sql in Supabase so players can drop pins. Raw error: ${error?.message ?? 'unknown'}`
+          : `Pin save failed: ${error?.message ?? 'unknown'}`)
         return
       }
       newPinId = data.id
