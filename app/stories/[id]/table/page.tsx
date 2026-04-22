@@ -187,6 +187,12 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
   if (r.outcome === 'action' && /^Aim\b/.test(suffix)) {
     return `${r.character_name} takes Aim`
   }
+  // Move action — no dice, no target. Narrative compact banner, with
+  // the verbose breakdown (label / [0+0]=0 / action) available via the ▸
+  // expand for GMs who want to audit the raw action log.
+  if (r.outcome === 'action' && /^Move\b/.test(suffix)) {
+    return `${r.character_name} Moves`
+  }
   // Attack-like rolls against a named target. Neutral phrasing per
   // playtest pattern: "<name> used <weapon> <Action> on <target>" — the
   // compact line describes the action taken; the ▸ expand reveals the
