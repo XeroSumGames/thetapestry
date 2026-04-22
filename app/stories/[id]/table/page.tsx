@@ -457,12 +457,14 @@ export default function TablePage() {
   const [qaPinCategory, setQaPinCategory] = useState('location')
   const [qaPinSaving, setQaPinSaving] = useState(false)
   const [qaPinDone, setQaPinDone] = useState(false)
+  const [qaPinAttachments, setQaPinAttachments] = useState<File[]>([])
   const [qaCommName, setQaCommName] = useState('')
   const [qaCommDesc, setQaCommDesc] = useState('')
   const [qaCommHomestead, setQaCommHomestead] = useState('')
   const [qaCommPublic, setQaCommPublic] = useState(false)
   const [qaCommSaving, setQaCommSaving] = useState(false)
   const [qaCommDone, setQaCommDone] = useState(false)
+  const [qaCommAttachments, setQaCommAttachments] = useState<File[]>([])
   const [qaPins, setQaPins] = useState<{ id: string; name: string }[]>([])
 
   // Recruitment state lives separately from the Special Check modal
@@ -2351,7 +2353,7 @@ export default function TablePage() {
     setQaPinSaving(true)
     const { data: maxRow } = await supabase.from('campaign_pins').select('sort_order').eq('campaign_id', id).order('sort_order', { ascending: false, nullsFirst: false }).limit(1).maybeSingle()
     const nextSort = ((maxRow as any)?.sort_order ?? 0) + 1
-    const { error } = await supabase.from('campaign_pins').insert({
+    const { data: newPin, error } = await supabase.from('campaign_pins').insert({
       campaign_id: id,
       name: qaPinName.trim(),
       lat, lng,
@@ -2359,12 +2361,26 @@ export default function TablePage() {
       category: qaPinCategory,
       revealed: false,
       sort_order: nextSort,
-    })
+    }).select('id').single()
+    if (error || !newPin) {
+      setQaPinSaving(false)
+      alert(`Pin save failed: ${error?.message ?? 'unknown'}`)
+      return
+    }
+    // Upload attachments to pin-attachments/<campaign>/<pin>/<filename>.
+    // Failures are logged but don't block the pin save itself.
+    if (qaPinAttachments.length > 0) {
+      for (const file of qaPinAttachments) {
+        const path = `${id}/${newPin.id}/${file.name}`
+        const { error: upErr } = await supabase.storage.from('pin-attachments').upload(path, file)
+        if (upErr) console.warn('[quick-add] attachment upload failed:', file.name, upErr.message)
+      }
+    }
     setQaPinSaving(false)
-    if (error) { alert(`Pin save failed: ${error.message}`); return }
     setQaPinDone(true)
     setQaPinName('')
     setQaPinNotes('')
+    setQaPinAttachments([])
     // Refresh pin list so the Homestead dropdown picks it up if the
     // player now wants to attach it to a new community.
     const { data: pins } = await supabase.from('campaign_pins').select('id, name').eq('campaign_id', id).order('name', { ascending: true })
@@ -2373,24 +2389,38 @@ export default function TablePage() {
   async function handleQaCommSave() {
     if (!qaCommName.trim()) return
     setQaCommSaving(true)
-    const { error } = await supabase.from('communities').insert({
+    const { data: newComm, error } = await supabase.from('communities').insert({
       campaign_id: id,
       name: qaCommName.trim(),
       description: qaCommDesc.trim() || null,
       homestead_pin_id: qaCommHomestead || null,
       status: 'forming',
       world_visibility: qaCommPublic ? 'published' : 'private',
-    })
-    setQaCommSaving(false)
-    if (error) {
-      alert(`Community save failed: ${error.message}`)
+    }).select('id').single()
+    if (error || !newComm) {
+      setQaCommSaving(false)
+      alert(`Community save failed: ${error?.message ?? 'unknown'}`)
       return
     }
+    // Upload attachments — reuse the pin-attachments bucket with a
+    // community-<id> subprefix so we don't need a separate bucket
+    // provisioning step. A dedicated community-attachments bucket
+    // can replace this later; current structure just namespaces by
+    // path. Failures log but don't block.
+    if (qaCommAttachments.length > 0) {
+      for (const file of qaCommAttachments) {
+        const path = `${id}/community-${newComm.id}/${file.name}`
+        const { error: upErr } = await supabase.storage.from('pin-attachments').upload(path, file)
+        if (upErr) console.warn('[quick-add] community attachment upload failed:', file.name, upErr.message)
+      }
+    }
+    setQaCommSaving(false)
     setQaCommDone(true)
     setQaCommName('')
     setQaCommDesc('')
     setQaCommHomestead('')
     setQaCommPublic(false)
+    setQaCommAttachments([])
   }
 
   async function openRecruitModal() {
@@ -7240,11 +7270,13 @@ export default function TablePage() {
           <div onClick={e => e.stopPropagation()}
             style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '760px', maxHeight: '88vh', overflowY: 'auto' }}>
             <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Quick Add</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>Set the table</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>
+              {qaHideCommunity ? 'Set the Table' : 'Putting Down Roots'}
+            </div>
             <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1.25rem', fontFamily: 'Barlow, sans-serif' }}>
               {qaHideCommunity
-                ? 'Drop a pin at the location you just double-clicked.'
-                : 'Drop a pin on the map, start a community, or both. You can submit each independently.'}
+                ? 'Drop a pin at the location you just double-clicked. Title, notes, and attachments all go with the pin.'
+                : 'Drop a pin on the map, start a community, or both. Each saves independently and can include attachments.'}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: qaHideCommunity ? '1fr' : '1fr 1fr', gap: '16px' }}>
@@ -7300,6 +7332,23 @@ export default function TablePage() {
                     style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
                 </div>
 
+                {/* Attachments — multiple files, any type. Uploaded to
+                    pin-attachments/<campaign>/<pin>/<name> after pin INSERT. */}
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Attachments (optional)</div>
+                  <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: qaPinAttachments.length > 0 ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
+                    {qaPinAttachments.length > 0
+                      ? `${qaPinAttachments.length} file${qaPinAttachments.length > 1 ? 's' : ''} selected`
+                      : 'Click to attach files'}
+                    <input type="file" multiple onChange={e => { if (e.target.files) setQaPinAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />
+                  </label>
+                  {qaPinAttachments.length > 0 && (
+                    <div style={{ marginTop: '4px', fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
+                      {qaPinAttachments.map((f, i) => <div key={i} style={{ marginTop: '1px' }}>{f.name}</div>)}
+                    </div>
+                  )}
+                </div>
+
                 <button onClick={handleQaPinSave} disabled={qaPinSaving || !qaPinName.trim()}
                   style={{ width: '100%', padding: '9px', background: qaPinName.trim() ? '#1a1a2e' : '#111', border: `1px solid ${qaPinName.trim() ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: qaPinName.trim() ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: qaPinName.trim() && !qaPinSaving ? 'pointer' : 'not-allowed' }}>
                   {qaPinSaving ? 'Saving…' : '📍 Save Pin'}
@@ -7347,6 +7396,25 @@ export default function TablePage() {
                   <input type="checkbox" checked={qaCommPublic} onChange={e => setQaCommPublic(e.target.checked)} />
                   Make public (LFG — coming soon)
                 </label>
+
+                {/* Attachments — charter, banner image, notes, etc.
+                    Uploaded to pin-attachments/<campaign>/community-<id>/<name>
+                    after the community INSERT. Same storage bucket as
+                    pins; community-<id> prefix keeps them separate. */}
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Attachments (optional)</div>
+                  <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: qaCommAttachments.length > 0 ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
+                    {qaCommAttachments.length > 0
+                      ? `${qaCommAttachments.length} file${qaCommAttachments.length > 1 ? 's' : ''} selected`
+                      : 'Click to attach files'}
+                    <input type="file" multiple onChange={e => { if (e.target.files) setQaCommAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />
+                  </label>
+                  {qaCommAttachments.length > 0 && (
+                    <div style={{ marginTop: '4px', fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
+                      {qaCommAttachments.map((f, i) => <div key={i} style={{ marginTop: '1px' }}>{f.name}</div>)}
+                    </div>
+                  )}
+                </div>
 
                 <button onClick={handleQaCommSave} disabled={qaCommSaving || !qaCommName.trim()}
                   style={{ width: '100%', padding: '9px', background: qaCommName.trim() ? '#1a2e10' : '#111', border: `1px solid ${qaCommName.trim() ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: qaCommName.trim() ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: qaCommName.trim() && !qaCommSaving ? 'pointer' : 'not-allowed' }}>
