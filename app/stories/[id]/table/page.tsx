@@ -3362,9 +3362,19 @@ export default function TablePage() {
         const isGMRollingNPC = isGM && activeEntry.is_npc
         const isGMRollingPC = isGM && !activeEntry.is_npc
         if (isMyTurn || isGMRollingNPC || isGMRollingPC) {
-          // Track last attack target for same-target +1 CMod bonus
+          // Track last attack target for same-target +1 CMod bonus AND
+          // for pre-selecting the same target on the next Attack modal
+          // (playtest: "the next time they attack the Attack Modal should
+          // automatically select the same target a second time").
           if (pendingRoll?.weapon && targetName) {
             await supabase.from('initiative_order').update({ last_attack_target: targetName }).eq('id', activeEntry.id)
+            // Clear any stale map-click target so the next Attack modal
+            // open falls through to `last_attack_target` (the just-
+            // attacked target) instead of re-using whatever token the
+            // player happened to click on the map before rolling. The
+            // map-selection priority was pre-empting same-target recall
+            // across consecutive attacks.
+            setSelectedMapTargetName(null)
           }
           await consumeAction(activeEntry.id, undefined, cost)
         } else {
