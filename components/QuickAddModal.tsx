@@ -126,16 +126,48 @@ export default function QuickAddModal({
   const [commSaving, setCommSaving] = useState(false)
   const [commDone, setCommDone] = useState(false)
   const [pinList, setPinList] = useState<{ id: string; name: string; category: string | null }[]>([])
+  // Existing communities + member counts → drives the "Join or Start
+  // a Community" toggle. When ≥1 exists, the community panel flips
+  // from Start-only to Join-or-Start; Join becomes the default mode.
+  const [existingCommunities, setExistingCommunities] = useState<{ id: string; name: string; memberCount: number }[]>([])
+  const [myPcId, setMyPcId] = useState<string | null>(null)
+  const [commMode, setCommMode] = useState<'join' | 'start'>('start')
+  const [commJoinId, setCommJoinId] = useState('')
+  const [commJoining, setCommJoining] = useState(false)
+  const [commJoinDone, setCommJoinDone] = useState(false)
+  const [commJoinError, setCommJoinError] = useState<string | null>(null)
 
   // Load the pin list for the Homestead dropdown on the Community
   // panel whenever the modal opens (campaign mode, community visible).
   // Also pulled after each Pin save so a just-dropped Homestead-tagged
-  // pin is immediately selectable.
+  // pin is immediately selectable. Simultaneously loads existing
+  // communities + this user's PC id for the Join flow.
   useEffect(() => {
     if (mode !== 'campaign' || !campaignId || hideCommunity) return
     supabase.from('campaign_pins').select('id, name, category').eq('campaign_id', campaignId).order('name', { ascending: true })
       .then(({ data }: { data: { id: string; name: string; category: string | null }[] | null }) => setPinList(data ?? []))
-  }, [mode, campaignId, hideCommunity])
+    // Existing communities + member counts (parallel queries).
+    ;(async () => {
+      const [{ data: comms }, { data: mems }] = await Promise.all([
+        supabase.from('communities').select('id, name').eq('campaign_id', campaignId).order('created_at', { ascending: true }),
+        supabase.from('community_members').select('community_id, communities!inner(campaign_id)').is('left_at', null).eq('communities.campaign_id', campaignId),
+      ])
+      const byComm: Record<string, number> = {}
+      for (const m of (mems ?? []) as any[]) byComm[m.community_id] = (byComm[m.community_id] ?? 0) + 1
+      const list = ((comms ?? []) as { id: string; name: string }[]).map(c => ({ id: c.id, name: c.name, memberCount: byComm[c.id] ?? 0 }))
+      setExistingCommunities(list)
+      // Default to Join mode when there's at least one community; the
+      // player is more likely joining an existing effort than splitting
+      // off a new one on open.
+      if (list.length > 0) setCommMode('join')
+      else setCommMode('start')
+    })()
+    // Current user's PC in this campaign (for Join).
+    if (userId) {
+      supabase.from('campaign_members').select('character_id').eq('campaign_id', campaignId).eq('user_id', userId).not('character_id', 'is', null).maybeSingle()
+        .then(({ data }: { data: { character_id: string } | null }) => setMyPcId(data?.character_id ?? null))
+    }
+  }, [mode, campaignId, hideCommunity, userId])
 
   // Re-seed lat/lng when caller passes new initial values (e.g. a
   // second dblclick on the map without closing first).
@@ -222,6 +254,34 @@ export default function QuickAddModal({
       setPinList((pins ?? []) as { id: string; name: string; category: string | null }[])
     }
     onPinSaved?.()
+  }
+
+  // Join an existing community. Inserts a community_members row with
+  // this user's PC as a Cohort (standard "I'm in" recruitment type).
+  // Requires a PC in the campaign; if the user doesn't have one we
+  // surface an inline hint instead of silently failing.
+  async function handleCommJoin() {
+    if (!commJoinId || !myPcId || mode !== 'campaign' || !campaignId) return
+    setCommJoining(true)
+    setCommJoinError(null)
+    const { error } = await supabase.from('community_members').insert({
+      community_id: commJoinId,
+      character_id: myPcId,
+      role: 'unassigned',
+      recruitment_type: 'cohort',
+      joined_at: new Date().toISOString(),
+    })
+    setCommJoining(false)
+    if (error) {
+      setCommJoinError(error.message)
+      return
+    }
+    setCommJoinDone(true)
+    // Bump the member count locally so the dropdown shows the new
+    // count on a re-open without a full refresh.
+    setExistingCommunities(prev => prev.map(c => c.id === commJoinId ? { ...c, memberCount: c.memberCount + 1 } : c))
+    setCommJoinId('')
+    onCommunitySaved?.()
   }
 
   async function handleCommSave() {
@@ -389,8 +449,67 @@ export default function QuickAddModal({
           {/* ── Start a Community — campaign mode only, not hidden ── */}
           {!hideCommunity && (
             <div style={{ padding: '14px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '4px' }}>
-              <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>🏘️ Start a Community</div>
+              <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>
+                🏘️ {existingCommunities.length > 0 ? 'Join or Start a Community' : 'Start a Community'}
+              </div>
 
+              {/* Mode toggle — only shown when at least one community
+                  exists in the campaign. Join is the default (more
+                  common action for a player arriving at a table with
+                  an existing group); Start New is the escape hatch. */}
+              {existingCommunities.length > 0 && (
+                <div style={{ display: 'flex', gap: '4px', marginBottom: '12px' }}>
+                  <button type="button" onClick={() => setCommMode('join')}
+                    style={{ flex: 1, padding: '7px', background: commMode === 'join' ? '#2d5a1b' : '#111', border: `1px solid ${commMode === 'join' ? '#7fc458' : '#2e2e2e'}`, borderRadius: '3px', color: commMode === 'join' ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                    🤝 Join Existing
+                  </button>
+                  <button type="button" onClick={() => setCommMode('start')}
+                    style={{ flex: 1, padding: '7px', background: commMode === 'start' ? '#2d5a1b' : '#111', border: `1px solid ${commMode === 'start' ? '#7fc458' : '#2e2e2e'}`, borderRadius: '3px', color: commMode === 'start' ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                    🏡 Start New
+                  </button>
+                </div>
+              )}
+
+              {/* ── Join Existing branch ──────────────────────────── */}
+              {commMode === 'join' && existingCommunities.length > 0 && (
+                <>
+                  <div style={{ marginBottom: '8px' }}>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Community</div>
+                    <select value={commJoinId} onChange={e => setCommJoinId(e.target.value)}
+                      style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                      <option value="">— pick a community —</option>
+                      {existingCommunities.map(c => (
+                        <option key={c.id} value={c.id}>{c.name} ({c.memberCount} member{c.memberCount === 1 ? '' : 's'})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {!myPcId && userId && (
+                    <div style={{ marginBottom: '10px', padding: '8px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', fontSize: '12px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', lineHeight: 1.4 }}>
+                      You need a PC assigned to this campaign before you can join a community. Ask the GM to invite you with a character.
+                    </div>
+                  )}
+
+                  <button type="button" onClick={handleCommJoin} disabled={!commJoinId || !myPcId || commJoining}
+                    style={{ width: '100%', padding: '9px', background: commJoinId && myPcId ? '#1a2e10' : '#111', border: `1px solid ${commJoinId && myPcId ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: commJoinId && myPcId ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: commJoinId && myPcId && !commJoining ? 'pointer' : 'not-allowed' }}>
+                    {commJoining ? 'Joining…' : '🤝 Join Community'}
+                  </button>
+                  {commJoinDone && (
+                    <div style={{ marginTop: '8px', padding: '6px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', letterSpacing: '.04em' }}>
+                      ✓ Joined.
+                    </div>
+                  )}
+                  {commJoinError && (
+                    <div style={{ marginTop: '8px', padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '12px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                      {commJoinError}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* ── Start New branch — the original flow ──────────── */}
+              {commMode === 'start' && (
+              <>
               <div style={{ marginBottom: '8px' }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Name</div>
                 <input value={commName} onChange={e => setCommName(e.target.value)} placeholder="e.g. The Greenhouse"
@@ -462,6 +581,8 @@ export default function QuickAddModal({
                 <div style={{ marginTop: '8px', padding: '6px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', letterSpacing: '.04em' }}>
                   ✓ Community created.
                 </div>
+              )}
+              </>
               )}
             </div>
           )}
