@@ -277,12 +277,16 @@ export default function QuickAddModal({
     })
     setCommJoining(false)
     if (error) {
-      setCommJoinError(error.message)
+      // Surface a helpful diagnostic if the status column is missing
+      // — i.e. the approval-flow migration hasn't been run on this
+      // Supabase yet. Otherwise show the raw message.
+      const isMigrationMissing = /status.*schema cache|column.*status.*does not exist/i.test(error.message)
+      setCommJoinError(isMigrationMissing
+        ? 'Leader-approval flow not live yet — the GM needs to run sql/community-members-join-requests.sql in Supabase. Once that\'s done, Join requests will route to the leader for approval.'
+        : error.message)
       return
     }
     setCommJoinDone(true)
-    // Note: not bumping memberCount — pending requests don't count
-    // toward the visible roster until the leader approves.
     setCommJoinId('')
     onCommunitySaved?.()
   }
@@ -310,15 +314,20 @@ export default function QuickAddModal({
     }
     // Auto-enroll the creator's PC as the first member. Skips cleanly
     // if the creator doesn't have a PC in the campaign (GMs, etc.).
+    // NOTE: `status` is intentionally omitted — the column's DEFAULT
+    // ('active') from sql/community-members-join-requests.sql handles
+    // new-schema installs, and old-schema installs (column missing)
+    // work by ignoring the unsent field. This keeps auto-enroll
+    // functional even before the migration runs on prod.
     if (myPcId) {
-      await supabase.from('community_members').insert({
+      const { error: enrollErr } = await supabase.from('community_members').insert({
         community_id: data.id,
         character_id: myPcId,
         role: 'unassigned',
         recruitment_type: 'founder',
-        status: 'active',
         joined_at: new Date().toISOString(),
       })
+      if (enrollErr) console.warn('[quick-add] creator auto-enroll failed:', enrollErr.message)
     }
     if (commAttachments.length > 0) {
       for (const file of commAttachments) {

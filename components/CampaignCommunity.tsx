@@ -182,14 +182,16 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
         .maybeSingle()
       const myCharacterId = (myCm as any)?.character_id as string | undefined
       if (myCharacterId) {
-        const { data: founderRow } = await supabase.from('community_members').insert({
+        // status omitted — DB default 'active' covers new schema,
+        // missing-column old schema ignores the unsent field.
+        const { data: founderRow, error: enrollErr } = await supabase.from('community_members').insert({
           community_id: newComm.id,
           character_id: myCharacterId,
           role: 'unassigned',
           recruitment_type: 'founder',
-          status: 'active',
           joined_at: new Date().toISOString(),
         }).select().single()
+        if (enrollErr) console.warn('[campaign-community] founder auto-enroll failed:', enrollErr.message)
         if (founderRow) {
           setMembers(prev => ({ ...prev, [newComm.id]: [founderRow as Member] }))
         }

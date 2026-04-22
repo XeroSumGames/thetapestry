@@ -165,14 +165,16 @@ export default function CommunitiesIndexPage() {
         .maybeSingle()
       const myCharacterId = (myCm as any)?.character_id as string | undefined
       if (myCharacterId) {
-        await supabase.from('community_members').insert({
+        // status omitted — DB default 'active' covers new schema,
+        // missing-column old schema ignores the unsent field.
+        const { error: enrollErr } = await supabase.from('community_members').insert({
           community_id: data.id,
           character_id: myCharacterId,
           role: 'unassigned',
           recruitment_type: 'founder',
-          status: 'active',
           joined_at: new Date().toISOString(),
         })
+        if (enrollErr) console.warn('[communities] founder auto-enroll failed:', enrollErr.message)
       }
     }
     setCreating(false)
@@ -244,7 +246,13 @@ export default function CommunitiesIndexPage() {
       invited_by_user_id: userId,
     })
     setInviting(false)
-    if (error) { setInviteError(error.message); return }
+    if (error) {
+      const isMigrationMissing = /status.*schema cache|column.*(?:status|invited_by_user_id).*does not exist/i.test(error.message)
+      setInviteError(isMigrationMissing
+        ? 'Invite flow not live yet — a GM needs to run sql/community-members-join-requests.sql in Supabase. Once applied, invites route to the community leader for approval.'
+        : error.message)
+      return
+    }
     setInviteDone(true)
     setInviteCommId('')
     setInviteCharId('')
