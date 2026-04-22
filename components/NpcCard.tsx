@@ -33,9 +33,14 @@ interface Props {
   onPlaceOnMap?: () => void
   // Set to enable a "Popout" button that opens this NPC in a standalone window.
   campaignId?: string
+  // Communities Phase B — opens the Recruit modal for this NPC. Parent
+  // decides whether the campaign has any communities to recruit into; if
+  // the prop is omitted the button isn't shown (campaigns without a
+  // community just don't get the affordance).
+  onRecruit?: () => void
 }
 
-export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPublished, onPlaceOnMap, campaignId }: Props) {
+export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPublished, onPlaceOnMap, campaignId, onRecruit }: Props) {
   const supabase = createClient()
   const [enlarged, setEnlarged] = useState(false)
   const rapid: Record<string, number> = { RSN: npc.reason, ACU: npc.acumen, PHY: npc.physicality, INF: npc.influence, DEX: npc.dexterity }
@@ -162,6 +167,11 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
             <button onClick={() => openPopout(`/npc-sheet?c=${campaignId}&npc=${npc.id}`, `npc-${npc.id}`)}
               title="Pop out to its own window"
               style={{ padding: '2px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Popout</button>
+          )}
+          {onRecruit && (
+            <button onClick={onRecruit}
+              title="Attempt to recruit this NPC into a community"
+              style={{ padding: '2px 6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Recruit</button>
           )}
           {onEdit && (
             <button onClick={onEdit} style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Edit</button>
