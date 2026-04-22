@@ -444,6 +444,12 @@ export default function TablePage() {
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
   const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null; character_name: string }[]>([])
   const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | null>(null)
+  // First Impression NPC picker: which NPC the check is TARGETED at.
+  // Cleared when the modal closes. On roll-time the npcId is copied
+  // into firstImpressionTargetRef so executeRoll can write the
+  // relationship CMod post-outcome.
+  const [firstImpressionNpcId, setFirstImpressionNpcId] = useState<string>('')
+  const firstImpressionTargetRef = useRef<{ characterId: string; npcId: string; npcName: string } | null>(null)
   const [showReadyWeaponModal, setShowReadyWeaponModal] = useState(false)
   const [showGrappleModal, setShowGrappleModal] = useState(false)
   // Two-step grapple flow: click a target → confirm + optionally spend
@@ -2223,7 +2229,11 @@ export default function TablePage() {
     setShowSpecialCheck(null)
   }
 
-  function triggerFirstImpression(characterName: string) {
+  // First Impression — rolled by a PC against a specific NPC. On outcome,
+  // writes `npc_relationships.relationship_cmod` so future Recruitment
+  // Checks (and other social interactions) have the right CMod baked in.
+  // See SRD §02 First Impressions + §08 Communities Recruitment Check.
+  function triggerFirstImpression(characterName: string, npcId: string, npcName: string) {
     const charEntry = entries.find(e => e.character.name === characterName)
     if (!charEntry) return
     const rapid = charEntry.character.data?.rapid ?? {}
@@ -2232,7 +2242,11 @@ export default function TablePage() {
     const socialSkills = ['Manipulation', 'Streetwise', 'Psychology']
     const bestSkill = skills.filter((s: any) => socialSkills.includes(s.skillName)).sort((a: any, b: any) => b.level - a.level)[0]
     const smod = bestSkill?.level ?? 0
-    handleRollRequest(`${characterName} — First Impression`, infMod, smod)
+    // Stash the NPC target so executeRoll can write the relationship
+    // CMod when the outcome lands. Ref not state — executeRoll runs
+    // inside a state update chain and would miss a re-render.
+    firstImpressionTargetRef.current = { characterId: charEntry.character.id, npcId, npcName }
+    handleRollRequest(`${characterName} — First Impression (${npcName})`, infMod, smod)
     setShowSpecialCheck(null)
   }
 
@@ -3342,6 +3356,62 @@ export default function TablePage() {
     if (pendingLootLogs.length > 0) {
       const { error: lootErr } = await supabase.from('roll_log').insert(pendingLootLogs)
       if (lootErr) console.error('[auto-loot] log insert error:', lootErr.message)
+    }
+
+    // First Impression — write outcome to npc_relationships.relationship_cmod.
+    // Outcome → CMod mapping:
+    //   Moment of High Insight / Wild Success → +2
+    //   Success                              → +1
+    //   Failure                              →  0 (no change recorded, but
+    //     we still upsert revealed=true so the NPC appears in the PC's
+    //     sidebar going forward)
+    //   Dire Failure                         → -1
+    //   Moment of Low Insight                → -2
+    // Overwrites any existing row for (npc, character) — First Impression
+    // is the opening-scene vibe; a re-roll replaces. GM can hand-edit
+    // later via NpcRoster if they need to tune.
+    const firstImpressionTarget = firstImpressionTargetRef.current
+    if (firstImpressionTarget && pendingRoll.label.includes('First Impression')) {
+      const cmodDelta = (outcome === 'High Insight' || outcome === 'Wild Success') ? 2
+        : outcome === 'Success' ? 1
+        : outcome === 'Failure' ? 0
+        : outcome === 'Dire Failure' ? -1
+        : outcome === 'Low Insight' ? -2
+        : 0
+      try {
+        const { data: existing } = await supabase
+          .from('npc_relationships')
+          .select('id, revealed, reveal_level')
+          .eq('npc_id', firstImpressionTarget.npcId)
+          .eq('character_id', firstImpressionTarget.characterId)
+          .maybeSingle()
+        if (existing) {
+          await supabase.from('npc_relationships')
+            .update({
+              relationship_cmod: cmodDelta,
+              revealed: true,
+              reveal_level: existing.reveal_level || 'name_portrait',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', existing.id)
+        } else {
+          await supabase.from('npc_relationships').insert({
+            npc_id: firstImpressionTarget.npcId,
+            character_id: firstImpressionTarget.characterId,
+            relationship_cmod: cmodDelta,
+            revealed: true,
+            reveal_level: 'name_portrait',
+          })
+        }
+        // Local refresh so the sidebar + cards pick up the new CMod
+        // without waiting on a realtime broadcast.
+        if (myCharIdRef.current) {
+          void loadRevealedNpcs(myCharIdRef.current, campaignNpcs)
+        }
+      } catch (err) {
+        console.error('[first-impression] relationship upsert failed:', err)
+      }
+      firstImpressionTargetRef.current = null
     }
 
     setRollResult({
@@ -7328,7 +7398,7 @@ export default function TablePage() {
 
       {/* Special Check Modal */}
       {showSpecialCheck && (
-        <div onClick={() => setShowSpecialCheck(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+        <div onClick={() => { setShowSpecialCheck(null); setFirstImpressionNpcId('') }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '380px' }}>
             {showSpecialCheck === 'perception' && (
               <>
@@ -7354,18 +7424,65 @@ export default function TablePage() {
                 </div>
               </>
             )}
-            {showSpecialCheck === 'first_impression' && (
+            {showSpecialCheck === 'first_impression' && (() => {
+              // Eligible NPCs = on the active tactical map OR revealed
+              // to any PC. Dedupe by id. Drop dead/mortal NPCs since
+              // First Impression doesn't apply to corpses.
+              const onMap = mapTokens.filter(t => t.token_type !== 'object' && t.npc_id)
+              const revealed = revealedNpcs
+              const byId = new Map<string, any>()
+              for (const n of revealed) byId.set(n.id, n)
+              for (const t of onMap) {
+                if (!t.npc_id || byId.has(t.npc_id)) continue
+                const npc = campaignNpcs.find((n: any) => n.id === t.npc_id)
+                if (npc) byId.set(npc.id, npc)
+              }
+              const eligibleNpcs = [...byId.values()].filter((n: any) => {
+                const wp = n.wp_current ?? n.wp_max ?? 10
+                return wp > 0 && n.status !== 'dead'
+              }).sort((a: any, b: any) => String(a.name).localeCompare(String(b.name)))
+              const npcChosen = eligibleNpcs.find((n: any) => n.id === firstImpressionNpcId) ?? null
+              return (
               <>
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>First Impression</div>
-                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Uses Influence + best of Manipulation, Streetwise, Psychology. Result sets Relationship CMod.</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Uses Influence + best of Manipulation, Streetwise, Psychology. Result sets the Relationship CMod between the rolling PC and the target NPC — feeds future Recruitment / social checks.</div>
+
+                {/* NPC target picker */}
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Target NPC</div>
+                  {eligibleNpcs.length === 0 ? (
+                    <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px' }}>
+                      No NPCs visible on the map or in your sidebar. A GM needs to place an NPC or reveal one first.
+                    </div>
+                  ) : (
+                    <select value={firstImpressionNpcId} onChange={e => setFirstImpressionNpcId(e.target.value)}
+                      style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                      <option value="">— pick an NPC —</option>
+                      {eligibleNpcs.map((n: any) => (
+                        <option key={n.id} value={n.id}>{n.name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                {/* PC roller buttons — disabled until an NPC is chosen */}
+                <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Rolling PC</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {entries.map(e => (
-                    <button key={e.character.id} onClick={() => triggerFirstImpression(e.character.name)}
-                      style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>{e.character.name} (INF {e.character.data?.rapid?.INF ?? 0})</button>
-                  ))}
+                  {entries.map(e => {
+                    const ready = !!npcChosen
+                    return (
+                      <button key={e.character.id}
+                        disabled={!ready}
+                        onClick={() => { if (npcChosen) triggerFirstImpression(e.character.name, npcChosen.id, npcChosen.name) }}
+                        style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), opacity: ready ? 1 : 0.4, cursor: ready ? 'pointer' : 'not-allowed' }}>
+                        {e.character.name} (INF {e.character.data?.rapid?.INF ?? 0})
+                      </button>
+                    )
+                  })}
                 </div>
               </>
-            )}
+              )
+            })()}
             {showSpecialCheck === 'group' && (
               <>
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Group Check</div>
