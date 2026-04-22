@@ -21,6 +21,10 @@ interface Props {
   mapCenterLng?: number | null
   revealedNpcIds?: Set<string>
   focusPin?: { id: string; lat: number; lng: number } | null
+  // Double-click on any empty map location fires this callback with
+  // the clicked coords. Table page wires it to open the Quick Add
+  // modal pre-seeded with the location. Null = feature off.
+  onMapDoubleClick?: (lat: number, lng: number) => void
 }
 
 interface PinNpc {
@@ -77,7 +81,7 @@ function getCategoryEmoji(category: string): string {
   return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '📍'
 }
 
-export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defaultMapStyle, mapCenterLat, mapCenterLng, revealedNpcIds, focusPin }: Props) {
+export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defaultMapStyle, mapCenterLat, mapCenterLng, revealedNpcIds, focusPin, onMapDoubleClick }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const tileLayerRef = useRef<any>(null)
@@ -85,6 +89,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   const clusterGroupRef = useRef<any>(null)
   const debounceRef = useRef<any>(null)
   const placingRef = useRef(false)
+  // Hold a ref to the latest onMapDoubleClick callback so the Leaflet
+  // dblclick handler registered in the init effect can always call the
+  // current parent version without re-subscribing.
+  const dblClickRef = useRef<typeof onMapDoubleClick>(undefined)
+  useEffect(() => { dblClickRef.current = onMapDoubleClick }, [onMapDoubleClick])
   const supabase = createClient()
   const [pins, setPins] = useState<CampaignPin[]>([])
   const [mapLayer, setMapLayer] = useState<string>(defaultMapStyle ?? 'street')
@@ -256,6 +265,13 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         if (!placingRef.current) return
         setNewPin({ lat: e.latlng.lat, lng: e.latlng.lng })
         setPinForm({ name: '', notes: '', category: 'location' })
+      })
+      // Double-click anywhere on the map fires the Quick Add parent
+      // callback with the clicked coords. Prevented Leaflet's default
+      // zoom-on-dblclick so the interaction is ours exclusively.
+      map.doubleClickZoom.disable()
+      map.on('dblclick', (e: any) => {
+        if (dblClickRef.current) dblClickRef.current(e.latlng.lat, e.latlng.lng)
       })
 
       await loadPins(L)

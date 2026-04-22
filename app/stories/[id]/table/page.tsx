@@ -440,13 +440,15 @@ export default function TablePage() {
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
   const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null; character_name: string }[]>([])
   const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | null>(null)
-  // Quick Add modal — shortcut for dropping a pin AND/OR starting a
-  // community without menu-hopping. Auto-opens on first /table visit
-  // when the campaign has zero pins AND zero communities (fresh-start
-  // UX); also manually reopenable via the header "Quick Add" button.
-  // Session-scoped dismissal so it doesn't keep popping on reload.
+  // Quick Add modal — opened ONLY by double-clicking an empty spot on
+  // the campaign map. Never auto-opens, never redirects. The dblclick
+  // handler on CampaignMap hands the lat/lng up via onMapDoubleClick,
+  // which calls openQuickAdd(lat, lng) below.
+  // When the rolling player is already in a community, the modal hides
+  // the "Start a Community" panel — per user spec: "once a player is
+  // in a community, this modal should ONLY show the drop a pin section."
   const [showQuickAdd, setShowQuickAdd] = useState(false)
-  const quickAddAutoShownRef = useRef(false)
+  const [qaHideCommunity, setQaHideCommunity] = useState(false)
   const [qaPinLat, setQaPinLat] = useState<string>('')
   const [qaPinLng, setQaPinLng] = useState<string>('')
   const [qaPinName, setQaPinName] = useState('')
@@ -850,29 +852,11 @@ export default function TablePage() {
       setSessionCount(camp.session_count ?? 0)
       setLoading(false)
       // Seed the Quick Add pin lat/lng from the campaign's map center
-      // so the player isn't typing coords from scratch. They can still
-      // edit manually.
+      // so if the player opens Quick Add via some non-dblclick route
+      // the coords aren't zero. Double-click replaces them with the
+      // clicked location.
       if (camp.map_center_lat != null) setQaPinLat(String(camp.map_center_lat))
       if (camp.map_center_lng != null) setQaPinLng(String(camp.map_center_lng))
-      // Quick Add auto-open: fresh campaigns (zero pins + zero
-      // communities) get the modal pre-opened so players don't have
-      // to hunt for the two things they need to do first. Once
-      // dismissed, a per-session flag prevents re-open on reload.
-      if (!quickAddAutoShownRef.current) {
-        quickAddAutoShownRef.current = true
-        try {
-          const key = `qa_dismissed_${id}`
-          if (typeof window !== 'undefined' && !sessionStorage.getItem(key)) {
-            const [{ count: pinCount }, { count: commCount }] = await Promise.all([
-              supabase.from('campaign_pins').select('id', { count: 'exact', head: true }).eq('campaign_id', id),
-              supabase.from('communities').select('id', { count: 'exact', head: true }).eq('campaign_id', id),
-            ])
-            if ((pinCount ?? 0) === 0 && (commCount ?? 0) === 0) {
-              setShowQuickAdd(true)
-            }
-          }
-        } catch { /* non-fatal */ }
-      }
 
       const [{ data: gmProfile }, { data: members }] = await Promise.all([
         supabase.from('profiles').select('id, username').eq('id', camp.gm_user_id).single(),
@@ -2324,21 +2308,42 @@ export default function TablePage() {
   // standard handleRollRequest/executeRoll path — Recruitment is out-
   // of-combat, has its own CMod stack and custom outcome application).
   // ── Quick Add helpers ─────────────────────────────────────────────
-  async function openQuickAdd() {
+  // Open with lat/lng = where the player just double-clicked on the
+  // map. Also snapshots whether the current user's PC is in any
+  // community; if so, we'll suppress the "Start a Community" panel.
+  async function openQuickAdd(lat?: number, lng?: number) {
     setQaPinDone(false)
     setQaCommDone(false)
+    if (typeof lat === 'number' && typeof lng === 'number') {
+      setQaPinLat(lat.toFixed(6))
+      setQaPinLng(lng.toFixed(6))
+    }
     // Refresh the pin list so the Homestead dropdown sees any pins
     // that were just dropped via the Pin form in the same modal.
     const { data: pins } = await supabase.from('campaign_pins').select('id, name').eq('campaign_id', id).order('name', { ascending: true })
     setQaPins((pins ?? []) as { id: string; name: string }[])
+    // Community hiding — if this user owns any PC currently a member
+    // of a campaign community, hide the Start-a-Community panel.
+    // GMs always see both panels (they can help manage multiple
+    // communities per campaign and may not have a PC of their own).
+    let hide = false
+    if (!isGM && userId) {
+      const myPcIds = entries.filter(e => e.userId === userId).map(e => e.character.id)
+      if (myPcIds.length > 0) {
+        const { count } = await supabase
+          .from('community_members')
+          .select('id, communities!inner(campaign_id)', { count: 'exact', head: true })
+          .in('character_id', myPcIds)
+          .eq('communities.campaign_id', id)
+          .is('left_at', null)
+        hide = (count ?? 0) > 0
+      }
+    }
+    setQaHideCommunity(hide)
     setShowQuickAdd(true)
   }
   function closeQuickAdd() {
     setShowQuickAdd(false)
-    // Per-session dismissal so auto-open doesn't fire again on reload.
-    try {
-      if (typeof window !== 'undefined') sessionStorage.setItem(`qa_dismissed_${id}`, '1')
-    } catch {}
   }
   async function handleQaPinSave() {
     if (!qaPinName.trim()) return
@@ -4169,11 +4174,6 @@ export default function TablePage() {
             Sessions
           </a>
         )}
-        <button onClick={openQuickAdd}
-          title="Drop a pin or start a community — no menu-hopping"
-          style={hdrBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
-          + Quick Add
-        </button>
         <a href={`/stories/${id}`} style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
           Stories
         </a>
@@ -5533,7 +5533,7 @@ export default function TablePage() {
               onThrowCancel={() => setThrowMode(null)}
             />
           ) : (
-            <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} revealedNpcIds={revealedNpcIds} focusPin={focusPin} />
+            <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} revealedNpcIds={revealedNpcIds} focusPin={focusPin} onMapDoubleClick={(lat, lng) => openQuickAdd(lat, lng)} />
           )}
 
           {/* NPC Card(s) — grid overlay when out of combat, draggable inline when in combat */}
@@ -7239,10 +7239,12 @@ export default function TablePage() {
             <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Quick Add</div>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>Set the table</div>
             <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1.25rem', fontFamily: 'Barlow, sans-serif' }}>
-              Drop a pin on the map, start a community, or both. You can submit each independently.
+              {qaHideCommunity
+                ? 'Drop a pin at the location you just double-clicked.'
+                : 'Drop a pin on the map, start a community, or both. You can submit each independently.'}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: qaHideCommunity ? '1fr' : '1fr 1fr', gap: '16px' }}>
               {/* ── Drop a Pin ───────────────────────────────────── */}
               <div style={{ padding: '14px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '4px' }}>
                 <div style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>📍 Drop a Pin</div>
@@ -7306,7 +7308,9 @@ export default function TablePage() {
                 )}
               </div>
 
-              {/* ── Start a Community ────────────────────────────── */}
+              {/* ── Start a Community — hidden when the current player
+                    already belongs to a community in this campaign ── */}
+              {!qaHideCommunity && (
               <div style={{ padding: '14px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '4px' }}>
                 <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>🏘️ Start a Community</div>
 
@@ -7351,6 +7355,7 @@ export default function TablePage() {
                   </div>
                 )}
               </div>
+              )}
             </div>
 
             <button onClick={closeQuickAdd}
