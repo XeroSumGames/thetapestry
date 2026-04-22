@@ -4893,7 +4893,13 @@ export default function TablePage() {
                     left: pos?.x ?? 10 + i * 20,
                     top: pos?.y ?? 10 + i * 20,
                     width: '607px',
-                    height: '357px',
+                    // Let height track the NpcCard's natural size instead of
+                    // pinning to 357px — Foes/Goons render shorter than PCs
+                    // and the leftover space showed up as a dead "shadow box"
+                    // outlined by the wrapper's boxShadow. If a particularly
+                    // tall NPC ever overflows the viewport we can add a
+                    // maxHeight+overflow:auto, but most fit comfortably.
+                    maxHeight: '80vh',
                     overflow: 'auto',
                     zIndex: 1100 + i,
                     borderRadius: '4px',
