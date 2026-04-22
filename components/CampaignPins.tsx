@@ -198,7 +198,7 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene
       {/* Pin list */}
       <div style={{ overflowY: 'auto', padding: '4px' }}>
         {pins.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '8px', color: '#3a3a3a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
+          <div style={{ textAlign: 'center', padding: '8px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
             {isGM ? 'No campaign pins' : 'No pins revealed yet'}
           </div>
         ) : (

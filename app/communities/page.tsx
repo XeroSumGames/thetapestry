@@ -197,7 +197,7 @@ export default function CommunitiesIndexPage() {
       {rows.length === 0 && (
         <div style={{ padding: '3rem', textAlign: 'center', color: '#5a5550', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
           You haven&apos;t founded or joined any communities yet.
-          <div style={{ marginTop: '8px', fontSize: '12px', color: '#3a3a3a', textTransform: 'none', letterSpacing: 0 }}>
+          <div style={{ marginTop: '8px', fontSize: '13px', color: '#cce0f5', textTransform: 'none', letterSpacing: 0 }}>
             Click <span style={{ color: '#c0392b' }}>+ New Community</span> above to found one inside any campaign you&apos;re a member of.
           </div>
         </div>

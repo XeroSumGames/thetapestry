@@ -1246,7 +1246,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
 
             {/* Notes */}
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>GM Notes <span style={{ color: '#3a3a3a' }}>(private)</span></div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>GM Notes <span style={{ color: '#cce0f5', opacity: 0.6 }}>(private)</span></div>
               <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                 placeholder="Private notes — never shown to players"
                 rows={3}

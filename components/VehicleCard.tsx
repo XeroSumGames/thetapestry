@@ -191,7 +191,7 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
               {item.notes && <span style={{ color: '#5a5550' }}> — {item.notes}</span>}
             </span>
             {canEdit && (
-              <button onClick={() => removeCargo(idx)} style={{ background: 'none', border: 'none', color: '#3a3a3a', fontSize: '12px', cursor: 'pointer', padding: '0 2px' }}
+              <button onClick={() => removeCargo(idx)} style={{ background: 'none', border: 'none', color: '#cce0f5', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}
                 onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
                 onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>×</button>
             )}

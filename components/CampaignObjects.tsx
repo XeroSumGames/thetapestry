@@ -287,7 +287,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       )}
 
       {objects.length === 0 && !showAdd && (
-        <div style={{ color: '#3a3a3a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', padding: '1rem' }}>
+        <div style={{ color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', padding: '1rem' }}>
           No objects in this scene
         </div>
       )}

@@ -27,6 +27,7 @@
 - **`canvas.toBlob` vs `canvas.toDataURL`**: `toBlob` is async and gives you the exact file size for display; `toDataURL` is synchronous and gives a string suitable for `<img src>` and `<a download>`. Use both in parallel when you need both size stats and a preview URL.
 
 ## Styling
+- **Banned combo: `fontSize: '12px'` + `color: '#3a3a3a'`**: Use `13px` + `#cce0f5` instead. The pair is illegible on the dark theme even though each value passes its own guardrail. Applies site-wide — `node scripts/check-font-sizes.mjs` flags violations. Rule recorded in `AGENTS.md` under UI conventions.
 - **Header buttons must all be the same size**: The campaign table header bar uses the `hdrBtn()` helper for uniform 28px height, 11px Barlow Condensed buttons. When adding new buttons to this bar, ALWAYS use `hdrBtn()` — never inline custom styles. This has been broken and fixed before. Check `hdrBtn` usage before adding any button to the header.
 
 - **`#5a5550` is too dim**: This color was used as secondary text throughout the app but is nearly invisible on dark backgrounds. Replaced globally with `#cce0f5` (light blue).

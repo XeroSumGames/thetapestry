@@ -214,7 +214,7 @@ export default function NotificationBell() {
 
           {/* List */}
           {notifications.length === 0 ? (
-            <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#3a3a3a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+            <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
               No notifications yet
             </div>
           ) : (
