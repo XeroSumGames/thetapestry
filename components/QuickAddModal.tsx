@@ -273,7 +273,12 @@ export default function QuickAddModal({
       community_id: commJoinId,
       character_id: myPcId,
       role: 'unassigned',
-      recruitment_type: 'cohort',
+      // 'member' = regular PC joiner. 'cohort' is reserved for
+      // NPCs recruited via a Recruitment Check, where the Cohort
+      // commitment level has mechanical meaning (Morale Check
+      // departure math). A PC earning a Cohort tag requires a
+      // specific Recruitment roll outcome, not a default join.
+      recruitment_type: 'member',
       status: 'pending',
       // joined_at stays null until approval; serves as an
       // approved-vs-pending distinguishing field alongside status.

@@ -9,7 +9,7 @@ import { createClient } from '../lib/supabase-browser'
 // manual management only.
 
 type Role = 'gatherer' | 'maintainer' | 'safety' | 'unassigned'
-type RecruitmentType = 'cohort' | 'conscript' | 'convert' | 'apprentice' | 'founder'
+type RecruitmentType = 'cohort' | 'conscript' | 'convert' | 'apprentice' | 'founder' | 'member'
 
 interface Community {
   id: string
@@ -63,11 +63,12 @@ const ROLE_MAX_PCT: Record<Role, number> = {
   unassigned: 100,
 }
 const RECRUITMENT_LABEL: Record<RecruitmentType, string> = {
+  member: 'Member',
+  founder: 'Founder',
   cohort: 'Cohort',
   conscript: 'Conscript',
   convert: 'Convert',
   apprentice: 'Apprentice',
-  founder: 'Founder',
 }
 
 const CommunityTAB_LABEL = 'Community'
@@ -103,7 +104,7 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
   const [addKind, setAddKind] = useState<'npc' | 'pc'>('npc')
   const [addSubjectId, setAddSubjectId] = useState('')
   const [addRole, setAddRole] = useState<Role>('unassigned')
-  const [addType, setAddType] = useState<RecruitmentType>('founder')
+  const [addType, setAddType] = useState<RecruitmentType>('member')
 
   useEffect(() => { load() }, [campaignId])
 
@@ -259,7 +260,7 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
       setMembers(prev => ({ ...prev, [communityId]: [...(prev[communityId] ?? []), data as Member] }))
       setAddSubjectId('')
       setAddRole('unassigned')
-      setAddType('founder')
+      setAddType('member')
     }
   }
 

@@ -241,7 +241,10 @@ export default function CommunitiesIndexPage() {
       community_id: inviteCommId,
       character_id: inviteCharId,
       role: 'unassigned',
-      recruitment_type: 'cohort',
+      // PC invites land as 'member', not 'cohort'. Cohort is an
+      // NPC Recruitment-Check outcome with departure consequences;
+      // inviting a PC to join isn't that.
+      recruitment_type: 'member',
       status: 'pending',
       invited_by_user_id: userId,
     })
