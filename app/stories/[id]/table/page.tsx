@@ -2102,6 +2102,34 @@ export default function TablePage() {
   const [campaignNpcs, setCampaignNpcs] = useState<any[]>([])
   const [revealedNpcs, setRevealedNpcs] = useState<any[]>([])
   const revealedNpcIds = useMemo(() => new Set<string>(revealedNpcs.map((n: any) => n.id)), [revealedNpcs])
+  // Player-side NPC folder expand state. Mirrors the GM's NpcRoster
+  // folder grouping so players see the same organization the GM set up.
+  // localStorage-backed per (campaign, user) so each player can have
+  // their own collapse state without stepping on others. Defaults to
+  // everything OPEN on first load so players see their NPCs up-front.
+  const [playerFolderOpen, setPlayerFolderOpen] = useState<Set<string>>(new Set())
+  const playerFolderStateLoadedRef = useRef(false)
+  useEffect(() => {
+    // Load once per campaign mount. Guarded by the ref so the load
+    // doesn't clobber in-flight toggles from a later re-render.
+    if (playerFolderStateLoadedRef.current || !id) return
+    if (typeof window === 'undefined') return
+    try {
+      const saved = localStorage.getItem(`npc_player_folders_${id}`)
+      if (saved) setPlayerFolderOpen(new Set(JSON.parse(saved)))
+    } catch { /* ignore quota / parse errors */ }
+    playerFolderStateLoadedRef.current = true
+  }, [id])
+  function togglePlayerFolder(name: string) {
+    setPlayerFolderOpen(prev => {
+      const next = new Set(prev)
+      next.has(name) ? next.delete(name) : next.add(name)
+      if (typeof window !== 'undefined') {
+        try { localStorage.setItem(`npc_player_folders_${id}`, JSON.stringify([...next])) } catch {}
+      }
+      return next
+    })
+  }
   const [focusPin, setFocusPin] = useState<{ id: string; lat: number; lng: number } | null>(null)
 
   // Re-sync any open NpcCards (centered "viewing" cards) whenever the underlying
@@ -5353,67 +5381,113 @@ export default function TablePage() {
                     return base ? { ...base, _combatOnly: true } : null
                   }).filter(Boolean)
                 : []
-              const playerNpcs = [
-                // Combat NPCs first, in initiative turn order
+              // Combine combat + revealed NPCs, group by GM-assigned folder.
+              // Combat NPCs not otherwise revealed are included as
+              // `_combatOnly: true` so they show even without a relationship.
+              const combined: any[] = [
                 ...combatNpcsInOrder,
-                // Then non-combat revealed NPCs
                 ...revealedNpcs.filter((n: any) => !combatIdSet.has(n.id)),
               ]
+              if (combined.length === 0) {
+                return (
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+                    <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>No NPCs revealed yet</div>
+                  </div>
+                )
+              }
+              // Group by folder. Null / empty → "Unfiled". A dedicated
+              // "In Combat" pseudo-folder pulls active combatants up top
+              // in initiative order regardless of their actual folder so
+              // players can reach them fast during a turn.
+              type FolderBucket = { name: string; key: string; npcs: any[] }
+              const folders: FolderBucket[] = []
+              if (combatNpcsInOrder.length > 0) {
+                folders.push({ name: '⚔️ In Combat', key: '__combat__', npcs: combatNpcsInOrder })
+              }
+              const byFolder = new Map<string, any[]>()
+              for (const n of revealedNpcs) {
+                if (combatIdSet.has(n.id)) continue // already in the Combat bucket
+                const f = (n.folder && n.folder.trim()) ? n.folder.trim() : 'Unfiled'
+                const arr = byFolder.get(f) ?? []
+                arr.push(n)
+                byFolder.set(f, arr)
+              }
+              const folderNames = [...byFolder.keys()].sort((a, b) => {
+                if (a === 'Unfiled') return 1
+                if (b === 'Unfiled') return -1
+                return a.localeCompare(b)
+              })
+              for (const f of folderNames) {
+                folders.push({ name: f, key: f, npcs: byFolder.get(f)!.sort((a, b) => a.name.localeCompare(b.name)) })
+              }
+
+              function renderNpcRow(npc: any) {
+                const isOpen = viewingNpcs.some(n => n.id === npc.id)
+                const inCombat = combatIdSet.has(npc.id)
+                const freshNpc = campaignNpcs.find((n: any) => n.id === npc.id)
+                const npcWP = freshNpc?.wp_current ?? npc.wp_current ?? npc.wp_max ?? 10
+                const npcIsDead = freshNpc?.status === 'dead' || (npcWP === 0 && freshNpc?.death_countdown != null && freshNpc.death_countdown <= 0)
+                const npcIsMortal = npcWP === 0 && !npcIsDead
+                return (
+                  <div
+                    key={npc.id}
+                    onClick={() => {
+                      setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc])
+                      setSelectedEntry(null)
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: isOpen ? '#2a1210' : npcIsDead ? '#0f0f0f' : '#1a1a1a', border: `1px solid ${isOpen ? '#c0392b' : npcIsDead ? '#3a3a3a' : inCombat ? '#5a1b1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s', opacity: npcIsDead ? 0.5 : 1 }}
+                  >
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                      {npc.portrait_url ? (
+                        <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.name}</div>
+                      {npcIsDead && <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>💀 Dead</div>}
+                      {npcIsMortal && <div style={{ fontSize: '12px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>🩸 Mortally Wounded</div>}
+                      {inCombat && !npcIsDead && !npcIsMortal && <div style={{ fontSize: '12px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>In Combat</div>}
+                      {!npc._combatOnly && npc.reveal_level === 'name_portrait_role' && npc.recruitment_role && (
+                        <div style={{ fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.recruitment_role}</div>
+                      )}
+                      {!npc._combatOnly && npc.relationship_cmod !== 0 && npc.relationship_cmod != null && (
+                        <div style={{ fontSize: '12px', color: npc.relationship_cmod > 0 ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                          {npc.relationship_cmod > 0 ? `+${npc.relationship_cmod}` : npc.relationship_cmod} CMod
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              }
+
               return (
               <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-                {playerNpcs.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                    No NPCs revealed yet
-                  </div>
-                ) : (
-                  playerNpcs.map((npc: any) => {
-                    const isOpen = viewingNpcs.some(n => n.id === npc.id)
-                    const inCombat = combatIdSet.has(npc.id)
-                    // Derive status from fresh campaignNpcs data
-                    const freshNpc = campaignNpcs.find((n: any) => n.id === npc.id)
-                    const npcWP = freshNpc?.wp_current ?? npc.wp_current ?? npc.wp_max ?? 10
-                    const npcIsDead = freshNpc?.status === 'dead' || (npcWP === 0 && freshNpc?.death_countdown != null && freshNpc.death_countdown <= 0)
-                    const npcIsMortal = npcWP === 0 && !npcIsDead
-                    return (
+                {folders.map(bucket => {
+                  // Combat pseudo-folder is always open — you don't want
+                  // to hide the "it's your turn" indicator behind a click.
+                  const isCombatBucket = bucket.key === '__combat__'
+                  const isOpen = isCombatBucket || playerFolderOpen.has(bucket.key)
+                  return (
+                    <div key={bucket.key} style={{ marginBottom: '6px' }}>
                       <div
-                        key={npc.id}
-                        onClick={() => {
-                          setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc])
-                          setSelectedEntry(null)
-                        }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: isOpen ? '#2a1210' : npcIsDead ? '#0f0f0f' : '#1a1a1a', border: `1px solid ${isOpen ? '#c0392b' : npcIsDead ? '#3a3a3a' : inCombat ? '#5a1b1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s', opacity: npcIsDead ? 0.5 : 1 }}
-                      >
-                        <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                          {npc.portrait_url ? (
-                            <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          ) : (
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
-                          )}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.name}</div>
-                          {npcIsDead && (
-                            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>💀 Dead</div>
-                          )}
-                          {npcIsMortal && (
-                            <div style={{ fontSize: '12px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>🩸 Mortally Wounded</div>
-                          )}
-                          {inCombat && !npcIsDead && !npcIsMortal && (
-                            <div style={{ fontSize: '12px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>In Combat</div>
-                          )}
-                          {!npc._combatOnly && npc.reveal_level === 'name_portrait_role' && npc.recruitment_role && (
-                            <div style={{ fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.recruitment_role}</div>
-                          )}
-                          {!npc._combatOnly && npc.relationship_cmod !== 0 && npc.relationship_cmod != null && (
-                            <div style={{ fontSize: '12px', color: npc.relationship_cmod > 0 ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                              {npc.relationship_cmod > 0 ? `+${npc.relationship_cmod}` : npc.relationship_cmod} CMod
-                            </div>
-                          )}
-                        </div>
+                        onClick={() => !isCombatBucket && togglePlayerFolder(bucket.key)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', cursor: isCombatBucket ? 'default' : 'pointer', userSelect: 'none' }}>
+                        {!isCombatBucket && (
+                          <span style={{ fontSize: '12px', color: '#5a5550', width: '10px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
+                        )}
+                        <span style={{ fontSize: '13px', color: isCombatBucket ? '#f5a89a' : '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>
+                          {bucket.name}
+                        </span>
+                        <span style={{ fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                          ({bucket.npcs.length})
+                        </span>
                       </div>
-                    )
-                  })
-                )}
+                      {isOpen && bucket.npcs.map(renderNpcRow)}
+                    </div>
+                  )
+                })}
               </div>
               )
             })()}
