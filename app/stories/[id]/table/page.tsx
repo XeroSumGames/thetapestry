@@ -5748,25 +5748,49 @@ export default function TablePage() {
                             </option>
                           )
                         })}
-                      {/* Object tokens with WP — weapons crates, doors, barrels, etc. */}
-                      {mapTokens
-                        .filter(t => t.token_type === 'object' && (t.wp_max ?? 0) > 0 && (t.wp_current ?? t.wp_max ?? 0) > 0)
-                        .filter(t => {
-                          // Range filter (skip for Charge)
-                          if (pendingRoll.weapon && !pendingRoll.label.includes('Charge')) {
-                            const active = initiativeOrder.find(ie => ie.is_active)
-                            if (active) {
-                              const autoRange = getAutoRangeBand(active.character_id || undefined, active.npc_id || undefined, t.name)
-                              if (autoRange && !isInRange(pendingRoll.weapon.weaponName, autoRange)) return false
+                      {/* Object tokens — crates, doors, barrels, etc. Show EVERY
+                          object on the map regardless of wp_max configuration;
+                          the suffix tells the user WHY one can't be destroyed
+                          ((indestructible) / (destroyed)) instead of silently
+                          omitting it. Silent omission was the source of several
+                          "I can see it right there but can't target it" reports
+                          during playtest — GMs assumed they'd placed the object
+                          wrong (or mis-configured wp_max) because there was no
+                          diagnostic. */}
+                      {(() => {
+                        const objs = mapTokens.filter(t => t.token_type === 'object')
+                        if (objs.length > 0 && process.env.NODE_ENV !== 'production') {
+                          console.warn('[target-dropdown] objects on map:', objs.map(o => ({
+                            name: o.name, wp_max: o.wp_max, wp_current: o.wp_current,
+                          })))
+                        }
+                        return objs
+                          .filter(t => {
+                            // Range filter (skip for Charge). An out-of-range
+                            // object still doesn't make the list — showing it
+                            // selectable would let the user roll and then
+                            // confusingly fail, same as for NPC targets.
+                            if (pendingRoll.weapon && !pendingRoll.label.includes('Charge')) {
+                              const active = initiativeOrder.find(ie => ie.is_active)
+                              if (active) {
+                                const autoRange = getAutoRangeBand(active.character_id || undefined, active.npc_id || undefined, t.name)
+                                if (autoRange && !isInRange(pendingRoll.weapon.weaponName, autoRange)) return false
+                              }
                             }
-                          }
-                          return true
-                        })
-                        .map(t => (
-                          <option key={t.id} value={t.name} style={{ color: '#EF9F27' }}>
-                            {t.name} (Object)
-                          </option>
-                        ))}
+                            return true
+                          })
+                          .map(t => {
+                            const indestructible = (t.wp_max ?? 0) <= 0
+                            const destroyed = !indestructible && (t.wp_current ?? t.wp_max ?? 0) <= 0
+                            const suffix = indestructible ? ' (Indestructible)' : destroyed ? ' (Destroyed)' : ' (Object)'
+                            const color = indestructible || destroyed ? '#5a5a5a' : '#EF9F27'
+                            return (
+                              <option key={t.id} value={t.name} style={{ color }} disabled={indestructible || destroyed}>
+                                {t.name}{suffix}
+                              </option>
+                            )
+                          })
+                      })()}
                     </select>
                   </div>
                 )}
