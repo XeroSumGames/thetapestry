@@ -2701,6 +2701,15 @@ export default function TablePage() {
           const { error: csErr, data: csData } = await supabase.from('character_states').update(update).eq('id', targetEntry.stateId).select()
           if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
           else console.warn('[damage] PC character_states update returned', csData?.length, 'rows')
+          // Silent RLS failure pattern: no error, 0 rows affected. The
+          // optimistic patch paints damage locally for a frame, then
+          // loadEntries at the end of executeRoll re-fetches the DB's
+          // unchanged value and the bar snaps back to full — user sees
+          // "zero damage applied" with no diagnostic. Make it loud.
+          if (!csErr && (!csData || csData.length === 0)) {
+            console.error('[damage] SILENT RLS FAIL — PC wp_current not updated. Run sql/character-states-rls-fix.sql in Supabase. stateId:', targetEntry.stateId)
+            alert(`Damage to ${targetEntry.character.name} was silently rejected by RLS — the row did not update.\n\nThe GM needs to run sql/character-states-rls-fix.sql in Supabase to allow GMs + campaign members to apply damage to PCs they don't own.\n\nUntil then, damage rolls against PCs will succeed visually but not persist.`)
+          }
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
           initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: { stateId: targetEntry.stateId, patch: update } })
           // Mortally wounded / incapacitated — zero their actions and auto-advance if active
