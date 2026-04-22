@@ -38,6 +38,10 @@ export interface QuickAddModalProps {
 }
 
 const CAMPAIGN_CATEGORIES: { value: string; label: string; emoji: string }[] = [
+  // Homestead sits at the top — communities tag their Base of Operations
+  // with this category, and the Homestead pin dropdown on the Start-a-
+  // Community panel shows homestead-tagged pins first.
+  { value: 'homestead',  label: 'Homestead',  emoji: '🏡' },
   { value: 'location',   label: 'Location',   emoji: '📍' },
   { value: 'residence',  label: 'Residence',  emoji: '🏠' },
   { value: 'business',   label: 'Business',   emoji: '🏪' },
@@ -86,6 +90,33 @@ export default function QuickAddModal({
   // Thrivers can also uncheck to keep a pin private to themselves.
   const [worldShare, setWorldShare] = useState(false)
 
+  // Address search — geocodes a human-typed place name via Nominatim
+  // and fills in Lat/Lng when the player picks a result. No auto-
+  // submit; the player still hits Save Pin themselves.
+  const [addrQuery, setAddrQuery] = useState('')
+  const [addrResults, setAddrResults] = useState<{ display_name: string; lat: string; lon: string }[]>([])
+  const [addrSearching, setAddrSearching] = useState(false)
+  async function handleAddressSearch() {
+    const q = addrQuery.trim()
+    if (!q) return
+    setAddrSearching(true)
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`)
+      const data = await res.json()
+      setAddrResults(Array.isArray(data) ? data : [])
+    } catch (err) {
+      console.warn('[quick-add] address search failed:', err)
+      setAddrResults([])
+    }
+    setAddrSearching(false)
+  }
+  function pickAddressResult(r: { lat: string; lon: string; display_name: string }) {
+    setPinLat(parseFloat(r.lat).toFixed(6))
+    setPinLng(parseFloat(r.lon).toFixed(6))
+    setAddrResults([])
+    setAddrQuery(r.display_name)
+  }
+
   // ── Community form state (campaign mode only) ────────────────────
   const [commName, setCommName] = useState('')
   const [commDesc, setCommDesc] = useState('')
@@ -94,14 +125,16 @@ export default function QuickAddModal({
   const [commAttachments, setCommAttachments] = useState<File[]>([])
   const [commSaving, setCommSaving] = useState(false)
   const [commDone, setCommDone] = useState(false)
-  const [pinList, setPinList] = useState<{ id: string; name: string }[]>([])
+  const [pinList, setPinList] = useState<{ id: string; name: string; category: string | null }[]>([])
 
   // Load the pin list for the Homestead dropdown on the Community
   // panel whenever the modal opens (campaign mode, community visible).
+  // Also pulled after each Pin save so a just-dropped Homestead-tagged
+  // pin is immediately selectable.
   useEffect(() => {
     if (mode !== 'campaign' || !campaignId || hideCommunity) return
-    supabase.from('campaign_pins').select('id, name').eq('campaign_id', campaignId).order('name', { ascending: true })
-      .then(({ data }: { data: { id: string; name: string }[] | null }) => setPinList(data ?? []))
+    supabase.from('campaign_pins').select('id, name, category').eq('campaign_id', campaignId).order('name', { ascending: true })
+      .then(({ data }: { data: { id: string; name: string; category: string | null }[] | null }) => setPinList(data ?? []))
   }, [mode, campaignId, hideCommunity])
 
   // Re-seed lat/lng when caller passes new initial values (e.g. a
@@ -185,8 +218,8 @@ export default function QuickAddModal({
     setWorldShare(false)
     // Refresh the pin list so the Homestead dropdown sees it.
     if (mode === 'campaign' && campaignId) {
-      const { data: pins } = await supabase.from('campaign_pins').select('id, name').eq('campaign_id', campaignId).order('name', { ascending: true })
-      setPinList((pins ?? []) as { id: string; name: string }[])
+      const { data: pins } = await supabase.from('campaign_pins').select('id, name, category').eq('campaign_id', campaignId).order('name', { ascending: true })
+      setPinList((pins ?? []) as { id: string; name: string; category: string | null }[])
     }
     onPinSaved?.()
   }
@@ -264,6 +297,35 @@ export default function QuickAddModal({
                 <input value={pinLng} onChange={e => setPinLng(e.target.value)} placeholder="-79.9959"
                   style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
               </div>
+            </div>
+
+            {/* Address search — geocodes via Nominatim, fills Lat/Lng
+                when the player picks a result. Sits between the
+                Lat/Lng row and Category per user spec. */}
+            <div style={{ marginBottom: '8px' }}>
+              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Address Search (optional)</div>
+              <form onSubmit={e => { e.preventDefault(); handleAddressSearch() }}
+                style={{ display: 'flex', gap: '6px' }}>
+                <input value={addrQuery} onChange={e => setAddrQuery(e.target.value)}
+                  placeholder="e.g. Broken Arrow, OK"
+                  style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                <button type="submit" disabled={!addrQuery.trim() || addrSearching}
+                  style={{ padding: '7px 14px', background: addrQuery.trim() ? '#1a1a2e' : '#111', border: `1px solid ${addrQuery.trim() ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: addrQuery.trim() ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: addrQuery.trim() && !addrSearching ? 'pointer' : 'not-allowed' }}>
+                  {addrSearching ? '…' : 'Go'}
+                </button>
+              </form>
+              {addrResults.length > 0 && (
+                <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px', maxHeight: '180px', overflowY: 'auto', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                  {addrResults.map((r, i) => (
+                    <button key={i} type="button" onClick={() => pickAddressResult(r)}
+                      style={{ textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow, sans-serif', cursor: 'pointer', lineHeight: 1.3 }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#1a1a2e')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      {r.display_name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div style={{ marginBottom: '8px' }}>
@@ -346,10 +408,31 @@ export default function QuickAddModal({
                 <select value={commHomestead} onChange={e => setCommHomestead(e.target.value)}
                   style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
                   <option value="">— none —</option>
-                  {pinList.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  {(() => {
+                    // Homestead-tagged pins float to the top with a 🏡
+                    // marker; other pins follow. Keeps the right pin
+                    // easy to find when a community has a purpose-
+                    // built Base of Operations marked as Homestead.
+                    const homesteadPins = pinList.filter(p => p.category === 'homestead')
+                    const otherPins = pinList.filter(p => p.category !== 'homestead')
+                    return (
+                      <>
+                        {homesteadPins.length > 0 && (
+                          <optgroup label="Homestead pins">
+                            {homesteadPins.map(p => <option key={p.id} value={p.id}>🏡 {p.name}</option>)}
+                          </optgroup>
+                        )}
+                        {otherPins.length > 0 && (
+                          <optgroup label={homesteadPins.length > 0 ? 'Other pins' : 'Pins'}>
+                            {otherPins.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                          </optgroup>
+                        )}
+                      </>
+                    )
+                  })()}
                 </select>
                 {pinList.length === 0 && (
-                  <div style={{ marginTop: '4px', fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>Drop a pin on the left first to tie a homestead to it.</div>
+                  <div style={{ marginTop: '4px', fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>Drop a pin on the left first to tie a homestead to it. Tag it as <strong style={{ color: '#7ab3d4' }}>🏡 Homestead</strong> for easy selection.</div>
                 )}
               </div>
 
