@@ -351,18 +351,20 @@ export default function CampaignPage() {
             </div>
           )}
           {/* Shortcut row — three character-creation paths so a new player
-              doesn't have to find the sidebar to make their first survivor. */}
+              doesn't have to find the sidebar to make their first survivor.
+              Each link carries ?return=<story-id> so the creation pages can
+              bounce the new player right back here when they're done. */}
           <div style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
-            <a href="/characters/new"
-              style={{ flex: 1, padding: '8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', textDecoration: 'none', cursor: 'pointer' }}>
+            <a href={`/characters/new?return=${id}`}
+              style={{ flex: 1, minHeight: '44px', padding: '8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', whiteSpace: 'nowrap' }}>
               Backstory Generation
             </a>
-            <a href="/characters/quick"
-              style={{ flex: 1, padding: '8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', textDecoration: 'none', cursor: 'pointer' }}>
+            <a href={`/characters/quick?return=${id}`}
+              style={{ flex: 1, minHeight: '44px', padding: '8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', whiteSpace: 'nowrap' }}>
               Quick Character
             </a>
-            <a href="/characters/random"
-              style={{ flex: 1, padding: '8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', textDecoration: 'none', cursor: 'pointer' }}>
+            <a href={`/characters/random?return=${id}`}
+              style={{ flex: 1, minHeight: '44px', padding: '8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.02em', textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', whiteSpace: 'nowrap' }}>
               Random Character
             </a>
           </div>

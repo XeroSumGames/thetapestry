@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createWizardState, WizardState, buildCharacter } from '../../../lib/xse-engine'
 import { createClient } from '../../../lib/supabase-browser'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { logFirstEvent } from '../../../lib/events'
 import GhostWall from '../../../components/GhostWall'
 import StepXero from '../../../components/wizard/StepXero'
@@ -55,6 +55,11 @@ const STEP_INSTRUCTIONS: (string | null)[] = [
 
 export default function NewCharacterPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  // If the user arrived from a campaign's "My Survivor" shortcut, the story
+  // id travels in ?return=<id>. After saving we bounce them right back there
+  // so they don't have to retrace the navigation themselves.
+  const returnStoryId = searchParams.get('return')
   const supabase = createClient()
   const [state, setState] = useState<WizardState>(createWizardState)
   const [saving, setSaving] = useState(false)
@@ -95,6 +100,7 @@ export default function NewCharacterPage() {
     logFirstEvent('first_character_created', { name: character.name })
     setSaved(true)
     setSaving(false)
+    if (returnStoryId) router.push(`/stories/${returnStoryId}`)
   }
 
   function handlePrint() {

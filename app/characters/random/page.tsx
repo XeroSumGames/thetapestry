@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
 import { logFirstEvent } from '../../../lib/events'
 import {
@@ -82,6 +82,8 @@ function randWeight(): string {
 
 export default function RandomCharacterPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnStoryId = searchParams.get('return')
   const [status, setStatus] = useState('Generating character...')
 
   useEffect(() => {
@@ -160,7 +162,11 @@ export default function RandomCharacterPage() {
       }
 
       logFirstEvent('first_character_created', { name: character.name })
-      router.push(`/characters/${newChar.id}/edit?step=4`)
+      // When the user came from a story shortcut, jump them straight back to
+      // that campaign so they can Assign without retracing steps.
+      router.push(returnStoryId
+        ? `/stories/${returnStoryId}`
+        : `/characters/${newChar.id}/edit?step=4`)
     }
 
     generate()

@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
 import { logFirstEvent } from '../../../lib/events'
 import GhostWall from '../../../components/GhostWall'
@@ -40,6 +40,8 @@ const QUICK_STEPS = [
 
 export default function QuickCharacterPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnStoryId = searchParams.get('return')
   const supabase = createClient()
   const [state, setState] = useState<WizardState>(createWizardState)
   const [step, setStep] = useState(0)
@@ -148,6 +150,7 @@ export default function QuickCharacterPage() {
     logFirstEvent('first_character_created', { name: character.name })
     setSaved(true)
     setSaving(false)
+    if (returnStoryId) router.push(`/stories/${returnStoryId}`)
   }
 
   function handlePrint() {
