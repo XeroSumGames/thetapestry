@@ -531,8 +531,14 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       }
     }
 
-    // Tokens
-    const toks = tokensRef.current
+    // Tokens. Sort so objects render first (bottom), then NPCs, then PCs
+    // on top — canvas is painter's-algorithm, last draw wins. Prevents a
+    // barrel or crate from covering a player token when they share a
+    // neighboring cell. Stable within each tier via index fallback.
+    const toks = [...tokensRef.current].sort((a, b) => {
+      const tier = (t: any) => t.token_type === 'object' ? 0 : t.token_type === 'npc' ? 1 : 2
+      return tier(a) - tier(b)
+    })
     const activeEntry = initiativeOrder.find((e: any) => e.is_active)
 
     let hasActiveAnim = false

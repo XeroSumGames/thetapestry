@@ -2,8 +2,21 @@
 
 ## 🎯 Next up (post-combat sprint)
 - [ ] **Destroyed-object portrait swap** — object tokens with WP should optionally carry a `destroyed_portrait_url`; when the token hits 0 WP, the canvas renders that image instead of the intact one. Falls back to the current shatter-crack overlay if no destroyed art exists. Upload UX lives on the object add/edit form in NpcRoster → Objects.
+- [ ] **NPC popup → First Impression display + Recruit button** — when a player clicks an NPC in the NPCs tab, surface their First Impression result + `relationship_cmod` for that PC, and add a Recruit button right of the Active badge (queued from Phase B Communities work).
+- [ ] **CMod Stack reusable component** — user loved the itemized CMod Stack on the Recruit modal; extract into `<CmodStack>` and use in Grapple, First Impression, main Attack modals.
+- [ ] **Phase C Communities** — weekly Morale Check + Resource Checks (Fed/Clothed) + Activity Blocks (Phase D).
 
 *Inventory migration removed 2026-04-21 — DB audit confirmed every character's `data.inventory` is already an array. Nothing to migrate.*
+
+## ✅ Shipped 2026-04-22 (Communities Phase B wrap + header nest)
+- **Recruitment Insight Dice** — pre-roll 3d6 / +3 CMod picker on the Recruit modal pick step (gated on roller having ≥1 Insight Die) + post-roll reroll buttons on the result step. Reroll reconciles `community_members` state if outcome crosses the success line, patches `roll_log` in place via captured row id. Handles 3d6 threshold math (14+/9+/4+/<4).
+- **Community milestone notification** — new Postgres trigger on `community_members` INSERT/UPDATE: when active count crosses 13 for the first time, notifies `leader_user_id` with `type='community_milestone'`, back-fills `notified_community_milestone=true` on existing ≥13 communities so they don't retro-fire. Colorized in `NotificationBell.tsx`. SQL: `sql/community-milestone-trigger.sql`.
+- **Community roster row redesign** — NPC name renders bold/prominent; recruitment type moves to subtle subtext; Apprentice rows show `Apprentice ⇐ <PC name>` inline so masters are visible. Roles bars now compute percentages over **NPCs only**. New "Player Characters (N)" block sits between role bars and NPC roster.
+- **Recruit copy fix** — `"X joined Y as a Cohort."` / `"as an Apprentice to Z"` (articles added everywhere — modal + roll_log label).
+- **Log trimming** — failure recruit labels compact to narrative `"Ada tried to recruit Jess but it didn't go well"` / `"it went badly"` (Dire Failure / Low Insight).
+- **Header bar nesting** — flat 12+ buttons → 4 dropdowns: `Checks ▾` / `Community ▾` / `Campaign ▾` (Share, Sessions, Stories) / `GM Tools ▾` (Restore, Loot, CDP, GM Screen). Custom dropdown replaces native `<select>` on Checks so option text center-aligns across browsers. ESC + outside-click close; chevron flips `▾`↔`▴` when open.
+- **Canvas token z-order** — tactical map sorts tokens so objects render first (bottom), then NPCs, then PCs on top. Barrels no longer cover PC name plates.
+- **`consumeAction` race guard** — per-entry `Set<string>` in-flight ref. A double-clicked Aim (or any action button) no longer decrements `actions_remaining` twice and skips the turn.
 
 ## ✅ Shipped 2026-04-20 (pre-Mongrels game sprint)
 - `f2e708f` Insight Dice sequential reroll — second spend on the OTHER die after first fails

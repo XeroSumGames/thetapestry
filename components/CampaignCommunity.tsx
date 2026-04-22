@@ -373,11 +373,19 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
       {communities.map(c => {
         const mems = members[c.id] ?? []
         const total = mems.length
+        // Role minimums (Gatherers 33% / Maintainers 20% / Safety 5-10%)
+        // apply to the NPC workforce only. PCs are players, not assigned
+        // labor — they get a dropdown if they want to pitch in, but they
+        // don't pull down the community's role percentages when they
+        // sit unassigned.
+        const npcMems = mems.filter(m => !!m.npc_id)
+        const pcMems = mems.filter(m => !!m.character_id)
+        const npcTotal = npcMems.length
         const isCommunity = total >= 13
         const isOpen = openId === c.id
-        const gatherPct = total > 0 ? Math.round(100 * mems.filter(m => m.role === 'gatherer').length / total) : 0
-        const maintainPct = total > 0 ? Math.round(100 * mems.filter(m => m.role === 'maintainer').length / total) : 0
-        const safetyPct = total > 0 ? Math.round(100 * mems.filter(m => m.role === 'safety').length / total) : 0
+        const gatherPct = npcTotal > 0 ? Math.round(100 * npcMems.filter(m => m.role === 'gatherer').length / npcTotal) : 0
+        const maintainPct = npcTotal > 0 ? Math.round(100 * npcMems.filter(m => m.role === 'maintainer').length / npcTotal) : 0
+        const safetyPct = npcTotal > 0 ? Math.round(100 * npcMems.filter(m => m.role === 'safety').length / npcTotal) : 0
         return (
           <div key={c.id} style={{ background: '#1a1a1a', border: `1px solid ${isOpen ? '#7ab3d4' : '#2e2e2e'}`, borderRadius: '4px' }}>
             {/* Header */}
@@ -441,13 +449,15 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
                   )
                 })()}
 
-                {/* Role bars */}
+                {/* Role bars — percentages are over NPC workforce only.
+                    PCs don't pull down role coverage since they aren't
+                    assigned labor. */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {(['gatherer', 'maintainer', 'safety'] as Role[]).map(r => {
                     const pct = r === 'gatherer' ? gatherPct : r === 'maintainer' ? maintainPct : safetyPct
                     const min = ROLE_MIN_PCT[r]
                     const max = ROLE_MAX_PCT[r]
-                    const count = mems.filter(m => m.role === r).length
+                    const count = npcMems.filter(m => m.role === r).length
                     const ok = pct >= min && pct <= max
                     return (
                       <div key={r} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif' }}>
@@ -466,31 +476,67 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
                   })}
                 </div>
 
-                {/* Members grouped by role */}
-                {(['gatherer', 'maintainer', 'safety', 'unassigned'] as Role[]).map(r => {
-                  const list = openMembersByRole[r]
-                  if (list.length === 0) return null
-                  return (
-                    <div key={r}>
-                      <div style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>{ROLE_LABEL[r]}</div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                        {list.map(m => (
-                          <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 6px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '2px' }}>
-                            <span style={{ fontSize: '14px' }}>{m.npc_id ? '👤' : '🎭'}</span>
-                            <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberLabel(m)}</span>
-                            <span style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{RECRUITMENT_LABEL[m.recruitment_type]}</span>
-                            <select value={m.role} onChange={e => handleChangeRole(m, e.target.value as Role)}
-                              style={{ padding: '1px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
-                              {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
-                            </select>
-                            <button onClick={() => handleRemoveMember(m)} title="Remove"
-                              style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '14px', cursor: 'pointer', padding: '0 4px' }}>×</button>
-                          </div>
-                        ))}
+                {/* Row renderer shared between PCs and NPCs. The primary
+                    label is the CHARACTER NAME (what used to say COHORT /
+                    FOUNDER). Recruitment type becomes a small subtext
+                    under the name. Apprentice rows expose their master
+                    PC inline ("Apprentice ⇐ Stellan Yardley") so players
+                    can see who's apprenticed to whom at a glance. */}
+                {(() => {
+                  const renderRow = (m: Member, accent: string) => {
+                    const name = memberLabel(m)
+                    const typeLabel = RECRUITMENT_LABEL[m.recruitment_type]
+                    const masterName = m.apprentice_of_character_id
+                      ? (chars.find(c => c.id === m.apprentice_of_character_id)?.name ?? null)
+                      : null
+                    const subline = m.recruitment_type === 'apprentice' && masterName
+                      ? `Apprentice ⇐ ${masterName}`
+                      : typeLabel
+                    return (
+                      <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: '#111', border: `1px solid ${accent}`, borderRadius: '2px' }}>
+                        <span style={{ fontSize: '14px' }}>{m.npc_id ? '👤' : '🎭'}</span>
+                        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+                          <span style={{ fontSize: '12px', color: m.recruitment_type === 'apprentice' ? '#d48bd4' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subline}</span>
+                        </div>
+                        <select value={m.role} onChange={e => handleChangeRole(m, e.target.value as Role)}
+                          style={{ padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                          {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
+                        </select>
+                        <button onClick={() => handleRemoveMember(m)} title="Remove"
+                          style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '14px', cursor: 'pointer', padding: '0 4px' }}>×</button>
                       </div>
-                    </div>
+                    )
+                  }
+
+                  return (
+                    <>
+                      {/* PC block — between the role bars and NPC roster */}
+                      {pcMems.length > 0 && (
+                        <div>
+                          <div style={{ fontSize: '14px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Player Characters ({pcMems.length})</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                            {pcMems.map(m => renderRow(m, '#2e2e4a'))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* NPC roster grouped by role */}
+                      {(['gatherer', 'maintainer', 'safety', 'unassigned'] as Role[]).map(r => {
+                        const list = openMembersByRole[r].filter(m => !!m.npc_id)
+                        if (list.length === 0) return null
+                        return (
+                          <div key={r}>
+                            <div style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>{ROLE_LABEL[r]} ({list.length})</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                              {list.map(m => renderRow(m, '#2e2e2e'))}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </>
                   )
-                })}
+                })()}
 
                 {/* Add member */}
                 {(availableNpcs.length > 0 || availableChars.length > 0) && (

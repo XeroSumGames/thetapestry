@@ -265,9 +265,22 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
   }
   // Recruitment outcome — label starts with "🤝" and we stash the full
   // structured metadata in damage_json (approach, community, apprentice
-  // flag). Compact banner is whatever the label already reads.
+  // flag). Compact banner narrativizes failure tiers instead of the
+  // mechanical "— Failure / Dire Failure / Low Insight" suffix the
+  // stored label carries.
   if (r.outcome === 'recruit') {
-    // Strip the emoji so the compact is narrative
+    const failMatch = r.label.match(/^🤝\s+(.+?)\s+tried to recruit\s+(.+?)\s+—\s+(.+)$/)
+    if (failMatch) {
+      const name = failMatch[1]
+      const target = failMatch[2]
+      const rollOutcome = failMatch[3]
+      if (rollOutcome === 'Dire Failure' || rollOutcome === 'Low Insight') {
+        return `${name} tried to recruit ${target} — it went badly`
+      }
+      return `${name} tried to recruit ${target} but it didn't go well`
+    }
+    // Success label is already narrative ("X recruited Y as Z to W");
+    // just strip the 🤝 emoji.
     return r.label.replace(/^🤝\s*/, '')
   }
   // Loot — label "🎒 <name> looted <items> from <container>". Narrative
@@ -323,6 +336,33 @@ export default function TablePage() {
   const [userId, setUserId] = useState<string | null>(null)
   const userIdRef = useRef<string | null>(null)
   useEffect(() => { userIdRef.current = userId }, [userId])
+
+  // Header-bar nested dropdowns (Checks / Community / GM Tools). Only
+  // one menu opens at a time — clicking another closes the previous;
+  // clicking outside closes whatever's open. Declared up here so the
+  // outside-click useEffect below can reference it.
+  const [openHeaderMenu, setOpenHeaderMenu] = useState<string | null>(null)
+
+  // Close any open header-bar dropdown on outside click or ESC. The
+  // click target is checked against `[data-header-menu]` containers;
+  // anything outside that closes the menu.
+  useEffect(() => {
+    if (!openHeaderMenu) return
+    function handleClick(e: MouseEvent) {
+      const t = e.target as HTMLElement | null
+      if (!t) return
+      if (!t.closest('[data-header-menu]')) setOpenHeaderMenu(null)
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpenHeaderMenu(null)
+    }
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [openHeaderMenu])
   // Per-PC stress memory — used to detect the <5 → 5 transition at the
   // table-page level so the Stress Check modal fires even when the target's
   // CharacterCard sheet isn't mounted.
@@ -346,6 +386,7 @@ export default function TablePage() {
   const pendingChargeRef = useRef<{ label: string; amod: number; smod: number; weapon: any; activeId?: string; moved?: boolean } | null>(null)
   const rollExecutedRef = useRef(false)       // Set in executeRoll, read in closeRollModal — refs survive React batching
   const nextTurnInFlightRef = useRef(false)   // Re-entry guard for nextTurn — prevents races where realtime echo + optimistic call both advance, silently skipping a combatant
+  const consumeActionInFlightRef = useRef<Set<string>>(new Set())   // Per-entry lock for consumeAction — prevents double-click races from decrementing actions_remaining twice (e.g. Aim button hit twice fast burning both actions instead of one)
   const [insightSavePrompt, setInsightSavePrompt] = useState<{ stateId: string; targetName: string; newWP: number; newRP: number; phyAmod: number; insightDice: number } | null>(null)
   const [rollResult, setRollResult] = useState<RollResult | null>(null)
   const [cmod, setCmod] = useState('0')
@@ -466,12 +507,17 @@ export default function TablePage() {
   const [recruitSkill, setRecruitSkill] = useState<string>('')
   const [recruitGmCmod, setRecruitGmCmod] = useState<number>(0)
   const [recruitApprenticeToggle, setRecruitApprenticeToggle] = useState(false)
+  const [recruitPreInsight, setRecruitPreInsight] = useState<'none' | '3d6' | '+3cmod'>('none')
   const [recruitResult, setRecruitResult] = useState<{
-    die1: number; die2: number; total: number; outcome: string
+    die1: number; die2: number; die3?: number; total: number; outcome: string
     amod: number; smod: number; cmod: number
     approach: RecruitApproach; npcName: string; rollerName: string
     communityId: string | null; communityName: string
     inserted: boolean; apprenticeApplied: boolean
+    // Full metadata for post-roll reroll math. logRowId so the log
+    // entry can be patched when the outcome changes via reroll.
+    logRowId?: string
+    mode3d6?: boolean
   } | null>(null)
   // recruitment_type table for enforcing 1-Apprentice-per-PC on the UI side
   const [apprenticeByCharacter, setApprenticeByCharacter] = useState<Record<string, { id: string; npcName: string } | undefined>>({})
@@ -1664,6 +1710,17 @@ export default function TablePage() {
   }
 
   async function consumeAction(entryId: string, actionLabel?: string, cost = 1) {
+    // Per-entry re-entry guard. A rapid double-click on Aim (or any action
+    // button) previously raced two consumeAction calls that both read
+    // actions_remaining=2 before either wrote, then both wrote a
+    // decrement — burning BOTH actions on a single click. The lock is
+    // scoped per entryId so other combatants aren't blocked.
+    if (consumeActionInFlightRef.current.has(entryId)) {
+      console.warn('[consumeAction] already in flight for', entryId, '— ignoring duplicate call')
+      return
+    }
+    consumeActionInFlightRef.current.add(entryId)
+    try {
     // Re-fetch from DB to avoid stale state
     const { data: freshEntry, error: freshErr } = await supabase.from('initiative_order').select('*').eq('id', entryId).single()
     if (freshErr) console.warn('[consumeAction] fetch error:', freshErr.message)
@@ -1716,6 +1773,9 @@ export default function TablePage() {
       await loadInitiative(id)
     } else {
       await loadInitiative(id)
+    }
+    } finally {
+      consumeActionInFlightRef.current.delete(entryId)
     }
   }
 
@@ -2323,6 +2383,7 @@ export default function TablePage() {
     setRecruitSkill('')
     setRecruitGmCmod(0)
     setRecruitApprenticeToggle(false)
+    setRecruitPreInsight('none')
     setRecruitResult(null)
     setRecruitStep('pick')
     // Load this campaign's communities (pick/auto/empty state), NPC
@@ -2457,10 +2518,36 @@ export default function TablePage() {
     const smod = (rollerEntry.character.data?.skills ?? []).find((s: any) => s.skillName === recruitSkill)?.level ?? 0
     // CMod: sum of First Impression + Inspiration + Poaching + GM.
     const cmods = computeRecruitCmods()
-    const die1 = Math.floor(Math.random() * 6) + 1
-    const die2 = Math.floor(Math.random() * 6) + 1
-    const total = die1 + die2 + amod + smod + cmods.total
-    const outcome = getOutcome(total, die1, die2)
+    // Insight Die pre-roll — 3d6 keep-all, or +3 CMod flat. Deducts 1
+    // from the roller PC's insight_dice. Gracefully no-ops if the PC
+    // has 0 (UI should already have hidden the option).
+    let die1: number, die2: number
+    let die3: number | undefined = undefined
+    let bonusCmod = 0
+    let mode3d6 = false
+    if (recruitPreInsight === '3d6' && rollerEntry.liveState && rollerEntry.liveState.insight_dice > 0) {
+      die1 = Math.floor(Math.random() * 6) + 1
+      die2 = Math.floor(Math.random() * 6) + 1
+      die3 = Math.floor(Math.random() * 6) + 1
+      mode3d6 = true
+      const newInsight = rollerEntry.liveState.insight_dice - 1
+      await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', rollerEntry.stateId)
+      setEntries(prev => prev.map(e => e.stateId === rollerEntry.stateId ? { ...e, liveState: { ...e.liveState, insight_dice: newInsight } } : e))
+    } else if (recruitPreInsight === '+3cmod' && rollerEntry.liveState && rollerEntry.liveState.insight_dice > 0) {
+      die1 = Math.floor(Math.random() * 6) + 1
+      die2 = Math.floor(Math.random() * 6) + 1
+      bonusCmod = 3
+      const newInsight = rollerEntry.liveState.insight_dice - 1
+      await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', rollerEntry.stateId)
+      setEntries(prev => prev.map(e => e.stateId === rollerEntry.stateId ? { ...e, liveState: { ...e.liveState, insight_dice: newInsight } } : e))
+    } else {
+      die1 = Math.floor(Math.random() * 6) + 1
+      die2 = Math.floor(Math.random() * 6) + 1
+    }
+    const total = die1 + die2 + (die3 ?? 0) + amod + smod + cmods.total + bonusCmod
+    const outcome = mode3d6
+      ? (total >= 14 ? 'Wild Success' : total >= 9 ? 'Success' : total >= 4 ? 'Failure' : 'Dire Failure')
+      : getOutcome(total, die1, die2)
     const isSuccess = outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight'
     const unlocksApprentice = outcome === 'Wild Success' || outcome === 'High Insight'
     const applyApprentice = unlocksApprentice && recruitApprenticeToggle && !apprenticeByCharacter[recruitRollerId]
@@ -2493,14 +2580,14 @@ export default function TablePage() {
     // carries the metadata so the feed renderer can show structured
     // flavor: approach, community, apprentice flag, poaching, etc.
     const logLabel = isSuccess
-      ? `🤝 ${rollerEntry.character.name} recruited ${npc.name}${applyApprentice ? ' as Apprentice' : ` as ${recruitmentType.charAt(0).toUpperCase() + recruitmentType.slice(1)}`} to ${finalCommunityName}`
+      ? `🤝 ${rollerEntry.character.name} recruited ${npc.name}${applyApprentice ? ' as an Apprentice' : ` as a ${recruitmentType.charAt(0).toUpperCase() + recruitmentType.slice(1)}`} to ${finalCommunityName}`
       : `🤝 ${rollerEntry.character.name} tried to recruit ${npc.name} — ${outcome}`
-    await supabase.from('roll_log').insert({
+    const { data: logRow } = await supabase.from('roll_log').insert({
       campaign_id: id,
       user_id: userId,
       character_name: rollerEntry.character.name,
       label: logLabel,
-      die1, die2, amod, smod, cmod: cmods.total,
+      die1, die2, amod, smod, cmod: cmods.total + bonusCmod,
       total,
       outcome: 'recruit',
       damage_json: {
@@ -2512,19 +2599,24 @@ export default function TablePage() {
         inspiration: cmods.inspiration,
         poaching: cmods.poaching,
         gmCmod: cmods.gm,
+        bonusCmod,
+        die3,
+        mode3d6,
         communityId: finalCommunityId,
         communityName: finalCommunityName,
         npcId: recruitNpcId,
         npcName: npc.name,
       } as any,
-    })
+    }).select('id').single()
 
     setRecruitResult({
-      die1, die2, total, outcome,
-      amod, smod, cmod: cmods.total,
+      die1, die2, die3, total, outcome,
+      amod, smod, cmod: cmods.total + bonusCmod,
       approach: recruitApproach, npcName: npc.name, rollerName: rollerEntry.character.name,
       communityId: finalCommunityId, communityName: finalCommunityName,
       inserted, apprenticeApplied: applyApprentice,
+      logRowId: logRow?.id,
+      mode3d6,
     })
     setRecruitStep('result')
     // Reload feed so the new log row appears immediately.
@@ -2535,6 +2627,104 @@ export default function TablePage() {
     setShowRecruit(false)
     setRecruitResult(null)
     setRecruitStep('pick')
+    setRecruitPreInsight('none')
+    setRecruitApprenticeToggle(false)
+  }
+
+  // Post-roll Insight Die reroll on the Recruitment outcome modal. One
+  // die at a time (1, 2, or 3 if 3d6 mode). Deducts 1 insight die,
+  // rerolls that die, recomputes outcome + total, patches the existing
+  // roll_log row and any community_members side-effect, and updates
+  // the in-modal result state.
+  async function rerollRecruitDie(which: 1 | 2 | 3) {
+    const r = recruitResult
+    if (!r) return
+    const rollerEntry = entries.find(e => e.character.name === r.rollerName)
+    if (!rollerEntry || !rollerEntry.liveState || rollerEntry.liveState.insight_dice < 1) return
+    if (which === 3 && !r.mode3d6) return
+
+    // Spend the die.
+    const newInsight = rollerEntry.liveState.insight_dice - 1
+    await supabase.from('character_states')
+      .update({ insight_dice: newInsight, updated_at: new Date().toISOString() })
+      .eq('id', rollerEntry.stateId)
+    setEntries(prev => prev.map(e => e.stateId === rollerEntry.stateId
+      ? { ...e, liveState: { ...e.liveState, insight_dice: newInsight } }
+      : e))
+
+    // Reroll the chosen die.
+    const newDie = Math.floor(Math.random() * 6) + 1
+    const die1 = which === 1 ? newDie : r.die1
+    const die2 = which === 2 ? newDie : r.die2
+    const die3 = which === 3 ? newDie : r.die3
+
+    const total = die1 + die2 + (die3 ?? 0) + r.amod + r.smod + r.cmod
+    const outcome = r.mode3d6
+      ? (total >= 14 ? 'Wild Success' : total >= 9 ? 'Success' : total >= 4 ? 'Failure' : 'Dire Failure')
+      : getOutcome(total, die1, die2)
+    const wasSuccess = r.inserted
+    const nowSuccess = outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight'
+
+    // Reconcile community_members side-effect if outcome flipped.
+    let inserted = r.inserted
+    let apprenticeApplied = r.apprenticeApplied
+    if (wasSuccess && !nowSuccess && r.communityId) {
+      // Withdraw membership — the recruit no longer happened.
+      await supabase.from('community_members')
+        .delete()
+        .eq('community_id', r.communityId)
+        .eq('npc_id', recruitNpcId)
+      inserted = false
+      apprenticeApplied = false
+    } else if (!wasSuccess && nowSuccess && r.communityId) {
+      // Late-insert the member. Apprentice flag defers to the
+      // post-roll Apprentice toggle (user clicks "Take as Apprentice"
+      // if they want it) — here we just land them as the normal
+      // recruitment type.
+      const { error: memErr } = await supabase.from('community_members').insert({
+        community_id: r.communityId,
+        npc_id: recruitNpcId,
+        character_id: null,
+        role: 'unassigned',
+        recruitment_type: r.approach,
+        apprentice_of_character_id: null,
+        joined_at: new Date().toISOString(),
+      })
+      if (!memErr) inserted = true
+    }
+
+    // Patch the existing roll_log row.
+    const newLabel = nowSuccess
+      ? `🤝 ${r.rollerName} recruited ${r.npcName}${apprenticeApplied ? ' as an Apprentice' : ` as a ${r.approach.charAt(0).toUpperCase() + r.approach.slice(1)}`} to ${r.communityName}`
+      : `🤝 ${r.rollerName} tried to recruit ${r.npcName} — ${outcome}`
+    if (r.logRowId) {
+      await supabase.from('roll_log')
+        .update({
+          die1, die2, total, label: newLabel,
+          damage_json: {
+            rollOutcome: outcome,
+            approach: r.approach,
+            recruitmentType: apprenticeApplied ? 'apprentice' : r.approach,
+            apprentice: apprenticeApplied,
+            die3,
+            mode3d6: r.mode3d6,
+            communityId: r.communityId,
+            communityName: r.communityName,
+            npcId: recruitNpcId,
+            npcName: r.npcName,
+            rerolled: which,
+          } as any,
+        })
+        .eq('id', r.logRowId)
+    }
+
+    setRecruitResult({
+      ...r,
+      die1, die2, die3,
+      total, outcome,
+      inserted, apprenticeApplied,
+    })
+    await loadRolls(id)
   }
 
   function triggerGroupCheck() {
@@ -3903,6 +4093,54 @@ export default function TablePage() {
     </div>
   )
 
+  // Header dropdown renderer. Each menu item text is center-aligned
+  // and uses the same Barlow Condensed uppercase style as the parent
+  // button. Clicking an item runs its handler then closes the menu.
+  // Pass `accent` to highlight (e.g. destructive items).
+  const renderHeaderMenu = (
+    id: string,
+    label: string,
+    items: Array<{ label: string; onClick: () => void; color?: string; hidden?: boolean }>,
+    btnStyle: React.CSSProperties,
+    menuWidth = 170,
+  ) => {
+    const isOpen = openHeaderMenu === id
+    const visibleItems = items.filter(i => !i.hidden)
+    if (visibleItems.length === 0) return null
+    return (
+      <div data-header-menu={id} style={{ position: 'relative' }}>
+        <button onClick={() => setOpenHeaderMenu(prev => prev === id ? null : id)}
+          style={btnStyle}>
+          {label} {isOpen ? '▴' : '▾'}
+        </button>
+        {isOpen && (
+          <div style={{
+            position: 'absolute', top: 'calc(100% + 4px)', left: '50%', transform: 'translateX(-50%)',
+            background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.6)', zIndex: 10050,
+            minWidth: `${menuWidth}px`, display: 'flex', flexDirection: 'column', padding: '4px',
+          }}>
+            {visibleItems.map((it, i) => (
+              <button key={i} onClick={() => { setOpenHeaderMenu(null); it.onClick() }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                style={{
+                  padding: '8px 14px', background: 'transparent', border: 'none',
+                  borderRadius: '2px',
+                  color: it.color ?? '#d4cfc9', fontSize: '12px',
+                  fontFamily: 'Barlow Condensed, sans-serif',
+                  letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer',
+                  textAlign: 'center', whiteSpace: 'nowrap',
+                }}>
+                {it.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   const gmEntry = entries.find(e => e.userId === campaign.gm_user_id) ?? null
   const playerEntries = (() => {
     const filtered = entries.filter(e => e.userId !== campaign.gm_user_id)
@@ -4004,103 +4242,116 @@ export default function TablePage() {
           </div>
         )}
         <div style={{ flex: 1 }} />
-        {sessionStatus === 'active' && (
-          <select value="" onChange={e => {
-            if (!e.target.value) return
-            if (e.target.value === 'recruit') {
-              openRecruitModal()
-            } else {
-              setShowSpecialCheck(e.target.value as any)
-            }
-            e.target.value = ''
-          }}
-            style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), width: '80px' }}>
-            <option value="">Checks</option>
-            <option value="perception">Perception</option>
-            <option value="gut">Gut Instinct</option>
-            <option value="first_impression">First Impression</option>
-            <option value="recruit">Recruit</option>
-            <option value="group">Group Check</option>
-            <option value="opposed">Opposed Check</option>
-          </select>
+        {/* Order per user spec: Checks → Community → Campaign → GM Tools →
+            (utility/nav standalone). Single top-level for each grouping,
+            leaving only Overlay, Dashboard, Exit as standalone. */}
+        {sessionStatus === 'active' && renderHeaderMenu(
+          'checks',
+          'Checks',
+          [
+            { label: 'Perception', onClick: () => setShowSpecialCheck('perception' as any) },
+            { label: 'Gut Instinct', onClick: () => setShowSpecialCheck('gut' as any) },
+            { label: 'First Impression', onClick: () => setShowSpecialCheck('first_impression' as any) },
+            { label: 'Recruit', onClick: () => openRecruitModal() },
+            { label: 'Group Check', onClick: () => setShowSpecialCheck('group' as any) },
+            { label: 'Opposed Check', onClick: () => setShowSpecialCheck('opposed' as any) },
+          ],
+          hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'),
         )}
-        {campaign?.invite_code && (
-          <button onClick={() => {
-            navigator.clipboard.writeText(`${window.location.origin}/join/${campaign.invite_code}`)
-            alert('Invite link copied to clipboard!')
-          }}
-            style={hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a')}
-            title={`Code: ${campaign.invite_code}`}>
-            Share
-          </button>
+        {renderHeaderMenu(
+          'community',
+          'Community',
+          [
+            { label: 'Status', color: '#7fc458', onClick: () => openQuickAddFull() },
+            { label: 'Recruit', color: '#7fc458', onClick: () => openRecruitModal(), hidden: sessionStatus !== 'active' },
+          ],
+          hdrBtn('#1a2e10', '#7fc458', '#2d5a1b'),
+        )}
+        {renderHeaderMenu(
+          'campaign',
+          'Campaign',
+          [
+            {
+              label: 'Share',
+              color: '#7ab3d4',
+              hidden: !campaign?.invite_code,
+              onClick: () => {
+                navigator.clipboard.writeText(`${window.location.origin}/join/${campaign.invite_code}`)
+                alert('Invite link copied to clipboard!')
+              },
+            },
+            {
+              label: 'Sessions',
+              color: '#d4cfc9',
+              hidden: sessionCount <= 0,
+              onClick: () => { window.location.href = `/stories/${id}/sessions` },
+            },
+            {
+              label: 'Stories',
+              color: '#d4cfc9',
+              onClick: () => { window.location.href = `/stories/${id}` },
+            },
+          ],
+          hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'),
+        )}
+        {isGM && renderHeaderMenu(
+          'gm_tools',
+          'GM Tools',
+          [
+            {
+              label: 'Restore',
+              color: '#7fc458',
+              onClick: async () => {
+                // Pre-select everyone who's damaged, dead, or wounded
+                const damagedNpcs = campaignNpcs.filter((n: any) => {
+                  const wp = n.wp_current ?? n.wp_max ?? 10
+                  const wpMax = n.wp_max ?? 10
+                  const rp = n.rp_current ?? n.rp_max ?? 6
+                  const rpMax = n.rp_max ?? 6
+                  return n.status === 'dead' || wp < wpMax || rp < rpMax
+                }).map(n => `npc:${n.id}`)
+                const damagedPCs = entries.filter(e => e.liveState && (e.liveState.wp_current < e.liveState.wp_max || e.liveState.rp_current < e.liveState.rp_max))
+                  .map(e => `pc:${e.stateId}`)
+                // Fetch destructible scene_tokens from the DB directly — mapTokens
+                // only exists when TacticalMap is mounted, so we can't read it
+                // from any other view. This scans ALL scenes in the campaign so
+                // a crate on an inactive scene still shows up.
+                const { data: scenes } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id)
+                const sceneIds = (scenes ?? []).map((s: any) => s.id)
+                const damagedObjRows = sceneIds.length > 0
+                  ? (await supabase.from('scene_tokens').select('id, name, wp_max, wp_current').in('scene_id', sceneIds).eq('token_type', 'object').not('wp_max', 'is', null)).data ?? []
+                  : []
+                const damagedObjs = damagedObjRows
+                  .filter((t: any) => (t.wp_current ?? t.wp_max) < t.wp_max)
+                  .map((t: any) => ({ id: t.id as string, name: t.name as string, wp_max: t.wp_max as number }))
+                setRestoreObjects(damagedObjs)
+                const damagedObjectKeys = damagedObjs.map((t: { id: string }) => `obj:${t.id}`)
+                setRestoreNpcIds(new Set([...damagedNpcs, ...damagedPCs, ...damagedObjectKeys]))
+                setShowRestorePicker(true)
+              },
+            },
+            {
+              label: 'Loot',
+              color: '#EF9F27',
+              onClick: () => { setLootItems([]); setLootRecipients(new Set(entries.map(e => e.character.id))); setShowLootModal(true) },
+            },
+            {
+              label: 'CDP',
+              color: '#7ab3d4',
+              onClick: () => { setCdpAmount(1); setCdpRecipients(new Set(entries.map(e => e.stateId))); setShowCdpModal(true) },
+            },
+            {
+              label: 'GM Screen',
+              color: '#d48bd4',
+              onClick: () => openPopout('/gm-screen', 'gm-screen', { w: 900, h: 700 }),
+            },
+          ],
+          hdrBtn('#2a2010', '#EF9F27', '#5a4a1b'),
         )}
         <button onClick={() => { setSheetMode(m => m === 'inline' ? 'overlay' : 'inline'); setSheetPos(null) }}
           style={hdrBtn('#242424', '#cce0f5', '#3a3a3a')}>
           {sheetMode === 'inline' ? 'Overlay' : 'Inline'}
         </button>
-        {isGM && (
-          <>
-            <button onClick={async () => {
-              // Pre-select everyone who's damaged, dead, or wounded
-              const damagedNpcs = campaignNpcs.filter((n: any) => {
-                const wp = n.wp_current ?? n.wp_max ?? 10
-                const wpMax = n.wp_max ?? 10
-                const rp = n.rp_current ?? n.rp_max ?? 6
-                const rpMax = n.rp_max ?? 6
-                return n.status === 'dead' || wp < wpMax || rp < rpMax
-              }).map(n => `npc:${n.id}`)
-              const damagedPCs = entries.filter(e => e.liveState && (e.liveState.wp_current < e.liveState.wp_max || e.liveState.rp_current < e.liveState.rp_max))
-                .map(e => `pc:${e.stateId}`)
-              // Fetch destructible scene_tokens from the DB directly — mapTokens
-              // only exists when TacticalMap is mounted, so we can't read it
-              // from any other view. This scans ALL scenes in the campaign so
-              // a crate on an inactive scene still shows up.
-              const { data: scenes } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id)
-              const sceneIds = (scenes ?? []).map((s: any) => s.id)
-              const damagedObjRows = sceneIds.length > 0
-                ? (await supabase.from('scene_tokens').select('id, name, wp_max, wp_current').in('scene_id', sceneIds).eq('token_type', 'object').not('wp_max', 'is', null)).data ?? []
-                : []
-              const damagedObjs = damagedObjRows
-                .filter((t: any) => (t.wp_current ?? t.wp_max) < t.wp_max)
-                .map((t: any) => ({ id: t.id as string, name: t.name as string, wp_max: t.wp_max as number }))
-              setRestoreObjects(damagedObjs)
-              const damagedObjectKeys = damagedObjs.map((t: { id: string }) => `obj:${t.id}`)
-              setRestoreNpcIds(new Set([...damagedNpcs, ...damagedPCs, ...damagedObjectKeys]))
-              setShowRestorePicker(true)
-            }}
-              style={hdrBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
-              Restore
-            </button>
-            <button onClick={() => { setLootItems([]); setLootRecipients(new Set(entries.map(e => e.character.id))); setShowLootModal(true) }}
-              style={hdrBtn('#2a2010', '#EF9F27', '#5a4a1b')}>
-              Loot
-            </button>
-            <button onClick={() => { setCdpAmount(1); setCdpRecipients(new Set(entries.map(e => e.stateId))); setShowCdpModal(true) }}
-              style={hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a')}>
-              CDP
-            </button>
-          </>
-        )}
-        {sessionCount > 0 && (
-          <a href={`/stories/${id}/sessions`}
-            style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
-            Sessions
-          </a>
-        )}
-        <button onClick={openQuickAddFull}
-          title="Drop a pin or start a community"
-          style={hdrBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
-          Community
-        </button>
-        <a href={`/stories/${id}`} style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), textDecoration: 'none' }}>
-          Stories
-        </a>
-        {isGM && (
-          <button onClick={() => openPopout('/gm-screen', 'gm-screen', { w: 900, h: 700 })}
-            style={hdrBtn('#2a102a', '#d48bd4', '#8b2e8b')}>
-            GM Screen
-          </button>
-        )}
         <a href="/dashboard" target="_blank" rel="noreferrer" style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), textDecoration: 'none' }}>
           Dashboard
         </a>
@@ -8000,6 +8251,36 @@ export default function TablePage() {
                     </div>
                   </div>
 
+                  {/* Pre-roll Insight Die — show only if the roller has ≥1 */}
+                  {(() => {
+                    const insightAvail = rollerEntry?.liveState?.insight_dice ?? 0
+                    if (insightAvail < 1) return null
+                    const pill = (active: boolean) => ({
+                      flex: 1, padding: '8px 10px',
+                      background: active ? '#2a102a' : '#242424',
+                      border: `1px solid ${active ? '#d48bd4' : '#3a3a3a'}`,
+                      borderRadius: '3px',
+                      color: active ? '#fff' : '#d4cfc9',
+                      fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer',
+                    } as React.CSSProperties)
+                    return (
+                      <div style={{ marginBottom: '12px', padding: '10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px' }}>
+                        <div style={{ fontSize: '12px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Insight Die (pre-roll)</span>
+                          <span style={{ color: '#cce0f5' }}>{insightAvail} available</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button onClick={() => setRecruitPreInsight('none')} style={pill(recruitPreInsight === 'none')}>None</button>
+                          <button onClick={() => setRecruitPreInsight('3d6')} style={pill(recruitPreInsight === '3d6')}>Roll 3d6</button>
+                          <button onClick={() => setRecruitPreInsight('+3cmod')} style={pill(recruitPreInsight === '+3cmod')}>+3 CMod</button>
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#cce0f5', marginTop: '6px', lineHeight: 1.4 }}>
+                          Spends 1 Insight Die. <strong>3d6</strong> keeps all three dice; <strong>+3 CMod</strong> flat-adds 3 to the total.
+                        </div>
+                      </div>
+                    )
+                  })()}
+
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={closeRecruitModal}
                       style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
@@ -8015,12 +8296,12 @@ export default function TablePage() {
               {recruitStep === 'result' && recruitResult && (
                 <>
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
-                    {[recruitResult.die1, recruitResult.die2].map((d, i) => (
+                    {([recruitResult.die1, recruitResult.die2, ...(recruitResult.die3 !== undefined ? [recruitResult.die3] : [])]).map((d, i) => (
                       <div key={i} style={{ flex: 1, padding: '12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', textAlign: 'center', fontSize: '24px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>{d}</div>
                     ))}
                   </div>
                   <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>
-                    [{recruitResult.die1}+{recruitResult.die2}]
+                    [{recruitResult.die1}+{recruitResult.die2}{recruitResult.die3 !== undefined ? `+${recruitResult.die3}` : ''}]
                     {recruitResult.amod !== 0 && <span style={{ color: recruitResult.amod > 0 ? '#7fc458' : '#c0392b' }}> {recruitResult.amod > 0 ? '+' : ''}{recruitResult.amod} AMod</span>}
                     {recruitResult.smod !== 0 && <span style={{ color: recruitResult.smod > 0 ? '#7fc458' : '#c0392b' }}> {recruitResult.smod > 0 ? '+' : ''}{recruitResult.smod} SMod</span>}
                     {recruitResult.cmod !== 0 && <span style={{ color: recruitResult.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {recruitResult.cmod > 0 ? '+' : ''}{recruitResult.cmod} CMod</span>}
@@ -8033,12 +8314,41 @@ export default function TablePage() {
                     {recruitResult.inserted ? (
                       <>
                         <strong>{recruitResult.npcName}</strong> joined <strong>{recruitResult.communityName}</strong>
-                        {recruitResult.apprenticeApplied ? ` as Apprentice to ${recruitResult.rollerName}.` : ` as ${recruitResult.approach.charAt(0).toUpperCase() + recruitResult.approach.slice(1)}.`}
+                        {recruitResult.apprenticeApplied ? ` as an Apprentice to ${recruitResult.rollerName}.` : ` as a ${recruitResult.approach.charAt(0).toUpperCase() + recruitResult.approach.slice(1)}.`}
                       </>
                     ) : (
                       <>The attempt failed. <strong>{recruitResult.npcName}</strong> is not joining {recruitResult.communityName}.</>
                     )}
                   </div>
+
+                  {/* Post-roll Insight Die reroll — spend 1 to reroll a single die. */}
+                  {(() => {
+                    const rollerEntry = entries.find(e => e.character.name === recruitResult.rollerName)
+                    const insightAvail = rollerEntry?.liveState?.insight_dice ?? 0
+                    if (insightAvail < 1) return null
+                    const btn = (label: string, which: 1 | 2 | 3) => (
+                      <button onClick={() => rerollRecruitDie(which)}
+                        style={{ flex: 1, padding: '8px 10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        {label}
+                      </button>
+                    )
+                    return (
+                      <div style={{ marginBottom: '1rem', padding: '10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px' }}>
+                        <div style={{ fontSize: '12px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Spend Insight to Reroll</span>
+                          <span style={{ color: '#cce0f5' }}>{insightAvail} available</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          {btn(`Re-roll Die 1 (${recruitResult.die1})`, 1)}
+                          {btn(`Re-roll Die 2 (${recruitResult.die2})`, 2)}
+                          {recruitResult.die3 !== undefined && btn(`Re-roll Die 3 (${recruitResult.die3})`, 3)}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#cce0f5', marginTop: '6px', lineHeight: 1.4 }}>
+                          Rerolling flips membership state if the outcome crosses the success line.
+                        </div>
+                      </div>
+                    )
+                  })()}
 
                   {/* Apprentice toggle (re-shown after Wild Success / High Insight if not yet applied) */}
                   {isWild && recruitResult.inserted && !recruitResult.apprenticeApplied && !pcHasApprentice && (

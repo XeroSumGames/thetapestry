@@ -160,6 +160,11 @@ export default function NotificationBell() {
       const match = body.match(/Your pin [""]?(.+?)[""]? has been reviewed/)
       if (match) return <>Your pin <span style={{ color: '#EF9F27' }}>{match[1]}</span> has been reviewed and was not approved</>
     }
+    // "X has grown to N members — it's officially a Community now."
+    if (type === 'community_milestone') {
+      const match = body.match(/^(.+?) has grown to (\d+) members — it'?s officially a Community now\.?$/)
+      if (match) return <><span style={{ color: '#c0392b' }}>{match[1]}</span> has grown to <span style={{ color: '#EF9F27' }}>{match[2]}</span> members — it's officially a <span style={{ color: '#7fc458' }}>Community</span> now.</>
+    }
     return body
   }
 
