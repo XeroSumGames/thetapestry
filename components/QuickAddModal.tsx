@@ -150,7 +150,9 @@ export default function QuickAddModal({
     ;(async () => {
       const [{ data: comms }, { data: mems }] = await Promise.all([
         supabase.from('communities').select('id, name').eq('campaign_id', campaignId).order('created_at', { ascending: true }),
-        supabase.from('community_members').select('community_id, communities!inner(campaign_id)').is('left_at', null).eq('communities.campaign_id', campaignId),
+        // Active members only — pending join requests don't count
+        // toward the visible roster size shown in the Join dropdown.
+        supabase.from('community_members').select('community_id, communities!inner(campaign_id)').is('left_at', null).eq('status', 'active').eq('communities.campaign_id', campaignId),
       ])
       const byComm: Record<string, number> = {}
       for (const m of (mems ?? []) as any[]) byComm[m.community_id] = (byComm[m.community_id] ?? 0) + 1
@@ -256,10 +258,10 @@ export default function QuickAddModal({
     onPinSaved?.()
   }
 
-  // Join an existing community. Inserts a community_members row with
-  // this user's PC as a Cohort (standard "I'm in" recruitment type).
-  // Requires a PC in the campaign; if the user doesn't have one we
-  // surface an inline hint instead of silently failing.
+  // Request to join an existing community. Inserts a pending
+  // community_members row; the community leader must approve before
+  // the PC becomes an active member. Uses recruitment_type='cohort'
+  // (standard "I'm in" joining intent).
   async function handleCommJoin() {
     if (!commJoinId || !myPcId || mode !== 'campaign' || !campaignId) return
     setCommJoining(true)
@@ -269,7 +271,9 @@ export default function QuickAddModal({
       character_id: myPcId,
       role: 'unassigned',
       recruitment_type: 'cohort',
-      joined_at: new Date().toISOString(),
+      status: 'pending',
+      // joined_at stays null until approval; serves as an
+      // approved-vs-pending distinguishing field alongside status.
     })
     setCommJoining(false)
     if (error) {
@@ -277,9 +281,8 @@ export default function QuickAddModal({
       return
     }
     setCommJoinDone(true)
-    // Bump the member count locally so the dropdown shows the new
-    // count on a re-open without a full refresh.
-    setExistingCommunities(prev => prev.map(c => c.id === commJoinId ? { ...c, memberCount: c.memberCount + 1 } : c))
+    // Note: not bumping memberCount — pending requests don't count
+    // toward the visible roster until the leader approves.
     setCommJoinId('')
     onCommunitySaved?.()
   }
@@ -287,6 +290,10 @@ export default function QuickAddModal({
   async function handleCommSave() {
     if (!commName.trim() || mode !== 'campaign' || !campaignId) return
     setCommSaving(true)
+    // Creator becomes the de facto leader. leader_user_id is set on
+    // the communities row; their PC (if they have one in the
+    // campaign) is also inserted as a founding member so the leader
+    // shows up in the member list.
     const { data, error } = await supabase.from('communities').insert({
       campaign_id: campaignId,
       name: commName.trim(),
@@ -294,11 +301,24 @@ export default function QuickAddModal({
       homestead_pin_id: commHomestead || null,
       status: 'forming',
       world_visibility: commPublic ? 'published' : 'private',
+      leader_user_id: userId ?? null,
     }).select('id').single()
     if (error || !data) {
       setCommSaving(false)
       alert(`Community save failed: ${error?.message ?? 'unknown'}`)
       return
+    }
+    // Auto-enroll the creator's PC as the first member. Skips cleanly
+    // if the creator doesn't have a PC in the campaign (GMs, etc.).
+    if (myPcId) {
+      await supabase.from('community_members').insert({
+        community_id: data.id,
+        character_id: myPcId,
+        role: 'unassigned',
+        recruitment_type: 'founder',
+        status: 'active',
+        joined_at: new Date().toISOString(),
+      })
     }
     if (commAttachments.length > 0) {
       for (const file of commAttachments) {
@@ -314,6 +334,9 @@ export default function QuickAddModal({
     setCommHomestead('')
     setCommPublic(false)
     setCommAttachments([])
+    // Refresh local state so Join dropdown sees this new community
+    // as an existing option if the user stays in the modal.
+    setExistingCommunities(prev => [...prev, { id: data.id, name: commName.trim(), memberCount: myPcId ? 1 : 0 }])
     onCommunitySaved?.()
   }
 
@@ -495,8 +518,8 @@ export default function QuickAddModal({
                     {commJoining ? 'Joining…' : '🤝 Join Community'}
                   </button>
                   {commJoinDone && (
-                    <div style={{ marginTop: '8px', padding: '6px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', letterSpacing: '.04em' }}>
-                      ✓ Joined.
+                    <div style={{ marginTop: '8px', padding: '8px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', letterSpacing: '.04em', lineHeight: 1.4 }}>
+                      ⏳ Join request sent. The community&apos;s leader needs to approve before you&apos;re an active member.
                     </div>
                   )}
                   {commJoinError && (

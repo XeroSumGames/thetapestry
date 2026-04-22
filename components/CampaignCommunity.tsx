@@ -33,8 +33,10 @@ interface Member {
   role: Role
   recruitment_type: RecruitmentType
   apprentice_of_character_id: string | null
-  joined_at: string
+  joined_at: string | null
   left_at: string | null
+  status: 'pending' | 'active' | 'removed'
+  invited_by_user_id: string | null
 }
 
 interface NpcOption { id: string; name: string }
@@ -79,7 +81,9 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
   const supabase = createClient()
 
   const [communities, setCommunities] = useState<Community[]>([])
-  const [members, setMembers] = useState<Record<string, Member[]>>({})   // key = community_id
+  const [members, setMembers] = useState<Record<string, Member[]>>({})   // key = community_id, status='active'
+  const [pendingByCommunity, setPendingByCommunity] = useState<Record<string, Member[]>>({})
+  const [myUserId, setMyUserId] = useState<string | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -121,7 +125,9 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
       .map(r => r.characters as CharOption | null)
       .filter((c): c is CharOption => !!c && !!c.id && !!c.name))
     setPins((pinsRes.data ?? []) as PinOption[])
-    // Load members for every community in parallel
+    // Load members for every community. Split into active vs pending
+    // so the roster shows confirmed members while the leader sees a
+    // separate "Pending Requests" block to approve/reject.
     if (coms.length > 0) {
       const res = await supabase
         .from('community_members')
@@ -129,13 +135,23 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
         .in('community_id', coms.map(c => c.id))
         .is('left_at', null)
       const byCom: Record<string, Member[]> = {}
+      const pendingByCom: Record<string, Member[]> = {}
       for (const m of (res.data ?? []) as Member[]) {
-        (byCom[m.community_id] ||= []).push(m)
+        if (m.status === 'pending') {
+          (pendingByCom[m.community_id] ||= []).push(m)
+        } else if (m.status !== 'removed') {
+          (byCom[m.community_id] ||= []).push(m)
+        }
       }
       setMembers(byCom)
+      setPendingByCommunity(pendingByCom)
     } else {
       setMembers({})
+      setPendingByCommunity({})
     }
+    // Cache current auth user id so the UI can check leader_user_id.
+    const { data: { user } } = await supabase.auth.getUser()
+    setMyUserId(user?.id ?? null)
     setLoading(false)
   }
 
@@ -150,14 +166,71 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
       homestead_pin_id: newHomestead || null,
       leader_user_id: user?.id ?? null,
     }).select().single()
-    setCreating(false)
-    if (error) { alert(`Create failed: ${error.message}`); return }
-    if (data) {
-      setCommunities(prev => [...prev, data as Community])
-      setOpenId((data as Community).id)
+    if (error) { setCreating(false); alert(`Create failed: ${error.message}`); return }
+    const newComm = data as Community
+    // Auto-enroll the creator's PC as founding active member, so the
+    // leader shows up in the roster and starts the member-count at 1.
+    // Quietly skips if the creator doesn't have a PC in this campaign
+    // (GM-only accounts, etc.).
+    if (user?.id) {
+      const { data: myCm } = await supabase
+        .from('campaign_members')
+        .select('character_id')
+        .eq('campaign_id', campaignId)
+        .eq('user_id', user.id)
+        .not('character_id', 'is', null)
+        .maybeSingle()
+      const myCharacterId = (myCm as any)?.character_id as string | undefined
+      if (myCharacterId) {
+        const { data: founderRow } = await supabase.from('community_members').insert({
+          community_id: newComm.id,
+          character_id: myCharacterId,
+          role: 'unassigned',
+          recruitment_type: 'founder',
+          status: 'active',
+          joined_at: new Date().toISOString(),
+        }).select().single()
+        if (founderRow) {
+          setMembers(prev => ({ ...prev, [newComm.id]: [founderRow as Member] }))
+        }
+      }
     }
+    setCreating(false)
+    setCommunities(prev => [...prev, newComm])
+    setOpenId(newComm.id)
     setNewName(''); setNewDesc(''); setNewHomestead('')
     setShowCreate(false)
+  }
+
+  // ── Pending-request approve/reject (leader-only) ────────────────────
+  async function handleApproveRequest(req: Member) {
+    const { error } = await supabase
+      .from('community_members')
+      .update({ status: 'active', joined_at: new Date().toISOString() })
+      .eq('id', req.id)
+    if (error) { alert(`Approve failed: ${error.message}`); return }
+    // Move from pending → active in local state.
+    setPendingByCommunity(prev => {
+      const n = { ...prev }
+      n[req.community_id] = (n[req.community_id] ?? []).filter(m => m.id !== req.id)
+      if (n[req.community_id].length === 0) delete n[req.community_id]
+      return n
+    })
+    setMembers(prev => ({
+      ...prev,
+      [req.community_id]: [...(prev[req.community_id] ?? []), { ...req, status: 'active', joined_at: new Date().toISOString() }],
+    }))
+  }
+  async function handleRejectRequest(req: Member) {
+    if (!confirm('Reject this join request? The PC can try again later.')) return
+    const { error } = await supabase.from('community_members').delete().eq('id', req.id)
+    if (error) { alert(`Reject failed: ${error.message}`); return }
+    setPendingByCommunity(prev => {
+      const n = { ...prev }
+      n[req.community_id] = (n[req.community_id] ?? []).filter(m => m.id !== req.id)
+      if (n[req.community_id].length === 0) delete n[req.community_id]
+      return n
+    })
   }
 
   async function handleDeleteCommunity(c: Community) {
@@ -327,6 +400,43 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
                 {c.description && (
                   <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>{c.description}</div>
                 )}
+
+                {/* Pending-requests — only visible to the leader (or
+                    GMs, which the wider RLS already permits). Approve
+                    flips status to 'active' + sets joined_at; Reject
+                    deletes the row. */}
+                {(() => {
+                  const pending = pendingByCommunity[c.id] ?? []
+                  const iLead = !!myUserId && myUserId === (c as any).leader_user_id
+                  if (pending.length === 0 || (!iLead && !isGM)) return null
+                  return (
+                    <div style={{ padding: '12px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '4px' }}>
+                      <div style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>
+                        ⏳ Pending Requests ({pending.length})
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {pending.map(req => (
+                          <div key={req.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                            <span style={{ flex: 1, fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                              {memberLabel(req)}
+                            </span>
+                            <span style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                              {RECRUITMENT_LABEL[req.recruitment_type]}
+                            </span>
+                            <button onClick={() => handleApproveRequest(req)}
+                              style={{ padding: '4px 12px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                              Approve
+                            </button>
+                            <button onClick={() => handleRejectRequest(req)}
+                              style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                              Reject
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
 
                 {/* Role bars */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

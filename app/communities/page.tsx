@@ -144,14 +144,38 @@ export default function CommunitiesIndexPage() {
         description: newDesc.trim() || null,
         homestead_pin_id: newHomestead || null,
         status: 'forming',
+        leader_user_id: userId ?? null,
       })
       .select('id')
       .single()
-    setCreating(false)
     if (error) {
+      setCreating(false)
       setCreateError(error.message)
       return
     }
+    // Creator's PC enrolled as founding member (if they have one in
+    // the chosen campaign). Silent no-op otherwise.
+    if (data && userId) {
+      const { data: myCm } = await supabase
+        .from('campaign_members')
+        .select('character_id')
+        .eq('campaign_id', newCampaignId)
+        .eq('user_id', userId)
+        .not('character_id', 'is', null)
+        .maybeSingle()
+      const myCharacterId = (myCm as any)?.character_id as string | undefined
+      if (myCharacterId) {
+        await supabase.from('community_members').insert({
+          community_id: data.id,
+          character_id: myCharacterId,
+          role: 'unassigned',
+          recruitment_type: 'founder',
+          status: 'active',
+          joined_at: new Date().toISOString(),
+        })
+      }
+    }
+    setCreating(false)
     setShowCreate(false)
     await loadCommunities()
     if (data?.id) {
@@ -159,6 +183,71 @@ export default function CommunitiesIndexPage() {
       // adding members without an extra click back through the index.
       window.location.href = `/communities/${data.id}`
     }
+  }
+
+  // ── Invite to Community ──────────────────────────────────────────
+  // Leader picks one of their communities + an email or username of
+  // a user to invite. We insert a community_members row with
+  // status='pending' + invited_by_user_id so the invitee can see +
+  // accept it. No PC is attached yet — they pick their own PC when
+  // they accept (future iteration; for now leader picks the
+  // character from the list of PCs in the campaign).
+  const [showInvite, setShowInvite] = useState(false)
+  const [inviteCommId, setInviteCommId] = useState('')
+  const [inviteCharId, setInviteCharId] = useState('')
+  const [inviteCandidates, setInviteCandidates] = useState<{ id: string; name: string; user_id: string }[]>([])
+  const [inviting, setInviting] = useState(false)
+  const [inviteError, setInviteError] = useState<string | null>(null)
+  const [inviteDone, setInviteDone] = useState(false)
+
+  // Invite dropdown lists every community the user can see. Anyone
+  // can send an invite (it creates a pending row); the community's
+  // actual leader still has to approve it before the PC is active.
+  // Keeps the gate at the approval step, not the invite step.
+
+  async function handleOpenInvite() {
+    setInviteCommId('')
+    setInviteCharId('')
+    setInviteError(null)
+    setInviteDone(false)
+    setShowInvite(true)
+  }
+  async function handleInviteCommunityPicked(commId: string) {
+    setInviteCommId(commId)
+    setInviteCharId('')
+    setInviteCandidates([])
+    if (!commId) return
+    const community = rows.find(r => r.id === commId)
+    if (!community) return
+    // Pull all PCs in the community's campaign; the leader picks which
+    // PC to invite. Excludes PCs already in this community.
+    const [{ data: camps }, { data: mems }] = await Promise.all([
+      supabase.from('campaign_members').select('user_id, character_id, characters:character_id(id, name)').eq('campaign_id', community.campaign_id).not('character_id', 'is', null),
+      supabase.from('community_members').select('character_id').eq('community_id', commId).is('left_at', null),
+    ])
+    const already = new Set(((mems ?? []) as any[]).map(m => m.character_id).filter(Boolean))
+    const list = ((camps ?? []) as any[])
+      .map(m => ({ id: m.character_id, user_id: m.user_id, name: (m.characters as any)?.name ?? '(unknown)' }))
+      .filter(c => c.id && !already.has(c.id))
+    setInviteCandidates(list)
+  }
+  async function handleInvite() {
+    if (!inviteCommId || !inviteCharId) return
+    setInviting(true)
+    setInviteError(null)
+    const { error } = await supabase.from('community_members').insert({
+      community_id: inviteCommId,
+      character_id: inviteCharId,
+      role: 'unassigned',
+      recruitment_type: 'cohort',
+      status: 'pending',
+      invited_by_user_id: userId,
+    })
+    setInviting(false)
+    if (error) { setInviteError(error.message); return }
+    setInviteDone(true)
+    setInviteCommId('')
+    setInviteCharId('')
   }
 
   if (loading) return <div style={{ padding: '2rem', color: '#cce0f5', fontSize: '14px' }}>Loading…</div>
@@ -184,10 +273,16 @@ export default function CommunitiesIndexPage() {
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
         <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '26px', letterSpacing: '.06em', textTransform: 'uppercase', color: '#c0392b', margin: 0 }}>My Communities</h1>
-        <button onClick={handleOpenCreate}
-          style={{ padding: '6px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-          + New Community
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={handleOpenInvite}
+            style={{ padding: '6px 14px', background: '#2d5a1b', border: '1px solid #7fc458', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            🤝 Invite to Community
+          </button>
+          <button onClick={handleOpenCreate}
+            style={{ padding: '6px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            + New Community
+          </button>
+        </div>
       </div>
       <p style={{ color: '#cce0f5', fontSize: '14px', marginBottom: '1.5rem' }}>
         Every group of survivors you&apos;re part of — yours and the ones you&apos;ve been recruited into.
@@ -235,6 +330,79 @@ export default function CommunitiesIndexPage() {
           </section>
         )
       })}
+
+      {/* Invite to Community modal — creates a pending community_members
+          row. The community's leader still has to approve before the PC
+          goes active. */}
+      {showInvite && (
+        <div onClick={() => !inviting && setShowInvite(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '460px' }}>
+            <div style={{ fontSize: '12px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Invite to Community</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>Bring a PC aboard</div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>
+              Invites create a pending membership. The community&apos;s leader still has to approve before the PC becomes active.
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ ...lbl }}>Community</div>
+              {rows.length === 0 ? (
+                <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }}>
+                  No communities yet. Create one first, then you can invite others.
+                </div>
+              ) : (
+                <select value={inviteCommId} onChange={e => handleInviteCommunityPicked(e.target.value)}
+                  style={{ ...inp, appearance: 'none' }}>
+                  <option value="">— pick a community —</option>
+                  {rows.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}{c.campaign_name ? ` · ${c.campaign_name}` : ''}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {inviteCommId && (
+              <div style={{ marginBottom: '10px' }}>
+                <div style={{ ...lbl }}>Invite which PC?</div>
+                {inviteCandidates.length === 0 ? (
+                  <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }}>
+                    Every PC in this campaign is already a member or pending.
+                  </div>
+                ) : (
+                  <select value={inviteCharId} onChange={e => setInviteCharId(e.target.value)}
+                    style={{ ...inp, appearance: 'none' }}>
+                    <option value="">— pick a PC —</option>
+                    {inviteCandidates.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                )}
+              </div>
+            )}
+
+            {inviteError && (
+              <div style={{ padding: '8px 10px', marginBottom: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                {inviteError}
+              </div>
+            )}
+            {inviteDone && (
+              <div style={{ padding: '8px 10px', marginBottom: '10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textAlign: 'center' }}>
+                ✓ Invitation sent — awaiting leader approval.
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => !inviting && setShowInvite(false)} disabled={inviting}
+                style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: inviting ? 'not-allowed' : 'pointer' }}>
+                Close
+              </button>
+              <button onClick={handleInvite} disabled={inviting || !inviteCommId || !inviteCharId}
+                style={{ flex: 2, padding: '10px', background: inviteCommId && inviteCharId ? '#c0392b' : '#111', border: `1px solid ${inviteCommId && inviteCharId ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', color: inviteCommId && inviteCharId ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: inviting || !inviteCommId || !inviteCharId ? 'not-allowed' : 'pointer' }}>
+                {inviting ? 'Sending…' : '🤝 Send Invite'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create Community modal */}
       {showCreate && (
