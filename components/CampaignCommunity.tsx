@@ -256,16 +256,14 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
   return (
     <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'auto', flex: 1 }}>
       {/* Top controls */}
-      {isGM && (
-        <div>
-          <button onClick={() => setShowCreate(v => !v)} style={chipBtn}>
-            {showCreate ? 'Cancel' : '+ New Community'}
-          </button>
-        </div>
-      )}
+      <div>
+        <button onClick={() => setShowCreate(v => !v)} style={chipBtn}>
+          {showCreate ? 'Cancel' : '+ New Community'}
+        </button>
+      </div>
 
       {/* Create form */}
-      {showCreate && isGM && (
+      {showCreate && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div>
             <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Name</div>
@@ -292,7 +290,7 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
       {/* Community list */}
       {communities.length === 0 && !showCreate && (
         <div style={{ textAlign: 'center', color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', padding: '2rem 1rem' }}>
-          {isGM ? 'No communities yet' : 'No communities'}
+          No communities yet
         </div>
       )}
 
@@ -368,16 +366,12 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
                             <span style={{ fontSize: '12px' }}>{m.npc_id ? '👤' : '🎭'}</span>
                             <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberLabel(m)}</span>
                             <span style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{RECRUITMENT_LABEL[m.recruitment_type]}</span>
-                            {isGM && (
-                              <>
-                                <select value={m.role} onChange={e => handleChangeRole(m, e.target.value as Role)}
-                                  style={{ padding: '1px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
-                                  {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
-                                </select>
-                                <button onClick={() => handleRemoveMember(m)} title="Remove"
-                                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '14px', cursor: 'pointer', padding: '0 4px' }}>×</button>
-                              </>
-                            )}
+                            <select value={m.role} onChange={e => handleChangeRole(m, e.target.value as Role)}
+                              style={{ padding: '1px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                              {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
+                            </select>
+                            <button onClick={() => handleRemoveMember(m)} title="Remove"
+                              style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '14px', cursor: 'pointer', padding: '0 4px' }}>×</button>
                           </div>
                         ))}
                       </div>
@@ -386,7 +380,7 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
                 })}
 
                 {/* Add member */}
-                {isGM && (availableNpcs.length > 0 || availableChars.length > 0) && (
+                {(availableNpcs.length > 0 || availableChars.length > 0) && (
                   <div style={{ padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                     <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Add Member</div>
                     <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
@@ -419,12 +413,10 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
                 )}
 
                 {/* Danger zone */}
-                {isGM && (
-                  <button onClick={() => handleDeleteCommunity(c)}
-                    style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '2px', color: '#c0392b', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
-                    Delete Community
-                  </button>
-                )}
+                <button onClick={() => handleDeleteCommunity(c)}
+                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '2px', color: '#c0392b', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
+                  Delete Community
+                </button>
               </div>
             )}
           </div>
