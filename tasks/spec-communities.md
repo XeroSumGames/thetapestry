@@ -70,11 +70,24 @@ Build the campaign-local system first (Phases A–D). Add the Tapestry / Persist
 
 Only 1 Apprentice per PC. Apprentices are still regular members for Community-Structure purposes.
 
+### 2a. Apprentice creation (per SRD §08 p. 21)
+
+On recruit (triggered by Wild Success / Moment of High Insight, optionally a deliberate Apprentice attempt):
+- PC gives the Apprentice a name (if they don't have one already).
+- Roll **2d6** on both the **Motivation** and **Complication** tables (SRD Appendix A).
+- PC + GM Fill In The Gaps on background.
+- Player spends **3 CDP** on RAPID Range Attributes.
+- Player picks one setting-appropriate **Paradigm** (SRD Table 8).
+- Player spends **5 CDP** on skills.
+- Over **1 month of game time**, PC can train the Apprentice in any single skill the PC has, up to **PC skill level − 1**. (PC with Barter 3 can train to Barter 2.)
+- CDP the PC earns later can be spent on the Apprentice.
+
 ## 3. Recruitment Check
 
 - **Roll**: 2d6 + AMod + SMod + CMod.
 - **Skill** is chosen from Barter, Psychology*, Tactics*, Inspiration, etc. per approach. Convert → usually Inspiration or Psychology*.
 - **First Impression** modifier (existing SRD) applies as CMod input.
+- **Inspiration skill** (Distemper CRB): every level adds **+1 SMod** to the roll in addition to the primary skill's SMod. Stacks. So a PC rolling Barter 2 with Inspiration 3 gets +5 SMod.
 - **Outcomes** (per NPC per attempt):
 
 | Total | Cohort | Conscript | Convert |
@@ -94,28 +107,34 @@ Only 1 Apprentice per PC. Apprentices are still regular members for Community-St
 
 ### 4a. Morale Outcomes
 
-| Total | Effect | Next-check CMod |
-|---|---|---|
-| Success 9–13 | Morale holds | 0 |
-| Wild Success 14+ | Morale strengthens | +1 |
-| Moment of High Insight (6+6) | Leadership trust high | +2 |
-| Failure 4–8 | 25% leave | −1 |
-| Dire Failure 0–3 | 50% leave | −2 |
-| Moment of Low Insight (1+1) | Catastrophe (GM fills gap) | −3 |
+| Total | Effect | Departures | Next-check CMod |
+|---|---|---|---|
+| Moment of High Insight (6+6) | Leadership trust high | 0 | +2 |
+| Wild Success 14+ | Morale strengthens | 0 | +1 |
+| Success 9–13 | Morale holds | 0 | 0 |
+| Failure 4–8 | Morale slipping | **25% leave** | −1 |
+| Dire Failure 0–3 | Morale collapses | **50% leave** | −2 |
+| Moment of Low Insight (1+1) | Infighting, rioting, violence | **75% leave** | −3 |
 
-**3 consecutive Failures → Community dissolves irrecoverably.**
+**3 consecutive Morale Check failures → Community dissolves irrecoverably.**
+
+**Retention check (SRD §08 p. 22)**: a fast-acting leader may attempt an **immediate Morale Check** as part of the dissolution to salvage fragments of the community or specific members. Use the preceding Morale Check's result as the Mood Around the Campfire CMod on this retention check.
 
 ### 4b. Morale Modifier Slots
 
 | Slot | Source |
 |---|---|
+| **Mood Around the Campfire** | Previous week's Morale outcome (+2 / +1 / 0 / −1 / −2 / −3). 0 if no prior check. |
 | **Fed** | Result of weekly Fed Check (Gatherers) |
 | **Clothed** | Result of weekly Clothed Check (Maintainers) |
-| **Mood Around the Campfire** | GM-narrative CMod |
-| **Enough Space** | GM-narrative CMod |
+| **Enough Hands** | **−1 CMod per role group below its minimum %** (Gatherers 33% / Maintainers 20% / Safety 5%), max −3. Mechanical, not narrative. |
 | **A Clear Voice** | 0 if clear leader; −1 if leaderless |
 | **Someone to Watch Over Me** | +1 if Safety ≥ 10%; −1 if Safety < 5%; else 0 |
-| **Additional CMods** | GM/player Fill in the Gaps |
+| **Additional CMods** | GM/player Fill In The Gaps for unmodeled events |
+
+**Distemper CRB skill bonuses stack onto Morale Checks:**
+- **Inspiration Lv4 "Beacon of Hope"**: +4 CMod if the PC is a member of the community.
+- **Psychology\* Lv4 "Insightful Counselor"**: +3 CMod if the PC has **tenure** as a community member (MVP: "is currently a member" suffices; post-MVP: add minimum `joined_week` threshold).
 
 ## 5. Community Structure (role minimums)
 
@@ -128,11 +147,12 @@ Only 1 Apprentice per PC. Apprentices are still regular members for Community-St
 (Remaining ~37–42% unassigned; leadership is drawn from Safety per SRD.)
 
 Fed/Clothed sub-check outcomes mirror the Morale scale:
-- Wild Success → +1 CMod next Morale
-- Success → 0
-- Failure → −1 Morale CMod
-- Dire Failure → −2
-- Moment of Low Insight → −3
+- Moment of High Insight (6+6) → +2 CMod next Morale
+- Wild Success (14+) → **+1** CMod next Morale (SRD text here appears OCR-garbled as −1 on the Fed side; narrative clearly intends +1 for a surplus)
+- Success (9–13) → 0 CMod
+- Failure (4–8) → −1 CMod
+- Dire Failure (0–3) → −2 CMod
+- Moment of Low Insight (1+1) → −3 CMod
 
 ## 6. Distemper Core additions (setting-flavor)
 
