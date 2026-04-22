@@ -150,13 +150,41 @@ Remaining ~37–42% are unassigned. Missing any group below minimum → −1 "En
 - A PC **may choose to spend their time** contributing to these tasks and use their own AMods/SMods **if they can Fill In The Gaps on how they contributed**.
 - No separate mechanic — just substitute the PC roller for the NPC's.
 
-## 5. Rules NOT in the SRD (Distemper CRB additions expected)
+## 5. Distemper CRB additions (confirmed 2026-04-22 after CRB re-upload)
 
-Per `tasks/spec-communities.md §6`, the Distemper Core Rulebook is expected to add setting-flavor:
-- **Conversion recruitment** uses **Inspiration** or **Psychology\*** specifically.
-- **Inspiration Lv4 "Beacon of Hope"**: +4 to any Community Morale Check via rousing speech.
+Source: `docs/Rules/Distemper CRB v0.9.2.pdf`, Skills chapter.
 
-When the CRB is re-parsed (it's 1.7MB now, re-uploaded 2026-04-22), validate and move those rules into this extract.
+### Inspiration skill — every level gives +1 SMod to Recruitment
+
+> "For each level in Inspiration, a PC gets a +1 SMod to any attempt to get NPCs behind an idea or to any NPC recruitment attempts."
+
+**Implementation**: When a PC rolls a Recruitment Check, their Inspiration level adds to SMod in addition to whatever core skill they're using (Barter / Psychology\* / Tactics\* / etc.). UI should show this as a distinct CMod line item in the Recruitment modal's review step.
+
+### Inspiration Lv4 "Beacon of Hope" — +4 to Morale + risk-everything narrative
+
+> "Level 4 'Beacon of Hope': At level 4, the character adds +4 to any Community Morale checks. Additionally, they can make rousing speeches that can convince any Community they are a part of to risk everything — including their own lives — for the good of the larger group."
+
+**Implementation**: +4 CMod to every Community Morale Check the PC participates in (auto-applied if the PC is a member). The "risk-everything" speech is a GM-narrative hook, not a mechanical trigger.
+
+### Psychology* Lv4 "Insightful Counselor" — +3 Morale if PC has tenure
+
+> "Level 4: 'Insightful Counselor': At level 4, a character who has spent time as part of a community is able to understand them and help the community leaders see what they need, and may add a +3 CMod to the community's weekly Morale checks."
+
+**Implementation**: +3 CMod to Morale Checks, **gated on the PC having spent time as a community member**. We'll need to track something like `community_members.joined_week` and gate the bonus on (current week − joined_week ≥ N) where N is GM-negotiated. For MVP, treat "is currently a member" as sufficient tenure.
+
+### Apprentice Paradigm pick (confirmed)
+
+> "Some players may recruit an Apprentice… and if they do, they get to choose a Paradigm for that apprentice."
+
+Matches SRD §08 creation rules. No new mechanics — just confirms the PC (not the GM) picks the Paradigm.
+
+### Activity Blocks (Phase D forward reference)
+
+CRB mentions a "Community Workbook" at DistemperVerse.com for managing Activity Blocks. Out of scope for Phase B — flagged here for the Phase D implementation to pull in.
+
+### CRB status note
+
+CRB v0.9.2 explicitly uses page-number placeholders ("see page xx") for Community rules — it defers to the SRD §08 as canonical. Nothing in the CRB contradicts the SRD on Community mechanics; it only adds the flavor above.
 
 ## 6. Data model implications (cross-check with spec)
 
@@ -187,4 +215,4 @@ When the CRB is re-parsed (it's 1.7MB now, re-uploaded 2026-04-22), validate and
 3. Add Moment of Low Insight = 75% leave + −3 Mood in §4a Morale Outcomes.
 4. Add retention-check mechanic to §10 dissolution.
 5. Note Fed Check Wild Success is +1 (narrative clearly intends +1 despite PDF OCR showing −1).
-6. Once Distemper CRB re-parsed, fold in Inspiration Lv4 "Beacon of Hope" +4 to Morale.
+6. CRB additions confirmed (§5 of this extract): Inspiration +1 SMod per level to Recruitment, Inspiration Lv4 "Beacon of Hope" +4 to Morale, Psychology\* Lv4 "Insightful Counselor" +3 to Morale for tenured members.
