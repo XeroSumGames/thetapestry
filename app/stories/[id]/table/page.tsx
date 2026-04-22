@@ -262,6 +262,13 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
     return hit ? `${r.character_name} — ${check}${outcomeTag}`
                : `${r.character_name} — ${check} (failed)${outcomeTag}`
   }
+  // Recruitment outcome — label starts with "🤝" and we stash the full
+  // structured metadata in damage_json (approach, community, apprentice
+  // flag). Compact banner is whatever the label already reads.
+  if (r.outcome === 'recruit') {
+    // Strip the emoji so the compact is narrative
+    return r.label.replace(/^🤝\s*/, '')
+  }
   // Loot — label "🎒 <name> looted <items> from <container>". Narrative
   // compact banner hides WHAT was looted (keeps players reading the log
   // without spoiling everyone's hauls); ▸ expand reveals the full list.
@@ -432,7 +439,37 @@ export default function TablePage() {
   const [sessionCount, setSessionCount] = useState(0)
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
   const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null; character_name: string }[]>([])
-  const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | 'recruit' | null>(null)
+  const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | null>(null)
+  // Recruitment state lives separately from the Special Check modal
+  // because its UI doesn't fit the 380px wrapper — multi-step wizard.
+  // Opened by picking "Recruit" in the CHECKS dropdown (which dispatches
+  // to setShowRecruit(true), not setShowSpecialCheck).
+  type RecruitStep = 'pick' | 'roll' | 'result'
+  type RecruitApproach = 'cohort' | 'conscript' | 'convert'
+  const [showRecruit, setShowRecruit] = useState(false)
+  const [recruitStep, setRecruitStep] = useState<RecruitStep>('pick')
+  const [recruitRollerId, setRecruitRollerId] = useState<string>('') // PC character id
+  const [recruitNpcId, setRecruitNpcId] = useState<string>('')
+  const [recruitCommunityId, setRecruitCommunityId] = useState<string>('') // community.id, '__new__', or ''
+  const [recruitNewCommunityName, setRecruitNewCommunityName] = useState('')
+  const [recruitNewCommunityPublic, setRecruitNewCommunityPublic] = useState(false)
+  const [recruitApproach, setRecruitApproach] = useState<RecruitApproach>('cohort')
+  const [recruitSkill, setRecruitSkill] = useState<string>('')
+  const [recruitGmCmod, setRecruitGmCmod] = useState<number>(0)
+  const [recruitApprenticeToggle, setRecruitApprenticeToggle] = useState(false)
+  const [recruitResult, setRecruitResult] = useState<{
+    die1: number; die2: number; total: number; outcome: string
+    amod: number; smod: number; cmod: number
+    approach: RecruitApproach; npcName: string; rollerName: string
+    communityId: string | null; communityName: string
+    inserted: boolean; apprenticeApplied: boolean
+  } | null>(null)
+  // recruitment_type table for enforcing 1-Apprentice-per-PC on the UI side
+  const [apprenticeByCharacter, setApprenticeByCharacter] = useState<Record<string, { id: string; npcName: string } | undefined>>({})
+  // Communities available to recruit into (loaded when modal opens).
+  const [recruitCommunityList, setRecruitCommunityList] = useState<{ id: string; name: string; member_count: number }[]>([])
+  // NPC memberships — which community (if any) each NPC is already in.
+  const [npcCommunityMap, setNpcCommunityMap] = useState<Record<string, { id: string; name: string; recruitment_type: string }>>({})
   // First Impression NPC picker: which NPC the check is TARGETED at.
   // Cleared when the modal closes. On roll-time the npcId is copied
   // into firstImpressionTargetRef so executeRoll can write the
@@ -2234,6 +2271,241 @@ export default function TablePage() {
     setShowSpecialCheck(null)
   }
 
+  // ── Recruitment Check (Communities Phase B) ─────────────────────────
+  // Flow: openRecruitModal() preps state + loads dependencies, then the
+  // inline modal walks the player through pick → roll → result.
+  // executeRecruitRoll() resolves the roll inside the modal (not via the
+  // standard handleRollRequest/executeRoll path — Recruitment is out-
+  // of-combat, has its own CMod stack and custom outcome application).
+  async function openRecruitModal() {
+    // Roller defaults to the current user's PC. GMs get the roller
+    // picker because they may be orchestrating on behalf of the player
+    // at the table. Player default = their own PC; if they have multiple
+    // they pick in the modal (edge case: GM running multiple PCs).
+    const myEntry = entries.find(e => e.userId === userId)
+    setRecruitRollerId(myEntry?.character.id ?? '')
+    setRecruitNpcId('')
+    setRecruitCommunityId('')
+    setRecruitNewCommunityName('')
+    setRecruitNewCommunityPublic(false)
+    setRecruitApproach('cohort')
+    setRecruitSkill('')
+    setRecruitGmCmod(0)
+    setRecruitApprenticeToggle(false)
+    setRecruitResult(null)
+    setRecruitStep('pick')
+    // Load this campaign's communities (pick/auto/empty state), NPC
+    // memberships (for poaching detection), and each PC's current
+    // Apprentice (for 1-per-PC enforcement). Parallel.
+    const [{ data: comms }, { data: memberships }] = await Promise.all([
+      supabase.from('communities').select('id, name').eq('campaign_id', id).order('created_at', { ascending: true }),
+      supabase.from('community_members')
+        .select('id, community_id, npc_id, character_id, recruitment_type, apprentice_of_character_id, communities!inner(name)')
+        .is('left_at', null)
+        .eq('communities.campaign_id', id),
+    ])
+    const commRows = (comms ?? []) as { id: string; name: string }[]
+    const mems = (memberships ?? []) as any[]
+    const byCommId: Record<string, number> = {}
+    const nextNpcMap: Record<string, { id: string; name: string; recruitment_type: string }> = {}
+    const nextApprenticeMap: Record<string, { id: string; npcName: string }> = {}
+    for (const m of mems) {
+      if (m.community_id) byCommId[m.community_id] = (byCommId[m.community_id] ?? 0) + 1
+      if (m.npc_id) {
+        const npcName = campaignNpcs.find((n: any) => n.id === m.npc_id)?.name ?? '?'
+        nextNpcMap[m.npc_id] = { id: m.community_id, name: m.communities?.name ?? '?', recruitment_type: m.recruitment_type }
+        if (m.recruitment_type === 'apprentice' && m.apprentice_of_character_id) {
+          nextApprenticeMap[m.apprentice_of_character_id] = { id: m.id, npcName }
+        }
+      }
+    }
+    setRecruitCommunityList(commRows.map(c => ({ ...c, member_count: byCommId[c.id] ?? 0 })))
+    setNpcCommunityMap(nextNpcMap)
+    setApprenticeByCharacter(nextApprenticeMap)
+    // Auto-pick community if exactly one exists, else blank (user picks
+    // or starts the "Found a new community" branch).
+    if (commRows.length === 1) setRecruitCommunityId(commRows[0].id)
+    setShowRecruit(true)
+  }
+
+  // Eligible-target NPCs for Recruitment: alive + either on the active
+  // tactical map OR revealed to any PC. Same rule as First Impression.
+  function getRecruitEligibleNpcs(): any[] {
+    const byId = new Map<string, any>()
+    for (const n of revealedNpcs) byId.set(n.id, n)
+    for (const t of mapTokens) {
+      if (t.token_type === 'object' || !t.npc_id || byId.has(t.npc_id)) continue
+      const npc = campaignNpcs.find((n: any) => n.id === t.npc_id)
+      if (npc) byId.set(npc.id, npc)
+    }
+    return [...byId.values()].filter((n: any) => {
+      const wp = n.wp_current ?? n.wp_max ?? 10
+      return wp > 0 && n.status !== 'dead'
+    }).sort((a: any, b: any) => String(a.name).localeCompare(String(b.name)))
+  }
+
+  // Skill auto-suggest per approach. Fallback social skills for free-pick.
+  function suggestedSkillsForApproach(ap: RecruitApproach): string[] {
+    if (ap === 'cohort') return ['Barter', 'Tactics', 'Inspiration']
+    if (ap === 'conscript') return ['Intimidation', 'Tactics']
+    // convert
+    return ['Inspiration', 'Psychology']
+  }
+  const RECRUITMENT_ALL_SKILLS = ['Barter', 'Inspiration', 'Manipulation', 'Psychology', 'Streetwise', 'Tactics', 'Intimidation']
+
+  // Compute the CMod breakdown for the currently-selected recruit
+  // state. Returns the pieces so the modal can display them line-by-
+  // line, and the total for the roll.
+  function computeRecruitCmods(): { firstImpression: number; inspiration: number; poaching: number; gm: number; total: number } {
+    let firstImpression = 0
+    let inspiration = 0
+    let poaching = 0
+    if (recruitRollerId && recruitNpcId) {
+      const rollerEntry = entries.find(e => e.character.id === recruitRollerId)
+      if (rollerEntry) {
+        // Inspiration skill: every level = +1 SMod to recruitment
+        // attempts per Distemper CRB. Stored as SMod on top of the
+        // chosen-skill SMod. Treated as CMod here (in the UI total)
+        // for clarity; the actual roll adds it to SMod.
+        const insp = (rollerEntry.character.data?.skills ?? []).find((s: any) => s.skillName === 'Inspiration')
+        inspiration = insp?.level ?? 0
+      }
+    }
+    // First Impression CMod — needs a fetch from npc_relationships;
+    // we don't eagerly sync this into state. The UI preview just
+    // falls through to 0 until the player rolls First Impression
+    // separately (which writes the row). Future enhancement: fetch
+    // on NPC pick. MVP: inline hint if it's null.
+    // For now, read from revealedNpcs which carries relationship_cmod.
+    const revealed = revealedNpcs.find((n: any) => n.id === recruitNpcId)
+    if (revealed && typeof revealed.relationship_cmod === 'number') firstImpression = revealed.relationship_cmod
+    // Poaching — if NPC is already in another community, apply -3.
+    if (recruitNpcId && npcCommunityMap[recruitNpcId]) poaching = -3
+    const total = firstImpression + inspiration + poaching + recruitGmCmod
+    return { firstImpression, inspiration, poaching, gm: recruitGmCmod, total }
+  }
+
+  async function executeRecruitRoll() {
+    if (!recruitRollerId || !recruitNpcId) return
+    if (!recruitSkill) return
+    const rollerEntry = entries.find(e => e.character.id === recruitRollerId)
+    if (!rollerEntry) return
+    const npc = campaignNpcs.find((n: any) => n.id === recruitNpcId)
+    if (!npc) return
+    // Resolve community: either existing id, or inline-create.
+    let finalCommunityId = recruitCommunityId
+    let finalCommunityName = ''
+    if (recruitCommunityId === '__new__') {
+      if (!recruitNewCommunityName.trim()) return
+      const { data: newComm, error: commErr } = await supabase
+        .from('communities')
+        .insert({
+          campaign_id: id,
+          name: recruitNewCommunityName.trim(),
+          status: 'forming',
+          world_visibility: recruitNewCommunityPublic ? 'published' : 'private',
+        })
+        .select('id, name')
+        .single()
+      if (commErr || !newComm) {
+        alert(`Failed to create community: ${commErr?.message ?? 'unknown error'}`)
+        return
+      }
+      finalCommunityId = newComm.id
+      finalCommunityName = newComm.name
+    } else if (finalCommunityId) {
+      finalCommunityName = recruitCommunityList.find(c => c.id === finalCommunityId)?.name ?? ''
+    } else {
+      return // nothing to do
+    }
+
+    // AMod: PC's INF (social approaches) regardless of specific skill.
+    const rapid = rollerEntry.character.data?.rapid ?? {}
+    const amod = rapid.INF ?? 0
+    // SMod: level in the picked skill.
+    const smod = (rollerEntry.character.data?.skills ?? []).find((s: any) => s.skillName === recruitSkill)?.level ?? 0
+    // CMod: sum of First Impression + Inspiration + Poaching + GM.
+    const cmods = computeRecruitCmods()
+    const die1 = Math.floor(Math.random() * 6) + 1
+    const die2 = Math.floor(Math.random() * 6) + 1
+    const total = die1 + die2 + amod + smod + cmods.total
+    const outcome = getOutcome(total, die1, die2)
+    const isSuccess = outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight'
+    const unlocksApprentice = outcome === 'Wild Success' || outcome === 'High Insight'
+    const applyApprentice = unlocksApprentice && recruitApprenticeToggle && !apprenticeByCharacter[recruitRollerId]
+    const recruitmentType: RecruitApproach | 'apprentice' = applyApprentice ? 'apprentice' : recruitApproach
+
+    // On success, INSERT community_members. If the NPC is currently in
+    // another community (poaching), leave that row alone — narratively
+    // the NPC is switching allegiance but the GM may want to retain
+    // history. MVP behavior: just insert the new membership; GM can
+    // manually remove old one if desired.
+    let inserted = false
+    if (isSuccess) {
+      const { error: memErr } = await supabase.from('community_members').insert({
+        community_id: finalCommunityId,
+        npc_id: recruitNpcId,
+        character_id: null,
+        role: 'unassigned',
+        recruitment_type: recruitmentType,
+        apprentice_of_character_id: applyApprentice ? recruitRollerId : null,
+        joined_at: new Date().toISOString(),
+      })
+      if (memErr) {
+        alert(`Failed to add member: ${memErr.message}`)
+      } else {
+        inserted = true
+      }
+    }
+
+    // Log to roll_log with outcome='recruit' for the feed. damage_json
+    // carries the metadata so the feed renderer can show structured
+    // flavor: approach, community, apprentice flag, poaching, etc.
+    const logLabel = isSuccess
+      ? `🤝 ${rollerEntry.character.name} recruited ${npc.name}${applyApprentice ? ' as Apprentice' : ` as ${recruitmentType.charAt(0).toUpperCase() + recruitmentType.slice(1)}`} to ${finalCommunityName}`
+      : `🤝 ${rollerEntry.character.name} tried to recruit ${npc.name} — ${outcome}`
+    await supabase.from('roll_log').insert({
+      campaign_id: id,
+      user_id: userId,
+      character_name: rollerEntry.character.name,
+      label: logLabel,
+      die1, die2, amod, smod, cmod: cmods.total,
+      total,
+      outcome: 'recruit',
+      damage_json: {
+        rollOutcome: outcome,
+        approach: recruitApproach,
+        recruitmentType,
+        apprentice: applyApprentice,
+        firstImpression: cmods.firstImpression,
+        inspiration: cmods.inspiration,
+        poaching: cmods.poaching,
+        gmCmod: cmods.gm,
+        communityId: finalCommunityId,
+        communityName: finalCommunityName,
+        npcId: recruitNpcId,
+        npcName: npc.name,
+      } as any,
+    })
+
+    setRecruitResult({
+      die1, die2, total, outcome,
+      amod, smod, cmod: cmods.total,
+      approach: recruitApproach, npcName: npc.name, rollerName: rollerEntry.character.name,
+      communityId: finalCommunityId, communityName: finalCommunityName,
+      inserted, apprenticeApplied: applyApprentice,
+    })
+    setRecruitStep('result')
+    // Reload feed so the new log row appears immediately.
+    await loadRolls(id)
+  }
+
+  function closeRecruitModal() {
+    setShowRecruit(false)
+    setRecruitResult(null)
+    setRecruitStep('pick')
+  }
+
   function triggerGroupCheck() {
     if (groupCheckParticipants.size === 0 || !groupCheckSkill) return
     const participants = entries.filter(e => groupCheckParticipants.has(e.character.id))
@@ -3702,7 +3974,15 @@ export default function TablePage() {
         )}
         <div style={{ flex: 1 }} />
         {sessionStatus === 'active' && (
-          <select value="" onChange={e => { if (e.target.value) setShowSpecialCheck(e.target.value as any); e.target.value = '' }}
+          <select value="" onChange={e => {
+            if (!e.target.value) return
+            if (e.target.value === 'recruit') {
+              openRecruitModal()
+            } else {
+              setShowSpecialCheck(e.target.value as any)
+            }
+            e.target.value = ''
+          }}
             style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), width: '80px' }}>
             <option value="">Checks</option>
             <option value="perception">Perception</option>
@@ -7479,16 +7759,6 @@ export default function TablePage() {
                 </div>
               </>
             )}
-            {showSpecialCheck === 'recruit' && (
-              <>
-                <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Recruitment</div>
-                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Attempt to recruit an NPC as Cohort, Conscript, or Convert. Uses Barter / Psychology* / Tactics* / Inspiration + First Impression CMod. Wild Success or High Insight unlocks the Apprentice option (1 per PC).</div>
-                <div style={{ padding: '12px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1rem', lineHeight: 1.4 }}>
-                  <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Under construction</div>
-                  Full recruitment flow (NPC picker → community pick/create → approach → skill → roll → outcome → membership insert) lands in the next commit.
-                </div>
-              </>
-            )}
             <button onClick={() => setShowSpecialCheck(null)}
               style={{ marginTop: '1rem', width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Close
@@ -7496,6 +7766,249 @@ export default function TablePage() {
           </div>
         </div>
       )}
+
+      {/* ── Recruitment Modal (Communities Phase B) ─────────────────── */}
+      {showRecruit && (() => {
+        const eligibleNpcs = getRecruitEligibleNpcs()
+        const pickedNpc = eligibleNpcs.find((n: any) => n.id === recruitNpcId)
+        const rollerEntry = entries.find(e => e.character.id === recruitRollerId)
+        const cmods = computeRecruitCmods()
+        const suggestedSkills = suggestedSkillsForApproach(recruitApproach)
+        const hasAnyCommunity = recruitCommunityList.length > 0
+        const resolvedCommunityName = recruitCommunityId === '__new__'
+          ? (recruitNewCommunityName.trim() || '— new community —')
+          : (recruitCommunityList.find(c => c.id === recruitCommunityId)?.name ?? '')
+        const canRoll = !!rollerEntry && !!pickedNpc && !!recruitSkill && (
+          recruitCommunityId === '__new__'
+            ? recruitNewCommunityName.trim().length > 0
+            : !!recruitCommunityId
+        )
+        const pcHasApprentice = recruitRollerId ? !!apprenticeByCharacter[recruitRollerId] : false
+        const poachingNpcCommunity = recruitNpcId ? npcCommunityMap[recruitNpcId] : null
+        const isWild = recruitResult && (recruitResult.outcome === 'Wild Success' || recruitResult.outcome === 'High Insight')
+        return (
+          <div onClick={closeRecruitModal}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <div onClick={e => e.stopPropagation()}
+              style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '520px', maxHeight: '85vh', overflowY: 'auto' }}>
+              <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Recruitment</div>
+              <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>
+                {recruitStep === 'pick' ? 'Pick target & approach' : recruitStep === 'roll' ? 'Review the roll' : 'Outcome'}
+              </div>
+
+              {/* ── STEP PICK ── */}
+              {recruitStep === 'pick' && (
+                <>
+                  {/* Roller PC */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Rolling PC</div>
+                    <select value={recruitRollerId} onChange={e => setRecruitRollerId(e.target.value)}
+                      style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                      <option value="">— pick a PC —</option>
+                      {entries.map(e => (
+                        <option key={e.character.id} value={e.character.id}>{e.character.name} (INF {e.character.data?.rapid?.INF ?? 0})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Target NPC */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Target NPC</div>
+                    {eligibleNpcs.length === 0 ? (
+                      <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px' }}>
+                        No NPCs visible on the map or in your sidebar. A GM needs to reveal one first.
+                      </div>
+                    ) : (
+                      <select value={recruitNpcId} onChange={e => setRecruitNpcId(e.target.value)}
+                        style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                        <option value="">— pick an NPC —</option>
+                        {eligibleNpcs.map((n: any) => {
+                          const mem = npcCommunityMap[n.id]
+                          return <option key={n.id} value={n.id}>{n.name}{mem ? ` — already in ${mem.name}` : ''}</option>
+                        })}
+                      </select>
+                    )}
+                    {poachingNpcCommunity && (
+                      <div style={{ marginTop: '6px', padding: '6px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                        ⚠ Poaching penalty: {pickedNpc?.name} is already in {poachingNpcCommunity.name} (−3 CMod)
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Community */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Community</div>
+                    {hasAnyCommunity ? (
+                      <select value={recruitCommunityId} onChange={e => setRecruitCommunityId(e.target.value)}
+                        style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                        <option value="">— pick a community —</option>
+                        {recruitCommunityList.map(c => (
+                          <option key={c.id} value={c.id}>{c.name} ({c.member_count} member{c.member_count === 1 ? '' : 's'})</option>
+                        ))}
+                        <option value="__new__">+ Found a new community</option>
+                      </select>
+                    ) : (
+                      <div style={{ padding: '8px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }}>
+                        No communities yet — this recruit will found a new one.
+                        {(() => { if (recruitCommunityId !== '__new__') setRecruitCommunityId('__new__'); return null })()}
+                      </div>
+                    )}
+                    {recruitCommunityId === '__new__' && (
+                      <div style={{ marginTop: '8px', padding: '10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                        <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Name</div>
+                        <input value={recruitNewCommunityName} onChange={e => setRecruitNewCommunityName(e.target.value)} placeholder="e.g. The Greenhouse"
+                          style={{ width: '100%', padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={recruitNewCommunityPublic} onChange={e => setRecruitNewCommunityPublic(e.target.checked)} />
+                          Make this community public (discoverable via LFG — coming soon)
+                        </label>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Approach */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Approach</div>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      {(['cohort', 'conscript', 'convert'] as RecruitApproach[]).map(ap => (
+                        <button key={ap} onClick={() => { setRecruitApproach(ap); setRecruitSkill('') }}
+                          style={{ flex: 1, padding: '8px 6px', background: recruitApproach === ap ? '#2d5a1b' : '#242424', border: `1px solid ${recruitApproach === ap ? '#7fc458' : '#3a3a3a'}`, borderRadius: '3px', color: recruitApproach === ap ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                          {ap}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ marginTop: '4px', fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
+                      {recruitApproach === 'cohort' ? 'Shared interest or goal — joins until the next Morale Check.'
+                        : recruitApproach === 'conscript' ? 'Coerced by credible threat — follows orders while coercion holds.'
+                        : 'Shared belief or ideology — probationary through first Morale Check, then committed.'}
+                    </div>
+                  </div>
+
+                  {/* Skill */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Skill</div>
+                    <select value={recruitSkill} onChange={e => setRecruitSkill(e.target.value)}
+                      style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                      <option value="">— pick a skill —</option>
+                      <optgroup label={`Suggested for ${recruitApproach}`}>
+                        {suggestedSkills.map(s => {
+                          const lvl = rollerEntry ? ((rollerEntry.character.data?.skills ?? []).find((sk: any) => sk.skillName === s)?.level ?? 0) : 0
+                          return <option key={s} value={s}>{s} (Lv {lvl})</option>
+                        })}
+                      </optgroup>
+                      <optgroup label="Other social">
+                        {RECRUITMENT_ALL_SKILLS.filter(s => !suggestedSkills.includes(s)).map(s => {
+                          const lvl = rollerEntry ? ((rollerEntry.character.data?.skills ?? []).find((sk: any) => sk.skillName === s)?.level ?? 0) : 0
+                          return <option key={s} value={s}>{s} (Lv {lvl})</option>
+                        })}
+                      </optgroup>
+                    </select>
+                  </div>
+
+                  {/* CMod preview */}
+                  <div style={{ marginBottom: '12px', padding: '10px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px' }}>
+                    <div style={{ fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>CMod stack</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>First Impression</span>
+                        <span style={{ color: cmods.firstImpression > 0 ? '#7fc458' : cmods.firstImpression < 0 ? '#f5a89a' : '#5a5550' }}>
+                          {cmods.firstImpression > 0 ? `+${cmods.firstImpression}` : cmods.firstImpression}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Inspiration skill (+1/level)</span>
+                        <span style={{ color: cmods.inspiration > 0 ? '#7fc458' : '#5a5550' }}>
+                          {cmods.inspiration > 0 ? `+${cmods.inspiration}` : '0'}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Poaching penalty</span>
+                        <span style={{ color: cmods.poaching < 0 ? '#f5a89a' : '#5a5550' }}>
+                          {cmods.poaching < 0 ? cmods.poaching : '0'}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span>GM adjustment</span>
+                        <input type="number" value={recruitGmCmod} onChange={e => setRecruitGmCmod(parseInt(e.target.value) || 0)}
+                          style={{ width: '60px', padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'right' }} />
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #2e2e5a', marginTop: '4px', paddingTop: '4px', fontWeight: 700 }}>
+                        <span>TOTAL CMOD</span>
+                        <span style={{ color: cmods.total > 0 ? '#7fc458' : cmods.total < 0 ? '#f5a89a' : '#f5f2ee' }}>
+                          {cmods.total > 0 ? `+${cmods.total}` : cmods.total}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={closeRecruitModal}
+                      style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                    <button onClick={executeRecruitRoll} disabled={!canRoll}
+                      style={{ flex: 2, padding: '10px', background: canRoll ? '#c0392b' : '#2a1210', border: `1px solid ${canRoll ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: canRoll ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: canRoll ? 'pointer' : 'not-allowed' }}>
+                      🎲 Roll Recruitment
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* ── STEP RESULT ── */}
+              {recruitStep === 'result' && recruitResult && (
+                <>
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
+                    {[recruitResult.die1, recruitResult.die2].map((d, i) => (
+                      <div key={i} style={{ flex: 1, padding: '12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', textAlign: 'center', fontSize: '24px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>{d}</div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>
+                    [{recruitResult.die1}+{recruitResult.die2}]
+                    {recruitResult.amod !== 0 && <span style={{ color: recruitResult.amod > 0 ? '#7fc458' : '#c0392b' }}> {recruitResult.amod > 0 ? '+' : ''}{recruitResult.amod} AMod</span>}
+                    {recruitResult.smod !== 0 && <span style={{ color: recruitResult.smod > 0 ? '#7fc458' : '#c0392b' }}> {recruitResult.smod > 0 ? '+' : ''}{recruitResult.smod} SMod</span>}
+                    {recruitResult.cmod !== 0 && <span style={{ color: recruitResult.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {recruitResult.cmod > 0 ? '+' : ''}{recruitResult.cmod} CMod</span>}
+                    <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {recruitResult.total}</span>
+                  </div>
+                  <div style={{ fontSize: '18px', fontWeight: 700, color: outcomeColor(recruitResult.outcome), fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '1rem' }}>
+                    {recruitResult.outcome}
+                  </div>
+                  <div style={{ padding: '12px', background: recruitResult.inserted ? '#0f1a0f' : '#2a1210', border: `1px solid ${recruitResult.inserted ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', marginBottom: '1rem', lineHeight: 1.4 }}>
+                    {recruitResult.inserted ? (
+                      <>
+                        <strong>{recruitResult.npcName}</strong> joined <strong>{recruitResult.communityName}</strong>
+                        {recruitResult.apprenticeApplied ? ` as Apprentice to ${recruitResult.rollerName}.` : ` as ${recruitResult.approach.charAt(0).toUpperCase() + recruitResult.approach.slice(1)}.`}
+                      </>
+                    ) : (
+                      <>The attempt failed. <strong>{recruitResult.npcName}</strong> is not joining {recruitResult.communityName}.</>
+                    )}
+                  </div>
+
+                  {/* Apprentice toggle (re-shown after Wild Success / High Insight if not yet applied) */}
+                  {isWild && recruitResult.inserted && !recruitResult.apprenticeApplied && !pcHasApprentice && (
+                    <div style={{ padding: '10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', marginBottom: '1rem' }}>
+                      <div style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>⭐ Apprentice Eligible</div>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px' }}>
+                        A Wild Success / High Insight on this recruit allows {recruitResult.rollerName} to take {recruitResult.npcName} as an Apprentice (1 per PC). Did not toggle pre-roll — flip it now if desired.
+                      </div>
+                      <button onClick={async () => {
+                        await supabase.from('community_members')
+                          .update({ recruitment_type: 'apprentice', apprentice_of_character_id: recruitRollerId })
+                          .eq('community_id', recruitResult.communityId)
+                          .eq('npc_id', recruitNpcId)
+                        setRecruitResult(r => r ? { ...r, apprenticeApplied: true } : r)
+                      }}
+                        style={{ padding: '6px 12px', background: '#8b2e8b', border: '1px solid #d48bd4', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        Take as Apprentice
+                      </button>
+                    </div>
+                  )}
+
+                  <button onClick={closeRecruitModal}
+                    style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Close</button>
+                </>
+              )}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Insight Die Save Modal */}
       {insightSavePrompt && (() => {
