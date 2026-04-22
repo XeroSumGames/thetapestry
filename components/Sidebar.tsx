@@ -4,6 +4,41 @@ import { createClient } from '../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import NotificationBell from './NotificationBell'
 
+// Left sidebar — restructured 2026-04-22 per user spec:
+//
+//   [Logo / Tapestry v1.0]
+//   [Username + Role Badge + Bell]
+//   ——— divider ———
+//   The Tapestry (header)
+//     Welcome to the Tapestry
+//     The World
+//     My Survivors
+//     My Stories
+//     My Communities
+//     The Campfire — soon
+//   ——— divider ———
+//   Survivors (header)
+//     Creating a Survivor
+//     Backstory Generation
+//     Quick Character
+//     Random Character
+//     Paradigms — soon
+//   ——— divider ———
+//   Tools (header, Thriver-only)
+//     Moderation Queue
+//     Resize Portraits
+//     Rescale Tactical Scenes
+//     Logs
+//     Copy Map Position
+//   ——— soft-gap ———
+//   (soon items, no header)
+//     Rules — soon
+//     Equipment — soon
+//     Forums — soon
+//     Looking for Group — soon
+//   [Create Account / Sign In] or [Log Out]
+//   [Xero Sum Games tiny logo]
+
 export default function Sidebar() {
   const [username, setUsername] = useState('')
   const [userRole, setUserRole] = useState<'survivor' | 'thriver' | null>(null)
@@ -73,6 +108,8 @@ export default function Sidebar() {
     e.currentTarget.style.background = on ? '#242424' : 'transparent'
   }
 
+  const soonSuffix = <span style={{ fontSize: '12px', color: '#cce0f5' }}>&mdash; soon</span>
+
   return (
     <div style={{ width: '220px', flexShrink: 0, background: '#1a1a1a', borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
 
@@ -90,7 +127,7 @@ export default function Sidebar() {
       </div>
 
       {/* User header */}
-      <div style={{ padding: '10px 14px 8px', fontSize: '13px', color: '#f5f2ee', letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', borderBottom: '1px solid #2e2e2e', marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
+      <div style={{ padding: '10px 14px 8px', fontSize: '14px', color: '#f5f2ee', letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', borderBottom: '1px solid #2e2e2e', display: 'flex', alignItems: 'center' }}>
         {isGuest ? (
           <span style={{ flex: 1, color: '#7fc458' }}>Ghost <span style={{ fontSize: '13px', color: '#7fc458' }}>— You Don&apos;t Exist</span></span>
         ) : (
@@ -98,7 +135,7 @@ export default function Sidebar() {
             <span style={{ flex: 1 }}>
               {username}
               {userRole === 'thriver'
-                ? <span style={{ marginLeft: '6px', background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 5px', borderRadius: '2px' }}>thriver</span>
+                ? <span style={{ marginLeft: '6px', background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 5px', borderRadius: '2px' }}>Thriver</span>
                 : <span style={{ marginLeft: '6px', background: '#2d5a1b', color: '#7fc458', fontSize: '13px', padding: '1px 5px', borderRadius: '2px' }}>Survivor</span>
               }
             </span>
@@ -107,54 +144,57 @@ export default function Sidebar() {
         )}
       </div>
 
-{/* The Tapestry section */}
+      {divider}
+
+      {/* The Tapestry — top-level destinations */}
       <div style={sectionHeading}>The Tapestry</div>
-      <a href="/welcome" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Welcome to the Tapestry</a>
-<a href="/map" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The World</a>
-<a href="/stories" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Stories</a>
-<a href="/communities" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Communities</a>
-<a href="#" style={soonStyle}>The Campfire <span style={{ fontSize: '12px', color: '#cce0f5' }}>&mdash; soon</span></a>
+      <a href="/welcome"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Welcome to the Tapestry</a>
+      <a href="/map"         style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The World</a>
+      <a href="/characters"  style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Survivors</a>
+      <a href="/stories"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Stories</a>
+      <a href="/communities" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Communities</a>
+      <a href="#" style={soonStyle}>The Campfire {soonSuffix}</a>
 
       {divider}
 
-      {/* Thriver tools */}
+      {/* Survivors — character creation paths */}
+      <div style={sectionHeading}>Survivors</div>
+      <a href="/creating-a-character" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Creating a Survivor</a>
+      <a href="/characters/new"       style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</a>
+      <a href="/characters/quick"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Character</a>
+      <a href="/characters/random"    style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</a>
+      <a href="#" style={soonStyle}>Paradigms {soonSuffix}</a>
+
+      {divider}
+
+      {/* Tools — Thriver-only. Keeps elevated destinations behind the role gate
+          so Survivors don't see admin surfaces. */}
       {userRole === 'thriver' && (
         <>
-          <a href="/moderate" style={{ ...linkStyle('#EF9F27'), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
+          <div style={sectionHeading}>Tools</div>
+          <a href="/moderate"
+            style={{ ...linkStyle('#EF9F27'), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+            onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
             Moderation Queue
             {pendingCount > 0 && <span style={{ background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 6px', borderRadius: '3px' }}>{pendingCount}</span>}
           </a>
-          <a href="/tools/portrait-resizer" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Resize Portraits</a>
+          <a href="/tools/portrait-resizer"       style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Resize Portraits</a>
           <a href="/tools/rescale-tactical-scenes" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rescale Tactical Scenes</a>
-          <a href="/logging" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Logs</a>
-          <a href="#" onClick={e => { e.preventDefault(); window.dispatchEvent(new CustomEvent('tapestry-copy-map-position')) }} style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Copy Map Position</a>
+          <a href="/logging"                       style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Logs</a>
+          <a href="#"
+            onClick={e => { e.preventDefault(); window.dispatchEvent(new CustomEvent('tapestry-copy-map-position')) }}
+            style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
+            Copy Map Position
+          </a>
+          {divider}
         </>
       )}
 
-      {divider}
-
-      {/* Survivors section */}
-      <div style={sectionHeading}>Survivors</div>
-      <a href="/creating-a-character" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Creating a Survivor</a>
-      <a href="/characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Survivors</a>
-      <a href="/characters/new" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</a>
-      <a href="/characters/quick" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Character</a>
-      <a href="/characters/random" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</a>
-      <a href="#" style={soonStyle}>Paradigms <span style={{ fontSize: '12px', color: '#cce0f5' }}>&mdash; soon</span></a>
-
-      {divider}
-
-      {/* Coming soon */}
-      {[
-        { href: '#', label: 'Rules' },
-        { href: '#', label: 'Equipment Catalog' },
-        { href: '#', label: 'Forums' },
-        { href: '#', label: 'Looking for Group' },
-      ].map(({ href, label }) => (
-        <a key={label} href={href} style={soonStyle}>
-          {label} <span style={{ fontSize: '13px', color: '#cce0f5' }}>&mdash; soon</span>
-        </a>
-      ))}
+      {/* Coming soon — always visible, no section header per user spec */}
+      <a href="#" style={soonStyle}>Rules {soonSuffix}</a>
+      <a href="#" style={soonStyle}>Equipment {soonSuffix}</a>
+      <a href="#" style={soonStyle}>Forums {soonSuffix}</a>
+      <a href="#" style={soonStyle}>Looking for Group {soonSuffix}</a>
 
       {/* Spacer + bottom section */}
       <div style={{ flex: 1 }} />
