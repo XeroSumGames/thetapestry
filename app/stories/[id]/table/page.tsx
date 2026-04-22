@@ -2794,8 +2794,16 @@ export default function TablePage() {
         // would never actually lose WP. Fixed by sql/scene-tokens-player-update-objects.sql.
         const { error: objErr, data: objData } = await supabase.from('scene_tokens').update({ wp_current: newWP }).eq('id', targetObject.id).select('id, wp_current')
         if (objErr) console.error('[damage] scene_tokens update error:', objErr.message)
+        // Silent RLS failure: no error, 0 rows affected. Without this
+        // alert the barrel's wp_current never reaches 0 in the DB, the
+        // object wouldn't render as destroyed, the auto-loot `.update`
+        // on scene_tokens.contents also fails silently, and the
+        // attacker's `characters.update` for the loot inventory may
+        // commit against a stale state. Surface it loudly so the GM
+        // knows to run the SQL and re-attack.
         if (!objErr && (!objData || objData.length === 0)) {
-          console.warn('[damage] SILENT RLS FAIL — object wp_current not updated. run sql/scene-tokens-player-update-objects.sql. tokenId:', targetObject.id)
+          console.error('[damage] SILENT RLS FAIL — scene_tokens.wp_current not updated. Run sql/scene-tokens-player-update-objects.sql. tokenId:', targetObject.id, 'tokenName:', targetObject.name)
+          alert(`Damage to "${targetObject.name}" was silently rejected by RLS — the token's WP did not update, so it won't show as destroyed and any loot inside won't drop.\n\nRun sql/scene-tokens-player-update-objects.sql in Supabase to allow players to damage object tokens in scenes they're part of.\n\nUntil then, players attacking barrels/crates will see damage in the log but the object stays full-health.`)
         }
         setMapTokens(prev => prev.map(t => t.id === targetObject.id ? { ...t, wp_current: newWP } : t))
 
