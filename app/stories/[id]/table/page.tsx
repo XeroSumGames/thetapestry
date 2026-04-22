@@ -13,6 +13,7 @@ import CampaignObjects from '../../../../components/CampaignObjects'
 import VehicleCard, { Vehicle } from '../../../../components/VehicleCard'
 import GmNotes from '../../../../components/GmNotes'
 import PlayerNotes from '../../../../components/PlayerNotes'
+import QuickAddModal from '../../../../components/QuickAddModal'
 import NotificationBell from '../../../../components/NotificationBell'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
@@ -440,32 +441,13 @@ export default function TablePage() {
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
   const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null; character_name: string }[]>([])
   const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | null>(null)
-  // Quick Add modal. Two entry points:
-  //   1. Double-click on the campaign map → PIN-ONLY mode, lat/lng
-  //      seeded from the click. Intentional gesture; always pin-only.
-  //   2. "Community" button in the top bar → FULL mode (pin + start-
-  //      a-community side by side). Single-column layout flips in
-  //      pin-only mode.
-  // No auto-open, no membership checks. The mode is set by whichever
-  // opener fires.
+  // Quick Add modal state — all pin/community form state now lives
+  // inside <QuickAddModal>. The table page only tracks open/close
+  // plus the pin-only flag + seed lat/lng.
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [qaHideCommunity, setQaHideCommunity] = useState(false)
   const [qaPinLat, setQaPinLat] = useState<string>('')
   const [qaPinLng, setQaPinLng] = useState<string>('')
-  const [qaPinName, setQaPinName] = useState('')
-  const [qaPinNotes, setQaPinNotes] = useState('')
-  const [qaPinCategory, setQaPinCategory] = useState('location')
-  const [qaPinSaving, setQaPinSaving] = useState(false)
-  const [qaPinDone, setQaPinDone] = useState(false)
-  const [qaPinAttachments, setQaPinAttachments] = useState<File[]>([])
-  const [qaCommName, setQaCommName] = useState('')
-  const [qaCommDesc, setQaCommDesc] = useState('')
-  const [qaCommHomestead, setQaCommHomestead] = useState('')
-  const [qaCommPublic, setQaCommPublic] = useState(false)
-  const [qaCommSaving, setQaCommSaving] = useState(false)
-  const [qaCommDone, setQaCommDone] = useState(false)
-  const [qaCommAttachments, setQaCommAttachments] = useState<File[]>([])
-  const [qaPins, setQaPins] = useState<{ id: string; name: string }[]>([])
 
   // Recruitment state lives separately from the Special Check modal
   // because its UI doesn't fit the 380px wrapper — multi-step wizard.
@@ -2310,117 +2292,20 @@ export default function TablePage() {
   // executeRecruitRoll() resolves the roll inside the modal (not via the
   // standard handleRollRequest/executeRoll path — Recruitment is out-
   // of-combat, has its own CMod stack and custom outcome application).
-  // ── Quick Add helpers ─────────────────────────────────────────────
-  // Two entry points, same modal, different mode.
-  // Refreshing the pin list before showing so the Homestead dropdown
-  // on the Community panel sees any recently-dropped pins — applies
-  // to both entry points so the two paths stay consistent.
-  async function loadQaPinList() {
-    const { data: pins } = await supabase.from('campaign_pins').select('id, name').eq('campaign_id', id).order('name', { ascending: true })
-    setQaPins((pins ?? []) as { id: string; name: string }[])
-  }
-
-  // Entry A — from a map double-click. Pin-only, lat/lng seeded.
-  async function openQuickAddPin(lat: number, lng: number) {
-    setQaPinDone(false)
-    setQaCommDone(false)
+  // ── Quick Add helpers (state + entry points only; forms live inside
+  //    the <QuickAddModal> component) ─────────────────────────────────
+  function openQuickAddPin(lat: number, lng: number) {
     setQaPinLat(lat.toFixed(6))
     setQaPinLng(lng.toFixed(6))
     setQaHideCommunity(true)
-    await loadQaPinList()
     setShowQuickAdd(true)
   }
-
-  // Entry B — from the Community top-bar button. Full two-panel view.
-  async function openQuickAddFull() {
-    setQaPinDone(false)
-    setQaCommDone(false)
+  function openQuickAddFull() {
     setQaHideCommunity(false)
-    // Leave qaPinLat/qaPinLng at whatever they are (usually the
-    // campaign map center from initial mount). Player can edit.
-    await loadQaPinList()
     setShowQuickAdd(true)
   }
-
   function closeQuickAdd() {
     setShowQuickAdd(false)
-  }
-  async function handleQaPinSave() {
-    if (!qaPinName.trim()) return
-    const lat = parseFloat(qaPinLat)
-    const lng = parseFloat(qaPinLng)
-    if (Number.isNaN(lat) || Number.isNaN(lng)) { alert('Lat/Lng must be valid numbers'); return }
-    setQaPinSaving(true)
-    const { data: maxRow } = await supabase.from('campaign_pins').select('sort_order').eq('campaign_id', id).order('sort_order', { ascending: false, nullsFirst: false }).limit(1).maybeSingle()
-    const nextSort = ((maxRow as any)?.sort_order ?? 0) + 1
-    const { data: newPin, error } = await supabase.from('campaign_pins').insert({
-      campaign_id: id,
-      name: qaPinName.trim(),
-      lat, lng,
-      notes: qaPinNotes.trim() || null,
-      category: qaPinCategory,
-      revealed: false,
-      sort_order: nextSort,
-    }).select('id').single()
-    if (error || !newPin) {
-      setQaPinSaving(false)
-      alert(`Pin save failed: ${error?.message ?? 'unknown'}`)
-      return
-    }
-    // Upload attachments to pin-attachments/<campaign>/<pin>/<filename>.
-    // Failures are logged but don't block the pin save itself.
-    if (qaPinAttachments.length > 0) {
-      for (const file of qaPinAttachments) {
-        const path = `${id}/${newPin.id}/${file.name}`
-        const { error: upErr } = await supabase.storage.from('pin-attachments').upload(path, file)
-        if (upErr) console.warn('[quick-add] attachment upload failed:', file.name, upErr.message)
-      }
-    }
-    setQaPinSaving(false)
-    setQaPinDone(true)
-    setQaPinName('')
-    setQaPinNotes('')
-    setQaPinAttachments([])
-    // Refresh pin list so the Homestead dropdown picks it up if the
-    // player now wants to attach it to a new community.
-    const { data: pins } = await supabase.from('campaign_pins').select('id, name').eq('campaign_id', id).order('name', { ascending: true })
-    setQaPins((pins ?? []) as { id: string; name: string }[])
-  }
-  async function handleQaCommSave() {
-    if (!qaCommName.trim()) return
-    setQaCommSaving(true)
-    const { data: newComm, error } = await supabase.from('communities').insert({
-      campaign_id: id,
-      name: qaCommName.trim(),
-      description: qaCommDesc.trim() || null,
-      homestead_pin_id: qaCommHomestead || null,
-      status: 'forming',
-      world_visibility: qaCommPublic ? 'published' : 'private',
-    }).select('id').single()
-    if (error || !newComm) {
-      setQaCommSaving(false)
-      alert(`Community save failed: ${error?.message ?? 'unknown'}`)
-      return
-    }
-    // Upload attachments — reuse the pin-attachments bucket with a
-    // community-<id> subprefix so we don't need a separate bucket
-    // provisioning step. A dedicated community-attachments bucket
-    // can replace this later; current structure just namespaces by
-    // path. Failures log but don't block.
-    if (qaCommAttachments.length > 0) {
-      for (const file of qaCommAttachments) {
-        const path = `${id}/community-${newComm.id}/${file.name}`
-        const { error: upErr } = await supabase.storage.from('pin-attachments').upload(path, file)
-        if (upErr) console.warn('[quick-add] community attachment upload failed:', file.name, upErr.message)
-      }
-    }
-    setQaCommSaving(false)
-    setQaCommDone(true)
-    setQaCommName('')
-    setQaCommDesc('')
-    setQaCommHomestead('')
-    setQaCommPublic(false)
-    setQaCommAttachments([])
   }
 
   async function openRecruitModal() {
@@ -7262,179 +7147,21 @@ export default function TablePage() {
         </div>
       )}
 
-      {/* ── Quick Add Modal — drop a pin AND/OR start a community side
-          by side so fresh campaigns don't require menu-hopping ────── */}
+      {/* Quick Add modal — extracted to components/QuickAddModal.tsx
+          so /map and other surfaces share the UI. Pin-only on
+          dblclick (qaHideCommunity=true), both panels via the
+          Community header button. */}
       {showQuickAdd && (
-        <div onClick={closeQuickAdd}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()}
-            style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '760px', maxHeight: '88vh', overflowY: 'auto' }}>
-            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Quick Add</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>
-              {qaHideCommunity ? 'Set the Table' : 'Putting Down Roots'}
-            </div>
-            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1.25rem', fontFamily: 'Barlow, sans-serif' }}>
-              {qaHideCommunity
-                ? 'Drop a pin at the location you just double-clicked. Title, notes, and attachments all go with the pin.'
-                : 'Drop a pin on the map, start a community, or both. Each saves independently and can include attachments.'}
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: qaHideCommunity ? '1fr' : '1fr 1fr', gap: '16px' }}>
-              {/* ── Drop a Pin ───────────────────────────────────── */}
-              <div style={{ padding: '14px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '4px' }}>
-                <div style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>📍 Drop a Pin</div>
-
-                <div style={{ marginBottom: '8px' }}>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Title</div>
-                  <input value={qaPinName} onChange={e => setQaPinName(e.target.value)} placeholder="e.g. Abandoned hospital"
-                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
-                </div>
-
-                <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Lat</div>
-                    <input value={qaPinLat} onChange={e => setQaPinLat(e.target.value)} placeholder="40.4406"
-                      style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Lng</div>
-                    <input value={qaPinLng} onChange={e => setQaPinLng(e.target.value)} placeholder="-79.9959"
-                      style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: '8px' }}>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Category</div>
-                  <select value={qaPinCategory} onChange={e => setQaPinCategory(e.target.value)}
-                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
-                    <option value="location">📍 Location</option>
-                    <option value="residence">🏠 Residence</option>
-                    <option value="business">🏪 Business</option>
-                    <option value="church">⛪ Church</option>
-                    <option value="government">🏛️ Government</option>
-                    <option value="airport">✈️ Transport</option>
-                    <option value="hospital">🏥 Hospital</option>
-                    <option value="military">⚔️ Military</option>
-                    <option value="person">👤 Person</option>
-                    <option value="danger">☠️ Danger</option>
-                    <option value="resource">🎒 Resource</option>
-                    <option value="medical">🩸 Medical</option>
-                    <option value="group">👥 Group</option>
-                    <option value="animals">🐾 Animals</option>
-                    <option value="community">🏘️ Community</option>
-                    <option value="settlement">🏚️ Settlement</option>
-                  </select>
-                </div>
-
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Notes (optional)</div>
-                  <textarea value={qaPinNotes} onChange={e => setQaPinNotes(e.target.value)} rows={2}
-                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
-                </div>
-
-                {/* Attachments — multiple files, any type. Uploaded to
-                    pin-attachments/<campaign>/<pin>/<name> after pin INSERT. */}
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Attachments (optional)</div>
-                  <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: qaPinAttachments.length > 0 ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
-                    {qaPinAttachments.length > 0
-                      ? `${qaPinAttachments.length} file${qaPinAttachments.length > 1 ? 's' : ''} selected`
-                      : 'Click to attach files'}
-                    <input type="file" multiple onChange={e => { if (e.target.files) setQaPinAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />
-                  </label>
-                  {qaPinAttachments.length > 0 && (
-                    <div style={{ marginTop: '4px', fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
-                      {qaPinAttachments.map((f, i) => <div key={i} style={{ marginTop: '1px' }}>{f.name}</div>)}
-                    </div>
-                  )}
-                </div>
-
-                <button onClick={handleQaPinSave} disabled={qaPinSaving || !qaPinName.trim()}
-                  style={{ width: '100%', padding: '9px', background: qaPinName.trim() ? '#1a1a2e' : '#111', border: `1px solid ${qaPinName.trim() ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: qaPinName.trim() ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: qaPinName.trim() && !qaPinSaving ? 'pointer' : 'not-allowed' }}>
-                  {qaPinSaving ? 'Saving…' : '📍 Save Pin'}
-                </button>
-                {qaPinDone && (
-                  <div style={{ marginTop: '8px', padding: '6px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', letterSpacing: '.04em' }}>
-                    ✓ Pin saved. Add another or close.
-                  </div>
-                )}
-              </div>
-
-              {/* ── Start a Community — hidden when the current player
-                    already belongs to a community in this campaign ── */}
-              {!qaHideCommunity && (
-              <div style={{ padding: '14px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '4px' }}>
-                <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>🏘️ Start a Community</div>
-
-                <div style={{ marginBottom: '8px' }}>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Name</div>
-                  <input value={qaCommName} onChange={e => setQaCommName(e.target.value)} placeholder="e.g. The Greenhouse"
-                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
-                </div>
-
-                <div style={{ marginBottom: '8px' }}>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Description (optional)</div>
-                  <textarea value={qaCommDesc} onChange={e => setQaCommDesc(e.target.value)} rows={2}
-                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
-                </div>
-
-                <div style={{ marginBottom: '8px' }}>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Homestead pin (optional)</div>
-                  <select value={qaCommHomestead} onChange={e => setQaCommHomestead(e.target.value)}
-                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
-                    <option value="">— none —</option>
-                    {qaPins.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                  {qaPins.length === 0 && (
-                    <div style={{ marginTop: '4px', fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
-                      Drop a pin on the left first to tie a homestead to it.
-                    </div>
-                  )}
-                </div>
-
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={qaCommPublic} onChange={e => setQaCommPublic(e.target.checked)} />
-                  Make public (LFG — coming soon)
-                </label>
-
-                {/* Attachments — charter, banner image, notes, etc.
-                    Uploaded to pin-attachments/<campaign>/community-<id>/<name>
-                    after the community INSERT. Same storage bucket as
-                    pins; community-<id> prefix keeps them separate. */}
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Attachments (optional)</div>
-                  <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: qaCommAttachments.length > 0 ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
-                    {qaCommAttachments.length > 0
-                      ? `${qaCommAttachments.length} file${qaCommAttachments.length > 1 ? 's' : ''} selected`
-                      : 'Click to attach files'}
-                    <input type="file" multiple onChange={e => { if (e.target.files) setQaCommAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />
-                  </label>
-                  {qaCommAttachments.length > 0 && (
-                    <div style={{ marginTop: '4px', fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
-                      {qaCommAttachments.map((f, i) => <div key={i} style={{ marginTop: '1px' }}>{f.name}</div>)}
-                    </div>
-                  )}
-                </div>
-
-                <button onClick={handleQaCommSave} disabled={qaCommSaving || !qaCommName.trim()}
-                  style={{ width: '100%', padding: '9px', background: qaCommName.trim() ? '#1a2e10' : '#111', border: `1px solid ${qaCommName.trim() ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: qaCommName.trim() ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: qaCommName.trim() && !qaCommSaving ? 'pointer' : 'not-allowed' }}>
-                  {qaCommSaving ? 'Saving…' : '🏘️ Create Community'}
-                </button>
-                {qaCommDone && (
-                  <div style={{ marginTop: '8px', padding: '6px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', letterSpacing: '.04em' }}>
-                    ✓ Community created.
-                  </div>
-                )}
-              </div>
-              )}
-            </div>
-
-            <button onClick={closeQuickAdd}
-              style={{ marginTop: '1.25rem', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-              Done
-            </button>
-          </div>
-        </div>
+        <QuickAddModal
+          mode="campaign"
+          campaignId={id}
+          hideCommunity={qaHideCommunity}
+          initialLat={qaPinLat}
+          initialLng={qaPinLng}
+          userRole={null}
+          userId={userId}
+          onClose={closeQuickAdd}
+        />
       )}
 
       {/* Grapple Modal */}
