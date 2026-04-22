@@ -343,6 +343,24 @@ export default function TablePage() {
   const [cmod, setCmod] = useState('0')
   const [rolling, setRolling] = useState(false)
   const [targetName, setTargetName] = useState<string>('')
+  // Grenade / thrown-explosive cell targeting. When the attacker clicks
+  // Attack with a weapon of category='explosive', we enter `throwMode`:
+  // the TacticalMap paints every cell within weapon range orange, and
+  // the player clicks a CELL (not a token) to place the blast. On click
+  // we stash the cell coords in `grenadeTargetCell` and open the roll
+  // modal with a synthetic "Cell (x,y)" target. executeRoll detects the
+  // cell target and applies blast damage centered on it. Both states
+  // clear on roll-close / cancel so a second attack starts fresh.
+  const [throwMode, setThrowMode] = useState<{
+    attackerCharId: string | null
+    attackerNpcId: string | null
+    weapon: WeaponContext
+    amod: number
+    smod: number
+    rangeFeet: number
+    label: string
+  } | null>(null)
+  const [grenadeTargetCell, setGrenadeTargetCell] = useState<{ gx: number; gy: number } | null>(null)
 
   // Initiative
   const [initiativeOrder, setInitiativeOrder] = useState<InitiativeEntry[]>([])
@@ -2898,21 +2916,35 @@ export default function TablePage() {
             }
           }
         }
+      } else if (grenadeTargetCell) {
+        // Grenade thrown at an empty cell — no "primary target" to damage,
+        // the blast block below picks up the cell coords and splashes
+        // everyone in range. Intentional that damageResult still shows
+        // the rolled WP/RP so the UI's damage card reads correctly.
+        console.warn('[damage] cell-throw — primary damage skipped, blast AoE will handle tokens around', grenadeTargetCell)
       } else {
         console.warn('[damage] no target resolved — damage NOT applied. targetName was:', targetName)
       }
 
-      // Blast Radius AoE — apply scaled damage to nearby tokens on the tactical map
-      if (hasBlast && targetName && mapTokens.length > 0) {
+      // Blast Radius AoE — apply scaled damage to nearby tokens on the
+      // tactical map. Center is the target token by default, or the
+      // cell the player clicked when it's a grenade throw-to-cell.
+      if (hasBlast && mapTokens.length > 0 && (targetName || grenadeTargetCell)) {
         const active = initiativeOrder.find(ie => ie.is_active)
-        // Find the target's token position as the blast center
-        const targetTok = mapTokens.find(t => {
-          const pe = entries.find(e => e.character.name === targetName)
-          if (pe && t.character_id === pe.character.id) return true
-          const npc = campaignNpcs.find((n: any) => n.name === targetName)
-          if (npc && t.npc_id === npc.id) return true
-          return false
-        })
+        // Resolve blast center: cell takes precedence over token lookup.
+        const center = grenadeTargetCell
+          ? { gx: grenadeTargetCell.gx, gy: grenadeTargetCell.gy }
+          : (() => {
+              const t = mapTokens.find(mt => {
+                const pe = entries.find(e => e.character.name === targetName)
+                if (pe && mt.character_id === pe.character.id) return true
+                const npc = campaignNpcs.find((n: any) => n.name === targetName)
+                if (npc && mt.npc_id === npc.id) return true
+                return false
+              })
+              return t ? { gx: t.grid_x, gy: t.grid_y } : null
+            })()
+        const targetTok = center ? { grid_x: center.gx, grid_y: center.gy } : null
         if (targetTok) {
           const ft = mapCellFeet || 3
           const blastTargets: string[] = []
@@ -2924,8 +2956,17 @@ export default function TablePage() {
             const isCombatant = !!tok.character_id || !!tok.npc_id
             const isDestructibleObject = tok.token_type === 'object' && tok.wp_max != null && tok.wp_max > 0
             if (!isCombatant && !isDestructibleObject) continue
-            // Skip primary target (already damaged) and attacker
-            const isPrimary = (targetEntry && tok.character_id && tok.character_id === targetEntry.character.id) || (targetNpc && tok.npc_id && tok.npc_id === targetNpc.id) || (targetObject && tok.id === targetObject.id) || (tok.grid_x === targetTok.grid_x && tok.grid_y === targetTok.grid_y)
+            // Skip primary target (already damaged via token path) and
+            // attacker. For cell-throws (grenadeTargetCell), there IS no
+            // primary — the cell is empty ground — so tokens AT the
+            // center cell should take full blast damage instead of being
+            // skipped. isPrimary only fires for token-targeted attacks.
+            const isPrimary = !grenadeTargetCell && (
+              (targetEntry && tok.character_id && tok.character_id === targetEntry.character.id) ||
+              (targetNpc && tok.npc_id && tok.npc_id === targetNpc.id) ||
+              (targetObject && tok.id === targetObject.id) ||
+              (tok.grid_x === targetTok.grid_x && tok.grid_y === targetTok.grid_y)
+            )
             const isAttacker = active && ((active.character_id && tok.character_id && tok.character_id === active.character_id) || (active.npc_id && tok.npc_id && tok.npc_id === active.npc_id))
             if (isPrimary || isAttacker) continue
             const dist = Math.max(Math.abs(tok.grid_x - targetTok.grid_x), Math.abs(tok.grid_y - targetTok.grid_y))
@@ -3236,6 +3277,10 @@ export default function TablePage() {
     } as any)
 
     setRolling(false)
+    // Clear the cell target AFTER the damage pass has consumed it — the
+    // next attack (even with the same grenade) starts fresh and the
+    // player has to pick a new cell.
+    setGrenadeTargetCell(null)
     await Promise.all([loadEntries(id), loadRolls(id)])
   }
 
@@ -3362,6 +3407,11 @@ export default function TablePage() {
         void nextTurn()
       }
     }
+    // If the player cancels a grenade throw-to-cell from the modal,
+    // clear the cell target so a retry doesn't auto-roll at the same
+    // coords. executeRoll also clears this on success; this is the
+    // cancel path.
+    setGrenadeTargetCell(null)
     setPendingRoll(null)
     setRollResult(null)
 
@@ -4006,7 +4056,24 @@ export default function TablePage() {
                     ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === w.skill)?.level ?? 0 : 0)
                     : charEntry?.character.data?.skills?.find((s: any) => s.skillName === w.skill)?.level ?? 0
                   const condCmod = weaponData.condition ? (CONDITION_CMOD as any)[weaponData.condition] ?? 0 : 0
-                  handleRollRequest(`${activeEntry.character_name} — Attack (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: condCmod !== -99 ? condCmod : 0, traits: w.traits })
+                  const weaponCtx: WeaponContext = { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: condCmod !== -99 ? condCmod : 0, traits: w.traits }
+                  // Explosive weapons skip the direct target-dropdown flow and
+                  // enter cell-throw mode on the tactical map. Player picks a
+                  // cell within range → we store it in grenadeTargetCell and
+                  // open the roll modal with that cell as the blast center.
+                  if (w.category === 'explosive') {
+                    const rangeFeetMap: Record<string, number> = { Engaged: 5, Close: 30, Medium: 100, Long: 300, Distant: 1000 }
+                    const rangeFeet = rangeFeetMap[w.range] ?? 30
+                    setThrowMode({
+                      attackerCharId: activeEntry.character_id,
+                      attackerNpcId: activeEntry.npc_id,
+                      weapon: weaponCtx,
+                      amod, smod, rangeFeet,
+                      label: `${activeEntry.character_name} — Attack (${w.name})`,
+                    })
+                    return
+                  }
+                  handleRollRequest(`${activeEntry.character_name} — Attack (${w.name})`, amod, smod, weaponCtx)
                 }}
                   style={w ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}
                   disabled={!w}>
@@ -4912,6 +4979,26 @@ export default function TablePage() {
                 }
               }}
               onMoveCancel={() => { pendingChargeRef.current = null; sprintPendingRef.current = false; setMoveMode(null) }}
+              throwMode={throwMode ? { attackerCharId: throwMode.attackerCharId, attackerNpcId: throwMode.attackerNpcId, rangeFeet: throwMode.rangeFeet } : null}
+              onThrowComplete={(gx, gy) => {
+                // Commit the cell target and open the roll modal. We keep
+                // throwMode cleared from here so a second click doesn't
+                // re-fire the handler; the modal now takes over.
+                if (!throwMode) return
+                const tm = throwMode
+                setGrenadeTargetCell({ gx, gy })
+                setThrowMode(null)
+                // Synthetic target name for the log / dropdown: "Cell
+                // (x,y)". executeRoll detects grenadeTargetCell and
+                // applies blast centered on the cell position instead
+                // of a token.
+                handleRollRequest(tm.label, tm.amod, tm.smod, tm.weapon)
+                // Pre-populate the modal target with the synthetic cell
+                // label so the UI shows "Target: Cell (x,y)" instead of
+                // the token dropdown.
+                setTargetName(`Cell (${gx},${gy})`)
+              }}
+              onThrowCancel={() => setThrowMode(null)}
             />
           ) : (
             <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} revealedNpcIds={revealedNpcIds} focusPin={focusPin} />
@@ -5933,14 +6020,19 @@ export default function TablePage() {
                     Select a target or damage will not be applied
                   </div>
                 )}
-                {pendingRoll.weapon && targetName && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand) && (
+                {pendingRoll.weapon && targetName && !grenadeTargetCell && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand) && (
                   <div style={{ padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
                     Out of range
                   </div>
                 )}
+                {grenadeTargetCell && (
+                  <div style={{ padding: '6px 10px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
+                    💥 Throwing at cell ({grenadeTargetCell.gx}, {grenadeTargetCell.gy}) — splash damage will apply
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={closeRollModal} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-                  <button onClick={executeRoll} disabled={rolling || (!!pendingRoll.weapon && !!targetName && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: (rolling || (!!pendingRoll.weapon && !!targetName && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 'not-allowed' : 'pointer', opacity: (rolling || (!!pendingRoll.weapon && !!targetName && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 0.6 : 1 }}>
+                  <button onClick={executeRoll} disabled={rolling || (!!pendingRoll.weapon && !!targetName && !grenadeTargetCell && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: (rolling || (!!pendingRoll.weapon && !!targetName && !grenadeTargetCell && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 'not-allowed' : 'pointer', opacity: (rolling || (!!pendingRoll.weapon && !!targetName && !grenadeTargetCell && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 0.6 : 1 }}>
                     {rolling ? 'Rolling...' : preRollInsight === '3d6' ? '🎲 Roll 3d6' : '🎲 Roll'}
                   </button>
                 </div>

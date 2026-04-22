@@ -63,12 +63,20 @@ interface Props {
   moveMode?: { characterId?: string; npcId?: string; feet: number } | null
   onMoveComplete?: () => void
   onMoveCancel?: () => void
+  // Throw-to-cell mode for grenades / thrown explosives. When set, the
+  // map paints every cell within `rangeFeet` of the attacker orange and
+  // a click on a valid cell calls onThrowComplete(gx, gy). Separate from
+  // moveMode because the cell-click resolves to a blast center, not a
+  // token move, and the range math uses weapon range not movement feet.
+  throwMode?: { attackerCharId: string | null; attackerNpcId: string | null; rangeFeet: number } | null
+  onThrowComplete?: (gx: number, gy: number) => void
+  onThrowCancel?: () => void
   onTokensUpdate?: (tokens: { id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null }[], cellFeet: number) => void
   onTokenChanged?: () => void                               // Notify parent to broadcast token_changed so other clients re-fetch
   onPlayerDragMove?: (characterId: string) => void          // Player finished a valid drag-move; parent consumes 1 action
 }
 
-export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, onTokensUpdate, onTokenChanged, onPlayerDragMove }: Props) {
+export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, throwMode, onThrowComplete, onThrowCancel, onTokensUpdate, onTokenChanged, onPlayerDragMove }: Props) {
   const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -255,7 +263,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
 
   // Redraw on token/scene changes
   // campaignNpcs/entries are in the dep list so HP damage repaints the pips immediately — missing them meant tokens stayed stale until some other dependency (click, zoom, move) forced a redraw.
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, showRangeOverlay, ping, dragging, campaignNpcs, entries])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, showRangeOverlay, ping, dragging, campaignNpcs, entries])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
@@ -411,6 +419,38 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               ctx.fillStyle = 'rgba(127,196,88,0.25)'
               ctx.fillRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
               ctx.strokeStyle = 'rgba(127,196,88,0.5)'
+              ctx.lineWidth = 1
+              ctx.strokeRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
+            }
+          }
+        }
+      }
+    }
+
+    // Throw-to-cell highlight — paint every cell within weapon range of
+    // the attacker token orange so the player can see where they can
+    // place the grenade. Uses Chebyshev distance (same as moveMode) so
+    // diagonal cells count as 1 step, matching how ranges are shown
+    // elsewhere in the engine.
+    if (throwMode) {
+      const ft = s.cell_feet ?? 3
+      const rangeCells = Math.floor(throwMode.rangeFeet / ft)
+      const throwerTok = tokensRef.current.find(t =>
+        (throwMode.attackerCharId && t.character_id === throwMode.attackerCharId) ||
+        (throwMode.attackerNpcId && t.npc_id === throwMode.attackerNpcId)
+      )
+      if (throwerTok) {
+        for (let gx = 0; gx < s.grid_cols; gx++) {
+          for (let gy = 0; gy < s.grid_rows; gy++) {
+            const dist = Math.max(Math.abs(gx - throwerTok.grid_x), Math.abs(gy - throwerTok.grid_y))
+            // Include the thrower's own cell (dist=0) so a player can
+            // drop a grenade at their feet if they really want to. Max
+            // bound: rangeCells. Dropping on self = Engaged = full blast
+            // to self, which is intentionally brutal.
+            if (dist <= rangeCells) {
+              ctx.fillStyle = 'rgba(239,159,39,0.22)'
+              ctx.fillRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
+              ctx.strokeStyle = 'rgba(239,159,39,0.55)'
               ctx.lineWidth = 1
               ctx.strokeRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
             }
@@ -823,6 +863,30 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   }
 
   function handleMouseDown(e: React.MouseEvent) {
+    // Throw-to-cell — click a valid cell to drop the grenade there.
+    // Checked BEFORE moveMode because a GM/player in throwMode never
+    // wants to accidentally fall through to move-click semantics.
+    if (throwMode) {
+      const pos = getGridPos(e)
+      if (pos && scene) {
+        const ft = scene.cell_feet ?? 3
+        const rangeCells = Math.floor(throwMode.rangeFeet / ft)
+        const throwerTok = tokens.find(t =>
+          (throwMode.attackerCharId && t.character_id === throwMode.attackerCharId) ||
+          (throwMode.attackerNpcId && t.npc_id === throwMode.attackerNpcId)
+        )
+        if (throwerTok) {
+          const dist = Math.max(Math.abs(pos.gx - throwerTok.grid_x), Math.abs(pos.gy - throwerTok.grid_y))
+          if (dist <= rangeCells) {
+            onThrowComplete?.(pos.gx, pos.gy)
+            return
+          }
+        }
+      }
+      // Out-of-range click — cancel so the player can retry or back out.
+      onThrowCancel?.()
+      return
+    }
     // Move mode — click a valid cell to move the token there
     if (moveMode) {
       const pos = getGridPos(e)
