@@ -343,17 +343,6 @@ export default function TablePage() {
   const [cmod, setCmod] = useState('0')
   const [rolling, setRolling] = useState(false)
   const [targetName, setTargetName] = useState<string>('')
-  // Communities Phase B — Recruit flow.
-  // `hasCommunities` is a lightweight boolean we load on mount (via a
-  // count() on the communities table). If false, the Recruit button on
-  // NPC cards is hidden — no point offering to recruit into a non-
-  // existent community. `recruitNpc` is the currently-targeted NPC for
-  // recruitment; when non-null, the RecruitmentModal mounts. For Step 1
-  // the modal is a shell — Steps 2-5 flesh it out (approach picker →
-  // skill picker → roll → outcome → INSERT).
-  const [hasCommunities, setHasCommunities] = useState(false)
-  const [recruitNpc, setRecruitNpc] = useState<CampaignNpc | null>(null)
-
   // Grenade / thrown-explosive cell targeting. When the attacker clicks
   // Attack with a weapon of category='explosive', we enter `throwMode`:
   // the TacticalMap paints every cell within weapon range orange, and
@@ -443,7 +432,7 @@ export default function TablePage() {
   const [sessionCount, setSessionCount] = useState(0)
   const [showEndSessionModal, setShowEndSessionModal] = useState(false)
   const [submittedPlayerNotes, setSubmittedPlayerNotes] = useState<{ id: string; user_id: string; title: string | null; content: string; submitted_at: string | null; character_name: string }[]>([])
-  const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | null>(null)
+  const [showSpecialCheck, setShowSpecialCheck] = useState<'group' | 'opposed' | 'perception' | 'gut' | 'first_impression' | 'recruit' | null>(null)
   // First Impression NPC picker: which NPC the check is TARGETED at.
   // Cleared when the modal closes. On roll-time the npcId is copied
   // into firstImpressionTargetRef so executeRoll can write the
@@ -824,16 +813,11 @@ export default function TablePage() {
           return
         }
       }
-      const [,,,, cnpcsResult, pubDataResult, commCountResult] = await Promise.all([
+      const [,,,, cnpcsResult, pubDataResult] = await Promise.all([
         loadEntries(id), loadRolls(id), loadInitiative(id), loadChat(id),
         supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
         supabase.from('world_npcs').select('source_campaign_npc_id').not('source_campaign_npc_id', 'is', null),
-        // HEAD count: cheap way to ask "are there any communities in this
-        // campaign?" without pulling the rows. Used to gate the Recruit
-        // button on NPC cards (Phase B).
-        supabase.from('communities').select('id', { count: 'exact', head: true }).eq('campaign_id', id),
       ])
-      setHasCommunities((commCountResult.count ?? 0) > 0)
       const cnpcs = cnpcsResult.data ?? []
       setCampaignNpcs(cnpcs)
       setRosterNpcs(cnpcs.filter((n: any) => {
@@ -3724,6 +3708,7 @@ export default function TablePage() {
             <option value="perception">Perception</option>
             <option value="gut">Gut Instinct</option>
             <option value="first_impression">First Impression</option>
+            <option value="recruit">Recruit</option>
             <option value="group">Group Check</option>
             <option value="opposed">Opposed Check</option>
           </select>
@@ -5170,7 +5155,6 @@ export default function TablePage() {
                     isPublished={publishedNpcIds.has(npc.id)}
                     onPlaceOnMap={(combatActive || showTacticalMap) ? () => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined}
                     campaignId={id}
-                    onRecruit={hasCommunities ? () => setRecruitNpc(liveNpc) : undefined}
                   />
                 ) : (
                   <PlayerNpcCard key={cardKey}
@@ -5259,8 +5243,7 @@ export default function TablePage() {
                       isPublished={publishedNpcIds.has(npc.id)}
                       onPlaceOnMap={() => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined)}
                       campaignId={id}
-                      onRecruit={hasCommunities ? () => setRecruitNpc(liveNpc) : undefined}
-                    />
+                      />
                   ) : (
                     <PlayerNpcCard
                       npc={liveNpc}
@@ -6848,31 +6831,6 @@ export default function TablePage() {
         </div>
       )}
 
-      {/* Recruitment Modal — Communities Phase B Step 1 shell.
-          Steps 2-5 flesh this out: approach picker → skill picker →
-          CMod preview (with First Impression auto-fill) → roll →
-          outcome → community_members INSERT on Success.
-          For now: opens, names the target, and confirms the connection
-          (hasCommunities + onRecruit wiring work end-to-end). */}
-      {recruitNpc && (
-        <div onClick={() => setRecruitNpc(null)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()}
-            style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '440px' }}>
-            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Recruit</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>{recruitNpc.name}</div>
-            <div style={{ padding: '12px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1rem', lineHeight: 1.4 }}>
-              <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Step 1 shell — under construction</div>
-              The full recruitment flow (approach / skill / roll / outcome) lands in the next commit. This modal proves the Recruit button on the NPC card correctly hands off the target NPC.
-            </div>
-            <button onClick={() => setRecruitNpc(null)}
-              style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Grapple Modal */}
       {showGrappleModal && (() => {
         const active = initiativeOrder.find(e => e.is_active)!
@@ -7518,6 +7476,16 @@ export default function TablePage() {
                 <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Both sides roll until one succeeds and the other fails. Use standard skill rolls for each side.</div>
                 <div style={{ fontSize: '12px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', padding: '1rem' }}>
                   Have each participant roll their relevant skill check normally. Compare outcomes — first to get Success while opponent gets Failure wins.
+                </div>
+              </>
+            )}
+            {showSpecialCheck === 'recruit' && (
+              <>
+                <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Recruitment</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Attempt to recruit an NPC as Cohort, Conscript, or Convert. Uses Barter / Psychology* / Tactics* / Inspiration + First Impression CMod. Wild Success or High Insight unlocks the Apprentice option (1 per PC).</div>
+                <div style={{ padding: '12px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1rem', lineHeight: 1.4 }}>
+                  <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Under construction</div>
+                  Full recruitment flow (NPC picker → community pick/create → approach → skill → roll → outcome → membership insert) lands in the next commit.
                 </div>
               </>
             )}
