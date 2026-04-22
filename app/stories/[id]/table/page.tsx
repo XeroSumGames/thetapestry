@@ -7756,10 +7756,13 @@ export default function TablePage() {
                   )}
                 </div>
 
-                {/* PC roller buttons — disabled until an NPC is chosen */}
+                {/* PC roller buttons — players only see their own PC(s);
+                    GMs can roll for any PC (they orchestrate NPC reactions
+                    and may need to fire a First Impression on a PC's
+                    behalf during an absent player's turn). */}
                 <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Rolling PC</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {entries.map(e => {
+                  {entries.filter(e => isGM || e.userId === userId).map(e => {
                     const ready = !!npcChosen
                     return (
                       <button key={e.character.id}
@@ -7852,13 +7855,16 @@ export default function TablePage() {
               {/* ── STEP PICK ── */}
               {recruitStep === 'pick' && (
                 <>
-                  {/* Roller PC */}
+                  {/* Roller PC — players only see their own PC; GMs
+                      see everyone (they may orchestrate on behalf of
+                      an absent player). Stops Percy from rolling a
+                      First Impression or Recruitment Check *as* Ada. */}
                   <div style={{ marginBottom: '12px' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Rolling PC</div>
                     <select value={recruitRollerId} onChange={e => setRecruitRollerId(e.target.value)}
                       style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
                       <option value="">— pick a PC —</option>
-                      {entries.map(e => (
+                      {entries.filter(e => isGM || e.userId === userId).map(e => (
                         <option key={e.character.id} value={e.character.id}>{e.character.name} (INF {e.character.data?.rapid?.INF ?? 0})</option>
                       ))}
                     </select>
