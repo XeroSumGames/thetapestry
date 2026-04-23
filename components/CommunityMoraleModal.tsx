@@ -634,9 +634,9 @@ export default function CommunityMoraleModal({
               </div>
 
               <div style={{ marginTop: '10px', ...rowFlex }}>
-                <span style={label}>Leader AMod</span>
+                <span style={label} title="The Morale roll uses the leader's Influence AMod (INF attribute value). Leave 0 for NPC leaders whose INF isn't tracked.">Leader Influence AMod</span>
                 <input type="number" value={moraleAmod} onChange={e => setMoraleAmod(parseInt(e.target.value) || 0)} style={numInput} />
-                <span style={label}>Leader SMod</span>
+                <span style={label} title="Leader's SMod in whichever social skill they're using to rally the community. Typical picks: Barter, Inspiration, Manipulation, Psychology*, Tactics*.">Leader SMod (Barter, Inspiration, Manipulation, Psychology*, Tactics*)</span>
                 <input type="number" value={moraleSmod} onChange={e => setMoraleSmod(parseInt(e.target.value) || 0)} style={numInput} />
                 <div style={{ marginLeft: 'auto', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   Pre-roll CMod (no Fed/Clothed yet): <span style={{ color: cmodColor(moraleCmodPreview), fontWeight: 700 }}>{formatCmod(moraleCmodPreview)}</span>
