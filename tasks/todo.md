@@ -26,6 +26,14 @@ When picking this back up:
 
 *Inventory migration removed 2026-04-21 — DB audit confirmed every character's `data.inventory` is already an array. Nothing to migrate.*
 
+## ✅ Shipped 2026-04-23 (Communities Phase D — Activity Blocks + Lv4 + Dashboard)
+- **Lv4 Morale auto-CMods** — leader's Inspiration 4 auto-adds +4 "Beacon of Hope"; leader's Psychology 4 auto-adds +3 "Insightful Counselor". Two purple-accent rows appear in the slot list with CRB-citing tooltips; pre-roll total and result card fold them in. Stored in `modifiers_json`. Everything else in the broader Lv4 Trait system stays on backburner until Xero authors the list.
+- **Skip Week button** — secondary "Skip Week" on the Weekly Check strip advances `week_number` without rolling. Pure clock bump, no consequences; Mood still carries from the last actual check.
+- **Pressgang confirmation** — Conscript approach on the Recruit modal now shows a red "pressure, not persuasion" warning banner at pick stage, plus a blocking confirm() at submit. Cancel returns to pick without burning Insight Dice.
+- **Community Dashboard** — new GM-only route `/stories/[id]/community`. Community picker + Morale history (last 20 weeks) + resource history (last 40 rolls) + current role distribution with SRD-minimum threshold markers + recruitment stats by approach + member-type breakdown. Community ▾ → Dashboard entry links to it.
+- **At-a-Glance block** — inside each expanded community body: Recent Morale trend chips (W/H/S/F/D/L letters, last 5 weeks) + "You" row showing the viewer's role, Apprentice bond, and NPCs they recruited. Visible to everyone; primary view for non-GMs.
+- **Apprentice task delegation** — `community_members.current_task` text column. Apprentice rows render a "Task: <text>" line with GM-edit ✎; no task + GM → "+ Assign task" dashed button. Edit-in-place with Enter/Escape keyboard handling. SQL: `sql/community-members-add-current-task.sql`.
+
 ## ✅ Shipped 2026-04-23 (Communities Phase C — Weekly Morale loop)
 - **Weekly Check modal** — `components/CommunityMoraleModal.tsx`. Single-button rolls Fed → Clothed → Morale in sequence. GM sees per-roll AMod/SMod/CMod inputs + 6 auto-filled Morale slots with override inputs (Mood from prior check's cmod_for_next; Enough Hands / Clear Voice / Safety computed mechanically; Fed + Clothed snap to actual rolled outcomes; Additional freeform). Result stage shows each roll, slot breakdown, departures / dissolution, then "Finalize & Save" commits everything in a single batch (cancel leaves DB untouched).
 - **Community logic extracted** — `lib/community-logic.ts` — pure helpers for CMod slot math, outcome → next-Morale CMod, outcome → departure %, weighted NPC departure picker (Unassigned → Cohort → Convert → Conscript → Founder → Apprentice), roll classification.
@@ -654,14 +662,14 @@ When picking this back up:
 - [x] New SQL migration `sql/community-members-add-morale-75-reason.sql` widens left_reason CHECK to include 'morale_75' for the Low Insight drop
 - [x] Retention Check on 3rd failure (SRD §08 p.22) — fast-acting leader gets an immediate salvage Morale Check using the failed Morale's cmod_for_next as the Mood CMod. Inline on the Result stage: "🙏 Attempt Retention Check" button appears when willDissolve=true, uses the leader's current AMod/SMod + skill pick. Success of any tier saves the community (consecutive_failures drops to 2); failure tiers let dissolution proceed. Custom `retention_check` roll-log card.
 
-### Phase D — Activity Blocks + Level 4 skills + dashboard
-- [ ] End Week button advances `week_number` (per-community, skips the Weekly Check when GM wants to fast-forward)
-- [ ] Inspiration Lv4 "Beacon of Hope" auto-applies +4 CMod to Morale Check when the rolling character has it (CRB-confirmed, unblocked — pairs with the broader Lv4 Trait work deferred below)
-- [ ] Psychology\* Lv4 "Insightful Counselor" auto-applies +3 CMod when the rolling PC is a member of the community (CRB-confirmed, unblocked)
-- [ ] Conscription pressgang confirmation modal ("this is coercion, requires credible threat")
-- [ ] `/stories/[id]/community` full-screen dashboard (GM): morale history graph, role health over time, recruitment success rate, members-by-recruitment-type breakdown
-- [ ] Player-facing read-only Community summary (members count, current morale trend, their recruitment/apprentice bonds)
-- [ ] Apprentice task delegation UI — GM assigns off-screen tasks during Activity Blocks
+### Phase D — Activity Blocks + Level 4 skills + dashboard ✅ 2026-04-23
+- [x] "Skip Week" button on the Weekly Check strip advances `week_number` without rolls (Activity Block off-screen time)
+- [x] Inspiration Lv4 "Beacon of Hope" auto-applies +4 CMod to Morale Check when the leader has it (CRB-confirmed)
+- [x] Psychology\* Lv4 "Insightful Counselor" auto-applies +3 CMod when the leader has it (CRB-confirmed; leader is always a member so tenure gate passes)
+- [x] Conscription pressgang — red warning banner on pick stage + blocking confirm() on submit ("this is coercion, requires credible threat")
+- [x] `/stories/[id]/community` full-screen GM dashboard: Morale history (last 20), resource history (last 40), role distribution with SRD minimum markers, recruitment stats by approach, member breakdown by recruitment_type. Community ▾ → Dashboard links to it.
+- [x] At-a-Glance block inside each expanded community body: Recent Morale trend chips (last 5) + "You" row showing viewer's role, Apprentice, and their recruited NPCs. Visible to everyone.
+- [x] Apprentice task delegation — `community_members.current_task` freeform text, GM-editable inline on apprentice rows. Display: "Task: <text>" with ✎ edit. No task + GM → "+ Assign task" affordance. SQL: `sql/community-members-add-current-task.sql`.
 
 **🔒 Broader Lv4 Skill Traits system — BACKBURNER (Xero 2026-04-23)**
 Every skill gets a Trait at Level 4 but most Traits aren't yet authored. The two above (Inspiration "Beacon of Hope" + Psychology\* "Insightful Counselor") are explicitly written in the CRB and can ship now. **Anything beyond those two is blocked** until Xero produces the full Lv4 Trait list outside this repo (likely target: `lib/lv4-traits.ts` as a data file). When the list lands, revisit: a generic Lv4-Trait-display surface on the character sheet, auto-application for any Lv4 Traits that affect Recruitment / Fed / Clothed / anything outside Morale.

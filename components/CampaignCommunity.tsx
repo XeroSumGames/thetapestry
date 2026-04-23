@@ -38,6 +38,11 @@ interface Member {
   left_at: string | null
   status: 'pending' | 'active' | 'removed'
   invited_by_user_id: string | null
+  // Phase D Apprentice task delegation — freeform "current task" the
+  // GM (eventually also the master PC) can set on an Apprentice NPC.
+  // Null = idle. Column added via sql/community-members-add-current-task.sql;
+  // gracefully absent on older DBs (the UI just won't render it).
+  current_task: string | null
 }
 
 interface NpcOption {
@@ -252,6 +257,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // can override to a specific member id, or '' to leave leaderless.
   const [stepDownCommunityId, setStepDownCommunityId] = useState<string | null>(null)
   const [successorChoice, setSuccessorChoice] = useState<string>('auto')
+
+  // Phase D — Apprentice task delegation. Null = no row in edit mode.
+  // memberId = that apprentice row shows an inline input. Draft holds
+  // the in-progress text; save writes to community_members.current_task.
+  const [editingTaskMemberId, setEditingTaskMemberId] = useState<string | null>(null)
+  const [taskDraft, setTaskDraft] = useState<string>('')
 
   useEffect(() => { load() }, [campaignId])
 
@@ -666,6 +677,33 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         })
       }
     }
+  }
+
+  // Phase D — Apprentice task delegation handlers. GM-only for MVP;
+  // master-PC-edit is a natural extension (gate on member.apprentice_of
+  // matching the viewer's PC). Saving null (empty trimmed draft) clears
+  // the task back to idle.
+  async function handleSaveTask(m: Member) {
+    const trimmed = taskDraft.trim()
+    const value = trimmed === '' ? null : trimmed
+    const { error } = await supabase.from('community_members')
+      .update({ current_task: value })
+      .eq('id', m.id)
+    if (error) { alert(`Task save failed: ${error.message}`); return }
+    setMembers(prev => ({
+      ...prev,
+      [m.community_id]: (prev[m.community_id] ?? []).map(x => x.id === m.id ? { ...x, current_task: value } : x),
+    }))
+    setEditingTaskMemberId(null)
+    setTaskDraft('')
+  }
+  function handleStartEditTask(m: Member) {
+    setEditingTaskMemberId(m.id)
+    setTaskDraft(m.current_task ?? '')
+  }
+  function handleCancelEditTask() {
+    setEditingTaskMemberId(null)
+    setTaskDraft('')
   }
 
   async function handleChangeRole(m: Member, role: Role) {
@@ -1113,17 +1151,57 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     const displayName = m.recruitment_type === 'apprentice' && masterName
                       ? `${rawName} ⇐ ${masterName}`
                       : rawName
+                    const isApprentice = m.recruitment_type === 'apprentice'
+                    const editingTask = editingTaskMemberId === m.id
+                    const taskText = m.current_task?.trim() || ''
                     return (
-                      <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: '#111', border: `1px solid ${accent}`, borderRadius: '2px' }}>
-                        <span style={{ flex: 1, minWidth: 0, fontSize: '15px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {displayName || (m.npc_id ? '(NPC)' : '(PC)')}
-                        </span>
-                        <select value={m.role} onChange={e => handleChangeRole(m, e.target.value as Role)}
-                          style={{ width: '110px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
-                          {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
-                        </select>
-                        <button onClick={() => handleRemoveMember(m)} title="Remove"
-                          style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '16px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>×</button>
+                      <div key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '6px 8px', background: '#111', border: `1px solid ${accent}`, borderRadius: '2px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ flex: 1, minWidth: 0, fontSize: '15px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {displayName || (m.npc_id ? '(NPC)' : '(PC)')}
+                          </span>
+                          <select value={m.role} onChange={e => handleChangeRole(m, e.target.value as Role)}
+                            style={{ width: '110px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                            {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
+                          </select>
+                          <button onClick={() => handleRemoveMember(m)} title="Remove"
+                            style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '16px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>×</button>
+                        </div>
+                        {/* Apprentice task row. Shows for apprentices only.
+                            Display mode: "Task: <text>" inline with pencil
+                            icon (GM). Edit mode: text input + save/cancel.
+                            No task + GM → "+ Assign task" affordance. */}
+                        {isApprentice && (editingTask ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '2px' }}>
+                            <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Task</span>
+                            <input autoFocus value={taskDraft}
+                              placeholder="e.g. Scout the warehouse, deliver the message to Maren"
+                              onChange={e => setTaskDraft(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') handleSaveTask(m)
+                                if (e.key === 'Escape') handleCancelEditTask()
+                              }}
+                              style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #5a2e5a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+                            <button onClick={() => handleSaveTask(m)}
+                              style={{ padding: '4px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>Save</button>
+                            <button onClick={handleCancelEditTask}
+                              style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '15px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>×</button>
+                          </div>
+                        ) : taskText ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '2px' }}>
+                            <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Task</span>
+                            <span style={{ flex: 1, fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', fontStyle: 'italic' }}>{taskText}</span>
+                            {isGM && (
+                              <button onClick={() => handleStartEditTask(m)} title="Edit task"
+                                style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', cursor: 'pointer', padding: '0 4px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✎ edit</button>
+                            )}
+                          </div>
+                        ) : isGM ? (
+                          <button onClick={() => handleStartEditTask(m)}
+                            style={{ alignSelf: 'flex-start', padding: '2px 8px', background: 'transparent', border: '1px dashed #5a2e5a', borderRadius: '2px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            + Assign task
+                          </button>
+                        ) : null)}
                       </div>
                     )
                   }
