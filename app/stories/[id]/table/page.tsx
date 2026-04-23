@@ -5592,7 +5592,7 @@ export default function TablePage() {
           {(combatActive || showTacticalMap || tacticalShared) ? (
             <TacticalMap
               campaignId={id}
-              isGM={isGM}
+              isGM={isGM || isThriver}
               initiativeOrder={initiativeOrder}
               tokenRefreshKey={tokenRefreshKey}
               onTokenChanged={() => { setTokenRefreshKey(k => k + 1); initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} }) }}
@@ -6041,7 +6041,7 @@ export default function TablePage() {
                 ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
                 : initiativeOrder
               const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
-              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}`, `npc-${npc.id}`) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} npcIdsOnMap={mapTokenNpcIds} onNpcDeleted={async (npcId) => {
+              return <NpcRoster campaignId={id} isGM={isGM || isThriver} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}`, `npc-${npc.id}`) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} npcIdsOnMap={mapTokenNpcIds} onNpcDeleted={async (npcId) => {
               // Drop the NPC from every local collection immediately so the
               // initiative bar, roster card overlay, and map token disappear
               // without waiting on a realtime DELETE event.
@@ -7476,7 +7476,7 @@ export default function TablePage() {
                 title="Close">✕</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-              <CampaignCommunity campaignId={id} isGM={isGM} />
+              <CampaignCommunity campaignId={id} isGM={isGM || isThriver} />
             </div>
           </div>
         </div>
