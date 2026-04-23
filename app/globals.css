@@ -124,17 +124,19 @@ textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
 .hdr-btn--active {
   background-color: #242424 !important;
 }
-/* Cascaded children — unfold out from the trigger on hover. Subtler
-   background so the trigger remains the "anchor" and children read as
-   its offshoots. Fade-slide in via the animation. */
+/* Cascaded children — unfold downward from the trigger on hover.
+   Subtler background so the trigger remains the "anchor" and children
+   read as its offshoots. Each child's animation-delay is set inline
+   (0.03s * index) so they drop in rapid sequence instead of all at
+   once — reinforces the cascade feel. */
 .hdr-btn--child {
   background-color: #151515 !important;
-  animation: hdrBtnUnfold 0.15s ease-out both;
+  animation: hdrBtnUnfoldDown 0.18s ease-out both;
 }
 .hdr-btn--child:hover {
   background-color: #242424 !important;
 }
-@keyframes hdrBtnUnfold {
-  from { opacity: 0; transform: translateX(-6px); }
-  to   { opacity: 1; transform: translateX(0); }
+@keyframes hdrBtnUnfoldDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

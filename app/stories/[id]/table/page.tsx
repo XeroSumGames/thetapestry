@@ -4112,20 +4112,28 @@ export default function TablePage() {
       <div data-header-menu={id}
         onMouseEnter={() => setOpenHeaderMenu(id)}
         onMouseLeave={() => setOpenHeaderMenu(prev => prev === id ? null : prev)}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+        style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
         <button onClick={() => setOpenHeaderMenu(prev => prev === id ? null : id)}
           className={`hdr-btn${isOpen ? ' hdr-btn--active' : ''}`}
           style={btnStyle}>
           {label} ▾
         </button>
-        {isOpen && visibleItems.map((it, i) => (
-          <button key={i}
-            onClick={() => { setOpenHeaderMenu(null); it.onClick() }}
-            className="hdr-btn hdr-btn--child"
-            style={{ ...btnStyle, color: it.color ?? btnStyle.color }}>
-            {it.label}
-          </button>
-        ))}
+        {isOpen && (
+          <div style={{
+            position: 'absolute', top: 'calc(100% + 4px)', left: 0,
+            display: 'flex', flexDirection: 'column', gap: '4px',
+            zIndex: 10050,
+          }}>
+            {visibleItems.map((it, i) => (
+              <button key={i}
+                onClick={() => { setOpenHeaderMenu(null); it.onClick() }}
+                className="hdr-btn hdr-btn--child"
+                style={{ ...btnStyle, color: it.color ?? btnStyle.color, animationDelay: `${i * 0.03}s` }}>
+                {it.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     )
   }
