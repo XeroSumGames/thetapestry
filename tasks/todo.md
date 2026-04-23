@@ -655,13 +655,16 @@ When picking this back up:
 - [x] Retention Check on 3rd failure (SRD §08 p.22) — fast-acting leader gets an immediate salvage Morale Check using the failed Morale's cmod_for_next as the Mood CMod. Inline on the Result stage: "🙏 Attempt Retention Check" button appears when willDissolve=true, uses the leader's current AMod/SMod + skill pick. Success of any tier saves the community (consecutive_failures drops to 2); failure tiers let dissolution proceed. Custom `retention_check` roll-log card.
 
 ### Phase D — Activity Blocks + Level 4 skills + dashboard
-- [ ] End Week button advances `week_number` (per-community)
-- [ ] Inspiration Lv4 "Beacon of Hope" auto-applies +4 CMod to Morale Check when the rolling character has it
-- [ ] Psychology* Lv4 "Insightful Counselor" auto-applies +3 CMod when the rolling PC has spent time in the community
+- [ ] End Week button advances `week_number` (per-community, skips the Weekly Check when GM wants to fast-forward)
+- [ ] Inspiration Lv4 "Beacon of Hope" auto-applies +4 CMod to Morale Check when the rolling character has it (CRB-confirmed, unblocked — pairs with the broader Lv4 Trait work deferred below)
+- [ ] Psychology\* Lv4 "Insightful Counselor" auto-applies +3 CMod when the rolling PC is a member of the community (CRB-confirmed, unblocked)
 - [ ] Conscription pressgang confirmation modal ("this is coercion, requires credible threat")
 - [ ] `/stories/[id]/community` full-screen dashboard (GM): morale history graph, role health over time, recruitment success rate, members-by-recruitment-type breakdown
 - [ ] Player-facing read-only Community summary (members count, current morale trend, their recruitment/apprentice bonds)
 - [ ] Apprentice task delegation UI — GM assigns off-screen tasks during Activity Blocks
+
+**🔒 Broader Lv4 Skill Traits system — BACKBURNER (Xero 2026-04-23)**
+Every skill gets a Trait at Level 4 but most Traits aren't yet authored. The two above (Inspiration "Beacon of Hope" + Psychology\* "Insightful Counselor") are explicitly written in the CRB and can ship now. **Anything beyond those two is blocked** until Xero produces the full Lv4 Trait list outside this repo (likely target: `lib/lv4-traits.ts` as a data file). When the list lands, revisit: a generic Lv4-Trait-display surface on the character sheet, auto-application for any Lv4 Traits that affect Recruitment / Fed / Clothed / anything outside Morale.
 
 ### Phase E — The Tapestry (Persistent World) 🚩 flagship differentiator
 Communities become first-class entities in the Distemperverse. Every published community from every table shares one world.
