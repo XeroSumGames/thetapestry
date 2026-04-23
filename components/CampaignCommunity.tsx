@@ -399,6 +399,23 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }))
   }
 
+  // Phase D — "Skip Week" pure clock bump. Advances week_number
+  // without running a Weekly Check. Leaves consecutive_failures and
+  // members untouched — nothing rolled, nothing consequenced. When
+  // the GM runs the Weekly Check next, Mood carries from the prior
+  // check's cmod_for_next (not the skipped weeks). Use for off-screen
+  // time where the fiction doesn't demand mechanical resolution.
+  async function handleSkipWeek(c: Community) {
+    if (c.status === 'dissolved') return
+    const nextWeek = c.week_number + 1
+    if (!confirm(`Skip week ${nextWeek} for ${c.name}? Week counter advances; no rolls, no departures, no Mood change.`)) return
+    const { error } = await supabase.from('communities')
+      .update({ week_number: nextWeek })
+      .eq('id', c.id)
+    if (error) { alert(`Skip week failed: ${error.message}`); return }
+    setCommunities(prev => prev.map(x => x.id === c.id ? { ...x, week_number: nextWeek } : x))
+  }
+
   // Auto-successor picker per spec: next founder → longest-tenured
   // active member. Excludes a member id the caller wants to skip
   // (typically the outgoing leader). Returns null if no viable
@@ -889,6 +906,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         {c.consecutive_failures === 2 && <span style={{ color: '#f5a89a', fontWeight: 600 }}> · one more failure dissolves the community</span>}
                       </div>
                     </div>
+                    <button onClick={() => handleSkipWeek(c)}
+                      title="Advance the community's week counter without rolling. Use for off-screen time — Morale / resource consequences only apply on an actual Weekly Check."
+                      style={{ padding: '8px 14px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      Skip Week
+                    </button>
                     <button onClick={() => setMoraleCommunityId(c.id)}
                       style={{ padding: '8px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                       Run Weekly Check
