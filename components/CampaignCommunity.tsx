@@ -8,7 +8,7 @@ import { createClient } from '../lib/supabase-browser'
 // Recruitment Checks (Phase B) + Morale (Phase C) come later; this is
 // manual management only.
 
-type Role = 'gatherer' | 'maintainer' | 'safety' | 'unassigned'
+type Role = 'gatherer' | 'maintainer' | 'safety' | 'unassigned' | 'assigned'
 type RecruitmentType = 'cohort' | 'conscript' | 'convert' | 'apprentice' | 'founder' | 'member'
 
 interface Community {
@@ -160,6 +160,7 @@ const ROLE_LABEL: Record<Role, string> = {
   maintainer: 'Maintainers',
   safety: 'Safety',
   unassigned: 'Unassigned',
+  assigned: 'Assigned',
 }
 // SRD §08 minimums
 const ROLE_MIN_PCT: Record<Role, number> = {
@@ -167,12 +168,14 @@ const ROLE_MIN_PCT: Record<Role, number> = {
   maintainer: 20,
   safety: 5,
   unassigned: 0,
+  assigned: 0,
 }
 const ROLE_MAX_PCT: Record<Role, number> = {
   gatherer: 100,
   maintainer: 100,
   safety: 10,
   unassigned: 100,
+  assigned: 100,
 }
 const RECRUITMENT_LABEL: Record<RecruitmentType, string> = {
   member: 'Member',
@@ -301,13 +304,16 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       for (const n of (npcsRes.data ?? []) as NpcOption[]) npcById.set(n.id, n)
       const autoUpdates: Array<{ id: string; role: Role }> = []
       for (const memberList of Object.values(byCom)) {
-        const npcMembers = memberList.filter(m => !!m.npc_id)
-        if (npcMembers.length === 0) continue
-        // Current distribution
-        const n = npcMembers.length
+        // Only the labor pool (not 'assigned') participates in
+        // rebalancing. Assigned NPCs are off on PC-directed tasks;
+        // leave them alone.
+        const laborMembers = memberList.filter(m => !!m.npc_id && m.role !== 'assigned')
+        if (laborMembers.length === 0) continue
+        // Current distribution over the LABOR pool
+        const n = laborMembers.length
         const currentCounts = { gatherer: 0, maintainer: 0, safety: 0 } as Record<WorkRole, number>
         let currentUnassigned = 0
-        for (const m of npcMembers) {
+        for (const m of laborMembers) {
           if (m.role === 'unassigned') currentUnassigned++
           else if (m.role in currentCounts) currentCounts[m.role as WorkRole]++
         }
@@ -318,8 +324,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         // Don't rebalance if mins are met AND nothing is unassigned —
         // the current assignment is the GM's deliberate choice.
         if (minOk && currentUnassigned === 0) continue
-        const newAssignment = rebalanceNpcRoles(npcMembers, npcById)
-        for (const m of npcMembers) {
+        const newAssignment = rebalanceNpcRoles(laborMembers, npcById)
+        for (const m of laborMembers) {
           const next = newAssignment.get(m.id) ?? 'unassigned'
           if (next !== m.role) autoUpdates.push({ id: m.id, role: next })
         }
@@ -353,13 +359,14 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // distribution is still off.
   async function handleRebalance(communityId: string) {
     const mems = members[communityId] ?? []
-    const npcMembers = mems.filter(m => !!m.npc_id)
-    if (npcMembers.length === 0) return
+    // Rebalance only the labor pool — assigned NPCs stay put.
+    const laborMembers = mems.filter(m => !!m.npc_id && m.role !== 'assigned')
+    if (laborMembers.length === 0) return
     const npcById = new Map<string, NpcOption>()
     for (const n of npcs) npcById.set(n.id, n)
-    const assignment = rebalanceNpcRoles(npcMembers, npcById)
+    const assignment = rebalanceNpcRoles(laborMembers, npcById)
     const updates: Array<{ id: string; role: Role }> = []
-    for (const m of npcMembers) {
+    for (const m of laborMembers) {
       const next = assignment.get(m.id) ?? 'unassigned'
       if (next !== m.role) updates.push({ id: m.id, role: next })
     }
@@ -542,8 +549,15 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const openCommunity = communities.find(c => c.id === openId) ?? null
   const openMembers = openCommunity ? (members[openCommunity.id] ?? []) : []
   const openMembersByRole = useMemo(() => {
-    const g: Record<Role, Member[]> = { gatherer: [], maintainer: [], safety: [], unassigned: [] }
-    for (const m of openMembers) g[m.role].push(m)
+    const g: Record<Role, Member[]> = { gatherer: [], maintainer: [], safety: [], unassigned: [], assigned: [] }
+    for (const m of openMembers) {
+      // Defensive: if the DB returns an unexpected role (e.g. a
+      // value from a future migration this frontend hasn't seen),
+      // bucket it under 'unassigned' instead of crashing on a
+      // missing key.
+      const bucket = g[m.role] ?? g.unassigned
+      bucket.push(m)
+    }
     return g
   }, [openMembers])
 
@@ -619,18 +633,22 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         const mems = members[c.id] ?? []
         const total = mems.length
         // Role minimums (Gatherers 33% / Maintainers 20% / Safety 5-10%)
-        // apply to the NPC workforce only. PCs are players, not assigned
-        // labor — they get a dropdown if they want to pitch in, but they
-        // don't pull down the community's role percentages when they
-        // sit unassigned.
+        // apply to the NPC LABOR pool only. Exclusions:
+        //   - PCs: they're players, not assigned labor.
+        //   - `assigned` NPCs: off doing a PC-directed task, not
+        //     pulling general role duty. They're still members
+        //     (count toward total) but the denominator for role
+        //     percentages excludes them.
         const npcMems = mems.filter(m => !!m.npc_id)
         const pcMems = mems.filter(m => !!m.character_id)
+        const laborPool = npcMems.filter(m => m.role !== 'assigned')
+        const laborTotal = laborPool.length
         const npcTotal = npcMems.length
         const isCommunity = total >= 13
         const isOpen = openId === c.id
-        const gatherPct = npcTotal > 0 ? Math.round(100 * npcMems.filter(m => m.role === 'gatherer').length / npcTotal) : 0
-        const maintainPct = npcTotal > 0 ? Math.round(100 * npcMems.filter(m => m.role === 'maintainer').length / npcTotal) : 0
-        const safetyPct = npcTotal > 0 ? Math.round(100 * npcMems.filter(m => m.role === 'safety').length / npcTotal) : 0
+        const gatherPct = laborTotal > 0 ? Math.round(100 * laborPool.filter(m => m.role === 'gatherer').length / laborTotal) : 0
+        const maintainPct = laborTotal > 0 ? Math.round(100 * laborPool.filter(m => m.role === 'maintainer').length / laborTotal) : 0
+        const safetyPct = laborTotal > 0 ? Math.round(100 * laborPool.filter(m => m.role === 'safety').length / laborTotal) : 0
         // Founder = the recruitment_type='founder' row (first PC who
         // created the community). There can be multiple founders if
         // several PCs are marked founder; we display the first.
@@ -759,7 +777,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     const pct = r === 'gatherer' ? gatherPct : r === 'maintainer' ? maintainPct : safetyPct
                     const min = ROLE_MIN_PCT[r]
                     const max = ROLE_MAX_PCT[r]
-                    const count = npcMems.filter(m => m.role === r).length
+                    const count = laborPool.filter(m => m.role === r).length
                     const ok = pct >= min && pct <= max
                     return (
                       <div key={r} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif' }}>
@@ -824,15 +842,21 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         </div>
                       )}
 
-                      {/* NPC roster grouped by role */}
-                      {(['gatherer', 'maintainer', 'safety', 'unassigned'] as Role[]).map(r => {
+                      {/* NPC roster grouped by role. Order: labor roles
+                          (Gatherers, Maintainers, Safety), then Assigned
+                          (PC-directed tasks), then Unassigned (idle).
+                          Assigned gets a purple accent so it reads as
+                          distinct from the general workforce. */}
+                      {(['gatherer', 'maintainer', 'safety', 'assigned', 'unassigned'] as Role[]).map(r => {
                         const list = openMembersByRole[r].filter(m => !!m.npc_id)
                         if (list.length === 0) return null
+                        const headerColor = r === 'assigned' ? '#d48bd4' : '#EF9F27'
+                        const rowAccent = r === 'assigned' ? '#5a2e5a' : '#2e2e2e'
                         return (
                           <div key={r}>
-                            <div style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>{ROLE_LABEL[r]} ({list.length})</div>
+                            <div style={{ fontSize: '14px', color: headerColor, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>{ROLE_LABEL[r]} ({list.length})</div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                              {list.map(m => renderRow(m, '#2e2e2e'))}
+                              {list.map(m => renderRow(m, rowAccent))}
                             </div>
                           </div>
                         )
