@@ -2401,14 +2401,18 @@ export default function TablePage() {
     setShowQuickAdd(false)
   }
 
-  async function openRecruitModal() {
+  async function openRecruitModal(preselectedNpcId?: string) {
     // Roller defaults to the current user's PC. GMs get the roller
     // picker because they may be orchestrating on behalf of the player
     // at the table. Player default = their own PC; if they have multiple
     // they pick in the modal (edge case: GM running multiple PCs).
+    //
+    // `preselectedNpcId` lets callers (e.g. the Recruit button on the
+    // player-facing NPC card) open the modal with the target already
+    // picked, skipping the NPC dropdown step.
     const myEntry = entries.find(e => e.userId === userId)
     setRecruitRollerId(myEntry?.character.id ?? '')
-    setRecruitNpcId('')
+    setRecruitNpcId(preselectedNpcId ?? '')
     setRecruitCommunityId('')
     setRecruitNewCommunityName('')
     setRecruitNewCommunityPublic(false)
@@ -5778,6 +5782,8 @@ export default function TablePage() {
                   <PlayerNpcCard key={cardKey}
                     npc={liveNpc}
                     onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
+                    viewingCharacterId={myEntry?.character.id}
+                    onRecruit={sessionStatus === 'active' ? () => openRecruitModal(npc.id) : undefined}
                   />
                 )
               })}
@@ -5866,6 +5872,8 @@ export default function TablePage() {
                     <PlayerNpcCard
                       npc={liveNpc}
                       onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
+                      viewingCharacterId={myEntry?.character.id}
+                      onRecruit={sessionStatus === 'active' ? () => openRecruitModal(npc.id) : undefined}
                     />
                   )}
                 </div>
