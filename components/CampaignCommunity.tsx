@@ -54,7 +54,11 @@ interface PinOption { id: string; name: string }
 //   Tactics / Ranged Combat /
 //   Melee Combat / Heavy Weapons /
 //   Demolitions                      → Safety
-type WorkRole = Exclude<Role, 'unassigned'>
+// WorkRole = the three SRD labor roles only. Explicitly excludes
+// both 'unassigned' (the idle-labor pool) and 'assigned' (PC-
+// directed, not part of the labor pool) — those aren't part of
+// ROLE_SKILLS / quota math.
+type WorkRole = Exclude<Role, 'unassigned' | 'assigned'>
 const ROLE_SKILLS: Record<WorkRole, string[]> = {
   gatherer: ['Farming', 'Scavenging', 'Survival'],
   maintainer: ['Mechanic', 'Tinkerer'],
