@@ -92,7 +92,7 @@ Roll is **2d6 + leader AMod + leader SMod + 6 modifier slots**:
 | **Mood Around The Campfire** | From the previous Morale Check result (see table below). If no prior check: 0. |
 | **Fed** | From the weekly Fed Check (Gatherers). |
 | **Clothed** | From the weekly Clothed Check (Maintainers). |
-| **Enough Hands** | −1 CMod per role group (Gatherers / Maintainers / Safety) below its % minimum, max −3. |
+| **Enough Hands** | **+1** if all three role groups meet their minimums (Gatherers 33%, Maintainers 20%, Safety 5%); else **−1 per group short**, max −3. (Page 23 only states the negative side; page 24 adds the +1 when fully staffed. Implementation combines both.) |
 | **A Clear Voice** | 0 if clear leader; −1 if community is leaderless. |
 | **Someone To Watch Over Me** | −1 if Safety < 5% of community; +1 if Safety ≥ 10%. Otherwise 0. |
 | **Additional CMods** | GM/player Fill-In-The-Gaps for unmodeled events (raids, crises, miracles, etc.). |

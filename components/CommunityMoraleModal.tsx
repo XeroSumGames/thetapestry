@@ -596,7 +596,7 @@ export default function CommunityMoraleModal({
                     style={numInput} />
                 </div>
                 {/* Enough Hands */}
-                <div style={slotRow} title="Mechanical (SRD §08). −1 per role group below its SRD minimum: Gatherers 33% of the NPC labor pool, Maintainers 20%, Safety 5%. Capped at −3. Labor pool excludes PCs and 'Assigned' NPCs.">
+                <div style={slotRow} title="Mechanical (SRD §08 pp. 23–24). +1 when all three role groups are at or above their SRD minimums (Gatherers 33% of the NPC labor pool, Maintainers 20%, Safety 5%). Otherwise −1 per group that's short, capped at −3. Labor pool excludes PCs and 'Assigned' NPCs.">
                   <span style={{ ...label, flex: 1 }}>Enough Hands</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>auto</span>
                   <span style={{ color: cmodColor(autoEnoughHands), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoEnoughHands)}</span>

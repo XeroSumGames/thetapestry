@@ -62,10 +62,16 @@ export function isMoraleFailure(outcome: string): boolean {
   return outcome === 'Failure' || outcome === 'Dire Failure' || outcome === 'Low Insight'
 }
 
-// "Enough Hands" CMod — mechanical, −1 per role group under its SRD
-// minimum, clamped to −3. Labor pool = NPCs with role ≠ 'assigned'
-// (Assigned NPCs are off on PC-directed tasks and don't pull role duty;
-// PCs are players and not part of assigned labor).
+// "Enough Hands" CMod — mechanical, per SRD §08 (pages 23–24).
+// Page 23: "Communities without enough members acting as Gatherers,
+// Maintainers, or Safety suffer a −1 CMod for each group that is short,
+// up to a maximum CMod of −3."
+// Page 24 (Safety section): "If there are enough people in each
+// category, there is a +1 E H CMod on the M C."
+// Combined: +1 when all three minimums met, else −1 per shortage
+// (capped at −3). Labor pool = NPCs with role ≠ 'assigned' (Assigned
+// NPCs are off on PC-directed tasks and don't pull role duty; PCs are
+// players and not part of assigned labor).
 export function computeEnoughHandsCmod(members: CommunityMemberLite[]): number {
   const laborPool = members.filter(m => !!m.npc_id && m.role !== 'assigned')
   const n = laborPool.length
@@ -80,6 +86,8 @@ export function computeEnoughHandsCmod(members: CommunityMemberLite[]): number {
   if (gatherers < gatherMin) cmod -= 1
   if (maintainers < maintainMin) cmod -= 1
   if (safety < safetyMin) cmod -= 1
+  // All three categories at or above minimum → +1 per page 24.
+  if (cmod === 0) return 1
   return Math.max(-3, cmod)
 }
 
