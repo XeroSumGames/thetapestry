@@ -50,7 +50,7 @@ export default function StepEight({ state, onChange }: Props) {
         <div style={{ display: 'flex', gap: '4px', marginBottom: '8px' }}>
           {(['all', 'melee', 'ranged'] as WeaponTab[]).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
-              padding: '5px 12px', fontSize: '12px',
+              padding: '5px 12px', fontSize: '13px',
               border: `1px solid ${tab === t ? '#c0392b' : '#3a3a3a'}`,
               borderRadius: '3px', cursor: 'pointer',
               background: tab === t ? '#c0392b' : '#242424',
@@ -83,17 +83,17 @@ export default function StepEight({ state, onChange }: Props) {
                 }}>
                   {w.cat}
                 </div>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee' }}>{w.name}</div>
-                <div style={{ fontSize: '12px', color: '#d4cfc9', marginTop: '2px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{w.name}</div>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px' }}>
                   {w.range} — {dmg} — RP {'rpPercent' in w ? w.rpPercent : ''}% — ENC {w.enc}
                 </div>
                 {'traits' in w && w.traits.length > 0 && (
-                  <div style={{ fontSize: '12px', color: '#7ab3d4', marginTop: '1px' }}>
+                  <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>
                     {w.traits.map(t => t.name).join(', ')}
                   </div>
                 )}
                 {'clipSize' in w && w.clipSize > 0 && (
-                  <div style={{ fontSize: '12px', color: '#7ab3d4', marginTop: '1px' }}>
+                  <div style={{ fontSize: '13px', color: '#7ab3d4', marginTop: '1px' }}>
                     Clip: {w.clipSize}
                   </div>
                 )}
@@ -105,9 +105,9 @@ export default function StepEight({ state, onChange }: Props) {
         {/* Ammo roll */}
         {current && needsAmmo(current) && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '12px', color: '#f5f2ee', flex: 1 }}>Starting ammo for {current}:</span>
+            <span style={{ fontSize: '13px', color: '#f5f2ee', flex: 1 }}>Starting ammo for {current}:</span>
             <button onClick={rollAmmo} style={{
-              padding: '5px 12px', fontSize: '12px',
+              padding: '5px 12px', fontSize: '13px',
               border: '1px solid #1a3a5c', borderRadius: '3px',
               background: '#0f2035', color: '#7ab3d4', cursor: 'pointer',
               fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.05em', textTransform: 'uppercase',
@@ -118,7 +118,7 @@ export default function StepEight({ state, onChange }: Props) {
               ? <span style={{ fontSize: '13px', fontWeight: 600, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   {ammo} reload{ammo > 1 ? 's' : ''}
                 </span>
-              : <span style={{ fontSize: '12px', color: '#cce0f5' }}>Not yet rolled</span>
+              : <span style={{ fontSize: '13px', color: '#cce0f5' }}>Not yet rolled</span>
             }
           </div>
         )}
@@ -157,8 +157,8 @@ export default function StepEight({ state, onChange }: Props) {
               }}>
                 {item.rarity}
               </div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee' }}>{item.name}</div>
-              <div style={{ fontSize: '12px', color: '#d4cfc9', marginTop: '2px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{item.name}</div>
+              <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px' }}>
                 ENC {item.enc}{item.notes ? ` — ${item.notes}` : ''}
               </div>
             </div>
@@ -175,7 +175,7 @@ export default function StepEight({ state, onChange }: Props) {
             <div key={name} onClick={() => onChange({ incidentalItem: sel ? '' : name })} style={{
               background: sel ? '#2a1210' : '#242424',
               border: `1px solid ${sel ? '#c0392b' : '#2e2e2e'}`,
-              borderRadius: '3px', padding: '6px 7px', fontSize: '12px', cursor: 'pointer',
+              borderRadius: '3px', padding: '6px 7px', fontSize: '13px', cursor: 'pointer',
               textAlign: 'center', color: sel ? '#f5a89a' : '#f5f2ee',
               fontWeight: sel ? 600 : 400, transition: 'all .1s',
             }}>
@@ -185,7 +185,7 @@ export default function StepEight({ state, onChange }: Props) {
         })}
       </div>
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ fontSize: '12px', color: '#f5f2ee', letterSpacing: '.05em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
+        <label style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.05em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
           Enter your own incidental item
         </label>
         <input
@@ -217,8 +217,8 @@ export default function StepEight({ state, onChange }: Props) {
               }}>
                 {item.rarity}
               </div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee' }}>{item.name}</div>
-              <div style={{ fontSize: '12px', color: '#d4cfc9', marginTop: '2px' }}>ENC {item.enc} — {item.notes}</div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee' }}>{item.name}</div>
+              <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px' }}>ENC {item.enc} — {item.notes}</div>
             </div>
           )
         })}
@@ -230,7 +230,7 @@ export default function StepEight({ state, onChange }: Props) {
 
 const sh: React.CSSProperties = {
   fontFamily: 'Barlow Condensed, sans-serif',
-  fontSize: '12px', fontWeight: 600, color: '#f5f2ee',
+  fontSize: '13px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em',
   margin: '1.25rem 0 8px', borderBottom: '1px solid #2e2e2e',
   paddingBottom: '4px',

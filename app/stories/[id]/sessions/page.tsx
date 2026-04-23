@@ -161,16 +161,16 @@ export default function SessionHistoryPage() {
                     <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '15px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
                       Session {s.session_number}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#d4cfc9' }}>
+                    <div style={{ fontSize: '13px', color: '#d4cfc9' }}>
                       {formatDate(s.started_at)} {formatTime(s.started_at)}
                       {s.ended_at && <> — {duration(s.started_at, s.ended_at)}</>}
                     </div>
                   </div>
                   {isActive && (
-                    <span style={{ fontSize: '12px', padding: '1px 5px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', flexShrink: 0 }}>Active</span>
+                    <span style={{ fontSize: '13px', padding: '1px 5px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', flexShrink: 0 }}>Active</span>
                   )}
                   {sessAttachments.length > 0 && (
-                    <span style={{ fontSize: '12px', color: '#cce0f5', flexShrink: 0 }}>📎{sessAttachments.length}</span>
+                    <span style={{ fontSize: '13px', color: '#cce0f5', flexShrink: 0 }}>📎{sessAttachments.length}</span>
                   )}
                 </div>
 
@@ -185,18 +185,18 @@ export default function SessionHistoryPage() {
                 <div style={{ marginTop: 'auto', padding: '0 12px 10px', display: 'flex', gap: '4px' }}>
                   {hasContent && (
                     <button onClick={() => setExpandedId(isExpanded ? null : s.id)}
-                      style={{ flex: 1, padding: '5px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ flex: 1, padding: '5px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       {isExpanded ? 'Collapse' : 'Expand'}
                     </button>
                   )}
                   {isActive && (
                     <button onClick={() => deactivateSession(s.id)} disabled={deactivating === s.id}
-                      style={{ padding: '5px 10px', background: 'none', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: deactivating === s.id ? 'not-allowed' : 'pointer', opacity: deactivating === s.id ? 0.5 : 1 }}>
+                      style={{ padding: '5px 10px', background: 'none', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: deactivating === s.id ? 'not-allowed' : 'pointer', opacity: deactivating === s.id ? 0.5 : 1 }}>
                       {deactivating === s.id ? '...' : 'Deactivate'}
                     </button>
                   )}
                   <button onClick={() => deleteSession(s.id)} disabled={deleting === s.id}
-                    style={{ padding: '5px 10px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: deleting === s.id ? 'not-allowed' : 'pointer', opacity: deleting === s.id ? 0.5 : 1 }}>
+                    style={{ padding: '5px 10px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: deleting === s.id ? 'not-allowed' : 'pointer', opacity: deleting === s.id ? 0.5 : 1 }}>
                     {deleting === s.id ? '...' : 'Delete'}
                   </button>
                 </div>
@@ -206,25 +206,25 @@ export default function SessionHistoryPage() {
                   <div style={{ padding: '0 12px 12px', borderTop: '1px solid #2e2e2e' }}>
                     {s.gm_summary && (
                       <div style={{ marginTop: '10px' }}>
-                        <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>What Happened</div>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>What Happened</div>
                         <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.gm_summary}</div>
                       </div>
                     )}
                     {s.cliffhanger && (
                       <div style={{ marginTop: '10px' }}>
-                        <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>How Did It End?</div>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>How Did It End?</div>
                         <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.cliffhanger}</div>
                       </div>
                     )}
                     {s.next_session_notes && (
                       <div style={{ marginTop: '10px' }}>
-                        <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>Notes for Next Session</div>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>Notes for Next Session</div>
                         <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{s.next_session_notes}</div>
                       </div>
                     )}
                     {sessAttachments.length > 0 && (
                       <div style={{ marginTop: '10px' }}>
-                        <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Attachments</div>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Attachments</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                           {sessAttachments.map(a => (
                             <a key={a.id} href={a.file_url} target="_blank" rel="noreferrer"
@@ -234,7 +234,7 @@ export default function SessionHistoryPage() {
                             >
                               <span>{getFileIcon(a.file_type)}</span>
                               <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.file_name}</span>
-                              <span style={{ fontSize: '12px', color: '#cce0f5', flexShrink: 0 }}>Open ↗</span>
+                              <span style={{ fontSize: '13px', color: '#cce0f5', flexShrink: 0 }}>Open ↗</span>
                             </a>
                           ))}
                         </div>

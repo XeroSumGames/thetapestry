@@ -633,7 +633,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
 
       {/* Community list */}
       {communities.length === 0 && !showCreate && (
-        <div style={{ textAlign: 'center', color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', padding: '2rem 1rem' }}>
+        <div style={{ textAlign: 'center', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', padding: '2rem 1rem' }}>
           No communities yet
         </div>
       )}
@@ -744,7 +744,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       <div style={{ fontSize: '14px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
                         📊 Weekly Check
                       </div>
-                      <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
                         Week {c.week_number + 1} · {c.consecutive_failures}/3 consecutive failures
                         {c.consecutive_failures === 2 && <span style={{ color: '#f5a89a', fontWeight: 600 }}> · one more failure dissolves the community</span>}
                       </div>
@@ -775,7 +775,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                             <span style={{ flex: 1, fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                               {memberLabel(req)}
                             </span>
-                            <span style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                            <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                               {RECRUITMENT_LABEL[req.recruitment_type]}
                             </span>
                             <button onClick={() => handleApproveRequest(req)}
@@ -800,7 +800,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ flex: 1, fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Role Coverage</div>
                   <button onClick={() => handleRebalance(c.id)}
-                    style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+                    style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
                     title="Auto-sort NPCs by skill to hit SRD minimums">
                     ⚖ Re-balance Roles
                   </button>

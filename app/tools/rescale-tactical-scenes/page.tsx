@@ -131,7 +131,7 @@ export default function RescaleTacticalScenesPage() {
             <tr key={r.id} style={{ borderBottom: '1px solid #2e2e2e' }}>
               <td style={{ padding: '6px 8px' }}>
                 <div style={{ fontWeight: 600 }}>{r.name}</div>
-                <div style={{ fontSize: '12px', color: '#5a5550' }}>{r.campaign_id.slice(0, 8)}…</div>
+                <div style={{ fontSize: '13px', color: '#5a5550' }}>{r.campaign_id.slice(0, 8)}…</div>
               </td>
               <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>{r.natural_w ?? '—'}</td>
               <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>{r.img_scale.toFixed(3)}</td>
@@ -142,7 +142,7 @@ export default function RescaleTacticalScenesPage() {
               <td style={{ padding: '6px 8px' }}>
                 {r.status === 'ready' && (
                   <button onClick={() => rescaleOne(r)}
-                    style={{ padding: '3px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ padding: '3px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Rescale
                   </button>
                 )}

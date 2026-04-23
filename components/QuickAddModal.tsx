@@ -449,7 +449,7 @@ export default function QuickAddModal({
                 <input type="file" multiple onChange={e => { if (e.target.files) setPinAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />
               </label>
               {pinAttachments.length > 0 && (
-                <div style={{ marginTop: '4px', fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
+                <div style={{ marginTop: '4px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
                   {pinAttachments.map((f, i) => <div key={i}>{f.name}</div>)}
                 </div>
               )}
@@ -465,7 +465,7 @@ export default function QuickAddModal({
                   <span style={{ display: 'block', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>
                     Make this pin public
                   </span>
-                  <span style={{ display: 'block', marginTop: '2px', fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', lineHeight: 1.3 }}>
+                  <span style={{ display: 'block', marginTop: '2px', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', lineHeight: 1.3 }}>
                     {userRole === 'thriver'
                       ? 'Auto-approved for Thrivers. Visible to all players as a Rumor.'
                       : 'Goes to the Thriver queue. If approved, becomes a Rumor visible to all players.'}
@@ -525,7 +525,7 @@ export default function QuickAddModal({
                   </div>
 
                   {!myPcId && userId && (
-                    <div style={{ marginBottom: '10px', padding: '8px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', fontSize: '12px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', lineHeight: 1.4 }}>
+                    <div style={{ marginBottom: '10px', padding: '8px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', lineHeight: 1.4 }}>
                       You need a PC assigned to this campaign before you can join a community. Ask the GM to invite you with a character.
                     </div>
                   )}
@@ -540,7 +540,7 @@ export default function QuickAddModal({
                     </div>
                   )}
                   {commJoinError && (
-                    <div style={{ marginTop: '8px', padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '12px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                    <div style={{ marginTop: '8px', padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
                       {commJoinError}
                     </div>
                   )}
@@ -591,7 +591,7 @@ export default function QuickAddModal({
                   })()}
                 </select>
                 {pinList.length === 0 && (
-                  <div style={{ marginTop: '4px', fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>Drop a pin on the left first to tie a homestead to it. Tag it as <strong style={{ color: '#7ab3d4' }}>🏡 Homestead</strong> for easy selection.</div>
+                  <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>Drop a pin on the left first to tie a homestead to it. Tag it as <strong style={{ color: '#7ab3d4' }}>🏡 Homestead</strong> for easy selection.</div>
                 )}
               </div>
 
@@ -607,7 +607,7 @@ export default function QuickAddModal({
                   <input type="file" multiple onChange={e => { if (e.target.files) setCommAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />
                 </label>
                 {commAttachments.length > 0 && (
-                  <div style={{ marginTop: '4px', fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
+                  <div style={{ marginTop: '4px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
                     {commAttachments.map((f, i) => <div key={i}>{f.name}</div>)}
                   </div>
                 )}

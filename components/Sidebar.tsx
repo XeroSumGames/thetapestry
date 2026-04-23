@@ -108,7 +108,7 @@ export default function Sidebar() {
     e.currentTarget.style.background = on ? '#242424' : 'transparent'
   }
 
-  const soonSuffix = <span style={{ fontSize: '12px', color: '#cce0f5' }}>&mdash; soon</span>
+  const soonSuffix = <span style={{ fontSize: '13px', color: '#cce0f5' }}>&mdash; soon</span>
 
   return (
     <div style={{ width: '220px', flexShrink: 0, background: '#1a1a1a', borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
@@ -117,7 +117,7 @@ export default function Sidebar() {
       <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid #c0392b', textAlign: 'center' }}>
         <a href="/dashboard" style={{ textDecoration: 'none' }}>
           <img src="/DistemperLogoRedv5.png" alt="Distemper" style={{ height: '28px', objectFit: 'contain', marginBottom: '4px' }} />
-          <div style={{ fontFamily: 'Distemper, sans-serif', fontSize: '18px', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1 }}>The Tapestry <span style={{ fontSize: '12px', color: '#f5f2ee' }}>v1.0</span></div>
+          <div style={{ fontFamily: 'Distemper, sans-serif', fontSize: '18px', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1 }}>The Tapestry <span style={{ fontSize: '13px', color: '#f5f2ee' }}>v1.0</span></div>
         </a>
         {onlineCount > 0 && (
           <div style={{ fontSize: '14px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: '4px' }}>

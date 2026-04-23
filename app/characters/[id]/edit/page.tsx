@@ -131,7 +131,7 @@ export default function EditCharacterPage() {
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Edit Character
         </div>
-        <div style={{ fontSize: '12px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
+        <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
           {characterName}
         </div>
       </div>
@@ -143,7 +143,7 @@ export default function EditCharacterPage() {
         ))}
       </div>
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1.25rem', marginBottom: '1rem', borderLeft: '3px solid #c0392b' }}>
-        <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px' }}>Step {step} of 4</div>
+        <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px' }}>Step {step} of 4</div>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '26px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '8px', color: '#f5f2ee' }}>{STEPS[step].title}</div>
       </div>
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1.25rem', marginBottom: '1rem' }}>
@@ -156,9 +156,9 @@ export default function EditCharacterPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #2e2e2e' }}>
         <button onClick={() => { setStep(s => Math.max(0, s - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }} disabled={step === 0} style={navBtn(false)}>Back</button>
         <div style={{ textAlign: 'center' }}>
-          {saveError && <div style={{ fontSize: '12px', color: '#f5a89a', marginBottom: '2px' }}>{saveError}</div>}
-          {saved && <div style={{ fontSize: '12px', color: '#7fc458', marginBottom: '2px' }}>Saved!</div>}
-          <div style={{ fontSize: '12px', color: '#d4cfc9', letterSpacing: '.05em', textTransform: 'uppercase' }}>Step {step} of 4</div>
+          {saveError && <div style={{ fontSize: '13px', color: '#f5a89a', marginBottom: '2px' }}>{saveError}</div>}
+          {saved && <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '2px' }}>Saved!</div>}
+          <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.05em', textTransform: 'uppercase' }}>Step {step} of 4</div>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {step === 4 && <button onClick={handlePrint} style={{ ...navBtn(false), borderColor: '#2d5a1b', color: '#7fc458' }}>Print</button>}

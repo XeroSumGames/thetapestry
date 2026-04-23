@@ -30,7 +30,7 @@ function actionBtn(borderColor: string, color: string): React.CSSProperties {
   return {
     padding: '6px 14px', background: 'none',
     border: `1px solid ${borderColor}`, borderRadius: '3px',
-    color, fontSize: '12px', cursor: 'pointer',
+    color, fontSize: '13px', cursor: 'pointer',
     fontFamily: 'Barlow Condensed, sans-serif',
     letterSpacing: '.04em', textTransform: 'uppercase',
   }
@@ -39,7 +39,7 @@ function actionBtn(borderColor: string, color: string): React.CSSProperties {
 const navLink: React.CSSProperties = {
   padding: '5px 12px', background: '#242424',
   border: '1px solid #3a3a3a', borderRadius: '3px',
-  color: '#f5f2ee', fontSize: '12px',
+  color: '#f5f2ee', fontSize: '13px',
   fontFamily: 'Barlow Condensed, sans-serif',
   letterSpacing: '.06em', textTransform: 'uppercase',
   textDecoration: 'none',
@@ -187,7 +187,7 @@ export default function ModerationPage() {
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Moderation
         </div>
-        <div style={{ fontSize: '12px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase' }}>
           Thriver Console
         </div>
         <div style={{ flex: 1 }} />
@@ -203,7 +203,7 @@ export default function ModerationPage() {
             background: section === s ? '#2a1210' : '#242424',
             color: section === s ? '#f5a89a' : '#d4cfc9',
             borderRadius: '3px', cursor: 'pointer',
-            fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif',
+            fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
             letterSpacing: '.06em', textTransform: 'uppercase',
           }}>
             {s === 'rumors' ? 'Rumor Queue' : s === 'users' ? 'Users' : 'NPCs'}
@@ -222,7 +222,7 @@ export default function ModerationPage() {
                 background: filter === f ? '#2a1210' : '#242424',
                 color: filter === f ? '#f5a89a' : '#d4cfc9',
                 borderRadius: '3px', cursor: 'pointer',
-                fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif',
+                fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
                 letterSpacing: '.06em', textTransform: 'uppercase',
               }}>
                 {f}
@@ -246,11 +246,11 @@ export default function ModerationPage() {
                     <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                       {p.title}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#cce0f5', marginTop: '2px' }}>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>
                       Submitted by {p.profiles?.username ?? 'unknown'} &mdash; {formatDate(p.created_at)}
                     </div>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'monospace' }}>
                     {p.lat.toFixed(4)}, {p.lng.toFixed(4)}
                   </div>
                 </div>
@@ -264,7 +264,7 @@ export default function ModerationPage() {
                 {p.attachments && p.attachments.length > 0 && (
                   <div style={{ marginBottom: '8px' }}>
                     {p.attachments.map((name: string) => (
-                      <div key={name} style={{ fontSize: '12px', color: '#7ab3d4', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '3px' }}>
+                      <div key={name} style={{ fontSize: '13px', color: '#7ab3d4', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '3px' }}>
                         <span style={{ opacity: 0.7 }}>📎</span>
                         <span>Uploaded file: {name}</span>
                       </div>
@@ -300,11 +300,11 @@ export default function ModerationPage() {
       {/* ── USERS ── */}
       {section === 'users' && (
         <>
-          <div style={{ fontSize: '12px', color: '#cce0f5', marginBottom: '1rem', letterSpacing: '.04em', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', letterSpacing: '.04em', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span>{users.length} registered user{users.length !== 1 ? 's' : ''}</span>
             {users.length > 0 && (
               <a href={`mailto:?bcc=${users.map(u => u.email).filter(Boolean).join(',')}`}
-                style={{ padding: '3px 10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer' }}>
+                style={{ padding: '3px 10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer' }}>
                 Email All Users
               </a>
             )}
@@ -324,7 +324,7 @@ export default function ModerationPage() {
                   <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em' }}>
                     {u.username}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#cce0f5', marginTop: '2px' }}>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>
                     {u.email && <span style={{ color: '#d4cfc9', marginRight: '8px' }}>{u.email}</span>}
                     Joined {formatDate(u.created_at)}
                   </div>
@@ -332,12 +332,12 @@ export default function ModerationPage() {
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   {u.suspended && (
-                    <span style={{ fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px', background: '#2a1a00', color: '#EF9F27', border: '1px solid #EF9F27' }}>
+                    <span style={{ fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px', background: '#2a1a00', color: '#EF9F27', border: '1px solid #EF9F27' }}>
                       Suspended
                     </span>
                   )}
                   <span style={{
-                    fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif',
+                    fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
                     letterSpacing: '.08em', textTransform: 'uppercase',
                     padding: '3px 8px', borderRadius: '2px',
                     background: u.role?.toLowerCase() === 'thriver' ? '#2a1210' : '#1a1a2e',
@@ -375,7 +375,7 @@ export default function ModerationPage() {
       {/* World NPCs moderation */}
       {section === 'npcs' && (
         <>
-          <div style={{ fontSize: '12px', color: '#cce0f5', marginBottom: '1rem' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem' }}>
             {npcsLoading ? 'Loading...' : `${worldNpcs.length} pending NPC${worldNpcs.length !== 1 ? 's' : ''}`}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -383,23 +383,23 @@ export default function ModerationPage() {
               <div key={npc.id} style={{ padding: '12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                   <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                    {npc.portrait_url ? <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '12px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>}
+                    {npc.portrait_url ? <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
-                    <div style={{ fontSize: '12px', color: '#cce0f5' }}>
+                    <div style={{ fontSize: '13px', color: '#cce0f5' }}>
                       by {(npc.profiles as any)?.username ?? 'Unknown'} &middot; {formatDate(npc.created_at)}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-                    {npc.npc_type && <span style={{ fontSize: '12px', padding: '1px 5px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
-                    {npc.setting && <span style={{ fontSize: '12px', padding: '1px 5px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.setting === 'district_zero' ? 'District Zero' : npc.setting === 'chased' ? 'Chased' : 'Custom'}</span>}
+                    {npc.npc_type && <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
+                    {npc.setting && <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.setting === 'district_zero' ? 'District Zero' : npc.setting === 'chased' ? 'Chased' : 'Custom'}</span>}
                   </div>
                 </div>
                 {npc.public_description && (
-                  <div style={{ fontSize: '12px', color: '#d4cfc9', marginBottom: '8px', lineHeight: 1.5 }}>{npc.public_description}</div>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '8px', lineHeight: 1.5 }}>{npc.public_description}</div>
                 )}
-                <div style={{ display: 'flex', gap: '6px', fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', gap: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>
                   {['RSN', 'ACU', 'PHY', 'INF', 'DEX'].map((attr, i) => {
                     const vals = [npc.reason, npc.acumen, npc.physicality, npc.influence, npc.dexterity]
                     return <span key={attr}>{attr} {vals[i] > 0 ? `+${vals[i]}` : vals[i]}</span>

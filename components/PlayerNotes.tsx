@@ -135,7 +135,7 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title (optional)" style={inp} />
           <textarea value={content} onChange={e => setContent(e.target.value)} placeholder="Your notes for this session..." rows={6} style={{ ...inp, resize: 'vertical' }} />
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: submitOnSave ? '#7fc458' : '#7ab3d4', cursor: 'pointer', padding: '4px 2px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: submitOnSave ? '#7fc458' : '#7ab3d4', cursor: 'pointer', padding: '4px 2px' }}>
             <input type="checkbox" checked={submitOnSave} onChange={e => setSubmitOnSave(e.target.checked)}
               style={{ width: '14px', height: '14px', accentColor: '#7fc458', cursor: 'pointer' }} />
             Append to GM's session summary
@@ -149,16 +149,16 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
 
       {sharedNotes.length > 0 && (
         <>
-          <div style={{ fontSize: '12px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '4px 0' }}>GM Handouts</div>
+          <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '4px 0' }}>GM Handouts</div>
           {sharedNotes.map(n => (
             <div key={`shared-${n.id}`} style={{ background: '#1a1a1a', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
               <div onClick={() => toggle(`shared-${n.id}`)}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', cursor: 'pointer' }}>
                 <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {n.title}
-                  {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '12px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
+                  {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '13px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
                 </span>
-                <span style={{ fontSize: '12px', color: '#5a5550' }}>{expanded.has(`shared-${n.id}`) ? '▲' : '▼'}</span>
+                <span style={{ fontSize: '13px', color: '#5a5550' }}>{expanded.has(`shared-${n.id}`) ? '▲' : '▼'}</span>
               </div>
               {expanded.has(`shared-${n.id}`) && (
                 <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
@@ -169,7 +169,7 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
                     <NoteAttachmentsView attachments={n.attachments} />
                   )}
                   <button onClick={() => openPopout(`/handout?id=${n.id}`, `handout-${n.id}`, { w: 800, h: 700 })}
-                    style={{ marginTop: '6px', padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ marginTop: '6px', padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Popout
                   </button>
                 </div>
@@ -181,7 +181,7 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
       )}
 
       {notes.length === 0 && sharedNotes.length === 0 && !showAdd && (
-        <div style={{ color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', padding: '2rem' }}>
+        <div style={{ color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', padding: '2rem' }}>
           No notes yet
         </div>
       )}
@@ -191,9 +191,9 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', cursor: 'pointer' }}>
             <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {n.title || n.content.slice(0, 40) + (n.content.length > 40 ? '…' : '')}
-              {n.submitted_to_summary && <span style={{ marginLeft: '6px', fontSize: '12px', color: '#7fc458' }}>✓ SUBMITTED</span>}
+              {n.submitted_to_summary && <span style={{ marginLeft: '6px', fontSize: '13px', color: '#7fc458' }}>✓ SUBMITTED</span>}
             </span>
-            <span style={{ fontSize: '12px', color: '#5a5550' }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
+            <span style={{ fontSize: '13px', color: '#5a5550' }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
           </div>
           {expanded.has(n.id) && (
             <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
@@ -202,11 +202,11 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
               </pre>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button onClick={() => toggleSubmit(n)}
-                  style={{ padding: '4px 10px', background: n.submitted_to_summary ? '#1a2e10' : 'transparent', border: `1px solid ${n.submitted_to_summary ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.submitted_to_summary ? '#7fc458' : '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '4px 10px', background: n.submitted_to_summary ? '#1a2e10' : 'transparent', border: `1px solid ${n.submitted_to_summary ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.submitted_to_summary ? '#7fc458' : '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {n.submitted_to_summary ? '✓ In Session Summary' : '+ Add to Session Summary'}
                 </button>
                 <button onClick={() => handleDelete(n)}
-                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Delete
                 </button>
               </div>

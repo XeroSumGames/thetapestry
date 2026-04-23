@@ -11,7 +11,7 @@ const MAP_STYLES = [
   ['positron', 'Positron'], ['dark', 'Dark'],
 ]
 
-const lbl: React.CSSProperties = { display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Barlow Condensed, sans-serif' }
+const lbl: React.CSSProperties = { display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Barlow Condensed, sans-serif' }
 const inp: React.CSSProperties = { width: '100%', padding: '10px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box' }
 
 export default function EditCampaignPage() {
@@ -101,7 +101,7 @@ export default function EditCampaignPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
             {MAP_STYLES.map(([val, label]) => (
               <button key={val} type="button" onClick={() => setMapStyle(val)}
-                style={{ padding: '6px 4px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapStyle === val ? '#c0392b' : '#3a3a3a'}`, background: mapStyle === val ? '#2a1210' : '#242424', color: mapStyle === val ? '#f5a89a' : '#d4cfc9' }}>
+                style={{ padding: '6px 4px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapStyle === val ? '#c0392b' : '#3a3a3a'}`, background: mapStyle === val ? '#2a1210' : '#242424', color: mapStyle === val ? '#f5a89a' : '#d4cfc9' }}>
                 {label}
               </button>
             ))}
@@ -143,17 +143,17 @@ export default function EditCampaignPage() {
           </div>
           {mapCenter && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
-              <span style={{ fontSize: '12px', color: '#7fc458', fontFamily: 'monospace' }}>
+              <span style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'monospace' }}>
                 {mapCenter.lat.toFixed(4)}, {mapCenter.lng.toFixed(4)}
               </span>
               <button type="button" onClick={() => { setMapCenter(null); setLocationQuery('') }}
-                style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', textTransform: 'uppercase' }}>
+                style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', textTransform: 'uppercase' }}>
                 Clear
               </button>
             </div>
           )}
           {!mapCenter && (
-            <div style={{ fontSize: '12px', color: '#5a5550', marginTop: '4px' }}>No custom center — map uses default view</div>
+            <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px' }}>No custom center — map uses default view</div>
           )}
         </div>
 
@@ -182,7 +182,7 @@ export default function EditCampaignPage() {
         {/* Sync to Seed — Thriver only, non-custom settings */}
         {isThriver && setting && setting !== 'custom' && (
           <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #2e2e2e' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#EF9F27', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Seed Management</div>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#EF9F27', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Seed Management</div>
             <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '10px', lineHeight: 1.5 }}>
               Update the seed data for <strong style={{ color: '#f5f2ee' }}>{SETTINGS[setting] ?? setting}</strong> using this campaign's NPCs, pins, scenes, and handouts. All future campaigns using this setting will start with this data.
             </div>

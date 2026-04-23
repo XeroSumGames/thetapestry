@@ -68,23 +68,23 @@ export default function UserCharactersPage() {
     <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
-        <a href="/moderate" style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', marginTop: '4px' }}>
+        <a href="/moderate" style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', marginTop: '4px' }}>
           Back
         </a>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
             {username}&apos;s Characters
           </div>
-          <div style={{ fontSize: '12px', color: '#cce0f5', marginBottom: '2px' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '2px' }}>
             {email}{joinDate && <> &middot; Joined {new Date(joinDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</>}
           </div>
-          <div style={{ fontSize: '12px', color: '#cce0f5' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5' }}>
             {characters.length} character{characters.length !== 1 ? 's' : ''}
           </div>
         </div>
         {characters.length > 0 && (
           <button onClick={handleDeleteAll} disabled={deletingAll}
-            style={{ padding: '5px 12px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '4px', opacity: deletingAll ? 0.5 : 1 }}>
+            style={{ padding: '5px 12px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '4px', opacity: deletingAll ? 0.5 : 1 }}>
             {deletingAll ? 'Deleting...' : 'Delete All Characters'}
           </button>
         )}

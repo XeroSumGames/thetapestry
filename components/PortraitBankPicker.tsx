@@ -38,7 +38,7 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
       <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '700px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <div style={{ fontFamily: '"Barlow Condensed", sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c0392b' }}>Portrait Bank</div>
-          <button onClick={onClose} style={{ background: 'transparent', border: '1px solid #3a3a3a', color: '#d4cfc9', padding: '4px 10px', fontSize: '12px', fontFamily: '"Barlow Condensed", sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px' }}>Close</button>
+          <button onClick={onClose} style={{ background: 'transparent', border: '1px solid #3a3a3a', color: '#d4cfc9', padding: '4px 10px', fontSize: '13px', fontFamily: '"Barlow Condensed", sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px' }}>Close</button>
         </div>
 
         {/* Filter tabs */}
@@ -70,7 +70,7 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
           ) : portraits.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#5a5550', fontFamily: '"Barlow Condensed", sans-serif', fontSize: '13px' }}>
               No portraits in the bank yet.<br />
-              <span style={{ fontSize: '12px' }}>Thrivers can add portraits via the Resize Portraits tool.</span>
+              <span style={{ fontSize: '13px' }}>Thrivers can add portraits via the Resize Portraits tool.</span>
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))', gap: '8px' }}>

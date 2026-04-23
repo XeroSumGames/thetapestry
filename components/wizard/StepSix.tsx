@@ -24,7 +24,7 @@ export default function StepSix({ state, onChange }: Props) {
 
       {/* Complication */}
       <div style={sh}>Complication</div>
-      <p style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px' }}>
+      <p style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px' }}>
         A narrative tool for roleplay and character definition. Roll or pick one.
       </p>
       <button
@@ -39,7 +39,7 @@ export default function StepSix({ state, onChange }: Props) {
             style={{
               background: stepData.complication === c ? '#2a1210' : '#242424',
               border: `1px solid ${stepData.complication === c ? '#c0392b' : '#2e2e2e'}`,
-              borderRadius: '3px', padding: '6px 7px', fontSize: '12px', cursor: 'pointer',
+              borderRadius: '3px', padding: '6px 7px', fontSize: '13px', cursor: 'pointer',
               textAlign: 'center', color: stepData.complication === c ? '#f5a89a' : '#f5f2ee',
               fontWeight: stepData.complication === c ? 600 : 400,
               transition: 'all .1s',
@@ -51,7 +51,7 @@ export default function StepSix({ state, onChange }: Props) {
 
       {/* Motivation */}
       <div style={sh}>Motivation</div>
-      <p style={{ fontSize: '12px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px' }}>
+      <p style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px' }}>
         What gets them out of bed. Roll or pick one.
       </p>
       <button
@@ -66,7 +66,7 @@ export default function StepSix({ state, onChange }: Props) {
             style={{
               background: stepData.motivation === m ? '#2a1210' : '#242424',
               border: `1px solid ${stepData.motivation === m ? '#c0392b' : '#2e2e2e'}`,
-              borderRadius: '3px', padding: '6px 7px', fontSize: '12px', cursor: 'pointer',
+              borderRadius: '3px', padding: '6px 7px', fontSize: '13px', cursor: 'pointer',
               textAlign: 'center', color: stepData.motivation === m ? '#f5a89a' : '#f5f2ee',
               fontWeight: stepData.motivation === m ? 600 : 400,
               transition: 'all .1s',
@@ -82,7 +82,7 @@ export default function StepSix({ state, onChange }: Props) {
 
 const sh: React.CSSProperties = {
   fontFamily: 'Barlow Condensed, sans-serif',
-  fontSize: '12px', fontWeight: 600, color: '#f5f2ee',
+  fontSize: '13px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em',
   margin: '1.25rem 0 8px', borderBottom: '1px solid #2e2e2e',
   paddingBottom: '4px',

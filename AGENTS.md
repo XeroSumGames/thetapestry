@@ -6,6 +6,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## UI conventions
 
-- **Minimum inline fontSize is 12px.** Never write `fontSize: '9px'`, `'10px'`, or `'11px'` in `style={{ ... }}` props — even for badges, chips, or micro-labels. If something looks too big at 12, use color/weight/layout instead. Guardrail: `node scripts/check-font-sizes.mjs` reports offenders; `--fix` rewrites them to 12.
-- **Banned combo: `fontSize: '12px'` + `color: '#3a3a3a'`.** That pairing is illegible on dark backgrounds. Use `fontSize: '13px'` + `color: '#cce0f5'` instead. The font-size guardrail script flags the combo (no auto-fix — the right replacement color can vary by context, but default to `#cce0f5`).
+- **Minimum inline fontSize is 13px.** (Raised from 12 → 13 on 2026-04-23.) Never write `fontSize: '9px'` through `'12px'` in `style={{ ... }}` props — even for badges, chips, or micro-labels. If something looks too big at 13, use color/weight/layout instead. Guardrail: `node scripts/check-font-sizes.mjs` reports offenders; `--fix` rewrites them to 13.
+- **Banned combo: `fontSize: '13px'` + `color: '#3a3a3a'`.** That pairing is illegible on dark backgrounds. Use `color: '#cce0f5'` instead. The font-size guardrail script flags the combo (no auto-fix — the right replacement color can vary by context, but default to `#cce0f5`).
 - **Popout routes never show the global sidebar.** `LayoutShell.tsx`'s `FULL_WIDTH_PATTERN` auto-hides the sidebar for any pathname ending in `-sheet` or `-popout`, or under `/popout/...`. Name new popout routes accordingly (e.g. `/foo-sheet`, `/foo-popout`) and they'll be sidebar-free with no further edits.

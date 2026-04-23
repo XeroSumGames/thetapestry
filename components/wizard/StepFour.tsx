@@ -112,7 +112,7 @@ export default function StepFour({ state, onChange }: Props) {
                 {gained.length ? gained.join(', ') : 'none'}
               </span>
             </div>
-            {d.note && <div style={{ fontSize: '12px', color: '#d4cfc9', marginTop: '5px', lineHeight: 1.5, fontStyle: 'italic' }}>"{d.note}"</div>}
+            {d.note && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '5px', lineHeight: 1.5, fontStyle: 'italic' }}>"{d.note}"</div>}
           </div>
         )
       })}
@@ -133,7 +133,7 @@ export default function StepFour({ state, onChange }: Props) {
       {/* Skill picker — 4 CDP */}
       <div style={sh}>Skills — 4 CDP (max Professional +3)</div>
       {profSkills.length > 0 && (
-        <p style={{ fontSize: '12px', color: '#d4cfc9', marginBottom: '6px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '6px', lineHeight: 1.6 }}>
           Profession skills highlighted: {profSkills.join(', ')}
         </p>
       )}
@@ -143,7 +143,7 @@ export default function StepFour({ state, onChange }: Props) {
             <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', border: `1px solid ${i < skillCDPSpent ? '#c0392b' : '#3a3a3a'}`, background: i < skillCDPSpent ? '#c0392b' : '#0f0f0f' }} />
           ))}
         </div>
-        <span style={{ fontSize: '12px', color: '#f5f2ee', flex: 1 }}>Skill CDP</span>
+        <span style={{ fontSize: '13px', color: '#f5f2ee', flex: 1 }}>Skill CDP</span>
         <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '36px', textAlign: 'right', color: skillCDPSpent >= 4 ? '#f5a89a' : '#f5f2ee' }}>
           {4 - skillCDPSpent} left
         </span>
@@ -179,7 +179,7 @@ export default function StepFour({ state, onChange }: Props) {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
                 <button onClick={() => changeSkill(sk.name, -1)} disabled={!canDec} style={skBtn(!canDec)}>−</button>
-                <span style={{ fontSize: '12px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Barlow Condensed, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Barlow Condensed, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>
                   {disp}
                 </span>
                 <button onClick={() => changeSkill(sk.name, 1)} disabled={!canInc} style={skBtn(!canInc)}>+</button>
@@ -203,14 +203,14 @@ export default function StepFour({ state, onChange }: Props) {
 
 const sh: React.CSSProperties = {
   fontFamily: 'Barlow Condensed, sans-serif',
-  fontSize: '12px', fontWeight: 600, color: '#f5f2ee',
+  fontSize: '13px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em',
   margin: '1.25rem 0 8px', borderBottom: '1px solid #2e2e2e',
   paddingBottom: '4px',
 }
 
 const lbl: React.CSSProperties = {
-  fontSize: '12px', color: '#f5f2ee',
+  fontSize: '13px', color: '#f5f2ee',
   letterSpacing: '.05em', textTransform: 'uppercase',
   display: 'block', marginBottom: '4px',
 }
@@ -220,7 +220,7 @@ function attrBtn(disabled: boolean): React.CSSProperties {
     width: '19px', height: '19px', border: '1px solid #3a3a3a',
     borderRadius: '2px', background: '#1a1a1a',
     cursor: disabled ? 'not-allowed' : 'pointer',
-    fontSize: '12px', color: '#f5f2ee',
+    fontSize: '13px', color: '#f5f2ee',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: 0, lineHeight: 1, opacity: disabled ? 0.18 : 1,
     transition: 'all .1s',
@@ -232,7 +232,7 @@ function skBtn(disabled: boolean): React.CSSProperties {
     width: '19px', height: '19px', border: '1px solid #3a3a3a',
     borderRadius: '2px', background: '#1a1a1a',
     cursor: disabled ? 'not-allowed' : 'pointer',
-    fontSize: '12px', color: '#f5f2ee',
+    fontSize: '13px', color: '#f5f2ee',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: 0, lineHeight: 1, opacity: disabled ? 0.18 : 1,
     transition: 'all .1s',

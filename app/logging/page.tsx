@@ -273,7 +273,7 @@ export default function LoggingPage() {
           </span>
         </div>
         <div ref={mapRef} style={{ height: '400px', background: '#0d0d0d' }} />
-        <div style={{ padding: '6px 14px', borderTop: '1px solid #2e2e2e', display: 'flex', gap: '16px', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', color: '#cce0f5' }}>
+        <div style={{ padding: '6px 14px', borderTop: '1px solid #2e2e2e', display: 'flex', gap: '16px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#cce0f5' }}>
           <span><span style={{ color: '#c0392b', fontSize: '14px' }}>●</span> Ghost</span>
           <span><span style={{ color: '#7fc458', fontSize: '14px' }}>●</span> Survivor</span>
           <span style={{ color: '#3a3a3a' }}>Dot size = visit frequency</span>
@@ -320,19 +320,19 @@ export default function LoggingPage() {
                     setVisitorFilter('')
                   }
                 }} />
-              <span style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Enter = Exclude</span>
+              <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Enter = Exclude</span>
             </div>
             {excludeTerms.length > 0 && (
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>Excluding:</span>
+                <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>Excluding:</span>
                 {excludeTerms.map(term => (
                   <button key={term} onClick={() => setExcludeTerms(prev => prev.filter(t => t !== term))}
-                    style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     {term} <span style={{ fontSize: '13px' }}>×</span>
                   </button>
                 ))}
                 <button onClick={() => setExcludeTerms([])}
-                  style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
+                  style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
                   Clear All
                 </button>
               </div>
@@ -386,19 +386,19 @@ export default function LoggingPage() {
                     setEventFilter('')
                   }
                 }} />
-              <span style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Enter = Exclude</span>
+              <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Enter = Exclude</span>
             </div>
             {eventExcludeTerms.length > 0 && (
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>Excluding:</span>
+                <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>Excluding:</span>
                 {eventExcludeTerms.map(term => (
                   <button key={term} onClick={() => setEventExcludeTerms(prev => prev.filter(t => t !== term))}
-                    style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     {term} <span style={{ fontSize: '13px' }}>×</span>
                   </button>
                 ))}
                 <button onClick={() => setEventExcludeTerms([])}
-                  style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
+                  style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
                   Clear All
                 </button>
               </div>

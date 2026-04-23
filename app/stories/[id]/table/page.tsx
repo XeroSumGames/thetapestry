@@ -4222,7 +4222,7 @@ export default function TablePage() {
       {/* Header */}
       <div style={{ borderBottom: '1px solid #c0392b', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, background: '#0f0f0f', position: 'relative', zIndex: 10001 }}>
         <div>
-          <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>
             {SETTINGS[campaign.setting] ?? campaign.setting} &mdash; {isGM ? 'GM View' : 'Player View'}
           </div>
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1 }}>
@@ -4447,7 +4447,7 @@ export default function TablePage() {
           <div style={{ background: '#2a1210', borderBottom: '1px solid #c0392b', padding: '8px 16px', fontFamily: 'Barlow Condensed, sans-serif', color: '#f5a89a', textAlign: 'center', flexShrink: 0 }}>
             <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a' }}>🩸 {title}</div>
             <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px' }}>{subtitle}</div>
-            <div style={{ fontSize: '12px', color: '#cce0f5', marginTop: '2px' }}>You can still watch the map, whisper the GM, and read the log.</div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>You can still watch the map, whisper the GM, and read the log.</div>
           </div>
         )
       })()}
@@ -4461,7 +4461,7 @@ export default function TablePage() {
                 the GM can always see whose turn it is even if the active
                 combatant's entry has scrolled off-screen to the right. */}
             <div style={{ position: 'sticky', left: 0, zIndex: 10, background: '#0d0d0d', display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '8px', borderRight: '1px solid #2e2e2e', marginRight: '4px', flexShrink: 0 }}>
-              <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>
                 ⚔️ Initiative
               </div>
               {(() => {
@@ -4495,7 +4495,7 @@ export default function TablePage() {
                     onClick={clickable ? () => nextTurn() : undefined}
                     title={title}
                     style={{
-                      fontSize: '12px',
+                      fontSize: '13px',
                       padding: '2px 8px',
                       background: stuck ? '#2a1210' : '#1a2e10',
                       border: `1px solid ${stuck ? '#c0392b' : '#7fc458'}`,
@@ -4557,11 +4557,11 @@ export default function TablePage() {
                     {entry.portrait_url ? (
                       <img src={entry.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{entry.character_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}</span>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{entry.character_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}</span>
                     )}
                   </div>
                 )}
-                <span title={entry.character_name} style={{ fontSize: '12px', fontWeight: entry.is_active ? 700 : 400, color: entry.is_active ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                <span title={entry.character_name} style={{ fontSize: '13px', fontWeight: entry.is_active ? 700 : 400, color: entry.is_active ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                   {(() => {
                     // Compact name in the initiative bar — "Frankie G."
                     // instead of "Frankie Gibblets" — to fit more combatants
@@ -4574,13 +4574,13 @@ export default function TablePage() {
                   })()}
                 </span>
                 {entry.is_npc && entry.npc_type && (
-                  <span style={{ fontSize: '12px', color: entry.npc_type === 'bystander' ? '#7fc458' : entry.npc_type === 'antagonist' ? '#d48bd4' : entry.npc_type === 'foe' ? '#f5a89a' : '#EF9F27', background: entry.npc_type === 'bystander' ? '#1a2e10' : entry.npc_type === 'antagonist' ? '#2a102a' : entry.npc_type === 'foe' ? '#2a1210' : '#2a2010', border: `1px solid ${entry.npc_type === 'bystander' ? '#2d5a1b' : entry.npc_type === 'antagonist' ? '#8b2e8b' : entry.npc_type === 'foe' ? '#c0392b' : '#5a4a1b'}`, padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>{entry.npc_type}</span>
+                  <span style={{ fontSize: '13px', color: entry.npc_type === 'bystander' ? '#7fc458' : entry.npc_type === 'antagonist' ? '#d48bd4' : entry.npc_type === 'foe' ? '#f5a89a' : '#EF9F27', background: entry.npc_type === 'bystander' ? '#1a2e10' : entry.npc_type === 'antagonist' ? '#2a102a' : entry.npc_type === 'foe' ? '#2a1210' : '#2a2010', border: `1px solid ${entry.npc_type === 'bystander' ? '#2d5a1b' : entry.npc_type === 'antagonist' ? '#8b2e8b' : entry.npc_type === 'foe' ? '#c0392b' : '#5a4a1b'}`, padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>{entry.npc_type}</span>
                 )}
                 {entry.is_npc && !entry.npc_type && (
-                  <span style={{ fontSize: '12px', color: '#EF9F27', background: '#2a2010', border: '1px solid #EF9F27', padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>NPC</span>
+                  <span style={{ fontSize: '13px', color: '#EF9F27', background: '#2a2010', border: '1px solid #EF9F27', padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>NPC</span>
                 )}
-                <span style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
-                <span style={{ fontSize: '12px', letterSpacing: '2px' }}>
+                <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
+                <span style={{ fontSize: '13px', letterSpacing: '2px' }}>
                   {Array.from({ length: 2 }).map((_, i) => {
                     const remaining = entry.actions_remaining ?? 0
                     const hasActions = i < remaining
@@ -4591,7 +4591,7 @@ export default function TablePage() {
                 {/* Aim/social bonus badge — hidden for NPCs from non-GM viewers
                     (playtest #20: don't expose NPC conditions to players). */}
                 {(entry.aim_bonus ?? 0) !== 0 && (isGM || !entry.is_npc) && (
-                  <span style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: entry.aim_bonus > 0 ? '#7fc458' : '#c0392b' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: entry.aim_bonus > 0 ? '#7fc458' : '#c0392b' }}>
                     {entry.aim_bonus > 0 ? '+' : ''}{entry.aim_bonus}
                   </span>
                 )}
@@ -4610,9 +4610,9 @@ export default function TablePage() {
                     const isMortal = npcWP === 0 && !isDead
                     const isUnconscious = npcRP === 0 && npcWP > 0
                     return <>
-                      {isDead && <span style={{ fontSize: '12px' }} title="Dead">💀</span>}
-                      {isMortal && <span style={{ fontSize: '12px' }} title={`Death in ${npc.death_countdown ?? '?'} rounds`}>🩸</span>}
-                      {isUnconscious && <span style={{ fontSize: '12px' }} title="Unconscious">💤</span>}
+                      {isDead && <span style={{ fontSize: '13px' }} title="Dead">💀</span>}
+                      {isMortal && <span style={{ fontSize: '13px' }} title={`Death in ${npc.death_countdown ?? '?'} rounds`}>🩸</span>}
+                      {isUnconscious && <span style={{ fontSize: '13px' }} title="Unconscious">💤</span>}
                     </>
                   }
                   const charEntry = entries.find(e => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
@@ -4623,10 +4623,10 @@ export default function TablePage() {
                   const isUnconscious = ls.rp_current === 0 && ls.wp_current > 0
                   const isStressed = ls.stress >= 3
                   return <>
-                    {isDead && <span style={{ fontSize: '12px' }} title="Dead">💀</span>}
-                    {isMortal && <span style={{ fontSize: '12px' }} title={`Death in ${(ls as any).death_countdown ?? '?'} rounds`}>🩸</span>}
-                    {isUnconscious && <span style={{ fontSize: '12px' }} title="Unconscious">💤</span>}
-                    {isStressed && !isDead && !isMortal && <span style={{ fontSize: '12px' }} title="Stressed">⚡</span>}
+                    {isDead && <span style={{ fontSize: '13px' }} title="Dead">💀</span>}
+                    {isMortal && <span style={{ fontSize: '13px' }} title={`Death in ${(ls as any).death_countdown ?? '?'} rounds`}>🩸</span>}
+                    {isUnconscious && <span style={{ fontSize: '13px' }} title="Unconscious">💤</span>}
+                    {isStressed && !isDead && !isMortal && <span style={{ fontSize: '13px' }} title="Stressed">⚡</span>}
                   </>
                 })()}
                 {/* Defer — GM can defer anyone, players can defer their own */}
@@ -4670,7 +4670,7 @@ export default function TablePage() {
                     // Player ending their own turn
                     await nextTurn()
                   }}
-                    style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '12px', padding: '0 0 0 2px', lineHeight: 1 }}>×</button>
+                    style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '13px', padding: '0 0 0 2px', lineHeight: 1 }}>×</button>
                 )}
               </div>
             )})}
@@ -4685,21 +4685,21 @@ export default function TablePage() {
                   if (addable.length === 0) return null
                   return !showAddPC ? (
                     <button onClick={() => setShowAddPC(true)}
-                      style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+                      style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
                       title="Add a player to initiative mid-combat">
                       + PC
                     </button>
                   ) : (
                     <div style={{ position: 'absolute', top: '32px', left: 0, zIndex: 100, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '6px', minWidth: '160px', boxShadow: '0 4px 12px rgba(0,0,0,0.6)' }}>
-                      <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Add PC to Combat</div>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Add PC to Combat</div>
                       {addable.map(e => (
                         <button key={e.character.id} onClick={() => addPCToCombat(e)}
-                          style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginBottom: '3px' }}>
+                          style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginBottom: '3px' }}>
                           {e.character.name}
                         </button>
                       ))}
                       <button onClick={() => setShowAddPC(false)}
-                        style={{ display: 'block', width: '100%', padding: '3px 8px', background: 'none', border: '1px solid #2e2e2e', borderRadius: '2px', color: '#cce0f5', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', marginTop: '2px' }}>
+                        style={{ display: 'block', width: '100%', padding: '3px 8px', background: 'none', border: '1px solid #2e2e2e', borderRadius: '2px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', marginTop: '2px' }}>
                         Cancel
                       </button>
                     </div>
@@ -4707,7 +4707,7 @@ export default function TablePage() {
                 })()}
                 {!showAddNPC ? (
                   <button onClick={() => setShowAddNPC(true)}
-                    style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     + NPC
                   </button>
                 ) : (
@@ -4718,14 +4718,14 @@ export default function TablePage() {
                       onChange={e => setNpcName(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') addNPC(); if (e.key === 'Escape') { setShowAddNPC(false); setNpcName('') } }}
                       placeholder="NPC name..."
-                      style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow, sans-serif', width: '120px' }}
+                      style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', width: '120px' }}
                     />
-                    <button onClick={addNPC} style={{ padding: '4px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>Add</button>
-                    <button onClick={() => { setShowAddNPC(false); setNpcName('') }} style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>✕</button>
+                    <button onClick={addNPC} style={{ padding: '4px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>Add</button>
+                    <button onClick={() => { setShowAddNPC(false); setNpcName('') }} style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>✕</button>
                   </div>
                 )}
                 <button onClick={nextTurn}
-                  style={{ padding: '4px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '4px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Next →
                 </button>
               </div>
@@ -4755,7 +4755,7 @@ export default function TablePage() {
 
             const actBtn = (bg: string, color: string, border: string): React.CSSProperties => ({
               padding: '2px 8px', background: bg, border: `1px solid ${border}`, borderRadius: '3px',
-              color, fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif',
+              color, fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
               letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer',
             })
 
@@ -4771,7 +4771,7 @@ export default function TablePage() {
                 {/* ── GRAPPLED STATE: only Break Free available ── */}
                 {isGrappled && (
                   <>
-                    <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '3px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.06em' }}>
+                    <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '3px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.06em' }}>
                       Grappled by {activeEntry.grappled_by}
                     </span>
                     <button onClick={() => { setGrappleResult(null); setShowGrappleModal(true) }}
@@ -4781,7 +4781,7 @@ export default function TablePage() {
                 {/* ── GRAPPLING STATE: only Release available ── */}
                 {isGrappling && grappledTarget && (
                   <>
-                    <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '3px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.06em' }}>
+                    <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '3px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.06em' }}>
                       Grappling {grappledTarget.character_name}
                     </span>
                     <button onClick={async () => {
@@ -4803,7 +4803,7 @@ export default function TablePage() {
                   style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
                   Aim{(activeEntry.aim_bonus ?? 0) > 0 ? ` (+${activeEntry.aim_bonus})` : ''}
                 </button>
-                {activeEntry.aim_active && <span style={{ fontSize: '12px', padding: '1px 6px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '2px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Aimed — Attack or lose it</span>}
+                {activeEntry.aim_active && <span style={{ fontSize: '13px', padding: '1px 6px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '2px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Aimed — Attack or lose it</span>}
 
                 {/* ── ATTACK: weapon attack, +1 CMod if same target as last attack ── */}
                 <button onClick={() => {
@@ -4899,7 +4899,7 @@ export default function TablePage() {
                           </div>
                         )}
                         <button onClick={() => setSocialTarget(null)}
-                          style={{ marginTop: '10px', width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                          style={{ marginTop: '10px', width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                       </div>
                     </div>
                   )
@@ -4912,10 +4912,10 @@ export default function TablePage() {
                     <div onClick={() => setShowCoordinateModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
                         <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Coordinate</div>
-                        <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5, marginBottom: '12px' }}>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5, marginBottom: '12px' }}>
                           Select the enemy to coordinate against. On a successful Tactics* check, allies within Close range get +2 CMod when attacking that target.
                         </div>
-                        <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Coordinate Against</div>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Coordinate Against</div>
                         <select value={coordinateSelection} onChange={e => setCoordinateSelection(e.target.value)}
                           style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none', marginBottom: '12px' }}>
                           <option value="">Select target...</option>
@@ -4925,7 +4925,7 @@ export default function TablePage() {
                         </select>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button onClick={() => setShowCoordinateModal(false)}
-                            style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                            style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                           <button disabled={!coordinateSelection} onClick={() => {
                             // Find the target entry and trigger Tactics* roll
                             const targetEntry = initiativeOrder.find(e => e.character_name === coordinateSelection)
@@ -4939,7 +4939,7 @@ export default function TablePage() {
                             handleRollRequest(`${activeEntry.character_name} — Coordinate (vs ${coordinateSelection})`, amod, smod)
                             setShowCoordinateModal(false)
                           }}
-                            style={{ flex: 2, padding: '8px', background: coordinateSelection ? '#c0392b' : '#242424', border: `1px solid ${coordinateSelection ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: coordinateSelection ? '#fff' : '#5a5550', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: coordinateSelection ? 'pointer' : 'not-allowed' }}>Roll Tactics*</button>
+                            style={{ flex: 2, padding: '8px', background: coordinateSelection ? '#c0392b' : '#242424', border: `1px solid ${coordinateSelection ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: coordinateSelection ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: coordinateSelection ? 'pointer' : 'not-allowed' }}>Roll Tactics*</button>
                         </div>
                       </div>
                     </div>
@@ -5147,7 +5147,7 @@ export default function TablePage() {
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
             {(['rolls', 'chat', 'both'] as const).map(tab => (
               <button key={tab} onClick={() => setFeedTab(tab)}
-                style={{ flex: 1, padding: '8px 0', background: feedTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: feedTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: feedTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '12px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ flex: 1, padding: '8px 0', background: feedTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: feedTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: feedTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '13px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 {tab === 'rolls' ? 'Logs' : tab === 'chat' ? 'Chat' : 'Both'}
               </button>
             ))}
@@ -5179,7 +5179,7 @@ export default function TablePage() {
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Combat Started</span>
-                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                      <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                     </div>
                     <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
                       Between {((r.damage_json as any).combatants as string[]).map((n, i, arr) => (
@@ -5194,15 +5194,15 @@ export default function TablePage() {
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a2010', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.label}</span>
-                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                      <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                     </div>
-                    <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
+                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
                   </div>
                 ) : r.outcome === 'defer' ? (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f1a2e', border: '1px solid #7ab3d4', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.label}</span>
-                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                      <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                     </div>
                   </div>
                 ) : r.outcome === 'sprint' ? (() => {
@@ -5219,7 +5219,7 @@ export default function TablePage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🏃 Sprint</span>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                        <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                        <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                         {tr && (
                           <button onClick={() => setExpandedRollIds(prev => { const next = new Set(prev); isExpanded ? next.delete(r.id) : next.add(r.id); return next })}
                             title={isExpanded ? 'Hide details' : 'View roll'}
@@ -5251,7 +5251,7 @@ export default function TablePage() {
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a0a0a', border: '1px solid #5a1b1b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.character_name}</span>
-                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                      <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                     </div>
                     <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>{r.label}</div>
                   </div>
@@ -5259,7 +5259,7 @@ export default function TablePage() {
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Combat Ended</span>
-                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                      <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                     </div>
                     {((r.damage_json as any).combatants as string[]).length > 0 && (
                       <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
@@ -5276,7 +5276,7 @@ export default function TablePage() {
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Initiative</span>
-                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                      <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                     </div>
                     {((r.damage_json as any).initiative as any[]).map((e: any, i: number) => {
                       const init = (e.acu ?? 0) + (e.dex ?? 0)
@@ -5304,7 +5304,7 @@ export default function TablePage() {
                     <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#111', border: `1px solid ${color}33`, borderRadius: '3px', borderLeft: `3px solid ${color}` }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
                         <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{emoji} Week {dj.weekNumber} · {dj.communityName} · {title}</span>
-                        <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                        <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                       </div>
                       <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
                         [{r.die1}+{r.die2}]
@@ -5314,7 +5314,7 @@ export default function TablePage() {
                         <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
                         <span style={{ marginLeft: '8px', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{rollOutcome}</span>
                       </div>
-                      <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '2px' }}>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '2px' }}>
                         → Next Morale CMod <span style={{ color: dj.cmodForNextMorale > 0 ? '#7fc458' : dj.cmodForNextMorale < 0 ? '#f5a89a' : '#cce0f5', fontWeight: 700 }}>{dj.cmodForNextMorale > 0 ? '+' : ''}{dj.cmodForNextMorale ?? 0}</span>
                       </div>
                     </div>
@@ -5331,7 +5331,7 @@ export default function TablePage() {
                     <div key={r.id} style={{ marginBottom: '8px', padding: '10px', background: willDissolve ? '#1a0a0a' : '#111', border: `1px solid ${color}`, borderRadius: '3px', borderLeft: `3px solid ${color}` }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                         <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>📊 Week {dj.weekNumber} · {dj.communityName} · Morale</span>
-                        <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                        <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                       </div>
                       <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
                         [{r.die1}+{r.die2}]
@@ -5342,7 +5342,7 @@ export default function TablePage() {
                         <span style={{ marginLeft: '8px', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{rollOutcome}</span>
                       </div>
                       {slots && Object.keys(slots).length > 0 && (
-                        <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.6, marginBottom: '4px' }}>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.6, marginBottom: '4px' }}>
                           <span style={{ color: '#5a5550' }}>Slots:</span>
                           {[['Mood', slots.mood], ['Fed', slots.fed], ['Clothed', slots.clothed], ['Hands', slots.enoughHands], ['Voice', slots.clearVoice], ['Watch', slots.safety]].map(([n, v]: any, i) => (
                             <span key={i}> · {n} <span style={{ color: cmodClr(v ?? 0), fontWeight: 700 }}>{fmt(v ?? 0)}</span></span>
@@ -5377,7 +5377,7 @@ export default function TablePage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.character_name}</span>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                        <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                        <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                         {compact && (
                           <button onClick={() => setExpandedRollIds(prev => { const next = new Set(prev); isExpanded ? next.delete(r.id) : next.add(r.id); return next })}
                             title={isExpanded ? 'Hide details' : 'View more'}
@@ -5390,7 +5390,7 @@ export default function TablePage() {
                     {useCompact ? (
                       <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
                         {compact}
-                        {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
+                        {r.insight_awarded && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
                       </div>
                     ) : (
                       <>
@@ -5407,11 +5407,11 @@ export default function TablePage() {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <span style={{ fontSize: '15px', fontWeight: 700, color: outcomeColor(r.outcome), fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.outcome}</span>
-                          {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
+                          {r.insight_awarded && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
                         </div>
                         {r.damage_json && (
                           <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>
-                            <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '12px' }}>Damage → {r.damage_json.targetName}</span>
+                            <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '13px' }}>Damage → {r.damage_json.targetName}</span>
                             <div style={{ marginTop: '2px' }}>
                               {r.damage_json.base > 0 && <span>{r.damage_json.base}</span>}
                               {r.damage_json.diceDesc && <span>{r.damage_json.base > 0 ? '+' : ''}{r.damage_json.diceDesc} ({r.damage_json.diceRoll})</span>}
@@ -5433,7 +5433,7 @@ export default function TablePage() {
             {/* Chat messages (Chat tab only) */}
             {feedTab === 'chat' && (
               chatMessages.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>No messages yet</div>
+                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>No messages yet</div>
               ) : (
                 chatMessages.map(m => {
                   const isW = m.is_whisper
@@ -5444,7 +5444,7 @@ export default function TablePage() {
                         <span style={{ fontSize: '13px', fontWeight: 700, color: isW ? '#d48bd4' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                           {isW ? whisperLabel : m.character_name}
                         </span>
-                        <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(m.created_at)}</span>
+                        <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(m.created_at)}</span>
                       </div>
                       <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{m.message}</div>
                     </div>
@@ -5473,7 +5473,7 @@ export default function TablePage() {
                 <div key={`chat-${item.data.id}`} style={{ marginBottom: '6px', padding: '6px 8px', background: mW ? '#1a1a2a' : '#1a1a1a', border: `1px solid ${mW ? '#4a2a6a' : '#2e2e2e'}`, borderRadius: '3px', borderLeft: `3px solid ${mW ? '#8b2e8b' : '#7ab3d4'}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
                     <span style={{ fontSize: '13px', fontWeight: 700, color: mW ? '#d48bd4' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{mW ? wLabel : item.data.character_name}</span>
-                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                    <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
                   <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{item.data.message}</div>
                 </div>)
@@ -5481,7 +5481,7 @@ export default function TablePage() {
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Combat Started</span>
-                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                    <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
                   <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
                     Between {((item.data.damage_json as any).combatants as string[]).map((n, i, arr) => (
@@ -5496,7 +5496,7 @@ export default function TablePage() {
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Combat Ended</span>
-                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                    <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
                   {((item.data.damage_json as any).combatants as string[]).length > 0 && (
                     <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
@@ -5513,7 +5513,7 @@ export default function TablePage() {
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Initiative</span>
-                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                    <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
                   {((item.data.damage_json as any).initiative as any[]).map((e: any, i: number) => {
                     const init = (e.acu ?? 0) + (e.dex ?? 0)
@@ -5543,7 +5543,7 @@ export default function TablePage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🏃 Sprint</span>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                      <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                       {tr && (
                         <button onClick={() => setExpandedRollIds(prev => { const next = new Set(prev); isExpanded ? next.delete(item.data.id) : next.add(item.data.id); return next })}
                           title={isExpanded ? 'Hide details' : 'View roll'}
@@ -5575,22 +5575,22 @@ export default function TablePage() {
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a2010', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{item.data.label}</span>
-                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                    <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
                 </div>
               ) : item.data.outcome === 'defer' ? (
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f1a2e', border: '1px solid #7ab3d4', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                     <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{item.data.label}</span>
-                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                    <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
                 </div>
               ) : (item.data.outcome === 'death' || item.data.character_name === 'Death is in the air') ? (
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a0a0a', border: '1px solid #5a1b1b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{item.data.character_name}</span>
-                    <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
+                    <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
                   <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>{item.data.label}</div>
                 </div>
@@ -5604,7 +5604,7 @@ export default function TablePage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.character_name}</span>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                      <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                      <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                       {compact && (
                         <button onClick={() => setExpandedRollIds(prev => { const next = new Set(prev); isExpanded ? next.delete(r.id) : next.add(r.id); return next })}
                           title={isExpanded ? 'Hide details' : 'View more'}
@@ -5617,7 +5617,7 @@ export default function TablePage() {
                   {useCompact ? (
                     <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
                       {compact}
-                      {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
+                      {r.insight_awarded && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif', marginLeft: '6px' }}>+1 Insight Die</span>}
                     </div>
                   ) : (
                     <>
@@ -5634,11 +5634,11 @@ export default function TablePage() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span style={{ fontSize: '15px', fontWeight: 700, color: outcomeColor(r.outcome), fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.outcome}</span>
-                        {r.insight_awarded && <span style={{ fontSize: '12px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
+                        {r.insight_awarded && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
                       </div>
                       {r.damage_json && (
                         <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>
-                          <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '12px' }}>Damage → {r.damage_json.targetName}</span>
+                          <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '13px' }}>Damage → {r.damage_json.targetName}</span>
                           <div style={{ marginTop: '2px' }}>
                             {r.damage_json.base > 0 && <span>{r.damage_json.base}</span>}
                             {r.damage_json.diceDesc && <span>{r.damage_json.base > 0 ? '+' : ''}{r.damage_json.diceDesc} ({r.damage_json.diceRoll})</span>}
@@ -5663,7 +5663,7 @@ export default function TablePage() {
               <div>
                 {whisperTarget && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', background: '#2a102a', borderBottom: '1px solid #8b2e8b' }}>
-                    <span style={{ fontSize: '12px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Whispering to {whisperTarget.characterName}</span>
+                    <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Whispering to {whisperTarget.characterName}</span>
                     <button onClick={() => setWhisperTarget(null)}
                       style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#d48bd4', cursor: 'pointer', fontSize: '13px', padding: '0 4px', lineHeight: 1 }}>×</button>
                   </div>
@@ -5675,7 +5675,7 @@ export default function TablePage() {
                     rows={2}
                     style={{ flex: 1, padding: '6px 8px', background: whisperTarget ? '#1a1a2a' : '#242424', border: `1px solid ${whisperTarget ? '#8b2e8b' : '#3a3a3a'}`, borderRight: 'none', borderRadius: '3px 0 0 3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', resize: 'none', lineHeight: '1.4' }} />
                   <button onClick={sendChat}
-                    style={{ width: '24px', flexShrink: 0, background: whisperTarget ? '#2a102a' : '#1a2e10', border: `1px solid ${whisperTarget ? '#8b2e8b' : '#2d5a1b'}`, borderRadius: '0 3px 3px 0', color: whisperTarget ? '#d48bd4' : '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', writingMode: 'vertical-rl', letterSpacing: '.08em', padding: 0, transform: 'rotate(180deg)' }}>Send</button>
+                    style={{ width: '24px', flexShrink: 0, background: whisperTarget ? '#2a102a' : '#1a2e10', border: `1px solid ${whisperTarget ? '#8b2e8b' : '#2d5a1b'}`, borderRadius: '0 3px 3px 0', color: whisperTarget ? '#d48bd4' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', writingMode: 'vertical-rl', letterSpacing: '.08em', padding: 0, transform: 'rotate(180deg)' }}>Send</button>
                 </div>
               </div>
             )}
@@ -6128,7 +6128,7 @@ export default function TablePage() {
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
             {((combatActive || showTacticalMap) ? ['npcs', 'assets', 'pins', 'notes'] as const : ['pins', 'npcs', 'assets', 'notes'] as const).map(tab => (
               <button key={tab} onClick={() => setGmTab(tab)}
-                style={{ flex: 1, padding: '8px 0', background: gmTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: gmTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: gmTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '12px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ flex: 1, padding: '8px 0', background: gmTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: gmTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: gmTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '13px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 {tab === 'pins' ? 'Pins' : tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : isGM ? 'GM Notes' : 'Notes'}
               </button>
             ))}
@@ -6183,7 +6183,7 @@ export default function TablePage() {
               if (combined.length === 0) {
                 return (
                   <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-                    <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>No NPCs revealed yet</div>
+                    <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>No NPCs revealed yet</div>
                   </div>
                 )
               }
@@ -6239,13 +6239,13 @@ export default function TablePage() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.name}</div>
                       {npcIsDead && <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>💀 Dead</div>}
-                      {npcIsMortal && <div style={{ fontSize: '12px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>🩸 Mortally Wounded</div>}
-                      {inCombat && !npcIsDead && !npcIsMortal && <div style={{ fontSize: '12px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>In Combat</div>}
+                      {npcIsMortal && <div style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>🩸 Mortally Wounded</div>}
+                      {inCombat && !npcIsDead && !npcIsMortal && <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>In Combat</div>}
                       {!npc._combatOnly && npc.reveal_level === 'name_portrait_role' && npc.recruitment_role && (
-                        <div style={{ fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.recruitment_role}</div>
+                        <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.recruitment_role}</div>
                       )}
                       {!npc._combatOnly && npc.relationship_cmod !== 0 && npc.relationship_cmod != null && (
-                        <div style={{ fontSize: '12px', color: npc.relationship_cmod > 0 ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        <div style={{ fontSize: '13px', color: npc.relationship_cmod > 0 ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>
                           {npc.relationship_cmod > 0 ? `+${npc.relationship_cmod}` : npc.relationship_cmod} CMod
                         </div>
                       )}
@@ -6267,12 +6267,12 @@ export default function TablePage() {
                         onClick={() => !isCombatBucket && togglePlayerFolder(bucket.key)}
                         style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', cursor: isCombatBucket ? 'default' : 'pointer', userSelect: 'none' }}>
                         {!isCombatBucket && (
-                          <span style={{ fontSize: '12px', color: '#5a5550', width: '10px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
+                          <span style={{ fontSize: '13px', color: '#5a5550', width: '10px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                         )}
                         <span style={{ fontSize: '13px', color: isCombatBucket ? '#f5a89a' : '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>
                           {bucket.name}
                         </span>
-                        <span style={{ fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>
                           ({bucket.npcs.length})
                         </span>
                       </div>
@@ -6300,7 +6300,7 @@ export default function TablePage() {
                   style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none', flexShrink: 0 }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                  <span style={{ fontSize: '12px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('objects') ? '▼' : '▶'}</span>
+                  <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('objects') ? '▼' : '▶'}</span>
                   <span style={{ fontSize: '14px' }}>🎯</span>
                   <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>Objects</span>
                 </div>
@@ -6385,10 +6385,10 @@ export default function TablePage() {
                       style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none', flexShrink: 0 }}
                       onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                      <span style={{ fontSize: '12px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('vehicles') ? '▼' : '▶'}</span>
+                      <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{assetsFolderState.has('vehicles') ? '▼' : '▶'}</span>
                       <span style={{ fontSize: '14px' }}>🚗</span>
                       <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>Vehicles</span>
-                      <span style={{ fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{vehicles.length}</span>
+                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{vehicles.length}</span>
                     </div>
                     {assetsFolderState.has('vehicles') && (
                       <div style={{ padding: '4px' }}>
@@ -6410,7 +6410,7 @@ export default function TablePage() {
                                 <span style={{ fontSize: '14px' }}>🚗</span>
                                 <div style={{ flex: 1 }}>
                                   <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{v.name}</div>
-                                  <div style={{ fontSize: '12px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif' }}>{v.type} · WP {v.wp_current}/{v.wp_max}</div>
+                                  <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif' }}>{v.type} · WP {v.wp_current}/{v.wp_max}</div>
                                 </div>
                               </div>
                             )}
@@ -6457,7 +6457,7 @@ export default function TablePage() {
               />
             )}
           </div>
-          <div style={{ fontSize: '12px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {(gmEntry ? gmEntry.username : (gmInfo?.username ?? 'GM'))} (GM)
           </div>
         </button>
@@ -6509,7 +6509,7 @@ export default function TablePage() {
                           placeTokenOnMap(entry.character.name, 'pc', entry.character.id, undefined, getCharPhoto(entry) || undefined)
                         }
                       }}
-                        style={{ padding: '3px 8px', background: onMap ? '#1a2e10' : '#1a1a2e', border: `1px solid ${onMap ? '#2d5a1b' : '#2e2e5a'}`, borderRadius: '3px', color: onMap ? '#7fc458' : '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.2 }}>
+                        style={{ padding: '3px 8px', background: onMap ? '#1a2e10' : '#1a1a2e', border: `1px solid ${onMap ? '#2d5a1b' : '#2e2e5a'}`, borderRadius: '3px', color: onMap ? '#7fc458' : '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.2 }}>
                         Map
                       </div>
                     )
@@ -6519,7 +6519,7 @@ export default function TablePage() {
                   </div>
                   {(isGM || isMe) && (
                     <div onClick={e => { e.stopPropagation(); openPopout(`/character-sheet?c=${id}&char=${entry.character.id}`, `char-${entry.character.id}`, { w: 800, h: 800 }) }}
-                      style={{ padding: '3px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.2 }}>
+                      style={{ padding: '3px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.2 }}>
                       Popout
                     </div>
                   )}
@@ -6894,32 +6894,32 @@ export default function TablePage() {
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <button onClick={() => setPreRollInsight(preRollInsight === '3d6' ? 'none' : '3d6')}
                         style={{ flex: 1, padding: '8px 4px', background: preRollInsight === '3d6' ? '#2d5a1b' : '#1a2e10', border: `1px solid ${preRollInsight === '3d6' ? '#7fc458' : '#2d5a1b'}`, borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                        Roll 3d6<br /><span style={{ fontSize: '12px', color: preRollInsight === '3d6' ? '#7fc458' : '#cce0f5' }}>Keep all 3</span>
+                        Roll 3d6<br /><span style={{ fontSize: '13px', color: preRollInsight === '3d6' ? '#7fc458' : '#cce0f5' }}>Keep all 3</span>
                       </button>
                       <button onClick={() => setPreRollInsight(preRollInsight === '+3cmod' ? 'none' : '+3cmod')}
                         style={{ flex: 1, padding: '8px 4px', background: preRollInsight === '+3cmod' ? '#2d5a1b' : '#1a2e10', border: `1px solid ${preRollInsight === '+3cmod' ? '#7fc458' : '#2d5a1b'}`, borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                        +3 CMod<br /><span style={{ fontSize: '12px', color: preRollInsight === '+3cmod' ? '#7fc458' : '#cce0f5' }}>Added to roll</span>
+                        +3 CMod<br /><span style={{ fontSize: '13px', color: preRollInsight === '+3cmod' ? '#7fc458' : '#cce0f5' }}>Added to roll</span>
                       </button>
                     </div>
                   </div>
                 )}
                 {pendingRoll.weapon && !targetName && (
-                  <div style={{ padding: '6px 10px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
+                  <div style={{ padding: '6px 10px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
                     Select a target or damage will not be applied
                   </div>
                 )}
                 {pendingRoll.weapon && targetName && !grenadeTargetCell && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand) && (
-                  <div style={{ padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
+                  <div style={{ padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
                     Out of range
                   </div>
                 )}
                 {grenadeTargetCell && (
-                  <div style={{ padding: '6px 10px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
+                  <div style={{ padding: '6px 10px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
                     💥 Throwing at cell ({grenadeTargetCell.gx}, {grenadeTargetCell.gy}) — splash damage will apply
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={closeRollModal} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={closeRollModal} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                   <button onClick={executeRoll} disabled={rolling || (!!pendingRoll.weapon && !!targetName && !grenadeTargetCell && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: (rolling || (!!pendingRoll.weapon && !!targetName && !grenadeTargetCell && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 'not-allowed' : 'pointer', opacity: (rolling || (!!pendingRoll.weapon && !!targetName && !grenadeTargetCell && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 0.6 : 1 }}>
                     {rolling ? 'Rolling...' : preRollInsight === '3d6' ? '🎲 Roll 3d6' : '🎲 Roll'}
                   </button>
@@ -6940,7 +6940,7 @@ export default function TablePage() {
                     <div key={i} style={{ width: '52px', height: '52px', background: '#242424', border: '2px solid #3a3a3a', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, color: '#f5f2ee' }}>{d}</div>
                   ))}
                 </div>
-                <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', marginBottom: '8px' }}>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', marginBottom: '8px' }}>
                   [{rollResult.diceRolled && rollResult.diceRolled.length > 2
                     ? rollResult.diceRolled.join('+')
                     : `${rollResult.die1}+${rollResult.die2}`}]
@@ -7016,9 +7016,9 @@ export default function TablePage() {
                   </div>
                 )}
                 {(rollResult.insightUsed === 'pre' || rollResult.insightUsed === 'both') && (
-                  <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '1rem', marginBottom: '1rem', textAlign: 'center', fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>Insight {rollResult.insightUsed === 'both' ? 'Dice' : 'Die'} spent</div>
+                  <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '1rem', marginBottom: '1rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>Insight {rollResult.insightUsed === 'both' ? 'Dice' : 'Die'} spent</div>
                 )}
-                <button onClick={closeRollModal} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Done</button>
+                <button onClick={closeRollModal} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Done</button>
               </>
             )}
 
@@ -7031,7 +7031,7 @@ export default function TablePage() {
       {showLootModal && (
         <div onClick={() => setShowLootModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '420px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: '12px', color: '#EF9F27', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Loot Distribution</div>
+            <div style={{ fontSize: '13px', color: '#EF9F27', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Loot Distribution</div>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>Give Items to Players</div>
 
             {/* Item list */}
@@ -7040,7 +7040,7 @@ export default function TablePage() {
                 <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 6px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '2px', fontSize: '13px' }}>
                   <span style={{ flex: 1, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>
                     {item.name}{item.qty > 1 && <span style={{ color: '#7ab3d4' }}> ×{item.qty}</span>}
-                    {item.notes && <span style={{ color: '#5a5550', fontSize: '12px' }}> — {item.notes}</span>}
+                    {item.notes && <span style={{ color: '#5a5550', fontSize: '13px' }}> — {item.notes}</span>}
                   </span>
                   <button onClick={() => setLootItems(prev => prev.filter((_, i) => i !== idx))}
                     style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}>×</button>
@@ -7065,7 +7065,7 @@ export default function TablePage() {
             </div>
 
             {/* Recipients */}
-            <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Give to</div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Give to</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginBottom: '12px' }}>
               {entries.map(e => (
                 <label key={e.character.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', background: lootRecipients.has(e.character.id) ? '#1a2e10' : '#111', border: `1px solid ${lootRecipients.has(e.character.id) ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', cursor: 'pointer', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
@@ -7125,7 +7125,7 @@ export default function TablePage() {
       {showCdpModal && (
         <div onClick={() => setShowCdpModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '360px' }}>
-            <div style={{ fontSize: '12px', color: '#7ab3d4', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Award CDP</div>
+            <div style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Award CDP</div>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>Character Development Points</div>
 
             {/* Amount */}
@@ -7137,7 +7137,7 @@ export default function TablePage() {
             </div>
 
             {/* Recipients */}
-            <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Award to</div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Award to</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginBottom: '12px' }}>
               {entries.map(e => (
                 <label key={e.stateId} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', background: cdpRecipients.has(e.stateId) ? '#1a1a2e' : '#111', border: `1px solid ${cdpRecipients.has(e.stateId) ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', cursor: 'pointer', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
@@ -7213,27 +7213,27 @@ export default function TablePage() {
         return (
         <div onClick={() => setShowRestorePicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '400px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: '12px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Restore</div>
+            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Restore</div>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '0.5rem' }}>Restore to full health</div>
             {allDead.length > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{restoreNpcIds.size} of {allDead.length} selected</span>
+                <span style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{restoreNpcIds.size} of {allDead.length} selected</span>
                 <button onClick={() => setRestoreNpcIds(allSelected ? new Set() : new Set(allDead.map(d => d.key)))}
-                  style={{ padding: '2px 8px', background: allSelected ? '#2a1210' : '#1a2e10', border: `1px solid ${allSelected ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allSelected ? '#f5a89a' : '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '2px 8px', background: allSelected ? '#2a1210' : '#1a2e10', border: `1px solid ${allSelected ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allSelected ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {allSelected ? 'Deselect All' : 'Select All'}
                 </button>
               </div>
             )}
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
               {sections.length === 0 ? (
-                <div style={{ color: '#cce0f5', fontSize: '12px', textAlign: 'center', padding: '1rem' }}>Nothing to restore — everyone is at full health.</div>
+                <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem' }}>Nothing to restore — everyone is at full health.</div>
               ) : sections.map(section => {
                 const sectionKeys = section.items.map(i => i.key)
                 const sectionAllSelected = sectionKeys.every(k => restoreNpcIds.has(k))
                 return (
                   <div key={section.label} style={{ marginBottom: '10px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', padding: '0 2px' }}>
-                      <span style={{ fontSize: '12px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>{section.label} ({section.items.length})</span>
+                      <span style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>{section.label} ({section.items.length})</span>
                       <button onClick={() => {
                         setRestoreNpcIds(prev => {
                           const next = new Set(prev)
@@ -7242,7 +7242,7 @@ export default function TablePage() {
                           return next
                         })
                       }}
-                        style={{ padding: '1px 6px', background: 'none', border: '1px solid #2e2e2e', borderRadius: '2px', color: '#cce0f5', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        style={{ padding: '1px 6px', background: 'none', border: '1px solid #2e2e2e', borderRadius: '2px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                         {sectionAllSelected ? 'None' : 'All'}
                       </button>
                     </div>
@@ -7254,8 +7254,8 @@ export default function TablePage() {
                             setRestoreNpcIds(prev => { const next = new Set(prev); if (next.has(d.key)) next.delete(d.key); else next.add(d.key); return next })
                           }} style={{ accentColor: '#7fc458' }} />
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{d.name}</div>
-                            <span style={{ fontSize: '12px', color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{d.type}</span>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{d.name}</div>
+                            <span style={{ fontSize: '13px', color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{d.type}</span>
                           </div>
                         </label>
                       )
@@ -7266,7 +7266,7 @@ export default function TablePage() {
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setShowRestorePicker(false)}
-                style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 Cancel
               </button>
               <button onClick={async () => {
@@ -7334,7 +7334,7 @@ export default function TablePage() {
                 setRestoreNpcIds(new Set())
               }}
                 disabled={restoreNpcIds.size === 0}
-                style={{ flex: 1, padding: '10px', background: restoreNpcIds.size > 0 ? '#1a2e10' : '#242424', border: `1px solid ${restoreNpcIds.size > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: restoreNpcIds.size > 0 ? '#7fc458' : '#3a3a3a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: restoreNpcIds.size > 0 ? 'pointer' : 'not-allowed' }}>
+                style={{ flex: 1, padding: '10px', background: restoreNpcIds.size > 0 ? '#1a2e10' : '#242424', border: `1px solid ${restoreNpcIds.size > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: restoreNpcIds.size > 0 ? '#7fc458' : '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: restoreNpcIds.size > 0 ? 'pointer' : 'not-allowed' }}>
                 Restore {restoreNpcIds.size > 0 ? `(${restoreNpcIds.size})` : ''}
               </button>
             </div>
@@ -7347,24 +7347,24 @@ export default function TablePage() {
       {showEndSessionModal && (
         <div onClick={() => setShowEndSessionModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '520px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>End Session</div>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>End Session</div>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1.25rem' }}>Session {sessionCount} Summary</div>
 
             {/* Player submissions — notes the players flagged "Add to Session Summary". */}
             {submittedPlayerNotes.length > 0 && (
               <div style={{ marginBottom: '1.25rem', padding: '10px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px' }}>
-                <div style={{ fontSize: '12px', color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Player Submissions ({submittedPlayerNotes.length})</div>
+                <div style={{ fontSize: '13px', color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Player Submissions ({submittedPlayerNotes.length})</div>
                 {submittedPlayerNotes.map(n => (
                   <div key={n.id} style={{ marginBottom: '8px', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '2px' }}>{n.character_name}</div>
-                    {n.title && <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '2px' }}>{n.title}</div>}
-                    <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.4, marginBottom: '6px' }}>{n.content}</div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '2px' }}>{n.character_name}</div>
+                    {n.title && <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '2px' }}>{n.title}</div>}
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.4, marginBottom: '6px' }}>{n.content}</div>
                     <button onClick={() => {
                       const titlePart = n.title ? ` — ${n.title}` : ''
                       const block = (sessionSummary.trim() ? '\n\n' : '') + `${n.character_name}${titlePart}: ${n.content}`
                       setSessionSummary(prev => prev + block)
                     }}
-                      style={{ padding: '3px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ padding: '3px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       Append to Summary
                     </button>
                   </div>
@@ -7374,7 +7374,7 @@ export default function TablePage() {
 
             {/* What happened */}
             <div style={{ marginBottom: '1.25rem' }}>
-              <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>What happened this session?</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>What happened this session?</div>
               <textarea
                 value={sessionSummary}
                 onChange={e => setSessionSummary(e.target.value)}
@@ -7411,7 +7411,7 @@ export default function TablePage() {
 
             {/* File upload */}
             <div style={{ marginBottom: '1.25rem' }}>
-              <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Attach files (optional)</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Attach files (optional)</div>
               <div
                 onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#c0392b' }}
                 onDragLeave={e => { e.currentTarget.style.borderColor = '#3a3a3a' }}
@@ -7433,7 +7433,7 @@ export default function TablePage() {
                 <div style={{ marginTop: '8px' }}>
                   {sessionFiles.map((f, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '12px', color: '#d4cfc9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+                      <span style={{ fontSize: '13px', color: '#d4cfc9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
                       <button onClick={() => setSessionFiles(prev => prev.filter((_, j) => j !== i))}
                         style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '14px', padding: '0 4px' }}>×</button>
                     </div>
@@ -7443,7 +7443,7 @@ export default function TablePage() {
             </div>
 
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => setShowEndSessionModal(false)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setShowEndSessionModal(false)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               <button onClick={endSession} disabled={sessionActing} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: sessionActing ? 'not-allowed' : 'pointer', opacity: sessionActing ? 0.6 : 1 }}>
                 {sessionActing ? 'Ending...' : 'End Session'}
               </button>
@@ -7456,7 +7456,7 @@ export default function TablePage() {
       {showNpcPicker && (
         <div onClick={() => setShowNpcPicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '400px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Start Combat</div>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Start Combat</div>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '0.5rem' }}>Select NPCs for this encounter</div>
             {(() => {
               // Exclude dead NPCs from the combat picker
@@ -7468,9 +7468,9 @@ export default function TablePage() {
               const allSelected = aliveNpcs.length > 0 && aliveNpcs.every(n => selectedNpcIds.has(n.id))
               return aliveNpcs.length > 0 ? (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '12px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{selectedNpcIds.size} of {aliveNpcs.length} selected</span>
+                  <span style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{selectedNpcIds.size} of {aliveNpcs.length} selected</span>
                   <button onClick={() => setSelectedNpcIds(allSelected ? new Set() : new Set(aliveNpcs.map(n => n.id)))}
-                    style={{ padding: '2px 8px', background: allSelected ? '#2a1210' : '#1a2e10', border: `1px solid ${allSelected ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allSelected ? '#f5a89a' : '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ padding: '2px 8px', background: allSelected ? '#2a1210' : '#1a2e10', border: `1px solid ${allSelected ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allSelected ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     {allSelected ? 'Deselect All' : 'Select All'}
                   </button>
                 </div>
@@ -7484,7 +7484,7 @@ export default function TablePage() {
                   return !isDead
                 })
                 return aliveNpcs.length === 0 ? (
-                <div style={{ color: '#cce0f5', fontSize: '12px', textAlign: 'center', padding: '1rem' }}>No active NPCs in roster. You can add them during combat.</div>
+                <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem' }}>No active NPCs in roster. You can add them during combat.</div>
               ) : (
                 aliveNpcs.map(npc => (
                   <label key={npc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', background: selectedNpcIds.has(npc.id) ? '#2a1210' : '#1a1a1a', border: `1px solid ${selectedNpcIds.has(npc.id) ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer' }}>
@@ -7500,12 +7500,12 @@ export default function TablePage() {
                       {npc.portrait_url ? (
                         <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
                       )}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '12px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
-                      {npc.npc_type && <span style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
+                      {npc.npc_type && <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
                     </div>
                   </label>
                 ))
@@ -7513,7 +7513,7 @@ export default function TablePage() {
             </div>
             {/* Getting The Drop */}
             <div style={{ marginBottom: '1rem', padding: '8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-              <div style={{ fontSize: '12px', color: '#EF9F27', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Getting The Drop (optional)</div>
+              <div style={{ fontSize: '13px', color: '#EF9F27', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Getting The Drop (optional)</div>
               <select value={dropCharacter} onChange={e => setDropCharacter(e.target.value)}
                 style={{ width: '100%', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', cursor: 'pointer' }}>
                 <option value="">No one gets the drop</option>
@@ -7526,10 +7526,10 @@ export default function TablePage() {
                   </optgroup>
                 )}
               </select>
-              {dropCharacter && <div style={{ fontSize: '12px', color: '#cce0f5', marginTop: '4px', fontFamily: 'Barlow, sans-serif' }}>{dropCharacter} acts first with 1 action, then takes -2 CMod on initiative roll.</div>}
+              {dropCharacter && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '4px', fontFamily: 'Barlow, sans-serif' }}>{dropCharacter} acts first with 1 action, then takes -2 CMod on initiative roll.</div>}
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => { setShowNpcPicker(false); setDropCharacter('') }} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => { setShowNpcPicker(false); setDropCharacter('') }} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               <button onClick={confirmStartCombat} disabled={startingCombat}
                 style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: startingCombat ? 'not-allowed' : 'pointer', opacity: startingCombat ? 0.6 : 1 }}>
                 {startingCombat ? 'Rolling...' : `⚔️ Start Combat${selectedNpcIds.size > 0 ? ` (${selectedNpcIds.size} NPCs)` : ''}`}
@@ -7741,9 +7741,9 @@ export default function TablePage() {
         return (
           <div onClick={() => { if (!grappleResult) { setShowGrappleModal(false); setGrappleTarget(null); setGrappleInsight('none') } }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '400px' }}>
-              <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Grapple — Opposed Check</div>
+              <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Grapple — Opposed Check</div>
               <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>{active.character_name}</div>
-              <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '1rem' }}>
+              <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '1rem' }}>
                 PHY {aPhyMod >= 0 ? '+' : ''}{aPhyMod} · Unarmed {aUnarmed >= 0 ? '+' : ''}{aUnarmed}
               </div>
 
@@ -7753,7 +7753,7 @@ export default function TablePage() {
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
                     {/* Attacker roll */}
                     <div style={{ flex: 1, padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                      <div style={{ fontSize: '12px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '4px' }}>Attacker</div>
+                      <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '4px' }}>Attacker</div>
                       <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{grappleResult.attackerName}</div>
                       <div style={{ fontSize: '20px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
                         {/* Show three dice when Insight Die 3d6 was spent, two otherwise */}
@@ -7762,18 +7762,18 @@ export default function TablePage() {
                           : `${grappleResult.aDie1} + ${grappleResult.aDie2} = ${grappleResult.aTotal}`}
                       </div>
                       {grappleResult.insightSpent && (
-                        <div style={{ fontSize: '12px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '2px' }}>Insight Die spent</div>
+                        <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '2px' }}>Insight Die spent</div>
                       )}
-                      <div style={{ fontSize: '12px', color: isSuccess(grappleResult.aOutcome) ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', fontWeight: 700 }}>{grappleResult.aOutcome}</div>
+                      <div style={{ fontSize: '13px', color: isSuccess(grappleResult.aOutcome) ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', fontWeight: 700 }}>{grappleResult.aOutcome}</div>
                     </div>
                     {/* Defender roll */}
                     <div style={{ flex: 1, padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                      <div style={{ fontSize: '12px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '4px' }}>Defender</div>
+                      <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '4px' }}>Defender</div>
                       <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{grappleResult.defenderName}</div>
                       <div style={{ fontSize: '20px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
                         {grappleResult.dDie1} + {grappleResult.dDie2} = {grappleResult.dTotal}
                       </div>
-                      <div style={{ fontSize: '12px', color: isSuccess(grappleResult.dOutcome) ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', fontWeight: 700 }}>{grappleResult.dOutcome}</div>
+                      <div style={{ fontSize: '13px', color: isSuccess(grappleResult.dOutcome) ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', fontWeight: 700 }}>{grappleResult.dOutcome}</div>
                     </div>
                   </div>
 
@@ -7790,7 +7790,7 @@ export default function TablePage() {
                     {grappleResult.result === 'no_victor' && 'No Clear Victor'}
                   </div>
                   {grappleResult.rpTarget && (
-                    <div style={{ fontSize: '12px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', marginBottom: '8px' }}>
+                    <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', marginBottom: '8px' }}>
                       {grappleResult.rpTarget} takes 1 RP damage
                     </div>
                   )}
@@ -7802,7 +7802,7 @@ export default function TablePage() {
                 </>
               ) : !grappleTarget ? (
                 <>
-                  <div style={{ fontSize: '12px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>Select Target (Engaged)</div>
+                  <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>Select Target (Engaged)</div>
                   {engagedTargets.length === 0 ? (
                     <div style={{ padding: '1rem', textAlign: 'center', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>No targets within Engaged range</div>
                   ) : (
@@ -7823,7 +7823,7 @@ export default function TablePage() {
               ) : (
                 <>
                   {/* Target confirmation + optional Insight Die spend before rolling */}
-                  <div style={{ fontSize: '12px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>Target</div>
+                  <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>Target</div>
                   <div style={{ padding: '8px 12px', marginBottom: '1rem', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: grappleTarget.is_npc ? '#7fc458' : '#c0392b' }}>
                     {grappleTarget.character_name}{grappleTarget.is_npc ? ' (NPC)' : ''}
                   </div>
@@ -7832,24 +7832,24 @@ export default function TablePage() {
                       on 2d6. See grapple flow comment above. */}
                   {charEntry?.liveState && charEntry.liveState.insight_dice >= 1 && (
                     <div style={{ marginBottom: '1rem', padding: '8px', background: '#0f2010', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
-                      <div style={{ fontSize: '12px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>
+                      <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>
                         Spend Insight Die? ({charEntry.liveState.insight_dice} available)
                       </div>
                       <div style={{ display: 'flex', gap: '4px' }}>
                         <button onClick={() => setGrappleInsight(grappleInsight === '3d6' ? 'none' : '3d6')}
                           style={{ flex: 1, padding: '8px 4px', background: grappleInsight === '3d6' ? '#2d5a1b' : '#1a2e10', border: `1px solid ${grappleInsight === '3d6' ? '#7fc458' : '#2d5a1b'}`, borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                          Roll 3d6<br /><span style={{ fontSize: '12px', color: grappleInsight === '3d6' ? '#7fc458' : '#cce0f5' }}>Keep all 3</span>
+                          Roll 3d6<br /><span style={{ fontSize: '13px', color: grappleInsight === '3d6' ? '#7fc458' : '#cce0f5' }}>Keep all 3</span>
                         </button>
                         <button onClick={() => setGrappleInsight(grappleInsight === '+3cmod' ? 'none' : '+3cmod')}
                           style={{ flex: 1, padding: '8px 4px', background: grappleInsight === '+3cmod' ? '#2d5a1b' : '#1a2e10', border: `1px solid ${grappleInsight === '+3cmod' ? '#7fc458' : '#2d5a1b'}`, borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                          +3 CMod<br /><span style={{ fontSize: '12px', color: grappleInsight === '+3cmod' ? '#7fc458' : '#cce0f5' }}>Added to roll</span>
+                          +3 CMod<br /><span style={{ fontSize: '13px', color: grappleInsight === '+3cmod' ? '#7fc458' : '#cce0f5' }}>Added to roll</span>
                         </button>
                       </div>
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => { setGrappleTarget(null); setGrappleInsight('none') }}
-                      style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Back</button>
+                      style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Back</button>
                     <button onClick={() => executeGrapple(grappleTarget, grappleInsight)}
                       style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       🎲 {grappleInsight === '3d6' ? 'Roll 3d6' : 'Roll Grapple'}
@@ -8024,25 +8024,25 @@ export default function TablePage() {
         return (
           <div onClick={() => setShowReadyWeaponModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '380px' }}>
-              <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Ready Weapon</div>
+              <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Ready Weapon</div>
               <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>{active.character_name}</div>
 
               {/* Current weapon info */}
               <div style={{ marginBottom: '1rem', padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                <div style={{ fontSize: '12px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Primary</div>
+                <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Primary</div>
                 <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase' }}>{primary?.weaponName ?? 'None'}</div>
-                {primary && <div style={{ fontSize: '12px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                {primary && <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   Condition: <span style={{ color: condIdx <= 1 ? '#7fc458' : condIdx === 2 ? '#EF9F27' : '#f5a89a' }}>{primary.condition ?? 'Used'}</span>
                   {primaryW?.clip ? <> · Ammo: <span style={{ color: '#EF9F27' }}>{primary.ammoCurrent ?? 0}/{primaryW.clip}</span> · Reloads: <span style={{ color: '#7ab3d4' }}>{primary.reloads ?? 0}</span></> : null}
                 </div>}
                 {secondary?.weaponName && <>
-                  <div style={{ fontSize: '12px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginTop: '6px', marginBottom: '2px' }}>Secondary</div>
+                  <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginTop: '6px', marginBottom: '2px' }}>Secondary</div>
                   <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{secondary.weaponName}</div>
                 </>}
               </div>
 
               {hasTracking && (
-                <div style={{ fontSize: '12px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', padding: '4px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
+                <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', padding: '4px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
                   Tracking weapon — Ready Weapon grants +1 CMod aim bonus
                 </div>
               )}
@@ -8063,7 +8063,7 @@ export default function TablePage() {
                 if (invWeapons.length === 0) return null
                 return (
                   <div style={{ marginBottom: '1rem' }}>
-                    <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Equip from Inventory</div>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Equip from Inventory</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '160px', overflowY: 'auto' }}>
                       {invWeapons.map(item => {
                         const w = getWeaponByName(item.name)!
@@ -8071,9 +8071,9 @@ export default function TablePage() {
                           <button key={item.name} onClick={() => doEquipFromInventory(item.name)}
                             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'left', cursor: 'pointer' }}>
                             <span style={{ flex: 1, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em' }}>{item.name}</span>
-                            <span style={{ fontSize: '12px', color: '#cce0f5' }}>{w.damage} · {w.range}</span>
-                            {item.qty > 1 && <span style={{ fontSize: '12px', color: '#cce0f5' }}>×{item.qty}</span>}
-                            <span style={{ fontSize: '12px', color: '#7fc458', fontWeight: 700, letterSpacing: '.04em' }}>READY →</span>
+                            <span style={{ fontSize: '13px', color: '#cce0f5' }}>{w.damage} · {w.range}</span>
+                            {item.qty > 1 && <span style={{ fontSize: '13px', color: '#cce0f5' }}>×{item.qty}</span>}
+                            <span style={{ fontSize: '13px', color: '#7fc458', fontWeight: 700, letterSpacing: '.04em' }}>READY →</span>
                           </button>
                         )
                       })}
@@ -8086,15 +8086,15 @@ export default function TablePage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <button onClick={canSwitch ? doSwitch : undefined} disabled={!canSwitch}
                   style={{ padding: '10px', background: canSwitch ? '#1a1a2e' : '#1a1a1a', border: `1px solid ${canSwitch ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: canSwitch ? '#7ab3d4' : '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: canSwitch ? 'pointer' : 'not-allowed', textAlign: 'left' }}>
-                  Switch{secondary?.weaponName ? ` to ${secondary.weaponName}` : ''} {!canSwitch && <span style={{ fontSize: '12px', opacity: 0.5 }}>— no secondary</span>}
+                  Switch{secondary?.weaponName ? ` to ${secondary.weaponName}` : ''} {!canSwitch && <span style={{ fontSize: '13px', opacity: 0.5 }}>— no secondary</span>}
                 </button>
                 <button onClick={canReload ? doReload : undefined} disabled={!canReload}
                   style={{ padding: '10px', background: canReload ? '#2a2010' : '#1a1a1a', border: `1px solid ${canReload ? '#5a4a1b' : '#2e2e2e'}`, borderRadius: '3px', color: canReload ? '#EF9F27' : '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: canReload ? 'pointer' : 'not-allowed', textAlign: 'left' }}>
-                  Reload{primaryW?.clip ? ` (${primary?.reloads ?? 0} remaining)` : ''} {!canReload && !primaryW?.clip && <span style={{ fontSize: '12px', opacity: 0.5 }}>— melee weapon</span>}{!canReload && primaryW?.clip && (primary?.reloads ?? 0) <= 0 && <span style={{ fontSize: '12px', opacity: 0.5 }}>— no reloads left</span>}
+                  Reload{primaryW?.clip ? ` (${primary?.reloads ?? 0} remaining)` : ''} {!canReload && !primaryW?.clip && <span style={{ fontSize: '13px', opacity: 0.5 }}>— melee weapon</span>}{!canReload && primaryW?.clip && (primary?.reloads ?? 0) <= 0 && <span style={{ fontSize: '13px', opacity: 0.5 }}>— no reloads left</span>}
                 </button>
                 <button onClick={canUnjam ? doUnjam : undefined} disabled={!canUnjam}
                   style={{ padding: '10px', background: canUnjam ? '#2a1210' : '#1a1a1a', border: `1px solid ${canUnjam ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', color: canUnjam ? '#f5a89a' : '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: canUnjam ? 'pointer' : 'not-allowed', textAlign: 'left' }}>
-                  Unjam / Repair {!canUnjam && <span style={{ fontSize: '12px', opacity: 0.5 }}>— weapon not damaged</span>}
+                  Unjam / Repair {!canUnjam && <span style={{ fontSize: '13px', opacity: 0.5 }}>— weapon not damaged</span>}
                 </button>
               </div>
 
@@ -8160,7 +8160,7 @@ export default function TablePage() {
 
                 {/* NPC target picker */}
                 <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Target NPC</div>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Target NPC</div>
                   {eligibleNpcs.length === 0 ? (
                     <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px' }}>
                       No NPCs visible on the map or in your sidebar. A GM needs to place an NPC or reveal one first.
@@ -8180,7 +8180,7 @@ export default function TablePage() {
                     GMs can roll for any PC (they orchestrate NPC reactions
                     and may need to fire a First Impression on a PC's
                     behalf during an absent player's turn). */}
-                <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Rolling PC</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Rolling PC</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {entries.filter(e => isGM || e.userId === userId).map(e => {
                     const ready = !!npcChosen
@@ -8202,7 +8202,7 @@ export default function TablePage() {
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Group Check</div>
                 <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Highest modifier leads. Others contribute their SMod. No Insight Dice.</div>
                 <div style={{ marginBottom: '1rem' }}>
-                  <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Skill</div>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Skill</div>
                   <select value={groupCheckSkill} onChange={e => setGroupCheckSkill(e.target.value)}
                     style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
                     <option value="">Select skill...</option>
@@ -8210,7 +8210,7 @@ export default function TablePage() {
                   </select>
                 </div>
                 <div style={{ marginBottom: '1rem' }}>
-                  <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Participants</div>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Participants</div>
                   {entries.map(e => (
                     <label key={e.character.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px', cursor: 'pointer' }}>
                       <input type="checkbox" checked={groupCheckParticipants.has(e.character.id)} onChange={() => {
@@ -8230,7 +8230,7 @@ export default function TablePage() {
               <>
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Opposed Check</div>
                 <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Both sides roll until one succeeds and the other fails. Use standard skill rolls for each side.</div>
-                <div style={{ fontSize: '12px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', padding: '1rem' }}>
+                <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', padding: '1rem' }}>
                   Have each participant roll their relevant skill check normally. Compare outcomes — first to get Success while opponent gets Failure wins.
                 </div>
               </>
@@ -8308,7 +8308,7 @@ export default function TablePage() {
                       </select>
                     )}
                     {poachingNpcCommunity && (
-                      <div style={{ marginTop: '6px', padding: '6px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                      <div style={{ marginTop: '6px', padding: '6px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
                         ⚠ Poaching penalty: {pickedNpc?.name} is already in {poachingNpcCommunity.name} (−3 CMod)
                       </div>
                     )}
@@ -8334,7 +8334,7 @@ export default function TablePage() {
                     )}
                     {recruitCommunityId === '__new__' && (
                       <div style={{ marginTop: '8px', padding: '10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                        <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Name</div>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Name</div>
                         <input value={recruitNewCommunityName} onChange={e => setRecruitNewCommunityName(e.target.value)} placeholder="e.g. The Greenhouse"
                           style={{ width: '100%', padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
@@ -8356,7 +8356,7 @@ export default function TablePage() {
                         </button>
                       ))}
                     </div>
-                    <div style={{ marginTop: '4px', fontSize: '12px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
+                    <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
                       {recruitApproach === 'cohort' ? 'Shared interest or goal — joins until the next Morale Check.'
                         : recruitApproach === 'conscript' ? 'Coerced by credible threat — follows orders while coercion holds.'
                         : 'Shared belief or ideology — probationary through first Morale Check, then committed.'}
@@ -8386,7 +8386,7 @@ export default function TablePage() {
 
                   {/* CMod preview */}
                   <div style={{ marginBottom: '12px', padding: '10px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px' }}>
-                    <div style={{ fontSize: '12px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>CMod stack</div>
+                    <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>CMod stack</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>First Impression</span>
@@ -8430,11 +8430,11 @@ export default function TablePage() {
                       border: `1px solid ${active ? '#d48bd4' : '#3a3a3a'}`,
                       borderRadius: '3px',
                       color: active ? '#fff' : '#d4cfc9',
-                      fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer',
+                      fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer',
                     } as React.CSSProperties)
                     return (
                       <div style={{ marginBottom: '12px', padding: '10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px' }}>
-                        <div style={{ fontSize: '12px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
+                        <div style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
                           <span>Insight Die (pre-roll)</span>
                           <span style={{ color: '#cce0f5' }}>{insightAvail} available</span>
                         </div>
@@ -8443,7 +8443,7 @@ export default function TablePage() {
                           <button onClick={() => setRecruitPreInsight('3d6')} style={pill(recruitPreInsight === '3d6')}>Roll 3d6</button>
                           <button onClick={() => setRecruitPreInsight('+3cmod')} style={pill(recruitPreInsight === '+3cmod')}>+3 CMod</button>
                         </div>
-                        <div style={{ fontSize: '12px', color: '#cce0f5', marginTop: '6px', lineHeight: 1.4 }}>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '6px', lineHeight: 1.4 }}>
                           Spends 1 Insight Die. <strong>3d6</strong> keeps all three dice; <strong>+3 CMod</strong> flat-adds 3 to the total.
                         </div>
                       </div>
@@ -8452,7 +8452,7 @@ export default function TablePage() {
 
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={closeRecruitModal}
-                      style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                      style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                     <button onClick={executeRecruitRoll} disabled={!canRoll}
                       style={{ flex: 2, padding: '10px', background: canRoll ? '#c0392b' : '#2a1210', border: `1px solid ${canRoll ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: canRoll ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: canRoll ? 'pointer' : 'not-allowed' }}>
                       🎲 Roll Recruitment
@@ -8497,13 +8497,13 @@ export default function TablePage() {
                     if (insightAvail < 1) return null
                     const btn = (label: string, which: 1 | 2 | 3) => (
                       <button onClick={() => rerollRecruitDie(which)}
-                        style={{ flex: 1, padding: '8px 10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        style={{ flex: 1, padding: '8px 10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                         {label}
                       </button>
                     )
                     return (
                       <div style={{ marginBottom: '1rem', padding: '10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px' }}>
-                        <div style={{ fontSize: '12px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
+                        <div style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
                           <span>Spend Insight to Reroll</span>
                           <span style={{ color: '#cce0f5' }}>{insightAvail} available</span>
                         </div>
@@ -8512,7 +8512,7 @@ export default function TablePage() {
                           {btn(`Re-roll Die 2 (${recruitResult.die2})`, 2)}
                           {recruitResult.die3 !== undefined && btn(`Re-roll Die 3 (${recruitResult.die3})`, 3)}
                         </div>
-                        <div style={{ fontSize: '12px', color: '#cce0f5', marginTop: '6px', lineHeight: 1.4 }}>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '6px', lineHeight: 1.4 }}>
                           Rerolling flips membership state if the outcome crosses the success line.
                         </div>
                       </div>
@@ -8623,7 +8623,7 @@ export default function TablePage() {
 // buttons in a row no longer compete as solid colored rectangles.
 const hdrBtn = (_bg: string, color: string, _border: string): React.CSSProperties => ({
   padding: '4px 14px', background: '#1a1a1a', border: 'none', borderRadius: '8px',
-  color, fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif',
+  color, fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
   letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer',
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
   height: '28px', minWidth: '70px', boxSizing: 'border-box',

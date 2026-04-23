@@ -135,7 +135,7 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
   if (!isGM) return null
   if (loading) return <div style={{ color: '#cce0f5', fontSize: '13px' }}>Loading snapshots…</div>
 
-  const lbl: React.CSSProperties = { display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Barlow Condensed, sans-serif' }
+  const lbl: React.CSSProperties = { display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Barlow Condensed, sans-serif' }
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box' }
 
   return (
@@ -167,7 +167,7 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
           let me run it" workflow: make an empty campaign, come here, import. */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '12px', marginBottom: '12px' }}>
         <div style={{ fontSize: '14px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Import Snapshot</div>
-        <div style={{ fontSize: '12px', color: '#cce0f5', marginBottom: '8px', lineHeight: 1.4 }}>
+        <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px', lineHeight: 1.4 }}>
           Load a <code>.tapestry-snapshot.json</code> file into this campaign. Use this to receive a shared campaign from another GM — NPCs, pins, scenes, tactical tokens, and handouts will populate here. Best run in a brand-new empty campaign.
         </div>
         <input type="file" accept="application/json,.json" ref={fileInputRef} style={{ display: 'none' }}
@@ -201,23 +201,23 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.name}</div>
                 {r.description && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', fontFamily: 'Barlow, sans-serif' }}>{r.description}</div>}
-                <div style={{ fontSize: '12px', color: '#5a5550', marginTop: '4px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   {new Date(r.created_at).toLocaleString()} · {r.snapshot?.npcs?.length ?? 0} NPCs · {r.snapshot?.pins?.length ?? 0} pins · {r.snapshot?.scenes?.length ?? 0} scenes · {r.snapshot?.notes?.length ?? 0} notes
                   {r.includes_character_states && <span style={{ color: '#EF9F27', marginLeft: '6px' }}>+ party states</span>}
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
                 <button onClick={() => handleRestore(r)} disabled={!!restoring}
-                  style={{ padding: '4px 12px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: restoring ? 'wait' : 'pointer', opacity: restoring ? 0.5 : 1 }}>
+                  style={{ padding: '4px 12px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: restoring ? 'wait' : 'pointer', opacity: restoring ? 0.5 : 1 }}>
                   {restoring === r.id ? 'Restoring…' : 'Restore'}
                 </button>
                 <button onClick={() => handleDownload(r)}
                   title="Download the snapshot as a JSON file so another GM can import it into their own campaign"
-                  style={{ padding: '4px 12px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '4px 12px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Download
                 </button>
                 <button onClick={() => handleDelete(r)} disabled={!!restoring}
-                  style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Delete
                 </button>
               </div>

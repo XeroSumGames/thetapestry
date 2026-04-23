@@ -141,7 +141,7 @@ export default function ImportGmKitPage() {
   }
 
   const lbl: React.CSSProperties = {
-    display: 'block', fontSize: '12px', fontWeight: 600,
+    display: 'block', fontSize: '13px', fontWeight: 600,
     color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em',
     marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif',
   }
@@ -167,19 +167,19 @@ export default function ImportGmKitPage() {
           <input type="file" accept=".zip,application/zip"
             onChange={e => setFile(e.target.files?.[0] ?? null)}
             style={{ ...inp, padding: '6px' }} />
-          {file && <div style={{ fontSize: '12px', color: '#7fc458', fontFamily: 'Barlow, sans-serif', marginTop: '4px' }}>{file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</div>}
+          {file && <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow, sans-serif', marginTop: '4px' }}>{file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</div>}
         </div>
 
         <div>
           <label style={lbl}>Setting key</label>
           <input type="text" value={settingKey} onChange={e => setSettingKey(e.target.value)}
             placeholder="e.g. arena" style={inp} />
-          <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginTop: '4px' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginTop: '4px' }}>
             Must match a key in <code>lib/settings.ts</code> SETTINGS to show up on the create form.
           </div>
         </div>
 
-        <div style={{ background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', padding: '10px 12px', fontSize: '12px', color: '#EF9F27', lineHeight: 1.5 }}>
+        <div style={{ background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', padding: '10px 12px', fontSize: '13px', color: '#EF9F27', lineHeight: 1.5 }}>
           <b>Note:</b> NPC portraits, scene backgrounds, and handout attachments are stored as URLs pointing at the source campaign's Supabase bucket. They'll keep working as long as the source campaign's images stay reachable. Delete the source campaign and the seed images will 404.
         </div>
 
@@ -191,7 +191,7 @@ export default function ImportGmKitPage() {
 
         {result && (
           <div style={{ background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', padding: '12px' }}>
-            <div style={{ fontSize: '12px', color: '#7fc458', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Imported</div>
+            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Imported</div>
             <div style={{ fontSize: '13px', color: '#f5f2ee', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
               <div>Pins: <b>{result.counts.pins}</b>{result.errors.pins && <span style={{ color: '#c0392b' }}> (error: {result.errors.pins})</span>}</div>
               <div>NPCs: <b>{result.counts.npcs}</b>{result.errors.npcs && <span style={{ color: '#c0392b' }}> (error: {result.errors.npcs})</span>}</div>

@@ -569,7 +569,7 @@ export default function CommunityMoraleModal({
                 {/* Mood */}
                 <div style={slotRow}>
                   <span style={{ ...label, flex: 1 }}>Mood Around The Campfire</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '12px' }}>auto</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>auto</span>
                   <span style={{ color: cmodColor(moodFromPrior), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(moodFromPrior)}</span>
                   <input type="number" value={slotMoodOverride ?? ''} placeholder="—"
                     onChange={e => setSlotMoodOverride(e.target.value === '' ? null : parseInt(e.target.value) || 0)}
@@ -578,21 +578,21 @@ export default function CommunityMoraleModal({
                 {/* Fed slot — live 0 until roll fires */}
                 <div style={slotRow}>
                   <span style={{ ...label, flex: 1 }}>Fed (post-roll)</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '12px' }}>snaps to Fed outcome</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>snaps to Fed outcome</span>
                   <span style={{ color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>—</span>
                   <div style={{ width: '64px' }} />
                 </div>
                 {/* Clothed slot — live 0 until roll fires */}
                 <div style={slotRow}>
                   <span style={{ ...label, flex: 1 }}>Clothed (post-roll)</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '12px' }}>snaps to Clothed outcome</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>snaps to Clothed outcome</span>
                   <span style={{ color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>—</span>
                   <div style={{ width: '64px' }} />
                 </div>
                 {/* Enough Hands */}
                 <div style={slotRow}>
                   <span style={{ ...label, flex: 1 }}>Enough Hands</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '12px' }}>auto</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>auto</span>
                   <span style={{ color: cmodColor(autoEnoughHands), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoEnoughHands)}</span>
                   <input type="number" value={slotEnoughHandsOverride ?? ''} placeholder="—"
                     onChange={e => setSlotEnoughHandsOverride(e.target.value === '' ? null : parseInt(e.target.value) || 0)}
@@ -601,7 +601,7 @@ export default function CommunityMoraleModal({
                 {/* A Clear Voice */}
                 <div style={slotRow}>
                   <span style={{ ...label, flex: 1 }}>A Clear Voice</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '12px' }}>auto</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>auto</span>
                   <span style={{ color: cmodColor(autoClearVoice), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoClearVoice)}</span>
                   <input type="number" value={slotClearVoiceOverride ?? ''} placeholder="—"
                     onChange={e => setSlotClearVoiceOverride(e.target.value === '' ? null : parseInt(e.target.value) || 0)}
@@ -610,7 +610,7 @@ export default function CommunityMoraleModal({
                 {/* Safety */}
                 <div style={slotRow}>
                   <span style={{ ...label, flex: 1 }}>Someone To Watch Over Me</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '12px' }}>auto</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>auto</span>
                   <span style={{ color: cmodColor(autoSafety), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoSafety)}</span>
                   <input type="number" value={slotSafetyOverride ?? ''} placeholder="—"
                     onChange={e => setSlotSafetyOverride(e.target.value === '' ? null : parseInt(e.target.value) || 0)}
@@ -619,7 +619,7 @@ export default function CommunityMoraleModal({
                 {/* Additional — freeform */}
                 <div style={slotRow}>
                   <span style={{ ...label, flex: 1 }}>Additional (Fill-In-The-Gaps)</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '12px' }}>GM freeform</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>GM freeform</span>
                   <span style={{ color: cmodColor(additionalMoraleCmod), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(additionalMoraleCmod)}</span>
                   <input type="number" value={additionalMoraleCmod}
                     onChange={e => setAdditionalMoraleCmod(parseInt(e.target.value) || 0)}
@@ -700,7 +700,7 @@ export default function CommunityMoraleModal({
               <span style={{ color: r.morale.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.morale.cmod >= 0 ? '+' : ''}{r.morale.cmod} CMod</span>
               <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.morale.total}</span>
             </div>
-            <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.6 }}>
+            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.6 }}>
               <span style={{ color: '#5a5550' }}>Slots:</span>
               <span> Mood <span style={{ color: cmodColor(r.moraleSlots.mood), fontWeight: 700 }}>{formatCmod(r.moraleSlots.mood)}</span></span>
               <span> · Fed <span style={{ color: cmodColor(r.moraleSlots.fed), fontWeight: 700 }}>{formatCmod(r.moraleSlots.fed)}</span></span>
@@ -733,7 +733,7 @@ export default function CommunityMoraleModal({
               <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
                 {r.departureIds.map(id => memberNameById.get(id) ?? '(unknown)').join(', ')}
               </div>
-              <div style={{ marginTop: '6px', fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <div style={{ marginTop: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
                 Roster after: {r.membersAfter} · Consecutive failures: {r.consecutiveFailuresAfter}/3
               </div>
             </div>

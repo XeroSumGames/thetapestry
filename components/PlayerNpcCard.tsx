@@ -101,14 +101,14 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '17px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.name}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '3px', flexWrap: 'wrap' }}>
             {npc.npc_type && (
-              <span style={{ fontSize: '12px', padding: '1px 5px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.npc_type}</span>
+              <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.npc_type}</span>
             )}
-            <span style={{ fontSize: '12px', padding: '1px 5px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{displayStatus}</span>
+            <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{displayStatus}</span>
             {/* Recruit button — right of the status badge per spec.
                 Hidden for dead/mortal since you can't recruit a corpse. */}
             {onRecruit && displayStatus !== 'dead' && displayStatus !== 'mortally wounded' && (
               <button onClick={onRecruit}
-                style={{ fontSize: '12px', padding: '1px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}
+                style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}
                 title="Open the Recruit modal with this NPC as the target">
                 🤝 Recruit
               </button>
@@ -119,7 +119,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
             {cmod != null && cmod !== 0 && (
               <span
                 title={`Your First Impression with ${npc.name}: ${cmod > 0 ? '+' : ''}${cmod} CMod on social rolls`}
-                style={{ fontSize: '12px', padding: '1px 5px', borderRadius: '2px',
+                style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px',
                   background: cmod > 0 ? '#1a2e10' : '#2a1210',
                   border: `1px solid ${cmod > 0 ? '#2d5a1b' : '#c0392b'}`,
                   color: cmod > 0 ? '#7fc458' : '#f5a89a',
@@ -129,7 +129,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
             )}
           </div>
         </div>
-        <button onClick={onClose} style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', flexShrink: 0 }}>Close</button>
+        <button onClick={onClose} style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', flexShrink: 0 }}>Close</button>
       </div>
 
       {enlarged && npc.portrait_url && (

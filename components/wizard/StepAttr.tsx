@@ -112,7 +112,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
                 {gained.length ? gained.join(', ') : 'none'}
               </span>
             </div>
-            {d.note && <div style={{ fontSize: '12px', color: '#d4cfc9', marginTop: '5px', lineHeight: 1.5, fontStyle: 'italic' }}>"{d.note}"</div>}
+            {d.note && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '5px', lineHeight: 1.5, fontStyle: 'italic' }}>"{d.note}"</div>}
           </div>
         )
       })}
@@ -127,7 +127,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
                 <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', border: `1px solid ${i < (stepData.attrKey ? 1 : 0) ? '#c0392b' : '#3a3a3a'}`, background: i < (stepData.attrKey ? 1 : 0) ? '#c0392b' : '#0f0f0f' }} />
               ))}
             </div>
-            <span style={{ fontSize: '12px', color: '#f5f2ee', flex: 1 }}>Attribute CDP — raise one attribute</span>
+            <span style={{ fontSize: '13px', color: '#f5f2ee', flex: 1 }}>Attribute CDP — raise one attribute</span>
             <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '36px', textAlign: 'right', color: stepData.attrKey ? '#f5a89a' : '#f5f2ee' }}>
               {stepData.attrKey ? '0 left' : '1 left'}
             </span>
@@ -145,15 +145,15 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
                   borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
                   transition: 'all .15s',
                 }}>
-                  <div style={{ fontSize: '12px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-                  <div style={{ fontSize: '12px', color: '#d4cfc9', marginBottom: '4px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                     <button onClick={() => pickAttr(k)} disabled={!canDec} style={attrBtn(!canDec)}>-</button>
                     <div>
                       <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', color: isSelected ? '#f5a89a' : val > 0 ? '#f5f2ee' : '#d4cfc9' }}>
                         {val >= 0 ? `+${val}` : val}
                       </div>
-                      <div style={{ fontSize: '12px', color: isSelected ? '#f5a89a' : '#d4cfc9', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
+                      <div style={{ fontSize: '13px', color: isSelected ? '#f5a89a' : '#d4cfc9', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
                     </div>
                     <button onClick={() => pickAttr(k)} disabled={!canInc} style={attrBtn(!canInc)}>+</button>
                   </div>
@@ -162,7 +162,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
             })}
           </div>
           {stepData.attrKey && (
-            <p style={{ fontSize: '12px', color: '#d4cfc9', marginBottom: '8px', lineHeight: 1.6 }}>
+            <p style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '8px', lineHeight: 1.6 }}>
               Raised {ATTR_FULL[stepData.attrKey as AttributeName]} this step. One attribute per step in stages 1-3.
             </p>
           )}
@@ -177,7 +177,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
             <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', border: `1px solid ${i < skillCDPSpent ? '#c0392b' : '#3a3a3a'}`, background: i < skillCDPSpent ? '#c0392b' : '#0f0f0f' }} />
           ))}
         </div>
-        <span style={{ fontSize: '12px', color: '#f5f2ee', flex: 1 }}>Skill CDP</span>
+        <span style={{ fontSize: '13px', color: '#f5f2ee', flex: 1 }}>Skill CDP</span>
         <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '36px', textAlign: 'right', color: skillCDPSpent >= skillBudget ? '#f5a89a' : '#f5f2ee' }}>
           {skillBudget - skillCDPSpent} left
         </span>
@@ -212,7 +212,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
                 <button onClick={() => changeSkill(sk.name, -1)} disabled={!canDec} style={skBtn(!canDec)}>-</button>
-                <span style={{ fontSize: '12px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Barlow Condensed, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Barlow Condensed, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>
                   {disp}
                 </span>
                 <button onClick={() => changeSkill(sk.name, 1)} disabled={!canInc} style={skBtn(!canInc)}>+</button>
@@ -236,7 +236,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
 
 const sh: React.CSSProperties = {
   fontFamily: 'Barlow Condensed, sans-serif',
-  fontSize: '12px', fontWeight: 600, color: '#f5f2ee',
+  fontSize: '13px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em',
   margin: '1.25rem 0 8px', borderBottom: '1px solid #2e2e2e',
   paddingBottom: '4px',
@@ -247,7 +247,7 @@ function attrBtn(disabled: boolean): React.CSSProperties {
     width: '19px', height: '19px', border: '1px solid #3a3a3a',
     borderRadius: '2px', background: '#1a1a1a',
     cursor: disabled ? 'not-allowed' : 'pointer',
-    fontSize: '12px', color: '#f5f2ee',
+    fontSize: '13px', color: '#f5f2ee',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: 0, lineHeight: 1, opacity: disabled ? 0.18 : 1,
     transition: 'all .1s',
@@ -259,7 +259,7 @@ function skBtn(disabled: boolean): React.CSSProperties {
     width: '19px', height: '19px', border: '1px solid #3a3a3a',
     borderRadius: '2px', background: '#1a1a1a',
     cursor: disabled ? 'not-allowed' : 'pointer',
-    fontSize: '12px', color: '#f5f2ee',
+    fontSize: '13px', color: '#f5f2ee',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: 0, lineHeight: 1, opacity: disabled ? 0.18 : 1,
     transition: 'all .1s',

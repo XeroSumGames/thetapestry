@@ -224,14 +224,14 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
                     style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical', marginBottom: '4px' }} />
                   <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Latitude</div>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Latitude</div>
                       <input value={editLat} onChange={e => setEditLat(e.target.value)} placeholder="Lat"
-                        style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'monospace', boxSizing: 'border-box' }} />
+                        style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'monospace', boxSizing: 'border-box' }} />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Longitude</div>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Longitude</div>
                       <input value={editLng} onChange={e => setEditLng(e.target.value)} placeholder="Lng"
-                        style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'monospace', boxSizing: 'border-box' }} />
+                        style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'monospace', boxSizing: 'border-box' }} />
                     </div>
                   </div>
                   {/* Address search — lookup via Nominatim, click a
@@ -243,9 +243,9 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
                   {/* Tactical Map link */}
                   {isGM && scenes.length > 0 && (
                     <div style={{ marginBottom: '4px' }}>
-                      <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Tactical Map</div>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Tactical Map</div>
                       <select value={editSceneId ?? ''} onChange={e => setEditSceneId(e.target.value || null)}
-                        style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
+                        style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
                         <option value="">— None —</option>
                         {scenes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>
@@ -253,7 +253,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
                   )}
                   {/* Sort order — explicit number that decides list position */}
                   <div style={{ marginBottom: '4px', width: '90px' }}>
-                    <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Order</div>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Order</div>
                     <input value={editSortOrder} onChange={e => setEditSortOrder(e.target.value)} type="number" min="1" placeholder="#"
                       style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', textAlign: 'center' }} />
                   </div>
@@ -280,7 +280,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
                   >
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       {pin.name}
-                      {pin.tactical_scene_id && <span title="Has tactical map" style={{ fontSize: '12px', color: '#7ab3d4' }}>🗺️</span>}
+                      {pin.tactical_scene_id && <span title="Has tactical map" style={{ fontSize: '13px', color: '#7ab3d4' }}>🗺️</span>}
                     </div>
                     {pin.notes && <div style={{ fontSize: '13px', color: '#cce0f5', overflow: expandedId === pin.id ? 'visible' : 'hidden', textOverflow: expandedId === pin.id ? 'unset' : 'ellipsis', whiteSpace: expandedId === pin.id ? 'normal' : 'nowrap' }}>{pin.notes}</div>}
                     {expandedId === pin.id && pinImages[pin.id] && pinImages[pin.id].length > 0 && (
@@ -345,7 +345,7 @@ function AddressSearchRow({ onPick }: { onPick: (lat: number, lng: number) => vo
   }
   return (
     <div style={{ marginBottom: '4px' }}>
-      <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Address search</div>
+      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Address search</div>
       <div style={{ display: 'flex', gap: '4px' }}>
         <input value={q}
           onChange={e => setQ(e.target.value)}
@@ -353,7 +353,7 @@ function AddressSearchRow({ onPick }: { onPick: (lat: number, lng: number) => vo
           placeholder="Street, city, landmark..."
           style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
         <button onClick={runSearch} disabled={searching || !q.trim()}
-          style={{ padding: '0 10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching || !q.trim() ? 'not-allowed' : 'pointer', opacity: searching || !q.trim() ? 0.5 : 1 }}>
+          style={{ padding: '0 10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching || !q.trim() ? 'not-allowed' : 'pointer', opacity: searching || !q.trim() ? 0.5 : 1 }}>
           {searching ? '…' : 'Search'}
         </button>
       </div>
@@ -362,7 +362,7 @@ function AddressSearchRow({ onPick }: { onPick: (lat: number, lng: number) => vo
           {results.map((r, i) => (
             <button key={i}
               onClick={() => { onPick(parseFloat(r.lat), parseFloat(r.lon)); setResults([]); setQ('') }}
-              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: 'transparent', border: 'none', borderBottom: i < results.length - 1 ? '1px solid #2e2e2e' : 'none', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow, sans-serif', cursor: 'pointer', lineHeight: 1.3 }}
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: 'transparent', border: 'none', borderBottom: i < results.length - 1 ? '1px solid #2e2e2e' : 'none', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow, sans-serif', cursor: 'pointer', lineHeight: 1.3 }}
               onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
               {r.display_name}

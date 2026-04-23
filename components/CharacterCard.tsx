@@ -309,15 +309,15 @@ export default function CharacterCard({
     if (!localState) return null
     return (
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '12px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>{label}</div>
+        <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>{label}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
           <button disabled={!canEdit || value <= 0}
             onClick={() => canEdit && value > 0 && localState && updateStat(localState.id, field, value - 1)}
-            style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && value > 0 ? 'pointer' : 'not-allowed', opacity: canEdit && value > 0 ? 1 : 0.3, fontSize: '12px', lineHeight: 1, padding: 0 }}>-</button>
+            style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && value > 0 ? 'pointer' : 'not-allowed', opacity: canEdit && value > 0 ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0 }}>-</button>
           <span style={{ fontSize: '16px', fontWeight: 700, color, fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'center' }}>{value}</span>
           <button disabled={!canEdit || value >= max}
             onClick={() => canEdit && value < max && localState && updateStat(localState.id, field, value + 1)}
-            style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && value < max ? 'pointer' : 'not-allowed', opacity: canEdit && value < max ? 1 : 0.3, fontSize: '12px', lineHeight: 1, padding: 0 }}>+</button>
+            style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && value < max ? 'pointer' : 'not-allowed', opacity: canEdit && value < max ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0 }}>+</button>
         </div>
       </div>
     )
@@ -393,9 +393,9 @@ export default function CharacterCard({
                 onMouseEnter={e => { if (clickable) { (e.currentTarget as HTMLElement).style.borderColor = '#7fc458'; (e.currentTarget as HTMLElement).style.background = v > 0 ? '#243e14' : '#2e2e2e' } }}
                 onMouseLeave={e => { if (clickable) { (e.currentTarget as HTMLElement).style.borderColor = v > 0 ? '#2d5a1b' : '#3a3a3a'; (e.currentTarget as HTMLElement).style.background = v > 0 ? '#1a2e10' : '#242424' } }}
               >
-                <div style={{ fontSize: '12px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
                 <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: v > 0 ? '#7fc458' : '#d4cfc9' }}>{sgn(v)}</div>
-                {clickable && <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>ROLL</div>}
+                {clickable && <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>ROLL</div>}
               </div>
             )
           })}
@@ -410,7 +410,7 @@ export default function CharacterCard({
                 {localState.wp_current === 0 && (
                   <div style={{ marginTop: '4px' }}>
                     {localState.death_countdown != null && localState.death_countdown <= 0 ? (
-                      <div style={{ fontSize: '13px', color: '#3a3a3a', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>💀 Dead</div>
+                      <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>💀 Dead</div>
                     ) : (
                       <>
                         <div style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>
@@ -547,7 +547,7 @@ export default function CharacterCard({
               <span key={s.skillName}
                 onClick={() => handleSkillClick(s.skillName, s.level)}
                 style={{
-                  fontSize: '12px', padding: '3px 6px', borderRadius: '3px',
+                  fontSize: '13px', padding: '3px 6px', borderRadius: '3px',
                   background: raised ? '#1a2e10' : '#1a1a1a',
                   border: `1px solid ${raised ? '#2d5a1b' : '#2e2e2e'}`,
                   color: raised ? '#7fc458' : s.level < 0 ? '#7a4a4a' : '#f5f2ee',
@@ -727,7 +727,7 @@ export default function CharacterCard({
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif' }}>
                 <span style={{ color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.06em' }}>Encumbrance:</span>
                 <span style={{ color: overloaded ? '#c0392b' : '#7fc458', fontWeight: 700 }}>{currentEnc}/{encLimit}</span>
-                {overloaded && <span style={{ color: '#c0392b', fontSize: '12px' }}>OVERLOADED</span>}
+                {overloaded && <span style={{ color: '#c0392b', fontSize: '13px' }}>OVERLOADED</span>}
               </div>
             )
           })()}
@@ -751,7 +751,7 @@ export default function CharacterCard({
           {canEdit && localState && (
             <div style={{ display: 'flex', gap: '4px', marginTop: '8px', flexWrap: 'wrap' }}>
               <button onClick={() => setShowRestModal(true)}
-                style={{ padding: '3px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ padding: '3px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                 Rest
               </button>
               <button onClick={() => {
@@ -761,7 +761,7 @@ export default function CharacterCard({
                   onStatUpdate?.(localState.id, 'stress', newStress)
                 }
               }}
-                style={{ padding: '3px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#EF9F27', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ padding: '3px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                 Reduce Stress
               </button>
               <button onClick={() => {
@@ -784,7 +784,7 @@ export default function CharacterCard({
                   alert('Subsistence: 1 RP damage')
                 }
               }}
-                style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                 Env. Damage
               </button>
             </div>
@@ -831,17 +831,17 @@ export default function CharacterCard({
             <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1rem' }}>How much time has passed resting?</div>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Hours</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Hours</div>
                 <input type="number" min={0} value={restHours} onChange={e => setRestHours(parseInt(e.target.value) || 0)}
                   style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Days</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Days</div>
                 <input type="number" min={0} value={restDays} onChange={e => setRestDays(parseInt(e.target.value) || 0)}
                   style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '12px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Weeks</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Weeks</div>
                 <input type="number" min={0} value={restWeeks} onChange={e => setRestWeeks(parseInt(e.target.value) || 0)}
                   style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
               </div>
@@ -1007,7 +1007,7 @@ export default function CharacterCard({
 function btn(borderColor: string, color: string): React.CSSProperties {
   return {
     background: 'none', border: `1px solid ${borderColor}`,
-    borderRadius: '3px', color, fontSize: '12px',
+    borderRadius: '3px', color, fontSize: '13px',
     padding: '4px 10px', cursor: 'pointer',
     fontFamily: 'Barlow Condensed, sans-serif',
     letterSpacing: '.04em', textTransform: 'uppercase',

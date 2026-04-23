@@ -148,7 +148,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
 
   const chipBtn: React.CSSProperties = {
     padding: '4px 10px', background: 'transparent', border: '1px solid #3a3a3a',
-    borderRadius: '3px', color: '#7ab3d4', fontSize: '12px',
+    borderRadius: '3px', color: '#7ab3d4', fontSize: '13px',
     fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', cursor: 'pointer',
   }
@@ -182,7 +182,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
           {pendingFiles.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
               {pendingFiles.map((f, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name} <span style={{ color: '#5a5550' }}>({fmtSize(f.size)})</span></span>
                   <button onClick={() => setPendingFiles(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#c0392b', fontSize: '14px', cursor: 'pointer', padding: '0 4px' }}>×</button>
                 </div>
@@ -198,7 +198,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
 
       {/* Notes list */}
       {notes.length === 0 && !showAdd && (
-        <div style={{ color: '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', padding: '2rem' }}>
+        <div style={{ color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', padding: '2rem' }}>
           No notes yet
         </div>
       )}
@@ -208,10 +208,10 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', cursor: 'pointer' }}>
             <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>
               {n.title}
-              {n.shared && <span style={{ marginLeft: '6px', fontSize: '12px', color: '#7fc458' }}>SHARED</span>}
-              {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '12px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
+              {n.shared && <span style={{ marginLeft: '6px', fontSize: '13px', color: '#7fc458' }}>SHARED</span>}
+              {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '13px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
             </span>
-            <span style={{ fontSize: '12px', color: '#5a5550' }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
+            <span style={{ fontSize: '13px', color: '#5a5550' }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
           </div>
           {expanded.has(n.id) && (
             <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
@@ -251,7 +251,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                       type: 'broadcast', event: 'gm_notes_updated', payload: { id: n.id, shared: next },
                     })
                   }}
-                    style={{ flex: 1, padding: '4px 10px', background: n.shared ? '#1a2e10' : 'transparent', border: `1px solid ${n.shared ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.shared ? '#7fc458' : '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ flex: 1, padding: '4px 10px', background: n.shared ? '#1a2e10' : 'transparent', border: `1px solid ${n.shared ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.shared ? '#7fc458' : '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     {n.shared ? '✓ Shared' : 'Share'}
                   </button>
                   <label style={{ ...chipBtn, flex: 1, textAlign: 'center' as const, display: 'inline-block', cursor: uploadingNoteId === n.id ? 'wait' : 'pointer', opacity: uploadingNoteId === n.id ? 0.6 : 1 }}>
@@ -262,11 +262,11 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                 {/* Row 2 — Popout + Delete */}
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <button onClick={() => openPopout(`/handout?id=${n.id}`, `handout-${n.id}`, { w: 800, h: 700 })}
-                    style={{ flex: 1, padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ flex: 1, padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Popout
                   </button>
                   <button onClick={() => handleDelete(n)}
-                    style={{ flex: 1, padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ flex: 1, padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Delete Note
                   </button>
                 </div>

@@ -173,7 +173,7 @@ export default function QuickCharacterPage() {
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Quick Character Creation
         </div>
-        <div style={{ fontSize: '12px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
+        <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
           20 CDP � No Life-Stage Structure
         </div>
       </div>
@@ -189,7 +189,7 @@ export default function QuickCharacterPage() {
 
       {/* Step card */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1.25rem', marginBottom: '1rem', borderLeft: '3px solid #c0392b' }}>
-        <div style={{ fontSize: '12px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px' }}>
+        <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px' }}>
           Step {step} of 5
         </div>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '26px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '8px', color: '#f5f2ee' }}>
@@ -213,7 +213,7 @@ export default function QuickCharacterPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginBottom: '1.25rem' }}>
               {PROFESSIONS.map(p => (
                 <div key={p.name} onClick={() => syncProfession(profession === p.name ? '' : p.name)}
-                  style={{ padding: '6px 8px', borderRadius: '3px', fontSize: '12px', cursor: 'pointer', textAlign: 'center', border: `1px solid ${profession === p.name ? '#c0392b' : '#2e2e2e'}`, background: profession === p.name ? '#2a1210' : '#242424', color: profession === p.name ? '#f5a89a' : '#f5f2ee', fontWeight: profession === p.name ? 600 : 400 }}>
+                  style={{ padding: '6px 8px', borderRadius: '3px', fontSize: '13px', cursor: 'pointer', textAlign: 'center', border: `1px solid ${profession === p.name ? '#c0392b' : '#2e2e2e'}`, background: profession === p.name ? '#2a1210' : '#242424', color: profession === p.name ? '#f5a89a' : '#f5f2ee', fontWeight: profession === p.name ? 600 : 400 }}>
                   {p.name}
                 </div>
               ))}
@@ -227,7 +227,7 @@ export default function QuickCharacterPage() {
                   <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', border: `1px solid ${i < attrCDPSpent ? '#c0392b' : '#3a3a3a'}`, background: i < attrCDPSpent ? '#c0392b' : '#0f0f0f' }} />
                 ))}
               </div>
-              <span style={{ fontSize: '12px', color: '#f5f2ee', flex: 1 }}>Attribute CDP</span>
+              <span style={{ fontSize: '13px', color: '#f5f2ee', flex: 1 }}>Attribute CDP</span>
               <span style={{ fontSize: '13px', fontWeight: 600, color: attrCDPSpent >= ATTR_BUDGET ? '#f5a89a' : '#f5f2ee' }}>{ATTR_BUDGET - attrCDPSpent} left</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', marginBottom: '1.25rem' }}>
@@ -237,13 +237,13 @@ export default function QuickCharacterPage() {
                 const canDec = val > 0
                 return (
                   <div key={k} style={{ background: val > 0 ? '#2a1210' : '#242424', border: `1px solid ${val > 0 ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', padding: '8px 4px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '12px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-                    <div style={{ fontSize: '12px', color: '#d4cfc9', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
+                    <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                    <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                       <button onClick={() => changeAttr(k, -1)} disabled={!canDec} style={skBtn(!canDec)}>-</button>
                       <div>
                         <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee' }}>{val >= 0 ? `+${val}` : val}</div>
-                        <div style={{ fontSize: '12px', color: val > 0 ? '#f5a89a' : '#d4cfc9', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
+                        <div style={{ fontSize: '13px', color: val > 0 ? '#f5a89a' : '#d4cfc9', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
                       </div>
                       <button onClick={() => changeAttr(k, 1)} disabled={!canInc} style={skBtn(!canInc)}>+</button>
                     </div>
@@ -260,7 +260,7 @@ export default function QuickCharacterPage() {
                   <div key={i} style={{ width: '10px', height: '10px', borderRadius: '2px', border: `1px solid ${i < skillCDPSpent ? '#c0392b' : '#3a3a3a'}`, background: i < skillCDPSpent ? '#c0392b' : '#0f0f0f' }} />
                 ))}
               </div>
-              <span style={{ fontSize: '12px', color: '#f5f2ee', flex: 1 }}>Skill CDP</span>
+              <span style={{ fontSize: '13px', color: '#f5f2ee', flex: 1 }}>Skill CDP</span>
               <span style={{ fontSize: '13px', fontWeight: 600, color: skillCDPSpent >= SKILL_BUDGET ? '#f5a89a' : '#f5f2ee' }}>{SKILL_BUDGET - skillCDPSpent} left</span>
             </div>
             <input
@@ -286,7 +286,7 @@ export default function QuickCharacterPage() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
                       <button onClick={() => changeSkill(sk.name, -1)} disabled={!canDec} style={skBtn(!canDec)}>-</button>
-                      <span style={{ fontSize: '12px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Barlow Condensed, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>{disp}</span>
+                      <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Barlow Condensed, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>{disp}</span>
                       <button onClick={() => changeSkill(sk.name, 1)} disabled={!canInc} style={skBtn(!canInc)}>+</button>
                     </div>
                   </div>
@@ -306,9 +306,9 @@ export default function QuickCharacterPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #2e2e2e' }}>
         <button onClick={() => { if (requireAuth()) return; setStep(s => Math.max(0, s - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }} disabled={step === 0} style={navBtn(false)}>Back</button>
         <div style={{ textAlign: 'center' }}>
-          {saveError && <div style={{ fontSize: '12px', color: '#f5a89a', marginBottom: '2px' }}>{saveError}</div>}
-          {saved && <div style={{ fontSize: '12px', color: '#7fc458', marginBottom: '2px' }}>Character saved!</div>}
-          <div style={{ fontSize: '12px', color: '#d4cfc9', letterSpacing: '.05em', textTransform: 'uppercase' }}>Step {step} of 5</div>
+          {saveError && <div style={{ fontSize: '13px', color: '#f5a89a', marginBottom: '2px' }}>{saveError}</div>}
+          {saved && <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '2px' }}>Character saved!</div>}
+          <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.05em', textTransform: 'uppercase' }}>Step {step} of 5</div>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {step === 5 && (
@@ -329,7 +329,7 @@ export default function QuickCharacterPage() {
 }
 
 const sh: React.CSSProperties = {
-  fontFamily: 'Barlow Condensed, sans-serif', fontSize: '12px', fontWeight: 600, color: '#f5f2ee',
+  fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em', margin: '1.25rem 0 8px',
   borderBottom: '1px solid #2e2e2e', paddingBottom: '4px',
 }
@@ -339,5 +339,5 @@ function navBtn(primary: boolean): React.CSSProperties {
 }
 
 function skBtn(disabled: boolean): React.CSSProperties {
-  return { width: '19px', height: '19px', border: '1px solid #3a3a3a', borderRadius: '2px', background: '#1a1a1a', cursor: disabled ? 'not-allowed' : 'pointer', fontSize: '12px', color: '#f5f2ee', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, lineHeight: 1, opacity: disabled ? 0.18 : 1, transition: 'all .1s' }
+  return { width: '19px', height: '19px', border: '1px solid #3a3a3a', borderRadius: '2px', background: '#1a1a1a', cursor: disabled ? 'not-allowed' : 'pointer', fontSize: '13px', color: '#f5f2ee', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, lineHeight: 1, opacity: disabled ? 0.18 : 1, transition: 'all .1s' }
 }
