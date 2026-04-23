@@ -1063,9 +1063,26 @@ export const MONGRELS_NPCS: NpcSeed[] = [
   },
 ]
 
+// King's Crossing Mall — pulled directly from `CHASED_NPCS` so the source of
+// truth stays in one place (Chased magazine pages 34-39 + Art Buchanan as
+// the overall mall leader). The Mall is a stand-alone persistent setting,
+// so the Chased intro cast (Maddy Bell, the Connors) is intentionally
+// excluded — those belong to the Chased adventure module that funnels
+// players INTO the mall, not to the mall as an ongoing community.
+const KINGS_CROSSING_MALL_NAMES = new Set([
+  'William Robertson', 'Caleb Robertson', 'Carol Robertson',
+  'Bobby Robertson', 'Jemmy Robertson',
+  'Paula Ortiz', 'Milton Ortiz', 'Nick Manson',
+  'Eric Rose', 'Macy Stevens', 'Mikey Doyle',
+  'Art Buchanan',
+])
+export const KINGS_CROSSING_MALL_NPCS: NpcSeed[] = CHASED_NPCS
+  .filter(n => KINGS_CROSSING_MALL_NAMES.has(n.name))
+
 export const SETTING_NPCS: Record<string, NpcSeed[]> = {
   district_zero: DISTRICT_ZERO_NPCS,
   chased: CHASED_NPCS,
   empty: CHASED_NPCS,
   mongrels: MONGRELS_NPCS,
+  kings_crossing_mall: KINGS_CROSSING_MALL_NPCS,
 }
