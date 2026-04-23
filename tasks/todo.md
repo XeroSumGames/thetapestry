@@ -6,6 +6,20 @@
 - [ ] **CMod Stack reusable component** — user loved the itemized CMod Stack on the Recruit modal; extract into `<CmodStack>` and use in Grapple, First Impression, main Attack modals.
 - [ ] **Phase C Communities** — weekly Morale Check + Resource Checks (Fed/Clothed) + Activity Blocks (Phase D).
 
+## 🔒 Backburner — Thriver godmode UI sweep
+**Status:** DB-level done, UI deferred. Xero's `profiles.role = 'Thriver'` + the policies in `sql/thriver-godmode-policies.sql` + `sql/campaign-pins-rls-thriver-bypass.sql` give superuser access at the database layer. The UI still hides admin affordances (add/edit/delete/scene-setup/session-control) behind `isGM` checks, so Thrivers can only see those buttons on campaigns they actually GM. Pilot (commit fd5db34) widened 3 components (NpcRoster / TacticalMap / CampaignCommunity) but was rolled back — user wants to hold until the whole surface is done in one pass.
+
+When picking this back up:
+- [ ] UI sweep: every `isGM && <button ...>` in the app widens to `(isGM || isThriver) && <button ...>`. Candidates:
+  - Table page header: Start/End Session, Start/End Combat, Tactical Map toggle, Share Map, GM Tools dropdown
+  - NpcRoster (add/edit/delete NPCs, folders, objects, place-on-map)
+  - TacticalMap (scene picker, setup, token placement)
+  - CampaignCommunity (delete community, approve pending, set leader)
+  - CampaignPins / CampaignObjects / VehicleCard
+  - Character sheet edits for non-owned PCs (GM-only today)
+- [ ] Pattern: prefer widening at the caller (`isGM={isGM || isThriver}`) over rewriting every internal reference — faster and keeps child components prop-clean.
+- [ ] Verify after the sweep: log in as Xero on a campaign they don't GM, confirm every admin affordance is visible and actually works (RLS + UI both honor it).
+
 *Inventory migration removed 2026-04-21 — DB audit confirmed every character's `data.inventory` is already an array. Nothing to migrate.*
 
 ## ✅ Shipped 2026-04-22 (Communities Phase B wrap + header nest)
