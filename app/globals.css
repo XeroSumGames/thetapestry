@@ -111,3 +111,16 @@ textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
     z-index: 99999 !important;
   }
 }
+
+/* Header-bar pill buttons (Option B style). Neutral dark bg, no border,
+   subtle hover lift. Color is carried by text only so 6–7 buttons don't
+   compete visually. Active dropdown gets .hdr-btn--active. */
+.hdr-btn {
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+.hdr-btn:hover {
+  background-color: #242424 !important;
+}
+.hdr-btn--active {
+  background-color: #242424 !important;
+}

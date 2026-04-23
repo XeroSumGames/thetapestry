@@ -4110,6 +4110,7 @@ export default function TablePage() {
     return (
       <div data-header-menu={id} style={{ position: 'relative' }}>
         <button onClick={() => setOpenHeaderMenu(prev => prev === id ? null : id)}
+          className={`hdr-btn${isOpen ? ' hdr-btn--active' : ''}`}
           style={btnStyle}>
           {label} {isOpen ? '▴' : '▾'}
         </button>
@@ -4169,6 +4170,7 @@ export default function TablePage() {
         </div>
         {isGM && sessionStatus === 'idle' && (
           <button onClick={startSession} disabled={sessionActing}
+            className="hdr-btn"
             style={{ ...hdrBtn('#1a2e10', '#7fc458', '#2d5a1b'), opacity: sessionActing ? 0.5 : 1, cursor: sessionActing ? 'not-allowed' : 'pointer' }}>
             {sessionActing ? 'Starting...' : 'Start Session'}
           </button>
@@ -4193,6 +4195,7 @@ export default function TablePage() {
             setSubmittedPlayerNotes(enriched)
             setShowEndSessionModal(true)
           }}
+            className="hdr-btn"
             style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>
             End Session
           </button>
@@ -4204,12 +4207,14 @@ export default function TablePage() {
         )}
         {isGM && !combatActive && (
           <button onClick={() => { setShowTacticalMap(prev => !prev); refreshMapTokenIds() }}
+            className={`hdr-btn${showTacticalMap ? ' hdr-btn--active' : ''}`}
             style={hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a')}>
             {showTacticalMap ? 'Campaign Map' : 'Tactical Map'}
           </button>
         )}
         {!isGM && !combatActive && (
           <button onClick={() => { setShowTacticalMap(prev => !prev); if (tacticalShared) setTacticalShared(false) }}
+            className={`hdr-btn${showTacticalMap ? ' hdr-btn--active' : ''}`}
             style={hdrBtn(showTacticalMap ? '#2a1210' : '#242424', showTacticalMap ? '#f5a89a' : '#d4cfc9', showTacticalMap ? '#c0392b' : '#3a3a3a')}>
             {showTacticalMap ? 'Campaign Map' : 'Tactical Map'}
           </button>
@@ -4220,18 +4225,21 @@ export default function TablePage() {
             setTacticalShared(newShared)
             initChannelRef.current?.send({ type: 'broadcast', event: newShared ? 'tactical_shared' : 'tactical_unshared', payload: { shared: newShared } })
           }}
+            className={`hdr-btn${tacticalShared ? ' hdr-btn--active' : ''}`}
             style={hdrBtn(tacticalShared ? '#1a2e10' : '#242424', tacticalShared ? '#7fc458' : '#d4cfc9', tacticalShared ? '#2d5a1b' : '#3a3a3a')}>
             {tacticalShared ? 'Unshare Map' : 'Share Map'}
           </button>
         )}
         {isGM && sessionStatus === 'active' && !combatActive && (
           <button onClick={startCombat} disabled={startingCombat || entries.length === 0}
+            className="hdr-btn"
             style={{ ...hdrBtn('#7a1f16', '#f5a89a', '#c0392b'), opacity: startingCombat || entries.length === 0 ? 0.5 : 1, cursor: startingCombat || entries.length === 0 ? 'not-allowed' : 'pointer' }}>
             {startingCombat ? 'Rolling...' : '⚔️ Start Combat'}
           </button>
         )}
         {isGM && combatActive && (
           <button onClick={endCombat}
+            className="hdr-btn"
             style={hdrBtn('#0f2035', '#7ab3d4', '#1a3a5c')}>
             End Combat
           </button>
@@ -4348,10 +4356,14 @@ export default function TablePage() {
           ],
           hdrBtn('#2a2010', '#EF9F27', '#5a4a1b'),
         )}
-        <a href="/dashboard" target="_blank" rel="noreferrer" style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), textDecoration: 'none' }}>
+        <a href="/dashboard" target="_blank" rel="noreferrer"
+          className="hdr-btn"
+          style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), textDecoration: 'none' }}>
           Dashboard
         </a>
-        <a href="/stories" style={{ ...hdrBtn('#7a1f16', '#f5a89a', '#c0392b'), textDecoration: 'none' }}>
+        <a href="/stories"
+          className="hdr-btn"
+          style={{ ...hdrBtn('#7a1f16', '#f5a89a', '#c0392b'), textDecoration: 'none' }}>
           Exit
         </a>
       </div>
@@ -8441,8 +8453,15 @@ export default function TablePage() {
   )
 }
 
-const hdrBtn = (bg: string, color: string, border: string): React.CSSProperties => ({
-  padding: '4px 14px', background: bg, border: `1px solid ${border}`, borderRadius: '3px',
+// Option B "subdued pill" — neutral dark bg, no border, 8px radius. The
+// three args are preserved for source compatibility, but only `color`
+// (text color) still affects the visual. `bg` / `border` are ignored in
+// favor of a unified `#1a1a1a` pill that hovers to `#242424` via the
+// `.hdr-btn` class rule in globals.css. Keeps the muscle-memory of
+// color-coded headers by carrying the hue on the TEXT only, so 6-7
+// buttons in a row no longer compete as solid colored rectangles.
+const hdrBtn = (_bg: string, color: string, _border: string): React.CSSProperties => ({
+  padding: '4px 14px', background: '#1a1a1a', border: 'none', borderRadius: '8px',
   color, fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif',
   letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer',
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
