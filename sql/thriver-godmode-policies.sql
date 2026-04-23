@@ -139,8 +139,10 @@ CREATE POLICY player_notes_thriver_bypass ON public.player_notes
   FOR ALL TO authenticated
   USING (public.is_thriver()) WITH CHECK (public.is_thriver());
 
-DROP POLICY IF EXISTS gm_notes_thriver_bypass ON public.gm_notes;
-CREATE POLICY gm_notes_thriver_bypass ON public.gm_notes
+-- GM notes live in campaign_notes (both GM notes + player handouts —
+-- the component is called GmNotes.tsx but the table is campaign_notes).
+DROP POLICY IF EXISTS campaign_notes_thriver_bypass ON public.campaign_notes;
+CREATE POLICY campaign_notes_thriver_bypass ON public.campaign_notes
   FOR ALL TO authenticated
   USING (public.is_thriver()) WITH CHECK (public.is_thriver());
 
