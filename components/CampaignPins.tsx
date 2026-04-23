@@ -24,11 +24,16 @@ interface TacticalScene {
 interface Props {
   campaignId: string
   isGM: boolean
+  isThriver?: boolean
   onPinFocus?: (pin: { id: string; lat: number; lng: number }) => void
   onOpenScene?: (sceneId: string) => void
 }
 
-export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene }: Props) {
+export default function CampaignPins({ campaignId, isGM, isThriver = false, onPinFocus, onOpenScene }: Props) {
+  // "Can manage" = campaign GM OR app-level Thriver. Thrivers get
+  // parity on pin edit/delete so they can relocate stray pins across
+  // any campaign they don't GM (e.g. the "dis ho" cleanup scenario).
+  const canManage = isGM || isThriver
   const supabase = createClient()
   const [pins, setPins] = useState<CampaignPin[]>([])
   const [loading, setLoading] = useState(true)
@@ -229,6 +234,12 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene
                         style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '12px', fontFamily: 'monospace', boxSizing: 'border-box' }} />
                     </div>
                   </div>
+                  {/* Address search — lookup via Nominatim, click a
+                      result to fill lat/lng. Helpful when relocating
+                      a pin that was dropped in the wrong spot. */}
+                  <AddressSearchRow
+                    onPick={(lat, lng) => { setEditLat(lat.toFixed(6)); setEditLng(lng.toFixed(6)) }}
+                  />
                   {/* Tactical Map link */}
                   {isGM && scenes.length > 0 && (
                     <div style={{ marginBottom: '4px' }}>
@@ -283,7 +294,7 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene
                     )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end', flexShrink: 0 }}>
-                    {isGM && (
+                    {canManage && (
                       <>
                         <button onClick={() => toggleReveal(pin)}
                           style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: pin.revealed ? '#2a1210' : '#1a2e10', border: `1px solid ${pin.revealed ? '#c0392b' : '#2d5a1b'}`, color: pin.revealed ? '#f5a89a' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
@@ -304,5 +315,61 @@ export default function CampaignPins({ campaignId, isGM, onPinFocus, onOpenScene
         )}
       </div>
     </>
+  )
+}
+
+// ── Address search helper ─────────────────────────────────────
+// Small self-contained widget: type an address, hit Search (or Enter),
+// pick from up to 5 Nominatim results, the parent gets {lat, lng}
+// via onPick. Used inside the pin edit form so Thrivers (or GMs) can
+// relocate a pin by address instead of hand-typing coords.
+function AddressSearchRow({ onPick }: { onPick: (lat: number, lng: number) => void }) {
+  const [q, setQ] = useState('')
+  const [searching, setSearching] = useState(false)
+  const [results, setResults] = useState<Array<{ display_name: string; lat: string; lon: string }>>([])
+  async function runSearch() {
+    const query = q.trim()
+    if (!query) return
+    setSearching(true)
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } })
+      const data = await res.json()
+      setResults(Array.isArray(data) ? data : [])
+    } catch (err: any) {
+      console.warn('[address-search] failed:', err?.message ?? err)
+      setResults([])
+    } finally {
+      setSearching(false)
+    }
+  }
+  return (
+    <div style={{ marginBottom: '4px' }}>
+      <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Address search</div>
+      <div style={{ display: 'flex', gap: '4px' }}>
+        <input value={q}
+          onChange={e => setQ(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); runSearch() } }}
+          placeholder="Street, city, landmark..."
+          style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+        <button onClick={runSearch} disabled={searching || !q.trim()}
+          style={{ padding: '0 10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching || !q.trim() ? 'not-allowed' : 'pointer', opacity: searching || !q.trim() ? 0.5 : 1 }}>
+          {searching ? '…' : 'Search'}
+        </button>
+      </div>
+      {results.length > 0 && (
+        <div style={{ marginTop: '4px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', maxHeight: '140px', overflowY: 'auto' }}>
+          {results.map((r, i) => (
+            <button key={i}
+              onClick={() => { onPick(parseFloat(r.lat), parseFloat(r.lon)); setResults([]); setQ('') }}
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: 'transparent', border: 'none', borderBottom: i < results.length - 1 ? '1px solid #2e2e2e' : 'none', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow, sans-serif', cursor: 'pointer', lineHeight: 1.3 }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+              {r.display_name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

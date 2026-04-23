@@ -386,6 +386,10 @@ export default function TablePage() {
   const stressWatchPrimedRef = useRef(false)
   const [myUsername, setMyUsername] = useState<string>('')
   const [isGM, setIsGM] = useState(false)
+  // Thriver = app-level admin role. Gets pin management parity with
+  // GMs (delete, edit with lat/lng + address search) so they can
+  // clean up / relocate pins across any campaign, not just their own.
+  const [isThriver, setIsThriver] = useState(false)
   const [entries, setEntries] = useState<TableEntry[]>([])
   const [gmInfo, setGmInfo] = useState<GmInfo | null>(null)
   const [loading, setLoading] = useState(true)
@@ -892,6 +896,7 @@ export default function TablePage() {
       userIdRef.current = user.id  // Sync immediately so loadChat's initial call sees it
       const { data: myProfile } = await supabase.from('profiles').select('username, role').eq('id', user.id).single()
       setMyUsername(myProfile?.username ?? '')
+      setIsThriver(myProfile?.role === 'Thriver')
 
       const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
       if (!camp) { router.push('/stories'); return }
@@ -6180,7 +6185,7 @@ export default function TablePage() {
             })()}
             {gmTab === 'pins' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
-                <CampaignPins campaignId={id} isGM={isGM} onPinFocus={p => setFocusPin({ ...p })} onOpenScene={async (sceneId: string) => {
+                <CampaignPins campaignId={id} isGM={isGM} isThriver={isThriver} onPinFocus={p => setFocusPin({ ...p })} onOpenScene={async (sceneId: string) => {
                   await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', id)
                   await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', sceneId)
                   setShowTacticalMap(true)
