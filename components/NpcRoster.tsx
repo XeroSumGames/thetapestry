@@ -23,14 +23,31 @@ const RAPID_LABELS: Record<number, string> = {
 
 const TYPE_COLORS: Record<string, { bg: string; border: string; color: string }> = {
   friendly: { bg: '#1a2e10', border: '#2d5a1b', color: '#7fc458' },
+  bystander: { bg: '#1a2e10', border: '#2d5a1b', color: '#7fc458' },
   goon: { bg: '#2a2010', border: '#5a4a1b', color: '#EF9F27' },
   foe: { bg: '#2a1210', border: '#c0392b', color: '#f5a89a' },
   antagonist: { bg: '#2a102a', border: '#8b2e8b', color: '#d48bd4' },
 }
 
+// Ring color of the NPC portrait circle — driven by npc_type so the
+// type is visible at a glance even when the NPC has no uploaded
+// photo. Exported so other components (NpcCard, PlayerNpcCard) use
+// the same palette. Falls back to neutral gray when no type is set.
+export function getNpcRingColor(npc_type: string | null | undefined): { border: string; bg: string; color: string } {
+  if (!npc_type) return { border: '#3a3a3a', bg: '#2e2e2e', color: '#d4cfc9' }
+  return TYPE_COLORS[npc_type] ?? { border: '#3a3a3a', bg: '#2e2e2e', color: '#d4cfc9' }
+}
+
+// Placeholder silhouette portraits by type. Clicking one sets
+// portrait_url to that colored SVG. Used when the GM wants a
+// typed-looking stand-in without uploading art. The ring color of
+// the outer circle is driven by npc_type separately — these are
+// just the INSIDE image.
 const PORTRAIT_BANK = [
-  { label: 'Enemy', bg: '#2a1210', color: '#c0392b' },
-  { label: 'Ally', bg: '#1a2e10', color: '#7fc458' },
+  { label: 'Bystander', bg: '#1a2e10', color: '#7fc458' },
+  { label: 'Goon', bg: '#2a2010', color: '#EF9F27' },
+  { label: 'Foe', bg: '#2a1210', color: '#c0392b' },
+  { label: 'Antagonist', bg: '#2a102a', color: '#d48bd4' },
   { label: 'Neutral', bg: '#2e2e2e', color: '#d4cfc9' },
 ].map((p, i) => ({
   ...p,
@@ -917,14 +934,22 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '12px', padding: '1px 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>}
                     </div>
                   </div>
-                  {/* Right: portrait */}
-                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                    {npc.portrait_url ? (
-                      <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <span style={{ fontSize: '15px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(npc.name)}</span>
-                    )}
-                  </div>
+                  {/* Right: portrait — ring color = npc_type color so
+                      Bystander=green, Goon=amber, Foe=red, Antagonist=
+                      purple, untyped=gray. Independent of whether an
+                      image is uploaded. */}
+                  {(() => {
+                    const ring = getNpcRingColor(npc.npc_type)
+                    return (
+                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: ring.bg, border: `2px solid ${ring.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                        {npc.portrait_url ? (
+                          <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <span style={{ fontSize: '15px', fontWeight: 700, color: ring.color, fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(npc.name)}</span>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </div>
                 </div>
               )
@@ -1034,23 +1059,30 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
               </div>
             )}
 
-            {/* Portrait + bank + upload + status on one row */}
-            <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                {form.portrait_url ? (
-                  <img src={form.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{form.name ? getInitials(form.name) : '?'}</span>
-                )}
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 20px)', gap: '3px' }}>
-                {PORTRAIT_BANK.map((p, i) => (
-                  <button key={i} onClick={() => setForm(f => ({ ...f, portrait_url: p.url }))} type="button"
-                    style={{ width: '20px', height: '20px', borderRadius: '50%', border: form.portrait_url === p.url ? '2px solid #c0392b' : '1px solid #3a3a3a', overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none' }}>
-                    <img src={p.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </button>
-                ))}
-              </div>
+            {/* Portrait + bank + upload + status on one row. Ring
+                color = npc_type color; changes as soon as the user
+                picks a type. Placeholder bank lets them pick a
+                colored silhouette as the INSIDE image. */}
+            {(() => {
+              const ring = getNpcRingColor(form.npc_type || null)
+              return (
+                <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: ring.bg, border: `2px solid ${ring.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                    {form.portrait_url ? (
+                      <img src={form.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: ring.color, fontFamily: 'Barlow Condensed, sans-serif' }}>{form.name ? getInitials(form.name) : '?'}</span>
+                    )}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: `repeat(${PORTRAIT_BANK.length}, 20px)`, gap: '3px' }}>
+                    {PORTRAIT_BANK.map((p, i) => (
+                      <button key={i} onClick={() => setForm(f => ({ ...f, portrait_url: p.url }))} type="button"
+                        title={p.label}
+                        style={{ width: '20px', height: '20px', borderRadius: '50%', border: form.portrait_url === p.url ? `2px solid ${p.color}` : '1px solid #3a3a3a', overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none' }}>
+                        <img src={p.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </button>
+                    ))}
+                  </div>
               <label style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>
                 {uploading ? '...' : 'Upload'}
                 <input type="file" accept="image/*" hidden onChange={e => { if (e.target.files?.[0]) handlePortraitUpload(e.target.files[0]) }} />
@@ -1072,6 +1104,8 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                 ))}
               </div>
             </div>
+              )
+            })()}
 
             {/* Name + Type on one row */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>

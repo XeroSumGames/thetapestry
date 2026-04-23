@@ -1,7 +1,7 @@
 'use client'
 // no React hooks needed — HP is derived from props
 import { useState } from 'react'
-import { CampaignNpc } from './NpcRoster'
+import { CampaignNpc, getNpcRingColor } from './NpcRoster'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, Condition, getTraitValue } from '../lib/weapons'
 import { createClient } from '../lib/supabase-browser'
 import { openPopout } from '../lib/popout'
@@ -121,17 +121,22 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
 
       {/* Header — name, badges, buttons all on one row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-        <div
-          onClick={() => npc.portrait_url && setEnlarged(true)}
-          style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, cursor: npc.portrait_url ? 'zoom-in' : 'default' }}>
-          {npc.portrait_url ? (
-            <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>
-              {npc.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}
-            </span>
-          )}
-        </div>
+        {(() => {
+          const ring = getNpcRingColor(npc.npc_type)
+          return (
+            <div
+              onClick={() => npc.portrait_url && setEnlarged(true)}
+              style={{ width: '32px', height: '32px', borderRadius: '50%', background: ring.bg, border: `2px solid ${ring.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, cursor: npc.portrait_url ? 'zoom-in' : 'default' }}>
+              {npc.portrait_url ? (
+                <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontSize: '12px', fontWeight: 700, color: ring.color, fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  {npc.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}
+                </span>
+              )}
+            </div>
+          )
+        })()}
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '15px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>{npc.name}</div>
         {npc.npc_type && <span style={{ fontSize: '12px', padding: '0 4px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
         <span style={{ fontSize: '12px', padding: '0 4px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{displayStatus}</span>
