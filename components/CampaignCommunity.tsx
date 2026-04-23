@@ -217,6 +217,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const [communities, setCommunities] = useState<Community[]>([])
   const [members, setMembers] = useState<Record<string, Member[]>>({})   // key = community_id, status='active'
   const [pendingByCommunity, setPendingByCommunity] = useState<Record<string, Member[]>>({})
+  // Last-5 Morale outcomes per community, newest-first. Drives the
+  // "Recent Morale" trend chip strip on the At-a-Glance block.
+  const [recentMorale, setRecentMorale] = useState<Record<string, { week_number: number; outcome: string }[]>>({})
   const [myUserId, setMyUserId] = useState<string | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -296,6 +299,22 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         .select('*')
         .in('community_id', coms.map(c => c.id))
         .is('left_at', null)
+      // Parallel — recent Morale outcomes for each community. Small
+      // window (6 rows per community) for the trend chip strip; we
+      // DESC order them by week and slice to 5 on the client so we
+      // have room to filter/adjust display later.
+      const moraleRes = await supabase
+        .from('community_morale_checks')
+        .select('community_id, week_number, outcome')
+        .in('community_id', coms.map(c => c.id))
+        .order('week_number', { ascending: false })
+      const moraleByCom: Record<string, { week_number: number; outcome: string }[]> = {}
+      for (const row of ((moraleRes.data ?? []) as any[])) {
+        const cid = row.community_id as string
+        if (!moraleByCom[cid]) moraleByCom[cid] = []
+        if (moraleByCom[cid].length < 5) moraleByCom[cid].push({ week_number: row.week_number, outcome: row.outcome })
+      }
+      setRecentMorale(moraleByCom)
       const byCom: Record<string, Member[]> = {}
       const pendingByCom: Record<string, Member[]> = {}
       for (const m of (res.data ?? []) as Member[]) {
@@ -818,6 +837,90 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 {c.description && (
                   <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>{c.description}</div>
                 )}
+
+                {/* At-a-Glance — player-facing read-only summary.
+                    Morale trend chip row (last 5 checks, newest first)
+                    and, if the viewer is a member of this community,
+                    a "Your role · Apprentice · Recruits" line that
+                    surfaces their bonds at a glance. Rendered for
+                    everyone so GMs see the same story; for non-GMs
+                    this is effectively their primary view of the
+                    community since the edit surfaces below stay
+                    gated/read-only. */}
+                {(() => {
+                  const recent = recentMorale[c.id] ?? []
+                  // Viewer's bonds: recruits = NPC members invited by
+                  // me; apprentice = NPC with apprentice_of tied to
+                  // my PC's character_id (found via member list).
+                  const myPcMember = myUserId
+                    ? mems.find(m => m.character_id && m.invited_by_user_id === myUserId)
+                      ?? mems.find(m => m.character_id && m.recruitment_type === 'founder')  // founder fallback (best-effort for pre-migration PCs)
+                    : null
+                  const myRecruits = myUserId ? mems.filter(m => m.invited_by_user_id === myUserId && m.npc_id) : []
+                  const myApprentice = myPcMember?.character_id
+                    ? mems.find(m => m.recruitment_type === 'apprentice' && m.apprentice_of_character_id === myPcMember.character_id)
+                    : null
+                  const viewerIsMember = !!myPcMember
+                  if (recent.length === 0 && !viewerIsMember) return null  // no history and not a member → skip
+                  const outcomeChipColor = (o: string) => {
+                    const s = (o ?? '').toLowerCase().replace(/ /g, '_')
+                    if (s === 'wild_success' || s === 'high_insight') return '#7fc458'
+                    if (s === 'success') return '#7ab3d4'
+                    if (s === 'failure') return '#EF9F27'
+                    if (s === 'dire_failure' || s === 'low_insight') return '#c0392b'
+                    return '#5a5550'
+                  }
+                  const outcomeChipLetter = (o: string) => {
+                    const s = (o ?? '').toLowerCase().replace(/ /g, '_')
+                    if (s === 'wild_success') return 'W'
+                    if (s === 'high_insight') return 'H'
+                    if (s === 'success') return 'S'
+                    if (s === 'failure') return 'F'
+                    if (s === 'dire_failure') return 'D'
+                    if (s === 'low_insight') return 'L'
+                    return '?'
+                  }
+                  return (
+                    <div style={{ padding: '10px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {recent.length > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '14px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Recent Morale</span>
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            {[...recent].reverse().map((m, i) => (
+                              <span key={i} title={`Week ${m.week_number} — ${m.outcome.replace(/_/g, ' ')}`}
+                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '3px', background: outcomeChipColor(m.outcome) + '22', border: `1px solid ${outcomeChipColor(m.outcome)}`, color: outcomeChipColor(m.outcome), fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: '15px' }}>
+                                {outcomeChipLetter(m.outcome)}
+                              </span>
+                            ))}
+                          </div>
+                          <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>oldest → newest</span>
+                        </div>
+                      )}
+                      {viewerIsMember && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', color: '#cce0f5' }}>
+                          <span style={{ color: '#7ab3d4', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>You</span>
+                          <span>
+                            <span style={{ color: '#5a5550', letterSpacing: '.04em', textTransform: 'uppercase' }}>Role:</span>{' '}
+                            <span style={{ color: '#f5f2ee', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em' }}>{ROLE_LABEL[myPcMember!.role]}</span>
+                            {myPcMember!.recruitment_type === 'founder' && <span style={{ color: '#EF9F27' }}> · Founder</span>}
+                          </span>
+                          {myApprentice && (
+                            <span>
+                              <span style={{ color: '#5a5550', letterSpacing: '.04em', textTransform: 'uppercase' }}>Apprentice:</span>{' '}
+                              <span style={{ color: '#d48bd4', fontWeight: 700 }}>{memberLabel(myApprentice)}</span>
+                            </span>
+                          )}
+                          {myRecruits.length > 0 && (
+                            <span>
+                              <span style={{ color: '#5a5550', letterSpacing: '.04em', textTransform: 'uppercase' }}>Recruits:</span>{' '}
+                              <span style={{ color: '#f5f2ee' }}>{myRecruits.map(r => memberLabel(r)).join(', ')}</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
 
                 {/* Leader — call-out + dropdown. The current leader
                     is shown bold; selecting a new member from the
