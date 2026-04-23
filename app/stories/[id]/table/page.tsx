@@ -2529,6 +2529,19 @@ export default function TablePage() {
     if (!rollerEntry) return
     const npc = campaignNpcs.find((n: any) => n.id === recruitNpcId)
     if (!npc) return
+    // Conscription pressgang gate (CRB). Conscription explicitly
+    // requires a credible threat — coercion, leverage, weapons drawn,
+    // hostage, etc. Surface this at roll time so it can't be a
+    // half-accidental click. SRD: "The PCs must present a credible
+    // threat for Conscription to work."
+    if (recruitApproach === 'conscript') {
+      const ack = confirm(
+        `Conscription — pressgang.\n\n` +
+        `This is coercion, not persuasion. The PC must have established a credible threat (weapons drawn, leverage held, escape cut off, etc.) before this roll can proceed.\n\n` +
+        `Confirm the threat is credible and roll?`
+      )
+      if (!ack) return
+    }
     // Resolve community: either existing id, or inline-create.
     let finalCommunityId = recruitCommunityId
     let finalCommunityName = ''
@@ -8411,6 +8424,16 @@ export default function TablePage() {
                         : recruitApproach === 'conscript' ? 'Coerced by credible threat — follows orders while coercion holds.'
                         : 'Shared belief or ideology — probationary through first Morale Check, then committed.'}
                     </div>
+                    {/* Pressgang gate — explicit warning on Conscript so
+                        the GM/players see this is coercion, not
+                        persuasion, before rolling. A blocking confirm
+                        fires on submit; this banner just makes it
+                        visible earlier. */}
+                    {recruitApproach === 'conscript' && (
+                      <div style={{ marginTop: '8px', padding: '8px 10px', background: '#2a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                        ⚠ <span style={{ fontWeight: 700 }}>Pressgang.</span> This is pressure, not persuasion. The PC must have established a credible threat (weapons drawn, leverage held, escape cut off) before the roll. You'll be asked to confirm on submit.
+                      </div>
+                    )}
                   </div>
 
                   {/* Skill */}
