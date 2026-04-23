@@ -343,6 +343,12 @@ export default function TablePage() {
   // clicking outside closes whatever's open. Declared up here so the
   // outside-click useEffect below can reference it.
   const [openHeaderMenu, setOpenHeaderMenu] = useState<string | null>(null)
+  // Pinned = user clicked the trigger (as opposed to just hovering).
+  // When pinned, mouse-leave does NOT collapse the menu — you have to
+  // click the trigger again or click outside. Fixes the "I'm chasing
+  // the buttons" jitter where moving toward a child accidentally
+  // crossed a dead zone and collapsed the menu.
+  const [isMenuPinned, setIsMenuPinned] = useState(false)
 
   // Close any open header-bar dropdown on outside click or ESC. The
   // click target is checked against `[data-header-menu]` containers;
@@ -352,10 +358,16 @@ export default function TablePage() {
     function handleClick(e: MouseEvent) {
       const t = e.target as HTMLElement | null
       if (!t) return
-      if (!t.closest('[data-header-menu]')) setOpenHeaderMenu(null)
+      if (!t.closest('[data-header-menu]')) {
+        setOpenHeaderMenu(null)
+        setIsMenuPinned(false)
+      }
     }
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpenHeaderMenu(null)
+      if (e.key === 'Escape') {
+        setOpenHeaderMenu(null)
+        setIsMenuPinned(false)
+      }
     }
     document.addEventListener('mousedown', handleClick)
     document.addEventListener('keydown', handleKey)
@@ -4117,23 +4129,43 @@ export default function TablePage() {
     if (visibleItems.length === 0) return null
     return (
       <div data-header-menu={id}
-        onMouseEnter={() => setOpenHeaderMenu(id)}
-        onMouseLeave={() => setOpenHeaderMenu(prev => prev === id ? null : prev)}
+        onMouseEnter={() => { if (!isMenuPinned) setOpenHeaderMenu(id) }}
+        onMouseLeave={() => { if (!isMenuPinned) setOpenHeaderMenu(prev => prev === id ? null : prev) }}
         style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-        <button onClick={() => setOpenHeaderMenu(prev => prev === id ? null : id)}
+        <button onClick={() => {
+          // Clicking the trigger toggles a pinned state — stays open
+          // even when the mouse wanders off, until clicked again or
+          // clicked outside.
+          if (openHeaderMenu === id && isMenuPinned) {
+            setIsMenuPinned(false)
+            setOpenHeaderMenu(null)
+          } else {
+            setIsMenuPinned(true)
+            setOpenHeaderMenu(id)
+          }
+        }}
           className={`hdr-btn${isOpen ? ' hdr-btn--active' : ''}`}
           style={btnStyle}>
           {label} ▾
         </button>
         {isOpen && (
           <div style={{
-            position: 'absolute', top: 'calc(100% + 4px)', left: 0,
+            // `top: 100%` + `paddingTop: 4px` closes the hover gap —
+            // the wrapper's hover descendants now include the 4px
+            // visual gap, so cursor travel trigger→child never exits
+            // the hover zone.
+            position: 'absolute', top: '100%', left: 0,
+            paddingTop: '4px',
             display: 'flex', flexDirection: 'column', gap: '4px',
             zIndex: 10050,
           }}>
             {visibleItems.map((it, i) => (
               <button key={i}
-                onClick={() => { setOpenHeaderMenu(null); it.onClick() }}
+                onClick={() => {
+                  setOpenHeaderMenu(null)
+                  setIsMenuPinned(false)
+                  it.onClick()
+                }}
                 className="hdr-btn hdr-btn--child"
                 style={{ ...btnStyle, color: it.color ?? btnStyle.color, animationDelay: `${i * 0.03}s` }}>
                 {it.label}
