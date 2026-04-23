@@ -1,99 +1,147 @@
-# Test Plan — Recruitment Insight Dice + Community Screen + Milestone Notification
+# Test Plan — Phase C Communities (Weekly Morale + Fed/Clothed)
 
-## Change 1: "as a Cohort" copy
+**Scope:** Weekly Check modal, Fed/Clothed/Morale roll persistence, consequence application (25/50/75% departures), 3-failure dissolution, roll-log cards.
 
-**What changed:** Recruitment success copy reads `"Jesse Hayes joined The Schoolers as a Cohort."` (article added). Applies to both the Recruit result modal and the roll_log feed entry. `Apprentice` uses `"an Apprentice"`.
+**Ship date:** 2026-04-23.
 
-**Files touched:**
-- `app/stories/[id]/table/page.tsx` lines 2540 (roll_log label) + 8080 (result modal)
-
-**Steps:**
-1. Roll a successful Recruit vs any NPC. Confirm result modal and feed both read `"as a Cohort"` (or `"as an Apprentice"` on Wild Success + toggle).
+**Pre-req:**
+1. Run the new migration: `psql ... -f sql/community-members-add-morale-75-reason.sql` so `left_reason = 'morale_75'` is accepted. (Modal falls back to 'manual' if you skip this — it still persists, just with a less precise reason.)
+2. Dev server running: `npm run dev` in the worktree.
 
 ---
 
-## Change 2: Group → Community milestone notification
+## Setup (one-time, ~3 min)
 
-**What changed:** When active membership crosses into 13+ for the first time, the `leader_user_id` gets a one-shot notification.
-
-**Files touched:**
-- `sql/community-milestone-trigger.sql` — **new migration, must be run in Supabase SQL Editor**
-- `components/NotificationBell.tsx` — colorized renderer for the new `community_milestone` type
-
-**SQL to run:** `C:\TheTapestry\sql\community-milestone-trigger.sql`
-
-**Steps after migration:**
-1. Back-fill check: `SELECT c.name, c.notified_community_milestone, (SELECT count(*) FROM community_members m WHERE m.community_id=c.id AND m.left_at IS NULL AND COALESCE(m.status,'active')='active') FROM communities c;` — any already ≥13 should have `notified_community_milestone = true`.
-2. Cross the threshold via Recruit/Invite/approve until active count hits 13. Expect bell notification **"Your group is now a Community"** linking to `/communities`.
-3. Bell colorization: community name red, `13` amber, `Community` green.
-4. Remove a member and re-add. Expect **no** second notification.
+1. Open a campaign you GM. Use The Arena (id `35ed2133-498a-43d2-bbd6-21da05233af2`) or any other where you have ≥13 NPCs available.
+2. Open the table page (`/stories/<id>/table`).
+3. Click **Community ▾ → Status** in the header to open the Community panel.
+4. Expand (or create) a community. Add NPCs via "Add Member" until the total hits **13+** — the "Community" chip (green) should appear in the header, replacing the "Group" chip (amber).
+5. Make sure a **Leader** is set (the dropdown under the community title). Leaderless will apply a −1 "A Clear Voice" slot.
+6. Pick roles so role percentages are green on all three bars — we'll cover the understaffed-penalty case separately.
 
 ---
 
-## Change 3: Insight Dice on Recruitment modal
+## Happy path — normal weekly check with Success result
 
-**What changed:** The Recruitment flow now supports both pre-roll Insight Die spends (3d6 / +3 CMod) AND post-roll reroll (pick any single die to reroll). Reroll flips `community_members` state if the outcome crosses the success line.
+**Goal:** Prove the basic loop rolls, displays, and persists correctly.
 
-**Files touched:**
-- `app/stories/[id]/table/page.tsx` — `executeRecruitRoll` pre-roll branch, `rerollRecruitDie`, pick-step picker UI, result-step reroll buttons, result modal renders `die3` when `mode3d6`.
+1. In the expanded community body, you should see a new **📊 Weekly Check** info strip (blue-bordered) between Leader and Pending Requests, showing "Week 1 · 0/3 consecutive failures" and a green **Run Weekly Check** button. *GM-only — verify by viewing as a non-GM player: the strip should not render.*
+2. Click **Run Weekly Check**. Modal opens titled "Weekly Check — <community name>", week 1, <N> members, 0/3 failures.
+3. Expected defaults: Fed/Clothed AMod=0, SMod=1, CMod=0; Morale Leader AMod=0, SMod=0; all 6 Morale slots show auto-calculated values; no banner.
+4. Without changing anything, click **🎲 Run Weekly Check**. Modal advances to the **Results** stage.
+5. Verify the three roll cards:
+   - 🌾 Fed Check — dice, A/S/CMod breakdown, outcome colored (green/blue/amber/red), "→ next-Morale CMod: +N"
+   - 🔧 Clothed Check — same shape
+   - 📊 Morale — dice, "Slots:" row showing all six values, "Next week's Mood CMod:" line
+6. Consequence panel below should say one of:
+   - Green "Morale holds. No departures." (Success tier)
+   - Amber "N member(s) leave" with names (Failure/Dire/Low Insight)
+   - Red "Community Dissolves" (only on 3rd consecutive failure)
+7. Click **Finalize & Save**. Modal closes, panel reloads.
+8. Verify in the community panel:
+   - Week counter advanced by 1 (next click shows "Week 2")
+   - Consecutive failures: 0 if success, 1 if failure
+   - Member count: unchanged on success; dropped by floor(total × 25%) on Failure, 50% on Dire, 75% on Low Insight
+9. Open the **Logs** tab on the table page:
+   - Three new cards visible in order: Fed, Clothed, Morale (most recent at top of feed — check ordering by timestamp)
+   - Fed / Clothed cards: colored border by outcome, dice breakdown, "→ Next Morale CMod +N" footer
+   - Morale card: slot breakdown, departure block (if any), consecutive-failure counter
+10. Reload the page (`F5`). State persists — week counter, failure count, member count all survive reload.
 
-**Preconditions:**
-- PC with ≥2 Insight Dice available (one for pre-roll, another for a reroll test).
-- At least one NPC map-revealed, alive, not already in the target community.
+## Reopen same community, second week
 
-### 3.1 Pre-roll: baseline (None)
-1. Open `/stories/[id]/table`, CHECKS → Recruit.
-2. Pick target NPC, approach, skill, community.
-3. Leave Insight Die = **None**. Click Roll.
-4. Expect: standard 2d6 + mods. Insight Dice count unchanged.
-
-### 3.2 Pre-roll: Roll 3d6
-1. Same setup but pick **Roll 3d6** in the Insight Die section.
-2. Click Roll.
-3. Expect: 3 dice render in the result modal. Sum of (d1+d2+d3) + AMod + SMod + CMod shown in the breakdown. Outcome uses thresholds 14+/9+/4+/<4 (Wild/Success/Failure/Dire). Insight Dice count decremented by 1.
-
-### 3.3 Pre-roll: +3 CMod
-1. Same setup but pick **+3 CMod**.
-2. Click Roll.
-3. Expect: 2 dice render. Breakdown's CMod cell is 3 higher than the plain CMod stack. Insight Dice count decremented by 1.
-
-### 3.4 Post-roll reroll: Die 2 (2d6)
-1. After a 2d6 roll, expect a purple "Spend Insight to Reroll" panel listing `Re-roll Die 1` and `Re-roll Die 2`.
-2. Click **Re-roll Die 2**.
-3. Expect: Die 2 value changes, total recomputes, outcome recomputes, Insight Dice count drops by 1. Apprentice toggle re-evaluates for the new outcome.
-4. Spam reroll again to confirm the button still works and count drops again (no reroll lockout — each press costs 1 die).
-
-### 3.5 Post-roll reroll: Die 3 (3d6)
-1. Start a 3d6 recruit (spends 1 die).
-2. In result step, expect `Re-roll Die 1`, `Re-roll Die 2`, `Re-roll Die 3` all visible.
-3. Click **Re-roll Die 3**. Confirm only Die 3 changes; total/outcome recompute.
-
-### 3.6 Outcome flip reconciliation
-1. Force a Failure on a recruit attempt (low dice). Confirm no `community_members` row inserted (result modal shows "attempt failed").
-2. Reroll Die 1 until you flip to Success.
-3. Expect: `community_members` row now present for that NPC in the chosen community. Feed log label updates from `"tried to recruit ... — Failure"` → `"recruited ... as a Cohort to <community>"`.
-4. Reverse: on a Success, reroll to push back below the success line. Expect: membership row deleted, label reverts.
-
-### 3.7 Exhausted Insight
-1. PC with 0 Insight Dice: open Recruit pick step → no Insight Die picker renders. Result step → no reroll panel.
+1. Open the modal again. The "Mood Around The Campfire" slot should now show the **prior check's next-week CMod** (non-zero if last week was non-Success, 0 if Success).
+2. The Additional freeform slot resets to 0 each open (by design — it's event-specific).
+3. Run another weekly check. Verify the Mood slot feeds into the Morale roll total correctly — cross-check by adding all six slot values + Additional in your head, and matching the "CMod" breakdown on the Morale card.
 
 ---
 
-## Change 4: Community screen — names, role counts, PC block
+## Understaffed community — "Enough Hands" penalty
 
-**What changed:** The in-campaign community management panel now:
-- Shows each NPC's **name** bold/prominent at the front of each row (with recruitment type as a subdued suffix).
-- Auto-calculates Gatherer / Maintainer / Safety percentages from **NPCs only**. PCs are excluded from role workforce math.
-- Renders a dedicated "Player Characters (N)" block between the role bars and the NPC-by-role roster.
-- PCs still have a role dropdown but default to Unassigned.
+**Goal:** Verify the mechanical −1/−2/−3 CMod fires when role quotas are missed.
 
-**Files touched:** `components/CampaignCommunity.tsx`
+1. Move NPCs so Gatherers < 33% of NPCs (e.g. put most in Unassigned or Safety). Note: Re-balance Roles also fires on panel re-load, so open the modal immediately after manually dragging NPCs into the wrong roles — don't navigate away.
+2. Verify the modal's "Enough Hands" slot shows a negative CMod (−1 per understaffed group, max −3). The "auto" chip confirms it's computed.
+3. Try: zero the Safety role entirely. Enough Hands should hit at least −1 (Safety missing), AND "Someone To Watch Over Me" should show −1 (Safety < 5%).
 
-### Steps:
-1. Open a campaign with a community that has both PCs (founders) and NPCs recruited in.
-2. Expect role bars: `count / total NPCs` (e.g. "1 (8%)" — should be counting NPC workforce only, so if 1/12 NPCs are Gatherers: 8%).
-3. PC rows show up in a blue-bordered "Player Characters" block beneath the Safety bar, above the first NPC role header.
-4. NPC rows display name (bold uppercase, left), recruitment type (subdued, right of name), role dropdown, ✕.
-5. Change a PC's role via the dropdown → confirm the role bars do **not** shift (they're npc-only).
-6. Change an NPC's role → confirm the role bars update immediately.
-7. New joiners default to Unassigned (both founder auto-enroll and add-member form).
+---
+
+## Leaderless penalty — "A Clear Voice"
+
+1. If the Leader dropdown won't let you select a blank option, directly null both `leader_user_id` and `leader_npc_id` via Supabase Studio on the row.
+2. Open the weekly check modal. "A Clear Voice" slot should show **−1** (auto).
+
+---
+
+## Cancel preserves DB
+
+1. Open the modal. Click **🎲 Run Weekly Check** to advance to Results.
+2. Click **Cancel (discard)** on the result stage.
+3. Verify via the panel — week counter UNCHANGED, consecutive_failures UNCHANGED, member count UNCHANGED.
+4. Verify via Logs tab — no new fed/clothed/morale cards.
+5. Refresh and confirm same. (Good — all-at-once persistence works.)
+
+---
+
+## Dissolution path — 3 consecutive failures
+
+**Goal:** Prove the community flips to `status='dissolved'` and all members are removed.
+
+This is dice-random, so either (a) cheat by editing `consecutive_failures` directly via Supabase Studio to 2, OR (b) farm failures the slow way.
+
+### Fast path (recommended):
+
+1. In Supabase Studio (or psql), update the community: `UPDATE communities SET consecutive_failures = 2 WHERE id = '<your id>'`.
+2. Reload the table page.
+3. Community panel shows "2/3 consecutive failures · one more failure dissolves the community" in red.
+4. Open Weekly Check modal — header banner also shows the warning.
+5. Set Fed AMod/SMod/CMod, Clothed AMod/SMod/CMod, and all Morale A/S to aggressive negatives (e.g. AMod=−5 each) so the Morale roll lands in Dire Failure / Low Insight territory reliably.
+6. Click **Run Weekly Check**. On the Result stage:
+   - Consequence panel should be RED "⚠ Community Dissolves" with a count of scattered members
+   - The finalize button is also red: "Finalize — Dissolve Community"
+7. Click **Finalize — Dissolve Community**.
+8. Verify:
+   - Community header now shows "Dissolved" (red chip)
+   - All members moved to removed state (the body member roster is empty)
+   - DB: `communities.status = 'dissolved'`, `dissolved_at IS NOT NULL`; all `community_members` rows have `left_at` set and `left_reason='dissolved'`
+   - Logs tab: Morale card has red border + "⚠ Community dissolved — 3 consecutive failures" caption
+9. Try to open the modal on a dissolved community — the "Run Weekly Check" strip should NOT render (gate: `status==='active'`).
+
+---
+
+## Departure priority order
+
+**Goal:** Confirm the weighted departure picker leaves the right NPCs.
+
+1. Set up a community with a mix: 3 Apprentice NPCs, 3 Cohort NPCs, 3 Convert NPCs, 3 Conscript NPCs, 3 Unassigned NPCs, 2 founder PCs. Total 15+.
+2. Force a Failure outcome (25% = 4 members leave). Aggressive-negative modifiers as above.
+3. Run, Finalize. Verify via panel:
+   - The 4 who left should be drawn from Unassigned first, then Cohort. Apprentices + Conscripts + Founders should all be intact.
+4. Set the community back up (manually remove `left_at` in DB or just re-add members). Force Dire Failure (50% = 7 leave). Expect: all 3 Unassigned + all 3 Cohort + 1 Convert.
+5. Force Low Insight (1+1 on the Morale dice — this is RNG. If you can't force it, skip this step.). Expect 75% leave, Apprentices still last to go.
+
+**Note:** PCs should never appear in the departure list. Verify by checking that all 2 founder PCs stay.
+
+---
+
+## Edge cases / regressions
+
+- [ ] **<13 members guard** — reduce below 13. Modal opens but shows amber warning "Only N members. Morale Checks require 13+." The Run button is disabled (grey).
+- [ ] **Community with no Fed/Clothed history** — first week's "Mood Around The Campfire" should display 0, not crash.
+- [ ] **Slot override** — put a manual value in the Enough Hands override input. Roll. The Morale card's CMod breakdown should use your override, not the computed auto value.
+- [ ] **Additional CMod propagates** — set Additional to +5. Roll. The Morale card's CMod total should include +5.
+- [ ] **Roll-log cards Both tab** — switch feed tab to Both. Fed/Clothed/Morale rolls should render as simplified character-card rows with the stored label (emoji stripped).
+- [ ] **TypeScript** — `npx tsc --noEmit` exits 0 (verified at commit).
+- [ ] **Font size guardrail** — `node scripts/check-font-sizes.mjs` reports OK (verified at commit).
+
+---
+
+## Known deferrals (not in Phase C scope)
+
+- **Retention Check** on 3rd failure — SRD §08 p.22 allows a fast-acting leader to salvage fragments. Not implemented; dissolution is immediate. Flagged in tasks/todo.md Phase C section.
+- **End Week / Activity Blocks** — Phase D.
+- **Inspiration Lv4 "Beacon of Hope"** auto +4 CMod — Phase D.
+- **Psychology* Lv4 "Insightful Counselor"** auto +3 CMod (tenure-gated) — Phase D.
+- **Morale history dashboard** — Phase D.
+
+If any of these surface as a blocker during table play, bump them up in the todo.

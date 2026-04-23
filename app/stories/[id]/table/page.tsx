@@ -284,6 +284,14 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
     // just strip the 🤝 emoji.
     return r.label.replace(/^🤝\s*/, '')
   }
+  // Community weekly checks — Fed / Clothed / Morale. The Logs tab has
+  // dedicated custom cards for these (colored border, slot breakdown).
+  // The Both tab (chat + rolls interleaved) has a simpler renderer that
+  // falls through to this function, so give it a clean one-liner from
+  // the stored label instead of showing the raw category outcome.
+  if (r.outcome === 'fed_check' || r.outcome === 'clothed_check' || r.outcome === 'morale_check') {
+    return r.label.replace(/^[\u{1F33E}\u{1F527}\u{1F4CA}]\s*/u, '')
+  }
   // Loot — label "🎒 <name> looted <items> from <container>". Narrative
   // compact banner hides WHAT was looted (keeps players reading the log
   // without spoiling everyone's hauls); ▸ expand reveals the full list.
@@ -5286,7 +5294,81 @@ export default function TablePage() {
                       )
                     })}
                   </div>
-                ) : (() => {
+                ) : (r.outcome === 'fed_check' || r.outcome === 'clothed_check') ? (() => {
+                  const dj = (r.damage_json ?? {}) as any
+                  const rollOutcome = dj.rollOutcome ?? 'Success'
+                  const emoji = r.outcome === 'fed_check' ? '🌾' : '🔧'
+                  const title = r.outcome === 'fed_check' ? 'Fed Check' : 'Clothed Check'
+                  const color = outcomeColor(rollOutcome)
+                  return (
+                    <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#111', border: `1px solid ${color}33`, borderRadius: '3px', borderLeft: `3px solid ${color}` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{emoji} Week {dj.weekNumber} · {dj.communityName} · {title}</span>
+                        <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        [{r.die1}+{r.die2}]
+                        {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+                        {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+                        {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+                        <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+                        <span style={{ marginLeft: '8px', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{rollOutcome}</span>
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '2px' }}>
+                        → Next Morale CMod <span style={{ color: dj.cmodForNextMorale > 0 ? '#7fc458' : dj.cmodForNextMorale < 0 ? '#f5a89a' : '#cce0f5', fontWeight: 700 }}>{dj.cmodForNextMorale > 0 ? '+' : ''}{dj.cmodForNextMorale ?? 0}</span>
+                      </div>
+                    </div>
+                  )
+                })() : r.outcome === 'morale_check' ? (() => {
+                  const dj = (r.damage_json ?? {}) as any
+                  const rollOutcome = dj.rollOutcome ?? 'Success'
+                  const slots = dj.slots ?? {}
+                  const willDissolve = !!dj.willDissolve
+                  const color = willDissolve ? '#c0392b' : outcomeColor(rollOutcome)
+                  const fmt = (n: number) => n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0'
+                  const cmodClr = (n: number) => n > 0 ? '#7fc458' : n < 0 ? '#f5a89a' : '#cce0f5'
+                  return (
+                    <div key={r.id} style={{ marginBottom: '8px', padding: '10px', background: willDissolve ? '#1a0a0a' : '#111', border: `1px solid ${color}`, borderRadius: '3px', borderLeft: `3px solid ${color}` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>📊 Week {dj.weekNumber} · {dj.communityName} · Morale</span>
+                        <span style={{ fontSize: '12px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
+                        [{r.die1}+{r.die2}]
+                        {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+                        {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+                        {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+                        <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+                        <span style={{ marginLeft: '8px', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{rollOutcome}</span>
+                      </div>
+                      {slots && Object.keys(slots).length > 0 && (
+                        <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.6, marginBottom: '4px' }}>
+                          <span style={{ color: '#5a5550' }}>Slots:</span>
+                          {[['Mood', slots.mood], ['Fed', slots.fed], ['Clothed', slots.clothed], ['Hands', slots.enoughHands], ['Voice', slots.clearVoice], ['Watch', slots.safety]].map(([n, v]: any, i) => (
+                            <span key={i}> · {n} <span style={{ color: cmodClr(v ?? 0), fontWeight: 700 }}>{fmt(v ?? 0)}</span></span>
+                          ))}
+                          {slots.additional !== 0 && slots.additional != null && (
+                            <span> · Additional <span style={{ color: cmodClr(slots.additional), fontWeight: 700 }}>{fmt(slots.additional)}</span></span>
+                          )}
+                        </div>
+                      )}
+                      {willDissolve ? (
+                        <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 600 }}>
+                          ⚠ Community dissolved — 3 consecutive failures. All {dj.membersBefore ?? '?'} members scattered.
+                        </div>
+                      ) : dj.departureCount > 0 ? (
+                        <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                          {dj.departureCount} left: <span style={{ color: '#d4cfc9' }}>{(dj.departureNames ?? []).join(', ')}</span>
+                          <span style={{ color: '#cce0f5' }}> · {dj.membersAfter}/{dj.membersBefore} remaining · {dj.consecutiveFailuresAfter}/3 failures</span>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                          Morale holds. Next Morale CMod: <span style={{ fontWeight: 700 }}>{fmt(dj.cmodForNext ?? 0)}</span>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })() : (() => {
                   const compact = compactRollSummary(r)
                   const isExpanded = expandedRollIds.has(r.id)
                   const useCompact = compact && !isExpanded

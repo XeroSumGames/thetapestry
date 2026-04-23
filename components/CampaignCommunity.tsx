@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import CommunityMoraleModal from './CommunityMoraleModal'
 
 // Phase A — Communities foundation. Lists communities for a campaign, lets
 // the GM create one, drill into the member roster, add/remove members from
@@ -237,6 +238,10 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const [addSubjectId, setAddSubjectId] = useState('')
   const [addRole, setAddRole] = useState<Role>('unassigned')
   const [addType, setAddType] = useState<RecruitmentType>('member')
+
+  // Phase C — Weekly Morale / Fed / Clothed check modal target.
+  // Null = closed; uuid = run the modal for that community.
+  const [moraleCommunityId, setMoraleCommunityId] = useState<string | null>(null)
 
   useEffect(() => { load() }, [campaignId])
 
@@ -727,6 +732,30 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   </select>
                 </div>
 
+                {/* Phase C — Weekly Check button. Shows only when the
+                    Group has crossed the 13-member threshold AND isn't
+                    already dissolved AND the viewer is a GM. Opens the
+                    Morale modal which handles Fed → Clothed → Morale
+                    in one button-press with per-roll CMod inputs and
+                    auto-filled slot suggestions. */}
+                {isGM && isCommunity && c.status !== 'dissolved' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '14px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
+                        📊 Weekly Check
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        Week {c.week_number + 1} · {c.consecutive_failures}/3 consecutive failures
+                        {c.consecutive_failures === 2 && <span style={{ color: '#f5a89a', fontWeight: 600 }}> · one more failure dissolves the community</span>}
+                      </div>
+                    </div>
+                    <button onClick={() => setMoraleCommunityId(c.id)}
+                      style={{ padding: '8px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                      Run Weekly Check
+                    </button>
+                  </div>
+                )}
+
                 {/* Pending-requests — only visible to the leader (or
                     GMs, which the wider RLS already permits). Approve
                     flips status to 'active' + sets joined_at; Reject
@@ -912,6 +941,31 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
           </div>
         )
       })}
+
+      {/* Phase C — Weekly Check modal. Rendered once at top level;
+          the individual community cards just set moraleCommunityId
+          to open it. Success → reload the whole panel so the updated
+          week_number / consecutive_failures / member roster all
+          reflect the just-committed check. */}
+      {moraleCommunityId && (() => {
+        const comm = communities.find(c => c.id === moraleCommunityId)
+        if (!comm) return null
+        const mems = members[moraleCommunityId] ?? []
+        const nameMap = new Map<string, string>()
+        for (const m of mems) nameMap.set(m.id, memberLabel(m))
+        return (
+          <CommunityMoraleModal
+            open
+            onClose={() => setMoraleCommunityId(null)}
+            community={comm}
+            members={mems}
+            memberNameById={nameMap}
+            campaignId={campaignId}
+            userId={myUserId}
+            onComplete={() => { setMoraleCommunityId(null); load() }}
+          />
+        )
+      })()}
     </div>
   )
 }

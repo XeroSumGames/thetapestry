@@ -8,7 +8,7 @@
 - [ ] **"Assigned" role — mission/task linkage** — today "Assigned" is just a flag that pulls an NPC out of the labor pool. Extend it so the NPC is actually bound to a PC-directed mission or task: (a) schema — add `assignment_pc_id` (character_id) and optionally `assignment_task` (text) or `assignment_mission_id` (FK to a future missions table) on `community_members`; (b) UI — when picking "Assigned" in the role dropdown, prompt "Directed by which PC?" (character picker) and "What are they doing?" (freeform or preset list: guard pin / run errand / follow PC / scouting / etc.); (c) display — assigned rows show `⇐ <PC name>: <task>` inline like the Apprentice master link does now; (d) when the directing PC leaves the campaign or the task is completed, prompt the GM to reassign or release the NPC back to the labor pool. Pairs naturally with the Apprentice system — same "PC owns this NPC's time" shape.
 - [ ] **Destroyed-object portrait swap** — object tokens with WP should optionally carry a `destroyed_portrait_url`; when the token hits 0 WP, the canvas renders that image instead of the intact one. Falls back to the current shatter-crack overlay if no destroyed art exists. Upload UX lives on the object add/edit form in NpcRoster → Objects.
 - [ ] **CMod Stack reusable component** — user loved the itemized CMod Stack on the Recruit modal; extract into `<CmodStack>` and use in Grapple, First Impression, main Attack modals.
-- [ ] **Phase C Communities** — weekly Morale Check + Resource Checks (Fed/Clothed) + Activity Blocks (Phase D).
+- [x] **Phase C Communities** — weekly Morale Check + Resource Checks (Fed/Clothed) shipped 2026-04-23. Activity Blocks + Lv4 skill auto-CMods deferred to Phase D.
 
 ## 🔒 Backburner — Thriver godmode UI sweep
 **Status:** DB-level done, UI deferred. Xero's `profiles.role = 'Thriver'` + the policies in `sql/thriver-godmode-policies.sql` + `sql/campaign-pins-rls-thriver-bypass.sql` give superuser access at the database layer. The UI still hides admin affordances (add/edit/delete/scene-setup/session-control) behind `isGM` checks, so Thrivers can only see those buttons on campaigns they actually GM. Pilot (commit fd5db34) widened 3 components (NpcRoster / TacticalMap / CampaignCommunity) but was rolled back — user wants to hold until the whole surface is done in one pass.
@@ -25,6 +25,14 @@ When picking this back up:
 - [ ] Verify after the sweep: log in as Xero on a campaign they don't GM, confirm every admin affordance is visible and actually works (RLS + UI both honor it).
 
 *Inventory migration removed 2026-04-21 — DB audit confirmed every character's `data.inventory` is already an array. Nothing to migrate.*
+
+## ✅ Shipped 2026-04-23 (Communities Phase C — Weekly Morale loop)
+- **Weekly Check modal** — `components/CommunityMoraleModal.tsx`. Single-button rolls Fed → Clothed → Morale in sequence. GM sees per-roll AMod/SMod/CMod inputs + 6 auto-filled Morale slots with override inputs (Mood from prior check's cmod_for_next; Enough Hands / Clear Voice / Safety computed mechanically; Fed + Clothed snap to actual rolled outcomes; Additional freeform). Result stage shows each roll, slot breakdown, departures / dissolution, then "Finalize & Save" commits everything in a single batch (cancel leaves DB untouched).
+- **Community logic extracted** — `lib/community-logic.ts` — pure helpers for CMod slot math, outcome → next-Morale CMod, outcome → departure %, weighted NPC departure picker (Unassigned → Cohort → Convert → Conscript → Founder → Apprentice), roll classification.
+- **Consequence engine** — Failure 25% / Dire Failure 50% / Low Insight 75% leave; PCs never auto-removed. `consecutive_failures` ticks on any failure tier, resets to 0 on any success tier. `week_number` bumps on finalize. 3rd consecutive failure flips community to `status='dissolved'` + `dissolved_at=now`, all members soft-removed with reason='dissolved'.
+- **New left_reason 'morale_75'** — `sql/community-members-add-morale-75-reason.sql` widens the CHECK constraint. Modal falls back to 'manual' if the migration hasn't been applied yet.
+- **Roll-log custom cards** — `fed_check` / `clothed_check` / `morale_check` render as colored cards in the Logs tab with slot breakdowns, departure names, consecutive-failure counter, and a red dissolved variant. compactRollSummary narrative falls back to the stored label for the Both tab.
+- **"Run Weekly Check" gate** — button only renders for the GM on `status='active'` communities with ≥13 members. Shows week number + consecutive-failure count; flashes red "one more failure dissolves" warning at 2/3.
 
 ## ✅ Shipped 2026-04-22 (Communities Phase B wrap + header nest)
 - **Recruitment Insight Dice** — pre-roll 3d6 / +3 CMod picker on the Recruit modal pick step (gated on roller having ≥1 Insight Die) + post-roll reroll buttons on the result step. Reroll reconciles `community_members` state if outcome crosses the success line, patches `roll_log` in place via captured row id. Handles 3d6 threshold math (14+/9+/4+/<4).
@@ -636,14 +644,15 @@ When picking this back up:
 - [ ] Apprentice toggle on Wild Success / High Insight — one Apprentice per PC, persistent bond
 - [ ] Recruitment log entry in `roll_log` with custom card style
 
-### Phase C — Morale + Resource checks (weekly loop)
-- [ ] `community_morale_checks` table + `community_resource_checks` table + RLS
-- [ ] Fed Check modal (Gatherers roll; outcome → CMod on next Morale)
-- [ ] Clothed Check modal (Maintainers roll; same pattern)
-- [ ] Weekly Morale Check modal — auto-fills 6 modifier slots (Fed, Clothed, Mood, Space, Clear Voice, Someone to Watch Over Me) + ad-hoc GM CMods
-- [ ] Consequence application: Failure removes 25% members (weighted Unassigned → Cohort → Convert → Conscript, Apprentices last), Dire Failure 50%, cmod_for_next accumulates, consecutive_failures counter increments on failure / resets on success
-- [ ] 3-failure dissolution flow with confirm modal + `status='dissolved'`
-- [ ] Log cards for all three check types in `roll_log`
+### Phase C — Morale + Resource checks (weekly loop) ✅ 2026-04-23
+- [x] `community_morale_checks` table + `community_resource_checks` table + RLS (already landed in Phase A migration)
+- [x] Fed / Clothed / Morale rolled together in a single **Weekly Check modal** (`components/CommunityMoraleModal.tsx`) — NPCs assumed reasonable proficiency, GM adjusts A/S/CMod per roll, single "Run Weekly Check" fires all three rolls sequentially
+- [x] Morale auto-fills all 6 SRD slots — Mood (from prior week's cmod_for_next), Fed + Clothed (snap to actual rolled outcomes), Enough Hands (mechanical − 1 per understaffed role group, max −3), A Clear Voice (0 with leader, −1 leaderless), Someone To Watch Over Me (+1 ≥10% Safety, −1 <5%); GM override on any slot + Additional freeform CMod
+- [x] Consequence application: Failure 25% / Dire Failure 50% / Low Insight 75% leave, weighted priority Unassigned → Cohort → Convert → Conscript → Founder → Apprentice, PCs never auto-removed; `consecutive_failures` +1 on failure / reset to 0 on success; `week_number` increments on finalize
+- [x] 3-consecutive-failure dissolution — Result stage flips to a red "Finalize — Dissolve Community" button, all members soft-removed with reason='dissolved', community flips to status='dissolved'
+- [x] Custom roll_log cards for `fed_check` / `clothed_check` / `morale_check` with slot breakdown + departure list + dissolve warning; compactRollSummary narrative for the Both tab
+- [x] New SQL migration `sql/community-members-add-morale-75-reason.sql` widens left_reason CHECK to include 'morale_75' for the Low Insight drop
+- [ ] Retention Check on 3rd failure (SRD §08 p.22) — fast-acting leader gets an immediate salvage Morale Check with prior Mood as CMod. Deferred; Phase D.
 
 ### Phase D — Activity Blocks + Level 4 skills + dashboard
 - [ ] End Week button advances `week_number` (per-community)
