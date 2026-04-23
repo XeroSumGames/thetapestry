@@ -39,9 +39,39 @@ interface Member {
   invited_by_user_id: string | null
 }
 
-interface NpcOption { id: string; name: string }
+interface NpcOption {
+  id: string
+  name: string
+  // skills.entries drives auto-assign. Shape: { entries: [{ name, level }] }
+  skills?: { entries?: { name: string; level: number }[] } | null
+}
 interface CharOption { id: string; name: string }
 interface PinOption { id: string; name: string }
+
+// Skill-based role auto-assign. Per user spec:
+//   Farming / Scavenging / Survival  → Gatherers
+//   Mechanic / Tinkerer              → Maintainers
+//   Tactics / Ranged Combat /
+//   Melee Combat / Heavy Weapons /
+//   Demolitions                      → Safety
+// "Best fit" is the highest-level skill in the matched bucket. NPCs
+// with no relevant skills stay unassigned.
+const ROLE_SKILLS: Record<Exclude<Role, 'unassigned'>, string[]> = {
+  gatherer: ['Farming', 'Scavenging', 'Survival'],
+  maintainer: ['Mechanic', 'Tinkerer'],
+  safety: ['Tactics', 'Ranged Combat', 'Melee Combat', 'Heavy Weapons', 'Demolitions'],
+}
+function suggestRoleFromSkills(skills: NpcOption['skills']): Exclude<Role, 'unassigned'> | null {
+  const entries = Array.isArray(skills?.entries) ? skills!.entries! : []
+  if (entries.length === 0) return null
+  let best: { role: Exclude<Role, 'unassigned'>; level: number } | null = null
+  for (const role of Object.keys(ROLE_SKILLS) as Array<Exclude<Role, 'unassigned'>>) {
+    const matches = entries.filter(e => ROLE_SKILLS[role].includes(e.name))
+    const top = matches.reduce((m, e) => Math.max(m, e.level), 0)
+    if (top > 0 && (!best || top > best.level)) best = { role, level: top }
+  }
+  return best?.role ?? null
+}
 
 const ROLE_LABEL: Record<Role, string> = {
   gatherer: 'Gatherers',
@@ -112,7 +142,7 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
     setLoading(true)
     const [comsRes, npcsRes, charsRes, pinsRes] = await Promise.all([
       supabase.from('communities').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: true }),
-      supabase.from('campaign_npcs').select('id, name').eq('campaign_id', campaignId).order('name'),
+      supabase.from('campaign_npcs').select('id, name, skills').eq('campaign_id', campaignId).order('name'),
       supabase.from('campaign_members')
         .select('character_id, characters:character_id(id, name)')
         .eq('campaign_id', campaignId)
@@ -146,6 +176,38 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
       }
       setMembers(byCom)
       setPendingByCommunity(pendingByCom)
+
+      // Auto-assign any `unassigned` NPC member to the role suggested
+      // by their skills. Silent DB write — doesn't block the render.
+      // Only touches rows currently at 'unassigned' so manual overrides
+      // aren't stomped. PCs stay unassigned by default per spec.
+      const npcById = new Map<string, NpcOption>()
+      for (const n of (npcsRes.data ?? []) as NpcOption[]) npcById.set(n.id, n)
+      const autoUpdates: Array<{ id: string; role: Role }> = []
+      for (const memberList of Object.values(byCom)) {
+        for (const m of memberList) {
+          if (m.role !== 'unassigned' || !m.npc_id) continue
+          const npc = npcById.get(m.npc_id)
+          const suggested = suggestRoleFromSkills(npc?.skills)
+          if (suggested) autoUpdates.push({ id: m.id, role: suggested })
+        }
+      }
+      if (autoUpdates.length > 0) {
+        // Fire in parallel; swallow individual errors so a schema-
+        // cache miss on one row doesn't block the rest.
+        await Promise.all(autoUpdates.map(u =>
+          supabase.from('community_members').update({ role: u.role }).eq('id', u.id)
+        ))
+        // Patch local state in-place so the UI matches without a reload.
+        setMembers(prev => {
+          const updated = { ...prev }
+          const byMemberId = new Map(autoUpdates.map(u => [u.id, u.role]))
+          for (const [cid, list] of Object.entries(updated)) {
+            updated[cid] = list.map(m => byMemberId.has(m.id) ? { ...m, role: byMemberId.get(m.id)! } : m)
+          }
+          return updated
+        })
+      }
     } else {
       setMembers({})
       setPendingByCommunity({})
@@ -154,6 +216,31 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
     const { data: { user } } = await supabase.auth.getUser()
     setMyUserId(user?.id ?? null)
     setLoading(false)
+  }
+
+  // Change the community leader. Leader is either a PC (character_id
+  // → leader_user_id lookup) or an NPC (leader_npc_id). Exactly one
+  // is set at a time; the other is nulled.
+  async function handleSetLeader(communityId: string, choice: { kind: 'pc' | 'npc'; memberId: string }) {
+    const member = (members[communityId] ?? []).find(m => m.id === choice.memberId)
+    if (!member) return
+    let update: { leader_user_id: string | null; leader_npc_id: string | null } = {
+      leader_user_id: null, leader_npc_id: null,
+    }
+    if (choice.kind === 'pc' && member.character_id) {
+      // Need the user_id for the PC; look it up from campaign_members.
+      const { data: cm } = await supabase.from('campaign_members')
+        .select('user_id')
+        .eq('campaign_id', campaignId)
+        .eq('character_id', member.character_id)
+        .maybeSingle()
+      update.leader_user_id = (cm as any)?.user_id ?? null
+    } else if (choice.kind === 'npc' && member.npc_id) {
+      update.leader_npc_id = member.npc_id
+    }
+    const { error } = await supabase.from('communities').update(update).eq('id', communityId)
+    if (error) { alert(`Leader change failed: ${error.message}`); return }
+    setCommunities(prev => prev.map(c => c.id === communityId ? { ...c, ...update } : c))
   }
 
   async function handleCreate() {
@@ -386,6 +473,21 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
         const gatherPct = npcTotal > 0 ? Math.round(100 * npcMems.filter(m => m.role === 'gatherer').length / npcTotal) : 0
         const maintainPct = npcTotal > 0 ? Math.round(100 * npcMems.filter(m => m.role === 'maintainer').length / npcTotal) : 0
         const safetyPct = npcTotal > 0 ? Math.round(100 * npcMems.filter(m => m.role === 'safety').length / npcTotal) : 0
+        // Founder = the recruitment_type='founder' row (first PC who
+        // created the community). There can be multiple founders if
+        // several PCs are marked founder; we display the first.
+        const founderMember = mems.find(m => m.recruitment_type === 'founder')
+        const founderName = founderMember ? memberLabel(founderMember) : null
+        // Leader resolution — prefer the PC leader (leader_user_id)
+        // resolved via campaign_members, else the NPC (leader_npc_id).
+        // Stored as an id on community; we match back to a member row
+        // so the dropdown can select by member.id.
+        const leaderMember = (() => {
+          if (c.leader_npc_id) return mems.find(m => m.npc_id === c.leader_npc_id) ?? null
+          // No direct user_id on community_members; skip PC leader
+          // matching here — dropdown still lets you set it.
+          return null
+        })()
         return (
           <div key={c.id} style={{ background: '#1a1a1a', border: `1px solid ${isOpen ? '#7ab3d4' : '#2e2e2e'}`, borderRadius: '4px' }}>
             {/* Header */}
@@ -399,7 +501,9 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
                   </span>
                 </div>
                 <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                  {total} member{total === 1 ? '' : 's'}{!isCommunity && total > 0 ? ` · ${13 - total} more for Community` : ''}
+                  {total} member{total === 1 ? '' : 's'}
+                  {founderName && <> · <span style={{ color: '#EF9F27' }}>Founder:</span> <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{founderName}</span></>}
+                  {!isCommunity && total > 0 && ` · ${13 - total} more for Community`}
                 </div>
               </div>
               <span style={{ fontSize: '14px', color: '#5a5550' }}>{isOpen ? '▲' : '▼'}</span>
@@ -411,6 +515,29 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
                 {c.description && (
                   <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>{c.description}</div>
                 )}
+
+                {/* Leader — call-out + dropdown. The current leader
+                    is shown bold; selecting a new member from the
+                    dropdown calls handleSetLeader which writes the
+                    correct leader_user_id / leader_npc_id on the
+                    community row. */}
+                <div style={{ padding: '10px 12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Leader</span>
+                  <select
+                    value={leaderMember?.id ?? ''}
+                    onChange={e => {
+                      if (!e.target.value) return
+                      const mem = mems.find(m => m.id === e.target.value)
+                      if (!mem) return
+                      handleSetLeader(c.id, { kind: mem.npc_id ? 'npc' : 'pc', memberId: mem.id })
+                    }}
+                    style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none' }}>
+                    <option value="">— pick a leader —</option>
+                    {mems.map(m => (
+                      <option key={m.id} value={m.id}>{memberLabel(m)}{m.npc_id ? ' (NPC)' : ' (PC)'}</option>
+                    ))}
+                  </select>
+                </div>
 
                 {/* Pending-requests — only visible to the leader (or
                     GMs, which the wider RLS already permits). Approve
@@ -484,27 +611,28 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
                     can see who's apprenticed to whom at a glance. */}
                 {(() => {
                   const renderRow = (m: Member, accent: string) => {
-                    const name = memberLabel(m)
-                    const typeLabel = RECRUITMENT_LABEL[m.recruitment_type]
+                    // Name is always the dominant visual — bigger font,
+                    // takes all remaining flex space. Apprentice rows
+                    // get their master appended inline so the chain
+                    // reads at a glance without a second line of text.
+                    const rawName = memberLabel(m)
                     const masterName = m.apprentice_of_character_id
                       ? (chars.find(c => c.id === m.apprentice_of_character_id)?.name ?? null)
                       : null
-                    const subline = m.recruitment_type === 'apprentice' && masterName
-                      ? `Apprentice ⇐ ${masterName}`
-                      : typeLabel
+                    const displayName = m.recruitment_type === 'apprentice' && masterName
+                      ? `${rawName} ⇐ ${masterName}`
+                      : rawName
                     return (
                       <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: '#111', border: `1px solid ${accent}`, borderRadius: '2px' }}>
-                        <span style={{ fontSize: '14px' }}>{m.npc_id ? '👤' : '🎭'}</span>
-                        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
-                          <span style={{ fontSize: '12px', color: m.recruitment_type === 'apprentice' ? '#d48bd4' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subline}</span>
-                        </div>
+                        <span style={{ flex: 1, minWidth: 0, fontSize: '15px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {displayName || (m.npc_id ? '(NPC)' : '(PC)')}
+                        </span>
                         <select value={m.role} onChange={e => handleChangeRole(m, e.target.value as Role)}
-                          style={{ padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                          style={{ width: '110px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
                           {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
                         </select>
                         <button onClick={() => handleRemoveMember(m)} title="Remove"
-                          style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '14px', cursor: 'pointer', padding: '0 4px' }}>×</button>
+                          style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '16px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>×</button>
                       </div>
                     )
                   }
