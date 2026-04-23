@@ -347,6 +347,12 @@ export default function CharacterCard({
               {onPlaceOnMap && <button onClick={onPlaceOnMap} style={btn('#1a1a2e', '#7ab3d4')}>Map</button>}
               <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={btn('#c0392b', '#f5a89a')}>Edit</button>
               <button onClick={() => setShowInventory(true)} style={btn('#2a2010', '#EF9F27')}>Inventory</button>
+              {/* Apprentice placeholder — unwired for now. Will surface
+                  the PC's Apprentice NPC card when clicked once the
+                  picker/display is built. Matches Inventory styling
+                  (green community-palette) so it reads as a paired
+                  bond surface. */}
+              <button onClick={() => alert('Apprentice view coming soon — check the Community roster for NPCs tagged ⇐ this PC.')} style={btn('#1a2e10', '#7fc458')}>Apprentice</button>
               {campaignIdProp && (
                 <button onClick={() => openPopout(`/character-sheet?c=${campaignIdProp}&char=${c.id}`, `char-${c.id}`, { w: 800, h: 800 })} title="Pop out" style={btn('#2a102a', '#d48bd4')}>Popout</button>
               )}

@@ -4334,6 +4334,10 @@ export default function TablePage() {
             { label: 'Status', onClick: () => openCommunityModal('status') },
             { label: 'New Community', onClick: () => openCommunityModal('create') },
             { label: 'Recruit', onClick: () => openRecruitModal(), hidden: sessionStatus !== 'active' },
+            // Apprentice placeholder — the apprentice card / picker UI isn't
+            // wired yet. Menu entry reserved so the nav slot lands now and
+            // the feature can drop in without a menu reshuffle later.
+            { label: 'Apprentice', onClick: () => alert('Apprentice view coming soon — for now, see the Apprentice NPC inside the Community roster (look for ⇐ <your PC name>).') },
           ],
           hdrBtn('#1a2e10', '#7fc458', '#2d5a1b'),
         )}
