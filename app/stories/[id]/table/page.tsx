@@ -4348,10 +4348,6 @@ export default function TablePage() {
           ],
           hdrBtn('#2a2010', '#EF9F27', '#5a4a1b'),
         )}
-        <button onClick={() => { setSheetMode(m => m === 'inline' ? 'overlay' : 'inline'); setSheetPos(null) }}
-          style={hdrBtn('#242424', '#cce0f5', '#3a3a3a')}>
-          {sheetMode === 'inline' ? 'Overlay' : 'Inline'}
-        </button>
         <a href="/dashboard" target="_blank" rel="noreferrer" style={{ ...hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'), textDecoration: 'none' }}>
           Dashboard
         </a>
