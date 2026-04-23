@@ -289,8 +289,8 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
   // The Both tab (chat + rolls interleaved) has a simpler renderer that
   // falls through to this function, so give it a clean one-liner from
   // the stored label instead of showing the raw category outcome.
-  if (r.outcome === 'fed_check' || r.outcome === 'clothed_check' || r.outcome === 'morale_check') {
-    return r.label.replace(/^[\u{1F33E}\u{1F527}\u{1F4CA}]\s*/u, '')
+  if (r.outcome === 'fed_check' || r.outcome === 'clothed_check' || r.outcome === 'morale_check' || r.outcome === 'retention_check') {
+    return r.label.replace(/^[\u{1F33E}\u{1F527}\u{1F4CA}\u{1F64F}]\s*/u, '')
   }
   // Loot — label "🎒 <name> looted <items> from <container>". Narrative
   // compact banner hides WHAT was looted (keeps players reading the log
@@ -5294,7 +5294,40 @@ export default function TablePage() {
                       )
                     })}
                   </div>
-                ) : (r.outcome === 'fed_check' || r.outcome === 'clothed_check') ? (() => {
+                ) : r.outcome === 'retention_check' ? (() => {
+                  const dj = (r.damage_json ?? {}) as any
+                  const rollOutcome = dj.rollOutcome ?? 'Success'
+                  const survived = !!dj.survived
+                  const color = survived ? '#7fc458' : '#c0392b'
+                  return (
+                    <div key={r.id} style={{ marginBottom: '8px', padding: '10px', background: survived ? '#0f1a2e' : '#1a0a0a', border: `1px solid ${color}`, borderRadius: '3px', borderLeft: `3px solid ${color}` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🙏 Week {dj.weekNumber} · {dj.communityName} · Retention</span>
+                        <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
+                      </div>
+                      {dj.leaderName && (
+                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
+                          Rolled by <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{dj.leaderName}</span>
+                          {dj.leaderKind && <span style={{ color: '#5a5550' }}> ({dj.leaderKind === 'pc' ? 'PC' : 'NPC'})</span>}
+                          {dj.skillUsed && <span> — <span style={{ color: '#7ab3d4' }}>{dj.skillUsed}</span></span>}
+                        </div>
+                      )}
+                      <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
+                        [{r.die1}+{r.die2}]
+                        {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+                        {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+                        <span style={{ color: r.cmod < 0 ? '#f5a89a' : '#cce0f5' }}> {r.cmod >= 0 ? '+' : ''}{r.cmod} Mood</span>
+                        <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+                        <span style={{ marginLeft: '8px', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{rollOutcome}</span>
+                      </div>
+                      <div style={{ fontSize: '13px', color: survived ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 600 }}>
+                        {survived
+                          ? `✓ ${dj.leaderName ?? 'The leader'} rallied the survivors. Community retained — consecutive failures reset to 2.`
+                          : `✗ The fragments scatter. Community dissolved.`}
+                      </div>
+                    </div>
+                  )
+                })() : (r.outcome === 'fed_check' || r.outcome === 'clothed_check') ? (() => {
                   const dj = (r.damage_json ?? {}) as any
                   const rollOutcome = dj.rollOutcome ?? 'Success'
                   const emoji = r.outcome === 'fed_check' ? '🌾' : '🔧'

@@ -204,7 +204,7 @@ CRB v0.9.2 explicitly uses page-number placeholders ("see page xx") for Communit
 | §3 Recruitment skills | "Barter, Psychology\*, Tactics\*, Inspiration, etc." | SRD confirms Barter / Psychology\* / Tactics\*; Inspiration is CRB-flavor | ✓ Matches |
 | §3 First Impression CMod | Flows from `npc_relationships.relationship_cmod` | Confirmed: SRD p. 21 "Recruitment Checks can be influenced by the First Impression a player made on them" | ✓ Matches |
 | §4 Morale cadence | "Weekly" | SRD: "usually weekly, but the exact cadence is up to the GM" | ⚠️ Spec should note cadence is GM-configurable |
-| §4 3-consecutive-failure dissolution | "Dissolves irrecoverably" | SRD adds: **immediate retention Morale Check is allowed**, using previous result as Mood CMod, for "fast-acting leaders" | ⚠️ Spec missing retention check |
+| §4 3-consecutive-failure dissolution | "Dissolves irrecoverably" | SRD adds: **immediate retention Morale Check is allowed**, using previous result as Mood CMod, for "fast-acting leaders" | ✅ Implemented 2026-04-23 in `CommunityMoraleModal` — inline on Result stage when willDissolve, Mood = failed Morale's cmod_for_next, success saves the community (cons_failures drops to 2), failure dissolves as planned |
 | §5 Leadership | Says leadership drawn from Safety | SRD confirms: "This group is also made up of Community leadership" | ✓ Matches |
 | §10 Who runs Morale | "GM always; leader PC if leader_user_id = auth.uid()" | SRD: acknowledged leader (PC or NPC); Group Check if co-equal leaders | ✓ Matches (spec is stricter — OK for MVP) |
 | Morale outcome 75% leave | Not in spec | SRD: Moment of Low Insight = **75% leave** (spec only has 25/50) | ❌ Spec missing 75% / Low Insight tier |

@@ -81,6 +81,24 @@ interface RollResult {
   outcome: string
 }
 
+// Retention Check per SRD §08 p.22: "Any leader wishing to unite or
+// retain fragments of a dissolving community will need to make an
+// immediate Morale Check as part of this attempt, using the result of
+// the preceding Morale Check as the Mood Around the Campfire CMod."
+// Only Mood changes; other slots stay at current values. Success of
+// any tier saves the community; failure tiers let dissolution proceed.
+interface RetentionResult {
+  die1: number
+  die2: number
+  amod: number
+  smod: number
+  mood: number       // = failed Morale's cmod_for_next (negative)
+  total: number
+  outcome: string
+  survived: boolean  // any Success/WildSuccess/HighInsight → true
+  skillUsed: string
+}
+
 interface FinalResult {
   fed: RollResult
   clothed: RollResult
@@ -171,6 +189,11 @@ export default function CommunityMoraleModal({
 
   // Final result payload once rolls fire
   const [result, setResult] = useState<FinalResult | null>(null)
+  // Retention Check state — set when leader attempts to salvage on a
+  // 3rd-failure dissolution. Null = not attempted. If survived=true,
+  // the community does NOT dissolve despite willDissolve on result.
+  const [retention, setRetention] = useState<RetentionResult | null>(null)
+  const [rollingRetention, setRollingRetention] = useState(false)
 
   // Reset on open
   useEffect(() => {
@@ -181,6 +204,8 @@ export default function CommunityMoraleModal({
     setClothedAmod(0); setClothedSmod(1); setClothedCmod(0)
     setMoraleAmod(0); setMoraleSmod(0); setAdditionalMoraleCmod(0)
     setLeaderInfo(null)
+    setRetention(null)
+    setRollingRetention(false)
     setSlotMoodOverride(null)
     setSlotEnoughHandsOverride(null)
     setSlotClearVoiceOverride(null)
@@ -360,6 +385,35 @@ export default function CommunityMoraleModal({
     setRunning(false)
   }
 
+  // Retention Check — fired only from the Result stage when willDissolve
+  // is true AND the leader hasn't attempted one yet. SRD §08 p.22: an
+  // "immediate Morale Check" using the failed Morale's cmod_for_next as
+  // the Mood slot. No other slots change; leader A/S unchanged. Success
+  // of any tier saves the community. Uses the currently-selected
+  // moraleAmod/moraleSmod/moraleSkillName so the leader can swap skills
+  // before the retention roll if the GM wants.
+  function attemptRetentionCheck() {
+    if (!result || rollingRetention) return
+    if (retention) return  // already attempted; one shot per SRD
+    setRollingRetention(true)
+    const mood = outcomeToMoraleCmod(result.morale.outcome)
+    const dice = roll2d6()
+    const total = dice.die1 + dice.die2 + moraleAmod + moraleSmod + mood
+    const outcome = classifyRoll(total, dice.die1, dice.die2)
+    const survived = !isMoraleFailure(outcome)
+    setRetention({
+      ...dice,
+      amod: moraleAmod,
+      smod: moraleSmod,
+      mood,
+      total,
+      outcome,
+      survived,
+      skillUsed: moraleSkillName,
+    })
+    setRollingRetention(false)
+  }
+
   async function finalizeAndSave() {
     if (!result || running) return
     setRunning(true)
@@ -401,8 +455,17 @@ export default function CommunityMoraleModal({
       members_before: membersBefore, members_after: membersAfter,
     })
 
+    // Retention overrides dissolution if a successful Retention Check
+    // was rolled on this Result stage. Per SRD p.22 the community is
+    // saved; departures from the failed Morale still apply, and we
+    // drop consecutive_failures to 2 (one week's cushion — they're
+    // battered but not dead). If the retention attempt FAILED, the
+    // community dissolves as originally planned.
+    const retentionSucceeded = !!retention?.survived
+    const reallyDissolves = willDissolve && !retentionSucceeded
+
     // 3) Apply member consequence
-    if (willDissolve) {
+    if (reallyDissolves) {
       // All members marked left with reason=dissolved; community status flips.
       await supabase.from('community_members')
         .update({ left_at: now, left_reason: 'dissolved' })
@@ -429,16 +492,20 @@ export default function CommunityMoraleModal({
     }
 
     // 4) Update community counters (+ status transition).
-    //    'forming' → 'active' on first completed weekly cycle; 'active' →
-    //    'dissolved' on 3rd consecutive failure; otherwise keep.
-    const nextStatus: 'forming' | 'active' | 'dissolved' = willDissolve
+    //    'forming' → 'active' on first completed weekly cycle.
+    //    Retention success on a 3rd-fail keeps the community active
+    //    with consecutive_failures = 2 (SRD doesn't specify; we pick
+    //    2 so next failure re-dissolves but a Success next week resets).
+    //    Pure dissolution: status → 'dissolved', dissolved_at set.
+    const finalConsFailures = retentionSucceeded ? 2 : consecutiveFailuresAfter
+    const nextStatus: 'forming' | 'active' | 'dissolved' = reallyDissolves
       ? 'dissolved'
       : (community.status === 'forming' ? 'active' : community.status)
     await supabase.from('communities').update({
       week_number: newWeek,
-      consecutive_failures: consecutiveFailuresAfter,
+      consecutive_failures: finalConsFailures,
       status: nextStatus,
-      ...(willDissolve ? { dissolved_at: now } : {}),
+      ...(reallyDissolves ? { dissolved_at: now } : {}),
     }).eq('id', community.id)
 
     // 5) Log rows for the session feed. Morale card is credited to the
@@ -448,14 +515,19 @@ export default function CommunityMoraleModal({
     const leaderName = leaderInfo?.name ?? community.name
     const fedLabel = `🌾 Week ${newWeek} · ${community.name} — Fed Check: ${fed.outcome}`
     const clothedLabel = `🔧 Week ${newWeek} · ${community.name} — Clothed Check: ${clothed.outcome}`
-    const moraleSuffix = willDissolve
+    const moraleSuffix = reallyDissolves
       ? ` — Community dissolved`
-      : departureIds.length > 0
-        ? ` — ${departureIds.length} member${departureIds.length === 1 ? '' : 's'} left`
-        : ''
+      : retentionSucceeded
+        ? ` — Retention pending`
+        : departureIds.length > 0
+          ? ` — ${departureIds.length} member${departureIds.length === 1 ? '' : 's'} left`
+          : ''
     const moraleLabel = `📊 Week ${newWeek} · ${community.name} — ${leaderName} rolls ${moraleSkillName}: ${morale.outcome}${moraleSuffix}`
 
-    await supabase.from('roll_log').insert([
+    // Base rows — Fed, Clothed, Morale. Retention row appended below
+    // if attempted so the feed tells the story: Morale failed → Leader
+    // rolled a salvage → Community survived (or collapsed anyway).
+    const rows: any[] = [
       {
         campaign_id: campaignId, user_id: userId,
         character_name: community.name, label: fedLabel,
@@ -467,7 +539,7 @@ export default function CommunityMoraleModal({
           weekNumber: newWeek,
           rollOutcome: fed.outcome,
           cmodForNextMorale: outcomeToMoraleCmod(fed.outcome),
-        } as any,
+        },
         created_at: now,
       },
       {
@@ -481,7 +553,7 @@ export default function CommunityMoraleModal({
           weekNumber: newWeek,
           rollOutcome: clothed.outcome,
           cmodForNextMorale: outcomeToMoraleCmod(clothed.outcome),
-        } as any,
+        },
         created_at: now,
       },
       {
@@ -500,16 +572,47 @@ export default function CommunityMoraleModal({
           slots: moraleSlots,
           cmodForNext: nextMoraleCmod,
           membersBefore, membersAfter,
-          departureCount: willDissolve ? membersBefore : departureIds.length,
-          departureNames: willDissolve
+          departureCount: reallyDissolves ? membersBefore : departureIds.length,
+          departureNames: reallyDissolves
             ? ['— all members —']
             : departureIds.map(id => memberNameById.get(id) ?? '(unknown)'),
           consecutiveFailuresAfter,
-          willDissolve,
-        } as any,
+          willDissolve: reallyDissolves,
+          retentionAttempted: !!retention,
+          retentionSurvived: retentionSucceeded,
+        },
         created_at: now,
       },
-    ])
+    ]
+    if (retention) {
+      const retLabel = retention.survived
+        ? `🙏 Week ${newWeek} · ${community.name} — ${leaderName} rallies the survivors: ${retention.outcome}`
+        : `🙏 Week ${newWeek} · ${community.name} — ${leaderName} fails to hold the community together: ${retention.outcome}`
+      // Bump retention log timestamp by 1ms so it sorts after the failed
+      // Morale row in the feed (same-tick inserts can sort unpredictably).
+      const retTime = new Date(Date.now() + 1).toISOString()
+      rows.push({
+        campaign_id: campaignId, user_id: userId,
+        character_name: leaderName, label: retLabel,
+        die1: retention.die1, die2: retention.die2,
+        amod: retention.amod, smod: retention.smod, cmod: retention.mood,
+        total: retention.total, outcome: 'retention_check',
+        damage_json: {
+          communityId: community.id,
+          communityName: community.name,
+          weekNumber: newWeek,
+          rollOutcome: retention.outcome,
+          leaderName,
+          leaderKind: leaderInfo?.kind ?? null,
+          skillUsed: retention.skillUsed,
+          moodCmod: retention.mood,
+          survived: retention.survived,
+          failedMoraleOutcome: morale.outcome,
+        },
+        created_at: retTime,
+      })
+    }
+    await supabase.from('roll_log').insert(rows)
 
     setRunning(false)
     onComplete()
@@ -860,14 +963,62 @@ export default function CommunityMoraleModal({
             </div>
           </div>
 
+          {/* Retention Check card — shown after the leader attempts
+              one. SRD p.22: immediate Morale Check, failed Morale's
+              cmod_for_next as the only Mood CMod. Success of any tier
+              saves the community; failure tiers let dissolution proceed. */}
+          {retention && (
+            <div style={{ padding: '10px', background: '#111', border: `1px solid ${outcomeColor(retention.outcome)}`, borderLeft: `3px solid ${outcomeColor(retention.outcome)}`, borderRadius: '3px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                <span style={{ fontSize: '18px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🙏 Retention Check</span>
+                <span style={{ fontSize: '19px', color: outcomeColor(retention.outcome), fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{retention.outcome}</span>
+              </div>
+              <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
+                [{retention.die1}+{retention.die2}]
+                {retention.amod !== 0 && <span style={{ color: retention.amod > 0 ? '#7fc458' : '#c0392b' }}> {retention.amod > 0 ? '+' : ''}{retention.amod} AMod</span>}
+                {retention.smod !== 0 && <span style={{ color: retention.smod > 0 ? '#7fc458' : '#c0392b' }}> {retention.smod > 0 ? '+' : ''}{retention.smod} SMod</span>}
+                <span style={{ color: cmodColor(retention.mood) }}> {retention.mood >= 0 ? '+' : ''}{retention.mood} Mood</span>
+                <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {retention.total}</span>
+              </div>
+              <div style={{ fontSize: '17px', color: retention.survived ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 600 }}>
+                {retention.survived
+                  ? `✓ The community holds together. Consecutive failures drop to 2 — one more failure next week dissolves it.`
+                  : `✗ The fragments scatter. Dissolution proceeds.`}
+              </div>
+            </div>
+          )}
+
           {/* Consequence */}
-          {r.willDissolve ? (
+          {r.willDissolve && !retention?.survived ? (
             <div style={{ padding: '12px', background: '#2a1010', border: '1px solid #c0392b', borderRadius: '3px' }}>
               <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
                 ⚠ Community Dissolves
               </div>
               <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
-                3 consecutive Morale failures. All {r.membersBefore} members scatter. The community is gone. (Retention check not yet implemented — deferred.)
+                3 consecutive Morale failures. All {r.membersBefore} members scatter. The community is gone.
+                {!retention && leaderInfo && (
+                  <> A fast-acting leader may attempt an immediate Retention Check (SRD §08 p.22) to salvage fragments.</>
+                )}
+              </div>
+              {!retention && leaderInfo && (
+                <button onClick={attemptRetentionCheck}
+                  disabled={rollingRetention}
+                  style={{ marginTop: '8px', padding: '8px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '17px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: rollingRetention ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: rollingRetention ? 0.4 : 1 }}>
+                  {rollingRetention ? 'Rolling…' : `🙏 Attempt Retention Check (${leaderInfo.name} rolls ${moraleSkillName})`}
+                </button>
+              )}
+            </div>
+          ) : r.willDissolve && retention?.survived ? (
+            <div style={{ padding: '10px', background: '#1a2010', border: '1px solid #7fc458', borderRadius: '3px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                Community Retained
+              </div>
+              <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
+                {leaderInfo?.name ?? 'The leader'} rallied the survivors. The community does NOT dissolve.
+                Original Morale failure consequence still applies: {r.departureIds.length} member{r.departureIds.length === 1 ? '' : 's'} leave — {r.departureIds.map(id => memberNameById.get(id) ?? '(unknown)').join(', ')}.
+              </div>
+              <div style={{ marginTop: '6px', fontSize: '17px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                Roster after: {r.membersAfter} · Consecutive failures reset to 2 (one week's cushion).
               </div>
             </div>
           ) : r.departureIds.length > 0 ? (
@@ -895,8 +1046,14 @@ export default function CommunityMoraleModal({
           <button onClick={onClose} style={chipBtn} disabled={running}>Cancel (discard)</button>
           <button onClick={finalizeAndSave}
             disabled={running}
-            style={{ ...(r.willDissolve ? dangerBtn : primaryBtn), opacity: running ? 0.4 : 1, cursor: running ? 'not-allowed' : 'pointer' }}>
-            {running ? 'Saving…' : r.willDissolve ? 'Finalize — Dissolve Community' : 'Finalize & Save'}
+            style={{ ...(r.willDissolve && !retention?.survived ? dangerBtn : primaryBtn), opacity: running ? 0.4 : 1, cursor: running ? 'not-allowed' : 'pointer' }}>
+            {running
+              ? 'Saving…'
+              : r.willDissolve && !retention?.survived
+                ? 'Finalize — Dissolve Community'
+                : r.willDissolve && retention?.survived
+                  ? 'Finalize — Save Community'
+                  : 'Finalize & Save'}
           </button>
         </div>
       </div>

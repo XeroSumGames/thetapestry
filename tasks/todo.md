@@ -652,7 +652,7 @@ When picking this back up:
 - [x] 3-consecutive-failure dissolution — Result stage flips to a red "Finalize — Dissolve Community" button, all members soft-removed with reason='dissolved', community flips to status='dissolved'
 - [x] Custom roll_log cards for `fed_check` / `clothed_check` / `morale_check` with slot breakdown + departure list + dissolve warning; compactRollSummary narrative for the Both tab
 - [x] New SQL migration `sql/community-members-add-morale-75-reason.sql` widens left_reason CHECK to include 'morale_75' for the Low Insight drop
-- [ ] Retention Check on 3rd failure (SRD §08 p.22) — fast-acting leader gets an immediate salvage Morale Check with prior Mood as CMod. Deferred; Phase D.
+- [x] Retention Check on 3rd failure (SRD §08 p.22) — fast-acting leader gets an immediate salvage Morale Check using the failed Morale's cmod_for_next as the Mood CMod. Inline on the Result stage: "🙏 Attempt Retention Check" button appears when willDissolve=true, uses the leader's current AMod/SMod + skill pick. Success of any tier saves the community (consecutive_failures drops to 2); failure tiers let dissolution proceed. Custom `retention_check` roll-log card.
 
 ### Phase D — Activity Blocks + Level 4 skills + dashboard
 - [ ] End Week button advances `week_number` (per-community)
