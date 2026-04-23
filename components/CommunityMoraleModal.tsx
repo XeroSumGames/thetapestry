@@ -528,7 +528,7 @@ export default function CommunityMoraleModal({
             {/* Fed */}
             <div>
               <div style={sectionHeading}>🌾 Fed Check · Gatherers</div>
-              <div style={{ fontSize: '12px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
                 Hunt / forage / farm / fish for Rations. NPC assumed, A/S mods default to reasonable NPC.
               </div>
               <div style={rowFlex}>
@@ -544,7 +544,7 @@ export default function CommunityMoraleModal({
             {/* Clothed */}
             <div>
               <div style={sectionHeading}>🔧 Clothed Check · Maintainers</div>
-              <div style={{ fontSize: '12px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
                 Repair, Supplies collection. NPC assumed, A/S mods default to reasonable NPC.
               </div>
               <div style={rowFlex}>
@@ -560,7 +560,7 @@ export default function CommunityMoraleModal({
             {/* Morale */}
             <div>
               <div style={sectionHeading}>📊 Morale Check · Leader</div>
-              <div style={{ fontSize: '12px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
                 6 SRD slots below auto-fill; override any slot if the GM has a reason.
                 Fed + Clothed CMods will snap to their actual rolled outcome when you click "Run Weekly Check" — the current display assumes 0 until then.
               </div>
