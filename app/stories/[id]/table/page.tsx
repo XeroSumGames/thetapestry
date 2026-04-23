@@ -508,8 +508,17 @@ export default function TablePage() {
   // view (pending requests, member roles, PC/NPC roster, founder flows)
   // as an overlay on the table. Triggered via the Community ▾ → Status
   // dropdown item so players don't have to leave /table to inspect the
-  // current state of their community.
+  // current state of their community. `communityModalMode` tells
+  // CampaignCommunity which panel to auto-expand on open (status →
+  // first community unfolded; create → the create form open).
   const [showCommunityModal, setShowCommunityModal] = useState(false)
+  const [communityModalMode, setCommunityModalMode] = useState<'status' | 'create'>('status')
+  const [communityModalToken, setCommunityModalToken] = useState(0)
+  function openCommunityModal(mode: 'status' | 'create') {
+    setCommunityModalMode(mode)
+    setCommunityModalToken(t => t + 1)
+    setShowCommunityModal(true)
+  }
   const [qaPinLat, setQaPinLat] = useState<string>('')
   const [qaPinLng, setQaPinLng] = useState<string>('')
 
@@ -4310,7 +4319,8 @@ export default function TablePage() {
           'community',
           'Community',
           [
-            { label: 'Status', onClick: () => setShowCommunityModal(true) },
+            { label: 'Status', onClick: () => openCommunityModal('status') },
+            { label: 'New Community', onClick: () => openCommunityModal('create') },
             { label: 'Recruit', onClick: () => openRecruitModal(), hidden: sessionStatus !== 'active' },
           ],
           hdrBtn('#1a2e10', '#7fc458', '#2d5a1b'),
@@ -7473,7 +7483,12 @@ export default function TablePage() {
                 title="Close">✕</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-              <CampaignCommunity campaignId={id} isGM={isGM} />
+              <CampaignCommunity
+                campaignId={id}
+                isGM={isGM}
+                initialMode={communityModalMode}
+                initialModeToken={communityModalToken}
+              />
             </div>
           </div>
         </div>

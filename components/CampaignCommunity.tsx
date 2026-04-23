@@ -188,9 +188,22 @@ const CommunityTAB_LABEL = 'Community'
 interface Props {
   campaignId: string
   isGM: boolean
+  // When launched from the Community ▾ dropdown, the caller can
+  // tell us which panel to open by default:
+  //   'status' → auto-expand the first community so the user sees
+  //              roster/roles immediately (no extra click).
+  //   'create' → auto-show the "+ New Community" create form.
+  // If omitted, the panel opens collapsed with nothing selected.
+  initialMode?: 'status' | 'create'
+  // Monotonically-changing token the caller bumps each time it
+  // wants CampaignCommunity to honor `initialMode` again (React
+  // only re-runs the effect when deps change; without a token,
+  // closing and reopening the modal wouldn't re-trigger the
+  // auto-expand). Any value works — we just watch for a change.
+  initialModeToken?: number
 }
 
-export default function CampaignCommunity({ campaignId, isGM }: Props) {
+export default function CampaignCommunity({ campaignId, isGM, initialMode, initialModeToken }: Props) {
   const supabase = createClient()
 
   const [communities, setCommunities] = useState<Community[]>([])
@@ -219,6 +232,23 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
   const [addType, setAddType] = useState<RecruitmentType>('member')
 
   useEffect(() => { load() }, [campaignId])
+
+  // Honor initialMode once communities are loaded. For 'status' we
+  // auto-expand the first community so the Status view drops the
+  // user directly into the unfolded roster/roles. For 'create' we
+  // flip open the "+ New Community" create form.
+  useEffect(() => {
+    if (loading || !initialMode) return
+    if (initialMode === 'status' && communities.length > 0 && !openId) {
+      setOpenId(communities[0].id)
+    }
+    if (initialMode === 'create') {
+      setShowCreate(true)
+    }
+  // Re-runs when the caller bumps initialModeToken or when the
+  // loading→loaded transition happens. openId inclusion prevents
+  // us from re-expanding something the user manually collapsed.
+  }, [loading, initialMode, initialModeToken, communities])
 
   async function load() {
     setLoading(true)
