@@ -525,49 +525,69 @@ export default function CommunityMoraleModal({
               </div>
             )}
 
+            {/* Per-roll mod input tooltips (SRD §08). Native `title` so it
+                works with zero extra layout plumbing; if a richer tooltip
+                component lands later we can port to that wholesale. */}
             {/* Fed */}
             <div>
-              <div style={sectionHeading}>🌾 Fed Check · Gatherers</div>
+              <div style={sectionHeading} title="Fed Check — Gatherers roll weekly for Rations (hunting / foraging / farming / fishing / scavenging). Outcome becomes the Fed CMod on this week's Morale roll.">🌾 Fed Check · Gatherers</div>
               <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                Hunt / forage / farm / fish for Rations. NPC assumed, A/S mods default to reasonable NPC.
+                Community efforts to hunt, forage, farm, and fish. It is assumed this effort is led by an NPC; if it is led by a player, substitute their AMod and SMods.
               </div>
               <div style={rowFlex}>
-                <span style={label}>AMod</span>
+                <span style={label} title="Attribute Modifier — the roller's relevant Rapid Range Attribute. NPCs default to 0.">AMod</span>
                 <input type="number" value={fedAmod} onChange={e => setFedAmod(parseInt(e.target.value) || 0)} style={numInput} />
-                <span style={label}>SMod</span>
+                <span style={label} title="Skill Modifier — the roller's level in the skill used (Farming / Scavenging / Survival). NPC default 1 ('reasonable proficiency' per SRD §08).">SMod</span>
                 <input type="number" value={fedSmod} onChange={e => setFedSmod(parseInt(e.target.value) || 0)} style={numInput} />
-                <span style={label}>+ CMod</span>
+                <span style={label} title="Circumstance Modifier — any one-off GM adjustments to this specific roll (tool quality, weather, luck, etc.).">+ CMod</span>
                 <input type="number" value={fedCmod} onChange={e => setFedCmod(parseInt(e.target.value) || 0)} style={numInput} />
               </div>
             </div>
 
             {/* Clothed */}
             <div>
-              <div style={sectionHeading}>🔧 Clothed Check · Maintainers</div>
+              <div style={sectionHeading} title="Clothed Check — Maintainers roll weekly for Supplies (repairs, clothing, tools, batteries, vehicle upkeep). Outcome becomes the Clothed CMod on this week's Morale roll.">🔧 Clothed Check · Maintainers</div>
               <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                Repair, Supplies collection. NPC assumed, A/S mods default to reasonable NPC.
+                Community efforts to scavenge for supplies to ensure housing and equipment are maintained and repaired. It is assumed this effort is led by an NPC; if it is led by a player, substitute their AMod and SMods.
               </div>
               <div style={rowFlex}>
-                <span style={label}>AMod</span>
+                <span style={label} title="Attribute Modifier — the roller's relevant Rapid Range Attribute. NPCs default to 0.">AMod</span>
                 <input type="number" value={clothedAmod} onChange={e => setClothedAmod(parseInt(e.target.value) || 0)} style={numInput} />
-                <span style={label}>SMod</span>
+                <span style={label} title="Skill Modifier — the roller's level in the skill used (Mechanic / Tinkerer). NPC default 1 ('reasonable proficiency' per SRD §08).">SMod</span>
                 <input type="number" value={clothedSmod} onChange={e => setClothedSmod(parseInt(e.target.value) || 0)} style={numInput} />
-                <span style={label}>+ CMod</span>
+                <span style={label} title="Circumstance Modifier — any one-off GM adjustments to this specific roll.">+ CMod</span>
                 <input type="number" value={clothedCmod} onChange={e => setClothedCmod(parseInt(e.target.value) || 0)} style={numInput} />
               </div>
             </div>
 
             {/* Morale */}
             <div>
-              <div style={sectionHeading}>📊 Morale Check · Leader</div>
+              <div style={sectionHeading} title="Morale Check — the acknowledged leader rolls at the start of each week. 2d6 + leader AMod + leader SMod + all 6 slot CMods below + Additional. Outcome drives member departures (Failure 25% / Dire 50% / Low Insight 75%) and sets next week's Mood.">📊 Morale Check · Leader</div>
               <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                6 SRD slots below auto-fill; override any slot if the GM has a reason.
-                Fed + Clothed CMods will snap to their actual rolled outcome when you click "Run Weekly Check" — the current display assumes 0 until then.
+                The modifiers below are tied to weekly events within the community, and GMs can provide CMods where relevant. The Fed + Clothed CMods will use the rolled outcome when "Run Weekly Check" is run.
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {/* Mood */}
-                <div style={slotRow}>
+                {/* Fed slot — live 0 until roll fires */}
+                <div style={slotRow} title="Set by this week's Fed Check (Gatherers). Outcome ladder: High Insight +2, Wild Success +1, Success 0, Failure −1, Dire Failure −2, Low Insight −3. Currently shows — because the Fed roll hasn't fired yet; it snaps to the actual rolled CMod when you click Run Weekly Check.">
+                  <span style={{ ...label, flex: 1 }}>Fed (post-roll)</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>snaps to Fed outcome</span>
+                  <span style={{ color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>—</span>
+                  <div style={{ width: '64px' }} />
+                </div>
+                {/* Clothed slot — live 0 until roll fires */}
+                <div style={slotRow} title="Set by this week's Clothed Check (Maintainers). Same outcome ladder as Fed: High Insight +2, Wild Success +1, Success 0, Failure −1, Dire Failure −2, Low Insight −3. Snaps to the rolled CMod when you click Run Weekly Check.">
+                  <span style={{ ...label, flex: 1 }}>Clothed (post-roll)</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>snaps to Clothed outcome</span>
+                  <span style={{ color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>—</span>
+                  <div style={{ width: '64px' }} />
+                </div>
+                {/* Mood — carries over from prior week's cmod_for_next.
+                    Positioned between the resource rolls and the mechanical
+                    slots so the form visually reads: "this week's resources
+                    first, then lingering mood, then structural/mechanical
+                    modifiers." User-requested order 2026-04-23. */}
+                <div style={slotRow} title="Carried over from last week's Morale outcome (SRD §08). High Insight +2, Wild Success +1, Success 0, Failure −1, Dire Failure −2, Low Insight −3. Starts at 0 if this is the first check. Override if last week's events don't match the stored value.">
                   <span style={{ ...label, flex: 1 }}>Mood Around The Campfire</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>auto</span>
                   <span style={{ color: cmodColor(moodFromPrior), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(moodFromPrior)}</span>
@@ -575,22 +595,8 @@ export default function CommunityMoraleModal({
                     onChange={e => setSlotMoodOverride(e.target.value === '' ? null : parseInt(e.target.value) || 0)}
                     style={numInput} />
                 </div>
-                {/* Fed slot — live 0 until roll fires */}
-                <div style={slotRow}>
-                  <span style={{ ...label, flex: 1 }}>Fed (post-roll)</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>snaps to Fed outcome</span>
-                  <span style={{ color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>—</span>
-                  <div style={{ width: '64px' }} />
-                </div>
-                {/* Clothed slot — live 0 until roll fires */}
-                <div style={slotRow}>
-                  <span style={{ ...label, flex: 1 }}>Clothed (post-roll)</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>snaps to Clothed outcome</span>
-                  <span style={{ color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>—</span>
-                  <div style={{ width: '64px' }} />
-                </div>
                 {/* Enough Hands */}
-                <div style={slotRow}>
+                <div style={slotRow} title="Mechanical (SRD §08). −1 per role group below its SRD minimum: Gatherers 33% of the NPC labor pool, Maintainers 20%, Safety 5%. Capped at −3. Labor pool excludes PCs and 'Assigned' NPCs.">
                   <span style={{ ...label, flex: 1 }}>Enough Hands</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>auto</span>
                   <span style={{ color: cmodColor(autoEnoughHands), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoEnoughHands)}</span>
@@ -599,7 +605,7 @@ export default function CommunityMoraleModal({
                     style={numInput} />
                 </div>
                 {/* A Clear Voice */}
-                <div style={slotRow}>
+                <div style={slotRow} title="0 if the community has an acknowledged leader (PC or NPC); −1 if leaderless. Set or change the leader via the Leader dropdown on the community panel.">
                   <span style={{ ...label, flex: 1 }}>A Clear Voice</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>auto</span>
                   <span style={{ color: cmodColor(autoClearVoice), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoClearVoice)}</span>
@@ -608,7 +614,7 @@ export default function CommunityMoraleModal({
                     style={numInput} />
                 </div>
                 {/* Safety */}
-                <div style={slotRow}>
+                <div style={slotRow} title="+1 if Safety makes up ≥ 10% of the NPC labor pool, −1 if < 5%, otherwise 0. Safety covers policing / patrol / fire / emergency and is where community leadership is drawn from.">
                   <span style={{ ...label, flex: 1 }}>Someone To Watch Over Me</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>auto</span>
                   <span style={{ color: cmodColor(autoSafety), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoSafety)}</span>
@@ -617,7 +623,7 @@ export default function CommunityMoraleModal({
                     style={numInput} />
                 </div>
                 {/* Additional — freeform */}
-                <div style={slotRow}>
+                <div style={slotRow} title="GM freeform Fill-In-The-Gaps — event-specific modifiers this week (raids, crises, miracles, weather, a surprise resupply, a Distemper surge, etc.). Resets to 0 each time the modal opens so one-off events don't bleed into future weeks.">
                   <span style={{ ...label, flex: 1 }}>Additional (Fill-In-The-Gaps)</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '13px' }}>GM freeform</span>
                   <span style={{ color: cmodColor(additionalMoraleCmod), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(additionalMoraleCmod)}</span>
