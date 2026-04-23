@@ -541,13 +541,13 @@ export default function CommunityMoraleModal({
     textTransform: 'uppercase',
   }
   const label: React.CSSProperties = {
-    fontSize: '15px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif',
+    fontSize: '17px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif',
     letterSpacing: '.04em', textTransform: 'uppercase',
   }
   const numInput: React.CSSProperties = {
     width: '64px', padding: '5px 8px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee',
-    fontSize: '15px', fontFamily: 'Barlow, sans-serif', textAlign: 'center',
+    fontSize: '17px', fontFamily: 'Barlow, sans-serif', textAlign: 'center',
   }
   const rowFlex: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: '10px',
@@ -573,7 +573,7 @@ export default function CommunityMoraleModal({
   }
   const chipBtn: React.CSSProperties = {
     padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4',
-    borderRadius: '3px', color: '#7ab3d4', fontSize: '15px',
+    borderRadius: '3px', color: '#7ab3d4', fontSize: '17px',
     fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', cursor: 'pointer',
   }
@@ -603,7 +603,7 @@ export default function CommunityMoraleModal({
               <div style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                 Weekly Check — {community.name}
               </div>
-              <div style={{ fontSize: '15px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+              <div style={{ fontSize: '17px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
                 Week {community.week_number + 1} · {memberCount} members · {community.consecutive_failures}/3 consecutive failures
               </div>
             </div>
@@ -612,20 +612,20 @@ export default function CommunityMoraleModal({
 
           <div style={body}>
             {loading && (
-              <div style={{ color: '#cce0f5', fontSize: '15px' }}>Loading prior week…</div>
+              <div style={{ color: '#cce0f5', fontSize: '17px' }}>Loading prior week…</div>
             )}
             {dissolved && (
-              <div style={{ padding: '10px', background: '#2a1010', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '15px' }}>
+              <div style={{ padding: '10px', background: '#2a1010', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '17px' }}>
                 This community has already dissolved. No further checks possible.
               </div>
             )}
             {!dissolved && memberCount < 13 && (
-              <div style={{ padding: '10px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '15px' }}>
+              <div style={{ padding: '10px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '17px' }}>
                 Only {memberCount} member{memberCount === 1 ? '' : 's'}. Morale Checks require 13+ (this is a Group, not a Community).
               </div>
             )}
             {community.consecutive_failures === 2 && !dissolved && (
-              <div style={{ padding: '10px', background: '#2a1010', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '15px' }}>
+              <div style={{ padding: '10px', background: '#2a1010', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '17px' }}>
                 ⚠ {community.name} is one failed check away from dissolution.
               </div>
             )}
@@ -636,7 +636,7 @@ export default function CommunityMoraleModal({
             {/* Fed */}
             <div>
               <div style={sectionHeading} title="Fed Check — Gatherers roll weekly for Rations (hunting / foraging / farming / fishing / scavenging). Outcome becomes the Fed CMod on this week's Morale roll.">🌾 Fed Check · Gatherers</div>
-              <div style={{ fontSize: '15px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <div style={{ fontSize: '17px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
                 Community efforts to hunt, forage, farm, and fish. It is assumed this effort is led by an NPC; if it is led by a player, substitute their AMod and SMods.
               </div>
               <div style={rowFlex}>
@@ -652,7 +652,7 @@ export default function CommunityMoraleModal({
             {/* Clothed */}
             <div>
               <div style={sectionHeading} title="Clothed Check — Maintainers roll weekly for Supplies (repairs, clothing, tools, batteries, vehicle upkeep). Outcome becomes the Clothed CMod on this week's Morale roll.">🔧 Clothed Check · Maintainers</div>
-              <div style={{ fontSize: '15px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <div style={{ fontSize: '17px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
                 Community efforts to scavenge for supplies to ensure housing and equipment are maintained and repaired. It is assumed this effort is led by an NPC; if it is led by a player, substitute their AMod and SMods.
               </div>
               <div style={rowFlex}>
@@ -668,7 +668,7 @@ export default function CommunityMoraleModal({
             {/* Morale */}
             <div>
               <div style={sectionHeading} title="Morale Check — the acknowledged leader rolls at the start of each week. 2d6 + leader AMod + leader SMod + all 6 slot CMods below + Additional. Outcome drives member departures (Failure 25% / Dire 50% / Low Insight 75%) and sets next week's Mood.">📊 Morale Check · Leader</div>
-              <div style={{ fontSize: '15px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <div style={{ fontSize: '17px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
                 The modifiers below are tied to weekly events within the community, and GMs can provide CMods where relevant. The Fed + Clothed CMods will use the rolled outcome when "Run Weekly Check" is run.
               </div>
 
@@ -676,14 +676,14 @@ export default function CommunityMoraleModal({
                 {/* Fed slot — live 0 until roll fires */}
                 <div style={slotRow} title="Set by this week's Fed Check (Gatherers). Outcome ladder: High Insight +2, Wild Success +1, Success 0, Failure −1, Dire Failure −2, Low Insight −3. Currently shows — because the Fed roll hasn't fired yet; it snaps to the actual rolled CMod when you click Run Weekly Check.">
                   <span style={{ ...label, flex: 1 }}>Fed (post-roll)</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '15px' }}>snaps to Fed outcome</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>snaps to Fed outcome</span>
                   <span style={{ color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>—</span>
                   <div style={{ width: '64px' }} />
                 </div>
                 {/* Clothed slot — live 0 until roll fires */}
                 <div style={slotRow} title="Set by this week's Clothed Check (Maintainers). Same outcome ladder as Fed: High Insight +2, Wild Success +1, Success 0, Failure −1, Dire Failure −2, Low Insight −3. Snaps to the rolled CMod when you click Run Weekly Check.">
                   <span style={{ ...label, flex: 1 }}>Clothed (post-roll)</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '15px' }}>snaps to Clothed outcome</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>snaps to Clothed outcome</span>
                   <span style={{ color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>—</span>
                   <div style={{ width: '64px' }} />
                 </div>
@@ -694,7 +694,7 @@ export default function CommunityMoraleModal({
                     modifiers." User-requested order 2026-04-23. */}
                 <div style={slotRow} title="Carried over from last week's Morale outcome (SRD §08). High Insight +2, Wild Success +1, Success 0, Failure −1, Dire Failure −2, Low Insight −3. Starts at 0 if this is the first check. Override if last week's events don't match the stored value.">
                   <span style={{ ...label, flex: 1 }}>Mood Around The Campfire</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '15px' }}>auto</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(moodFromPrior), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(moodFromPrior)}</span>
                   <input type="number" value={slotMoodOverride ?? ''} placeholder="—"
                     onChange={e => setSlotMoodOverride(e.target.value === '' ? null : parseInt(e.target.value) || 0)}
@@ -703,7 +703,7 @@ export default function CommunityMoraleModal({
                 {/* Enough Hands */}
                 <div style={slotRow} title="Mechanical (SRD §08 pp. 23–24). +1 when all three role groups are at or above their SRD minimums (Gatherers 33% of the NPC labor pool, Maintainers 20%, Safety 5%). Otherwise −1 per group that's short, capped at −3. Labor pool excludes PCs and 'Assigned' NPCs.">
                   <span style={{ ...label, flex: 1 }}>Enough Hands</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '15px' }}>auto</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(autoEnoughHands), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoEnoughHands)}</span>
                   <input type="number" value={slotEnoughHandsOverride ?? ''} placeholder="—"
                     onChange={e => setSlotEnoughHandsOverride(e.target.value === '' ? null : parseInt(e.target.value) || 0)}
@@ -712,7 +712,7 @@ export default function CommunityMoraleModal({
                 {/* A Clear Voice */}
                 <div style={slotRow} title="0 if the community has an acknowledged leader (PC or NPC); −1 if leaderless. Set or change the leader via the Leader dropdown on the community panel.">
                   <span style={{ ...label, flex: 1 }}>A Clear Voice</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '15px' }}>auto</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(autoClearVoice), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoClearVoice)}</span>
                   <input type="number" value={slotClearVoiceOverride ?? ''} placeholder="—"
                     onChange={e => setSlotClearVoiceOverride(e.target.value === '' ? null : parseInt(e.target.value) || 0)}
@@ -721,7 +721,7 @@ export default function CommunityMoraleModal({
                 {/* Safety */}
                 <div style={slotRow} title="+1 if Safety makes up ≥ 10% of the NPC labor pool, −1 if < 5%, otherwise 0. Safety covers policing / patrol / fire / emergency and is where community leadership is drawn from.">
                   <span style={{ ...label, flex: 1 }}>Someone To Watch Over Me</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '15px' }}>auto</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(autoSafety), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoSafety)}</span>
                   <input type="number" value={slotSafetyOverride ?? ''} placeholder="—"
                     onChange={e => setSlotSafetyOverride(e.target.value === '' ? null : parseInt(e.target.value) || 0)}
@@ -730,7 +730,7 @@ export default function CommunityMoraleModal({
                 {/* Additional — freeform */}
                 <div style={slotRow} title="GM freeform Fill-In-The-Gaps — event-specific modifiers this week (raids, crises, miracles, weather, a surprise resupply, a Distemper surge, etc.). Resets to 0 each time the modal opens so one-off events don't bleed into future weeks.">
                   <span style={{ ...label, flex: 1 }}>Additional (Fill-In-The-Gaps)</span>
-                  <span style={{ ...label, color: '#5a5550', fontSize: '15px' }}>GM freeform</span>
+                  <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>GM freeform</span>
                   <span style={{ color: cmodColor(additionalMoraleCmod), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(additionalMoraleCmod)}</span>
                   <input type="number" value={additionalMoraleCmod}
                     onChange={e => setAdditionalMoraleCmod(parseInt(e.target.value) || 0)}
@@ -746,12 +746,12 @@ export default function CommunityMoraleModal({
                   is using this week — SMod follows the selection. */}
               {leaderInfo ? (
                 <div style={{ marginTop: '10px', padding: '8px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '15px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Rolling</span>
+                  <span style={{ fontSize: '17px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Rolling</span>
                   <span style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase' }}>{leaderInfo.name}</span>
-                  <span style={{ fontSize: '15px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>({leaderInfo.kind === 'pc' ? 'PC' : 'NPC'})</span>
+                  <span style={{ fontSize: '17px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>({leaderInfo.kind === 'pc' ? 'PC' : 'NPC'})</span>
                 </div>
               ) : !loading && (
-                <div style={{ marginTop: '10px', padding: '8px 12px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', fontSize: '15px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <div style={{ marginTop: '10px', padding: '8px 12px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', fontSize: '17px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   No leader set on this community. Set one via the Leader dropdown on the community panel — SRD p.22: the check is made by the acknowledged leader. Rolling with 0/0 defaults for now.
                 </div>
               )}
@@ -769,7 +769,7 @@ export default function CommunityMoraleModal({
                     const lvl = leaderInfo?.skillLevels[name] ?? 0
                     setMoraleSmod(lvl)
                   }}
-                  style={{ padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none', minWidth: '180px' }}>
+                  style={{ padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '17px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none', minWidth: '180px' }}>
                   {MORALE_SOCIAL_SKILLS.map(s => {
                     const lvl = leaderInfo?.skillLevels[s] ?? 0
                     return <option key={s} value={s}>{s} ({lvl})</option>
@@ -777,7 +777,7 @@ export default function CommunityMoraleModal({
                 </select>
                 <span style={label} title="The selected skill's level. Auto-filled from the skill picker; editable for one-off GM overrides.">SMod</span>
                 <input type="number" value={moraleSmod} onChange={e => setMoraleSmod(parseInt(e.target.value) || 0)} style={numInput} />
-                <div style={{ marginLeft: 'auto', fontSize: '15px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <div style={{ marginLeft: 'auto', fontSize: '17px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   Pre-roll CMod (no Fed/Clothed yet): <span style={{ color: cmodColor(moraleCmodPreview), fontWeight: 700 }}>{formatCmod(moraleCmodPreview)}</span>
                 </div>
               </div>
@@ -802,10 +802,10 @@ export default function CommunityMoraleModal({
   const resourceCard = (title: string, emoji: string, rr: RollResult) => (
     <div style={{ padding: '8px 10px', background: '#111', border: `1px solid ${outcomeColor(rr.outcome)}33`, borderLeft: `3px solid ${outcomeColor(rr.outcome)}`, borderRadius: '3px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
-        <span style={{ fontSize: '15px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{emoji} {title}</span>
+        <span style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{emoji} {title}</span>
         <span style={{ fontSize: '14px', color: outcomeColor(rr.outcome), fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{rr.outcome}</span>
       </div>
-      <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+      <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
         [{rr.die1}+{rr.die2}]
         {rr.amod !== 0 && <span style={{ color: rr.amod > 0 ? '#7fc458' : '#c0392b' }}> {rr.amod > 0 ? '+' : ''}{rr.amod} AMod</span>}
         {rr.smod !== 0 && <span style={{ color: rr.smod > 0 ? '#7fc458' : '#c0392b' }}> {rr.smod > 0 ? '+' : ''}{rr.smod} SMod</span>}
@@ -836,16 +836,16 @@ export default function CommunityMoraleModal({
           <div style={{ padding: '10px', background: '#111', border: `1px solid ${outcomeColor(r.morale.outcome)}`, borderLeft: `3px solid ${outcomeColor(r.morale.outcome)}`, borderRadius: '3px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
               <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>📊 Morale</span>
-              <span style={{ fontSize: '15px', color: outcomeColor(r.morale.outcome), fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.morale.outcome}</span>
+              <span style={{ fontSize: '17px', color: outcomeColor(r.morale.outcome), fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.morale.outcome}</span>
             </div>
-            <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>
+            <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>
               [{r.morale.die1}+{r.morale.die2}]
               {r.morale.amod !== 0 && <span style={{ color: r.morale.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.morale.amod > 0 ? '+' : ''}{r.morale.amod} AMod</span>}
               {r.morale.smod !== 0 && <span style={{ color: r.morale.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.morale.smod > 0 ? '+' : ''}{r.morale.smod} SMod</span>}
               <span style={{ color: r.morale.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.morale.cmod >= 0 ? '+' : ''}{r.morale.cmod} CMod</span>
               <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.morale.total}</span>
             </div>
-            <div style={{ fontSize: '15px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.6 }}>
+            <div style={{ fontSize: '17px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.6 }}>
               <span style={{ color: '#5a5550' }}>Slots:</span>
               <span> Mood <span style={{ color: cmodColor(r.moraleSlots.mood), fontWeight: 700 }}>{formatCmod(r.moraleSlots.mood)}</span></span>
               <span> · Fed <span style={{ color: cmodColor(r.moraleSlots.fed), fontWeight: 700 }}>{formatCmod(r.moraleSlots.fed)}</span></span>
@@ -855,7 +855,7 @@ export default function CommunityMoraleModal({
               <span> · Watch <span style={{ color: cmodColor(r.moraleSlots.safety), fontWeight: 700 }}>{formatCmod(r.moraleSlots.safety)}</span></span>
               {r.moraleSlots.additional !== 0 && <span> · Additional <span style={{ color: cmodColor(r.moraleSlots.additional), fontWeight: 700 }}>{formatCmod(r.moraleSlots.additional)}</span></span>}
             </div>
-            <div style={{ marginTop: '6px', fontSize: '15px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+            <div style={{ marginTop: '6px', fontSize: '17px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
               Next week's Mood CMod: <span style={{ color: cmodColor(r.nextMoraleCmod), fontWeight: 700 }}>{formatCmod(r.nextMoraleCmod)}</span>
             </div>
           </div>
@@ -866,7 +866,7 @@ export default function CommunityMoraleModal({
               <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
                 ⚠ Community Dissolves
               </div>
-              <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
                 3 consecutive Morale failures. All {r.membersBefore} members scatter. The community is gone. (Retention check not yet implemented — deferred.)
               </div>
             </div>
@@ -875,16 +875,16 @@ export default function CommunityMoraleModal({
               <div style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
                 {r.departureIds.length} Member{r.departureIds.length === 1 ? '' : 's'} Leave
               </div>
-              <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
                 {r.departureIds.map(id => memberNameById.get(id) ?? '(unknown)').join(', ')}
               </div>
-              <div style={{ marginTop: '6px', fontSize: '15px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <div style={{ marginTop: '6px', fontSize: '17px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
                 Roster after: {r.membersAfter} · Consecutive failures: {r.consecutiveFailuresAfter}/3
               </div>
             </div>
           ) : (
             <div style={{ padding: '10px', background: '#1a2010', border: '1px solid #7fc458', borderRadius: '3px' }}>
-              <div style={{ fontSize: '15px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+              <div style={{ fontSize: '17px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
                 Morale holds. No departures. Consecutive failures reset to 0.
               </div>
             </div>
