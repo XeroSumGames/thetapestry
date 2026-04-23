@@ -4299,14 +4299,14 @@ export default function TablePage() {
             { label: 'Group Check', onClick: () => setShowSpecialCheck('group' as any) },
             { label: 'Opposed Check', onClick: () => setShowSpecialCheck('opposed' as any) },
           ],
-          hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'),
+          hdrBtn('#2a102a', '#d48bd4', '#8b2e8b'),
         )}
         {renderHeaderMenu(
           'community',
           'Community',
           [
-            { label: 'Status', color: '#7fc458', onClick: () => setShowCommunityModal(true) },
-            { label: 'Recruit', color: '#7fc458', onClick: () => openRecruitModal(), hidden: sessionStatus !== 'active' },
+            { label: 'Status', onClick: () => setShowCommunityModal(true) },
+            { label: 'Recruit', onClick: () => openRecruitModal(), hidden: sessionStatus !== 'active' },
           ],
           hdrBtn('#1a2e10', '#7fc458', '#2d5a1b'),
         )}
@@ -4316,7 +4316,6 @@ export default function TablePage() {
           [
             {
               label: 'Share',
-              color: '#7ab3d4',
               hidden: !campaign?.invite_code,
               onClick: () => {
                 navigator.clipboard.writeText(`${window.location.origin}/join/${campaign.invite_code}`)
@@ -4325,13 +4324,11 @@ export default function TablePage() {
             },
             {
               label: 'Sessions',
-              color: '#d4cfc9',
               hidden: sessionCount <= 0,
               onClick: () => { window.location.href = `/stories/${id}/sessions` },
             },
             {
               label: 'Stories',
-              color: '#d4cfc9',
               onClick: () => { window.location.href = `/stories/${id}` },
             },
           ],
@@ -4343,7 +4340,6 @@ export default function TablePage() {
           [
             {
               label: 'Restore',
-              color: '#7fc458',
               onClick: async () => {
                 // Pre-select everyone who's damaged, dead, or wounded
                 const damagedNpcs = campaignNpcs.filter((n: any) => {
@@ -4375,17 +4371,14 @@ export default function TablePage() {
             },
             {
               label: 'Loot',
-              color: '#EF9F27',
               onClick: () => { setLootItems([]); setLootRecipients(new Set(entries.map(e => e.character.id))); setShowLootModal(true) },
             },
             {
               label: 'CDP',
-              color: '#7ab3d4',
               onClick: () => { setCdpAmount(1); setCdpRecipients(new Set(entries.map(e => e.stateId))); setShowCdpModal(true) },
             },
             {
               label: 'GM Screen',
-              color: '#d48bd4',
               onClick: () => openPopout('/gm-screen', 'gm-screen', { w: 900, h: 700 }),
             },
           ],
