@@ -4093,51 +4093,39 @@ export default function TablePage() {
     </div>
   )
 
-  // Header dropdown renderer. Each menu item text is center-aligned
-  // and uses the same Barlow Condensed uppercase style as the parent
-  // button. Clicking an item runs its handler then closes the menu.
-  // Pass `accent` to highlight (e.g. destructive items).
+  // Header cascade renderer. Hover the trigger → sub-items unfold
+  // inline to the right as sibling pill buttons. Click the trigger
+  // also toggles (for touch/keyboard). Each sub-item keeps the same
+  // pill style with its own text color; only the trigger has the
+  // chevron. No dropdown panel — feels like the buttons are physically
+  // extending out of the trigger.
   const renderHeaderMenu = (
     id: string,
     label: string,
     items: Array<{ label: string; onClick: () => void; color?: string; hidden?: boolean }>,
     btnStyle: React.CSSProperties,
-    menuWidth = 170,
   ) => {
     const isOpen = openHeaderMenu === id
     const visibleItems = items.filter(i => !i.hidden)
     if (visibleItems.length === 0) return null
     return (
-      <div data-header-menu={id} style={{ position: 'relative' }}>
+      <div data-header-menu={id}
+        onMouseEnter={() => setOpenHeaderMenu(id)}
+        onMouseLeave={() => setOpenHeaderMenu(prev => prev === id ? null : prev)}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
         <button onClick={() => setOpenHeaderMenu(prev => prev === id ? null : id)}
           className={`hdr-btn${isOpen ? ' hdr-btn--active' : ''}`}
           style={btnStyle}>
-          {label} {isOpen ? '▴' : '▾'}
+          {label} ▾
         </button>
-        {isOpen && (
-          <div style={{
-            position: 'absolute', top: 'calc(100% + 4px)', left: '50%', transform: 'translateX(-50%)',
-            background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.6)', zIndex: 10050,
-            minWidth: `${menuWidth}px`, display: 'flex', flexDirection: 'column', padding: '4px',
-          }}>
-            {visibleItems.map((it, i) => (
-              <button key={i} onClick={() => { setOpenHeaderMenu(null); it.onClick() }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                style={{
-                  padding: '8px 14px', background: 'transparent', border: 'none',
-                  borderRadius: '2px',
-                  color: it.color ?? '#d4cfc9', fontSize: '12px',
-                  fontFamily: 'Barlow Condensed, sans-serif',
-                  letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer',
-                  textAlign: 'center', whiteSpace: 'nowrap',
-                }}>
-                {it.label}
-              </button>
-            ))}
-          </div>
-        )}
+        {isOpen && visibleItems.map((it, i) => (
+          <button key={i}
+            onClick={() => { setOpenHeaderMenu(null); it.onClick() }}
+            className="hdr-btn hdr-btn--child"
+            style={{ ...btnStyle, color: it.color ?? btnStyle.color }}>
+            {it.label}
+          </button>
+        ))}
       </div>
     )
   }
