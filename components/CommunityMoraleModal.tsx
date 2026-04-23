@@ -111,12 +111,6 @@ interface FinalResult {
     clearVoice: number
     safety: number
     additional: number
-    // CRB Lv4 skill auto-bonuses, derived from the leader's sheet.
-    // Inspiration Lv4 "Beacon of Hope" → +4; Psychology* Lv4
-    // "Insightful Counselor" → +3 (leader is always a member since
-    // they lead the community, so the tenure gate passes by default).
-    beaconOfHope: number
-    insightfulCounselor: number
   }
   newWeek: number
   nextMoraleCmod: number
@@ -317,16 +311,13 @@ export default function CommunityMoraleModal({
   const slotClearVoice = slotClearVoiceOverride ?? autoClearVoice
   const slotSafety = slotSafetyOverride ?? autoSafety
 
-  // CRB Lv4 auto-CMods. Inspiration "Beacon of Hope" applies when the
-  // leader has Inspiration at Lv4+; Psychology\* "Insightful Counselor"
-  // applies when the leader has Psychology at Lv4+ AND is a current
-  // community member (the leader always is by definition — they lead it).
-  // Skill names matched against the leader's sheet via
-  // leaderInfo.skillLevels (populated in the open effect). Clamps at
-  // the CRB-stated bonuses — +4 and +3 respectively — even if future
-  // rules push skills above Lv4.
-  const beaconOfHope = (leaderInfo?.skillLevels.Inspiration ?? 0) >= 4 ? 4 : 0
-  const insightfulCounselor = (leaderInfo?.skillLevels.Psychology ?? 0) >= 4 ? 3 : 0
+  // NOTE (2026-04-23): Inspiration Lv4 "Beacon of Hope" (+4) and
+  // Psychology* Lv4 "Insightful Counselor" (+3) auto-CMods were
+  // intentionally removed. Per Xero, Lv4 Skill Traits ship as a
+  // complete system or not at all — no piecemeal implementation
+  // while the broader Trait list is still being authored.
+  // See memory:project_lv4_traits.md. If the GM wants to apply these
+  // bonuses today, they stuff them into the Additional slot by hand.
 
   async function runWeeklyCheck() {
     if (!eligible || running) return
@@ -353,12 +344,10 @@ export default function CommunityMoraleModal({
     }
 
     // Roll 3 — Morale. Uses Fed+Clothed outcomes just rolled (not the
-    // pre-form estimates, which are 0 before any roll fires). Lv4
-    // auto-bonuses fold into the CMod total here.
+    // pre-form estimates, which are 0 before any roll fires).
     const moraleSlotsTotal =
       slotMood + fedCmodForMorale + clothedCmodForMorale +
-      slotEnoughHands + slotClearVoice + slotSafety + additionalMoraleCmod +
-      beaconOfHope + insightfulCounselor
+      slotEnoughHands + slotClearVoice + slotSafety + additionalMoraleCmod
     const moraleDice = roll2d6()
     const moraleTotal = moraleDice.die1 + moraleDice.die2 + moraleAmod + moraleSmod + moraleSlotsTotal
     const moraleOutcome = classifyRoll(moraleTotal, moraleDice.die1, moraleDice.die2)
@@ -391,8 +380,6 @@ export default function CommunityMoraleModal({
         clearVoice: slotClearVoice,
         safety: slotSafety,
         additional: additionalMoraleCmod,
-        beaconOfHope,
-        insightfulCounselor,
       },
       newWeek: community.week_number + 1,
       nextMoraleCmod,
@@ -718,8 +705,7 @@ export default function CommunityMoraleModal({
   // ── FORM stage ─────────────────────────────────────────
   if (stage === 'form') {
     const moraleCmodPreview =
-      slotMood + slotEnoughHands + slotClearVoice + slotSafety + additionalMoraleCmod +
-      beaconOfHope + insightfulCounselor
+      slotMood + slotEnoughHands + slotClearVoice + slotSafety + additionalMoraleCmod
     return (
       <div style={backdrop} onClick={onClose}>
         <div style={panel} onClick={e => e.stopPropagation()}>
@@ -861,32 +847,6 @@ export default function CommunityMoraleModal({
                     onChange={e => setAdditionalMoraleCmod(parseInt(e.target.value) || 0)}
                     style={numInput} />
                 </div>
-                {/* Inspiration Lv4 — Beacon of Hope. Auto-applies +4
-                    when the leader has Inspiration 4+. Read-only row
-                    with purple accent so GM sees the bonus is in play
-                    and can trace a surprising Morale total to the right
-                    skill. Row hidden when bonus is 0 to keep the slot
-                    list tight. */}
-                {beaconOfHope !== 0 && (
-                  <div style={{ ...slotRow, background: '#1a102a', borderColor: '#5a2e5a' }} title="Inspiration Lv4 'Beacon of Hope' (Distemper CRB). The leader has Inspiration 4+, so they add +4 to any Community Morale Check they're part of. Auto-applied — not an override.">
-                    <span style={{ ...label, flex: 1, color: '#d48bd4' }}>⭐ Beacon of Hope (Inspiration 4)</span>
-                    <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
-                    <span style={{ color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(beaconOfHope)}</span>
-                    <div style={{ width: '64px' }} />
-                  </div>
-                )}
-                {/* Psychology* Lv4 — Insightful Counselor. Auto-applies
-                    +3 when the leader has Psychology 4+. Leader is a
-                    community member by definition, so the tenure gate
-                    passes automatically. */}
-                {insightfulCounselor !== 0 && (
-                  <div style={{ ...slotRow, background: '#1a102a', borderColor: '#5a2e5a' }} title="Psychology* Lv4 'Insightful Counselor' (Distemper CRB). The leader has Psychology 4+ and is a community member (always true for the leader), so they contribute +3 to the weekly Morale Check. Auto-applied.">
-                    <span style={{ ...label, flex: 1, color: '#d48bd4' }}>⭐ Insightful Counselor (Psychology 4)</span>
-                    <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
-                    <span style={{ color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(insightfulCounselor)}</span>
-                    <div style={{ width: '64px' }} />
-                  </div>
-                )}
               </div>
 
               {/* Designated-leader banner. Per SRD §08 p.22 the Morale
@@ -1005,8 +965,6 @@ export default function CommunityMoraleModal({
               <span> · Voice <span style={{ color: cmodColor(r.moraleSlots.clearVoice), fontWeight: 700 }}>{formatCmod(r.moraleSlots.clearVoice)}</span></span>
               <span> · Watch <span style={{ color: cmodColor(r.moraleSlots.safety), fontWeight: 700 }}>{formatCmod(r.moraleSlots.safety)}</span></span>
               {r.moraleSlots.additional !== 0 && <span> · Additional <span style={{ color: cmodColor(r.moraleSlots.additional), fontWeight: 700 }}>{formatCmod(r.moraleSlots.additional)}</span></span>}
-              {r.moraleSlots.beaconOfHope !== 0 && <span> · <span style={{ color: '#d48bd4' }}>⭐ Beacon</span> <span style={{ color: '#7fc458', fontWeight: 700 }}>{formatCmod(r.moraleSlots.beaconOfHope)}</span></span>}
-              {r.moraleSlots.insightfulCounselor !== 0 && <span> · <span style={{ color: '#d48bd4' }}>⭐ Counselor</span> <span style={{ color: '#7fc458', fontWeight: 700 }}>{formatCmod(r.moraleSlots.insightfulCounselor)}</span></span>}
             </div>
             <div style={{ marginTop: '6px', fontSize: '17px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
               Next week's Mood CMod: <span style={{ color: cmodColor(r.nextMoraleCmod), fontWeight: 700 }}>{formatCmod(r.nextMoraleCmod)}</span>

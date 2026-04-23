@@ -5412,12 +5412,6 @@ export default function TablePage() {
                           {slots.additional !== 0 && slots.additional != null && (
                             <span> · Additional <span style={{ color: cmodClr(slots.additional), fontWeight: 700 }}>{fmt(slots.additional)}</span></span>
                           )}
-                          {slots.beaconOfHope !== 0 && slots.beaconOfHope != null && (
-                            <span> · <span style={{ color: '#d48bd4' }}>⭐ Beacon</span> <span style={{ color: '#7fc458', fontWeight: 700 }}>{fmt(slots.beaconOfHope)}</span></span>
-                          )}
-                          {slots.insightfulCounselor !== 0 && slots.insightfulCounselor != null && (
-                            <span> · <span style={{ color: '#d48bd4' }}>⭐ Counselor</span> <span style={{ color: '#7fc458', fontWeight: 700 }}>{fmt(slots.insightfulCounselor)}</span></span>
-                          )}
                         </div>
                       )}
                       {willDissolve ? (

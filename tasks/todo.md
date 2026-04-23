@@ -26,8 +26,8 @@ When picking this back up:
 
 *Inventory migration removed 2026-04-21 — DB audit confirmed every character's `data.inventory` is already an array. Nothing to migrate.*
 
-## ✅ Shipped 2026-04-23 (Communities Phase D — Activity Blocks + Lv4 + Dashboard)
-- **Lv4 Morale auto-CMods** — leader's Inspiration 4 auto-adds +4 "Beacon of Hope"; leader's Psychology 4 auto-adds +3 "Insightful Counselor". Two purple-accent rows appear in the slot list with CRB-citing tooltips; pre-roll total and result card fold them in. Stored in `modifiers_json`. Everything else in the broader Lv4 Trait system stays on backburner until Xero authors the list.
+## ✅ Shipped 2026-04-23 (Communities Phase D — Activity Blocks + Dashboard)
+**NOTE:** The Lv4 Morale auto-CMods that originally shipped in this batch (Inspiration "Beacon of Hope" +4, Psychology\* "Insightful Counselor" +3) were reverted on the same day — Xero's ruling is Lv4 Traits ship together with the full list or not at all. See `memory:project_lv4_traits.md`. The entries below are what remains live.
 - **Skip Week button** — secondary "Skip Week" on the Weekly Check strip advances `week_number` without rolling. Pure clock bump, no consequences; Mood still carries from the last actual check.
 - **Pressgang confirmation** — Conscript approach on the Recruit modal now shows a red "pressure, not persuasion" warning banner at pick stage, plus a blocking confirm() at submit. Cancel returns to pick without burning Insight Dice.
 - **Community Dashboard** — new GM-only route `/stories/[id]/community`. Community picker + Morale history (last 20 weeks) + resource history (last 40 rolls) + current role distribution with SRD-minimum threshold markers + recruitment stats by approach + member-type breakdown. Community ▾ → Dashboard entry links to it.
@@ -662,17 +662,19 @@ When picking this back up:
 - [x] New SQL migration `sql/community-members-add-morale-75-reason.sql` widens left_reason CHECK to include 'morale_75' for the Low Insight drop
 - [x] Retention Check on 3rd failure (SRD §08 p.22) — fast-acting leader gets an immediate salvage Morale Check using the failed Morale's cmod_for_next as the Mood CMod. Inline on the Result stage: "🙏 Attempt Retention Check" button appears when willDissolve=true, uses the leader's current AMod/SMod + skill pick. Success of any tier saves the community (consecutive_failures drops to 2); failure tiers let dissolution proceed. Custom `retention_check` roll-log card.
 
-### Phase D — Activity Blocks + Level 4 skills + dashboard ✅ 2026-04-23
+### Phase D — Activity Blocks + dashboard ✅ 2026-04-23 (Lv4 items deferred)
 - [x] "Skip Week" button on the Weekly Check strip advances `week_number` without rolls (Activity Block off-screen time)
-- [x] Inspiration Lv4 "Beacon of Hope" auto-applies +4 CMod to Morale Check when the leader has it (CRB-confirmed)
-- [x] Psychology\* Lv4 "Insightful Counselor" auto-applies +3 CMod when the leader has it (CRB-confirmed; leader is always a member so tenure gate passes)
 - [x] Conscription pressgang — red warning banner on pick stage + blocking confirm() on submit ("this is coercion, requires credible threat")
 - [x] `/stories/[id]/community` full-screen GM dashboard: Morale history (last 20), resource history (last 40), role distribution with SRD minimum markers, recruitment stats by approach, member breakdown by recruitment_type. Community ▾ → Dashboard links to it.
 - [x] At-a-Glance block inside each expanded community body: Recent Morale trend chips (last 5) + "You" row showing viewer's role, Apprentice, and their recruited NPCs. Visible to everyone.
 - [x] Apprentice task delegation — `community_members.current_task` freeform text, GM-editable inline on apprentice rows. Display: "Task: <text>" with ✎ edit. No task + GM → "+ Assign task" affordance. SQL: `sql/community-members-add-current-task.sql`.
 
-**🔒 Broader Lv4 Skill Traits system — BACKBURNER (Xero 2026-04-23)**
-Every skill gets a Trait at Level 4 but most Traits aren't yet authored. The two above (Inspiration "Beacon of Hope" + Psychology\* "Insightful Counselor") are explicitly written in the CRB and can ship now. **Anything beyond those two is blocked** until Xero produces the full Lv4 Trait list outside this repo (likely target: `lib/lv4-traits.ts` as a data file). When the list lands, revisit: a generic Lv4-Trait-display surface on the character sheet, auto-application for any Lv4 Traits that affect Recruitment / Fed / Clothed / anything outside Morale.
+**🔒 Lv4 Skill Traits system — FULLY BACKBURNER (Xero 2026-04-23, reinforced)**
+Every skill gets a Trait at Level 4, but the full list isn't written. Xero's ruling: **ships together or not at all — no piecemeal.** The two CRB-defined Morale bonuses (Inspiration "Beacon of Hope" +4, Psychology\* "Insightful Counselor" +3) were shipped in `03d8767` and then reverted on the same day to enforce this rule. Until the authoritative list lands, the GM stuffs any Lv4 bonus into the Morale "Additional" slot manually. Pending:
+- [ ] Inspiration Lv4 "Beacon of Hope" auto +4 to Morale (awaiting full list)
+- [ ] Psychology\* Lv4 "Insightful Counselor" auto +3 to Morale (awaiting full list)
+- [ ] Generic Lv4 Trait surface on the character sheet
+- [ ] Auto-application hooks for any other Lv4 Trait that touches Morale / Recruitment / Fed / Clothed / combat
 
 ### Phase E — The Tapestry (Persistent World) 🚩 flagship differentiator
 Communities become first-class entities in the Distemperverse. Every published community from every table shares one world.
