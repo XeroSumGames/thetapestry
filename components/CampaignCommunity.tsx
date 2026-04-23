@@ -54,23 +54,105 @@ interface PinOption { id: string; name: string }
 //   Tactics / Ranged Combat /
 //   Melee Combat / Heavy Weapons /
 //   Demolitions                      → Safety
-// "Best fit" is the highest-level skill in the matched bucket. NPCs
-// with no relevant skills stay unassigned.
-const ROLE_SKILLS: Record<Exclude<Role, 'unassigned'>, string[]> = {
+type WorkRole = Exclude<Role, 'unassigned'>
+const ROLE_SKILLS: Record<WorkRole, string[]> = {
   gatherer: ['Farming', 'Scavenging', 'Survival'],
   maintainer: ['Mechanic', 'Tinkerer'],
   safety: ['Tactics', 'Ranged Combat', 'Melee Combat', 'Heavy Weapons', 'Demolitions'],
 }
-function suggestRoleFromSkills(skills: NpcOption['skills']): Exclude<Role, 'unassigned'> | null {
+
+// `scoreNpcForRole` returns the NPC's highest-level skill that's in
+// the role's bucket. 0 = no qualification. Ties handled by caller.
+function scoreNpcForRole(skills: NpcOption['skills'], role: WorkRole): number {
   const entries = Array.isArray(skills?.entries) ? skills!.entries! : []
-  if (entries.length === 0) return null
-  let best: { role: Exclude<Role, 'unassigned'>; level: number } | null = null
-  for (const role of Object.keys(ROLE_SKILLS) as Array<Exclude<Role, 'unassigned'>>) {
-    const matches = entries.filter(e => ROLE_SKILLS[role].includes(e.name))
-    const top = matches.reduce((m, e) => Math.max(m, e.level), 0)
-    if (top > 0 && (!best || top > best.level)) best = { role, level: top }
+  return entries.filter(e => ROLE_SKILLS[role].includes(e.name))
+    .reduce((m, e) => Math.max(m, e.level), 0)
+}
+
+// Quota-aware NPC → role rebalance. Returns a map of member.id →
+// chosen role (or null to leave current). Respects SRD minimums:
+//   Gatherers ≥ 33%, Maintainers ≥ 20%, Safety ≥ 5% (1 minimum).
+// If an NPC is qualified for multiple buckets, we prefer the one
+// with the biggest deficit. Extras (roles over-target) can still
+// fill understaffed buckets to guarantee the minimums.
+//
+// Inputs: the NPC members to consider + npc lookup for skills.
+// Output: Map<memberId, WorkRole>. Unassigned members keep 'unassigned'
+// only if no understaffed bucket can use them.
+function rebalanceNpcRoles(
+  npcMembers: Member[],
+  npcById: Map<string, NpcOption>,
+): Map<string, WorkRole> {
+  const n = npcMembers.length
+  if (n === 0) return new Map()
+  const targets: Record<WorkRole, number> = {
+    gatherer: Math.ceil(n * 0.33),
+    maintainer: Math.ceil(n * 0.20),
+    safety: Math.max(1, Math.ceil(n * 0.05)),
   }
-  return best?.role ?? null
+  const counts: Record<WorkRole, number> = { gatherer: 0, maintainer: 0, safety: 0 }
+  const assignment = new Map<string, WorkRole>()
+  // Pre-compute each NPC's score per role so we can sort/pick fast.
+  const scores = npcMembers.map(m => {
+    const npc = m.npc_id ? npcById.get(m.npc_id) : undefined
+    return {
+      member: m,
+      gatherer: scoreNpcForRole(npc?.skills, 'gatherer'),
+      maintainer: scoreNpcForRole(npc?.skills, 'maintainer'),
+      safety: scoreNpcForRole(npc?.skills, 'safety'),
+    }
+  })
+  const remaining = new Set(scores.map(s => s.member.id))
+
+  // Pass 1: give each role its minimum from QUALIFIED candidates.
+  // Safety first (smallest quota, pickiest skills), then Maintainers,
+  // then Gatherers. Within each role, best-match first. This keeps
+  // specialists in their lane before the general Gatherer pool eats
+  // them up.
+  for (const role of ['safety', 'maintainer', 'gatherer'] as WorkRole[]) {
+    const candidates = scores
+      .filter(s => remaining.has(s.member.id) && s[role] > 0)
+      .sort((a, b) => b[role] - a[role])
+    for (const cand of candidates) {
+      if (counts[role] >= targets[role]) break
+      assignment.set(cand.member.id, role)
+      counts[role]++
+      remaining.delete(cand.member.id)
+    }
+  }
+
+  // Pass 2: gaps still exist (not enough qualified candidates). Fill
+  // from anyone remaining, regardless of skill — community still needs
+  // warm bodies. Same priority order: safety → maintainer → gatherer.
+  for (const role of ['safety', 'maintainer', 'gatherer'] as WorkRole[]) {
+    while (counts[role] < targets[role] && remaining.size > 0) {
+      const firstId = remaining.values().next().value as string
+      assignment.set(firstId, role)
+      counts[role]++
+      remaining.delete(firstId)
+    }
+  }
+
+  // Pass 3: extras. Assign any still-remaining NPCs to the role
+  // they score highest in (if any skill matches). Pushes counts over
+  // targets — that's fine per SRD; minimums are floors, not caps.
+  // NPCs with no matching skill at all stay unassigned (0-score rows).
+  for (const s of scores) {
+    if (!remaining.has(s.member.id)) continue
+    const best: WorkRole | null = (() => {
+      const options = (['safety', 'maintainer', 'gatherer'] as WorkRole[])
+        .filter(r => s[r] > 0)
+        .sort((a, b) => s[b] - s[a])
+      return options[0] ?? null
+    })()
+    if (best) {
+      assignment.set(s.member.id, best)
+      counts[best]++
+      remaining.delete(s.member.id)
+    }
+  }
+
+  return assignment
 }
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -177,28 +259,45 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
       setMembers(byCom)
       setPendingByCommunity(pendingByCom)
 
-      // Auto-assign any `unassigned` NPC member to the role suggested
-      // by their skills. Silent DB write — doesn't block the render.
-      // Only touches rows currently at 'unassigned' so manual overrides
-      // aren't stomped. PCs stay unassigned by default per spec.
+      // Quota-aware auto-balance. For each community, check if the
+      // NPC role distribution violates SRD minimums; if so, rebalance
+      // ALL NPC members (not just unassigned) so min quotas are hit.
+      // A community where 10/12 NPCs are all in Gatherers + 0 in the
+      // other buckets needs re-sorting, not just new-member top-up.
+      // Manual GM/Thriver overrides get stomped here by design — the
+      // explicit "Re-balance Roles" button always re-runs this logic,
+      // and load-time runs it when the current state obviously fails.
       const npcById = new Map<string, NpcOption>()
       for (const n of (npcsRes.data ?? []) as NpcOption[]) npcById.set(n.id, n)
       const autoUpdates: Array<{ id: string; role: Role }> = []
       for (const memberList of Object.values(byCom)) {
-        for (const m of memberList) {
-          if (m.role !== 'unassigned' || !m.npc_id) continue
-          const npc = npcById.get(m.npc_id)
-          const suggested = suggestRoleFromSkills(npc?.skills)
-          if (suggested) autoUpdates.push({ id: m.id, role: suggested })
+        const npcMembers = memberList.filter(m => !!m.npc_id)
+        if (npcMembers.length === 0) continue
+        // Current distribution
+        const n = npcMembers.length
+        const currentCounts = { gatherer: 0, maintainer: 0, safety: 0 } as Record<WorkRole, number>
+        let currentUnassigned = 0
+        for (const m of npcMembers) {
+          if (m.role === 'unassigned') currentUnassigned++
+          else if (m.role in currentCounts) currentCounts[m.role as WorkRole]++
+        }
+        // Does current state already meet minimums? If so, skip.
+        const minOk = currentCounts.gatherer >= Math.ceil(n * 0.33)
+          && currentCounts.maintainer >= Math.ceil(n * 0.20)
+          && currentCounts.safety >= Math.max(1, Math.ceil(n * 0.05))
+        // Don't rebalance if mins are met AND nothing is unassigned —
+        // the current assignment is the GM's deliberate choice.
+        if (minOk && currentUnassigned === 0) continue
+        const newAssignment = rebalanceNpcRoles(npcMembers, npcById)
+        for (const m of npcMembers) {
+          const next = newAssignment.get(m.id) ?? 'unassigned'
+          if (next !== m.role) autoUpdates.push({ id: m.id, role: next })
         }
       }
       if (autoUpdates.length > 0) {
-        // Fire in parallel; swallow individual errors so a schema-
-        // cache miss on one row doesn't block the rest.
         await Promise.all(autoUpdates.map(u =>
           supabase.from('community_members').update({ role: u.role }).eq('id', u.id)
         ))
-        // Patch local state in-place so the UI matches without a reload.
         setMembers(prev => {
           const updated = { ...prev }
           const byMemberId = new Map(autoUpdates.map(u => [u.id, u.role]))
@@ -216,6 +315,35 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
     const { data: { user } } = await supabase.auth.getUser()
     setMyUserId(user?.id ?? null)
     setLoading(false)
+  }
+
+  // Manual rebalance trigger — wipes existing NPC roles and re-runs
+  // the quota-aware allocator. Useful when the GM has made enough
+  // changes that the auto-load version stops firing but the
+  // distribution is still off.
+  async function handleRebalance(communityId: string) {
+    const mems = members[communityId] ?? []
+    const npcMembers = mems.filter(m => !!m.npc_id)
+    if (npcMembers.length === 0) return
+    const npcById = new Map<string, NpcOption>()
+    for (const n of npcs) npcById.set(n.id, n)
+    const assignment = rebalanceNpcRoles(npcMembers, npcById)
+    const updates: Array<{ id: string; role: Role }> = []
+    for (const m of npcMembers) {
+      const next = assignment.get(m.id) ?? 'unassigned'
+      if (next !== m.role) updates.push({ id: m.id, role: next })
+    }
+    if (updates.length === 0) { return }
+    await Promise.all(updates.map(u =>
+      supabase.from('community_members').update({ role: u.role }).eq('id', u.id)
+    ))
+    setMembers(prev => ({
+      ...prev,
+      [communityId]: (prev[communityId] ?? []).map(m => {
+        const next = assignment.get(m.id)
+        return next ? { ...m, role: next } : m
+      }),
+    }))
   }
 
   // Change the community leader. Leader is either a PC (character_id
@@ -478,15 +606,23 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
         // several PCs are marked founder; we display the first.
         const founderMember = mems.find(m => m.recruitment_type === 'founder')
         const founderName = founderMember ? memberLabel(founderMember) : null
-        // Leader resolution — prefer the PC leader (leader_user_id)
-        // resolved via campaign_members, else the NPC (leader_npc_id).
-        // Stored as an id on community; we match back to a member row
-        // so the dropdown can select by member.id.
+        // Leader resolution. Precedence:
+        //   1. Explicit NPC leader (leader_npc_id on the community)
+        //   2. Explicit PC leader (leader_user_id) — matched back to
+        //      a member via invited_by_user_id (best-effort; may miss
+        //      for pre-migration founders)
+        //   3. Fallback: the founder (first recruitment_type='founder')
+        //      unless they've explicitly stepped down. "Stepped down"
+        //      mechanism is queued in tasks/todo.md — for now, any
+        //      non-null leader_* column counts as "set".
         const leaderMember = (() => {
           if (c.leader_npc_id) return mems.find(m => m.npc_id === c.leader_npc_id) ?? null
-          // No direct user_id on community_members; skip PC leader
-          // matching here — dropdown still lets you set it.
-          return null
+          if (c.leader_user_id) {
+            const match = mems.find(m => m.invited_by_user_id === c.leader_user_id)
+            if (match) return match
+          }
+          // Default to founder
+          return mems.find(m => m.recruitment_type === 'founder') ?? null
         })()
         return (
           <div key={c.id} style={{ background: '#1a1a1a', border: `1px solid ${isOpen ? '#7ab3d4' : '#2e2e2e'}`, borderRadius: '4px' }}>
@@ -578,7 +714,16 @@ export default function CampaignCommunity({ campaignId, isGM }: Props) {
 
                 {/* Role bars — percentages are over NPC workforce only.
                     PCs don't pull down role coverage since they aren't
-                    assigned labor. */}
+                    assigned labor. The "Re-balance" button triggers
+                    the quota-aware allocator manually. */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ flex: 1, fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Role Coverage</div>
+                  <button onClick={() => handleRebalance(c.id)}
+                    style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '12px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+                    title="Auto-sort NPCs by skill to hit SRD minimums">
+                    ⚖ Re-balance Roles
+                  </button>
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {(['gatherer', 'maintainer', 'safety'] as Role[]).map(r => {
                     const pct = r === 'gatherer' ? gatherPct : r === 'maintainer' ? maintainPct : safetyPct

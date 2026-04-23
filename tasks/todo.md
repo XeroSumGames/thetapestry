@@ -1,6 +1,7 @@
 # Tapestry — To Do & Backlog
 
 ## 🎯 Next up (post-combat sprint)
+- [ ] **Community leader "step down" mechanism** — a leader should be able to abdicate / resign, triggering leader reassignment. Candidate flows: (a) leader clicks a "Step down" button on the community modal → system offers the next-most-senior member or lets them nominate one; (b) if leader leaves the community entirely, auto-pick the next founder or the longest-tenured member. Until this lands, "default leader = founder" is the rule and any explicit change via the Leader dropdown is considered the GM overriding default.
 - [ ] **Destroyed-object portrait swap** — object tokens with WP should optionally carry a `destroyed_portrait_url`; when the token hits 0 WP, the canvas renders that image instead of the intact one. Falls back to the current shatter-crack overlay if no destroyed art exists. Upload UX lives on the object add/edit form in NpcRoster → Objects.
 - [ ] **NPC popup → First Impression display + Recruit button** — when a player clicks an NPC in the NPCs tab, surface their First Impression result + `relationship_cmod` for that PC, and add a Recruit button right of the Active badge (queued from Phase B Communities work).
 - [ ] **CMod Stack reusable component** — user loved the itemized CMod Stack on the Recruit modal; extract into `<CmodStack>` and use in Grapple, First Impression, main Attack modals.
