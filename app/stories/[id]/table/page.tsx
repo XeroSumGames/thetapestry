@@ -14,6 +14,7 @@ import VehicleCard, { Vehicle } from '../../../../components/VehicleCard'
 import GmNotes from '../../../../components/GmNotes'
 import PlayerNotes from '../../../../components/PlayerNotes'
 import QuickAddModal from '../../../../components/QuickAddModal'
+import CampaignCommunity from '../../../../components/CampaignCommunity'
 import NotificationBell from '../../../../components/NotificationBell'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
@@ -487,6 +488,12 @@ export default function TablePage() {
   // plus the pin-only flag + seed lat/lng.
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [qaHideCommunity, setQaHideCommunity] = useState(false)
+  // Community Status modal — opens the full CampaignCommunity management
+  // view (pending requests, member roles, PC/NPC roster, founder flows)
+  // as an overlay on the table. Triggered via the Community ▾ → Status
+  // dropdown item so players don't have to leave /table to inspect the
+  // current state of their community.
+  const [showCommunityModal, setShowCommunityModal] = useState(false)
   const [qaPinLat, setQaPinLat] = useState<string>('')
   const [qaPinLng, setQaPinLng] = useState<string>('')
 
@@ -4266,7 +4273,7 @@ export default function TablePage() {
           'community',
           'Community',
           [
-            { label: 'Status', color: '#7fc458', onClick: () => openQuickAddFull() },
+            { label: 'Status', color: '#7fc458', onClick: () => setShowCommunityModal(true) },
             { label: 'Recruit', color: '#7fc458', onClick: () => openRecruitModal(), hidden: sessionStatus !== 'active' },
           ],
           hdrBtn('#1a2e10', '#7fc458', '#2d5a1b'),
@@ -7417,6 +7424,32 @@ export default function TablePage() {
           userId={userId}
           onClose={closeQuickAdd}
         />
+      )}
+
+      {/* Community Status — overlay modal wrapping <CampaignCommunity>.
+          Same management surface as /communities but docked on the table
+          page so players can check pending requests / Apprentice links /
+          role coverage without leaving their PC view. Click the backdrop
+          or ✕ to close. */}
+      {showCommunityModal && (
+        <div onClick={() => setShowCommunityModal(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ background: '#0f0f0f', border: '1px solid #3a3a3a', borderRadius: '4px', width: '100%', maxWidth: '560px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: '12px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Community</div>
+                <div style={{ fontSize: '18px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', lineHeight: 1 }}>{campaign.name}</div>
+              </div>
+              <button onClick={() => setShowCommunityModal(false)}
+                style={{ background: 'none', border: 'none', color: '#d4cfc9', fontSize: '20px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}
+                title="Close">✕</button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+              <CampaignCommunity campaignId={id} isGM={isGM} />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Grapple Modal */}
