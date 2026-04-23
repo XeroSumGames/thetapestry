@@ -54,6 +54,23 @@ interface Props {
 
 type Stage = 'form' | 'result'
 
+// Morale social-skill candidates (matches the Leader SMod label in the
+// modal). Best level across this set populates the default SMod from
+// the designated leader's sheet / NPC skill list. Skill name match is
+// exact against character.data.skills[].skillName (PCs) or
+// campaign_npcs.skills.entries[].name (NPCs).
+const MORALE_SOCIAL_SKILLS = ['Barter', 'Inspiration', 'Manipulation', 'Psychology', 'Tactics']
+
+interface LeaderInfo {
+  name: string
+  kind: 'pc' | 'npc'
+  amod: number
+  // Per-skill level map across the MORALE_SOCIAL_SKILLS set. Drives
+  // the skill-picker dropdown — each option reads "Name (level)".
+  // Skills not on the leader's sheet appear as 0.
+  skillLevels: Record<string, number>
+}
+
 interface RollResult {
   die1: number
   die2: number
@@ -120,6 +137,16 @@ export default function CommunityMoraleModal({
   // Prior check's cmod_for_next → "Mood Around The Campfire"
   const [moodFromPrior, setMoodFromPrior] = useState(0)
 
+  // Designated-leader info. Fetched on open from leader_npc_id /
+  // leader_user_id. SRD §08 p.22: "there is an acknowledged and
+  // recognized community leader who will make the check using any
+  // AMods or SMods that might be appropriate." We pre-fill moraleAmod
+  // / moraleSmod from the leader's stats; GM can still override.
+  const [leaderInfo, setLeaderInfo] = useState<LeaderInfo | null>(null)
+  // Which social skill the leader is using on this Morale roll. Drives
+  // the SMod input. GM can change the picker; SMod auto-reflects.
+  const [moraleSkillName, setMoraleSkillName] = useState<string>('Inspiration')
+
   // Per-roll inputs. NPCs are assumed "reasonable proficiency" per SRD §08
   // Fed/Clothed text — default A=0, S=1. Leader A/S defaults to 0/0 with
   // the GM overriding if they know the leader's stats.
@@ -153,23 +180,94 @@ export default function CommunityMoraleModal({
     setFedAmod(0); setFedSmod(1); setFedCmod(0)
     setClothedAmod(0); setClothedSmod(1); setClothedCmod(0)
     setMoraleAmod(0); setMoraleSmod(0); setAdditionalMoraleCmod(0)
+    setLeaderInfo(null)
     setSlotMoodOverride(null)
     setSlotEnoughHandsOverride(null)
     setSlotClearVoiceOverride(null)
     setSlotSafetyOverride(null)
     setLoading(true)
     ;(async () => {
-      const { data } = await supabase
+      // Parallel — prior Morale row for Mood, + the leader's stats for
+      // the Morale roll (SRD p.22: check is made BY the designated
+      // leader using their appropriate AMod/SMod).
+      const moodPromise = supabase
         .from('community_morale_checks')
         .select('cmod_for_next')
         .eq('community_id', community.id)
         .order('week_number', { ascending: false })
         .limit(1)
         .maybeSingle()
-      setMoodFromPrior((data as any)?.cmod_for_next ?? 0)
+      const leaderPromise = (async (): Promise<LeaderInfo | null> => {
+        // Helper — build skillLevels map from a skills array. NPC
+        // skills use `entries[].name`; PC skills use `skills[].skillName`.
+        // Either way, result is a Record<skillName, level>.
+        const pickSocialSkills = (get: (s: string) => number): Record<string, number> => {
+          const out: Record<string, number> = {}
+          for (const s of MORALE_SOCIAL_SKILLS) out[s] = get(s)
+          return out
+        }
+        // NPC leader path. NPCs don't have RAPID Range Attributes
+        // tracked in the same shape as PCs → AMod defaults to 0.
+        if (community.leader_npc_id) {
+          const { data: npc } = await supabase
+            .from('campaign_npcs')
+            .select('name, skills')
+            .eq('id', community.leader_npc_id)
+            .maybeSingle()
+          if (!npc) return null
+          const entries = ((npc as any).skills?.entries ?? []) as Array<{ name: string; level: number }>
+          const skillLevels = pickSocialSkills(s => entries.find(e => e.name === s)?.level ?? 0)
+          return { name: (npc as any).name, kind: 'npc', amod: 0, skillLevels }
+        }
+        // PC leader path — leader_user_id → campaign_members row for
+        // the owned character → characters row for RAPID + skills.
+        if (community.leader_user_id) {
+          const { data: cm } = await supabase
+            .from('campaign_members')
+            .select('character_id')
+            .eq('campaign_id', campaignId)
+            .eq('user_id', community.leader_user_id)
+            .not('character_id', 'is', null)
+            .maybeSingle()
+          const charId = (cm as any)?.character_id as string | undefined
+          if (!charId) return null
+          const { data: ch } = await supabase
+            .from('characters')
+            .select('name, data')
+            .eq('id', charId)
+            .maybeSingle()
+          if (!ch) return null
+          const rapid = ((ch as any).data?.rapid ?? {}) as Record<string, number>
+          const skills = ((ch as any).data?.skills ?? []) as Array<{ skillName: string; level: number }>
+          const amod = rapid.INF ?? 0
+          const skillLevels = pickSocialSkills(s => skills.find(sk => sk.skillName === s)?.level ?? 0)
+          return { name: (ch as any).name, kind: 'pc', amod, skillLevels }
+        }
+        return null
+      })()
+      const [moodRes, leader] = await Promise.all([moodPromise, leaderPromise])
+      setMoodFromPrior((moodRes.data as any)?.cmod_for_next ?? 0)
+      if (leader) {
+        setLeaderInfo(leader)
+        setMoraleAmod(leader.amod)
+        // Default-select the leader's best social skill (tie-break:
+        // first in MORALE_SOCIAL_SKILLS order, which puts Inspiration
+        // ahead of others tied at the same level — Inspiration is the
+        // canonical Community-rally skill per CRB).
+        let bestSkill = MORALE_SOCIAL_SKILLS[0]
+        let bestLvl = leader.skillLevels[bestSkill] ?? 0
+        for (const s of MORALE_SOCIAL_SKILLS) {
+          const lvl = leader.skillLevels[s] ?? 0
+          if (lvl > bestLvl) { bestSkill = s; bestLvl = lvl }
+        }
+        setMoraleSkillName(bestSkill)
+        setMoraleSmod(bestLvl)
+      } else {
+        setMoraleSkillName('Inspiration')
+      }
       setLoading(false)
     })()
-  }, [open, community.id, supabase])
+  }, [open, community.id, community.leader_npc_id, community.leader_user_id, campaignId, supabase])
 
   if (!open) return null
 
@@ -343,7 +441,11 @@ export default function CommunityMoraleModal({
       ...(willDissolve ? { dissolved_at: now } : {}),
     }).eq('id', community.id)
 
-    // 5) Log rows for the session feed
+    // 5) Log rows for the session feed. Morale card is credited to the
+    //    designated leader (per SRD p.22); Fed/Clothed stay credited to
+    //    the community since SRD p.24 says those are assumed to be
+    //    rolled by generic NPCs of reasonable proficiency.
+    const leaderName = leaderInfo?.name ?? community.name
     const fedLabel = `🌾 Week ${newWeek} · ${community.name} — Fed Check: ${fed.outcome}`
     const clothedLabel = `🔧 Week ${newWeek} · ${community.name} — Clothed Check: ${clothed.outcome}`
     const moraleSuffix = willDissolve
@@ -351,7 +453,7 @@ export default function CommunityMoraleModal({
       : departureIds.length > 0
         ? ` — ${departureIds.length} member${departureIds.length === 1 ? '' : 's'} left`
         : ''
-    const moraleLabel = `📊 Week ${newWeek} · ${community.name} — Morale: ${morale.outcome}${moraleSuffix}`
+    const moraleLabel = `📊 Week ${newWeek} · ${community.name} — ${leaderName} rolls ${moraleSkillName}: ${morale.outcome}${moraleSuffix}`
 
     await supabase.from('roll_log').insert([
       {
@@ -384,7 +486,7 @@ export default function CommunityMoraleModal({
       },
       {
         campaign_id: campaignId, user_id: userId,
-        character_name: community.name, label: moraleLabel,
+        character_name: leaderName, label: moraleLabel,
         die1: morale.die1, die2: morale.die2, amod: morale.amod, smod: morale.smod, cmod: morale.cmod,
         total: morale.total, outcome: 'morale_check',
         damage_json: {
@@ -392,6 +494,9 @@ export default function CommunityMoraleModal({
           communityName: community.name,
           weekNumber: newWeek,
           rollOutcome: morale.outcome,
+          leaderName,
+          leaderKind: leaderInfo?.kind ?? null,
+          skillUsed: moraleSkillName,
           slots: moraleSlots,
           cmodForNext: nextMoraleCmod,
           membersBefore, membersAfter,
@@ -633,10 +738,44 @@ export default function CommunityMoraleModal({
                 </div>
               </div>
 
-              <div style={{ marginTop: '10px', ...rowFlex }}>
-                <span style={label} title="The Morale roll uses the leader's Influence AMod (INF attribute value). Leave 0 for NPC leaders whose INF isn't tracked.">Leader Influence AMod</span>
+              {/* Designated-leader banner. Per SRD §08 p.22 the Morale
+                  check is made BY the acknowledged leader. Leader info
+                  is fetched on open from leader_npc_id / leader_user_id;
+                  A/S mods auto-populate from their sheet. Skill picker
+                  below lets the GM choose WHICH social skill the leader
+                  is using this week — SMod follows the selection. */}
+              {leaderInfo ? (
+                <div style={{ marginTop: '10px', padding: '8px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Rolling</span>
+                  <span style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase' }}>{leaderInfo.name}</span>
+                  <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>({leaderInfo.kind === 'pc' ? 'PC' : 'NPC'})</span>
+                </div>
+              ) : !loading && (
+                <div style={{ marginTop: '10px', padding: '8px 12px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  No leader set on this community. Set one via the Leader dropdown on the community panel — SRD p.22: the check is made by the acknowledged leader. Rolling with 0/0 defaults for now.
+                </div>
+              )}
+
+              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span style={label} title="The Morale roll uses the leader's Influence AMod (INF attribute value). Auto-filled from the designated leader's sheet; override if the GM has a reason.">Leader INF AMod</span>
                 <input type="number" value={moraleAmod} onChange={e => setMoraleAmod(parseInt(e.target.value) || 0)} style={numInput} />
-                <span style={label} title="Leader's SMod in whichever social skill they're using to rally the community. Typical picks: Barter, Inspiration, Manipulation, Psychology*, Tactics*.">Leader SMod (Barter, Inspiration, Manipulation, Psychology*, Tactics*)</span>
+                <span style={label} title="Pick the skill the leader is using to rally the community this week. SMod follows the selection; each option shows the leader's current level in that skill.">Skill</span>
+                <select value={moraleSkillName}
+                  onChange={e => {
+                    const name = e.target.value
+                    setMoraleSkillName(name)
+                    // SMod follows the pick. GM can still override the
+                    // number input afterwards for one-off adjustments.
+                    const lvl = leaderInfo?.skillLevels[name] ?? 0
+                    setMoraleSmod(lvl)
+                  }}
+                  style={{ padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none', minWidth: '180px' }}>
+                  {MORALE_SOCIAL_SKILLS.map(s => {
+                    const lvl = leaderInfo?.skillLevels[s] ?? 0
+                    return <option key={s} value={s}>{s} ({lvl})</option>
+                  })}
+                </select>
+                <span style={label} title="The selected skill's level. Auto-filled from the skill picker; editable for one-off GM overrides.">SMod</span>
                 <input type="number" value={moraleSmod} onChange={e => setMoraleSmod(parseInt(e.target.value) || 0)} style={numInput} />
                 <div style={{ marginLeft: 'auto', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   Pre-roll CMod (no Fed/Clothed yet): <span style={{ color: cmodColor(moraleCmodPreview), fontWeight: 700 }}>{formatCmod(moraleCmodPreview)}</span>
