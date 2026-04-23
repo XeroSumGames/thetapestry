@@ -4351,6 +4351,11 @@ export default function TablePage() {
             // wired yet. Menu entry reserved so the nav slot lands now and
             // the feature can drop in without a menu reshuffle later.
             { label: 'Apprentice', onClick: () => alert('Apprentice view coming soon — for now, see the Apprentice NPC inside the Community roster (look for ⇐ <your PC name>).') },
+            // Dashboard — full-screen GM view with Morale history,
+            // resource log, role distribution, recruitment stats.
+            // Route: /stories/<id>/community. GM-only gated inside
+            // the page itself (non-GMs see an access-denied block).
+            { label: 'Dashboard', onClick: () => router.push(`/stories/${id}/community`), hidden: !isGM },
           ],
           hdrBtn('#1a2e10', '#7fc458', '#2d5a1b'),
         )}
