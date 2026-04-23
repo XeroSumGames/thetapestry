@@ -243,6 +243,13 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // Null = closed; uuid = run the modal for that community.
   const [moraleCommunityId, setMoraleCommunityId] = useState<string | null>(null)
 
+  // Step-down UI. Null = hidden; uuid = showing the successor-picker
+  // panel for that community. Successor defaults to 'auto' (next
+  // founder → longest-tenured member); GM or the leader themselves
+  // can override to a specific member id, or '' to leave leaderless.
+  const [stepDownCommunityId, setStepDownCommunityId] = useState<string | null>(null)
+  const [successorChoice, setSuccessorChoice] = useState<string>('auto')
+
   useEffect(() => { load() }, [campaignId])
 
   // Honor initialMode once communities are loaded. For 'status' we
@@ -392,6 +399,65 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }))
   }
 
+  // Auto-successor picker per spec: next founder → longest-tenured
+  // active member. Excludes a member id the caller wants to skip
+  // (typically the outgoing leader). Returns null if no viable
+  // successor exists (empty community).
+  function pickAutoSuccessor(communityId: string, excludeMemberId?: string): Member | null {
+    const mems = (members[communityId] ?? []).filter(m => m.id !== excludeMemberId && m.status !== 'pending')
+    if (mems.length === 0) return null
+    // 1) Other founders first.
+    const founders = mems.filter(m => m.recruitment_type === 'founder')
+    if (founders.length > 0) {
+      // Founders ordered by joined_at ASC — earliest founder wins.
+      return [...founders].sort((a, b) => (a.joined_at ?? '').localeCompare(b.joined_at ?? ''))[0]
+    }
+    // 2) Longest-tenured remaining member (smallest joined_at).
+    return [...mems].sort((a, b) => (a.joined_at ?? '').localeCompare(b.joined_at ?? ''))[0]
+  }
+
+  // Step-down — current leader (or GM) abdicates. Successor can be
+  // 'auto' (pickAutoSuccessor), '' (leave leaderless), or a member id.
+  // Writes a null + optional re-set on communities.leader_* and
+  // refreshes local state. Reuses handleSetLeader for the new-leader
+  // path so the PC-vs-NPC user_id/npc_id branch stays in one place.
+  async function handleStepDown(communityId: string, successor: string) {
+    const c = communities.find(x => x.id === communityId)
+    if (!c) return
+    // Resolve successor member id.
+    let targetMember: Member | null = null
+    if (successor === 'auto') {
+      // Exclude the current PC leader's member row if there is one
+      // (founder match) — we don't want auto-pick to re-nominate them.
+      const currentLeaderMember = (members[communityId] ?? []).find(m =>
+        (c.leader_npc_id && m.npc_id === c.leader_npc_id)
+        || (c.leader_user_id && m.invited_by_user_id === c.leader_user_id)
+        || (c.leader_user_id && m.recruitment_type === 'founder' && m.character_id)
+      ) ?? null
+      targetMember = pickAutoSuccessor(communityId, currentLeaderMember?.id)
+    } else if (successor !== '') {
+      targetMember = (members[communityId] ?? []).find(m => m.id === successor) ?? null
+    }
+    // Null both leader fields first so an immediately-following
+    // handleSetLeader writes a clean single-target update.
+    const { error } = await supabase.from('communities')
+      .update({ leader_user_id: null, leader_npc_id: null })
+      .eq('id', communityId)
+    if (error) { alert(`Step down failed: ${error.message}`); return }
+    setCommunities(prev => prev.map(x => x.id === communityId
+      ? { ...x, leader_user_id: null, leader_npc_id: null }
+      : x))
+    if (targetMember) {
+      await handleSetLeader(communityId, {
+        kind: targetMember.npc_id ? 'npc' : 'pc',
+        memberId: targetMember.id,
+      })
+    }
+    // Close the step-down panel.
+    setStepDownCommunityId(null)
+    setSuccessorChoice('auto')
+  }
+
   // Change the community leader. Leader is either a PC (character_id
   // → leader_user_id lookup) or an NPC (leader_npc_id). Exactly one
   // is set at a time; the other is nulled.
@@ -533,10 +599,37 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       .update({ left_at: new Date().toISOString(), left_reason: 'manual' })
       .eq('id', m.id)
     if (error) { alert(`Remove failed: ${error.message}`); return }
+    // If the departing member was the acknowledged leader, auto-promote
+    // per the step-down spec (next founder → longest-tenured remaining).
+    // Optimistically update local members FIRST so pickAutoSuccessor
+    // sees the post-removal roster; otherwise it could pick the
+    // just-removed member as their own successor.
     setMembers(prev => ({
       ...prev,
       [m.community_id]: (prev[m.community_id] ?? []).filter(x => x.id !== m.id),
     }))
+    const c = communities.find(x => x.id === m.community_id)
+    const wasLeader = !!c && (
+      (c.leader_npc_id && m.npc_id === c.leader_npc_id)
+      || (c.leader_user_id && m.invited_by_user_id === c.leader_user_id)
+    )
+    if (wasLeader) {
+      // Null both fields; pickAutoSuccessor now runs against the
+      // reduced roster and hands over to handleSetLeader if possible.
+      await supabase.from('communities')
+        .update({ leader_user_id: null, leader_npc_id: null })
+        .eq('id', m.community_id)
+      setCommunities(prev => prev.map(x => x.id === m.community_id
+        ? { ...x, leader_user_id: null, leader_npc_id: null }
+        : x))
+      const successor = pickAutoSuccessor(m.community_id, m.id)
+      if (successor) {
+        await handleSetLeader(m.community_id, {
+          kind: successor.npc_id ? 'npc' : 'pc',
+          memberId: successor.id,
+        })
+      }
+    }
   }
 
   async function handleChangeRole(m: Member, role: Role) {
@@ -713,24 +806,71 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     is shown bold; selecting a new member from the
                     dropdown calls handleSetLeader which writes the
                     correct leader_user_id / leader_npc_id on the
-                    community row. */}
-                <div style={{ padding: '10px 12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Leader</span>
-                  <select
-                    value={leaderMember?.id ?? ''}
-                    onChange={e => {
-                      if (!e.target.value) return
-                      const mem = mems.find(m => m.id === e.target.value)
-                      if (!mem) return
-                      handleSetLeader(c.id, { kind: mem.npc_id ? 'npc' : 'pc', memberId: mem.id })
-                    }}
-                    style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none' }}>
-                    <option value="">— pick a leader —</option>
-                    {mems.map(m => (
-                      <option key={m.id} value={m.id}>{memberLabel(m)}{m.npc_id ? ' (NPC)' : ' (PC)'}</option>
-                    ))}
-                  </select>
-                </div>
+                    community row.
+                    Step Down button is visible when (a) the viewer
+                    is a GM, or (b) the viewer is the PC leader
+                    (leader_user_id matches their auth uid). NPCs
+                    obviously can't click buttons, so NPC-leader
+                    step-downs are always GM-driven. */}
+                {(() => {
+                  const iAmLeader = !!myUserId && c.leader_user_id === myUserId
+                  const canStepDown = (isGM || iAmLeader) && !!leaderMember
+                  const autoSuccessorMember = pickAutoSuccessor(c.id, leaderMember?.id)
+                  const stepDownOpen = stepDownCommunityId === c.id
+                  return (
+                    <div style={{ padding: '10px 12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Leader</span>
+                        <select
+                          value={leaderMember?.id ?? ''}
+                          onChange={e => {
+                            if (!e.target.value) return
+                            const mem = mems.find(m => m.id === e.target.value)
+                            if (!mem) return
+                            handleSetLeader(c.id, { kind: mem.npc_id ? 'npc' : 'pc', memberId: mem.id })
+                          }}
+                          style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none' }}>
+                          <option value="">— pick a leader —</option>
+                          {mems.map(m => (
+                            <option key={m.id} value={m.id}>{memberLabel(m)}{m.npc_id ? ' (NPC)' : ' (PC)'}</option>
+                          ))}
+                        </select>
+                        {canStepDown && (
+                          <button onClick={() => { setStepDownCommunityId(stepDownOpen ? null : c.id); setSuccessorChoice('auto') }}
+                            title={iAmLeader && !isGM ? 'Step down as leader of this community' : 'Force the current leader to step down'}
+                            style={{ padding: '6px 10px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                            {stepDownOpen ? 'Cancel' : 'Step Down'}
+                          </button>
+                        )}
+                      </div>
+                      {stepDownOpen && (
+                        <div style={{ padding: '10px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                            <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{leaderMember ? memberLabel(leaderMember) : 'The leader'}</span> is stepping down. Pick a successor:
+                          </div>
+                          <select value={successorChoice} onChange={e => setSuccessorChoice(e.target.value)}
+                            style={{ padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none' }}>
+                            <option value="auto">Auto-pick{autoSuccessorMember ? ` — ${memberLabel(autoSuccessorMember)}${autoSuccessorMember.npc_id ? ' (NPC)' : ' (PC)'}` : ' — none available'}</option>
+                            <option value="">— Leave leaderless (−1 Clear Voice on next Morale) —</option>
+                            {mems.filter(m => m.id !== leaderMember?.id).map(m => (
+                              <option key={m.id} value={m.id}>{memberLabel(m)}{m.npc_id ? ' (NPC)' : ' (PC)'}</option>
+                            ))}
+                          </select>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                            <button onClick={() => { setStepDownCommunityId(null); setSuccessorChoice('auto') }}
+                              style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                              Cancel
+                            </button>
+                            <button onClick={() => handleStepDown(c.id, successorChoice)}
+                              style={{ padding: '6px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                              Confirm Step Down
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
 
                 {/* Phase C — Weekly Check button. Shows only when the
                     Group has crossed the 13-member threshold AND isn't
