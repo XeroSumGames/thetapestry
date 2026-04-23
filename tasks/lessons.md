@@ -40,6 +40,9 @@
 - **Store structured data, serialize for display**: Skills are stored as `{ entries: [...], text: "..." }` — structured for programmatic use, text for backwards compatibility and display.
 - **`SECURITY DEFINER` on trigger functions**: Required for triggers that insert into tables with RLS (like notifications), since triggers run as the invoking user who may not have insert permissions.
 
+## Conventions
+- **"new window time?" = handoff prompt**: When the user asks `new window time?`, respond with a concise, self-contained prompt they can paste into a new chat to resume. Shape: `I want to <task>. Load <relevant spec files> first.` Should reference the project-surviving files (tasks/todo.md, tasks/spec-*.md, tasks/rules-extract-*.md, tasks/testplan.md, tasks/lessons.md) so fresh-me has everything needed without re-litigating the last session. Example: `I want to build Phase C Communities — weekly Morale Check, Fed/Clothed resource checks, Activity Blocks. Load tasks/spec-communities.md and tasks/rules-extract-communities.md first.` Don't include stuff only meaningful in the current session (recent commit hashes, "we just shipped X"); stick to things fresh-me can actually reload.
+
 ## Process
 - **Always provide SQL upfront**: When a feature requires a DB schema change, provide the ALTER TABLE / CREATE TABLE SQL immediately in the same message — don't wait for the user to ask. The user shouldn't have to chase for it. This is explicitly required in CLAUDE.md: "Always provide the ALTER TABLE SQL alongside the commit."
 
