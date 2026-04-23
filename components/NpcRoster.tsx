@@ -29,13 +29,20 @@ const TYPE_COLORS: Record<string, { bg: string; border: string; color: string }>
   antagonist: { bg: '#2a102a', border: '#8b2e8b', color: '#d48bd4' },
 }
 
-// Ring color of the NPC portrait circle — driven by npc_type so the
-// type is visible at a glance even when the NPC has no uploaded
-// photo. Exported so other components (NpcCard, PlayerNpcCard) use
-// the same palette. Falls back to neutral gray when no type is set.
-export function getNpcRingColor(npc_type: string | null | undefined): { border: string; bg: string; color: string } {
-  if (!npc_type) return { border: '#3a3a3a', bg: '#2e2e2e', color: '#d4cfc9' }
-  return TYPE_COLORS[npc_type] ?? { border: '#3a3a3a', bg: '#2e2e2e', color: '#d4cfc9' }
+// Ring color of the NPC portrait circle — driven by DISPOSITION
+// (friendly / neutral / hostile), not npc_type. Disposition is
+// how the NPC feels toward the PCs; type is their role/threat
+// level. A Goon can be a friendly ally, a Bystander can be hostile
+// — the two concerns are independent. Exported so NpcCard,
+// PlayerNpcCard, and the edit form all render the same palette.
+// Null/unset disposition falls back to neutral gray.
+const DISPOSITION_COLORS: Record<string, { border: string; bg: string; color: string }> = {
+  friendly: { border: '#2d5a1b', bg: '#1a2e10', color: '#7fc458' },
+  neutral:  { border: '#3a3a3a', bg: '#2e2e2e', color: '#d4cfc9' },
+  hostile:  { border: '#c0392b', bg: '#2a1210', color: '#f5a89a' },
+}
+export function getNpcRingColor(disposition: string | null | undefined): { border: string; bg: string; color: string } {
+  return DISPOSITION_COLORS[disposition ?? 'neutral'] ?? DISPOSITION_COLORS.neutral
 }
 
 // Placeholder silhouette portraits by type. Clicking one sets
@@ -108,6 +115,7 @@ export interface CampaignNpc {
   skills: any
   notes: string | null
   npc_type: string | null
+  disposition: 'friendly' | 'neutral' | 'hostile' | null
   recruitment_role: string | null
   world_npc_id: string | null
   wp_current: number | null
@@ -175,7 +183,8 @@ const emptyForm = {
   name: '', portrait_url: null as string | null,
   reason: 0, acumen: 0, physicality: 0, influence: 0, dexterity: 0,
   skillEntries: [] as SkillEntry[], notes: '', status: 'active',
-  npc_type: '' as string, motivation: '', complication: '', threeWords: ['', '', ''] as string[],
+  npc_type: '' as string, disposition: '' as '' | 'friendly' | 'neutral' | 'hostile',
+  motivation: '', complication: '', threeWords: ['', '', ''] as string[],
   weapon: null as any,
   weapon2: null as any,
   folder: '' as string,
@@ -310,6 +319,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       notes: npc.notes ?? '',
       status: npc.status,
       npc_type: npc.npc_type ?? '',
+      disposition: (npc.disposition ?? '') as '' | 'friendly' | 'neutral' | 'hostile',
       motivation: (npc as any).motivation ?? '',
       complication: (npc as any).complication ?? '',
       threeWords: (npc as any).three_words ?? ['', '', ''],
@@ -357,6 +367,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       notes: form.notes.trim() || null,
       status: form.status,
       npc_type: form.npc_type || null,
+      disposition: form.disposition || null,
       motivation: form.motivation || null,
       complication: form.complication || null,
       three_words: form.threeWords.filter(w => w),
@@ -934,12 +945,11 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '12px', padding: '1px 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>}
                     </div>
                   </div>
-                  {/* Right: portrait — ring color = npc_type color so
-                      Bystander=green, Goon=amber, Foe=red, Antagonist=
-                      purple, untyped=gray. Independent of whether an
-                      image is uploaded. */}
+                  {/* Right: portrait — ring color = disposition
+                      (friendly green / neutral gray / hostile red).
+                      Set via the disposition picker in Edit NPC. */}
                   {(() => {
-                    const ring = getNpcRingColor(npc.npc_type)
+                    const ring = getNpcRingColor(npc.disposition)
                     return (
                       <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: ring.bg, border: `2px solid ${ring.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                         {npc.portrait_url ? (
@@ -1064,7 +1074,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                 picks a type. Placeholder bank lets them pick a
                 colored silhouette as the INSIDE image. */}
             {(() => {
-              const ring = getNpcRingColor(form.npc_type || null)
+              const ring = getNpcRingColor(form.disposition || null)
               return (
                 <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: ring.bg, border: `2px solid ${ring.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
@@ -1073,6 +1083,25 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                     ) : (
                       <span style={{ fontSize: '12px', fontWeight: 700, color: ring.color, fontFamily: 'Barlow Condensed, sans-serif' }}>{form.name ? getInitials(form.name) : '?'}</span>
                     )}
+                  </div>
+                  {/* Disposition picker — sets the ring color (friendly
+                      green / neutral gray / hostile red). Independent
+                      of portrait; can pick any disposition whether or
+                      not there's an uploaded image. */}
+                  <div style={{ display: 'flex', gap: '3px' }} title="Disposition — drives ring color">
+                    {([
+                      ['friendly', '#2d5a1b', '#1a2e10'],
+                      ['neutral',  '#3a3a3a', '#2e2e2e'],
+                      ['hostile',  '#c0392b', '#2a1210'],
+                    ] as const).map(([val, border, bg]) => {
+                      const picked = form.disposition === val
+                      return (
+                        <button key={val} type="button"
+                          onClick={() => setForm(f => ({ ...f, disposition: picked ? '' : val }))}
+                          title={val}
+                          style={{ width: '20px', height: '20px', borderRadius: '50%', border: `2px solid ${border}`, background: bg, cursor: 'pointer', padding: 0, outline: picked ? '2px solid #f5f2ee' : 'none', outlineOffset: '1px' }} />
+                      )
+                    })}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: `repeat(${PORTRAIT_BANK.length}, 20px)`, gap: '3px' }}>
                     {PORTRAIT_BANK.map((p, i) => (

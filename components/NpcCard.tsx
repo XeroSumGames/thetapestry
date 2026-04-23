@@ -122,7 +122,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
       {/* Header — name, badges, buttons all on one row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
         {(() => {
-          const ring = getNpcRingColor(npc.npc_type)
+          const ring = getNpcRingColor(npc.disposition)
           return (
             <div
               onClick={() => npc.portrait_url && setEnlarged(true)}

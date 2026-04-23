@@ -82,7 +82,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
     <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '8px 10px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         {(() => {
-          const ring = getNpcRingColor(npc.npc_type)
+          const ring = getNpcRingColor(npc.disposition)
           return (
             <div
               onClick={() => npc.portrait_url && setEnlarged(true)}
