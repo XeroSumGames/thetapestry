@@ -153,9 +153,27 @@ export const CHASED_PINS: SettingPin[] = [
     notes: "A small rural garage with a couple of pumps out front, a mini-mart inside, and a workshop attached. Owned and run by Errol and Martina Stansfield for almost 15 years before the Distemper hit. The two died at home within days of each other. The station has remained largely untouched since. The workshop contains an arc welder and a tow truck in good condition. The general store is mostly intact but most contents are expired or rotten. A cheap abandoned car sits outside. An expensive motorbike is connected to one of the pumps." },
 ]
 
+// King's Crossing Mall pulls the mall complex (01-07) plus Georgetown out of
+// CHASED_PINS so the persistent setting matches the NPCs already wired up
+// in lib/setting-npcs.ts. Single source of truth — pin notes/coords stay in
+// CHASED_PINS and propagate here automatically.
+const KINGS_CROSSING_MALL_PIN_TITLES = new Set([
+  '01 | Best Nite Motel',
+  "02 | Belvedere's Outdoor Supply",
+  '03 | Drop By Urgent Care',
+  '04 | Costco Superstore',
+  '05 | Tri-State Firearms & Shooting Range',
+  "06 | Swiss Tony's Used Car Lot",
+  '07 | RoadCo Gas Station',
+  'Georgetown',
+])
+export const KINGS_CROSSING_MALL_PINS: SettingPin[] = CHASED_PINS
+  .filter(p => KINGS_CROSSING_MALL_PIN_TITLES.has(p.title))
+
 export const SETTING_PINS: Record<string, SettingPin[]> = {
   district_zero: DISTRICT_ZERO_PINS,
   chased: CHASED_PINS,
   mongrels: MONGRELS_PINS,
   empty: CHASED_PINS,
+  kings_crossing_mall: KINGS_CROSSING_MALL_PINS,
 }
