@@ -127,6 +127,39 @@ export interface CloneResult {
   }
 }
 
+export interface SnapshotCounts {
+  pins: number
+  npcs: number
+  scenes: number
+  tokens: number
+  handouts: number
+}
+
+export interface BuildSnapshotOptions {
+  includePins?: boolean
+  includeNpcs?: boolean
+  includeScenes?: boolean
+  includeHandouts?: boolean
+}
+
+export interface ModuleForCampaign {
+  id: string
+  name: string
+  tagline: string | null
+  description: string | null
+  parent_setting: string | null
+  visibility: 'private' | 'unlisted' | 'listed'
+  latest_version_id: string | null
+  latest_version: {
+    id: string
+    version: string
+    version_major: number
+    version_minor: number
+    version_patch: number
+    published_at: string
+  } | null
+}
+
 // ── listAvailableModules ───────────────────────────────────────
 // Returns modules the current user can pick from campaign-creation:
 // their own + anything listed+approved. Unlisted modules are omitted
@@ -396,4 +429,278 @@ export async function cloneModuleIntoCampaign(
     subscriptionId: subRow?.id ?? '',
     counts,
   }
+}
+
+// ── getModuleForCampaign ───────────────────────────────────────
+// Returns the author's module for this campaign (if any). Used by
+// the edit page to decide between "Publish as Module" (first time)
+// and "Publish New Version" (re-publish). Only the author's own
+// module counts — two GMs can't co-author the same source today.
+export async function getModuleForCampaign(
+  supabase: SupabaseClient,
+  campaignId: string,
+): Promise<ModuleForCampaign | null> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data, error } = await supabase
+    .from('modules')
+    .select('id, name, tagline, description, parent_setting, visibility, latest_version_id')
+    .eq('source_campaign_id', campaignId)
+    .eq('author_user_id', user.id)
+    .maybeSingle()
+  if (error || !data) return null
+
+  let latest_version: ModuleForCampaign['latest_version'] = null
+  if (data.latest_version_id) {
+    const { data: v } = await supabase
+      .from('module_versions')
+      .select('id, version, version_major, version_minor, version_patch, published_at')
+      .eq('id', data.latest_version_id)
+      .maybeSingle()
+    if (v) latest_version = v as any
+  }
+
+  return { ...(data as any), latest_version }
+}
+
+// ── buildCampaignSnapshot ──────────────────────────────────────
+// Reads a campaign's live content and serializes it into the
+// ModuleSnapshot shape. Each row keeps its database id as
+// _external_id so cross-row links (NPC → pin, scene token → NPC)
+// survive the clone into a new campaign. Per-session state
+// (wp_current / rp_current / death_countdown / is_active etc) is
+// intentionally omitted — a cloned module should start fresh.
+export async function buildCampaignSnapshot(
+  supabase: SupabaseClient,
+  campaignId: string,
+  options: BuildSnapshotOptions = {},
+): Promise<{ snapshot: ModuleSnapshot; counts: SnapshotCounts }> {
+  const opts = {
+    includePins: options.includePins ?? true,
+    includeNpcs: options.includeNpcs ?? true,
+    includeScenes: options.includeScenes ?? true,
+    includeHandouts: options.includeHandouts ?? true,
+  }
+
+  const snapshot: ModuleSnapshot = {}
+  const counts: SnapshotCounts = { pins: 0, npcs: 0, scenes: 0, tokens: 0, handouts: 0 }
+
+  if (opts.includePins) {
+    const { data: pins, error } = await supabase
+      .from('campaign_pins')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('sort_order')
+    if (error) throw new Error(`Read pins: ${error.message}`)
+    snapshot.pins = (pins ?? []).map((p: any) => ({
+      _external_id: p.id,
+      name: p.name,
+      lat: p.lat,
+      lng: p.lng,
+      notes: p.notes ?? '',
+      category: p.category ?? 'location',
+      sort_order: p.sort_order,
+    }))
+    counts.pins = snapshot.pins.length
+  }
+
+  if (opts.includeNpcs) {
+    const { data: npcs, error } = await supabase
+      .from('campaign_npcs')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('sort_order')
+    if (error) throw new Error(`Read npcs: ${error.message}`)
+    snapshot.npcs = (npcs ?? []).map((n: any) => ({
+      _external_id: n.id,
+      _pin_external_id: n.campaign_pin_id ?? undefined,
+      name: n.name,
+      reason: n.reason,
+      acumen: n.acumen,
+      physicality: n.physicality,
+      influence: n.influence,
+      dexterity: n.dexterity,
+      wp_max: n.wp_max,
+      rp_max: n.rp_max,
+      skills: n.skills,
+      equipment: n.equipment,
+      notes: n.notes,
+      motivation: n.motivation,
+      portrait_url: n.portrait_url,
+      npc_type: n.npc_type,
+      sort_order: n.sort_order,
+    }))
+    counts.npcs = snapshot.npcs.length
+  }
+
+  if (opts.includeScenes) {
+    const { data: scenes, error } = await supabase
+      .from('tactical_scenes')
+      .select('*')
+      .eq('campaign_id', campaignId)
+    if (error) throw new Error(`Read scenes: ${error.message}`)
+    const sceneRows = scenes ?? []
+    const sceneIds = sceneRows.map((s: any) => s.id)
+    const tokensByScene: Record<string, any[]> = {}
+    if (sceneIds.length > 0) {
+      const { data: tokens, error: tErr } = await supabase
+        .from('scene_tokens')
+        .select('*')
+        .in('scene_id', sceneIds)
+      if (tErr) throw new Error(`Read scene_tokens: ${tErr.message}`)
+      for (const t of tokens ?? []) {
+        ;(tokensByScene[t.scene_id] ??= []).push(t)
+      }
+    }
+    snapshot.scenes = sceneRows.map((s: any) => {
+      const rawTokens = tokensByScene[s.id] ?? []
+      // Character-linked tokens (PC tokens) never clone — PCs don't
+      // travel with modules. Filter them out at snapshot time.
+      const usefulTokens = rawTokens.filter((t: any) => !t.character_id)
+      const tokens = usefulTokens.map((t: any) => ({
+        _external_id: t.id,
+        _npc_external_id: t.npc_id ?? undefined,
+        name: t.name,
+        token_type: t.token_type,
+        portrait_url: t.portrait_url,
+        grid_x: t.grid_x,
+        grid_y: t.grid_y,
+        color: t.color,
+        is_visible: t.is_visible,
+        wp_max: t.wp_max,
+        destroyed_portrait_url: t.destroyed_portrait_url,
+        lootable: t.lootable,
+      }))
+      counts.tokens += tokens.length
+      return {
+        _external_id: s.id,
+        name: s.name,
+        grid_cols: s.grid_cols,
+        grid_rows: s.grid_rows,
+        background_url: s.background_url,
+        cell_px: s.cell_px,
+        cell_feet: s.cell_feet,
+        has_grid: s.has_grid,
+        img_scale: s.img_scale,
+        tokens,
+      }
+    })
+    counts.scenes = snapshot.scenes.length
+  }
+
+  if (opts.includeHandouts) {
+    const { data: handouts, error } = await supabase
+      .from('campaign_notes')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('created_at')
+    if (error) throw new Error(`Read handouts: ${error.message}`)
+    snapshot.handouts = (handouts ?? []).map((h: any) => ({
+      _external_id: h.id,
+      title: h.title,
+      content: h.content ?? '',
+      attachments: Array.isArray(h.attachments) ? h.attachments : [],
+    }))
+    counts.handouts = snapshot.handouts.length
+  }
+
+  return { snapshot, counts }
+}
+
+// ── publishModuleVersion ───────────────────────────────────────
+// Creates (first publish) or updates (re-publish) a modules row +
+// inserts a fresh module_versions row. The caller provides an
+// already-built snapshot (see buildCampaignSnapshot). Semver is
+// passed explicitly so the UI can bump major/minor/patch per the
+// author's pick.
+//
+// Returns the module id + the freshly-inserted version id.
+export interface PublishParams {
+  campaignId: string
+  moduleId?: string          // omit on first publish; required on re-publish
+  name: string
+  tagline?: string | null
+  description?: string | null
+  parentSetting?: string | null
+  visibility: 'private' | 'unlisted' | 'listed'
+  version: string            // '1.0.0', '1.1.0', etc.
+  changelog?: string | null
+  snapshot: ModuleSnapshot
+}
+
+export async function publishModuleVersion(
+  supabase: SupabaseClient,
+  params: PublishParams,
+): Promise<{ moduleId: string; versionId: string }> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not logged in')
+
+  let moduleId = params.moduleId
+
+  if (!moduleId) {
+    // First publish — create the module row. Listed modules enter
+    // Thriver moderation as 'pending'; private / unlisted skip the
+    // queue.
+    const { data, error } = await supabase
+      .from('modules')
+      .insert({
+        author_user_id: user.id,
+        source_campaign_id: params.campaignId,
+        name: params.name,
+        tagline: params.tagline ?? null,
+        description: params.description ?? null,
+        parent_setting: params.parentSetting ?? 'custom',
+        visibility: params.visibility,
+        moderation_status: params.visibility === 'listed' ? 'pending' : 'approved',
+      })
+      .select('id')
+      .single()
+    if (error || !data) throw new Error(`Create module failed: ${error?.message ?? 'unknown'}`)
+    moduleId = data.id as string
+  } else {
+    // Re-publish — keep the module row alive, refresh metadata.
+    // Listed re-submissions reset moderation to 'pending'; other
+    // tiers stay approved.
+    const update: any = {
+      name: params.name,
+      tagline: params.tagline ?? null,
+      description: params.description ?? null,
+      visibility: params.visibility,
+    }
+    if (params.visibility === 'listed') update.moderation_status = 'pending'
+    const { error } = await supabase.from('modules').update(update).eq('id', moduleId)
+    if (error) throw new Error(`Update module failed: ${error.message}`)
+  }
+
+  const parts = params.version.split('.').map((n) => parseInt(n, 10))
+  const [major, minor, patch] = [parts[0] || 0, parts[1] || 0, parts[2] || 0]
+
+  const { data: versionRow, error: vErr } = await supabase
+    .from('module_versions')
+    .insert({
+      module_id: moduleId,
+      version: params.version,
+      version_major: major,
+      version_minor: minor,
+      version_patch: patch,
+      published_by: user.id,
+      changelog: params.changelog ?? null,
+      snapshot: params.snapshot as any,
+    })
+    .select('id')
+    .single()
+  if (vErr || !versionRow) throw new Error(`Publish version failed: ${vErr?.message ?? 'unknown'}`)
+
+  return { moduleId: moduleId as string, versionId: versionRow.id as string }
+}
+
+// ── Semver helpers ─────────────────────────────────────────────
+// Simple bump: '1.2.3' + 'patch' → '1.2.4'; 'minor' → '1.3.0';
+// 'major' → '2.0.0'. Missing parts default to 0.
+export function bumpSemver(current: string, kind: 'major' | 'minor' | 'patch'): string {
+  const [maj, min, pat] = current.split('.').map((n) => parseInt(n, 10) || 0)
+  if (kind === 'major') return `${maj + 1}.0.0`
+  if (kind === 'minor') return `${maj}.${min + 1}.0`
+  return `${maj}.${min}.${pat + 1}`
 }

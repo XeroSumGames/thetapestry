@@ -6,6 +6,8 @@ import { SETTINGS } from '../../../lib/settings'
 import { SETTING_PREGENS, type PregenSeed } from '../../../lib/setting-npcs'
 import { buildCharacterFromPregen } from '../../../lib/xse-schema'
 import { exportGmKit } from '../../../lib/gm-kit'
+import { getModuleForCampaign, type ModuleForCampaign } from '../../../lib/modules'
+import ModulePublishModal from '../../../components/ModulePublishModal'
 
 interface Campaign {
   id: string
@@ -72,6 +74,11 @@ export default function CampaignPage() {
   const [amKicked, setAmKicked] = useState(false)
   const [rejoining, setRejoining] = useState(false)
   const [exporting, setExporting] = useState(false)
+  // Phase 5 Sprint 2 — Module publish state. `existingModule` is
+  // non-null when this campaign already has a published module; in
+  // that case the Publish button flips to "Publish New Version".
+  const [publishOpen, setPublishOpen] = useState(false)
+  const [existingModule, setExistingModule] = useState<ModuleForCampaign | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -97,6 +104,12 @@ export default function CampaignPage() {
       if (myMembership?.character_id) {
         setSelectedCharId(myMembership.character_id)
         setAssignedCharName((myMembership.characters as any)?.name ?? '')
+      }
+
+      // Phase 5 Sprint 2 — only the GM cares about the publish state.
+      if (camp.gm_user_id === user.id) {
+        const mod = await getModuleForCampaign(supabase, id)
+        setExistingModule(mod)
       }
 
       // Check if this player was kicked from the current session
@@ -270,6 +283,13 @@ export default function CampaignPage() {
             title="Download every pin, NPC, scene, token, handout (with images) as a portable .zip">
             {exporting ? 'Packaging…' : 'GM Kit'}
           </button>
+          <button onClick={() => setPublishOpen(true)}
+            style={btn('#2a1a3e', '#c4a7f0', '#5a2e5a') as any}
+            title={existingModule
+              ? `Publish a new version of "${existingModule.name}" (current v${existingModule.latest_version?.version ?? '1.0.0'})`
+              : 'Publish this campaign as a reusable module other GMs can subscribe to'}>
+            📦 {existingModule ? `Module v${existingModule.latest_version?.version ?? '1.0.0'}` : 'Publish Module'}
+          </button>
           <button onClick={handleDelete} style={btn('#7a1f16', '#f5a89a', '#7a1f16') as any}>
             Delete
           </button>
@@ -433,6 +453,27 @@ export default function CampaignPage() {
           Back
         </a>
       </div>
+
+      {/* Phase 5 Sprint 2 — Module publish wizard. Opened from the
+          📦 button in the GM action row. After a successful publish,
+          refresh the existing-module state so the button re-labels
+          with the new version number. */}
+      {isGM && publishOpen && campaign && (
+        <ModulePublishModal
+          supabase={supabase}
+          campaignId={id}
+          campaignName={campaign.name}
+          campaignDescription={campaign.description}
+          existingModule={existingModule}
+          onClose={() => setPublishOpen(false)}
+          onPublished={async ({ version }) => {
+            setPublishOpen(false)
+            const refreshed = await getModuleForCampaign(supabase, id)
+            setExistingModule(refreshed)
+            alert(`📦 Published v${version}. Other GMs can now pick this module when creating a campaign.`)
+          }}
+        />
+      )}
 
     </div>
   )
