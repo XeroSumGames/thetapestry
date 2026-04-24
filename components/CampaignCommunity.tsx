@@ -39,10 +39,16 @@ interface Member {
   status: 'pending' | 'active' | 'removed'
   invited_by_user_id: string | null
   // Phase D Apprentice task delegation — freeform "current task" the
-  // GM (eventually also the master PC) can set on an Apprentice NPC.
-  // Null = idle. Column added via sql/community-members-add-current-task.sql;
-  // gracefully absent on older DBs (the UI just won't render it).
+  // GM (eventually also the master PC) can set on an Apprentice NPC
+  // or an Assigned NPC. Null = idle. Column added via
+  // sql/community-members-add-current-task.sql.
   current_task: string | null
+  // "Assigned" role mission linkage — character_id of the PC directing
+  // this NPC's off-screen work. Only meaningful when role='assigned';
+  // cleared automatically when the role changes back. Column added via
+  // sql/community-members-add-assignment-pc.sql. FK with ON DELETE
+  // SET NULL so a deleted PC silently clears the assignment.
+  assignment_pc_id: string | null
 }
 
 interface NpcOption {
@@ -263,6 +269,13 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // the in-progress text; save writes to community_members.current_task.
   const [editingTaskMemberId, setEditingTaskMemberId] = useState<string | null>(null)
   const [taskDraft, setTaskDraft] = useState<string>('')
+
+  // "Assigned" role mission linkage — modal that opens when a member's
+  // role flips to 'assigned'. Captures directing PC + task text, writes
+  // both plus the role in a single update. Null = modal closed.
+  const [assigningMember, setAssigningMember] = useState<Member | null>(null)
+  const [assignmentPcDraft, setAssignmentPcDraft] = useState<string>('')
+  const [assignmentTaskDraft, setAssignmentTaskDraft] = useState<string>('')
 
   useEffect(() => { load() }, [campaignId])
 
@@ -707,12 +720,60 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   }
 
   async function handleChangeRole(m: Member, role: Role) {
-    const { error } = await supabase.from('community_members').update({ role }).eq('id', m.id)
+    // Flipping INTO 'assigned' (from anything else) requires a PC
+    // director + a task, so divert to the assignment modal. The
+    // modal's save handler is what actually writes role + linkage.
+    if (role === 'assigned' && m.role !== 'assigned') {
+      setAssigningMember(m)
+      setAssignmentPcDraft(m.assignment_pc_id ?? '')
+      setAssignmentTaskDraft(m.current_task ?? '')
+      return
+    }
+    // Flipping OUT of 'assigned' into any other role — clear the
+    // linkage so the previous director / task don't linger as stale
+    // ghosts on a Gatherer/Maintainer/Safety/Unassigned row.
+    const update: Partial<Member> = { role }
+    if (m.role === 'assigned' && role !== 'assigned') {
+      update.assignment_pc_id = null
+      update.current_task = null
+    }
+    const { error } = await supabase.from('community_members').update(update).eq('id', m.id)
     if (error) { alert(`Role change failed: ${error.message}`); return }
     setMembers(prev => ({
       ...prev,
-      [m.community_id]: (prev[m.community_id] ?? []).map(x => x.id === m.id ? { ...x, role } : x),
+      [m.community_id]: (prev[m.community_id] ?? []).map(x => x.id === m.id ? { ...x, ...update } : x),
     }))
+  }
+
+  // Save handler for the "Assigned" role modal. Writes role='assigned'
+  // + assignment_pc_id + current_task in one round-trip. Cancelling
+  // closes the modal without changing anything — the role dropdown
+  // never flipped (handleChangeRole stopped short of the update).
+  async function handleSaveAssignment() {
+    if (!assigningMember) return
+    if (!assignmentPcDraft) { alert('Pick a directing PC.'); return }
+    const task = assignmentTaskDraft.trim() || null
+    const update = {
+      role: 'assigned' as Role,
+      assignment_pc_id: assignmentPcDraft,
+      current_task: task,
+    }
+    const { error } = await supabase.from('community_members').update(update).eq('id', assigningMember.id)
+    if (error) { alert(`Assignment failed: ${error.message}`); return }
+    setMembers(prev => ({
+      ...prev,
+      [assigningMember.community_id]: (prev[assigningMember.community_id] ?? []).map(
+        x => x.id === assigningMember.id ? { ...x, ...update } : x
+      ),
+    }))
+    setAssigningMember(null)
+    setAssignmentPcDraft('')
+    setAssignmentTaskDraft('')
+  }
+  function handleCancelAssignment() {
+    setAssigningMember(null)
+    setAssignmentPcDraft('')
+    setAssignmentTaskDraft('')
   }
 
   // Helpers to resolve a member's display name
@@ -1141,17 +1202,22 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 {(() => {
                   const renderRow = (m: Member, accent: string) => {
                     // Name is always the dominant visual — bigger font,
-                    // takes all remaining flex space. Apprentice rows
-                    // get their master appended inline so the chain
-                    // reads at a glance without a second line of text.
+                    // takes all remaining flex space. Two flavors pin
+                    // a PC to the NPC row:
+                    //   - Apprentice → master = apprentice_of_character_id
+                    //   - Assigned → director = assignment_pc_id
+                    // Both render as "<NPC> ⇐ <PC>" inline, and both
+                    // expose the current_task line below the row.
                     const rawName = memberLabel(m)
-                    const masterName = m.apprentice_of_character_id
-                      ? (chars.find(c => c.id === m.apprentice_of_character_id)?.name ?? null)
+                    const ownerCharId = m.recruitment_type === 'apprentice'
+                      ? m.apprentice_of_character_id
+                      : (m.role === 'assigned' ? m.assignment_pc_id : null)
+                    const ownerName = ownerCharId
+                      ? (chars.find(c => c.id === ownerCharId)?.name ?? null)
                       : null
-                    const displayName = m.recruitment_type === 'apprentice' && masterName
-                      ? `${rawName} ⇐ ${masterName}`
-                      : rawName
-                    const isApprentice = m.recruitment_type === 'apprentice'
+                    const displayName = ownerName ? `${rawName} ⇐ ${ownerName}` : rawName
+                    const hasTaskSurface = m.recruitment_type === 'apprentice'
+                      || (m.role === 'assigned' && !!m.assignment_pc_id)
                     const editingTask = editingTaskMemberId === m.id
                     const taskText = m.current_task?.trim() || ''
                     return (
@@ -1167,11 +1233,13 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                           <button onClick={() => handleRemoveMember(m)} title="Remove"
                             style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '16px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>×</button>
                         </div>
-                        {/* Apprentice task row. Shows for apprentices only.
-                            Display mode: "Task: <text>" inline with pencil
-                            icon (GM). Edit mode: text input + save/cancel.
-                            No task + GM → "+ Assign task" affordance. */}
-                        {isApprentice && (editingTask ? (
+                        {/* Task row. Shows for Apprentices (permanent
+                            PC bond) and Assigned NPCs (temporary PC-
+                            directed duty). Display mode: "Task: <text>"
+                            inline with pencil icon (GM). Edit mode:
+                            text input + save/cancel. No task + GM →
+                            "+ Assign task" affordance. */}
+                        {hasTaskSurface && (editingTask ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '2px' }}>
                             <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Task</span>
                             <input autoFocus value={taskDraft}
@@ -1284,6 +1352,78 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
           </div>
         )
       })}
+
+      {/* "Assigned" role mission modal. Triggered from handleChangeRole
+          when an NPC's role flips to 'assigned'. Captures director PC
+          + task in one dialog; save handler writes both plus the role.
+          Cancel leaves the role unchanged (handleChangeRole never
+          called supabase). */}
+      {assigningMember && (() => {
+        const m = assigningMember
+        const communityMems = members[m.community_id] ?? []
+        // PCs eligible to direct: any PC in this campaign. We prefer
+        // listing PCs who are community members first, since the GM
+        // usually assigns to someone present — but include all
+        // chars so absent PCs can still direct (narrative freedom).
+        const memberPcIds = new Set(communityMems.filter(x => x.character_id).map(x => x.character_id))
+        const orderedChars = [...chars].sort((a, b) => {
+          const aMem = memberPcIds.has(a.id) ? 0 : 1
+          const bMem = memberPcIds.has(b.id) ? 0 : 1
+          return aMem - bMem || a.name.localeCompare(b.name)
+        })
+        return (
+          <div onClick={handleCancelAssignment}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
+            <div onClick={e => e.stopPropagation()}
+              style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', width: '520px', maxWidth: '100%', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                  Assign {memberLabel(m)}
+                </div>
+                <button onClick={handleCancelAssignment}
+                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
+              </div>
+              <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                  Assigned NPCs are off doing a PC-directed task and don't count toward the SRD labor minimums. Pick who's directing them and what they're doing.
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Directed by</div>
+                  <select value={assignmentPcDraft}
+                    onChange={e => setAssignmentPcDraft(e.target.value)}
+                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                    <option value="">— pick a PC —</option>
+                    {orderedChars.map(c => {
+                      const isMember = memberPcIds.has(c.id)
+                      return <option key={c.id} value={c.id}>{c.name}{isMember ? '' : ' (not in this community)'}</option>
+                    })}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Task</div>
+                  <input autoFocus value={assignmentTaskDraft}
+                    placeholder="e.g. Scouting the Belvedere's warehouse"
+                    onChange={e => setAssignmentTaskDraft(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && assignmentPcDraft) handleSaveAssignment()
+                      if (e.key === 'Escape') handleCancelAssignment()
+                    }}
+                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                </div>
+              </div>
+              <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button onClick={handleCancelAssignment}
+                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={handleSaveAssignment}
+                  disabled={!assignmentPcDraft}
+                  style={{ padding: '8px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: assignmentPcDraft ? 'pointer' : 'not-allowed', opacity: assignmentPcDraft ? 1 : 0.4, fontWeight: 600 }}>
+                  Assign
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Phase C — Weekly Check modal. Rendered once at top level;
           the individual community cards just set moraleCommunityId
