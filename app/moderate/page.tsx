@@ -72,8 +72,29 @@ export default function ModerationPage() {
   // and render a banner when it's not 'thriver'.
   const [myRole, setMyRole] = useState<string | null>(null)
   const [roleChecked, setRoleChecked] = useState(false)
+  // Pending counts per queue so the tab buttons can light up green
+  // when there's something waiting. Users counts "new in last 7
+  // days" (no moderation status concept there); rumors / npcs /
+  // communities count actual pending rows.
+  const [pendingCounts, setPendingCounts] = useState<{ users: number; rumors: number; npcs: number; communities: number }>({ users: 0, rumors: 0, npcs: 0, communities: 0 })
   const router = useRouter()
   const supabase = createClient()
+
+  async function loadPendingCounts() {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const [rumorsRes, npcsRes, commsRes, usersRes] = await Promise.all([
+      supabase.from('map_pins').select('id', { count: 'exact', head: true }).eq('pin_type', 'rumor').eq('status', 'pending'),
+      supabase.from('world_npcs').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('world_communities').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo),
+    ])
+    setPendingCounts({
+      rumors: rumorsRes.count ?? 0,
+      npcs: npcsRes.count ?? 0,
+      communities: commsRes.count ?? 0,
+      users: usersRes.count ?? 0,
+    })
+  }
 
   useEffect(() => {
     async function check() {
@@ -89,6 +110,9 @@ export default function ModerationPage() {
         .maybeSingle()
       setMyRole((prof as any)?.role ?? null)
       setRoleChecked(true)
+      if (((prof as any)?.role ?? '').toLowerCase() === 'thriver') {
+        loadPendingCounts()
+      }
       load()
     }
     check()
@@ -275,21 +299,42 @@ export default function ModerationPage() {
 
       {roleChecked && isThriver && (<>
 
-      {/* Section tabs */}
+      {/* Section tabs. Green outline when the queue has pending work:
+          rumors / npcs / communities gate on actual pending rows,
+          users counts "new signups in last 7 days" since it has no
+          moderation status concept. Green supersedes the active-red
+          only when the tab isn't currently selected — the selected
+          tab keeps its red accent so the user can tell where they
+          are. Count badge appears next to the label. */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        {(['users', 'rumors', 'npcs', 'communities'] as const).map(s => (
-          <button key={s} onClick={() => setSection(s)} style={{
-            padding: '7px 16px',
-            border: `1px solid ${section === s ? '#c0392b' : '#3a3a3a'}`,
-            background: section === s ? '#2a1210' : '#242424',
-            color: section === s ? '#f5a89a' : '#d4cfc9',
-            borderRadius: '3px', cursor: 'pointer',
-            fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
-            letterSpacing: '.06em', textTransform: 'uppercase',
-          }}>
-            {s === 'rumors' ? 'Rumor Queue' : s === 'users' ? 'Users' : s === 'npcs' ? 'NPCs' : '🌐 Communities'}
-          </button>
-        ))}
+        {(['users', 'rumors', 'npcs', 'communities'] as const).map(s => {
+          const count = pendingCounts[s]
+          const hasPending = count > 0
+          const isActive = section === s
+          const borderColor = isActive ? '#c0392b' : (hasPending ? '#2d5a1b' : '#3a3a3a')
+          const color = isActive ? '#f5a89a' : (hasPending ? '#7fc458' : '#d4cfc9')
+          return (
+            <button key={s} onClick={() => setSection(s)} style={{
+              padding: '7px 16px',
+              border: `1px solid ${borderColor}`,
+              background: isActive ? '#2a1210' : (hasPending ? '#0f1a0f' : '#242424'),
+              color,
+              borderRadius: '3px', cursor: 'pointer',
+              fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
+              letterSpacing: '.06em', textTransform: 'uppercase',
+              display: 'flex', alignItems: 'center', gap: '6px',
+            }}>
+              <span>
+                {s === 'rumors' ? 'Rumor Queue' : s === 'users' ? 'Users' : s === 'npcs' ? 'NPCs' : '🌐 Communities'}
+              </span>
+              {hasPending && (
+                <span style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '10px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontWeight: 700 }}>
+                  {count}
+                </span>
+              )}
+            </button>
+          )
+        })}
       </div>
 
       {/* ── RUMORS ── */}
