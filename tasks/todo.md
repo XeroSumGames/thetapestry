@@ -702,20 +702,27 @@ Communities become first-class entities in the Distemperverse. Every published c
 
 **Full spec: `tasks/spec-modules.md`.** Supersedes the paused GM Kit v1 seed-table plumbing — unifies authoring (in-campaign), publishing (as a versioned jsonb snapshot), subscribing (campaign creation picks a module), and updates (opt-in diff/merge). Pairs with Phase 4b Communities (modules ship with pre-authored communities).
 
-### Phase A — MVP publish + subscribe loop
-- [ ] `modules` + `module_versions` + `module_subscriptions` tables with jsonb snapshots + RLS
-- [ ] Publish wizard on campaign edit page — metadata, include/exclude content types, visibility (Private / Unlisted / Listed)
-- [ ] Campaign creation third option: **Module** picker alongside Custom + Setting
-- [ ] `cloneModuleIntoCampaign(version, campaign)` — transactional clone of snapshot into campaign_npcs/pins/scenes/tokens/notes
-- [ ] Record `source_module_id` + `source_module_version_id` on cloned rows for Phase B update tracking
+### Phase A — MVP publish + subscribe loop ✅ shipped
+- [x] `modules` + `module_versions` + `module_subscriptions` tables with jsonb snapshots + RLS
+- [x] Publish wizard on campaign edit page — metadata, include/exclude content types, visibility (Private / Unlisted / Listed)
+- [x] Campaign creation third option: **Module** picker alongside Custom + Setting
+- [x] `cloneModuleIntoCampaign(version, campaign)` — transactional clone of snapshot into campaign_npcs/pins/scenes/tokens/notes
+- [x] Record `source_module_id` + `source_module_version_id` on cloned rows for Phase B update tracking
 - [ ] Migrate existing Arena seed (`setting_seed_*` tables) into a `modules` row; deprecate seed tables
 
-### Phase B — Versioning + updates
-- [ ] Semver bump on publish (patch/minor/major), changelog field
-- [ ] `/stories/[id]/modules/[id]/versions` history UI with diff summary
-- [ ] Update notifications on subscriber dashboards
-- [ ] Review modal — per-asset accept/reject diff, fork option, conflict resolver for locally-edited rows
-- [ ] `edited_since_clone` flag on cloned content so updates skip customized assets
+### Phase B — Versioning + updates ✅ shipped
+- [x] Semver bump on publish (patch/minor/major), changelog field
+- [x] `/stories/[id]/modules/[id]/versions` history UI with diff summary
+- [x] Update notifications on subscriber dashboards
+- [x] Review modal — per-asset accept/reject diff, fork option, conflict resolver for locally-edited rows
+- [x] `edited_since_clone` flag on cloned content so updates skip customized assets
+
+### Phase B+ — Lifecycle (shipped 2026-04-24)
+- [x] Listed modules enter Thriver moderation queue on publish/re-publish
+- [x] Thriver approve/reject notifies author; approval stamps `platform_locked_at` on all versions
+- [x] Author can archive module (soft-delete); hard-delete only when 0 subscribers
+- [x] Subscribers notified on archive; their campaign content untouched
+- [x] Archived modules hidden from campaign-creation picker
 
 ### Phase C — Marketplace
 - [ ] `/modules` browse + search + filters (setting, tags, rating, subscriber count)

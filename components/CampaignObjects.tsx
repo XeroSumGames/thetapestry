@@ -69,7 +69,9 @@ interface Props {
 export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemoveFromMap, onLoot, onDuplicate, onTokenChanged, tokenRefreshKey, entries }: Props) {
   const supabase = createClient()
   const [objects, setObjects] = useState<ObjectToken[]>([])
-  const [library, setLibrary] = useState<{ id: string; name: string; image_url: string }[]>([])
+  const [library, setLibrary] = useState<{ id: string; name: string; image_url: string; metadata?: any }[]>([])
+  const [activeSceneId, setActiveSceneId] = useState<string | null>(null)
+  const [activeSceneCols, setActiveSceneGridCols] = useState<number>(20)
   const [showAdd, setShowAdd] = useState(false)
   const [addName, setAddName] = useState('')
   const [addIcon, setAddIcon] = useState('crate')
@@ -115,8 +117,10 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   useEffect(() => { loadObjects(); loadLibrary() }, [campaignId, tokenRefreshKey])
 
   async function loadObjects() {
-    const { data: scenes } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', campaignId).eq('is_active', true).limit(1)
-    if (!scenes || scenes.length === 0) { setObjects([]); return }
+    const { data: scenes } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', campaignId).eq('is_active', true).limit(1)
+    if (!scenes || scenes.length === 0) { setObjects([]); setActiveSceneId(null); return }
+    setActiveSceneId(scenes[0].id)
+    setActiveSceneGridCols((scenes[0] as any).grid_cols ?? 20)
     const { data } = await supabase.from('scene_tokens').select('*').eq('scene_id', scenes[0].id).eq('token_type', 'object').order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true })
     setObjects((data ?? []) as ObjectToken[])
   }
@@ -124,7 +128,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   async function loadLibrary() {
     const { data } = await supabase
       .from('object_token_library')
-      .select('id, name, image_url')
+      .select('id, name, image_url, metadata')
       .eq('campaign_id', campaignId)
       .order('created_at', { ascending: false })
     setLibrary(data ?? [])
@@ -147,11 +151,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   async function handleAdd() {
     if (!addName.trim()) return
     setSaving(true)
-    const icon = OBJECT_ICONS.find(i => i.value === addIcon)
     const portraitUrl = addCustomUrl || null
-    // Indestructible → wp_max=null (no attack target). Otherwise: parse the
-    // field, fall back to 3 if empty/invalid so barrels/crates are destructible
-    // by default without the GM having to remember to fill the field.
     let wpMax: number | null
     if (addIndestructible) {
       wpMax = null
@@ -159,7 +159,37 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       const parsed = addWP ? parseInt(addWP, 10) : NaN
       wpMax = isNaN(parsed) ? 3 : parsed
     }
-    onPlaceOnMap?.(addName.trim(), portraitUrl, wpMax)
+
+    if (activeSceneId) {
+      // Scene is active — place directly.
+      await supabase.from('scene_tokens').insert({
+        scene_id: activeSceneId,
+        name: addName.trim(),
+        token_type: 'object',
+        portrait_url: portraitUrl,
+        color: addIcon,
+        grid_x: 1, grid_y: 1,
+        is_visible: true,
+        wp_max: wpMax, wp_current: wpMax,
+        properties: [], contents: [],
+      })
+      onTokenChanged?.()
+      loadObjects()
+    } else {
+      // No scene — save as a library template with full metadata.
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from('object_token_library').insert({
+          campaign_id: campaignId,
+          name: addName.trim(),
+          image_url: portraitUrl || `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><text x="32" y="46" text-anchor="middle" font-size="36">${OBJECT_ICONS.find(i => i.value === addIcon)?.emoji ?? '📦'}</text></svg>`)}`,
+          uploaded_by: user.id,
+          metadata: { icon: addIcon, wp_max: wpMax, indestructible: addIndestructible, properties: [], contents: [] },
+        })
+        loadLibrary()
+      }
+    }
+
     setAddName('')
     setAddIcon('crate')
     setAddWP('3')
@@ -167,6 +197,26 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     setAddCustomUrl(null)
     setShowAdd(false)
     setSaving(false)
+  }
+
+  async function placeLibraryTemplate(lib: { id: string; name: string; image_url: string; metadata?: any }) {
+    if (!activeSceneId || !lib.metadata) return
+    const meta = lib.metadata
+    const wpMax = meta.indestructible ? null : (meta.wp_max ?? 3)
+    await supabase.from('scene_tokens').insert({
+      scene_id: activeSceneId,
+      name: lib.name,
+      token_type: 'object',
+      portrait_url: lib.image_url || null,
+      color: meta.icon ?? 'crate',
+      grid_x: 1, grid_y: 1,
+      is_visible: true,
+      wp_max: wpMax, wp_current: wpMax,
+      properties: meta.properties ?? [],
+      contents: meta.contents ?? [],
+    })
+    onTokenChanged?.()
+    loadObjects()
   }
 
   // Generic uploader — takes a Blob (cropper outputs JPEG) and returns the public URL.
@@ -251,17 +301,40 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'add' }); e.target.value = '' }} />
           </label>
 
-          {/* Library picker — always visible so GM knows it exists */}
+          {/* Library picker — image items set portrait; template items (metadata) can be placed directly */}
           <div style={{ marginBottom: '6px' }}>
             <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Or pick from library ({library.length})</div>
-            <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', minHeight: '40px', maxHeight: '72px', overflowY: 'auto', padding: '2px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+            <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', minHeight: '40px', maxHeight: '96px', overflowY: 'auto', padding: '2px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
               {library.length === 0 ? (
-                <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', fontStyle: 'italic' }}>Empty — upload an image and it'll show here</div>
+                <div style={{ width: '100%', padding: '10px 6px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', fontStyle: 'italic' }}>Empty — upload an image or save an object without a scene</div>
               ) : library.map(lib => (
-                <button key={lib.id} title={lib.name}
-                  onClick={() => setAddCustomUrl(lib.image_url)}
-                  style={{ width: '36px', height: '36px', background: `url(${lib.image_url}) center/cover`, border: addCustomUrl === lib.image_url ? '2px solid #c0392b' : '1px solid #3a3a3a', borderRadius: '2px', cursor: 'pointer', padding: 0 }}
-                />
+                lib.metadata ? (
+                  // Template item — shows name + WP chip; Place button when scene active
+                  <div key={lib.id} style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%', padding: '3px 4px', background: '#1a1a1a', borderRadius: '2px', border: '1px solid #2e2e2e' }}>
+                    <img src={lib.image_url} alt="" style={{ width: '24px', height: '24px', objectFit: 'cover', borderRadius: '2px', flexShrink: 0 }} />
+                    <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lib.name}</span>
+                    {lib.metadata.wp_max != null && (
+                      <span style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif' }}>WP{lib.metadata.wp_max}</span>
+                    )}
+                    {lib.metadata.indestructible && (
+                      <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif' }}>∞</span>
+                    )}
+                    {activeSceneId ? (
+                      <button onClick={() => { placeLibraryTemplate(lib); setShowAdd(false) }}
+                        style={{ padding: '1px 6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', flexShrink: 0 }}>
+                        ▶ Place
+                      </button>
+                    ) : (
+                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>staged</span>
+                    )}
+                  </div>
+                ) : (
+                  // Image-only item — sets portrait for the object being added
+                  <button key={lib.id} title={lib.name}
+                    onClick={() => setAddCustomUrl(lib.image_url)}
+                    style={{ width: '36px', height: '36px', background: `url(${lib.image_url}) center/cover`, border: addCustomUrl === lib.image_url ? '2px solid #c0392b' : '1px solid #3a3a3a', borderRadius: '2px', cursor: 'pointer', padding: 0 }}
+                  />
+                )
               ))}
             </div>
           </div>
@@ -281,14 +354,19 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
 
           <button onClick={handleAdd} disabled={!addName.trim() || saving}
             style={{ ...chipBtn, width: '100%', background: '#c0392b', border: '1px solid #c0392b', color: '#fff' }}>
-            {saving ? 'Adding...' : 'Add to Scene'}
+            {saving ? 'Adding...' : activeSceneId ? 'Add to Scene' : 'Save to Library'}
           </button>
+          {!activeSceneId && (
+            <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', marginTop: '4px' }}>
+              No active scene — object will be saved to your library for later.
+            </div>
+          )}
         </div>
       )}
 
       {objects.length === 0 && !showAdd && (
         <div style={{ color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', padding: '1rem' }}>
-          No objects in this scene
+          {activeSceneId ? 'No objects in this scene' : 'No active scene — add objects to your library and place them when a scene is ready'}
         </div>
       )}
 
