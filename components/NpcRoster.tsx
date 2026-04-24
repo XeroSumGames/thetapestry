@@ -275,17 +275,16 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   }
 
   useEffect(() => {
-    if (isGM) loadNpcs()
-    else setLoading(false)
+    loadNpcs()
 
     // Realtime subscription — refresh when any campaign_npcs row changes
     // (e.g. damage applied from table page updates WP/RP in DB).
     const channel = supabase.channel(`npc_roster_${campaignId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${campaignId}` }, () => {
-        if (isGM) loadNpcs()
+        loadNpcs()
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members' }, () => {
-        if (isGM) loadNpcs()
+        loadNpcs()
       })
       .subscribe()
 
@@ -321,7 +320,6 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     }
   }, [editNpcId, npcs.length])
 
-  if (!isGM) return null
 
   function openAdd() {
     setForm(emptyForm)
@@ -791,7 +789,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
           onClose={() => setShowPortraitPicker(false)}
         />
       )}
-      <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+      {isGM && <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
         <button onClick={openAdd}
           style={{ padding: '2px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
           + Add NPC
@@ -820,9 +818,9 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
           style={{ padding: '2px 8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
           Library
         </button>
-      </div>
-      {/* Search & filter */}
-      {npcs.length > 3 && (
+      </div>}
+      {/* Search & filter — GM only */}
+      {isGM && npcs.length > 3 && (
         <div style={{ padding: '4px 10px 6px' }}>
           <input value={npcSearch} onChange={e => setNpcSearch(e.target.value)} placeholder="Search NPCs..."
             style={{ width: '100%', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box', marginBottom: '4px' }} />
@@ -1041,7 +1039,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                 )
               })
 
-              return [...communitySections, ...ordered.map(folderName => {
+              return [...communitySections, ...(isGM ? ordered : []).map(folderName => {
                 const folderNpcs = folderMap[folderName] ?? []
                 if (folderNpcs.length === 0) return null
                 const isOpen = expandedFolders.has(folderName)
