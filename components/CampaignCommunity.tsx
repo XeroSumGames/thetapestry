@@ -277,6 +277,20 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const [assignmentPcDraft, setAssignmentPcDraft] = useState<string>('')
   const [assignmentTaskDraft, setAssignmentTaskDraft] = useState<string>('')
 
+  // Phase E Sprint 4d — Schism. A large community splits in two: the
+  // original keeps its roster minus the breakaway, the breakaway is
+  // a brand-new community (same campaign) with the picked members
+  // and an optional new Homestead pin. Lineage preserved by
+  // soft-removing the breakaway members from the original with
+  // left_reason='schism' and inserting fresh rows in the new
+  // community.
+  const [schismCommunityId, setSchismCommunityId] = useState<string | null>(null)
+  const [schismName, setSchismName] = useState<string>('')
+  const [schismDescription, setSchismDescription] = useState<string>('')
+  const [schismHomesteadPinId, setSchismHomesteadPinId] = useState<string>('')
+  const [schismPickedIds, setSchismPickedIds] = useState<Set<string>>(new Set())
+  const [schismSubmitting, setSchismSubmitting] = useState<boolean>(false)
+
   // Phase E — Publish to Distemperverse modal. When set, the publish
   // confirmation UI renders for that community. Faction label is GM
   // freeform; captured pre-commit so the GM sees what goes public
@@ -479,6 +493,106 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         return next ? { ...m, role: next } : m
       }),
     }))
+  }
+
+  // ── Phase E Sprint 4d — Schism handlers ──────────────────────────
+  function openSchismModal(c: Community) {
+    setSchismCommunityId(c.id)
+    setSchismName(`${c.name} Breakaway`)
+    setSchismDescription('')
+    setSchismHomesteadPinId('')
+    setSchismPickedIds(new Set())
+  }
+  function closeSchismModal() {
+    if (schismSubmitting) return
+    setSchismCommunityId(null)
+    setSchismName('')
+    setSchismDescription('')
+    setSchismHomesteadPinId('')
+    setSchismPickedIds(new Set())
+  }
+  function toggleSchismMember(memberId: string) {
+    setSchismPickedIds(prev => {
+      const next = new Set(prev)
+      next.has(memberId) ? next.delete(memberId) : next.add(memberId)
+      return next
+    })
+  }
+  // Commit the split: insert the new community, soft-remove picked
+  // members from the original with reason='schism', insert fresh
+  // member rows in the new community preserving role +
+  // recruitment_type. Apprentice bonds carry over because
+  // apprentice_of_character_id is just a uuid that doesn't care
+  // which community contains the apprentice.
+  async function handleSchism() {
+    if (!schismCommunityId || schismSubmitting) return
+    if (!schismName.trim()) { alert('Give the breakaway community a name.'); return }
+    if (schismPickedIds.size === 0) { alert('Pick at least one member to leave with the breakaway.'); return }
+    const original = communities.find(c => c.id === schismCommunityId)
+    if (!original) return
+    const sourceMembers = (members[schismCommunityId] ?? []).filter(m => schismPickedIds.has(m.id))
+    if (sourceMembers.length === 0) return
+    setSchismSubmitting(true)
+    const now = new Date().toISOString()
+    // 1) Create the new community.
+    const { data: newCommRow, error: cErr } = await supabase
+      .from('communities')
+      .insert({
+        campaign_id: campaignId,
+        name: schismName.trim(),
+        description: schismDescription.trim() || `Splintered from ${original.name}.`,
+        homestead_pin_id: schismHomesteadPinId || null,
+      })
+      .select()
+      .single()
+    if (cErr || !newCommRow) {
+      setSchismSubmitting(false)
+      alert(`Schism failed at community create: ${cErr?.message ?? 'unknown'}`)
+      return
+    }
+    const newComm = newCommRow as Community
+    // 2) Soft-remove the picked members from the original. Try
+    //    'schism' first; if the CHECK constraint hasn't been widened
+    //    yet on this DB, fall back to 'manual' so the schism still
+    //    proceeds (the new rows in the new community are the source
+    //    of truth either way).
+    let removeErr = (await supabase.from('community_members')
+      .update({ left_at: now, left_reason: 'schism' })
+      .in('id', Array.from(schismPickedIds))).error
+    if (removeErr) {
+      removeErr = (await supabase.from('community_members')
+        .update({ left_at: now, left_reason: 'manual' })
+        .in('id', Array.from(schismPickedIds))).error
+    }
+    if (removeErr) {
+      setSchismSubmitting(false)
+      alert(`Schism failed at member removal: ${removeErr.message}`)
+      return
+    }
+    // 3) Insert fresh member rows in the new community.
+    const newMemberRows = sourceMembers.map(m => ({
+      community_id: newComm.id,
+      npc_id: m.npc_id,
+      character_id: m.character_id,
+      role: m.role,
+      recruitment_type: m.recruitment_type,
+      apprentice_of_character_id: m.apprentice_of_character_id,
+      joined_at: now,
+    }))
+    const { error: insErr } = await supabase.from('community_members').insert(newMemberRows)
+    if (insErr) {
+      setSchismSubmitting(false)
+      alert(`Schism partial: new community created + members removed but the new roster insert failed: ${insErr.message}. You may need to add the breakaway members manually.`)
+      return
+    }
+    setSchismSubmitting(false)
+    setSchismCommunityId(null)
+    setSchismName('')
+    setSchismDescription('')
+    setSchismHomesteadPinId('')
+    setSchismPickedIds(new Set())
+    // Reload to pick up the new community + roster reshuffle.
+    await load()
   }
 
   // ── Phase E — Publish to Distemperverse ─────────────────────────
@@ -1584,6 +1698,21 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   </div>
                 )}
 
+                {/* Phase E Sprint 4d — Schism. Splits this community
+                    into two: original keeps its remaining roster,
+                    breakaway is a brand-new community with the picked
+                    members. GM-only; gated on roster ≥ 14 so at
+                    least a 13/1 split is possible (the 13-side stays
+                    a Community; the 1-side is a Group until it
+                    grows). */}
+                {isGM && c.status !== 'dissolved' && total >= 14 && (
+                  <button onClick={() => openSchismModal(c)}
+                    title="Split this community into two — pick which members leave with the breakaway."
+                    style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #d48bd4', borderRadius: '2px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
+                    ⛓ Schism
+                  </button>
+                )}
+
                 {/* Danger zone */}
                 <button onClick={() => handleDeleteCommunity(c)}
                   style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '2px', color: '#c0392b', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
@@ -1594,6 +1723,102 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
           </div>
         )
       })}
+
+      {/* Phase E Sprint 4d — Schism modal. Pick a name for the new
+          breakaway community + optional homestead pin + which members
+          go with it. Submit creates the new community, soft-removes
+          the picked members from the original (left_reason='schism'),
+          and inserts fresh member rows in the breakaway. */}
+      {schismCommunityId && (() => {
+        const original = communities.find(c => c.id === schismCommunityId)
+        if (!original) return null
+        const mems = members[schismCommunityId] ?? []
+        const remaining = mems.length - schismPickedIds.size
+        const picked = schismPickedIds.size
+        const remainingIsCommunity = remaining >= 13
+        const breakawayIsCommunity = picked >= 13
+        return (
+          <div onClick={closeSchismModal}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2100, padding: '20px' }}>
+            <div onClick={e => e.stopPropagation()}
+              style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '640px', maxWidth: '100%', maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                    ⛓ Schism — {original.name}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                    Split into two communities
+                  </div>
+                </div>
+                <button onClick={closeSchismModal}
+                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
+              </div>
+              <div style={{ padding: '18px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                  Pick the breakaway faction's members. They leave with reason "schism" and join a new community in this campaign. The original keeps everyone else and its history (Morale roll log, week counter, consecutive failures).
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Breakaway name</div>
+                  <input value={schismName}
+                    onChange={e => setSchismName(e.target.value)}
+                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Description (optional)</div>
+                  <textarea value={schismDescription}
+                    placeholder="Why did they leave? What do they believe?"
+                    onChange={e => setSchismDescription(e.target.value)}
+                    rows={2}
+                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Breakaway Homestead pin (optional)</div>
+                  <select value={schismHomesteadPinId} onChange={e => setSchismHomesteadPinId(e.target.value)}
+                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                    <option value="">— None (set later) —</option>
+                    {pins.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                    Members joining the breakaway ({schismPickedIds.size} / {mems.length})
+                  </div>
+                  <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px' }}>
+                    {mems.map(m => {
+                      const checked = schismPickedIds.has(m.id)
+                      return (
+                        <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px', cursor: 'pointer', borderRadius: '2px', background: checked ? '#2a102a' : 'transparent' }}>
+                          <input type="checkbox" checked={checked} onChange={() => toggleSchismMember(m.id)} />
+                          <span style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>{memberLabel(m)}</span>
+                          <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginLeft: 'auto' }}>{m.npc_id ? 'NPC' : 'PC'} · {ROLE_LABEL[m.role]}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div style={{ padding: '10px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                    <span style={{ color: '#5a5550', textTransform: 'uppercase' }}>After split:</span>{' '}
+                    <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{original.name}</span> {remaining} ({remainingIsCommunity ? 'Community' : 'Group'}){' · '}
+                    <span style={{ color: '#d48bd4', fontWeight: 700 }}>{schismName.trim() || 'Breakaway'}</span> {picked} ({breakawayIsCommunity ? 'Community' : 'Group'})
+                  </div>
+                </div>
+              </div>
+              <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button onClick={closeSchismModal} disabled={schismSubmitting}
+                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: schismSubmitting ? 'not-allowed' : 'pointer', opacity: schismSubmitting ? 0.4 : 1 }}>
+                  Cancel
+                </button>
+                <button onClick={handleSchism} disabled={schismSubmitting || schismPickedIds.size === 0 || !schismName.trim()}
+                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (schismSubmitting || schismPickedIds.size === 0 || !schismName.trim()) ? 'not-allowed' : 'pointer', opacity: (schismSubmitting || schismPickedIds.size === 0 || !schismName.trim()) ? 0.4 : 1, fontWeight: 600 }}>
+                  {schismSubmitting ? 'Splitting…' : '⛓ Confirm Schism'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Phase E — Publish to Distemperverse modal. GM confirms what
           will go public (name, description, homestead coords if set,
