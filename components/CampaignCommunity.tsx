@@ -1641,11 +1641,17 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 )}
 
                 {/* Phase E — Publish to Tapestry strip. Shows
-                    the world-facing status chip + actions. GM-only;
-                    community must be at 13+ members and not dissolved
-                    for first publish. Republish (Update) and Unpublish
-                    stay available after moderation. */}
-                {isGM && isCommunity && c.status !== 'dissolved' && (() => {
+                    the world-facing status chip + actions. Community
+                    must be at 13+ members and not dissolved for first
+                    publish. Republish (Update) and Unpublish stay
+                    available after moderation.
+                    Visibility: GM of the source campaign, OR the
+                    community's leader (a PC leader publishes their
+                    own community without needing the GM to do it —
+                    Communities are player-driven per SRD §08). RLS
+                    mirrors this via world-communities-leader-
+                    permissions.sql. */}
+                {(isGM || (!!myUserId && c.leader_user_id === myUserId)) && isCommunity && c.status !== 'dissolved' && (() => {
                   const world = worldRows[c.id]
                   const isPublished = !!world
                   const modChip = world?.moderation_status === 'approved' ? '✓ Live'
