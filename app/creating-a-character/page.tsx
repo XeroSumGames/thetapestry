@@ -87,7 +87,7 @@ export default function CreatingACharacterPage() {
             Character Development Points (CDP)
           </h3>
           <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '1rem' }}>
-            CDP is the currency of character creation. You get a fixed budget at each life stage and spend it raising attributes and skills. Unspent CDP is gone — the SRD does not allow banking between steps. This keeps characters grounded in their history rather than optimised in a vacuum.
+            CDP is the currency of character creation. You get a fixed budget at each life stage and spend it raising attributes and skills. Unspent CDP is gone — the rules do not allow banking between steps. This keeps characters grounded in their history rather than optimised in a vacuum.
           </p>
           <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.8 }}>
             Over the full backstory, you spend a total of 20 CDP: 5 on attributes and 15 on skills.
