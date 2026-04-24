@@ -191,7 +191,7 @@ export default function NotificationBell() {
     if (!n.read) markAsRead(n.id)
   }
 
-  function colorizeBody(body: string, type: string): React.ReactNode {
+  function colorizeBody(body: string, type: string, metadata?: any): React.ReactNode {
     // "X joined Y as Z" or "X is now playing as Z in Y"
     if (type === 'player_joined') {
       const matchAs = body.match(/^(.+?) joined (.+?) as (.+)$/)
@@ -297,6 +297,35 @@ export default function NotificationBell() {
         )
       }
     }
+    // Phase E — Thriver approve / reject on world_communities. Body
+    // starts with 'Your published community "<name>"'. We bold the
+    // name and colorize the status word.
+    if (type === 'world_community_moderation') {
+      const status = (metadata as any)?.moderation_status as string | undefined
+      const name = (metadata as any)?.name as string | undefined
+      const statusColor = status === 'approved' ? '#7fc458' : status === 'rejected' ? '#f5a89a' : '#EF9F27'
+      if (name && status) {
+        return (
+          <>
+            Your published community <span style={{ color: '#EF9F27' }}>"{name}"</span> is now{' '}
+            <span style={{ color: statusColor, fontWeight: 700, textTransform: 'uppercase' }}>{status}</span>.
+          </>
+        )
+      }
+    }
+
+    // Phase E — Thriver deletion of a published community.
+    if (type === 'world_community_deleted') {
+      const name = (metadata as any)?.name as string | undefined
+      if (name) {
+        return (
+          <>
+            A Thriver removed <span style={{ color: '#EF9F27' }}>"{name}"</span> from the Distemperverse. The source campaign community is untouched — you can re-publish from the Community ▾ Status panel.
+          </>
+        )
+      }
+    }
+
     // Phase E Sprint 4b — link response. Body shape:
     //   "<recipient>" <status> your <type> proposal with "<proposer>"
     if (type === 'community_link_response') {
@@ -397,7 +426,7 @@ export default function NotificationBell() {
                     </button>
                   </div>
                 </div>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.4, textAlign: 'left' }}>{colorizeBody(n.body, n.type)}</div>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.4, textAlign: 'left' }}>{colorizeBody(n.body, n.type, (n as any).metadata)}</div>
                 {/* Phase E Sprint 4c — inline Accept / Decline. Shown
                     on action-bearing notifications when the user
                     hasn't yet acted on this card in the current
