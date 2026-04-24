@@ -10,6 +10,18 @@
 --
 -- Idempotent — drops + recreates both functions and triggers.
 
+-- ── Defensive column guarantee ─────────────────────────────────
+-- Both triggers below INSERT into public.notifications with a
+-- `metadata` jsonb column. That column was originally added by
+-- sql/community-encounters.sql (Sprint 4a), but if that migration
+-- only partially landed on a given environment the INSERTs here
+-- fail and roll back the parent UPDATE — which surfaces to the
+-- Thriver as "Moderation action failed: column metadata of
+-- relation notifications does not exist." Re-assert the column
+-- here so running this file alone is sufficient.
+ALTER TABLE public.notifications
+  ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'::jsonb;
+
 -- ── notify_world_community_moderation ──────────────────────────
 -- Approve / reject transitions. Also fires on re-reversal
 -- (approved → rejected → approved) so the publisher sees the
