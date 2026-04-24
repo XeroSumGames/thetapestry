@@ -28,11 +28,16 @@ interface Profile {
 
 function actionBtn(borderColor: string, color: string): React.CSSProperties {
   return {
-    padding: '6px 14px', background: 'none',
+    // Tightened from '6px 14px' → '5px 10px' so the whole user-row
+    // button stack (Make Thriver / Characters / Suspend / Delete)
+    // fits on a single line without wrapping. Paired with nowrap on
+    // the container (line ~411) and minWidth:0 on the left column.
+    padding: '5px 10px', background: 'none',
     border: `1px solid ${borderColor}`, borderRadius: '3px',
     color, fontSize: '13px', cursor: 'pointer',
     fontFamily: 'Barlow Condensed, sans-serif',
     letterSpacing: '.04em', textTransform: 'uppercase',
+    whiteSpace: 'nowrap',
   }
 }
 
@@ -257,20 +262,18 @@ export default function ModerationPage() {
         <a href="/map" style={navLink}>Map</a>
       </div>
 
-      {/* Thriver-only warning banner. Every queue on this page gates
-          reads behind an RLS policy that requires profiles.role =
-          'thriver'. A non-Thriver hitting this page sees empty tabs
-          with no explanation; the banner calls it out explicitly.
-          Suppressed until roleChecked flips so we don't flash the
-          banner while the profile fetch is in flight. */}
+      {/* Thriver-only gate. Non-Thrivers get a single compact banner
+          and nothing else — no empty queues to rummage through, no
+          tab strip, no page contents. Suppressed until roleChecked
+          flips so we don't flash the banner during the profile
+          fetch. */}
       {roleChecked && !isThriver && (
-        <div style={{ padding: '12px 14px', marginBottom: '1.5rem', background: '#2a1210', border: '1px solid #c0392b', borderLeft: '3px solid #c0392b', borderRadius: '4px', color: '#f5a89a', fontSize: '14px', lineHeight: 1.5, fontFamily: 'Barlow, sans-serif' }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '15px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a', marginBottom: '4px' }}>
-            ⚠ Thriver-only queue
-          </div>
-          Every queue on this page — Users, Rumors, NPCs, 🌐 Communities — is restricted at the database layer to users whose <code style={{ background: '#3a1a16', padding: '1px 5px', borderRadius: '2px' }}>profiles.role</code> is <code style={{ background: '#3a1a16', padding: '1px 5px', borderRadius: '2px' }}>thriver</code>. Your current role is <strong style={{ color: '#f5f2ee' }}>{myRole ?? '(null)'}</strong>, so every tab will show an empty list regardless of what's actually queued. Ask a Thriver to elevate your account, or paste <code style={{ background: '#3a1a16', padding: '1px 5px', borderRadius: '2px' }}>UPDATE profiles SET role = 'thriver' WHERE id = auth.uid();</code> into Supabase SQL editor if you should be one.
+        <div style={{ padding: '14px 18px', background: '#2a1210', border: '1px solid #c0392b', borderLeft: '3px solid #c0392b', borderRadius: '4px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700 }}>
+          ⚠ Thriver-only page
         </div>
       )}
+
+      {roleChecked && isThriver && (<>
 
       {/* Section tabs */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
@@ -398,17 +401,17 @@ export default function ModerationPage() {
                 borderRadius: '4px', padding: '10px 1.25rem',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
-                <div>
-                  <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em' }}>
+                <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
+                  <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {u.username}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {u.email && <span style={{ color: '#d4cfc9', marginRight: '8px' }}>{u.email}</span>}
                     Joined {formatDate(u.created_at)}
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap', justifyContent: 'flex-end', flexShrink: 0 }}>
                   {u.suspended && (
                     <span style={{ fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px', background: '#2a1a00', color: '#EF9F27', border: '1px solid #EF9F27' }}>
                       Suspended
@@ -601,6 +604,8 @@ export default function ModerationPage() {
           </div>
         </>
       )}
+
+      </>)}
 
     </div>
   )
