@@ -1,30 +1,21 @@
--- Phase E — Thriver notification when a published community's
--- public info is updated.
+-- Fix: notify_world_community_public_update() was broken.
 --
--- The "Update Public Info" flow in CampaignCommunity / MapView lets
--- a GM or community leader tweak description, faction_label,
--- size_band, community_status, and bumps last_public_update_at.
--- Thrivers should get a heads-up so they can re-scan the listing
--- for anything that violates moderation standards (name changes,
--- faction re-labels, description edits, etc.).
+-- The collector used `text[] || 'text_literal'` to append scalar strings
+-- to v_field_changes. Postgres resolves `||` on an array with an untyped
+-- string literal ambiguously — it picks the array-to-array form and
+-- tries to parse the literal as an array, which fails with:
+--   ERROR: 22P02: malformed array literal: "size"
 --
--- Scope:
---   - Fires AFTER UPDATE on world_communities
---   - Only when one of the human-readable public fields actually
---     changed (name, description, faction_label, size_band,
---     community_status, last_public_update_at)
---   - Skips if moderation_status changed in the same UPDATE —
---     that path is already covered by
---     notify_world_community_moderation (approve/reject) and we
---     don't want to double-notify on a single transition.
---   - Also skips if the only field that changed is the
---     subscriber_count / approved_by / approved_at plumbing.
+-- The trigger only fires on an UPDATE that changes one of the tracked
+-- public fields, which is why it stayed latent: nothing had been
+-- updating size_band in-place until the retaxonomy migration.
 --
--- Idempotent — drops + recreates function and trigger.
-
--- Defensive column assertion (same pattern as moderation-notify).
-ALTER TABLE public.notifications
-  ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'::jsonb;
+-- Replace `|| 'literal'` with `array_append(v_field_changes, 'literal')`
+-- so the append is unambiguously scalar-to-array. Behavior is otherwise
+-- identical.
+--
+-- Idempotent. Safe to re-run.
+-- ============================================================
 
 CREATE OR REPLACE FUNCTION public.notify_world_community_public_update()
 RETURNS trigger AS $$
@@ -41,9 +32,6 @@ BEGIN
 
   -- Collect which fields changed so the notification body can
   -- summarize. Only count the public-facing ones.
-  -- `array_append` is used instead of `||` because `text[] || 'literal'`
-  -- resolves ambiguously and Postgres may try to parse the literal as
-  -- an array, failing with 22P02 (malformed array literal).
   IF NEW.name IS DISTINCT FROM OLD.name THEN
     v_field_changes := array_append(v_field_changes, 'name');
   END IF;
@@ -81,23 +69,16 @@ BEGIN
     COALESCE(v_editor_username, 'Someone') || ' updated public info on "'
       || NEW.name || '" ('
       || array_to_string(v_field_changes, ', ') || ').',
-    '/moderate',
+    '/map',
     jsonb_build_object(
       'world_community_id', NEW.id,
-      'name', NEW.name,
-      'changed_fields', v_field_changes,
-      'editor_username', v_editor_username,
-      'moderation_status', NEW.moderation_status
+      'source_community_id', NEW.source_community_id,
+      'fields_changed', v_field_changes
     )
   FROM public.profiles p
-  WHERE lower(p.role) = 'thriver';
+  WHERE p.role = 'thriver'
+    AND p.id IS DISTINCT FROM NEW.published_by;
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS trg_world_community_public_update_notify
-  ON public.world_communities;
-CREATE TRIGGER trg_world_community_public_update_notify
-  AFTER UPDATE ON public.world_communities
-  FOR EACH ROW
-  EXECUTE FUNCTION public.notify_world_community_public_update();
