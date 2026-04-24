@@ -10,6 +10,12 @@ interface Notification {
   link: string | null
   read: boolean
   created_at: string
+  // Phase E Sprint 4 — structured payload for action-bearing
+  // notifications (encounters, link proposals, etc). Carries
+  // encounter_id / link_id / world_community_id so the inline
+  // Accept/Decline buttons can target the right row without
+  // parsing the body text.
+  metadata?: Record<string, any> | null
 }
 
 function timeAgo(iso: string): string {
@@ -29,6 +35,12 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [open, setOpen] = useState(false)
+  // Phase E Sprint 4c — once the user accepts or declines an action
+  // notification (encounter / link proposal), drop it into this set
+  // so the inline buttons hide. Keyed by notification id; cleared on
+  // bell-init reload.
+  const [actionedIds, setActionedIds] = useState<Set<string>>(new Set())
+  const [actingId, setActingId] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const channelRef = useRef<any>(null)
 
@@ -117,6 +129,49 @@ export default function NotificationBell() {
     if (!n.read) markAsRead(n.id)
     if (n.link) window.location.href = n.link
     setOpen(false)
+  }
+
+  // Phase E Sprint 4c — Accept / Decline handlers for action-bearing
+  // notifications. The metadata jsonb on the notification carries
+  // the underlying row id (encounter_id or link_id). The actual
+  // status flip happens on community_encounters / world_community_links;
+  // RLS gates the recipient (us) so the update will succeed only if
+  // we're the source community's GM.
+  async function handleEncounterAction(n: Notification, accepted: boolean) {
+    const encounterId = n.metadata?.encounter_id as string | undefined
+    if (!encounterId) return
+    setActingId(n.id)
+    const { error } = await supabase
+      .from('community_encounters')
+      .update({
+        status: accepted ? 'accepted' : 'declined',
+        responded_at: new Date().toISOString(),
+      })
+      .eq('id', encounterId)
+    setActingId(null)
+    if (error) { alert(`Action failed: ${error.message}`); return }
+    setActionedIds(prev => { const next = new Set(prev); next.add(n.id); return next })
+    if (!n.read) markAsRead(n.id)
+  }
+
+  async function handleLinkAction(n: Notification, accepted: boolean) {
+    const linkId = n.metadata?.link_id as string | undefined
+    if (!linkId) return
+    setActingId(n.id)
+    // 'active' = accepted; 'declined' = rejected. Schema enforces
+    // these values; trigger fires the close-the-loop notification
+    // back to the proposer.
+    const { error } = await supabase
+      .from('world_community_links')
+      .update({
+        status: accepted ? 'active' : 'declined',
+        responded_at: new Date().toISOString(),
+      })
+      .eq('id', linkId)
+    setActingId(null)
+    if (error) { alert(`Action failed: ${error.message}`); return }
+    setActionedIds(prev => { const next = new Set(prev); next.add(n.id); return next })
+    if (!n.read) markAsRead(n.id)
   }
 
   function colorizeBody(body: string, type: string): React.ReactNode {
@@ -296,6 +351,36 @@ export default function NotificationBell() {
                   </div>
                 </div>
                 <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.4, textAlign: 'left' }}>{colorizeBody(n.body, n.type)}</div>
+                {/* Phase E Sprint 4c — inline Accept / Decline. Shown
+                    on action-bearing notifications when the user
+                    hasn't yet acted on this card in the current
+                    session. After action the buttons hide (see
+                    actionedIds). The DB status flip on
+                    community_encounters / world_community_links is
+                    what makes the action durable; this UI is a
+                    convenience surface so the recipient doesn't have
+                    to navigate to the source community to respond. */}
+                {(n.type === 'community_encounter' || n.type === 'community_link_proposal')
+                  && !actionedIds.has(n.id)
+                  && (n.metadata?.encounter_id || n.metadata?.link_id) && (
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }} onClick={e => e.stopPropagation()}>
+                    <button
+                      onClick={() => n.type === 'community_encounter' ? handleEncounterAction(n, true) : handleLinkAction(n, true)}
+                      disabled={actingId === n.id}
+                      style={{ padding: '4px 12px', background: '#1a2010', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: actingId === n.id ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: actingId === n.id ? 0.4 : 1 }}>
+                      ✓ Accept
+                    </button>
+                    <button
+                      onClick={() => n.type === 'community_encounter' ? handleEncounterAction(n, false) : handleLinkAction(n, false)}
+                      disabled={actingId === n.id}
+                      style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: actingId === n.id ? 'not-allowed' : 'pointer', opacity: actingId === n.id ? 0.4 : 1 }}>
+                      ✗ Decline
+                    </button>
+                  </div>
+                )}
+                {actionedIds.has(n.id) && (n.type === 'community_encounter' || n.type === 'community_link_proposal') && (
+                  <div style={{ marginTop: '6px', fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✓ Responded</div>
+                )}
               </div>
             ))
           )}
