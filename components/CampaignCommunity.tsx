@@ -58,7 +58,7 @@ interface NpcOption {
   skills?: { entries?: { name: string; level: number }[] } | null
 }
 interface CharOption { id: string; name: string }
-interface PinOption { id: string; name: string }
+interface PinOption { id: string; name: string; lat?: number | null; lng?: number | null }
 
 // Skill-based role auto-assign. Per user spec:
 //   Farming / Scavenging / Survival  → Gatherers
@@ -357,7 +357,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         .select('character_id, characters:character_id(id, name)')
         .eq('campaign_id', campaignId)
         .not('character_id', 'is', null),
-      supabase.from('campaign_pins').select('id, name').eq('campaign_id', campaignId).order('name'),
+      supabase.from('campaign_pins').select('id, name, lat, lng').eq('campaign_id', campaignId).order('name'),
     ])
     const coms = (comsRes.data ?? []) as Community[]
     setCommunities(coms)
@@ -954,6 +954,21 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     setCommunities(prev => prev.map(c => c.id === communityId ? { ...c, ...update } : c))
   }
 
+  // ── Homestead pin setter ────────────────────────────────────────
+  // The Homestead is the pin a published community shows up at on the
+  // world map. Settable at create time (the New Community form), at
+  // schism time (the breakaway's form), and here — inline on any
+  // existing community body, GM-only. A null value removes the link
+  // (community falls back to "unlocated" on publish).
+  async function handleSetHomestead(communityId: string, pinId: string | null) {
+    const { error } = await supabase
+      .from('communities')
+      .update({ homestead_pin_id: pinId })
+      .eq('id', communityId)
+    if (error) { alert(`Homestead change failed: ${error.message}`); return }
+    setCommunities(prev => prev.map(c => c.id === communityId ? { ...c, homestead_pin_id: pinId } : c))
+  }
+
   async function handleCreate() {
     if (!newName.trim()) return
     setCreating(true)
@@ -1427,6 +1442,47 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                             </span>
                           )}
                         </div>
+                      )}
+                    </div>
+                  )
+                })()}
+
+                {/* Homestead — inline dropdown. GM-only; all other
+                    viewers see a read-only line. The Homestead pin
+                    drives publish coordinates (world map marker) and
+                    travels into migration / schism flows, so changing
+                    it on a published community will move its dot on
+                    the world map after the next publish sync. */}
+                {(() => {
+                  const homesteadPin = c.homestead_pin_id ? pins.find(p => p.id === c.homestead_pin_id) : null
+                  if (!isGM) {
+                    return (
+                      <div style={{ padding: '8px 12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>📍 Homestead</span>
+                        <span style={{ fontSize: '14px', color: homesteadPin ? '#f5f2ee' : '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
+                          {homesteadPin ? homesteadPin.name : 'unlocated'}
+                        </span>
+                      </div>
+                    )
+                  }
+                  return (
+                    <div style={{ padding: '8px 12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>📍 Homestead</span>
+                      <select
+                        value={c.homestead_pin_id ?? ''}
+                        onChange={e => handleSetHomestead(c.id, e.target.value || null)}
+                        style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none' }}>
+                        <option value="">— unlocated —</option>
+                        {pins.map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
+                      {homesteadPin && homesteadPin.lat != null && homesteadPin.lng != null && (
+                        <a href={`https://www.openstreetmap.org/#map=15/${homesteadPin.lat}/${homesteadPin.lng}`} target="_blank" rel="noreferrer"
+                          title="Open this homestead on OpenStreetMap"
+                          style={{ padding: '4px 8px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', textDecoration: 'none' }}>
+                          View
+                        </a>
                       )}
                     </div>
                   )
