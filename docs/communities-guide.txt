@@ -1,0 +1,665 @@
+THE TAPESTRY — COMMUNITIES USER GUIDE
+======================================
+For GMs and players running Distemper / XSE games on The Tapestry.
+Last updated: 2026-04-23
+
+
+TABLE OF CONTENTS
+-----------------
+  1.  What is a Community?
+  2.  Group vs Community — the 13-member threshold
+  3.  Creating a Community
+  4.  Adding and removing members
+  5.  Roles: Gatherer, Maintainer, Safety, Unassigned, Assigned
+  6.  Role minimums (SRD § 08)
+  7.  The Leader
+  8.  Stepping down and leader succession
+  9.  Recruitment Check
+  10. Recruitment approaches: Cohort, Conscript, Convert
+  11. Apprentices
+  12. Pressganging (Conscription) — the credible-threat rule
+  13. The Weekly Check (Fed → Clothed → Morale)
+  14. The six Morale modifier slots + "Additional"
+  15. Morale outcomes — success, failure, departures
+  16. Dissolution on three consecutive failures
+  17. The Retention Check (salvaging a dying community)
+  18. Skip Week (off-screen time without a roll)
+  19. Assigned NPCs (PC-directed task linkage)
+  20. Apprentice task delegation
+  21. The At-a-Glance block (player view)
+  22. The Community Dashboard (GM view)
+  23. Roll log cards to watch for
+  24. Glossary
+  25. Credits & canonical references
+
+
+1. WHAT IS A COMMUNITY?
+-----------------------
+A Community is a group of Player Characters (PCs) and NPCs bound
+together as a household, settlement, band, or enclave. Communities
+are one of the flagship mechanics of the XSE / Distemper system:
+they turn your PC party's allies from loose contacts into a roster
+with morale, resources, roles, and weekly rolls that shape the
+fiction between adventures.
+
+Every Community has:
+  - A name and description (GM-authored).
+  - A Homestead — optional pin on the campaign map.
+  - A Leader — a PC or NPC the community recognizes.
+  - A roster of members — PCs + NPCs, each with a role and a
+    recruitment type (how they came to join).
+  - A week counter and a consecutive-failure counter (for Morale).
+
+
+2. GROUP vs COMMUNITY — THE 13-MEMBER THRESHOLD
+-----------------------------------------------
+A party of PCs is a "Group." Groups do not run weekly checks and
+don't need roles — they're just your adventuring party.
+
+Once the combined PC + NPC count reaches thirteen (13) members,
+the Group becomes a "Community" and the weekly mechanics unlock:
+
+  - Weekly Morale / Fed / Clothed checks.
+  - Role minimums kick in (Gatherers 33%, Maintainers 20%,
+    Safety 5–10%).
+  - A leader is required (being leaderless costs morale).
+  - Failure states (25% / 50% / 75% departures, dissolution after
+    three consecutive failures).
+
+If a Community ever drops back below 13 it reverts to a Group
+and suspends weekly checks until it grows again.
+
+The status chip on the community header tells you which state
+you're in — "Group" (amber) or "Community" (green). Dissolved
+communities show a red "Dissolved" chip.
+
+
+3. CREATING A COMMUNITY
+-----------------------
+On the table page, click the  Community ▾  menu in the header.
+Choose either:
+
+  * Status       — opens the Community panel and auto-expands
+                   your first community (if any exist).
+  * New Community — opens the same panel with a "+ New Community"
+                   form already visible.
+
+Fill in:
+  - Name (required). Short and flavorful: "The Schoolers",
+    "Greenhouse Collective", "Mongrels East".
+  - Description (optional). One or two sentences on who these
+    people are and why they're together.
+  - Homestead pin (optional). Select an existing campaign pin
+    on the map; the community is narratively rooted there.
+    You can add this later.
+
+Click Create. You're auto-enrolled as a founding member with
+recruitment type "Founder". You'll also be the default Leader
+until one is explicitly set.
+
+
+4. ADDING AND REMOVING MEMBERS
+------------------------------
+Inside an expanded community body, the "Add Member" form lets
+the GM add NPCs from the campaign's NPC roster or PCs from the
+campaign's player characters. You pick:
+
+  - Subject kind: NPC or PC.
+  - The specific person.
+  - Their initial role (see section 5).
+  - Their recruitment type (usually "Member" unless you mean
+    something narrative — Cohort / Conscript / Convert / Founder).
+
+Recruitment Checks (section 9) are the mechanical way PCs bring
+NPCs in during play; manual "Add Member" is for setup and quick
+GM adjustments.
+
+Removing a member uses the × button on their row. Members are
+soft-removed (their history stays in the DB) with a reason:
+
+  - "morale_25" / "morale_50" / "morale_75" — weekly departures.
+  - "dissolved" — community collapse.
+  - "manual" — GM hand-removal.
+  - "killed" — set by other systems (combat, etc.).
+
+When you remove the Leader, the next successor is auto-picked
+(see section 8).
+
+
+5. ROLES
+--------
+Every member has one of five roles:
+
+  GATHERER     Hunt / forage / farm / fish / scavenge for Rations.
+               Rolls the weekly Fed Check.
+
+  MAINTAINER   Repair, clothing, supplies, tools, vehicles.
+               Rolls the weekly Clothed Check.
+
+  SAFETY       Policing, patrol, fire, emergency services.
+               Community leadership is drawn from here.
+               No weekly check; modifies Morale.
+
+  UNASSIGNED   Idle / no assigned duty. Pulls down "Enough Hands"
+               if the community is understaffed elsewhere.
+
+  ASSIGNED     Off doing a PC-directed mission or task. Does NOT
+               count toward the labor-pool minimums. Always
+               carries a directing PC and a task text (see § 19).
+
+Roles only apply to NPCs. Players are never counted toward
+labor minimums or labor distribution — they're always PCs, not
+community workers.
+
+
+6. ROLE MINIMUMS (SRD § 08)
+---------------------------
+The NPC labor pool (NPCs whose role is NOT "Assigned") has
+minimum fractions:
+
+  GATHERERS     ≥ 33 %  (rounded down)
+  MAINTAINERS   ≥ 20 %  (rounded down)
+  SAFETY          5 – 10 %  (at least 1 NPC if the pool is tiny)
+
+These directly affect the weekly Morale Check via the
+"Enough Hands" slot (section 14):
+
+  - All three met → "Enough Hands" contributes +1 to Morale.
+  - For each group below its minimum → −1 (capped at −3).
+
+The role bars in the community body show current counts vs.
+minimums. Green bar = OK; red bar = understaffed. A small
+orange tick on the dashboard bars marks the SRD minimum line.
+
+The "⚖ Re-balance Roles" button auto-assigns NPCs to roles
+based on their skills (Farming / Scavenging / Survival →
+Gatherer; Mechanic / Tinkerer → Maintainer; Tactics / Ranged
+Combat / Melee Combat / Heavy Weapons / Demolitions →
+Safety). Use it to quickly top up understaffed groups.
+
+
+7. THE LEADER
+-------------
+The Leader is one PC or NPC who rolls the weekly Morale Check
+on behalf of the community. By default the founder is leader
+until somebody is explicitly set.
+
+Setting the leader: Inside the community body, the "Leader"
+row has a dropdown listing every member. Picking one writes
+either leader_user_id (for PCs) or leader_npc_id (for NPCs)
+on the community row. Only one leader at a time.
+
+Having no leader costs −1 on "A Clear Voice" every Morale
+Check — so staying leaderless is usually a bad idea.
+
+
+8. STEPPING DOWN AND LEADER SUCCESSION
+--------------------------------------
+The GM (always) and the current PC leader (themselves) can
+abdicate via the "Step Down" button next to the Leader
+dropdown.
+
+A successor picker opens:
+
+  - AUTO (default): picks the next Founder if any, otherwise
+    the longest-tenured active member. The picker names who
+    auto would choose so you can see the consequence.
+  - LEAVE LEADERLESS: clears both leader fields. Next Morale
+    Check applies the −1 A Clear Voice penalty.
+  - A specific member: any other member of the community.
+
+Auto-succession also fires when a Leader is REMOVED from the
+community. If someone's role changes or they leave entirely
+and they were the leader, the next successor is picked
+automatically with no prompt.
+
+
+9. RECRUITMENT CHECK
+--------------------
+Recruitment is the mechanical way PCs bring NPCs into a
+Community during play. Open the Recruit modal via:
+
+  * NPC card → "Recruit" button (during an active session).
+  * Community ▾ → Recruit.
+  * Checks ▾ → Recruit (while session is active).
+
+The modal has three steps: pick (approach + skill) → roll →
+result. Rolls use:
+
+  2d6  +  AMod (roller's INF attribute)
+       +  SMod (roller's level in the chosen skill)
+       +  CMod  (First Impression + any other relevant CMods
+                 including Insight Dice bonuses)
+
+Standard XSE outcome ladder applies: 0–3 Dire Failure, 4–8
+Failure, 9–13 Success, 14+ Wild Success. Matching dice trigger
+Moment of Low Insight (1+1) and Moment of High Insight (6+6).
+
+On success the NPC is added to the chosen Community with
+recruitment type matching the chosen approach.
+
+
+10. RECRUITMENT APPROACHES
+--------------------------
+COHORT — a shared interest or goal. NPC joins until the next
+Morale Check, then re-evaluates.
+
+CONSCRIPT — coerced service. Requires a credible threat;
+see section 12 below.
+
+CONVERT — shared belief, ideology, or vision. Joins as a
+probationary Convert; commits fully after surviving the next
+Morale Check.
+
+(A fourth option — Apprentice — is unlocked only on a Wild
+Success or Moment of High Insight; see section 11.)
+
+
+11. APPRENTICES
+---------------
+If a Recruitment Check lands on Wild Success (14+) or a
+Moment of High Insight (6+6), the rolling PC may claim the
+new NPC as their Apprentice. One Apprentice per PC, ever.
+
+Apprentice rules at creation (SRD § 08, CDP spends):
+  - PC names the Apprentice (if they didn't have a name).
+  - Roll 2d6 on both the Motivation and Complication tables
+    (SRD Appendix A) and Fill In The Gaps on their background.
+  - Spend 3 CDP on RAPID Range Attributes.
+  - Pick one setting-appropriate Paradigm (SRD Table 8).
+  - Spend 5 CDP on skills.
+  - Over one month of game time, the PC can train the
+    Apprentice in any single skill up to (PC skill level − 1).
+  - Future CDP the PC earns can be spent on the Apprentice.
+
+The Apprentice bond survives Morale-induced departures — they
+stay bonded to their PC unless the PC dies, dismisses them,
+or the Apprentice is killed.
+
+In the community roster, Apprentice rows show a bond line:
+
+    JESS BROOKER ⇐ ADA MAREN     [Unassigned ▾]  ×
+      Task: Training with Ada in the garage        ✎ edit
+
+Players can see their own Apprentice in the "You" row of the
+At-a-Glance block (section 21). A dedicated "Apprentice" button
+exists in the Community ▾ menu and on the character sheet as a
+placeholder; the full Apprentice view comes in a future
+release.
+
+
+12. PRESSGANGING — THE CREDIBLE-THREAT RULE
+-------------------------------------------
+Conscription is coercion, not persuasion. Per SRD:
+
+   "The PCs must present a credible threat for Conscription
+    to work."
+
+When you pick "Conscript" on the Recruit modal, a red warning
+banner appears under the approach tiles reminding everyone
+this is pressure. When you click Roll, a blocking confirm
+dialog asks you to acknowledge: the PC has established a
+credible threat (weapons drawn, leverage held, escape cut
+off, etc.) before dice are thrown.
+
+Cancelling the confirm dismisses the roll without burning any
+Insight Dice or CMods. The other two approaches (Cohort,
+Convert) never show this gate.
+
+
+13. THE WEEKLY CHECK (FED → CLOTHED → MORALE)
+---------------------------------------------
+Once a week of in-game time, a Community must run the Weekly
+Check. The GM clicks "Run Weekly Check" on the community body.
+A single-button modal fires three rolls in sequence:
+
+  1. FED CHECK — Gatherers roll for Rations.
+     "Hunt / forage / farm / fish." Default assumption is
+     that NPCs of reasonable proficiency roll (A = 0, S = 1);
+     a PC can substitute their AMod / SMod if they're
+     contributing.
+
+  2. CLOTHED CHECK — Maintainers roll for Supplies.
+     "Repair, scavenge, upkeep." Same default A/S as Fed.
+
+  3. MORALE CHECK — the Leader rolls.
+     2d6 + leader's INF AMod + leader's SMod in a chosen
+     social skill + the six modifier slots + Additional
+     (see section 14).
+
+Fed and Clothed outcomes feed directly into the Morale
+modifier slots — a great Fed adds +1 / +2 to Morale; a
+famine drags it down by −2 or worse.
+
+The leader is auto-detected from the community's leader
+field; their INF attribute and social-skill levels auto-fill
+the A/SMod inputs. The GM can override any number before
+rolling.
+
+
+14. THE SIX MORALE MODIFIER SLOTS + "ADDITIONAL"
+------------------------------------------------
+Each Weekly Morale Check has six built-in slot CMods plus
+a GM-freeform slot:
+
+  1. FED (post-roll) — set by this week's Fed Check outcome.
+     +2 / +1 / 0 / −1 / −2 / −3 along the outcome ladder.
+
+  2. CLOTHED (post-roll) — same ladder, driven by Clothed.
+
+  3. MOOD AROUND THE CAMPFIRE — last week's Morale Check
+     cmod_for_next carries over. Starts at 0 on week 1.
+
+  4. ENOUGH HANDS — mechanical.
+        +1 if all three role minimums are met.
+        0 if one group is short.
+       −1 per group below minimum (capped at −3).
+
+  5. A CLEAR VOICE —  0 with an acknowledged leader,
+                     −1 if leaderless.
+
+  6. SOMEONE TO WATCH OVER ME —
+        +1 if Safety is ≥ 10 % of the NPC labor pool.
+         0 between 5 % and 10 %.
+        −1 if Safety is below 5 %.
+
+  7. ADDITIONAL (GM freeform) — Fill-In-The-Gaps for
+     unmodeled events this week (raids, miracles, weather,
+     a Distemper surge, a surprise resupply, etc.). Resets
+     to 0 each time the modal opens.
+
+Slots 3–6 auto-fill from community state; slots 1 and 2 snap
+to the rolled Fed / Clothed outcomes. The GM can override
+any slot via its small input.
+
+Hover any slot label to read its SRD / CRB rule text in a
+tooltip.
+
+
+15. MORALE OUTCOMES
+-------------------
+    Roll         Outcome         Departures    Next Mood
+    --------------------------------------------------------
+    6+6          High Insight       none          +2
+    14+          Wild Success       none          +1
+    9–13         Success            none           0
+    4–8          Failure            25 %          −1
+    0–3          Dire Failure       50 %          −2
+    1+1          Low Insight        75 %          −3
+
+Departures soft-remove NPCs (not PCs — players control their
+characters' actions). Within the removal pool, priority is:
+
+    Unassigned first  →  Cohort  →  Convert  →  Conscript  →
+    Founder  →  Apprentice (last).
+
+So Apprentices and Founders stick with the community the
+longest when times get hard.
+
+Any success tier resets the community's consecutive-failure
+counter to 0. Any failure tier increments it by 1.
+
+
+16. DISSOLUTION ON THREE CONSECUTIVE FAILURES
+---------------------------------------------
+Three failed Morale Checks in a row collapses the community.
+When you're at 2 / 3 the community panel shows a red warning
+line: "one more failure dissolves the community."
+
+If the third fail hits, the Result screen flips its
+consequence panel to RED "⚠ Community Dissolves" and the
+Finalize button relabels to "Finalize — Dissolve Community."
+On confirm:
+  - community.status → 'dissolved', dissolved_at = now.
+  - Every active member is soft-removed with reason
+    'dissolved'.
+  - "Run Weekly Check" disappears from the community body.
+
+Dissolved is permanent — there's no "re-form" path. A new
+community must be created if you want a similar story.
+
+
+17. THE RETENTION CHECK (SRD § 08 p. 22)
+----------------------------------------
+When the third failure would dissolve the community, a
+"fast-acting leader" may attempt to salvage fragments via
+an immediate Retention Check.
+
+The dissolution panel offers a 🙏 Attempt Retention Check
+button naming the current leader and their selected skill.
+One click rolls a second Morale Check right there:
+
+  2d6 + leader A/SMod + MOOD (= failed Morale's cmod_for_next)
+
+Only Mood applies — no other slots. If the Retention Check
+succeeds at any tier (Success / Wild Success / High Insight),
+the community survives:
+
+  - status stays active.
+  - consecutive_failures drops to 2 (one week's cushion;
+    another failure next week dissolves it).
+  - Original failed-Morale departures still apply — people
+    still left; but the community didn't collapse.
+
+If the Retention Check fails (Failure / Dire / Low Insight),
+dissolution proceeds as originally planned.
+
+A Retention Check is a one-shot per failure — if the retention
+roll itself fails, there's no second attempt.
+
+
+18. SKIP WEEK (OFF-SCREEN TIME WITHOUT A ROLL)
+----------------------------------------------
+Sometimes a week passes in the fiction with nothing worth
+resolving mechanically. The "Skip Week" button sits next to
+"Run Weekly Check" on the community body. It:
+
+  - Bumps week_number by 1.
+  - Does NOT roll Fed / Clothed / Morale.
+  - Does NOT change consecutive_failures, members, or Mood.
+
+The next actual Weekly Check still carries Mood from the most
+recent ROLLED check — skipped weeks don't reset it. This is
+by design: narrative off-screen time shouldn't erase the
+aftershocks of a real event.
+
+
+19. ASSIGNED NPCs (PC-DIRECTED TASK LINKAGE)
+--------------------------------------------
+"Assigned" is a role for NPCs who are off doing a PC-directed
+task. They don't count toward the labor-pool minimums —
+they're out in the field, not at the homestead.
+
+Setting an NPC's role to "Assigned" opens a small modal that
+captures:
+  - Directed by: which PC (campaign's character picker, with
+    current community members listed first for convenience).
+  - Task: a freeform text description. "Scouting the
+    Belvedere's warehouse", "Running supplies to the mall."
+
+Saving writes all three (role = assigned, assignment_pc_id,
+current_task) in one round-trip. Cancelling leaves the role
+on its old value — nothing commits.
+
+Assigned rows render like Apprentice rows:
+
+    QUINN LOCKHART #3 ⇐ ADA MAREN   [Assigned ▾]  ×
+      Task: Scouting the warehouse              ✎ edit
+
+Flipping the role OUT of "Assigned" (back to Gatherer,
+Maintainer, Safety, or Unassigned) auto-clears both
+assignment_pc_id and current_task. If the directing PC is
+deleted from the campaign, the assignment clears via the
+database FK but the NPC stays where they are — ready for
+reassignment.
+
+
+20. APPRENTICE TASK DELEGATION
+------------------------------
+Apprentice NPCs carry a "current_task" of their own. Anyone
+with community access can see it; only the GM can edit for
+now. (Master-PC edit is a natural extension and will land
+when the Apprentice view is fully wired.)
+
+On an Apprentice row with no task set, the GM sees a dashed
+"+ Assign task" affordance. Click it, type the task, press
+Enter or click Save. Task reads as italicized text below the
+name line; a small ✎ edit reopens the input.
+
+Empty-save clears the task back to idle.
+
+
+21. THE AT-A-GLANCE BLOCK (PLAYER VIEW)
+---------------------------------------
+At the top of every expanded community body, a small blue
+"At-a-Glance" block summarizes the community for the viewer:
+
+  RECENT MORALE
+     Five colored letter chips (W / H / S / F / D / L)
+     showing the last five weekly outcomes, oldest left,
+     newest right. Hover any chip to see the week number
+     and full outcome name.
+
+  YOU (when you're a member)
+     Your role in the community (Gatherer / Maintainer /
+     Safety / Unassigned / Assigned).
+     "Founder" tag if that's your recruitment_type.
+     Your Apprentice (if any) inline.
+     A comma list of NPCs you have personally recruited
+     into this community.
+
+This block is visible to everyone — GMs see the same
+summary. For players it's the primary view of the
+community since the edit surfaces below are gated.
+
+
+22. THE COMMUNITY DASHBOARD (GM VIEW)
+-------------------------------------
+Full-screen GM-only view at:
+
+    /stories/<campaign-id>/community
+
+Also reachable via Community ▾ → Dashboard.
+
+Shows, per-community:
+  - Header summary: status, week counter, consecutive
+    failures, member count.
+  - Morale History — last 20 weeks in a table with
+    color-coded outcome badges, total rolled, member
+    delta, and next-Mood CMod.
+  - Resource History — last 40 Fed/Clothed rolls as
+    compact color-coded chips grouped by week.
+  - Current Role Distribution — horizontal bars vs. SRD
+    minimum markers (orange tick on each bar).
+  - Recruitment Stats — success rate overall and broken
+    out by approach (Cohort / Conscript / Convert) plus
+    Apprentice count.
+  - Members by Recruitment Type — tiles showing how many
+    Founders / Members / Cohorts / etc. you currently have.
+
+Non-GMs who navigate here see an "access denied" screen
+and a back-link to the campaign page.
+
+
+23. ROLL LOG CARDS TO WATCH FOR
+-------------------------------
+In the session Logs tab and the Both tab, community events
+render as dedicated color-coded cards:
+
+  🤝 RECRUIT (Phase B)
+     Outcome, approach, which community, whether Apprentice
+     applied, Insight Dice spent.
+
+  🌾 FED CHECK
+     Week, community, dice, AMod/SMod/CMod, outcome, and
+     the CMod that'll feed next Morale.
+
+  🔧 CLOTHED CHECK
+     Same shape as Fed.
+
+  📊 MORALE CHECK
+     Week, community, leader's name, which social skill
+     they rolled, dice breakdown, slot breakdown ("Mood,
+     Fed, Clothed, Hands, Voice, Watch, Additional"),
+     outcome, departures by name (if any), consecutive
+     failure counter, and the next-Mood CMod. Red border
+     on the dissolve variant.
+
+  🙏 RETENTION CHECK
+     Leader, skill used, Mood (= failed Morale's next
+     CMod), outcome. Green border if the community was
+     saved; red if dissolution proceeded.
+
+
+24. GLOSSARY
+------------
+AMod            Attribute Modifier. Value of the rolling
+                character's RAPID attribute (Reason, Acumen,
+                Physicality, Influence, Dexterity).
+
+CMod            Circumstance Modifier. A numeric adjustment
+                reflecting situational factors (First
+                Impression, weather, leverage, community
+                state, etc.).
+
+Community       A Group of 13+ members running weekly
+                mechanics.
+
+Consecutive     Count of failed Morale Checks in a row.
+Failures        Resets to 0 on any success. Hitting 3 triggers
+                dissolution (possibly salvaged by a Retention
+                Check).
+
+Dire Failure    Roll total 0–3. 50 % of the community leaves.
+
+Failure         Roll total 4–8. 25 % of the community leaves.
+
+Fed Check       Weekly roll by Gatherers for Rations.
+
+First           Per-PC / per-NPC CMod stored in
+Impression      npc_relationships.relationship_cmod, set during
+                a First Impression Check (SRD § 02).
+
+Group           A PC party under 13 members. No weekly
+                mechanics.
+
+High Insight    6+6 on 2d6. Best outcome; Wild Success effects
+                plus special perks depending on the roll type.
+
+Insight Die     Pre-roll or post-roll bonus die; per-PC
+                resource. Costs 1 Insight Die to spend.
+
+Low Insight     1+1 on 2d6. Worst outcome; 75 % departures on
+                Morale.
+
+Mood Around     The cmod_for_next from last week's Morale
+The Campfire    Check — carries forward as a slot on this
+                week's Morale.
+
+Morale Check    Weekly roll by the Leader to keep the community
+                cohesive. 2d6 + leader A/SMod + 6 slot CMods +
+                Additional.
+
+Retention       Immediate salvage Morale Check when dissolution
+Check           is triggered. Only Mood applies. One shot.
+
+SMod            Skill Modifier. Level in the rolling
+                character's relevant skill (0–4).
+
+Success         Roll total 9–13. Morale holds.
+
+Wild Success    Roll total 14+. Morale strengthens; +1 CMod
+                on next Morale.
+
+
+25. CREDITS & CANONICAL REFERENCES
+----------------------------------
+System:  XSE SRD v1.1.17 (Distemper Release) § 08 Communities,
+         pp. 21–24.
+Flavor:  Distemper CRB v0.9.2, Skills chapter.
+
+When the rules and the platform disagree, the rulebooks
+are canonical. If you spot a mismatch, flag it in-game
+to the GM and file a note.
+
+END OF GUIDE
