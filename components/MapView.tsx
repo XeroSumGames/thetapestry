@@ -283,22 +283,52 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     if (!encounterCampaignId) { alert('Pick which of your campaigns is encountering this community.'); return }
     setEncounterSubmitting(true)
     const { data: { user } } = await supabase.auth.getUser()
+    const trimmedNarrative = encounterNarrative.trim()
     const { error } = await supabase.from('community_encounters').insert({
       world_community_id: encounterTarget.worldCommunityId,
       encountering_campaign_id: encounterCampaignId,
       encountering_user_id: user?.id ?? null,
-      narrative: encounterNarrative.trim() || null,
+      narrative: trimmedNarrative || null,
     })
-    setEncounterSubmitting(false)
+    // UNIQUE(world_community_id, encountering_campaign_id, status='pending')
+    // blocks a second row while the first is still pending. Rather
+    // than rejecting the user (who may have more context to share),
+    // append their new narrative to the existing pending encounter
+    // as a follow-up note. The source GM's response UI surfaces the
+    // concatenated narrative so they still see everything when they
+    // accept/decline.
     if (error) {
-      // Friendly handling for the unique constraint (already pending).
       if (/duplicate|unique/i.test(error.message)) {
-        alert('You already have a pending encounter request for this community. Wait for the source GM to respond, or check Notifications.')
-      } else {
-        alert(`Encounter failed: ${error.message}`)
+        const { data: existing } = await supabase
+          .from('community_encounters')
+          .select('id, narrative')
+          .eq('world_community_id', encounterTarget.worldCommunityId)
+          .eq('encountering_campaign_id', encounterCampaignId)
+          .eq('status', 'pending')
+          .maybeSingle()
+        if (existing) {
+          const appended = [
+            (existing as any).narrative?.trim(),
+            trimmedNarrative ? `— Follow-up: ${trimmedNarrative}` : '— Follow-up (no additional notes)',
+          ].filter(Boolean).join('\n\n')
+          const { error: updErr } = await supabase
+            .from('community_encounters')
+            .update({ narrative: appended })
+            .eq('id', (existing as any).id)
+          setEncounterSubmitting(false)
+          if (updErr) { alert(`Follow-up failed: ${updErr.message}`); return }
+          setEncounterTarget(null)
+          setEncounterCampaignId('')
+          setEncounterNarrative('')
+          alert('Added your follow-up to the existing pending encounter. The source GM will see the full thread when they respond.')
+          return
+        }
       }
+      setEncounterSubmitting(false)
+      alert(`Encounter failed: ${error.message}`)
       return
     }
+    setEncounterSubmitting(false)
     setEncounterTarget(null)
     setEncounterCampaignId('')
     setEncounterNarrative('')
