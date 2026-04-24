@@ -310,7 +310,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const [schismPickedIds, setSchismPickedIds] = useState<Set<string>>(new Set())
   const [schismSubmitting, setSchismSubmitting] = useState<boolean>(false)
 
-  // Phase E — Publish to Distemperverse modal. When set, the publish
+  // Phase E — Publish to Tapestry modal. When set, the publish
   // confirmation UI renders for that community. Faction label is GM
   // freeform; captured pre-commit so the GM sees what goes public
   // before the row is actually inserted.
@@ -698,7 +698,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     await load()
   }
 
-  // ── Phase E — Publish to Distemperverse ─────────────────────────
+  // ── Phase E — Publish to Tapestry ─────────────────────────
   // Size band derived from actual roster count. Anchored to Distemper
   // narrative scale: sub-13 is pre-Community "Small", then Band at
   // the 13-member Community threshold, then wider steps through
@@ -837,7 +837,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   async function handleUnpublish(communityId: string) {
     const world = worldRows[communityId]
     if (!world) return
-    if (!confirm('Remove this community from the Distemperverse? It will disappear from the world map. Republishing later will go back through Thriver moderation.')) return
+    if (!confirm('Remove this community from the Tapestry? It will disappear from the world map. Republishing later will go back through moderation.')) return
     const { error } = await supabase.from('world_communities').delete().eq('id', world.id)
     if (error) { alert(`Unpublish failed: ${error.message}`); return }
     await supabase.from('communities')
@@ -1587,7 +1587,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   </div>
                 )}
 
-                {/* Phase E — Publish to Distemperverse strip. Shows
+                {/* Phase E — Publish to Tapestry strip. Shows
                     the world-facing status chip + actions. GM-only;
                     community must be at 13+ members and not dissolved
                     for first publish. Republish (Update) and Unpublish
@@ -1873,7 +1873,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5, marginBottom: '8px' }}>
                         {survivors.length === 0
                           ? 'No NPC survivors recorded. Migration only applies to NPCs scattered by the dissolution.'
-                          : `${survivors.length} survivor${survivors.length === 1 ? '' : 's'} can be offered to other communities in the Distemperverse.`}
+                          : `${survivors.length} survivor${survivors.length === 1 ? '' : 's'} can be offered to other communities in the Tapestry.`}
                       </div>
                       {survivors.length > 0 && migrationTargets.length > 0 && (
                         <button onClick={() => openMigrationModal(c)}
@@ -2094,7 +2094,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         )
       })()}
 
-      {/* Phase E — Publish to Distemperverse modal. GM confirms what
+      {/* Phase E — Publish to Tapestry modal. GM confirms what
           will go public (name, description, homestead coords if set,
           size band computed from roster, public status from community
           state) plus a freeform faction_label. INSERT → status=pending
@@ -2119,7 +2119,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     🌐 {world ? 'Update' : 'Publish'} — {c.name}
                   </div>
                   <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
-                    {world ? 'Refresh the Distemperverse-facing card' : 'Share this community across the Distemperverse'}
+                    {world ? 'Refresh the Tapestry-facing card' : 'Share this community across the Tapestry'}
                   </div>
                 </div>
                 <button onClick={closePublishModal}
