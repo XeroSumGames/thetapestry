@@ -1628,13 +1628,22 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   )
                 })()}
 
-                {/* Phase C — Weekly Check button. Shows only when the
-                    Group has crossed the 13-member threshold AND isn't
-                    already dissolved AND the viewer is a GM. Opens the
+                {/* Phase C — Weekly Check button. Shows when the
+                    Group has crossed the 13-member threshold AND
+                    isn't dissolved AND the viewer is either the GM
+                    OR the community's PC leader (leader_user_id
+                    matches their auth.uid). Communities are
+                    player-driven per SRD §08 — the Leader should
+                    be able to run a Weekly Check without the GM
+                    driving. DB RLS on community_morale_checks /
+                    community_resource_checks already permits any
+                    campaign member to insert (see
+                    communities-rls-open-to-members.sql), so no
+                    migration needed for this widen. Opens the
                     Morale modal which handles Fed → Clothed → Morale
-                    in one button-press with per-roll CMod inputs and
-                    auto-filled slot suggestions. */}
-                {isGM && isCommunity && c.status !== 'dissolved' && (
+                    in one button-press with per-roll CMod inputs
+                    and auto-filled slot suggestions. */}
+                {(isGM || (!!myUserId && c.leader_user_id === myUserId)) && isCommunity && c.status !== 'dissolved' && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '14px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
