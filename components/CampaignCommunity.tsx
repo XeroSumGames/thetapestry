@@ -277,6 +277,25 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const [assignmentPcDraft, setAssignmentPcDraft] = useState<string>('')
   const [assignmentTaskDraft, setAssignmentTaskDraft] = useState<string>('')
 
+  // Phase E — Publish to Distemperverse modal. When set, the publish
+  // confirmation UI renders for that community. Faction label is GM
+  // freeform; captured pre-commit so the GM sees what goes public
+  // before the row is actually inserted.
+  const [publishingCommunityId, setPublishingCommunityId] = useState<string | null>(null)
+  const [publishFactionLabel, setPublishFactionLabel] = useState<string>('')
+  const [publishing, setPublishing] = useState<boolean>(false)
+  // World-row lookup per community id. Loaded alongside members;
+  // drives the "Published" chip + button state on each community
+  // (Publish vs. Update vs. Unpublish).
+  const [worldRows, setWorldRows] = useState<Record<string, {
+    id: string
+    moderation_status: 'pending' | 'approved' | 'rejected'
+    community_status: string
+    size_band: string
+    faction_label: string | null
+    last_public_update_at: string
+  }>>({})
+
   useEffect(() => { load() }, [campaignId])
 
   // Honor initialMode once communities are loaded. For 'status' we
@@ -339,6 +358,26 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         if (moraleByCom[cid].length < 5) moraleByCom[cid].push({ week_number: row.week_number, outcome: row.outcome })
       }
       setRecentMorale(moraleByCom)
+      // Phase E — world-facing mirror rows. One-per-source so we can
+      // index by community_id. Read policies let campaign members see
+      // their own pending rows, so this works for GMs mid-moderation
+      // too.
+      const worldRes = await supabase
+        .from('world_communities')
+        .select('id, source_community_id, moderation_status, community_status, size_band, faction_label, last_public_update_at')
+        .in('source_community_id', coms.map(c => c.id))
+      const worldByCom: typeof worldRows = {}
+      for (const w of (worldRes.data ?? []) as any[]) {
+        worldByCom[w.source_community_id] = {
+          id: w.id,
+          moderation_status: w.moderation_status,
+          community_status: w.community_status,
+          size_band: w.size_band,
+          faction_label: w.faction_label,
+          last_public_update_at: w.last_public_update_at,
+        }
+      }
+      setWorldRows(worldByCom)
       const byCom: Record<string, Member[]> = {}
       const pendingByCom: Record<string, Member[]> = {}
       for (const m of (res.data ?? []) as Member[]) {
@@ -440,6 +479,161 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         return next ? { ...m, role: next } : m
       }),
     }))
+  }
+
+  // ── Phase E — Publish to Distemperverse ─────────────────────────
+  // Size band derived from actual roster count. Anchored to Distemper
+  // narrative scale: sub-13 is pre-Community "Small", then Band at
+  // the 13-member Community threshold, then wider steps through
+  // Settlement / Enclave / City. GM can override post-publish by
+  // updating the world row directly (not wired in this sprint).
+  function computeSizeBand(n: number): 'Small' | 'Band' | 'Settlement' | 'Enclave' | 'City' {
+    if (n < 13) return 'Small'
+    if (n < 33) return 'Band'
+    if (n < 100) return 'Settlement'
+    if (n < 500) return 'Enclave'
+    return 'City'
+  }
+  // Public status (Thriving / Holding / Struggling / Dying / Dissolved)
+  // derived from the community's current state at publish time:
+  //   - dissolved → Dissolved
+  //   - consecutive_failures >= 2 → Dying
+  //   - consecutive_failures == 1 → Struggling
+  //   - last Morale was Wild Success / High Insight → Thriving
+  //   - otherwise Holding (steady or no recent check)
+  function computePublicStatus(c: Community): 'Thriving' | 'Holding' | 'Struggling' | 'Dying' | 'Dissolved' {
+    if (c.status === 'dissolved') return 'Dissolved'
+    if (c.consecutive_failures >= 2) return 'Dying'
+    if (c.consecutive_failures === 1) return 'Struggling'
+    const last = recentMorale[c.id]?.[0]?.outcome?.toLowerCase().replace(/ /g, '_') ?? ''
+    if (last === 'wild_success' || last === 'high_insight') return 'Thriving'
+    return 'Holding'
+  }
+
+  // Open the Publish modal. Pre-seeds faction_label from the existing
+  // world row if already published (→ this becomes an "Update" flow).
+  function openPublishModal(communityId: string) {
+    const world = worldRows[communityId]
+    setPublishFactionLabel(world?.faction_label ?? '')
+    setPublishingCommunityId(communityId)
+  }
+  function closePublishModal() {
+    if (publishing) return  // don't yank the modal mid-write
+    setPublishingCommunityId(null)
+    setPublishFactionLabel('')
+  }
+
+  // Commit a publish (INSERT) or republish (UPDATE). Also fetches
+  // the community's homestead pin lat/lng if one is set so the
+  // world map has something to plot. On insert, updates the source
+  // community's world_visibility + world_community_id so the UI
+  // chip flips to "Published" immediately.
+  async function handlePublish() {
+    if (!publishingCommunityId || publishing) return
+    const c = communities.find(x => x.id === publishingCommunityId)
+    if (!c) return
+    setPublishing(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    // Fetch Homestead coords if set. No homestead = null lat/lng,
+    // which keeps the world row valid but leaves it off the map.
+    let lat: number | null = null
+    let lng: number | null = null
+    if (c.homestead_pin_id) {
+      const { data: pin } = await supabase
+        .from('campaign_pins')
+        .select('lat, lng')
+        .eq('id', c.homestead_pin_id)
+        .maybeSingle()
+      if (pin) { lat = (pin as any).lat ?? null; lng = (pin as any).lng ?? null }
+    }
+    const total = (members[c.id] ?? []).length
+    const sizeBand = computeSizeBand(total)
+    const publicStatus = computePublicStatus(c)
+    const factionLabel = publishFactionLabel.trim() || null
+    const now = new Date().toISOString()
+    const existing = worldRows[c.id]
+    if (existing) {
+      // Republish — patch the public-facing fields. Moderation state
+      // is preserved (a GM updating their community's public card
+      // doesn't re-trigger Thriver moderation for now; major changes
+      // could eventually flip it back to pending but we don't want
+      // to block every tiny description tweak).
+      const { error } = await supabase.from('world_communities')
+        .update({
+          name: c.name,
+          description: c.description,
+          homestead_lat: lat,
+          homestead_lng: lng,
+          size_band: sizeBand,
+          faction_label: factionLabel,
+          community_status: publicStatus,
+          last_public_update_at: now,
+        })
+        .eq('id', existing.id)
+      if (error) { setPublishing(false); alert(`Publish update failed: ${error.message}`); return }
+      setWorldRows(prev => ({
+        ...prev,
+        [c.id]: { ...prev[c.id], size_band: sizeBand, faction_label: factionLabel, community_status: publicStatus, last_public_update_at: now },
+      }))
+    } else {
+      // First publish. Insert the world row with status='pending' so
+      // Thriver moderation gates visibility on the world map (sprint 2).
+      const { data, error } = await supabase.from('world_communities').insert({
+        source_community_id: c.id,
+        source_campaign_id: campaignId,
+        published_by: user?.id ?? null,
+        name: c.name,
+        description: c.description,
+        homestead_lat: lat,
+        homestead_lng: lng,
+        size_band: sizeBand,
+        faction_label: factionLabel,
+        community_status: publicStatus,
+        moderation_status: 'pending',
+        last_public_update_at: now,
+      }).select('id, moderation_status, community_status, size_band, faction_label, last_public_update_at').single()
+      if (error || !data) { setPublishing(false); alert(`Publish failed: ${error?.message ?? 'unknown'}`); return }
+      // Back-link on the source community so the UI chip + future
+      // cross-campaign lookups can find the world row cheaply.
+      await supabase.from('communities')
+        .update({
+          world_visibility: 'published',
+          world_community_id: (data as any).id,
+          published_at: now,
+        })
+        .eq('id', c.id)
+      setCommunities(prev => prev.map(x => x.id === c.id
+        ? { ...x, world_visibility: 'published' as const }
+        : x))
+      setWorldRows(prev => ({ ...prev, [c.id]: data as any }))
+    }
+    setPublishing(false)
+    setPublishingCommunityId(null)
+    setPublishFactionLabel('')
+  }
+
+  // Unpublish — deletes the world row (CASCADE relies on the source
+  // community unique constraint so this is idempotent). Reverts the
+  // source community's world_visibility to 'private' and clears the
+  // back-link. Existing moderation is discarded; next publish goes
+  // through the pending queue fresh.
+  async function handleUnpublish(communityId: string) {
+    const world = worldRows[communityId]
+    if (!world) return
+    if (!confirm('Remove this community from the Distemperverse? It will disappear from the world map. Republishing later will go back through Thriver moderation.')) return
+    const { error } = await supabase.from('world_communities').delete().eq('id', world.id)
+    if (error) { alert(`Unpublish failed: ${error.message}`); return }
+    await supabase.from('communities')
+      .update({ world_visibility: 'private', world_community_id: null, published_at: null })
+      .eq('id', communityId)
+    setCommunities(prev => prev.map(x => x.id === communityId
+      ? { ...x, world_visibility: 'private' as const }
+      : x))
+    setWorldRows(prev => {
+      const n = { ...prev }
+      delete n[communityId]
+      return n
+    })
   }
 
   // Phase D — "Skip Week" pure clock bump. Advances week_number
@@ -1120,6 +1314,54 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   </div>
                 )}
 
+                {/* Phase E — Publish to Distemperverse strip. Shows
+                    the world-facing status chip + actions. GM-only;
+                    community must be at 13+ members and not dissolved
+                    for first publish. Republish (Update) and Unpublish
+                    stay available after moderation. */}
+                {isGM && isCommunity && c.status !== 'dissolved' && (() => {
+                  const world = worldRows[c.id]
+                  const isPublished = !!world
+                  const modChip = world?.moderation_status === 'approved' ? '✓ Live'
+                    : world?.moderation_status === 'rejected' ? '✗ Rejected'
+                    : world?.moderation_status === 'pending' ? '⏳ Pending Moderation'
+                    : ''
+                  const modColor = world?.moderation_status === 'approved' ? '#7fc458'
+                    : world?.moderation_status === 'rejected' ? '#c0392b'
+                    : '#EF9F27'
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: isPublished ? '#1a102a' : '#1a1a1a', border: `1px solid ${isPublished ? '#5a2e5a' : '#2e2e2e'}`, borderRadius: '3px', flexWrap: 'wrap' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '14px', color: isPublished ? '#d48bd4' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
+                          🌐 The Tapestry
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                          {isPublished
+                            ? <>Published as <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{world!.size_band}</span> · <span style={{ color: modColor, fontWeight: 700 }}>{modChip}</span>{world!.faction_label ? <> · <span style={{ color: '#EF9F27' }}>{world!.faction_label}</span></> : null}</>
+                            : 'Publish this community to the Distemperverse to make it visible across other campaigns.'}
+                        </div>
+                      </div>
+                      {isPublished ? (
+                        <>
+                          <button onClick={() => openPublishModal(c.id)}
+                            style={{ padding: '8px 14px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            Update Public Info
+                          </button>
+                          <button onClick={() => handleUnpublish(c.id)}
+                            style={{ padding: '8px 14px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            Unpublish
+                          </button>
+                        </>
+                      ) : (
+                        <button onClick={() => openPublishModal(c.id)}
+                          style={{ padding: '8px 14px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                          🌐 Publish to Distemperverse
+                        </button>
+                      )}
+                    </div>
+                  )
+                })()}
+
                 {/* Pending-requests — only visible to the leader (or
                     GMs, which the wider RLS already permits). Approve
                     flips status to 'active' + sets joined_at; Reject
@@ -1352,6 +1594,81 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
           </div>
         )
       })}
+
+      {/* Phase E — Publish to Distemperverse modal. GM confirms what
+          will go public (name, description, homestead coords if set,
+          size band computed from roster, public status from community
+          state) plus a freeform faction_label. INSERT → status=pending
+          awaits Thriver approval; UPDATE just refreshes the public
+          card for already-published communities. */}
+      {publishingCommunityId && (() => {
+        const c = communities.find(x => x.id === publishingCommunityId)
+        if (!c) return null
+        const world = worldRows[c.id]
+        const total = (members[c.id] ?? []).length
+        const sizeBand = computeSizeBand(total)
+        const publicStatus = computePublicStatus(c)
+        const homesteadPin = c.homestead_pin_id ? pins.find(p => p.id === c.homestead_pin_id) : null
+        return (
+          <div onClick={closePublishModal}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
+            <div onClick={e => e.stopPropagation()}
+              style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '580px', maxWidth: '100%', maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                    🌐 {world ? 'Update' : 'Publish'} — {c.name}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                    {world ? 'Refresh the Distemperverse-facing card' : 'Share this community across the Distemperverse'}
+                  </div>
+                </div>
+                <button onClick={closePublishModal}
+                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
+              </div>
+              <div style={{ padding: '18px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                  Publishing exposes the sanitized fields below to every other campaign in the Distemperverse. Your private roster, Morale rolls, and internal notes stay put. First-time publishes go through Thriver moderation before they appear on the world map.
+                </div>
+
+                <div style={{ padding: '12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Preview</div>
+                  <div style={{ fontSize: '19px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 700 }}>{c.name}</div>
+                  {c.description && (
+                    <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>{c.description}</div>
+                  )}
+                  <div style={{ display: 'flex', gap: '14px', fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                    <span><span style={{ color: '#5a5550', textTransform: 'uppercase' }}>Size:</span> <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{sizeBand}</span> <span style={{ color: '#5a5550' }}>({total} members)</span></span>
+                    <span><span style={{ color: '#5a5550', textTransform: 'uppercase' }}>Status:</span> <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{publicStatus}</span></span>
+                    <span><span style={{ color: '#5a5550', textTransform: 'uppercase' }}>Homestead:</span> <span style={{ color: homesteadPin ? '#7fc458' : '#EF9F27', fontWeight: 700 }}>{homesteadPin ? homesteadPin.name : 'none set — will publish unlocated'}</span></span>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Faction / flavor label (optional)</div>
+                  <input value={publishFactionLabel}
+                    placeholder="e.g. Reformed Church, Mercantile, Mongrels, Scholars"
+                    onChange={e => setPublishFactionLabel(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                  <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
+                    Short label shown on the world map alongside the community's public card. Leave blank for none.
+                  </div>
+                </div>
+              </div>
+              <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button onClick={closePublishModal} disabled={publishing}
+                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: publishing ? 'not-allowed' : 'pointer', opacity: publishing ? 0.4 : 1 }}>
+                  Cancel
+                </button>
+                <button onClick={handlePublish} disabled={publishing}
+                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: publishing ? 'not-allowed' : 'pointer', opacity: publishing ? 0.4 : 1, fontWeight: 600 }}>
+                  {publishing ? 'Publishing…' : world ? 'Update Public Info' : '🌐 Publish'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* "Assigned" role mission modal. Triggered from handleChangeRole
           when an NPC's role flips to 'assigned'. Captures director PC
