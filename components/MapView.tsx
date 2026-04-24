@@ -129,6 +129,22 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [pinsVisible, setPinsVisible] = useState(true)
   const [sidebarTab, setSidebarTab] = useState<'public' | 'mine' | 'campaign'>('public')
   const [campaignPins, setCampaignPins] = useState<{ id: string; name: string; notes: string | null; lat: number; lng: number; category: string; campaign_name: string }[]>([])
+  // Phase E Sprint 3 polish — synthetic "🌐 Published Communities"
+  // sidebar folder. Populated during loadPins so the sidebar can
+  // list approved world_communities alongside the normal pin folder
+  // tree, with the same eye-toggle hide mechanism (via the
+  // 'world_community' key in hiddenFolders).
+  const [worldCommunities, setWorldCommunities] = useState<{
+    id: string
+    name: string
+    lat: number
+    lng: number
+    size_band: string
+    community_status: string
+    faction_label: string | null
+    source_campaign_id: string
+    campaign_name: string
+  }[]>([])
   const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private', categories: ['location'] })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -345,23 +361,36 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     // on world_communities already lets anyone read approved rows.
     // Hidden by the 'world_community' folder toggle alongside other
     // pin categories.
+    // Always fetch approved world_communities so the sidebar folder
+    // count stays accurate even when the layer is toggled off on the
+    // map itself. Markers only render when 'world_community' isn't in
+    // hiddenFolders.
+    const { data: wc } = await supabase
+      .from('world_communities')
+      .select('id, name, description, homestead_lat, homestead_lng, size_band, faction_label, community_status, source_campaign_id, last_public_update_at')
+      .eq('moderation_status', 'approved')
+      .not('homestead_lat', 'is', null)
+      .not('homestead_lng', 'is', null)
+    const rows = (wc ?? []) as any[]
+    // Batch-fetch source campaign names for attribution on the
+    // popup. Falls back to "Unknown campaign" if RLS hides the
+    // campaign row from the viewer.
+    let campaignNames: Record<string, string> = {}
+    if (rows.length > 0) {
+      const campIds = [...new Set(rows.map(r => r.source_campaign_id))]
+      const { data: camps } = await supabase.from('campaigns').select('id, name').in('id', campIds)
+      for (const c of (camps ?? []) as any[]) campaignNames[c.id] = c.name
+    }
+    // Snapshot for the sidebar folder. Names/coords don't change
+    // per-viewer so the sidebar mirrors exactly what the map shows.
+    setWorldCommunities(rows.map(r => ({
+      id: r.id, name: r.name, lat: r.homestead_lat, lng: r.homestead_lng,
+      size_band: r.size_band, community_status: r.community_status,
+      faction_label: r.faction_label,
+      source_campaign_id: r.source_campaign_id,
+      campaign_name: campaignNames[r.source_campaign_id] ?? 'Unknown campaign',
+    })))
     if (!currentHidden.has('world_community')) {
-      const { data: wc } = await supabase
-        .from('world_communities')
-        .select('id, name, description, homestead_lat, homestead_lng, size_band, faction_label, community_status, source_campaign_id, last_public_update_at')
-        .eq('moderation_status', 'approved')
-        .not('homestead_lat', 'is', null)
-        .not('homestead_lng', 'is', null)
-      const rows = (wc ?? []) as any[]
-      // Batch-fetch source campaign names for attribution on the
-      // popup. Falls back to "Unknown campaign" if RLS hides the
-      // campaign row from the viewer.
-      let campaignNames: Record<string, string> = {}
-      if (rows.length > 0) {
-        const campIds = [...new Set(rows.map(r => r.source_campaign_id))]
-        const { data: camps } = await supabase.from('campaigns').select('id, name').in('id', campIds)
-        for (const c of (camps ?? []) as any[]) campaignNames[c.id] = c.name
-      }
       for (const row of rows) {
         // Size band → pixel size on the map.
         const sizeBand = row.size_band || 'Band'
@@ -789,12 +818,94 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                 // Sort categories: Distemper Timeline first, then the rest in PIN_CATEGORIES order
                 const sortedCats = PIN_CATEGORIES.filter(c => folderMap[c.value] && folderMap[c.value].length > 0)
                   .sort((a, b) => a.value === 'world_event' ? -1 : b.value === 'world_event' ? 1 : 0)
-                if (sortedCats.length === 0) {
+                // Phase E — synthetic "🌐 Published Communities" folder.
+                // Sits above the normal PIN_CATEGORIES folders because
+                // it's a distinct layer, not a pin category. Filtered
+                // by pinSearch against name or campaign name.
+                const searchLC = pinSearch.trim().toLowerCase()
+                const wcFiltered = worldCommunities
+                  .filter(wc => !searchLC
+                    || wc.name.toLowerCase().includes(searchLC)
+                    || wc.campaign_name.toLowerCase().includes(searchLC)
+                    || (wc.faction_label ?? '').toLowerCase().includes(searchLC))
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                const wcFolderHasContent = wcFiltered.length > 0
+                if (sortedCats.length === 0 && !wcFolderHasContent) {
                   return <div style={{ padding: '2rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>{pinSearch.trim() ? 'No pins match your search.' : 'No pins to display.'}</div>
                 }
                 // If searching, auto-expand all folders with matches
                 const isSearching = pinSearch.trim().length > 0
-                return sortedCats.map(cat => {
+                const wcFolderOpen = isSearching || expandedFolders.has('world_community')
+                const wcHidden = hiddenFolders.has('world_community')
+                const wcFolderNode = wcFolderHasContent ? (
+                  <div key="world_community_folder" style={{ opacity: wcHidden ? 0.4 : 1 }}>
+                    <div onClick={() => {
+                      setExpandedFolders(prev => {
+                        const next = new Set(prev)
+                        next.has('world_community') ? next.delete('world_community') : next.add('world_community')
+                        if (typeof window !== 'undefined') localStorage.setItem('tapestry_folder_state', JSON.stringify([...next]))
+                        return next
+                      })
+                    }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{wcFolderOpen ? '▼' : '▶'}</span>
+                      <span style={{ fontSize: '14px' }}>🌐</span>
+                      <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1, fontWeight: 600 }}>Published Communities</span>
+                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginRight: '4px' }}>{wcFiltered.length}</span>
+                      <span onClick={e => {
+                        e.stopPropagation()
+                        setHiddenFolders(prev => {
+                          const next = new Set(prev)
+                          next.has('world_community') ? next.delete('world_community') : next.add('world_community')
+                          if (typeof window !== 'undefined') localStorage.setItem('tapestry_hidden_folders', JSON.stringify([...next]))
+                          return next
+                        })
+                      }}
+                        title={wcHidden ? 'Show on map' : 'Hide from map'}
+                        style={{ fontSize: '13px', cursor: 'pointer', color: wcHidden ? '#5a5550' : '#7fc458', lineHeight: 1 }}>
+                        {wcHidden ? '👁‍🗨' : '👁'}
+                      </span>
+                    </div>
+                    {wcFolderOpen && (
+                      <div style={{ padding: '2px 0 4px' }}>
+                        {wcFiltered.map(wc => {
+                          // Status-tier dot color — mirrors the map
+                          // marker palette so players recognize the
+                          // community in both surfaces.
+                          const color = wc.community_status === 'Thriving' ? '#7fc458'
+                            : wc.community_status === 'Holding' ? '#cce0f5'
+                            : wc.community_status === 'Struggling' ? '#EF9F27'
+                            : wc.community_status === 'Dying' ? '#f5a89a'
+                            : '#5a5550'
+                          return (
+                            <div key={wc.id}
+                              onClick={() => {
+                                const map = mapInstanceRef.current
+                                if (!map) return
+                                map.flyTo([wc.lat, wc.lng], 11, { duration: 1.2 })
+                                const marker = markersRef.current[`world_community:${wc.id}`]
+                                if (marker) setTimeout(() => marker.openPopup(), 1300)
+                              }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px 6px 30px', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = '#1a1a2e')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                              title={`${wc.name} · ${wc.size_band} · ${wc.community_status}${wc.faction_label ? ' · ' + wc.faction_label : ''} · From ${wc.campaign_name}`}>
+                              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: color, border: '1px solid #1a1a1a', flexShrink: 0 }} />
+                              <span style={{ color: '#f5f2ee', fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{wc.name}</span>
+                              <span style={{ color: '#5a5550', fontSize: '13px', letterSpacing: '.04em', textTransform: 'uppercase', flexShrink: 0 }}>{wc.size_band}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ) : null
+                return (
+                  <>
+                    {wcFolderNode}
+                    {sortedCats.map(cat => {
                   const folderPins = folderMap[cat.value] ?? []
                   const isOpen = isSearching || expandedFolders.has(cat.value)
                   const isHidden = hiddenFolders.has(cat.value)
@@ -907,7 +1018,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                       )}
                     </div>
                   )
-                })
+                })}
+                  </>
+                )
               })()
               )}
             </div>
