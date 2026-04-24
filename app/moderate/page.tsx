@@ -61,6 +61,12 @@ export default function ModerationPage() {
   // approved_by + approved_at per the world_communities RLS.
   const [worldCommunities, setWorldCommunities] = useState<any[]>([])
   const [communitiesLoading, setCommunitiesLoading] = useState(false)
+  // Role check — all four queues on this page are gated by an RLS
+  // policy that requires profiles.role = 'thriver'. Non-Thrivers see
+  // 0 rows silently, which is a trap. We pull the role once on mount
+  // and render a banner when it's not 'thriver'.
+  const [myRole, setMyRole] = useState<string | null>(null)
+  const [roleChecked, setRoleChecked] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -68,10 +74,22 @@ export default function ModerationPage() {
     async function check() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
+      // Cache role for the banner gate. Not a hard block — the page
+      // still loads so the user can see the empty state alongside
+      // the banner, but at least they know why.
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+      setMyRole((prof as any)?.role ?? null)
+      setRoleChecked(true)
       load()
     }
     check()
   }, [filter])
+
+  const isThriver = typeof myRole === 'string' && myRole.toLowerCase() === 'thriver'
 
   useEffect(() => {
     if (section === 'users') loadUsers()
@@ -238,6 +256,21 @@ export default function ModerationPage() {
         <div style={{ flex: 1 }} />
         <a href="/map" style={navLink}>Map</a>
       </div>
+
+      {/* Thriver-only warning banner. Every queue on this page gates
+          reads behind an RLS policy that requires profiles.role =
+          'thriver'. A non-Thriver hitting this page sees empty tabs
+          with no explanation; the banner calls it out explicitly.
+          Suppressed until roleChecked flips so we don't flash the
+          banner while the profile fetch is in flight. */}
+      {roleChecked && !isThriver && (
+        <div style={{ padding: '12px 14px', marginBottom: '1.5rem', background: '#2a1210', border: '1px solid #c0392b', borderLeft: '3px solid #c0392b', borderRadius: '4px', color: '#f5a89a', fontSize: '14px', lineHeight: 1.5, fontFamily: 'Barlow, sans-serif' }}>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '15px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a', marginBottom: '4px' }}>
+            ⚠ Thriver-only queue
+          </div>
+          Every queue on this page — Users, Rumors, NPCs, 🌐 Communities — is restricted at the database layer to users whose <code style={{ background: '#3a1a16', padding: '1px 5px', borderRadius: '2px' }}>profiles.role</code> is <code style={{ background: '#3a1a16', padding: '1px 5px', borderRadius: '2px' }}>thriver</code>. Your current role is <strong style={{ color: '#f5f2ee' }}>{myRole ?? '(null)'}</strong>, so every tab will show an empty list regardless of what's actually queued. Ask a Thriver to elevate your account, or paste <code style={{ background: '#3a1a16', padding: '1px 5px', borderRadius: '2px' }}>UPDATE profiles SET role = 'thriver' WHERE id = auth.uid();</code> into Supabase SQL editor if you should be one.
+        </div>
+      )}
 
       {/* Section tabs */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
