@@ -6,7 +6,7 @@ import NotificationBell from './NotificationBell'
 
 // Left sidebar — restructured 2026-04-22 per user spec:
 //
-//   [Logo / Tapestry v1.0]
+//   [Logo / Tapestry v0.5]
 //   [Username + Role Badge + Bell]
 //   ——— divider ———
 //   The Tapestry (header)
@@ -117,7 +117,7 @@ export default function Sidebar() {
       <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid #c0392b', textAlign: 'center' }}>
         <a href="/dashboard" style={{ textDecoration: 'none' }}>
           <img src="/DistemperLogoRedv5.png" alt="Distemper" style={{ height: '28px', objectFit: 'contain', marginBottom: '4px' }} />
-          <div style={{ fontFamily: 'Distemper, sans-serif', fontSize: '18px', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1 }}>The Tapestry <span style={{ fontSize: '13px', color: '#f5f2ee' }}>v1.0</span></div>
+          <div style={{ fontFamily: 'Distemper, sans-serif', fontSize: '18px', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1 }}>The Tapestry <span style={{ fontSize: '13px', color: '#f5f2ee' }}>v0.5</span></div>
         </a>
         {onlineCount > 0 && (
           <div style={{ fontSize: '14px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: '4px' }}>
