@@ -220,6 +220,8 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   const [dragFolderId, setDragFolderId] = useState<string | null>(null)
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null)
   const [dragNpcToFolder, setDragNpcToFolder] = useState<string | null>(null)
+  // Map of npc_id → { communityId, communityName } for recruited NPCs.
+  const [communityMap, setCommunityMap] = useState<Record<string, { communityId: string; communityName: string }>>({})
 
   async function loadNpcs() {
     const { data } = await supabase
@@ -229,6 +231,25 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       .order('sort_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true })
     setNpcs(data ?? [])
+
+    // Fetch community memberships for these NPCs.
+    const npcIds = (data ?? []).map((n: any) => n.id)
+    if (npcIds.length > 0) {
+      const { data: members } = await supabase
+        .from('community_members')
+        .select('npc_id, community_id, communities(name)')
+        .in('npc_id', npcIds)
+        .is('left_at', null)
+        .not('npc_id', 'is', null)
+      const map: Record<string, { communityId: string; communityName: string }> = {}
+      ;(members ?? []).forEach((m: any) => {
+        if (m.npc_id) map[m.npc_id] = { communityId: m.community_id, communityName: m.communities?.name ?? 'Community' }
+      })
+      setCommunityMap(map)
+    } else {
+      setCommunityMap({})
+    }
+
     setLoading(false)
   }
 
@@ -261,6 +282,9 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     // (e.g. damage applied from table page updates WP/RP in DB).
     const channel = supabase.channel(`npc_roster_${campaignId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${campaignId}` }, () => {
+        if (isGM) loadNpcs()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members' }, () => {
         if (isGM) loadNpcs()
       })
       .subscribe()
@@ -968,8 +992,22 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
               // Folder tree renders in both combat and non-combat modes — GMs
               // with lots of NPCs want groupings visible so they can scan by
               // faction / encounter batch while combat is live.
+
+              // Recruited NPCs float to a pinned Community section; the rest
+              // stay in their regular folders.
+              const recruitedNpcs = sortedNpcs.filter(n => communityMap[n.id])
+              const unrecruitedNpcs = sortedNpcs.filter(n => !communityMap[n.id])
+
+              // Group recruited NPCs by community name.
+              const communityGroups: Record<string, CampaignNpc[]> = {}
+              for (const npc of recruitedNpcs) {
+                const cname = communityMap[npc.id].communityName
+                if (!communityGroups[cname]) communityGroups[cname] = []
+                communityGroups[cname].push(npc)
+              }
+
               const folderMap: Record<string, CampaignNpc[]> = {}
-              for (const npc of sortedNpcs) {
+              for (const npc of unrecruitedNpcs) {
                 const f = npc.folder ?? 'Uncategorized'
                 if (!folderMap[f]) folderMap[f] = []
                 folderMap[f].push(npc)
@@ -983,7 +1021,27 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                 if (typeof window !== 'undefined') localStorage.setItem(`npc_folder_order_${campaignId}`, JSON.stringify(ordered))
               }
 
-              return ordered.map(folderName => {
+              // Community sections rendered before regular folders.
+              const communitySections = Object.entries(communityGroups).map(([cname, cnpcs]) => {
+                const key = `__community__${cname}`
+                const isOpen = expandedFolders.has(key)
+                return (
+                  <div key={key} style={{ marginBottom: '2px' }}>
+                    <div onClick={() => toggleFolder(key)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', cursor: 'pointer', borderRadius: '3px', background: 'transparent', borderBottom: '1px solid #2e2e2e', userSelect: 'none' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
+                      <span style={{ fontSize: '13px', color: '#7fc458', marginRight: '2px' }}>🏘</span>
+                      <span style={{ flex: 1, fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>Community — {cname}</span>
+                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{cnpcs.length}</span>
+                    </div>
+                    {isOpen && cnpcs.map(renderNpcCard)}
+                  </div>
+                )
+              })
+
+              return [...communitySections, ...ordered.map(folderName => {
                 const folderNpcs = folderMap[folderName] ?? []
                 if (folderNpcs.length === 0) return null
                 const isOpen = expandedFolders.has(folderName)
@@ -1021,7 +1079,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                     {isOpen && folderNpcs.map(renderNpcCard)}
                   </div>
                 )
-              })
+              })]
             })()
           )}
       </div>
