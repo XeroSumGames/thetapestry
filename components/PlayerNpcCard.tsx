@@ -18,6 +18,15 @@ import { createClient } from '../lib/supabase-browser'
 // to the status badge. Clicking it opens the Recruit modal pre-populated
 // with this NPC as the target. Hidden when the NPC is dead/mortally
 // wounded — you can't recruit a corpse.
+//
+// Recruit state badge: on mount we fetch the NPC's latest community
+// membership + latest recruitment roll_log entry and render one of:
+//   - active  → green chip "<ROLE> IN <COMMUNITY>" (Recruit button hidden)
+//   - left    → amber chip "LEFT <COMMUNITY>" + Recruit button (re-try OK)
+//   - failed  → red chip "RECRUIT FAILED" + Recruit button (re-try OK)
+//   - none    → just the Recruit button (current behavior)
+// This replaces the always-green Recruit button that persisted on
+// already-recruited or recently-failed NPCs.
 
 const TYPE_COLORS: Record<string, { bg: string; border: string; color: string }> = {
   bystander: { bg: '#1a2e10', border: '#2d5a1b', color: '#7fc458' },
@@ -42,10 +51,17 @@ interface Props {
   onRecruit?: () => void
 }
 
+type RecruitState =
+  | { kind: 'active'; role: string; communityName: string }
+  | { kind: 'left'; leftReason: string | null; communityName: string }
+  | { kind: 'failed'; outcome: string }
+  | null
+
 export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecruit }: Props) {
   const supabase = createClient()
   const [enlarged, setEnlarged] = useState(false)
   const [cmod, setCmod] = useState<number | null>(null)
+  const [recruitState, setRecruitState] = useState<RecruitState>(null)
 
   useEffect(() => {
     if (!viewingCharacterId) { setCmod(null); return }
@@ -61,6 +77,60 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
     })()
     return () => { cancelled = true }
   }, [npc.id, viewingCharacterId])
+
+  // Recruit-state lookup. Runs on every card open. Cheap: two
+  // small queries, neither returns more than 1 row.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      // 1. Latest community_members row for this NPC (active takes
+      //    precedence over left). Only an NPC-backed row counts —
+      //    PC rows don't belong on a "recruit" surface.
+      const { data: memRows } = await supabase
+        .from('community_members')
+        .select('recruitment_type, left_at, left_reason, communities!inner(id, name)')
+        .eq('npc_id', npc.id)
+        .order('joined_at', { ascending: false })
+        .limit(1)
+      if (cancelled) return
+      const mem = (memRows ?? [])[0] as any
+      if (mem) {
+        const communityName = Array.isArray(mem.communities)
+          ? (mem.communities[0]?.name ?? '')
+          : (mem.communities?.name ?? '')
+        if (!mem.left_at) {
+          setRecruitState({ kind: 'active', role: String(mem.recruitment_type ?? 'member'), communityName })
+          return
+        }
+        // They were a member but left. Fall through — we still want
+        // to show the "left" chip alongside the Recruit button.
+        setRecruitState({ kind: 'left', leftReason: mem.left_reason ?? null, communityName })
+        return
+      }
+
+      // 2. No membership ever — check for the latest recruitment
+      //    attempt (failures don't create community_members rows
+      //    but do log a 🤝-label row with damage_json.npcId set).
+      const { data: rollRows } = await supabase
+        .from('roll_log')
+        .select('damage_json, created_at')
+        .contains('damage_json', { npcId: npc.id })
+        .order('created_at', { ascending: false })
+        .limit(1)
+      if (cancelled) return
+      const roll = (rollRows ?? [])[0] as any
+      const outcome = roll?.damage_json?.rollOutcome
+      const isRecruitAttempt = roll?.damage_json?.approach === 'cohort'
+        || roll?.damage_json?.approach === 'conscript'
+        || roll?.damage_json?.approach === 'convert'
+      if (roll && outcome && isRecruitAttempt) {
+        setRecruitState({ kind: 'failed', outcome: String(outcome) })
+        return
+      }
+      setRecruitState(null)
+    })()
+    return () => { cancelled = true }
+  }, [npc.id])
 
   const wpMax = npc.wp_max ?? 10
   const rpMax = npc.rp_max ?? 6
@@ -104,14 +174,55 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
               <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.npc_type}</span>
             )}
             <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{displayStatus}</span>
-            {/* Recruit button — right of the status badge per spec.
-                Hidden for dead/mortal since you can't recruit a corpse. */}
-            {onRecruit && displayStatus !== 'dead' && displayStatus !== 'mortally wounded' && (
-              <button onClick={onRecruit}
-                style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}
-                title="Open the Recruit modal with this NPC as the target">
-                🤝 Recruit
-              </button>
+            {/* Recruit state — right of the status badge. Branches
+                between chip (active member) / chip + button (left or
+                failed) / button (no history). Dead/mortal NPCs get
+                nothing since you can't recruit a corpse. */}
+            {displayStatus !== 'dead' && displayStatus !== 'mortally wounded' && (
+              <>
+                {recruitState?.kind === 'active' && (
+                  <span
+                    title={`${npc.name} is a ${recruitState.role} in ${recruitState.communityName}.`}
+                    style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', fontWeight: 600 }}>
+                    💚 {recruitState.role}{recruitState.communityName ? ` · ${recruitState.communityName}` : ''}
+                  </span>
+                )}
+                {recruitState?.kind === 'left' && onRecruit && (
+                  <>
+                    <span
+                      title={`${npc.name} was in ${recruitState.communityName} but left${recruitState.leftReason ? ` (${recruitState.leftReason})` : ''}.`}
+                      style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', fontWeight: 600 }}>
+                      ↩ Left{recruitState.communityName ? ` · ${recruitState.communityName}` : ''}
+                    </span>
+                    <button onClick={onRecruit}
+                      style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}
+                      title="Re-recruit — the NPC left their prior community and can be recruited again.">
+                      🤝 Recruit
+                    </button>
+                  </>
+                )}
+                {recruitState?.kind === 'failed' && onRecruit && (
+                  <>
+                    <span
+                      title={`Last recruitment attempt: ${recruitState.outcome}.`}
+                      style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', fontWeight: 600 }}>
+                      ✗ Failed · {recruitState.outcome}
+                    </span>
+                    <button onClick={onRecruit}
+                      style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}
+                      title="Try again — a failed recruit doesn't lock the NPC out.">
+                      🤝 Retry
+                    </button>
+                  </>
+                )}
+                {recruitState === null && onRecruit && (
+                  <button onClick={onRecruit}
+                    style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}
+                    title="Open the Recruit modal with this NPC as the target">
+                    🤝 Recruit
+                  </button>
+                )}
+              </>
             )}
             {/* First Impression CMod — shown when the viewing PC has
                 a recorded relationship with this NPC. +N green,
