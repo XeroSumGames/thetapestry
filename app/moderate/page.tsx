@@ -46,7 +46,7 @@ const navLink: React.CSSProperties = {
 }
 
 export default function ModerationPage() {
-  const [section, setSection] = useState<'rumors' | 'users' | 'npcs'>('users')
+  const [section, setSection] = useState<'rumors' | 'users' | 'npcs' | 'communities'>('users')
   const [pins, setPins] = useState<Pin[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending')
@@ -55,6 +55,12 @@ export default function ModerationPage() {
   const [usersLoading, setUsersLoading] = useState(false)
   const [worldNpcs, setWorldNpcs] = useState<any[]>([])
   const [npcsLoading, setNpcsLoading] = useState(false)
+  // Phase E Sprint 2 — world_communities moderation queue. Same
+  // shape as world_npcs: pending / approved / rejected via the
+  // shared filter state. Approve writes moderation_status +
+  // approved_by + approved_at per the world_communities RLS.
+  const [worldCommunities, setWorldCommunities] = useState<any[]>([])
+  const [communitiesLoading, setCommunitiesLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -70,7 +76,8 @@ export default function ModerationPage() {
   useEffect(() => {
     if (section === 'users') loadUsers()
     if (section === 'npcs') loadWorldNpcs()
-  }, [section])
+    if (section === 'communities') loadWorldCommunities()
+  }, [section, filter])
 
   async function loadWorldNpcs() {
     setNpcsLoading(true)
@@ -84,6 +91,44 @@ export default function ModerationPage() {
     const { data: { user } } = await supabase.auth.getUser()
     await supabase.from('world_npcs').update({ status, approved_by: user?.id ?? null, approved_at: new Date().toISOString() }).eq('id', id)
     setWorldNpcs(prev => prev.filter(n => n.id !== id))
+    setActing(null)
+  }
+
+  async function loadWorldCommunities() {
+    setCommunitiesLoading(true)
+    // Join publisher profile for attribution; filter by the shared
+    // pending/approved/rejected filter. world_communities.RLS grants
+    // Thriver full read so this shows everything they need.
+    const { data } = await supabase
+      .from('world_communities')
+      .select('*, publisher:published_by(username), campaigns:source_campaign_id(name)')
+      .eq('moderation_status', filter)
+      .order('created_at', { ascending: false })
+    setWorldCommunities(data ?? [])
+    setCommunitiesLoading(false)
+  }
+
+  async function handleCommunityAction(id: string, status: 'approved' | 'rejected') {
+    setActing(id)
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('world_communities').update({
+      moderation_status: status,
+      approved_by: user?.id ?? null,
+      approved_at: new Date().toISOString(),
+    }).eq('id', id)
+    if (error) { alert(`Moderation action failed: ${error.message}`); setActing(null); return }
+    // Match the NPC pattern — drop the row from this filter's list so
+    // the queue shortens immediately. Switching filter tabs re-fetches.
+    setWorldCommunities(prev => prev.filter(c => c.id !== id))
+    setActing(null)
+  }
+
+  async function handleCommunityDelete(id: string) {
+    if (!confirm('Permanently delete this world_communities row? The source campaign community stays intact. Use this to force an unpublish.')) return
+    setActing(id)
+    const { error } = await supabase.from('world_communities').delete().eq('id', id)
+    if (error) { alert(`Delete failed: ${error.message}`); setActing(null); return }
+    setWorldCommunities(prev => prev.filter(c => c.id !== id))
     setActing(null)
   }
 
@@ -195,8 +240,8 @@ export default function ModerationPage() {
       </div>
 
       {/* Section tabs */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem' }}>
-        {(['users', 'rumors', 'npcs'] as const).map(s => (
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        {(['users', 'rumors', 'npcs', 'communities'] as const).map(s => (
           <button key={s} onClick={() => setSection(s)} style={{
             padding: '7px 16px',
             border: `1px solid ${section === s ? '#c0392b' : '#3a3a3a'}`,
@@ -206,7 +251,7 @@ export default function ModerationPage() {
             fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
             letterSpacing: '.06em', textTransform: 'uppercase',
           }}>
-            {s === 'rumors' ? 'Rumor Queue' : s === 'users' ? 'Users' : 'NPCs'}
+            {s === 'rumors' ? 'Rumor Queue' : s === 'users' ? 'Users' : s === 'npcs' ? 'NPCs' : '🌐 Communities'}
           </button>
         ))}
       </div>
@@ -411,6 +456,115 @@ export default function ModerationPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </>
+      )}
+
+      {/* ── WORLD COMMUNITIES (Phase E Sprint 2) ── */}
+      {section === 'communities' && (
+        <>
+          {/* Filter — pending / approved / rejected. Same control as
+              the rumor queue; re-uses the shared `filter` state. */}
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem' }}>
+            {(['pending', 'approved', 'rejected'] as const).map(f => (
+              <button key={f} onClick={() => setFilter(f)} style={{
+                padding: '7px 16px',
+                border: `1px solid ${filter === f ? '#c0392b' : '#3a3a3a'}`,
+                background: filter === f ? '#2a1210' : '#242424',
+                color: filter === f ? '#f5a89a' : '#d4cfc9',
+                borderRadius: '3px', cursor: 'pointer',
+                fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
+                letterSpacing: '.06em', textTransform: 'uppercase',
+              }}>
+                {f}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem' }}>
+            {communitiesLoading ? 'Loading...' : `${worldCommunities.length} ${filter} communit${worldCommunities.length === 1 ? 'y' : 'ies'}`}
+          </div>
+
+          {!communitiesLoading && worldCommunities.length === 0 && (
+            <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '3rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>
+              No {filter} communities.
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {worldCommunities.map(wc => {
+              const hasCoords = wc.homestead_lat != null && wc.homestead_lng != null
+              const publisherName = (wc.publisher as any)?.username ?? 'unknown'
+              const sourceCampaignName = (wc.campaigns as any)?.name ?? 'unknown campaign'
+              return (
+                <div key={wc.id} style={{ padding: '14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${filter === 'approved' ? '#7fc458' : filter === 'rejected' ? '#c0392b' : '#d48bd4'}`, borderRadius: '4px' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '19px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                        🌐 {wc.name}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>
+                        Published by <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{publisherName}</span> {wc.created_at ? `on ${formatDate(wc.created_at)}` : ''} · from <span style={{ color: '#EF9F27' }}>{sourceCampaignName}</span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{wc.size_band}</span>
+                      <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: '#1a2010', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{wc.community_status}</span>
+                      {wc.faction_label && (
+                        <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{wc.faction_label}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {wc.description && (
+                    <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a' }}>
+                      {wc.description}
+                    </div>
+                  )}
+
+                  <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px', fontFamily: 'Barlow Condensed, sans-serif', display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+                    <span>
+                      <span style={{ color: '#5a5550', letterSpacing: '.06em', textTransform: 'uppercase' }}>Homestead:</span>{' '}
+                      {hasCoords
+                        ? <span style={{ fontFamily: 'monospace', color: '#f5f2ee' }}>{wc.homestead_lat.toFixed(4)}, {wc.homestead_lng.toFixed(4)}</span>
+                        : <span style={{ color: '#EF9F27' }}>unlocated — won't appear on the world map</span>}
+                    </span>
+                    <span>
+                      <span style={{ color: '#5a5550', letterSpacing: '.06em', textTransform: 'uppercase' }}>Last update:</span>{' '}
+                      <span style={{ color: '#f5f2ee' }}>{wc.last_public_update_at ? formatDate(wc.last_public_update_at) : '—'}</span>
+                    </span>
+                  </div>
+
+                  {wc.moderator_notes && (
+                    <div style={{ fontSize: '13px', color: '#f5a89a', marginBottom: '8px', padding: '6px 8px', background: '#2a1010', borderRadius: '3px', border: '1px solid #c0392b' }}>
+                      <span style={{ color: '#5a5550', letterSpacing: '.06em', textTransform: 'uppercase' }}>Moderator notes:</span> {wc.moderator_notes}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {filter === 'pending' && (
+                      <>
+                        <button onClick={() => handleCommunityAction(wc.id, 'approved')} disabled={acting === wc.id} style={actionBtn('#2d5a1b', '#7fc458')}>Approve</button>
+                        <button onClick={() => handleCommunityAction(wc.id, 'rejected')} disabled={acting === wc.id} style={actionBtn('#7a1f16', '#f5a89a')}>Reject</button>
+                      </>
+                    )}
+                    {filter === 'approved' && (
+                      <button onClick={() => handleCommunityAction(wc.id, 'rejected')} disabled={acting === wc.id} style={actionBtn('#7a1f16', '#f5a89a')}>Revoke</button>
+                    )}
+                    {filter === 'rejected' && (
+                      <button onClick={() => handleCommunityAction(wc.id, 'approved')} disabled={acting === wc.id} style={actionBtn('#2d5a1b', '#7fc458')}>Approve</button>
+                    )}
+                    <button onClick={() => handleCommunityDelete(wc.id)} disabled={acting === wc.id} style={actionBtn('#2e2e2e', '#cce0f5')}>Delete</button>
+                    {hasCoords && (
+                      <a href={`https://www.openstreetmap.org/#map=15/${wc.homestead_lat}/${wc.homestead_lng}`} target="_blank" rel="noreferrer"
+                        style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', display: 'inline-block' }}>
+                        View on map
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </>
       )}
