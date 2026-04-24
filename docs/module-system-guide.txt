@@ -1,0 +1,508 @@
+MODULE SYSTEM — BETA TESTER GUIDE
+==================================
+
+Version 1 · 2026-04-24 · Phase 5 Sprints 1–3 shipped
+
+The Module System lets you take a campaign you've set up in The
+Tapestry — NPCs, map pins, tactical scenes, handouts — and publish
+it as a reusable "module" that other GMs can pick when they create
+their own campaign. Think of it like shipping an adventure pack,
+except authored entirely inside the live tool instead of through
+external files.
+
+This guide walks through the full author → subscriber loop. You
+should be able to finish the whole thing in 15–20 minutes if you
+have two browser windows (or two accounts) available.
+
+
+CONTENTS
+--------
+ 1. What a module is
+ 2. Before you start (once per Supabase project)
+ 3. Part A — PUBLISHING A MODULE
+    3a. Set up your source campaign
+    3b. Open the Publish wizard
+    3c. Pick what travels with the module
+    3d. Pick a visibility tier
+    3e. Hit Publish
+ 4. Part B — USING A MODULE
+    4a. Pick a module during campaign creation
+    4b. What gets cloned, what doesn't
+ 5. Part C — PUBLISHING A NEW VERSION
+    5a. Edit the source campaign
+    5b. Re-open the Publish wizard (it flips to "New Version")
+    5c. Semver bump (patch / minor / major)
+    5d. Changelog
+ 6. Part D — RECEIVING AN UPDATE (subscriber side)
+    6a. Notification + bell
+    6b. "Update available" button on the story page
+    6c. Version history page
+ 7. What's deferred (on the roadmap)
+ 8. Troubleshooting
+
+
+==============================================================
+ 1. WHAT A MODULE IS
+==============================================================
+
+A module is a named, versioned, shareable snapshot of a campaign's
+authored content. It contains:
+
+    • NPCs (stats, portraits, skills, equipment, motivation)
+    • Map pins (world-map locations with notes + category)
+    • Tactical scenes (battle maps with grid + object tokens)
+    • Handouts (campaign notes with attachments)
+
+It deliberately does NOT contain:
+
+    • Player characters (PCs stay with their players)
+    • Per-session state (HP at -3? unconscious round counter? gone)
+    • Community rosters (Phase 5 Phase E dependency)
+    • Session logs or roll history
+
+Each publish creates an immutable **version** (v1.0.0, v1.1.0,
+etc.). Subscribers clone a version into their own campaign; the
+clone is theirs to edit. When you publish a new version later,
+subscribed campaigns see an "Update available" prompt.
+
+
+==============================================================
+ 2. BEFORE YOU START
+==============================================================
+
+A Thriver or your dev needs to run two SQL migrations on the
+project ONCE. If you're testing the live site someone else
+manages, this is likely already done. If it's your own Supabase
+project, paste these two files into the SQL editor and run them:
+
+    sql/modules-phase-a.sql   (tables + RLS + campaign-creation picker)
+    sql/modules-phase-b.sql   (version history + subscriber notifications)
+
+Both are idempotent — safe to re-run if you're unsure whether
+they landed.
+
+Verify with this query (all five rows should come back non-null):
+
+    SELECT 'modules table'          AS check_name, to_regclass('public.modules')::text             AS result
+    UNION ALL SELECT 'module_versions table',      to_regclass('public.module_versions')::text
+    UNION ALL SELECT 'module_subscriptions table', to_regclass('public.module_subscriptions')::text
+    UNION ALL SELECT 'edited_since_clone column',
+        CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns
+                          WHERE table_name='campaign_npcs' AND column_name='edited_since_clone')
+             THEN 'yes' ELSE 'NO — run modules-phase-b.sql' END
+    UNION ALL SELECT 'notify_module_version_published trigger',
+        (SELECT tgname::text FROM pg_trigger WHERE tgname='trg_module_version_published_notify');
+
+
+==============================================================
+ 3. PART A — PUBLISHING A MODULE
+==============================================================
+
+3a. SET UP YOUR SOURCE CAMPAIGN
+    ----------------------------
+    Nothing special — just create and flesh out a campaign like
+    you normally would. Add some NPCs, drop some pins, build a
+    tactical scene or two, write handouts.
+
+    The content travelling with your module is WHATEVER EXISTS
+    in the source campaign at the moment you hit Publish. If
+    you haven't added something yet, it won't ship. You can
+    always publish a v1.1 later with the additions.
+
+    Tip: name your source campaign something module-y like
+    "The Arena — Source" so you remember it's the authoring
+    copy, not a play copy.
+
+3b. OPEN THE PUBLISH WIZARD
+    ------------------------
+    Go to your campaign's story page (the one at
+    /stories/<campaign_id> showing Launch / Edit / Clone /
+    Share / GM Kit). You'll see a new purple button:
+
+        📦 Publish Module
+
+    Click it. A modal opens titled "📦 Publish as Module".
+
+    (On a campaign you've already published once, this button
+    flips to "📦 Module v1.0.0" — clicking it opens the SAME
+    modal but in "Publish New Version" mode. We'll get to
+    that in Part C.)
+
+3c. FILL THE METADATA
+    ------------------
+    Four fields:
+
+        • Module Name — prefilled from your campaign name. You
+          can rename it here (this is what subscribers will see
+          in the picker; your source campaign name isn't
+          affected).
+
+        • Tagline — optional one-liner. Example:
+          "A gladiator sandbox set in post-collapse Missouri."
+
+        • Description — optional paragraph. Explain what the
+          module is, who it's for, how long it runs.
+
+        • Visibility — three tiers (see next section).
+
+3d. PICK A VISIBILITY TIER
+    -----------------------
+    Three buttons:
+
+        🔒 PRIVATE
+            Only you can pick this module when creating a
+            campaign. Use this for early drafts + personal
+            prep. Skips moderation.
+
+        🔗 UNLISTED
+            Anyone with the module's id (via a shared link)
+            can subscribe. Won't appear in any public
+            marketplace. Use this to share with a specific
+            co-GM or beta reader. Skips moderation.
+
+        🌐 LISTED
+            Will appear in the public marketplace once a
+            Thriver approves it. Use this when the module
+            is ready for broad discovery. Starts "pending";
+            goes live after moderation.
+
+    Pick PRIVATE for your first test publish.
+
+3e. PICK WHAT TRAVELS (CONTENT CHECKLIST)
+    --------------------------------------
+    Four checkboxes, each with a live count once the wizard
+    reads your source campaign:
+
+        📍 Pins             (count)
+        🧑 NPCs             (count)
+        🗺 Tactical scenes  (count / token count)
+        📄 Handouts         (count)
+
+    Uncheck anything you don't want to ship. Common reason
+    to uncheck something: you have WIP NPCs or spoiler pins
+    that shouldn't travel.
+
+    The counts refresh whenever you toggle — the number you
+    see is exactly what will go into the snapshot.
+
+3f. SEMVER (FIRST PUBLISH ONLY)
+    ----------------------------
+    Your first publish is v1.0.0. The wizard shows this in
+    the footer: "→ Publishing v1.0.0".
+
+    Re-publishes get a patch/minor/major picker (see Part C).
+
+3g. HIT PUBLISH
+    ------------
+    Click the purple **📦 Publish v1.0.0** button in the
+    footer. Takes a second or two (it's reading every
+    selected content type and packaging them into a single
+    snapshot).
+
+    When it's done:
+        • Alert: "📦 Published v1.0.0. Other GMs can now
+          pick this module when creating a campaign."
+        • The purple button on the story page re-labels
+          to "📦 Module v1.0.0".
+
+    That's it — the module is live (at whatever visibility
+    tier you chose).
+
+
+==============================================================
+ 4. PART B — USING A MODULE
+==============================================================
+
+4a. PICK A MODULE DURING CAMPAIGN CREATION
+    ---------------------------------------
+    Go to /campaigns/new or /stories/new. You'll see the
+    normal campaign-creation form with a Setting row
+    (Custom, District Zero, etc.).
+
+    BELOW the Setting row is a new section:
+
+        OR START FROM A MODULE
+
+    This section lists every module you can pick:
+        • Your own modules (all three visibility tiers)
+        • Anyone's LISTED + Thriver-approved modules
+        • Modules shared with you via UNLISTED link
+          (invite-link UI ships later; for now, any
+          UNLISTED module you know about is visible)
+
+    Each module is a purple-outlined card with 📦 +
+    name + version number + tagline.
+
+    Click one to select it. The card highlights purple.
+    Clicking the SAME module again deselects it. Picking
+    a module clears any setting you had selected
+    (module and setting are mutually exclusive).
+
+    Fill in the rest of the form (campaign name, map
+    style, description) and hit Create Campaign.
+
+4b. WHAT GETS CLONED
+    -----------------
+    When you create a campaign from a module:
+
+        ✓ All NPCs from the snapshot land in your
+          campaign_npcs with fresh uuids, HP/RP at max,
+          skills intact, portraits intact.
+        ✓ All pins from the snapshot land in your
+          campaign_pins. NPCs linked to pins stay linked
+          to the re-mapped pin ids.
+        ✓ All tactical scenes land in tactical_scenes
+          with their grid + background. Object tokens
+          (WP, loot, etc.) come through. NPC tokens that
+          were linked to NPCs in the source campaign
+          re-link to the cloned NPCs in your campaign.
+        ✓ All handouts land in campaign_notes with
+          attachments.
+
+    DOESN'T clone:
+        ✗ PC tokens (character_id rows) — PCs don't
+          travel with modules.
+        ✗ Session logs, roll history, combat state.
+        ✗ The source campaign's community rosters (Phase 5
+          cross-publish still to come).
+
+    Your campaign gets a `module_subscriptions` row
+    recording the link + the exact version you cloned.
+    This is what drives the "Update available" prompt
+    later.
+
+
+==============================================================
+ 5. PART C — PUBLISHING A NEW VERSION
+==============================================================
+
+Modules are living content. When you add an NPC, fix a typo,
+change a handout, you ship a new version. Subscribers see
+the update and choose whether to pull it in.
+
+5a. EDIT THE SOURCE CAMPAIGN
+    -------------------------
+    Go to your source campaign and make whatever changes
+    you want — add NPCs, retitle pins, rewrite handouts,
+    build new tactical scenes. No module-specific workflow;
+    you're just using the GM tools normally.
+
+5b. RE-OPEN THE PUBLISH WIZARD
+    ---------------------------
+    Back on /stories/<source_campaign_id>, the button now
+    reads:
+
+        📦 Module v1.0.0   (or whatever version you last shipped)
+
+    Click it. The modal opens titled "📦 Publish New Version
+    — <your module name>" (instead of "Publish as Module").
+
+    The content checklist works exactly the same — counts
+    reflect the CURRENT state of your source campaign, so
+    if you added 3 NPCs since v1.0, the NPCs count shows
+    the new total.
+
+5c. PICK YOUR SEMVER BUMP
+    ----------------------
+    A new row appears: "Version bump (current v1.0.0)".
+    Three buttons:
+
+        PATCH → v1.0.1    Silent fixes (typos, stat tweaks).
+                          Subscribers auto-upgrade (eventually —
+                          Phase 3b of the roadmap).
+
+        MINOR → v1.1.0    New content, backwards-compatible
+                          (new NPCs, new pins). Subscribers
+                          prompted to upgrade.
+
+        MAJOR → v2.0.0    Breaking changes (renamed scenes,
+                          removed NPCs). Subscribers must opt in.
+
+    Default is MINOR, which is the right answer 90% of the
+    time. Pick whatever fits.
+
+5d. WRITE A CHANGELOG
+    ------------------
+    Another new row: "Changelog (what changed in this version?)".
+
+    This is author-authored release notes. Subscribers see
+    this verbatim in their bell notification AND on the
+    version history page. Write it like a commit message:
+
+        "Added 3 NPCs to the south wing, rewrote the Costco
+         handout, rebalanced Gus's skill levels."
+
+    Optional but strongly recommended. A changelog-less
+    publish leaves subscribers guessing what changed.
+
+5e. HIT PUBLISH AGAIN
+    ------------------
+    Click the **📦 Publish v<new>** button.
+
+    When it's done:
+        • Alert: "📦 Published v1.1.0."
+        • Button re-labels to "📦 Module v1.1.0".
+        • BEHIND THE SCENES — every subscribed campaign's GM
+          gets a bell notification.
+
+
+==============================================================
+ 6. PART D — RECEIVING AN UPDATE (SUBSCRIBER SIDE)
+==============================================================
+
+Now switch to the OTHER account you used in Part B — the one
+running a campaign that subscribed to your module.
+
+6a. NOTIFICATION BELL
+    ------------------
+    Hard-refresh the page. In the top-right bell, a new
+    unread notification appears:
+
+        📦 MODULE UPDATED                    [just now]
+        A new version of "<your module name>" (v1.1.0) is
+        available: <your changelog text>
+
+    The module name renders in purple, the version bold
+    amber, the changelog italic blue. Clicking the
+    notification routes to the version history page
+    (Part 6c).
+
+6b. "UPDATE AVAILABLE" BUTTON ON THE STORY PAGE
+    --------------------------------------------
+    Go to /stories/<subscribed_campaign_id>. In the GM
+    action row (next to GM Kit, Edit, Clone, etc.), a
+    new purple button appears:
+
+        📦 v1.1.0 ↑
+
+    The tooltip reads: "<module> has a newer version.
+    You're on vA; latest is vB. Click to see what changed."
+
+    Clicking routes to the version history page.
+
+6c. VERSION HISTORY PAGE
+    ---------------------
+    Route: /stories/<campaign_id>/modules/<module_id>/versions
+
+    You see:
+
+        • A purple subscription banner at the top: "This
+          campaign is subscribed. Current cloned version:
+          vA, status: active."
+
+        • Every version of the module in reverse-
+          chronological order.
+
+        • Each version card shows:
+            - version number (bold)
+            - published timestamp
+            - author's changelog (if any)
+            - one-line diff summary vs. the prior version,
+              like: "+2 NPCs, −1 pin, 3 handouts updated"
+            - subscriber count chip (how many campaigns
+              are on this version right now)
+
+        • Your currently-cloned version gets a purple
+          "Your clone" chip + purple outline so you can
+          see exactly where you sit on the ladder.
+
+    What you CAN'T do yet: one-click "apply this update
+    to my campaign". That's the Sprint 3b review modal —
+    shipping next. For now, the version history is
+    read-only awareness.
+
+
+==============================================================
+ 7. WHAT'S DEFERRED (ON THE ROADMAP)
+==============================================================
+
+Things you'll want that aren't built yet, and roughly when:
+
+    ● Per-asset Review modal — when a new version lands,
+      click "Review" to see the diff, check which NPCs/pins/
+      handouts to merge in, skip the ones you've locally
+      edited. Sprint 3b.
+
+    ● Edit-tracking on cloned rows — the DB column
+      `edited_since_clone` is in place but the client
+      doesn't flip it yet. Once it does, the review modal
+      will skip-by-default any row you've changed locally
+      so upstream updates don't stomp your edits. Sprint 3b.
+
+    ● Fork / Unsubscribe buttons — right now a subscription
+      is always "active". The spec calls for Fork (stay on
+      current version forever; no upgrade prompts) and
+      Unsubscribe (remove the link entirely). Sprint 3b.
+
+    ● /modules marketplace — a dedicated browse page with
+      search, filters (setting, tags, rating), sort by
+      popularity, featured modules surface. Sprint 4.
+
+    ● Cover images — upload a cover image for your module
+      so the marketplace has something to show. Sprint 4.
+
+    ● Paid / Premium tiers — monetization. Sprint 5.
+
+    ● GM Kit v2 — printable PDF export of a module version
+      for physical-table use. Sprint 6.
+
+
+==============================================================
+ 8. TROUBLESHOOTING
+==============================================================
+
+"I don't see the Publish Module button on my story page."
+    • You must be the campaign's GM. Non-GM players don't see it.
+
+"The picker on /campaigns/new is empty — no 'Or start from a
+ Module' section at all."
+    • You have no modules visible to you. Either nobody has
+      published one you have access to, or the module tables
+      don't exist yet (run sql/modules-phase-a.sql).
+
+"I clicked Publish and got 'Could not find the table public.modules
+ in the schema cache'."
+    • sql/modules-phase-a.sql hasn't been run. Paste it into the
+      Supabase SQL editor.
+
+"I tried to create a campaign from a module and it errored out
+ with 'campaign created but module clone failed'."
+    • The campaign got created but the clone broke mid-way. Check
+      the Supabase SQL editor for the exact error. Most likely:
+      one of the cloned tables is missing a column. The error
+      message names the column. If it's `edited_since_clone`,
+      run sql/modules-phase-b.sql.
+
+"I published a new version but the subscriber account's bell
+ didn't fire."
+    • Either the `notify_module_version_published` trigger isn't
+      installed (run sql/modules-phase-b.sql), or the subscribing
+      campaign's status isn't 'active' (check module_subscriptions
+      directly), or the subscriber account IS the module's author
+      (triggers don't self-notify — you know what you just
+      published).
+
+"The version history page says '(no changes)' between v1.0 and v1.1
+ but I definitely changed things."
+    • The diff compares NPC/pin/scene/handout content. If you only
+      changed PC-related things or session state, nothing shows.
+      If you're sure you added an NPC, open the actual snapshot in
+      Supabase and verify the row made it in:
+
+          SELECT jsonb_array_length(snapshot->'npcs')
+          FROM module_versions
+          WHERE id = '<version-id>';
+
+"I can't re-publish — the wizard says 'Name is required' but
+ there's a name in the field."
+    • Known edge case: if you cleared and re-typed the name in
+      the current session, the state didn't propagate. Close the
+      modal and re-open it.
+
+Report anything weird that isn't in this list to Xero. Include:
+    • which step (Part A/B/C/D, sub-step number)
+    • the browser console log (F12 → Console tab)
+    • a screenshot of the Supabase row for the affected entity
+      if you can
+
+— End of guide —
