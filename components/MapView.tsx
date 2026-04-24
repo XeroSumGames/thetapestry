@@ -1260,7 +1260,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{wcFolderOpen ? '▼' : '▶'}</span>
                       <span style={{ fontSize: '14px' }}>🌐</span>
-                      <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1, fontWeight: 600 }}>Published Communities</span>
+                      <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1, fontWeight: 600 }}>Player Communities</span>
                       <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginRight: '4px' }}>{wcFiltered.length}</span>
                       <span onClick={e => {
                         e.stopPropagation()
