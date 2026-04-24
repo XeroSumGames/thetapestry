@@ -1,147 +1,293 @@
-# Test Plan — Phase C Communities (Weekly Morale + Fed/Clothed)
+# Test Plan — Phase E Sprints 1, 2, 3 + 3-polish + 4a
 
-**Scope:** Weekly Check modal, Fed/Clothed/Morale roll persistence, consequence application (25/50/75% departures), 3-failure dissolution, roll-log cards.
+**Scope:** The Tapestry persistent world layer for Communities — publish to Distemperverse, Thriver moderation, world-map overlay, sidebar browse folder, GM-to-GM Contact Handshake.
 
 **Ship date:** 2026-04-23.
 
-**Pre-req:**
-1. Run the new migration: `psql ... -f sql/community-members-add-morale-75-reason.sql` so `left_reason = 'morale_75'` is accepted. (Modal falls back to 'manual' if you skip this — it still persists, just with a less precise reason.)
-2. Dev server running: `npm run dev` in the worktree.
+**Pre-req migrations** (idempotent — safe to re-run):
+1. `sql/world-communities.sql` — Sprint 1 mirror table + RLS + back-FK on communities.world_community_id.
+2. `sql/community-encounters.sql` — Sprint 4a encounters table + RLS + notify trigger + adds `notifications.metadata` jsonb column.
+
+Earlier Phase A–D migrations should already be in place: `sql/community-members-add-morale-75-reason.sql`, `sql/community-members-add-current-task.sql`, `sql/community-members-add-assignment-pc.sql`.
 
 ---
 
-## Setup (one-time, ~3 min)
+## Account setup for full coverage
 
-1. Open a campaign you GM. Use The Arena (id `35ed2133-498a-43d2-bbd6-21da05233af2`) or any other where you have ≥13 NPCs available.
-2. Open the table page (`/stories/<id>/table`).
-3. Click **Community ▾ → Status** in the header to open the Community panel.
-4. Expand (or create) a community. Add NPCs via "Add Member" until the total hits **13+** — the "Community" chip (green) should appear in the header, replacing the "Group" chip (amber).
-5. Make sure a **Leader** is set (the dropdown under the community title). Leaderless will apply a −1 "A Clear Voice" slot.
-6. Pick roles so role percentages are green on all three bars — we'll cover the understaffed-penalty case separately.
+The handshake flow requires **two GM accounts**. If you only have one (Xero), simulate by creating two campaigns under your account and swapping a "second GM" by changing `campaigns.gm_user_id` directly via Supabase Studio for the duration of the test, then swap back.
 
----
-
-## Happy path — normal weekly check with Success result
-
-**Goal:** Prove the basic loop rolls, displays, and persists correctly.
-
-1. In the expanded community body, you should see a new **📊 Weekly Check** info strip (blue-bordered) between Leader and Pending Requests, showing "Week 1 · 0/3 consecutive failures" and a green **Run Weekly Check** button. *GM-only — verify by viewing as a non-GM player: the strip should not render.*
-2. Click **Run Weekly Check**. Modal opens titled "Weekly Check — <community name>", week 1, <N> members, 0/3 failures.
-3. Expected defaults: Fed/Clothed AMod=0, SMod=1, CMod=0; Morale Leader AMod=0, SMod=0; all 6 Morale slots show auto-calculated values; no banner.
-4. Without changing anything, click **🎲 Run Weekly Check**. Modal advances to the **Results** stage.
-5. Verify the three roll cards:
-   - 🌾 Fed Check — dice, A/S/CMod breakdown, outcome colored (green/blue/amber/red), "→ next-Morale CMod: +N"
-   - 🔧 Clothed Check — same shape
-   - 📊 Morale — dice, "Slots:" row showing all six values, "Next week's Mood CMod:" line
-6. Consequence panel below should say one of:
-   - Green "Morale holds. No departures." (Success tier)
-   - Amber "N member(s) leave" with names (Failure/Dire/Low Insight)
-   - Red "Community Dissolves" (only on 3rd consecutive failure)
-7. Click **Finalize & Save**. Modal closes, panel reloads.
-8. Verify in the community panel:
-   - Week counter advanced by 1 (next click shows "Week 2")
-   - Consecutive failures: 0 if success, 1 if failure
-   - Member count: unchanged on success; dropped by floor(total × 25%) on Failure, 50% on Dire, 75% on Low Insight
-9. Open the **Logs** tab on the table page:
-   - Three new cards visible in order: Fed, Clothed, Morale (most recent at top of feed — check ordering by timestamp)
-   - Fed / Clothed cards: colored border by outcome, dice breakdown, "→ Next Morale CMod +N" footer
-   - Morale card: slot breakdown, departure block (if any), consecutive-failure counter
-10. Reload the page (`F5`). State persists — week counter, failure count, member count all survive reload.
-
-## Reopen same community, second week
-
-1. Open the modal again. The "Mood Around The Campfire" slot should now show the **prior check's next-week CMod** (non-zero if last week was non-Success, 0 if Success).
-2. The Additional freeform slot resets to 0 each open (by design — it's event-specific).
-3. Run another weekly check. Verify the Mood slot feeds into the Morale roll total correctly — cross-check by adding all six slot values + Additional in your head, and matching the "CMod" breakdown on the Morale card.
+Recommended setup:
+- **Account A** — your usual Xero account (Thriver). GMs at least one campaign with a Community ≥13 members and a Homestead pin set.
+- **Account B** — second test account. GMs a different campaign. Plain Survivor.
+- (Optional) **Player C** — a non-GM account in Account B's campaign to test player-facing visibility.
 
 ---
 
-## Understaffed community — "Enough Hands" penalty
+## SPRINT 1 — Publish to Distemperverse
 
-**Goal:** Verify the mechanical −1/−2/−3 CMod fires when role quotas are missed.
+### Setup
+1. Sign in as Account A.
+2. Open the table page for a campaign with a community at 13+ members. If your community has no Homestead pin, set one via the create/edit flow OR drop a campaign pin and link it to the community.
 
-1. Move NPCs so Gatherers < 33% of NPCs (e.g. put most in Unassigned or Safety). Note: Re-balance Roles also fires on panel re-load, so open the modal immediately after manually dragging NPCs into the wrong roles — don't navigate away.
-2. Verify the modal's "Enough Hands" slot shows a negative CMod (−1 per understaffed group, max −3). The "auto" chip confirms it's computed.
-3. Try: zero the Safety role entirely. Enough Hands should hit at least −1 (Safety missing), AND "Someone To Watch Over Me" should show −1 (Safety < 5%).
+### Happy path — first publish
 
----
+1. Open Community ▾ → Status. Expand the community body.
+2. Look for a new purple-bordered strip labeled **"🌐 The Tapestry"**. It should read "Publish this community to the Distemperverse to make it visible across other campaigns." with a purple **"🌐 Publish to Distemperverse"** button on the right.
+3. Click the button. A modal opens titled "🌐 Publish — \<community name\>".
+4. Verify the **Preview** card shows:
+   - Community name
+   - Description (if set)
+   - **Size:** matches your member count → band per the threshold table:
+     - <13 Small · 13–32 Band · 33–99 Settlement · 100–499 Enclave · 500+ City
+   - **Status:** one of Thriving / Holding / Struggling / Dying / Dissolved (mapped from your community state)
+   - **Homestead:** pin name in green if set, "none set — will publish unlocated" in amber if not
+5. Type a **Faction / flavor label** like "Mongrels" or leave blank.
+6. Click **🌐 Publish**. The modal closes; the strip flips to:
+   - Background turns purple-tinged.
+   - "Published as \<Size Band\> · ⏳ Pending Moderation · \<faction\>"
+   - Buttons change to "Update Public Info" + "Unpublish".
+7. Hard-reload the table page. State persists.
 
-## Leaderless penalty — "A Clear Voice"
+### DB verification
 
-1. If the Leader dropdown won't let you select a blank option, directly null both `leader_user_id` and `leader_npc_id` via Supabase Studio on the row.
-2. Open the weekly check modal. "A Clear Voice" slot should show **−1** (auto).
+In Supabase Studio:
+- `world_communities` has one new row matching your community.
+- `moderation_status` = 'pending'.
+- `published_by` = Account A's user id.
+- `homestead_lat` / `homestead_lng` populated if pin had coords.
+- Source `communities.world_visibility` = 'published', `world_community_id` points to the new row, `published_at` set.
 
----
+### Update flow
 
-## Cancel preserves DB
+1. Click "Update Public Info" on the strip. Modal title now reads "🌐 Update — \<name\>".
+2. Change faction label and hit "Update Public Info".
+3. The strip should now show the new faction label without re-entering the moderation queue.
+4. DB: world_communities.faction_label and last_public_update_at updated; moderation_status unchanged.
 
-1. Open the modal. Click **🎲 Run Weekly Check** to advance to Results.
-2. Click **Cancel (discard)** on the result stage.
-3. Verify via the panel — week counter UNCHANGED, consecutive_failures UNCHANGED, member count UNCHANGED.
-4. Verify via Logs tab — no new fed/clothed/morale cards.
-5. Refresh and confirm same. (Good — all-at-once persistence works.)
+### Unpublish flow
 
----
+1. Click "Unpublish" on the strip. Confirm.
+2. Strip reverts to the pre-publish state (Publish button purple).
+3. DB: `world_communities` row is gone, `communities.world_visibility` = 'private', `world_community_id` = NULL, `published_at` = NULL.
 
-## Dissolution path — 3 consecutive failures
+### Edge cases
 
-**Goal:** Prove the community flips to `status='dissolved'` and all members are removed.
-
-This is dice-random, so either (a) cheat by editing `consecutive_failures` directly via Supabase Studio to 2, OR (b) farm failures the slow way.
-
-### Fast path (recommended):
-
-1. In Supabase Studio (or psql), update the community: `UPDATE communities SET consecutive_failures = 2 WHERE id = '<your id>'`.
-2. Reload the table page.
-3. Community panel shows "2/3 consecutive failures · one more failure dissolves the community" in red.
-4. Open Weekly Check modal — header banner also shows the warning.
-5. Set Fed AMod/SMod/CMod, Clothed AMod/SMod/CMod, and all Morale A/S to aggressive negatives (e.g. AMod=−5 each) so the Morale roll lands in Dire Failure / Low Insight territory reliably.
-6. Click **Run Weekly Check**. On the Result stage:
-   - Consequence panel should be RED "⚠ Community Dissolves" with a count of scattered members
-   - The finalize button is also red: "Finalize — Dissolve Community"
-7. Click **Finalize — Dissolve Community**.
-8. Verify:
-   - Community header now shows "Dissolved" (red chip)
-   - All members moved to removed state (the body member roster is empty)
-   - DB: `communities.status = 'dissolved'`, `dissolved_at IS NOT NULL`; all `community_members` rows have `left_at` set and `left_reason='dissolved'`
-   - Logs tab: Morale card has red border + "⚠ Community dissolved — 3 consecutive failures" caption
-9. Try to open the modal on a dissolved community — the "Run Weekly Check" strip should NOT render (gate: `status==='active'`).
-
----
-
-## Departure priority order
-
-**Goal:** Confirm the weighted departure picker leaves the right NPCs.
-
-1. Set up a community with a mix: 3 Apprentice NPCs, 3 Cohort NPCs, 3 Convert NPCs, 3 Conscript NPCs, 3 Unassigned NPCs, 2 founder PCs. Total 15+.
-2. Force a Failure outcome (25% = 4 members leave). Aggressive-negative modifiers as above.
-3. Run, Finalize. Verify via panel:
-   - The 4 who left should be drawn from Unassigned first, then Cohort. Apprentices + Conscripts + Founders should all be intact.
-4. Set the community back up (manually remove `left_at` in DB or just re-add members). Force Dire Failure (50% = 7 leave). Expect: all 3 Unassigned + all 3 Cohort + 1 Convert.
-5. Force Low Insight (1+1 on the Morale dice — this is RNG. If you can't force it, skip this step.). Expect 75% leave, Apprentices still last to go.
-
-**Note:** PCs should never appear in the departure list. Verify by checking that all 2 founder PCs stay.
+- [ ] Publish with no Homestead pin → preview shows amber "unlocated" warning. Submit anyway → world_communities row inserts with NULL coords.
+- [ ] Re-publish after unpublish → goes through moderation again (status = pending, moderator resets).
+- [ ] Republish 2x quickly → no duplicate world_communities rows (UNIQUE constraint on source_community_id).
+- [ ] Try as non-GM player — no Publish strip appears at all (gated `isGM && isCommunity && status !== 'dissolved'`).
+- [ ] Try on a dissolved community — strip hidden.
 
 ---
 
-## Edge cases / regressions
+## SPRINT 2 — Thriver Moderation Queue
 
-- [ ] **<13 members guard** — reduce below 13. Modal opens but shows amber warning "Only N members. Morale Checks require 13+." The Run button is disabled (grey).
-- [ ] **Community with no Fed/Clothed history** — first week's "Mood Around The Campfire" should display 0, not crash.
-- [ ] **Slot override** — put a manual value in the Enough Hands override input. Roll. The Morale card's CMod breakdown should use your override, not the computed auto value.
-- [ ] **Additional CMod propagates** — set Additional to +5. Roll. The Morale card's CMod total should include +5.
-- [ ] **Roll-log cards Both tab** — switch feed tab to Both. Fed/Clothed/Morale rolls should render as simplified character-card rows with the stored label (emoji stripped).
-- [ ] **TypeScript** — `npx tsc --noEmit` exits 0 (verified at commit).
-- [ ] **Font size guardrail** — `node scripts/check-font-sizes.mjs` reports OK (verified at commit).
+### Setup
+1. Account A still signed in (must be Thriver; check `profiles.role` in DB).
+2. From Sprint 1 you should have at least one pending world_communities row.
+
+### Happy path — approve
+
+1. Navigate to `/moderate`.
+2. Tab row should now show four tabs: **Users · Rumor Queue · NPCs · 🌐 Communities**. Click **🌐 Communities**.
+3. Filter row: **pending / approved / rejected**. Default = pending.
+4. Verify the queue card shows:
+   - Header: "🌐 \<name\>"
+   - Attribution: "Published by \<username\> on \<date\> · from \<source campaign name\>"
+   - Three chips on the right: Size Band (blue) / Status (green) / Faction Label (amber, if set)
+   - Description block (if set)
+   - Homestead row: lat/lng with a "View on map" link (or amber "unlocated" warning)
+   - Last update timestamp
+5. Click **Approve**. The card disappears from the pending list.
+6. Switch to the **approved** filter. The card reappears with green left border.
+7. DB: `moderation_status` = 'approved', `approved_by` = your user id, `approved_at` set.
+
+### Reject + revoke
+
+1. Find another pending community (or republish one to create one). On the pending tab click **Reject**. Card disappears.
+2. Switch to **rejected** filter. Card has red left border. Action button now says **Approve** (lets you reverse a rejection).
+3. Switch back to **approved** filter. Action button there says **Revoke** (flips back to rejected).
+4. Cycle approved → revoke → rejected → approve → approved. State should match each step in DB.
+
+### Delete
+
+1. Click **Delete** on any card. Confirm.
+2. Card disappears. DB: row hard-deleted from world_communities.
+3. The source community's world_visibility / world_community_id should NOT be auto-cleared — that's by design (the GM can republish; the source row is decoupled). Workaround if it's stale: have the GM unpublish manually.
+
+### View on map
+
+- Click "View on map" on a card with coords → opens OpenStreetMap in a new tab at the Homestead. Sanity check.
+
+### RLS sanity
+
+- Sign out of Thriver. Sign in as a non-Thriver (Account B). Navigate to `/moderate`. The Communities tab should still be visible (page doesn't gate per-tab) but the load should return 0 rows for non-Thriver since the RLS on world_communities only allows Thriver to read pending/rejected. **Bug to watch for:** if you see a non-Thriver seeing pending rows, the RLS is broken.
 
 ---
 
-## Known deferrals (not in Phase C scope)
+## SPRINT 3 — World Map Overlay
 
-- **Retention Check** on 3rd failure — SRD §08 p.22 allows a fast-acting leader to salvage fragments. Not implemented; dissolution is immediate. Flagged in tasks/todo.md Phase C section.
-- **End Week / Activity Blocks** — Phase D.
-- **Inspiration Lv4 "Beacon of Hope"** auto +4 CMod — Phase D.
-- **Psychology* Lv4 "Insightful Counselor"** auto +3 CMod (tenure-gated) — Phase D.
-- **Morale history dashboard** — Phase D.
+### Setup
+1. Make sure you have at least 2–3 **approved** world_communities with non-null Homestead coords. Approve from Sprint 2 first.
 
-If any of these surface as a blocker during table play, bump them up in the todo.
+### Happy path — markers
+
+1. Navigate to `/map`.
+2. Verify approved communities render as **colored circles** (no emoji, distinct from pin emoji-icons).
+3. Size by band:
+   - Small ~ 20 px
+   - Band ~ 24 px
+   - Settlement ~ 28 px
+   - Enclave ~ 32 px
+   - City ~ 36 px
+4. Color by status:
+   - Thriving → green
+   - Holding → pale blue
+   - Struggling → amber
+   - Dying → pale red
+   - Dissolved → grey
+5. Markers cluster with map_pins at low zoom; fan out at high zoom (Leaflet markercluster).
+
+### Popup
+
+1. Click a community marker. Popup shows:
+   - "🌐 \<community name\>" header
+   - Description
+   - Three chips: Size Band / Status / Faction Label (last is conditional)
+   - Attribution: "From **\<source campaign name\>**"
+   - Last update date
+2. Popup HTML escapes user content — try a community whose description has `<script>alert(1)</script>` in it (set via DB or edit). Should render as literal text, not execute.
+
+### Visibility filter
+
+1. (If you've already shipped Sprint 3 polish) The sidebar should show a **🌐 Published Communities** folder above the regular pin categories. See Sprint 3-polish below.
+2. Toggle the eye icon. Markers disappear from the map. Toggle back on. They reappear.
+3. Refresh the page. The hidden state persists (localStorage `tapestry_hidden_folders` includes `world_community`).
+
+### Edge cases
+
+- [ ] Pending or rejected world_communities should NOT render on the map (only approved).
+- [ ] Communities with NULL coords are absent from the map (filtered in the query).
+- [ ] Multiple communities at the exact same coords cluster together correctly.
+- [ ] Sign out → reload `/map`. Approved communities should still render (read policy allows public).
+
+---
+
+## SPRINT 3 POLISH — Sidebar Folder
+
+### Happy path
+
+1. Open `/map`. In the sidebar (toggle "Pins ☰" if collapsed), verify the **🌐 Published Communities** folder sits above the normal category folders. Header in purple, count badge matches the marker count.
+2. Click the folder header to expand. Each row shows:
+   - Status-colored dot
+   - Community name
+   - Size Band chip on the right
+   - Hover tooltip: name · band · status · faction · source campaign
+3. Click a community row in the sidebar. The map should `flyTo` the Homestead and **auto-open the popup** for that marker after the fly animation completes (~1.3s delay).
+4. Click the **eye icon** on the folder header. The map markers disappear (folder dim, count still visible). The list inside the folder still browseable.
+5. Refresh — folder open/closed state and hidden state persist (localStorage).
+
+### Search interaction
+
+1. Type a partial community name in the pin search box. The folder should filter to matching communities only.
+2. Try matching by source campaign name or faction label. Both fields are searchable per the filter logic.
+3. Clear search. Folder count restores.
+
+### Edge case
+
+- [ ] No approved communities → folder doesn't render at all (skipped by `wcFolderHasContent`).
+
+---
+
+## SPRINT 4a — GM-to-GM Contact Handshake
+
+### Setup
+- Account A: signed in, at least one published+approved community visible on `/map`.
+- Account B: a second account that GMs a *different* campaign. (For Xero-only testing, fake by editing `campaigns.gm_user_id` to your alt account or by making a fresh test campaign on Account A and using a "different campaign" rule; the encounter UI gates on GM-of-non-source-campaign.)
+
+### Happy path — encounter
+
+1. Sign in as Account B.
+2. Navigate to `/map`. Click an approved community marker (one published from Account A, NOT one from any of B's own campaigns).
+3. The popup now shows a **purple "🤝 My PCs encountered this"** button at the bottom. Click it.
+4. Encounter modal opens titled "🤝 Encounter — \<community name\>".
+5. Verify:
+   - "Encountering campaign" dropdown lists Account B's campaigns. Source campaign should NOT be in the list.
+   - "What happened (optional)" is a textarea.
+6. Pick a campaign, type "We traded medical supplies for ammunition while sheltering from a Distemper surge.", click **🤝 Send Encounter**.
+7. Alert: "Encounter sent. The source community's GM will see it in their notifications."
+8. DB: `community_encounters` row inserted with status='pending', narrative stored, encountering_user_id = Account B's id.
+
+### Notification (recipient side)
+
+1. Switch to **Account A** (the source community's GM). Hard-refresh.
+2. Open the notification bell (top right). New unread notification:
+   - Title: "Cross-Campaign Encounter"
+   - Body: colorized line — "**\<Account B username\>**'s campaign **"\<B campaign name\>"** encountered your community **"\<your community name\>"**"
+   - Italicized narrative line below: *"We traded medical supplies for ammunition…"*
+3. Click the notification. Marks as read; navigates to `/communities/\<id\>`.
+
+### Self-encounter guard
+
+1. From Account A, click your own published community on the map.
+2. Click "🤝 My PCs encountered this".
+3. Alert: "To flag an encounter you need to GM a campaign other than the one this community came from. Either create a campaign, or this community is one of your own."
+4. Modal does NOT open.
+
+### Duplicate-pending guard
+
+1. From Account B, encounter the same Account A community a second time without it being accepted/declined.
+2. Submit. Alert: "You already have a pending encounter request for this community. Wait for the source GM to respond, or check Notifications."
+3. DB unchanged — no second row inserted (UNIQUE constraint on world_community + encountering_campaign + status='pending').
+
+### Accept / decline (manual for now — UI surface deferred)
+
+1. The accept/decline UI lives in DB only for the moment (Sprint 4 follow-up will add a surface). Manually:
+   - In Supabase Studio, find the encounter row, set `status='accepted'` and `responded_at = now()`.
+   - Confirm RLS lets the source GM update (try via the API as Account A — should succeed).
+2. After acceptance, Account B can encounter the same community again — a new row goes in with status='pending' (no UNIQUE collision since the prior row is no longer pending).
+
+### Sign-in gating
+
+- [ ] Sign out → reload `/map`. Click a community marker. The popup should NOT show the "🤝 My PCs encountered this" button (gated on `currentUserId`).
+- [ ] Sign in as a non-GM Player C. Click an approved community marker. Button shows. Click → alert says "you need to GM a campaign other than the source." (gated on `myGmCampaigns.filter(c.id !== source).length > 0`).
+
+### RLS sanity
+
+- [ ] Try via direct API as a non-source non-encountering user: SELECT from community_encounters returns 0 rows.
+- [ ] Try INSERT with `encountering_user_id` ≠ auth.uid(): rejected.
+- [ ] Try UPDATE status as someone who's neither source GM nor encountering GM nor Thriver: rejected.
+
+---
+
+## Cross-cutting checks
+
+- [ ] **TypeScript** — `npx tsc --noEmit` exits 0 (verified at each commit).
+- [ ] **Font-size guardrail** — `node scripts/check-font-sizes.mjs` reports OK (verified at each commit).
+- [ ] **Vercel build** — main branch builds cleanly. If a build fails after a push, the SQL migrations probably haven't been applied yet on the live DB; queries return errors that surface at runtime, not build time, but RLS misconfiguration can.
+- [ ] **Mobile sanity** — open `/map` on a phone. Markers render, sidebar works, encounter button on popups is tappable.
+
+---
+
+## Known deferrals (call out in playtest if asked)
+
+- **Accept/decline UI on encounters** — DB ready, no front-end surface yet. Use Supabase Studio to manipulate `community_encounters.status` for now.
+- **Trade / alliance / feud arcs** — Sprint 4 next-up. Will draw colored Leaflet polylines between two published communities.
+- **Schism mechanic** — large communities split into two. Sprint 4.
+- **Migration on dissolution** — survivors offered to nearby published communities when a community collapses. Sprint 4.
+- **Per-community Campfire feed** — depends on Phase 6 Campfire which isn't built.
+- **Community subscription** — players follow communities across campaigns. Phase 6.
+- **Campaign-creation wizard "Start around an existing community"** — listed in Phase E spec; will land alongside the Modules system (Phase 5).
+
+---
+
+## Quick smoke test (~5 min if you've already published a few communities)
+
+1. As Thriver, `/moderate` → 🌐 Communities → approve any pending.
+2. `/map` → see the green/blue/amber dot at the right size.
+3. Click → popup looks right.
+4. Click "🤝 My PCs encountered this" (must be GM of another campaign).
+5. Pick campaign, type narrative, send.
+6. Switch accounts → bell shows the new notification.
+
+If all five steps work, Sprints 1–4a are healthy.
