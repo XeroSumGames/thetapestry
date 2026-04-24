@@ -178,6 +178,39 @@ export default function NotificationBell() {
         </>
       )
     }
+    // Phase E Sprint 4b — link proposal. Body shape:
+    //   <username> proposes a <type> between "<from>" and your "<to>"[: narrative]
+    if (type === 'community_link_proposal') {
+      const m = body.match(/^(.+?) proposes a (trade|alliance|feud) between "(.+?)" and your "(.+?)"(?::\s*(.+))?$/)
+      if (m) {
+        const typeColor = m[2] === 'trade' ? '#7fc458' : m[2] === 'alliance' ? '#7ab3d4' : '#c0392b'
+        return (
+          <>
+            <span style={{ color: '#7ab3d4' }}>{m[1]}</span> proposes a{' '}
+            <span style={{ color: typeColor, fontWeight: 700, textTransform: 'uppercase' }}>{m[2]}</span>{' '}
+            between <span style={{ color: '#EF9F27' }}>"{m[3]}"</span> and your{' '}
+            <span style={{ color: '#d48bd4' }}>"{m[4]}"</span>
+            {m[5] && <><br /><span style={{ color: '#cce0f5', fontStyle: 'italic' }}>"{m[5]}"</span></>}
+          </>
+        )
+      }
+    }
+    // Phase E Sprint 4b — link response. Body shape:
+    //   "<recipient>" <status> your <type> proposal with "<proposer>"
+    if (type === 'community_link_response') {
+      const m = body.match(/^"(.+?)" (active|declined) your (trade|alliance|feud) proposal with "(.+?)"$/)
+      if (m) {
+        const accepted = m[2] === 'active'
+        const statusColor = accepted ? '#7fc458' : '#f5a89a'
+        return (
+          <>
+            <span style={{ color: '#d48bd4' }}>"{m[1]}"</span>{' '}
+            <span style={{ color: statusColor, fontWeight: 700, textTransform: 'uppercase' }}>{accepted ? 'accepted' : 'declined'}</span>{' '}
+            your {m[3]} proposal with <span style={{ color: '#EF9F27' }}>"{m[4]}"</span>
+          </>
+        )
+      }
+    }
     return body
   }
 

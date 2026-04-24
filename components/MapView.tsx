@@ -155,6 +155,22 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [encounterCampaignId, setEncounterCampaignId] = useState<string>('')
   const [encounterNarrative, setEncounterNarrative] = useState<string>('')
   const [encounterSubmitting, setEncounterSubmitting] = useState<boolean>(false)
+
+  // Phase E Sprint 4b — Trade / Alliance / Feud links between
+  // published communities. The user picks one of THEIR approved
+  // world_communities + link type + narrative; submit inserts a
+  // world_community_links row whose trigger fires a notification
+  // to the OTHER community's GM. Active links render as colored
+  // polylines on the world map.
+  const [myPublishedCommunities, setMyPublishedCommunities] = useState<{
+    id: string; name: string
+  }[]>([])
+  const [linkTarget, setLinkTarget] = useState<{ worldCommunityId: string; name: string } | null>(null)
+  const [linkFromId, setLinkFromId] = useState<string>('')
+  const [linkType, setLinkType] = useState<'trade' | 'alliance' | 'feud'>('trade')
+  const [linkNarrative, setLinkNarrative] = useState<string>('')
+  const [linkSubmitting, setLinkSubmitting] = useState<boolean>(false)
+  const polylinesRef = useRef<any[]>([])
   const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private', categories: ['location'] })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -182,27 +198,85 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     function onDocClick(e: MouseEvent) {
       const t = e.target as HTMLElement | null
       if (!t) return
-      const btn = t.closest('[data-tapestry-encounter="1"]') as HTMLElement | null
-      if (!btn) return
-      e.preventDefault()
-      e.stopPropagation()
-      const worldCommunityId = btn.getAttribute('data-world-community-id') ?? ''
-      const sourceCampaignId = btn.getAttribute('data-source-campaign-id') ?? ''
-      const name = btn.getAttribute('data-name') ?? ''
-      if (!worldCommunityId || !sourceCampaignId) return
-      // Must be a GM of at least one campaign that isn't the source.
-      const eligible = myGmCampaigns.filter(c => c.id !== sourceCampaignId)
-      if (eligible.length === 0) {
-        alert('To flag an encounter you need to GM a campaign other than the one this community came from. Either create a campaign, or this community is one of your own.')
+      // Encounter button (Sprint 4a).
+      const encBtn = t.closest('[data-tapestry-encounter="1"]') as HTMLElement | null
+      if (encBtn) {
+        e.preventDefault()
+        e.stopPropagation()
+        const worldCommunityId = encBtn.getAttribute('data-world-community-id') ?? ''
+        const sourceCampaignId = encBtn.getAttribute('data-source-campaign-id') ?? ''
+        const name = encBtn.getAttribute('data-name') ?? ''
+        if (!worldCommunityId || !sourceCampaignId) return
+        const eligible = myGmCampaigns.filter(c => c.id !== sourceCampaignId)
+        if (eligible.length === 0) {
+          alert('To flag an encounter you need to GM a campaign other than the one this community came from. Either create a campaign, or this community is one of your own.')
+          return
+        }
+        setEncounterTarget({ worldCommunityId, name, sourceCampaignId })
+        setEncounterCampaignId(eligible[0].id)
+        setEncounterNarrative('')
         return
       }
-      setEncounterTarget({ worldCommunityId, name, sourceCampaignId })
-      setEncounterCampaignId(eligible[0].id)
-      setEncounterNarrative('')
+      // Link-propose button (Sprint 4b).
+      const linkBtn = t.closest('[data-tapestry-link="1"]') as HTMLElement | null
+      if (linkBtn) {
+        e.preventDefault()
+        e.stopPropagation()
+        const worldCommunityId = linkBtn.getAttribute('data-world-community-id') ?? ''
+        const name = linkBtn.getAttribute('data-name') ?? ''
+        if (!worldCommunityId) return
+        // Must own at least one published+approved community OTHER
+        // than the target — links connect two distinct communities.
+        const eligible = myPublishedCommunities.filter(wc => wc.id !== worldCommunityId)
+        if (eligible.length === 0) {
+          alert('To propose a link you need an approved published community of your own that isn\'t the target. Publish one and wait for Thriver approval first.')
+          return
+        }
+        setLinkTarget({ worldCommunityId, name })
+        setLinkFromId(eligible[0].id)
+        setLinkType('trade')
+        setLinkNarrative('')
+      }
     }
     document.addEventListener('click', onDocClick)
     return () => document.removeEventListener('click', onDocClick)
-  }, [myGmCampaigns])
+  }, [myGmCampaigns, myPublishedCommunities])
+
+  async function submitLink() {
+    if (!linkTarget || linkSubmitting) return
+    if (!linkFromId) { alert('Pick which of your published communities is proposing the link.'); return }
+    if (linkFromId === linkTarget.worldCommunityId) { alert('A community cannot link to itself.'); return }
+    setLinkSubmitting(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    // Sort the endpoint pair so the unique constraint can match
+    // proposal-from-A → B and proposal-from-B → A as the same logical
+    // link if you ever need to dedupe later. (Today the constraint
+    // keys on community_a + community_b + link_type + status, so
+    // ordering matters; sorting keeps it predictable.)
+    const [a, b] = [linkFromId, linkTarget.worldCommunityId].sort()
+    const { error } = await supabase.from('world_community_links').insert({
+      community_a_id: a,
+      community_b_id: b,
+      link_type: linkType,
+      proposed_by_user_id: user?.id ?? null,
+      proposed_from_community_id: linkFromId,
+      narrative: linkNarrative.trim() || null,
+    })
+    setLinkSubmitting(false)
+    if (error) {
+      if (/duplicate|unique/i.test(error.message)) {
+        alert('You already have a pending proposal for this link type with this community. Wait for the other GM to respond.')
+      } else {
+        alert(`Link proposal failed: ${error.message}`)
+      }
+      return
+    }
+    setLinkTarget(null)
+    setLinkFromId('')
+    setLinkType('trade')
+    setLinkNarrative('')
+    alert('Link proposal sent. The other community\'s GM will see it in their notifications.')
+  }
 
   async function submitEncounter() {
     if (!encounterTarget || encounterSubmitting) return
@@ -279,6 +353,19 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         const { data: gmCamps } = await supabase
           .from('campaigns').select('id, name').eq('gm_user_id', user.id).order('name')
         if (gmCamps) setMyGmCampaigns(gmCamps as { id: string; name: string }[])
+        // Phase E Sprint 4b — preload the user's approved
+        // world_communities so the link-propose modal can list
+        // them as eligible "from" endpoints. Filter to approved
+        // because pending/rejected communities aren't on the map.
+        if (gmCamps && gmCamps.length > 0) {
+          const { data: myWc } = await supabase
+            .from('world_communities')
+            .select('id, name')
+            .eq('moderation_status', 'approved')
+            .in('source_campaign_id', gmCamps.map((c: any) => c.id))
+            .order('name')
+          if (myWc) setMyPublishedCommunities(myWc as { id: string; name: string }[])
+        }
       }
 
       const L = (await import('leaflet')).default
@@ -374,6 +461,13 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     // Remove old cluster group
     if (clusterGroupRef.current) { mapInst.removeLayer(clusterGroupRef.current) }
     markersRef.current = {}
+    // Phase E Sprint 4b — clear old link polylines too. They live
+    // directly on the map (not in the cluster group) since lines
+    // don't cluster meaningfully.
+    if (polylinesRef.current.length > 0) {
+      for (const pl of polylinesRef.current) { try { mapInst.removeLayer(pl) } catch {} }
+      polylinesRef.current = []
+    }
 
     const clusterGroup = (leaflet as any).markerClusterGroup({
       maxClusterRadius: 40,
@@ -534,7 +628,10 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             </div>
             <div style="font-size:11px;color:#888;margin-bottom:8px">From <strong>${escapedCamp}</strong></div>
             ${row.last_public_update_at ? `<div style="font-size:10px;color:#aaa;margin-bottom:8px">Updated ${new Date(row.last_public_update_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>` : ''}
-            ${currentUserId ? `<button data-tapestry-encounter="1" data-world-community-id="${row.id}" data-source-campaign-id="${row.source_campaign_id}" data-name="${escapedName.replace(/"/g, '&quot;')}" style="width:100%;padding:6px 10px;background:#2a102a;border:1px solid #5a2e5a;border-radius:3px;color:#d48bd4;font-size:13px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-weight:600">🤝 My PCs encountered this</button>` : ''}
+            ${currentUserId ? `
+              <button data-tapestry-encounter="1" data-world-community-id="${row.id}" data-source-campaign-id="${row.source_campaign_id}" data-name="${escapedName.replace(/"/g, '&quot;')}" style="width:100%;padding:6px 10px;background:#2a102a;border:1px solid #5a2e5a;border-radius:3px;color:#d48bd4;font-size:13px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-weight:600;margin-bottom:4px">🤝 My PCs encountered this</button>
+              <button data-tapestry-link="1" data-world-community-id="${row.id}" data-name="${escapedName.replace(/"/g, '&quot;')}" style="width:100%;padding:6px 10px;background:transparent;border:1px solid #5a2e5a;border-radius:3px;color:#d48bd4;font-size:13px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">🔗 Propose link</button>
+            ` : ''}
           </div>
         `
         const marker = leaflet.marker([row.homestead_lat, row.homestead_lng], { icon }).bindPopup(popupHtml)
@@ -547,6 +644,45 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
     clusterGroup.addTo(mapInst)
     clusterGroupRef.current = clusterGroup
+
+    // Phase E Sprint 4b — Trade / Alliance / Feud polylines.
+    // Active links between two approved communities render as
+    // colored lines connecting their Homestead coords. Hidden when
+    // the world_community folder is toggled off (same gate as the
+    // markers, so the layer toggles as a cohesive overlay).
+    if (!currentHidden.has('world_community') && rows.length > 0) {
+      // Build a lookup of community id → coords so we can resolve
+      // the polyline endpoints without re-fetching world_communities.
+      const coordsById = new Map<string, [number, number]>()
+      for (const r of rows) coordsById.set(r.id, [r.homestead_lat, r.homestead_lng])
+      const { data: links } = await supabase
+        .from('world_community_links')
+        .select('id, community_a_id, community_b_id, link_type, narrative')
+        .eq('status', 'active')
+      for (const link of ((links ?? []) as any[])) {
+        const aPos = coordsById.get(link.community_a_id)
+        const bPos = coordsById.get(link.community_b_id)
+        if (!aPos || !bPos) continue  // one endpoint is unlocated or unapproved
+        const color = link.link_type === 'trade' ? '#7fc458'
+          : link.link_type === 'alliance' ? '#7ab3d4'
+          : link.link_type === 'feud' ? '#c0392b'
+          : '#cce0f5'
+        const dashArray = link.link_type === 'feud' ? '6,6' : undefined
+        const polyline = (leaflet as any).polyline([aPos, bPos], {
+          color,
+          weight: 2.5,
+          opacity: 0.7,
+          dashArray,
+        })
+        const escapedNarr = (link.narrative || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        polyline.bindTooltip(
+          `<div style="font-family:Barlow,sans-serif"><strong style="text-transform:uppercase;color:${color}">${link.link_type}</strong>${link.narrative ? `<br/><span style="font-size:13px">${escapedNarr}</span>` : ''}</div>`,
+          { sticky: true }
+        )
+        polyline.addTo(mapInst)
+        polylinesRef.current.push(polyline)
+      }
+    }
 
     setTimeout(() => mapInst.invalidateSize(), 100)
   }
@@ -794,6 +930,75 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+
+      {/* Phase E Sprint 4b — Propose Link modal. Opens when the user
+          clicks "🔗 Propose link" on a world community popup. Pick
+          which of YOUR approved communities is the proposing endpoint
+          + link type (trade/alliance/feud) + optional narrative. The
+          INSERT trigger fires a notification to the OTHER community's
+          GM. Active links draw as colored polylines on the map. */}
+      {linkTarget && (() => {
+        const eligible = myPublishedCommunities.filter(wc => wc.id !== linkTarget.worldCommunityId)
+        return (
+          <div onClick={() => !linkSubmitting && setLinkTarget(null)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, padding: '20px' }}>
+            <div onClick={e => e.stopPropagation()}
+              style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '520px', maxWidth: '100%', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                  🔗 Propose Link — {linkTarget.name}
+                </div>
+                <button onClick={() => !linkSubmitting && setLinkTarget(null)}
+                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
+              </div>
+              <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                  Both GMs must agree before this link goes live on the world map. The other community's GM will get a notification with your one-line context — they accept or decline.
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>From your community</div>
+                  <select value={linkFromId} onChange={e => setLinkFromId(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                    {eligible.map(wc => <option key={wc.id} value={wc.id}>{wc.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Link type</div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {([
+                      { v: 'trade' as const, label: '💱 Trade', color: '#7fc458', desc: 'Goods + supplies flow' },
+                      { v: 'alliance' as const, label: '🤝 Alliance', color: '#7ab3d4', desc: 'Mutual defense + aid' },
+                      { v: 'feud' as const, label: '⚔️ Feud', color: '#c0392b', desc: 'Standing hostility' },
+                    ]).map(opt => (
+                      <button key={opt.v} onClick={() => setLinkType(opt.v)}
+                        style={{ flex: 1, padding: '10px 8px', background: linkType === opt.v ? `${opt.color}22` : '#242424', border: `1px solid ${linkType === opt.v ? opt.color : '#3a3a3a'}`, borderRadius: '3px', color: linkType === opt.v ? opt.color : '#cce0f5', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: linkType === opt.v ? 700 : 400, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                        <span>{opt.label}</span>
+                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', textTransform: 'none', letterSpacing: 0 }}>{opt.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Narrative (optional)</div>
+                  <textarea value={linkNarrative}
+                    placeholder="e.g. Weekly trade caravans run between us — clean water for medicine."
+                    onChange={e => setLinkNarrative(e.target.value)}
+                    rows={3}
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
+                </div>
+              </div>
+              <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button onClick={() => setLinkTarget(null)} disabled={linkSubmitting}
+                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: linkSubmitting ? 'not-allowed' : 'pointer', opacity: linkSubmitting ? 0.4 : 1 }}>Cancel</button>
+                <button onClick={submitLink} disabled={linkSubmitting || !linkFromId}
+                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (linkSubmitting || !linkFromId) ? 'not-allowed' : 'pointer', opacity: (linkSubmitting || !linkFromId) ? 0.4 : 1, fontWeight: 600 }}>
+                  {linkSubmitting ? 'Sending…' : '🔗 Send Proposal'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Phase E Sprint 4a — Encounter modal. Opens when the user
           clicks the "🤝 My PCs encountered this" button on a world
