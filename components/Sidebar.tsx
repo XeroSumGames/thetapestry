@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import NotificationBell from './NotificationBell'
+import MessagesBell from './MessagesBell'
 
 // Left sidebar — restructured 2026-04-22 per user spec:
 //
@@ -139,6 +140,7 @@ export default function Sidebar() {
                 : <span style={{ marginLeft: '6px', background: '#2d5a1b', color: '#7fc458', fontSize: '13px', padding: '1px 5px', borderRadius: '2px' }}>Survivor</span>
               }
             </span>
+            <MessagesBell />
             <NotificationBell />
           </>
         )}
