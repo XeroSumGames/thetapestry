@@ -536,7 +536,10 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     const mems = members[communityId] ?? []
     // Rebalance only the labor pool — assigned NPCs stay put.
     const laborMembers = mems.filter(m => !!m.npc_id && m.role !== 'assigned')
-    if (laborMembers.length === 0) return
+    if (laborMembers.length === 0) {
+      alert('Nothing to re-balance — no NPC labor-pool members in this community yet.')
+      return
+    }
     const npcById = new Map<string, NpcOption>()
     for (const n of npcs) npcById.set(n.id, n)
     const assignment = rebalanceNpcRoles(laborMembers, npcById)
@@ -545,10 +548,18 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       const next = assignment.get(m.id) ?? 'unassigned'
       if (next !== m.role) updates.push({ id: m.id, role: next })
     }
-    if (updates.length === 0) { return }
-    await Promise.all(updates.map(u =>
+    if (updates.length === 0) {
+      alert('Roles are already at SRD minimums — nothing to re-balance.')
+      return
+    }
+    const results = await Promise.all(updates.map(u =>
       supabase.from('community_members').update({ role: u.role }).eq('id', u.id)
     ))
+    const errors = results.map((r, i) => r.error ? `${updates[i].id}: ${r.error.message}` : null).filter(Boolean)
+    if (errors.length > 0) {
+      console.error('[rebalance] updates failed:', errors)
+      alert(`Re-balance partial — ${updates.length - errors.length} of ${updates.length} role updates saved. Errors:\n${errors.join('\n')}`)
+    }
     setMembers(prev => ({
       ...prev,
       [communityId]: (prev[communityId] ?? []).map(m => {
@@ -689,7 +700,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       alert(`Schism failed at member removal: ${removeErr.message}`)
       return
     }
-    // 3) Insert fresh member rows in the new community.
+    // 3) Insert fresh member rows in the new community. Explicit
+    // `status: 'active'` because the DB default isn't uniform across
+    // environments (some old schemas default to 'pending') — which
+    // would silently send breakaway members into the pending-
+    // requests bucket, making the new community look empty to every
+    // down-stream UI including the "Re-balance Roles" button.
     const newMemberRows = sourceMembers.map(m => ({
       community_id: newComm.id,
       npc_id: m.npc_id,
@@ -697,9 +713,10 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       role: m.role,
       recruitment_type: m.recruitment_type,
       apprentice_of_character_id: m.apprentice_of_character_id,
+      status: 'active',
       joined_at: now,
     }))
-    const { error: insErr } = await supabase.from('community_members').insert(newMemberRows)
+    const { error: insErr } = await supabase.from('community_members').insert(newMemberRows as any)
     if (insErr) {
       setSchismSubmitting(false)
       alert(`Schism partial: new community created + members removed but the new roster insert failed: ${insErr.message}. You may need to add the breakaway members manually.`)
