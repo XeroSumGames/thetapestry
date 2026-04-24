@@ -609,12 +609,15 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     })))
     if (!currentHidden.has('world_community')) {
       for (const row of rows) {
-        // Size band → pixel size on the map.
-        const sizeBand = row.size_band || 'Band'
-        const sizePx = sizeBand === 'City' ? 36
-          : sizeBand === 'Enclave' ? 32
-          : sizeBand === 'Settlement' ? 28
-          : sizeBand === 'Band' ? 24
+        // Size band → pixel size on the map. New taxonomy:
+        // Group < 13, Small 13-50, Medium 51-150, Large 151-500,
+        // Huge 501-1000, Nation State 1000+.
+        const sizeBand = row.size_band || 'Group'
+        const sizePx = sizeBand === 'Nation State' ? 40
+          : sizeBand === 'Huge' ? 36
+          : sizeBand === 'Large' ? 32
+          : sizeBand === 'Medium' ? 28
+          : sizeBand === 'Small' ? 24
           : 20
         // Community status → dot color. Narrative palette tied to
         // the Morale outcome colors from the Weekly Check modal.

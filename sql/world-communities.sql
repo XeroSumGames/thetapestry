@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS public.world_communities (
   -- Narrative labels. size_band computed at publish time from the
   -- source community's roster; can be overridden by GM. faction_label
   -- freeform (e.g. "Mercantile", "Reformed Church", "Mongrels").
-  size_band text NOT NULL DEFAULT 'Band' CHECK (size_band IN ('Small','Band','Settlement','Enclave','City')),
+  size_band text NOT NULL DEFAULT 'Group' CHECK (size_band IN ('Group','Small','Medium','Large','Huge','Nation State')),
   faction_label text,
   -- Public status — the Distemperverse-facing health label. Distinct
   -- from moderation_status below. Set at publish time from current

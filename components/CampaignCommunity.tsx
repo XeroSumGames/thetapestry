@@ -733,17 +733,16 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   }
 
   // ── Phase E — Publish to Tapestry ─────────────────────────
-  // Size band derived from actual roster count. Anchored to Distemper
-  // narrative scale: sub-13 is pre-Community "Small", then Band at
-  // the 13-member Community threshold, then wider steps through
-  // Settlement / Enclave / City. GM can override post-publish by
-  // updating the world row directly (not wired in this sprint).
-  function computeSizeBand(n: number): 'Small' | 'Band' | 'Settlement' | 'Enclave' | 'City' {
-    if (n < 13) return 'Small'
-    if (n < 33) return 'Band'
-    if (n < 100) return 'Settlement'
-    if (n < 500) return 'Enclave'
-    return 'City'
+  // Size band derived from actual roster count. SRD §08 threshold: 13
+  // members = true Community. Below 13 is "Group" (pre-Community).
+  // Taxonomy tuned 2026-04-24 to match the canonical size tiers.
+  function computeSizeBand(n: number): 'Group' | 'Small' | 'Medium' | 'Large' | 'Huge' | 'Nation State' {
+    if (n < 13) return 'Group'
+    if (n <= 50) return 'Small'
+    if (n <= 150) return 'Medium'
+    if (n <= 500) return 'Large'
+    if (n <= 1000) return 'Huge'
+    return 'Nation State'
   }
   // Public status (Thriving / Holding / Struggling / Dying / Dissolved)
   // derived from the community's current state at publish time:
