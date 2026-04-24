@@ -194,6 +194,13 @@ export default function CommunityMoraleModal({
   // the community does NOT dissolve despite willDissolve on result.
   const [retention, setRetention] = useState<RetentionResult | null>(null)
   const [rollingRetention, setRollingRetention] = useState(false)
+  // Independent skill pick for the Retention Check — defaults to whatever
+  // skill drove the failed Morale roll, but a leader may want to swap
+  // (e.g. Inspiration for the Morale check, Manipulation for the
+  // last-ditch rally). The number track follows the picker's selected
+  // skill level on the leader's sheet.
+  const [retentionSkillName, setRetentionSkillName] = useState<string>('Inspiration')
+  const [retentionSmod, setRetentionSmod] = useState(0)
 
   // Reset on open
   useEffect(() => {
@@ -203,6 +210,7 @@ export default function CommunityMoraleModal({
     setFedAmod(0); setFedSmod(1); setFedCmod(0)
     setClothedAmod(0); setClothedSmod(1); setClothedCmod(0)
     setMoraleAmod(0); setMoraleSmod(0); setAdditionalMoraleCmod(0)
+    setRetention(null); setRetentionSkillName('Inspiration'); setRetentionSmod(0)
     setLeaderInfo(null)
     setRetention(null)
     setRollingRetention(false)
@@ -390,34 +398,40 @@ export default function CommunityMoraleModal({
       membersAfter: willDissolve ? 0 : memberCount - departureIds.length,
     })
     setStage('result')
+    // Seed the Retention skill picker from whatever drove the failed
+    // Morale roll. Leader can swap on the Result stage before clicking
+    // Attempt — most of the time same skill is the right call.
+    setRetentionSkillName(moraleSkillName)
+    setRetentionSmod(moraleSmod)
     setRunning(false)
   }
 
   // Retention Check — fired only from the Result stage when willDissolve
-  // is true AND the leader hasn't attempted one yet. SRD §08 p.22: an
-  // "immediate Morale Check" using the failed Morale's cmod_for_next as
-  // the Mood slot. No other slots change; leader A/S unchanged. Success
-  // of any tier saves the community. Uses the currently-selected
-  // moraleAmod/moraleSmod/moraleSkillName so the leader can swap skills
-  // before the retention roll if the GM wants.
+  // is true AND the leader hasn't attempted one yet. An immediate Morale
+  // Check using the failed Morale's cmod_for_next as the Mood slot. No
+  // other slots change; leader A unchanged. Success of any tier saves the
+  // community. The skill (and therefore SMod) is independently picked on
+  // the Result stage — defaults to the same skill that drove the failed
+  // Morale, but the leader can swap (e.g. drop Inspiration for
+  // Manipulation if the rally needs a different angle). One attempt only.
   function attemptRetentionCheck() {
     if (!result || rollingRetention) return
-    if (retention) return  // already attempted; one shot per SRD
+    if (retention) return  // one shot per failed Morale
     setRollingRetention(true)
     const mood = outcomeToMoraleCmod(result.morale.outcome)
     const dice = roll2d6()
-    const total = dice.die1 + dice.die2 + moraleAmod + moraleSmod + mood
+    const total = dice.die1 + dice.die2 + moraleAmod + retentionSmod + mood
     const outcome = classifyRoll(total, dice.die1, dice.die2)
     const survived = !isMoraleFailure(outcome)
     setRetention({
       ...dice,
       amod: moraleAmod,
-      smod: moraleSmod,
+      smod: retentionSmod,
       mood,
       total,
       outcome,
       survived,
-      skillUsed: moraleSkillName,
+      skillUsed: retentionSkillName,
     })
     setRollingRetention(false)
   }
@@ -1005,15 +1019,42 @@ export default function CommunityMoraleModal({
               <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
                 3 consecutive Morale failures. All {r.membersBefore} members scatter. The community is gone.
                 {!retention && leaderInfo && (
-                  <> A fast-acting leader may attempt an immediate Retention Check (SRD §08 p.22) to salvage fragments.</>
+                  <> A fast-acting leader may attempt an immediate Retention Check to salvage fragments.</>
                 )}
               </div>
               {!retention && leaderInfo && (
-                <button onClick={attemptRetentionCheck}
-                  disabled={rollingRetention}
-                  style={{ marginTop: '8px', padding: '8px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '17px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: rollingRetention ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: rollingRetention ? 0.4 : 1 }}>
-                  {rollingRetention ? 'Rolling…' : `🙏 Attempt Retention Check (${leaderInfo.name} rolls ${moraleSkillName})`}
-                </button>
+                <>
+                  {/* Skill picker — leader chooses what they're rolling
+                      to rally with. Defaults to the failed Morale's skill
+                      but a swap is encouraged (Manipulation, Streetwise,
+                      etc. depending on the angle of the appeal). */}
+                  <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '17px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                      {leaderInfo.name} rolls
+                    </span>
+                    <select value={retentionSkillName}
+                      onChange={e => {
+                        const name = e.target.value
+                        setRetentionSkillName(name)
+                        const lvl = leaderInfo?.skillLevels[name] ?? 0
+                        setRetentionSmod(lvl)
+                      }}
+                      style={{ padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '17px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none', minWidth: '180px' }}>
+                      {MORALE_SOCIAL_SKILLS.map(s => {
+                        const lvl = leaderInfo?.skillLevels[s] ?? 0
+                        return <option key={s} value={s}>{s} ({lvl})</option>
+                      })}
+                    </select>
+                    <span style={{ fontSize: '17px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>SMod</span>
+                    <input type="number" value={retentionSmod} onChange={e => setRetentionSmod(parseInt(e.target.value) || 0)}
+                      style={{ width: '60px', padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '17px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center' }} />
+                  </div>
+                  <button onClick={attemptRetentionCheck}
+                    disabled={rollingRetention}
+                    style={{ marginTop: '8px', padding: '8px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '17px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: rollingRetention ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: rollingRetention ? 0.4 : 1 }}>
+                    {rollingRetention ? 'Rolling…' : `🙏 Attempt Retention Check`}
+                  </button>
+                </>
               )}
             </div>
           ) : r.willDissolve && retention?.survived ? (
