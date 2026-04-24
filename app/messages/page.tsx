@@ -221,7 +221,12 @@ export default function MessagesPage() {
   }, [searchQuery, myId])
 
   async function openDM(otherUserId: string) {
-    const { data } = await supabase.rpc('get_or_create_dm', { other_user_id: otherUserId })
+    const { data, error } = await supabase.rpc('get_or_create_dm', { other_user_id: otherUserId })
+    if (error) {
+      console.error('get_or_create_dm error:', error)
+      alert(`Could not start conversation: ${error.message}`)
+      return
+    }
     if (data) {
       setSearching(false)
       setSearchQuery('')
