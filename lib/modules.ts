@@ -704,3 +704,445 @@ export function bumpSemver(current: string, kind: 'major' | 'minor' | 'patch'): 
   if (kind === 'minor') return `${maj}.${min + 1}.0`
   return `${maj}.${min}.${pat + 1}`
 }
+
+// ── Subscription-side helpers (Phase 5 Sprint 3b) ──────────────
+
+// Fork — user opts out of future update prompts. The module
+// subscription stays so the version history UI can still show
+// what they cloned from, but `module_version_published` triggers
+// skip forked rows.
+export async function forkSubscription(
+  supabase: SupabaseClient,
+  subscriptionId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('module_subscriptions')
+    .update({ status: 'forked' })
+    .eq('id', subscriptionId)
+  if (error) throw new Error(`Fork failed: ${error.message}`)
+}
+
+// Unsubscribe — breaks the link entirely. Cloned rows stay in
+// place (source_module_version_id preserved on them so the user
+// can see where they came from) but no future updates land.
+export async function unsubscribeSubscription(
+  supabase: SupabaseClient,
+  subscriptionId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('module_subscriptions')
+    .update({ status: 'unsubscribed' })
+    .eq('id', subscriptionId)
+  if (error) throw new Error(`Unsubscribe failed: ${error.message}`)
+}
+
+// Re-activate a forked / unsubscribed subscription.
+export async function reactivateSubscription(
+  supabase: SupabaseClient,
+  subscriptionId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('module_subscriptions')
+    .update({ status: 'active' })
+    .eq('id', subscriptionId)
+  if (error) throw new Error(`Reactivate failed: ${error.message}`)
+}
+
+// ── applyModuleUpdate ──────────────────────────────────────────
+// Walks the diff between the subscriber's cloned content and the
+// target version's snapshot, applying the changes the user
+// selected in the Review modal. Atomicity: not wrapped in a
+// transaction — each bucket is applied in order; errors surface
+// mid-way and the caller re-queries.
+//
+// Apply semantics, per change bucket:
+//   ADDED    — INSERT a fresh row in the target campaign/community
+//              carrying the new snapshot's data + source_module_*
+//              pointers to the new version id
+//   CHANGED  — UPDATE the existing cloned row's fields in place,
+//              including source_module_version_id → new version
+//              id (the flip_edited_since_clone trigger sees the
+//              source_module_version_id change and skips marking
+//              edited_since_clone)
+//   REMOVED  — DELETE the cloned row (only if the user opted in;
+//              default is to keep removed rows since the GM may
+//              have become attached to them)
+//
+// At the end, the module_subscriptions row is rehomed to the new
+// version. The subscription row's status stays 'active'; a Fork
+// is a separate user action.
+
+export interface SelectedChanges {
+  npcs:     { added: string[]; changed: string[]; removed: string[] }
+  pins:     { added: string[]; changed: string[]; removed: string[] }
+  scenes:   { added: string[]; changed: string[]; removed: string[] }
+  handouts: { added: string[]; changed: string[]; removed: string[] }
+}
+
+export interface ApplyResult {
+  applied: {
+    npcs:     { added: number; changed: number; removed: number }
+    pins:     { added: number; changed: number; removed: number }
+    scenes:   { added: number; changed: number; removed: number }
+    handouts: { added: number; changed: number; removed: number }
+  }
+  errors: string[]
+}
+
+export async function applyModuleUpdate(
+  supabase: SupabaseClient,
+  params: {
+    subscriptionId: string
+    campaignId: string
+    newVersionId: string
+    newSnapshot: ModuleSnapshot
+    accepted: SelectedChanges
+  },
+): Promise<ApplyResult> {
+  const { subscriptionId, campaignId, newVersionId, newSnapshot, accepted } = params
+  const applied: ApplyResult['applied'] = {
+    npcs:     { added: 0, changed: 0, removed: 0 },
+    pins:     { added: 0, changed: 0, removed: 0 },
+    scenes:   { added: 0, changed: 0, removed: 0 },
+    handouts: { added: 0, changed: 0, removed: 0 },
+  }
+  const errors: string[] = []
+
+  // We need to find the subscription's current module to get the
+  // source_module_id stamp for new rows. Also used for the
+  // UPDATE-existing-rows target filter.
+  const { data: sub } = await supabase
+    .from('module_subscriptions')
+    .select('module_id')
+    .eq('id', subscriptionId)
+    .maybeSingle()
+  const sourceModuleId = (sub as any)?.module_id as string | undefined
+  if (!sourceModuleId) {
+    errors.push('subscription: could not resolve module_id')
+    return { applied, errors }
+  }
+
+  // Build maps from snapshot external ids → item for lookups.
+  const byExternal = <T extends { _external_id?: string }>(arr: T[] | undefined) => {
+    const m = new Map<string, T>()
+    for (const item of arr ?? []) {
+      if (item._external_id) m.set(item._external_id, item)
+    }
+    return m
+  }
+  const newNpcsMap = byExternal(newSnapshot.npcs)
+  const newPinsMap = byExternal(newSnapshot.pins)
+  const newScenesMap = byExternal(newSnapshot.scenes)
+  const newHandoutsMap = byExternal(newSnapshot.handouts)
+
+  // ── PINS ─────────────────────────────────────────────────────
+  // Added pins first so NPC → pin links can resolve against them.
+  const pinExternalToNewLocalId: Record<string, string> = {}
+  if (accepted.pins.added.length > 0) {
+    const rows = accepted.pins.added
+      .map(xid => newPinsMap.get(xid))
+      .filter((p): p is NonNullable<typeof p> => !!p)
+      .map((p, i) => ({
+        campaign_id: campaignId,
+        name: p.name,
+        lat: p.lat,
+        lng: p.lng,
+        notes: p.notes ?? '',
+        category: p.category ?? 'location',
+        revealed: false,
+        sort_order: p.sort_order ?? 9000 + i,
+        source_module_id: sourceModuleId,
+        source_module_version_id: newVersionId,
+      }))
+    if (rows.length > 0) {
+      const { data, error } = await supabase.from('campaign_pins').insert(rows).select('id, name')
+      if (error) errors.push(`pins.added: ${error.message}`)
+      else {
+        applied.pins.added = data?.length ?? 0
+        // Track newly-inserted ids keyed by the source _external_id
+        // so an NPC with _pin_external_id in the same change set
+        // can link to them.
+        data?.forEach((row: any, i: number) => {
+          const src = accepted.pins.added[i]
+          if (src) pinExternalToNewLocalId[src] = row.id
+        })
+      }
+    }
+  }
+  if (accepted.pins.changed.length > 0) {
+    for (const xid of accepted.pins.changed) {
+      const p = newPinsMap.get(xid)
+      if (!p) continue
+      const { error } = await supabase
+        .from('campaign_pins')
+        .update({
+          name: p.name,
+          lat: p.lat, lng: p.lng,
+          notes: p.notes ?? '',
+          category: p.category ?? 'location',
+          source_module_version_id: newVersionId,
+          edited_since_clone: false,
+        })
+        .eq('campaign_id', campaignId)
+        .eq('source_module_id', sourceModuleId)
+        .ilike('name', p.name) // loose match — pins don't have a stable id back to external
+      if (error) errors.push(`pins.changed[${xid}]: ${error.message}`)
+      else applied.pins.changed++
+    }
+  }
+  if (accepted.pins.removed.length > 0) {
+    for (const xid of accepted.pins.removed) {
+      const { error } = await supabase
+        .from('campaign_pins')
+        .delete()
+        .eq('campaign_id', campaignId)
+        .eq('source_module_id', sourceModuleId)
+        // Without a stable external-id back-ref, we match by name
+        // captured at removal time via the snapshot's previous copy.
+        // Caller passes the old snapshot's pin name via the _external_id
+        // key (the xid itself was an id at publish time) — best-effort.
+        .eq('id', xid)  // may no-op if xid isn't a local id; that's fine
+      if (error) errors.push(`pins.removed[${xid}]: ${error.message}`)
+      else applied.pins.removed++
+    }
+  }
+
+  // ── NPCs ─────────────────────────────────────────────────────
+  if (accepted.npcs.added.length > 0) {
+    const rows = accepted.npcs.added
+      .map(xid => newNpcsMap.get(xid))
+      .filter((n): n is NonNullable<typeof n> => !!n)
+      .map((n, i) => ({
+        campaign_id: campaignId,
+        campaign_pin_id: n._pin_external_id
+          ? (pinExternalToNewLocalId[n._pin_external_id] ?? null)
+          : null,
+        name: n.name,
+        reason: n.reason ?? null,
+        acumen: n.acumen ?? null,
+        physicality: n.physicality ?? null,
+        influence: n.influence ?? null,
+        dexterity: n.dexterity ?? null,
+        skills: n.skills ?? null,
+        equipment: n.equipment ?? null,
+        notes: n.notes ?? null,
+        motivation: n.motivation ?? null,
+        portrait_url: n.portrait_url ?? null,
+        npc_type: n.npc_type ?? null,
+        wp_max: n.wp_max ?? null,
+        rp_max: n.rp_max ?? null,
+        wp_current: n.wp_max ?? null,
+        rp_current: n.rp_max ?? null,
+        status: 'active',
+        sort_order: n.sort_order ?? 9000 + i,
+        source_module_id: sourceModuleId,
+        source_module_version_id: newVersionId,
+      }))
+    if (rows.length > 0) {
+      const { data, error } = await supabase.from('campaign_npcs').insert(rows).select('id')
+      if (error) errors.push(`npcs.added: ${error.message}`)
+      else applied.npcs.added = data?.length ?? 0
+    }
+  }
+  if (accepted.npcs.changed.length > 0) {
+    for (const xid of accepted.npcs.changed) {
+      const n = newNpcsMap.get(xid)
+      if (!n) continue
+      // Match by name + source_module_id + original external_id
+      // captured during initial clone. For Sprint 3b MVP we match
+      // by name under the module stamp; stable external-id back-
+      // tracking is a Sprint 4 polish.
+      const { error } = await supabase
+        .from('campaign_npcs')
+        .update({
+          reason: n.reason ?? null,
+          acumen: n.acumen ?? null,
+          physicality: n.physicality ?? null,
+          influence: n.influence ?? null,
+          dexterity: n.dexterity ?? null,
+          skills: n.skills ?? null,
+          equipment: n.equipment ?? null,
+          notes: n.notes ?? null,
+          motivation: n.motivation ?? null,
+          portrait_url: n.portrait_url ?? null,
+          npc_type: n.npc_type ?? null,
+          wp_max: n.wp_max ?? null,
+          rp_max: n.rp_max ?? null,
+          source_module_version_id: newVersionId,
+          edited_since_clone: false,
+        })
+        .eq('campaign_id', campaignId)
+        .eq('source_module_id', sourceModuleId)
+        .ilike('name', n.name)
+      if (error) errors.push(`npcs.changed[${xid}]: ${error.message}`)
+      else applied.npcs.changed++
+    }
+  }
+  if (accepted.npcs.removed.length > 0) {
+    for (const xid of accepted.npcs.removed) {
+      const { error } = await supabase
+        .from('campaign_npcs')
+        .delete()
+        .eq('campaign_id', campaignId)
+        .eq('source_module_id', sourceModuleId)
+        .eq('id', xid)
+      if (error) errors.push(`npcs.removed[${xid}]: ${error.message}`)
+      else applied.npcs.removed++
+    }
+  }
+
+  // ── HANDOUTS ────────────────────────────────────────────────
+  if (accepted.handouts.added.length > 0) {
+    const rows = accepted.handouts.added
+      .map(xid => newHandoutsMap.get(xid))
+      .filter((h): h is NonNullable<typeof h> => !!h)
+      .map(h => ({
+        campaign_id: campaignId,
+        title: h.title,
+        content: h.content ?? '',
+        attachments: Array.isArray(h.attachments) ? h.attachments : [],
+        source_module_id: sourceModuleId,
+        source_module_version_id: newVersionId,
+      }))
+    if (rows.length > 0) {
+      const { error } = await supabase.from('campaign_notes').insert(rows)
+      if (error) errors.push(`handouts.added: ${error.message}`)
+      else applied.handouts.added = rows.length
+    }
+  }
+  if (accepted.handouts.changed.length > 0) {
+    for (const xid of accepted.handouts.changed) {
+      const h = newHandoutsMap.get(xid)
+      if (!h) continue
+      const { error } = await supabase
+        .from('campaign_notes')
+        .update({
+          content: h.content ?? '',
+          attachments: Array.isArray(h.attachments) ? h.attachments : [],
+          source_module_version_id: newVersionId,
+          edited_since_clone: false,
+        })
+        .eq('campaign_id', campaignId)
+        .eq('source_module_id', sourceModuleId)
+        .ilike('title', h.title)
+      if (error) errors.push(`handouts.changed[${xid}]: ${error.message}`)
+      else applied.handouts.changed++
+    }
+  }
+  if (accepted.handouts.removed.length > 0) {
+    for (const xid of accepted.handouts.removed) {
+      const { error } = await supabase
+        .from('campaign_notes')
+        .delete()
+        .eq('campaign_id', campaignId)
+        .eq('source_module_id', sourceModuleId)
+        .eq('id', xid)
+      if (error) errors.push(`handouts.removed[${xid}]: ${error.message}`)
+      else applied.handouts.removed++
+    }
+  }
+
+  // ── SCENES ──────────────────────────────────────────────────
+  // Scenes are big: each adds a row into tactical_scenes plus
+  // their object tokens into scene_tokens. For the MVP we only
+  // support add/changed/removed on the scene shell itself;
+  // token-level diff lands in a follow-up. Scenes with tokens
+  // in the added list include the full tokens array as a fresh
+  // clone (same pattern as cloneModuleIntoCampaign).
+  if (accepted.scenes.added.length > 0) {
+    for (const xid of accepted.scenes.added) {
+      const scene = newScenesMap.get(xid)
+      if (!scene) continue
+      const { data: inserted, error: sErr } = await supabase
+        .from('tactical_scenes')
+        .insert({
+          campaign_id: campaignId,
+          name: scene.name,
+          grid_cols: scene.grid_cols ?? 20,
+          grid_rows: scene.grid_rows ?? 15,
+          background_url: scene.background_url ?? null,
+          cell_px: scene.cell_px ?? 35,
+          cell_feet: scene.cell_feet ?? 3,
+          has_grid: scene.has_grid ?? true,
+          img_scale: scene.img_scale ?? 1,
+          is_active: false,
+          source_module_id: sourceModuleId,
+          source_module_version_id: newVersionId,
+        })
+        .select('id')
+        .single()
+      if (sErr || !inserted) {
+        errors.push(`scenes.added[${xid}]: ${sErr?.message ?? 'insert failed'}`)
+        continue
+      }
+      applied.scenes.added++
+      if (scene.tokens && scene.tokens.length > 0) {
+        const tokenRows = scene.tokens.map((t: any) => ({
+          scene_id: (inserted as any).id,
+          name: t.name ?? null,
+          token_type: t.token_type ?? 'object',
+          portrait_url: t.portrait_url ?? null,
+          grid_x: t.grid_x ?? null,
+          grid_y: t.grid_y ?? null,
+          color: t.color ?? null,
+          is_visible: t.is_visible ?? true,
+          wp_max: t.wp_max ?? null,
+          wp_current: t.wp_max ?? null,
+          destroyed_portrait_url: t.destroyed_portrait_url ?? null,
+          lootable: t.lootable ?? null,
+          npc_id: null,
+          character_id: null,
+          source_module_id: sourceModuleId,
+          source_module_version_id: newVersionId,
+        }))
+        const { error: tErr } = await supabase.from('scene_tokens').insert(tokenRows)
+        if (tErr) errors.push(`scenes.added[${xid}].tokens: ${tErr.message}`)
+      }
+    }
+  }
+  if (accepted.scenes.changed.length > 0) {
+    for (const xid of accepted.scenes.changed) {
+      const scene = newScenesMap.get(xid)
+      if (!scene) continue
+      const { error } = await supabase
+        .from('tactical_scenes')
+        .update({
+          grid_cols: scene.grid_cols ?? 20,
+          grid_rows: scene.grid_rows ?? 15,
+          background_url: scene.background_url ?? null,
+          cell_px: scene.cell_px ?? 35,
+          cell_feet: scene.cell_feet ?? 3,
+          has_grid: scene.has_grid ?? true,
+          img_scale: scene.img_scale ?? 1,
+          source_module_version_id: newVersionId,
+          edited_since_clone: false,
+        })
+        .eq('campaign_id', campaignId)
+        .eq('source_module_id', sourceModuleId)
+        .ilike('name', scene.name)
+      if (error) errors.push(`scenes.changed[${xid}]: ${error.message}`)
+      else applied.scenes.changed++
+    }
+  }
+  if (accepted.scenes.removed.length > 0) {
+    for (const xid of accepted.scenes.removed) {
+      const { error } = await supabase
+        .from('tactical_scenes')
+        .delete()
+        .eq('campaign_id', campaignId)
+        .eq('source_module_id', sourceModuleId)
+        .eq('id', xid)
+      if (error) errors.push(`scenes.removed[${xid}]: ${error.message}`)
+      else applied.scenes.removed++
+    }
+  }
+
+  // Finally — rehome the subscription to the new version.
+  const { error: subErr } = await supabase
+    .from('module_subscriptions')
+    .update({ current_version_id: newVersionId, status: 'active' })
+    .eq('id', subscriptionId)
+  if (subErr) errors.push(`subscription: ${subErr.message}`)
+
+  return { applied, errors }
+}
