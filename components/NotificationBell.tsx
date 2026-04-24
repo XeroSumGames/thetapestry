@@ -223,6 +223,21 @@ export default function NotificationBell() {
       const match = body.match(/^(.+?) submitted (?:a pin|an NPC): (.+)$/)
       if (match) return <><span style={{ color: '#7fc458' }}>{match[1]}</span> submitted: <span style={{ color: '#EF9F27' }}>{match[2]}</span></>
     }
+    // Phase E — Thriver queue alert when a new world_community is
+    // submitted. Body: `<submitter> submitted "<name>" from
+    // <campaign> for Tapestry publication.`
+    if (type === 'moderation_community') {
+      const match = body.match(/^(.+?) submitted "(.+?)" from (.+?) for Tapestry publication\.$/)
+      if (match) {
+        return (
+          <>
+            <span style={{ color: '#7fc458' }}>{match[1]}</span> submitted{' '}
+            <span style={{ color: '#d48bd4' }}>"{match[2]}"</span> from{' '}
+            <span style={{ color: '#EF9F27' }}>{match[3]}</span> for Tapestry publication.
+          </>
+        )
+      }
+    }
     // "Your pin "X" has been approved/rejected"
     if (type === 'rumor_approved') {
       const match = body.match(/Your pin [""]?(.+?)[""]? has been approved/)
