@@ -16,6 +16,7 @@ interface ConversationRow {
   participants: Participant[]
   latest_message: { body: string; created_at: string; sender_user_id: string } | null
   unread: number
+  archived_at: string | null
 }
 
 interface Message {
@@ -47,6 +48,8 @@ export default function MessagesPage() {
   const [searchResults, setSearchResults] = useState<UserResult[]>([])
   const [loadingConvs, setLoadingConvs] = useState(true)
   const [loadingMsgs, setLoadingMsgs] = useState(false)
+  const [openMenuConvId, setOpenMenuConvId] = useState<string | null>(null)
+  const [showArchived, setShowArchived] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
@@ -73,7 +76,7 @@ export default function MessagesPage() {
     // Fetch conversations the user is in.
     const { data: cpRows } = await supabase
       .from('conversation_participants')
-      .select('conversation_id, last_read_at, joined_at')
+      .select('conversation_id, last_read_at, joined_at, archived_at')
       .eq('user_id', userId)
       .order('joined_at', { ascending: false })
 
@@ -124,6 +127,7 @@ export default function MessagesPage() {
         participants: parts,
         latest_message: latest,
         unread,
+        archived_at: row.archived_at ?? null,
       }
     }).sort((a: ConversationRow, b: ConversationRow) => {
       const at = a.latest_message?.created_at ?? a.created_at
@@ -236,6 +240,40 @@ export default function MessagesPage() {
     }
   }
 
+  // ── Conversation actions ───────────────────────────────────────
+  async function archiveConversation(convId: string) {
+    setOpenMenuConvId(null)
+    await supabase.from('conversation_participants')
+      .update({ archived_at: new Date().toISOString() })
+      .eq('conversation_id', convId).eq('user_id', myId)
+    setConversations(prev => prev.map(c => c.id === convId ? { ...c, archived_at: new Date().toISOString() } : c))
+    if (activeConvId === convId) setActiveConvId(null)
+  }
+
+  async function unarchiveConversation(convId: string) {
+    setOpenMenuConvId(null)
+    await supabase.from('conversation_participants')
+      .update({ archived_at: null })
+      .eq('conversation_id', convId).eq('user_id', myId)
+    setConversations(prev => prev.map(c => c.id === convId ? { ...c, archived_at: null } : c))
+  }
+
+  async function deleteConversation(convId: string) {
+    setOpenMenuConvId(null)
+    if (!confirm('Delete this conversation? It will be removed for you only.')) return
+    await supabase.from('conversation_participants')
+      .delete().eq('conversation_id', convId).eq('user_id', myId)
+    setConversations(prev => prev.filter(c => c.id !== convId))
+    if (activeConvId === convId) setActiveConvId(null)
+  }
+
+  async function blockUser(otherUserId: string, convId: string) {
+    setOpenMenuConvId(null)
+    if (!confirm("Block this user? They won't be able to DM you.")) return
+    await supabase.from('user_blocks').insert({ blocker_id: myId, blocked_id: otherUserId })
+    await archiveConversation(convId)
+  }
+
   // ── Helpers ───────────────────────────────────────────────────
   function otherParticipants(conv: ConversationRow) {
     return conv.participants.filter(p => p.user_id !== myId)
@@ -251,6 +289,12 @@ export default function MessagesPage() {
   }
 
   // ── Styles ────────────────────────────────────────────────────
+  const menuItemStyle: React.CSSProperties = {
+    display: 'block', width: '100%', padding: '7px 12px', background: 'none', border: 'none',
+    color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
+    letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'left',
+  }
+
   const panelBase: React.CSSProperties = {
     background: '#1a1a1a', borderRight: '1px solid #2e2e2e',
     display: 'flex', flexDirection: 'column', overflow: 'hidden',
@@ -304,51 +348,87 @@ export default function MessagesPage() {
         )}
 
         {/* Conversation list */}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto' }} onClick={() => openMenuConvId && setOpenMenuConvId(null)}>
           {loadingConvs && (
             <div style={{ padding: '1rem', color: '#5a5550', fontSize: '13px', textAlign: 'center' }}>Loading…</div>
           )}
-          {!loadingConvs && conversations.length === 0 && (
+          {!loadingConvs && conversations.filter(c => !c.archived_at).length === 0 && !showArchived && (
             <div style={{ padding: '1.5rem 1rem', color: '#5a5550', fontSize: '13px', textAlign: 'center', lineHeight: 1.6 }}>
               No messages yet.<br />Hit ✏ to start a conversation.
             </div>
           )}
-          {conversations.map(conv => {
+          {conversations
+            .filter(c => showArchived ? !!c.archived_at : !c.archived_at)
+            .map(conv => {
             const others = otherParticipants(conv)
             const label = others.map(o => o.username).join(', ') || 'Unknown'
             const isActive = conv.id === activeConvId
             const preview = conv.latest_message?.body ?? ''
+            const menuOpen = openMenuConvId === conv.id
             return (
-              <button key={conv.id}
-                onClick={() => setActiveConvId(conv.id)}
-                style={{
-                  display: 'block', width: '100%', padding: '10px 14px',
-                  background: isActive ? '#242424' : 'transparent',
-                  border: 'none', borderBottom: '1px solid #1e1e1e',
-                  borderLeft: `3px solid ${isActive ? '#8b5cf6' : 'transparent'}`,
-                  cursor: 'pointer', textAlign: 'left',
-                }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-                  <span style={{ flex: 1, fontSize: '13px', fontWeight: conv.unread ? 700 : 400, color: conv.unread ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {label}
-                  </span>
-                  {conv.latest_message && (
-                    <span style={{ fontSize: '13px', color: '#5a5550', flexShrink: 0 }}>
-                      {formatTime(conv.latest_message.created_at)}
+              <div key={conv.id} style={{ position: 'relative', borderBottom: '1px solid #1e1e1e' }}>
+                <div
+                  onClick={() => { setActiveConvId(conv.id); setOpenMenuConvId(null) }}
+                  style={{
+                    padding: '9px 36px 9px 14px',
+                    background: isActive ? '#242424' : 'transparent',
+                    borderLeft: `3px solid ${isActive ? '#8b5cf6' : 'transparent'}`,
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLDivElement).style.background = '#1e1e1e' }}
+                  onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                    <span style={{ flex: 1, fontSize: '13px', fontWeight: conv.unread ? 700 : 400, color: conv.unread ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {label}
                     </span>
-                  )}
-                  {conv.unread > 0 && (
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#8b5cf6', flexShrink: 0, display: 'inline-block' }} />
+                    {conv.latest_message && (
+                      <span style={{ fontSize: '13px', color: '#5a5550', flexShrink: 0 }}>
+                        {formatTime(conv.latest_message.created_at)}
+                      </span>
+                    )}
+                    {conv.unread > 0 && (
+                      <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#8b5cf6', flexShrink: 0, display: 'inline-block' }} />
+                    )}
+                  </div>
+                  {preview && (
+                    <div style={{ fontSize: '13px', color: '#5a5550', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {conv.latest_message?.sender_user_id === myId ? 'You: ' : ''}{preview}
+                    </div>
                   )}
                 </div>
-                {preview && (
-                  <div style={{ fontSize: '13px', color: '#5a5550', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {conv.latest_message?.sender_user_id === myId ? 'You: ' : ''}{preview}
+                {/* ⋮ menu trigger */}
+                <button
+                  onClick={e => { e.stopPropagation(); setOpenMenuConvId(menuOpen ? null : conv.id) }}
+                  style={{ position: 'absolute', top: '8px', right: '6px', background: 'none', border: 'none', color: '#5a5550', fontSize: '16px', cursor: 'pointer', lineHeight: 1, padding: '2px 4px', borderRadius: '3px' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#d4cfc9')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#5a5550')}
+                  title="Options"
+                >⋮</button>
+                {/* Dropdown */}
+                {menuOpen && (
+                  <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: '28px', right: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '4px', zIndex: 100, minWidth: '130px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+                    {conv.archived_at ? (
+                      <button onClick={() => unarchiveConversation(conv.id)} style={menuItemStyle}>Unarchive</button>
+                    ) : (
+                      <button onClick={() => archiveConversation(conv.id)} style={menuItemStyle}>Archive</button>
+                    )}
+                    <button onClick={() => deleteConversation(conv.id)} style={{ ...menuItemStyle, color: '#f5a89a' }}>Delete</button>
+                    {others.length > 0 && (
+                      <button onClick={() => blockUser(others[0].user_id, conv.id)} style={{ ...menuItemStyle, color: '#f5a89a' }}>Block {others[0].username}</button>
+                    )}
                   </div>
                 )}
-              </button>
+              </div>
             )
           })}
+          {/* Archive toggle */}
+          {!loadingConvs && conversations.some(c => c.archived_at) && (
+            <button onClick={() => setShowArchived(s => !s)}
+              style={{ width: '100%', padding: '8px', background: 'none', border: 'none', color: '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderTop: '1px solid #1e1e1e' }}>
+              {showArchived ? '← Back' : `Archived (${conversations.filter(c => c.archived_at).length})`}
+            </button>
+          )}
         </div>
       </div>
 
@@ -369,6 +449,23 @@ export default function MessagesPage() {
               <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
                 {activeOther.map(o => o.username).join(', ') || 'Conversation'}
               </div>
+            </div>
+
+            {/* Send form — at the top for easy access */}
+            <div style={{ padding: '12px 20px', borderBottom: '1px solid #2e2e2e', display: 'flex', gap: '8px', flexShrink: 0 }}>
+              <input
+                autoFocus
+                value={body}
+                onChange={e => setBody(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
+                placeholder="Send a message… (Enter to send)"
+                maxLength={2000}
+                style={{ flex: 1, padding: '9px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '20px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', outline: 'none' }}
+              />
+              <button onClick={handleSend} disabled={!body.trim() || sending}
+                style={{ padding: '9px 18px', background: body.trim() ? '#8b5cf6' : '#242424', border: `1px solid ${body.trim() ? '#8b5cf6' : '#3a3a3a'}`, borderRadius: '20px', color: body.trim() ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: body.trim() ? 'pointer' : 'default', transition: 'all .15s', flexShrink: 0 }}>
+                Send
+              </button>
             </div>
 
             {/* Messages */}
@@ -403,22 +500,6 @@ export default function MessagesPage() {
                 )
               })}
               <div ref={bottomRef} />
-            </div>
-
-            {/* Send form */}
-            <div style={{ padding: '12px 20px', borderTop: '1px solid #2e2e2e', display: 'flex', gap: '8px', flexShrink: 0 }}>
-              <input
-                value={body}
-                onChange={e => setBody(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-                placeholder="Send a message… (Enter to send)"
-                maxLength={2000}
-                style={{ flex: 1, padding: '9px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '20px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', outline: 'none' }}
-              />
-              <button onClick={handleSend} disabled={!body.trim() || sending}
-                style={{ padding: '9px 18px', background: body.trim() ? '#8b5cf6' : '#242424', border: `1px solid ${body.trim() ? '#8b5cf6' : '#3a3a3a'}`, borderRadius: '20px', color: body.trim() ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: body.trim() ? 'pointer' : 'default', transition: 'all .15s', flexShrink: 0 }}>
-                Send
-              </button>
             </div>
           </>
         )}

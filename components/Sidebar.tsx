@@ -128,20 +128,23 @@ export default function Sidebar() {
       </div>
 
       {/* User header */}
-      <div style={{ padding: '10px 14px 8px', fontSize: '14px', color: '#f5f2ee', letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', borderBottom: '1px solid #2e2e2e', display: 'flex', alignItems: 'center' }}>
+      <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid #2e2e2e', fontFamily: 'Barlow Condensed, sans-serif' }}>
         {isGuest ? (
-          <span style={{ flex: 1, color: '#7fc458' }}>Ghost <span style={{ fontSize: '13px', color: '#7fc458' }}>— You Don&apos;t Exist</span></span>
+          <span style={{ color: '#7fc458', fontSize: '14px', letterSpacing: '.12em', textTransform: 'uppercase' }}>Ghost <span style={{ fontSize: '13px' }}>— You Don&apos;t Exist</span></span>
         ) : (
           <>
-            <span style={{ flex: 1 }}>
+            <div style={{ fontSize: '14px', color: '#f5f2ee', letterSpacing: '.12em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '5px' }}>
               {username}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               {userRole === 'thriver'
-                ? <span style={{ marginLeft: '6px', background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 5px', borderRadius: '2px' }}>Thriver</span>
-                : <span style={{ marginLeft: '6px', background: '#2d5a1b', color: '#7fc458', fontSize: '13px', padding: '1px 5px', borderRadius: '2px' }}>Survivor</span>
+                ? <span style={{ background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 6px', borderRadius: '2px', letterSpacing: '.06em', textTransform: 'uppercase' }}>Thriver</span>
+                : <span style={{ background: '#2d5a1b', color: '#7fc458', fontSize: '13px', padding: '1px 6px', borderRadius: '2px', letterSpacing: '.06em', textTransform: 'uppercase' }}>Survivor</span>
               }
-            </span>
-            <MessagesBell />
-            <NotificationBell />
+              <div style={{ flex: 1 }} />
+              <MessagesBell />
+              <NotificationBell />
+            </div>
           </>
         )}
       </div>
