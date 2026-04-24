@@ -386,9 +386,13 @@ export default function NotificationBell() {
       {open && (
         <div style={{
           position: 'fixed', top: (ref.current?.getBoundingClientRect().bottom ?? 40) + 4 + 'px', left: '10px',
-          width: '320px', maxHeight: '400px', overflowY: 'auto',
+          // Wider container + hard clip so long notification bodies
+          // wrap cleanly instead of punching out the right edge.
+          width: '360px', maxWidth: 'calc(100vw - 20px)',
+          maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden',
           background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px',
           boxShadow: '0 8px 24px rgba(0,0,0,0.6)', zIndex: 9999,
+          boxSizing: 'border-box',
         }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #2e2e2e' }}>
@@ -425,12 +429,15 @@ export default function NotificationBell() {
                   borderLeft: n.read ? '3px solid transparent' : '3px solid #c0392b',
                   transition: 'background 0.15s',
                   textAlign: 'left',
+                  // Keep long titles + bodies inside the dropdown.
+                  overflow: 'hidden',
+                  boxSizing: 'border-box',
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                 onMouseLeave={e => (e.currentTarget.style.background = n.read ? 'transparent' : '#111')}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{n.title}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px', gap: '8px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: 0, flex: 1, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{n.title}</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexShrink: 0, marginLeft: '8px' }}>
                     <span style={{ fontSize: '13px', color: '#cce0f5' }}>{timeAgo(n.created_at)}</span>
                     <button onClick={(e) => { e.stopPropagation(); deleteNotification(n.id) }}
@@ -441,7 +448,7 @@ export default function NotificationBell() {
                     </button>
                   </div>
                 </div>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.4, textAlign: 'left' }}>{colorizeBody(n.body, n.type, (n as any).metadata)}</div>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.4, textAlign: 'left', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{colorizeBody(n.body, n.type, (n as any).metadata)}</div>
                 {/* Phase E Sprint 4c — inline Accept / Decline. Shown
                     on action-bearing notifications when the user
                     hasn't yet acted on this card in the current
