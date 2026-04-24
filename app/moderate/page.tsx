@@ -242,6 +242,14 @@ export default function ModerationPage() {
       approved_at: new Date().toISOString(),
     }).eq('id', id)
     if (error) { alert(`Moderation action failed: ${error.message}`); setActing(null); return }
+    // Lock all versions as a platform copy when approving.
+    if (status === 'approved') {
+      await supabase
+        .from('module_versions')
+        .update({ platform_locked_at: new Date().toISOString() })
+        .eq('module_id', id)
+        .is('platform_locked_at', null)
+    }
     // Notify the author
     if (mod?.author_user_id) {
       await supabase.from('notifications').insert({

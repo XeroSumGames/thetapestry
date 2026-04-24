@@ -6,7 +6,7 @@ import { SETTINGS } from '../../../lib/settings'
 import { SETTING_PREGENS, type PregenSeed } from '../../../lib/setting-npcs'
 import { buildCharacterFromPregen } from '../../../lib/xse-schema'
 import { exportGmKit } from '../../../lib/gm-kit'
-import { getModuleForCampaign, type ModuleForCampaign } from '../../../lib/modules'
+import { getModuleForCampaign, archiveModule, type ModuleForCampaign } from '../../../lib/modules'
 import ModulePublishModal from '../../../components/ModulePublishModal'
 
 interface Campaign {
@@ -276,6 +276,36 @@ export default function CampaignPage() {
     router.push('/stories')
   }
 
+  async function handleArchiveModule() {
+    if (!existingModule) return
+    const isListed = existingModule.visibility === 'listed'
+    const msg = isListed
+      ? `Archive "${existingModule.name}"? It will be hidden from the marketplace and no one new can subscribe. All subscriber campaigns keep their content. This cannot be undone from this page.`
+      : `Archive "${existingModule.name}"? It will no longer appear when others create campaigns. All subscriber content is untouched.`
+    if (!confirm(msg)) return
+
+    try {
+      // Check subscriber count first to decide if hard-delete is an option.
+      const { count } = await supabase
+        .from('module_subscriptions')
+        .select('id', { count: 'exact', head: true })
+        .eq('module_id', existingModule.id)
+        .eq('status', 'active')
+      const subCount = count ?? 0
+
+      let hardDelete = false
+      if (subCount === 0 && !isListed) {
+        hardDelete = confirm('No one has subscribed yet. Permanently delete the module entirely, or just archive it?\n\nOK = Delete permanently\nCancel = Archive (keeps version history)')
+      }
+
+      await archiveModule(supabase, existingModule.id, hardDelete)
+      setExistingModule(null)
+      alert(hardDelete ? '📦 Module deleted.' : '📦 Module archived. Subscribers have been notified.')
+    } catch (e: any) {
+      alert(`Archive failed: ${e?.message ?? 'unknown error'}`)
+    }
+  }
+
   function copyInviteLink() {
     if (!campaign) return
     const link = `${window.location.origin}/join/${campaign.invite_code}`
@@ -326,13 +356,27 @@ export default function CampaignPage() {
             title="Download every pin, NPC, scene, token, handout (with images) as a portable .zip">
             {exporting ? 'Packaging…' : 'GM Kit'}
           </button>
-          <button onClick={() => setPublishOpen(true)}
-            style={btn('#2a1a3e', '#c4a7f0', '#5a2e5a') as any}
-            title={existingModule
-              ? `Publish a new version of "${existingModule.name}" (current v${existingModule.latest_version?.version ?? '1.0.0'})`
-              : 'Publish this campaign as a reusable module other GMs can subscribe to'}>
-            📦 {existingModule ? `Module v${existingModule.latest_version?.version ?? '1.0.0'}` : 'Publish Module'}
-          </button>
+          {(!existingModule || !existingModule.archived_at) && (
+            <button onClick={() => setPublishOpen(true)}
+              style={btn('#2a1a3e', '#c4a7f0', '#5a2e5a') as any}
+              title={existingModule
+                ? `Publish a new version of "${existingModule.name}" (current v${existingModule.latest_version?.version ?? '1.0.0'})`
+                : 'Publish this campaign as a reusable module other GMs can subscribe to'}>
+              📦 {existingModule ? `Module v${existingModule.latest_version?.version ?? '1.0.0'}` : 'Publish Module'}
+            </button>
+          )}
+          {existingModule?.archived_at && (
+            <span style={{ padding: '8px 12px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              📦 Archived
+            </span>
+          )}
+          {existingModule && !existingModule.archived_at && (
+            <button onClick={handleArchiveModule}
+              style={btn('#1a1a1a', '#5a5550', '#3a3a3a') as any}
+              title="Archive this module — removes it from the marketplace, notifies subscribers">
+              Archive Module
+            </button>
+          )}
           {moduleUpdate && (
             <a href={`/stories/${id}/modules/${moduleUpdate.moduleId}/versions`}
               style={{ ...btn('#2a1a3e', '#c4a7f0', '#8b5cf6'), textDecoration: 'none', fontWeight: 700 } as any}

@@ -150,6 +150,7 @@ export interface ModuleForCampaign {
   parent_setting: string | null
   visibility: 'private' | 'unlisted' | 'listed'
   latest_version_id: string | null
+  archived_at: string | null
   latest_version: {
     id: string
     version: string
@@ -177,6 +178,7 @@ export async function listAvailableModules(
     .from('modules')
     .select('id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, latest_version:module_versions!modules_latest_version_id_fkey(id, version, published_at)')
     .not('latest_version_id', 'is', null)
+    .is('archived_at', null)
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -200,6 +202,7 @@ async function listAvailableModulesFallback(
     .from('modules')
     .select('id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id')
     .not('latest_version_id', 'is', null)
+    .is('archived_at', null)
     .order('created_at', { ascending: false })
   if (error || !modules) return []
   const versionIds = modules.map((m: any) => m.latest_version_id).filter(Boolean)
@@ -463,7 +466,7 @@ export async function getModuleForCampaign(
 
   const { data, error } = await supabase
     .from('modules')
-    .select('id, name, tagline, description, parent_setting, visibility, latest_version_id')
+    .select('id, name, tagline, description, parent_setting, visibility, latest_version_id, archived_at')
     .eq('source_campaign_id', campaignId)
     .eq('author_user_id', user.id)
     .maybeSingle()
@@ -1163,4 +1166,75 @@ export async function applyModuleUpdate(
   if (subErr) errors.push(`subscription: ${subErr.message}`)
 
   return { applied, errors }
+}
+
+// ── archiveModule ──────────────────────────────────────────────
+// Soft-deletes a module. Rules enforced here:
+//   - 0 active subscribers + not listed → caller may also pass
+//     hardDelete=true to fully remove the row.
+//   - Any active subscriber → archive only; notifies each subscriber.
+// Returns { archived: true } or { deleted: true } so the UI can
+// redirect appropriately.
+export async function archiveModule(
+  supabase: SupabaseClient,
+  moduleId: string,
+  hardDelete = false,
+): Promise<{ archived?: true; deleted?: true; subscriberCount: number }> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not logged in')
+
+  // Count active subscriptions (other than the author's own campaign).
+  const { count: subCount } = await supabase
+    .from('module_subscriptions')
+    .select('id', { count: 'exact', head: true })
+    .eq('module_id', moduleId)
+    .eq('status', 'active')
+
+  const subscriberCount = subCount ?? 0
+
+  if (hardDelete && subscriberCount === 0) {
+    const { error } = await supabase.from('modules').delete().eq('id', moduleId)
+    if (error) throw new Error(`Delete failed: ${error.message}`)
+    return { deleted: true, subscriberCount: 0 }
+  }
+
+  // Archive — stamp archived_at and notify all active subscribers.
+  const { data: mod, error: modErr } = await supabase
+    .from('modules')
+    .update({ archived_at: new Date().toISOString(), archived_by: user.id })
+    .eq('id', moduleId)
+    .select('name')
+    .single()
+  if (modErr || !mod) throw new Error(`Archive failed: ${modErr?.message ?? 'unknown'}`)
+
+  // Fetch subscriber campaign owners to notify them.
+  if (subscriberCount > 0) {
+    const { data: subs } = await supabase
+      .from('module_subscriptions')
+      .select('campaign_id, campaigns(user_id)')
+      .eq('module_id', moduleId)
+      .eq('status', 'active')
+
+    const notifyUserIds = [
+      ...new Set(
+        (subs ?? [])
+          .map((s: any) => (Array.isArray(s.campaigns) ? s.campaigns[0]?.user_id : s.campaigns?.user_id))
+          .filter((id: string | null) => id && id !== user.id),
+      ),
+    ]
+
+    if (notifyUserIds.length > 0) {
+      await supabase.from('notifications').insert(
+        notifyUserIds.map((uid: string) => ({
+          user_id: uid,
+          type: 'module_archived',
+          title: 'A module you use has been archived',
+          body: `"${(mod as any).name}" is no longer maintained. Your campaign content is untouched.`,
+          metadata: { module_id: moduleId, module_name: (mod as any).name },
+        })),
+      )
+    }
+  }
+
+  return { archived: true, subscriberCount }
 }
