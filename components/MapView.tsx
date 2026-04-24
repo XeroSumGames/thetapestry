@@ -338,6 +338,83 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       markersRef.current[pin.id] = marker
     })
 
+    // Phase E Sprint 3 — overlay approved world_communities as
+    // size-banded markers in the SAME cluster group so they mingle
+    // with regular pins at distance but fan out on zoom. Only fetch
+    // approved rows with coords (homestead_lat/lng); the RLS policy
+    // on world_communities already lets anyone read approved rows.
+    // Hidden by the 'world_community' folder toggle alongside other
+    // pin categories.
+    if (!currentHidden.has('world_community')) {
+      const { data: wc } = await supabase
+        .from('world_communities')
+        .select('id, name, description, homestead_lat, homestead_lng, size_band, faction_label, community_status, source_campaign_id, last_public_update_at')
+        .eq('moderation_status', 'approved')
+        .not('homestead_lat', 'is', null)
+        .not('homestead_lng', 'is', null)
+      const rows = (wc ?? []) as any[]
+      // Batch-fetch source campaign names for attribution on the
+      // popup. Falls back to "Unknown campaign" if RLS hides the
+      // campaign row from the viewer.
+      let campaignNames: Record<string, string> = {}
+      if (rows.length > 0) {
+        const campIds = [...new Set(rows.map(r => r.source_campaign_id))]
+        const { data: camps } = await supabase.from('campaigns').select('id, name').in('id', campIds)
+        for (const c of (camps ?? []) as any[]) campaignNames[c.id] = c.name
+      }
+      for (const row of rows) {
+        // Size band → pixel size on the map.
+        const sizeBand = row.size_band || 'Band'
+        const sizePx = sizeBand === 'City' ? 36
+          : sizeBand === 'Enclave' ? 32
+          : sizeBand === 'Settlement' ? 28
+          : sizeBand === 'Band' ? 24
+          : 20
+        // Community status → dot color. Narrative palette tied to
+        // the Morale outcome colors from the Weekly Check modal.
+        const status = row.community_status || 'Holding'
+        const dotColor = status === 'Thriving' ? '#7fc458'
+          : status === 'Holding' ? '#cce0f5'
+          : status === 'Struggling' ? '#EF9F27'
+          : status === 'Dying' ? '#f5a89a'
+          : status === 'Dissolved' ? '#5a5550'
+          : '#cce0f5'
+        // Distinct visual language from pins: solid colored circle
+        // with a thin dark outline + subtle glow. No emoji — the
+        // shape itself reads as "settled place".
+        const icon = leaflet.divIcon({
+          html: `<div style="width:${sizePx}px;height:${sizePx}px;background:${dotColor};border:2px solid #1a1a1a;border-radius:50%;box-shadow:0 0 8px rgba(212,139,212,0.6);display:flex;align-items:center;justify-content:center;color:#1a1a1a;font-family:'Barlow Condensed',sans-serif;font-size:${Math.max(11, sizePx / 2.5)}px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;" title="${(row.name || '').replace(/"/g, '&quot;')} — ${sizeBand}"></div>`,
+          className: '',
+          iconSize: [sizePx, sizePx],
+          iconAnchor: [sizePx / 2, sizePx / 2],
+          popupAnchor: [0, -sizePx / 2 - 4],
+        })
+        const campName = campaignNames[row.source_campaign_id] ?? 'Unknown campaign'
+        const escapedName = (row.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        const escapedDesc = (row.description || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        const escapedFaction = (row.faction_label || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        const escapedCamp = (campName || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        const popupHtml = `
+          <div style="font-family:Barlow,sans-serif;min-width:240px;max-width:320px">
+            <div style="font-weight:700;font-size:15px;margin-bottom:4px;color:#1a1a1a">🌐 ${escapedName}</div>
+            ${row.description ? `<div style="font-size:13px;color:#555;margin-bottom:6px;line-height:1.4">${escapedDesc}</div>` : ''}
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">
+              <span style="font-size:10px;background:#1a1a2e;color:#7ab3d4;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em">${sizeBand}</span>
+              <span style="font-size:10px;background:#1a2010;color:#7fc458;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em">${status}</span>
+              ${row.faction_label ? `<span style="font-size:10px;background:#2a2010;color:#EF9F27;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em">${escapedFaction}</span>` : ''}
+            </div>
+            <div style="font-size:11px;color:#888">From <strong>${escapedCamp}</strong></div>
+            ${row.last_public_update_at ? `<div style="font-size:10px;color:#aaa;margin-top:2px">Updated ${new Date(row.last_public_update_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>` : ''}
+          </div>
+        `
+        const marker = leaflet.marker([row.homestead_lat, row.homestead_lng], { icon }).bindPopup(popupHtml)
+        clusterGroup.addLayer(marker)
+        // Distinct id namespace so future "focus this community"
+        // calls can find the marker without colliding with map_pins.
+        markersRef.current[`world_community:${row.id}`] = marker
+      }
+    }
+
     clusterGroup.addTo(mapInst)
     clusterGroupRef.current = clusterGroup
 
