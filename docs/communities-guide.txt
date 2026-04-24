@@ -251,15 +251,16 @@ CONVERT — shared belief, ideology, or vision. Joins as a
 probationary Convert; commits fully after surviving the next
 Morale Check.
 
-(A fourth option — Apprentice — is unlocked only on a Wild
-Success or Moment of High Insight; see section 11.)
+(A fourth option — Apprentice — is unlocked only on a
+Moment of High Insight; see section 11.)
 
 
 11. APPRENTICES
 ---------------
-If a Recruitment Check lands on Wild Success (14+) or a
-Moment of High Insight (6+6), the rolling PC may claim the
-new NPC as their Apprentice. One Apprentice per PC, ever.
+If a Recruitment Check lands on a Moment of High Insight
+(double-6), the rolling PC may claim the new NPC as their
+Apprentice. Wild Success (plain 14+) alone does NOT unlock
+the Apprentice option. One Apprentice per PC, ever.
 
 Apprentice rules at creation (SRD § 08, CDP spends):
   - PC names the Apprentice (if they didn't have a name).

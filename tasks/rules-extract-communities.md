@@ -64,7 +64,7 @@ Three recruitment approaches. The choice sets commitment duration and shifts fla
 
 ### Apprentices
 
-Apprentice is an **option** triggered by Wild Success or Moment of High Insight on any Recruitment Check. A player may also seek out a specific NPC and make a deliberate recruitment attempt aimed at Apprenticeship.
+Apprentice is an **option** triggered by a **Moment of High Insight** (double-6) on a Recruitment Check. A plain Wild Success (total ≥14 without matching faces) does NOT unlock Apprentice — the SRD's recruitment outcome table reads "Moment of High Insight (6+6): Same as Wild Success **+** may take the NPC as Apprentice", making the Apprentice option additive to High Insight only. A player may also seek out a specific NPC and make a deliberate recruitment attempt aimed at Apprenticeship (same roll, same threshold — still needs the double-6).
 
 **Rules** (SRD §08, p. 21):
 

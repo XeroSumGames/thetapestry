@@ -72,7 +72,7 @@ Only 1 Apprentice per PC. Apprentices are still regular members for Community-St
 
 ### 2a. Apprentice creation (per SRD §08 p. 21)
 
-On recruit (triggered by Wild Success / Moment of High Insight, optionally a deliberate Apprentice attempt):
+On recruit (triggered by a **Moment of High Insight** only — double-6 on the Recruitment Check. A plain Wild Success does NOT unlock Apprentice per SRD §08 p.21 — the table row reads "Same as Wild Success + may take as Apprentice", meaning the Apprentice option is *additive* to High Insight, not shared with Wild Success):
 - PC gives the Apprentice a name (if they don't have one already).
 - Roll **2d6** on both the **Motivation** and **Complication** tables (SRD Appendix A).
 - PC + GM Fill In The Gaps on background.

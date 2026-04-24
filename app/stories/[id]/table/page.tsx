@@ -2607,7 +2607,11 @@ export default function TablePage() {
       ? (total >= 14 ? 'Wild Success' : total >= 9 ? 'Success' : total >= 4 ? 'Failure' : 'Dire Failure')
       : getOutcome(total, die1, die2)
     const isSuccess = outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight'
-    const unlocksApprentice = outcome === 'Wild Success' || outcome === 'High Insight'
+    // Per XSE SRD §08 p.21 (+ tasks/rules-extract-communities.md table
+    // rows on High Insight): Apprentice is unlocked ONLY on a Moment
+    // of High Insight (double-6). A plain Wild Success (total ≥14
+    // without matching faces) does NOT grant the Apprentice option.
+    const unlocksApprentice = outcome === 'High Insight'
     const applyApprentice = unlocksApprentice && recruitApprenticeToggle && !apprenticeByCharacter[recruitRollerId]
     const recruitmentType: RecruitApproach | 'apprentice' = applyApprentice ? 'apprentice' : recruitApproach
 
@@ -8323,7 +8327,10 @@ export default function TablePage() {
         )
         const pcHasApprentice = recruitRollerId ? !!apprenticeByCharacter[recruitRollerId] : false
         const poachingNpcCommunity = recruitNpcId ? npcCommunityMap[recruitNpcId] : null
-        const isWild = recruitResult && (recruitResult.outcome === 'Wild Success' || recruitResult.outcome === 'High Insight')
+        // Apprentice eligibility — SRD §08 p.21: ONLY a Moment of
+        // High Insight (double-6) grants the Apprentice option.
+        // Wild Success (plain 14+ without matching faces) does not.
+        const isHighInsight = recruitResult?.outcome === 'High Insight'
         return (
           <div onClick={closeRecruitModal}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
@@ -8597,12 +8604,14 @@ export default function TablePage() {
                     )
                   })()}
 
-                  {/* Apprentice toggle (re-shown after Wild Success / High Insight if not yet applied) */}
-                  {isWild && recruitResult.inserted && !recruitResult.apprenticeApplied && !pcHasApprentice && (
+                  {/* Apprentice toggle — re-shown only after a Moment
+                      of High Insight (double-6). Wild Success alone
+                      does NOT unlock Apprentice per XSE SRD §08 p.21. */}
+                  {isHighInsight && recruitResult.inserted && !recruitResult.apprenticeApplied && !pcHasApprentice && (
                     <div style={{ padding: '10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', marginBottom: '1rem' }}>
                       <div style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>⭐ Apprentice Eligible</div>
                       <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px' }}>
-                        A Wild Success / High Insight on this recruit allows {recruitResult.rollerName} to take {recruitResult.npcName} as an Apprentice (1 per PC). Did not toggle pre-roll — flip it now if desired.
+                        A Moment of High Insight (double-6) on this recruit allows {recruitResult.rollerName} to take {recruitResult.npcName} as an Apprentice (1 per PC).
                       </div>
                       <button onClick={async () => {
                         await supabase.from('community_members')
