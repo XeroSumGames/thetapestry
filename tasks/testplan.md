@@ -1,14 +1,27 @@
-# Test Plan — Phase E Sprints 1, 2, 3 + 3-polish + 4a
+# Test Plan — Phase E Sprints 1 through 4e
 
-**Scope:** The Tapestry persistent world layer for Communities — publish to Distemperverse, Thriver moderation, world-map overlay, sidebar browse folder, GM-to-GM Contact Handshake.
+**Scope:** The Tapestry persistent world layer for Communities — publish to Distemperverse, Thriver moderation, world-map overlay, sidebar browse folder, GM-to-GM Contact Handshake, Trade/Alliance/Feud arcs, inline notification actions, Schism mechanic, Migration on dissolution.
 
-**Ship date:** 2026-04-23.
+**Ship date:** Sprints 1–4a on 2026-04-23; Sprints 4b–4e on 2026-04-23/24.
 
-**Pre-req migrations** (idempotent — safe to re-run):
+**Pre-req migrations** (all idempotent — safe to re-run):
 1. `sql/world-communities.sql` — Sprint 1 mirror table + RLS + back-FK on communities.world_community_id.
 2. `sql/community-encounters.sql` — Sprint 4a encounters table + RLS + notify trigger + adds `notifications.metadata` jsonb column.
+3. `sql/world-community-links.sql` — Sprint 4b links table + RLS + propose/response notify triggers.
+4. `sql/community-members-add-schism-reason.sql` — Sprint 4d widens `left_reason` CHECK to include `'schism'`.
+5. `sql/community-migrations.sql` — Sprint 4e migrations table + RLS + offer/response notify triggers.
 
 Earlier Phase A–D migrations should already be in place: `sql/community-members-add-morale-75-reason.sql`, `sql/community-members-add-current-task.sql`, `sql/community-members-add-assignment-pc.sql`.
+
+Quick verify all Phase E migrations are applied — paste into SQL editor:
+```sql
+SELECT 'world_communities'             AS tbl, to_regclass('public.world_communities')::text             AS ok UNION ALL
+SELECT 'community_encounters',              to_regclass('public.community_encounters')::text                  UNION ALL
+SELECT 'world_community_links',             to_regclass('public.world_community_links')::text                 UNION ALL
+SELECT 'community_migrations',              to_regclass('public.community_migrations')::text                  UNION ALL
+SELECT 'left_reason has schism',            CASE WHEN EXISTS(SELECT 1 FROM pg_constraint WHERE conname='community_members_left_reason_check' AND pg_get_constraintdef(oid) LIKE '%schism%') THEN 'yes' ELSE 'NO' END;
+```
+All five rows should come back non-null / `'yes'`.
 
 ---
 
@@ -269,25 +282,212 @@ In Supabase Studio:
 
 ---
 
-## Known deferrals (call out in playtest if asked)
+## SPRINT 4b — Trade / Alliance / Feud arcs
 
-- **Accept/decline UI on encounters** — DB ready, no front-end surface yet. Use Supabase Studio to manipulate `community_encounters.status` for now.
-- **Trade / alliance / feud arcs** — Sprint 4 next-up. Will draw colored Leaflet polylines between two published communities.
-- **Schism mechanic** — large communities split into two. Sprint 4.
-- **Migration on dissolution** — survivors offered to nearby published communities when a community collapses. Sprint 4.
-- **Per-community Campfire feed** — depends on Phase 6 Campfire which isn't built.
-- **Community subscription** — players follow communities across campaigns. Phase 6.
-- **Campaign-creation wizard "Start around an existing community"** — listed in Phase E spec; will land alongside the Modules system (Phase 5).
+### Setup
+- At least **two approved** world communities on the map, owned by **different GM accounts** (Account A's community and Account B's). Homesteads must have coords so the polyline has endpoints.
+- Sign in as Account B (the proposer).
+
+### Happy path — propose a trade link
+
+1. `/map`. Click the marker for **Account A's** community.
+2. Popup shows (below encounter button) a grey **"🔗 Propose link"** button. Click it.
+3. Modal opens titled "🔗 Propose Link — \<Account A community name\>".
+4. Verify:
+   - "From my community" dropdown lists Account B's **published** (approved) communities. Communities B hasn't published shouldn't be listed.
+   - Three big link-type cards: **💱 Trade** (green), **🤝 Alliance** (blue), **⚔️ Feud** (red). Default = trade.
+   - Narrative textarea below the cards.
+5. Pick a source community, leave type = Trade, type "Weekly trade caravans run between us — clean water for medicine.", hit **"Propose Trade Link"**.
+6. Modal closes. No polyline appears on the map yet (status='pending').
+7. DB: `world_community_links` has one new row — status='pending', link_type='trade', proposed_by_user_id=B's id, proposed_from_community_id=B's community, narrative set.
+
+### Notification (recipient side) — accept
+
+1. Switch to **Account A**. Hard-refresh.
+2. Open the bell. New notification:
+   - Title: **"💱 Trade route proposed"**
+   - Body: "\<B username\> proposes a trade between "\<B community\>" and your "\<A community\>": \<narrative\>"
+   - Two purple inline buttons below the body: **✓ Accept** and **✗ Decline** (Sprint 4c surface).
+3. Click **✓ Accept**.
+4. Row disappears or shows "Accepted" and buttons vanish (per Sprint 4c spec — `actionedIds` hides them).
+5. DB: `world_community_links.status` flipped to 'active', `responded_at` set.
+
+### Polyline renders
+
+1. Hard-refresh `/map` as either account.
+2. A **green solid polyline** now connects the two community dots.
+3. Hover the polyline. Tooltip shows "**TRADE**" in green + the narrative line.
+
+### Link type visuals
+
+1. Propose and accept two more links between other community pairs — one **alliance** and one **feud**.
+2. On `/map`:
+   - Alliance → **blue solid** line, tooltip header blue.
+   - Feud → **red dashed** line (6,6 dash), tooltip header red.
+
+### Notification (proposer side) — response
+
+1. After Account A accepts (step above), switch to **Account B**. Bell.
+2. New notification: "✓ Link accepted" — body "\<A community\> active your trade proposal with \<B community\>". Clicking opens `/communities/\<B source community id\>`.
+
+### Decline path
+
+1. Propose a fresh link (Account B → Account A). Switch to A. Click **✗ Decline** inline.
+2. DB: `status='declined'`, `responded_at` set.
+3. Map still shows nothing — declined links don't render.
+4. Account B gets a "✗ Link declined" notification.
+
+### Edge cases
+
+- [ ] Propose without picking a source community → button disabled (source dropdown starts empty if B has no published communities; in that case an alert fires: "You need at least one published community to propose a link").
+- [ ] Propose the exact same pair + type twice while still pending → UNIQUE constraint rejects. Expect "link already pending" or a DB error alert.
+- [ ] Click "🔗 Propose link" on your own community's popup → source dropdown omits it; effectively blocked (can't propose self-link; endpoints must be distinct per CHECK constraint).
+- [ ] Thriver bypass: sign in as Thriver → can see pending links in other people's pairs via a direct `SELECT * FROM world_community_links` — RLS read policy explicitly allows Thriver.
+- [ ] Revoke: either GM can delete the row (SQL Editor for now — no UI yet). Polyline disappears on next page load.
 
 ---
 
-## Quick smoke test (~5 min if you've already published a few communities)
+## SPRINT 4c — Inline Accept/Decline in NotificationBell
+
+**Covers three notification types:** `community_encounter` (Sprint 4a), `community_link_proposal` (Sprint 4b), `community_migration` (Sprint 4e). The happy paths for each type are covered in the matching sprint section above — this section is for the **shared bell behavior**.
+
+### Happy path — all three types
+
+1. Prime the bell with one pending encounter + one pending link proposal + one pending migration targeted at the same account.
+2. Open the bell. Each of the three notifications renders with:
+   - Body text (type-specific)
+   - Two inline buttons below: **✓ Accept** (green) and **✗ Decline** (red)
+3. Click **✓ Accept** on each in turn. Buttons disappear; a small "✓ Accepted" or "Actioned" chip takes their place (handled by `actionedIds` state).
+4. DB for each:
+   - encounter → `community_encounters.status = 'accepted'`, `responded_at` set.
+   - link → `world_community_links.status = 'active'`, `responded_at` set.
+   - migration → `community_migrations.status = 'accepted'`, `responded_at` set.
+5. For each, the proposer/offerer side gets a "✓ accepted" / "✗ declined" response notification (Sprint 4b/4e response triggers). These secondary notifications are **pure-info** — no Accept/Decline buttons.
+
+### Error handling
+
+- [ ] Kill the network, click **✓ Accept** → should alert the user with the error message instead of silently hiding the buttons. Actual behavior: confirm by disabling Wi-Fi briefly and testing.
+- [ ] Double-click **✓ Accept** rapidly → `actionedIds` check prevents a second write; only one status flip.
+
+### RLS / security
+
+- [ ] Forge the notification recipient: sign in as a user who isn't the source-GM, paste the notification id into the bell fetch manually (devtools) → accepting via the SQL path the bell uses will be rejected by RLS on the underlying table.
+- [ ] Inline buttons only render for the three action-bearing types — `community_link_response`, `community_migration_response`, `community_encounter_response`, and everything else (community_milestone, @-mention, etc.) should have no inline buttons.
+
+---
+
+## SPRINT 4d — Schism
+
+### Setup
+- An active community (not dissolved) with **≥ 14 members** (so at least a 13/1 split is possible). If you don't have one, recruit/add until total ≥ 14. Sign in as the GM.
+
+### Happy path — split
+
+1. `/stories/\<id\>/table` (or wherever your CampaignCommunity panel surfaces). Expand the community body.
+2. Near the bottom of the body (above "Delete Community"), a purple-outlined **"⛓ Schism"** button appears. Gated on `isGM && status !== 'dissolved' && total >= 14`.
+3. Click it. Modal opens titled something like "⛓ Schism — \<community\>".
+4. Verify:
+   - "Breakaway name" textbox prefilled with `"\<original\> Breakaway"`.
+   - Optional description textarea (placeholder "Splintered from …" if blank).
+   - Optional homestead pin dropdown (campaign's pins).
+   - Member picker listing every current (non-leader maybe? — confirm) member with checkboxes.
+5. Pick 2–4 members to leave with the breakaway. Hit **"⛓ Confirm Schism"**.
+6. Modal closes. Page reloads member lists. Expect:
+   - Original community's total is reduced by the breakaway count; those members show `left_reason='schism'` in `community_members`.
+   - A **new** community row exists in `communities` with the breakaway name + description + homestead_pin_id.
+   - Fresh `community_members` rows exist for the breakaway — one per picked member, same NPC refs, fresh ids, `left_at IS NULL`.
+7. Sidebar "My Communities" now lists the breakaway as a separate row.
+
+### Edge cases
+
+- [ ] Pick zero members → "⛓ Confirm Schism" disabled.
+- [ ] Leave the name field blank → "⛓ Confirm Schism" disabled with alert "Give the breakaway community a name."
+- [ ] Try on a 13-member community — "⛓ Schism" button hidden entirely (gated on `total >= 14`).
+- [ ] Try on a dissolved community — button hidden.
+- [ ] Sign in as a player (non-GM) → button hidden.
+- [ ] Partial failure (member removal succeeds, new-community insert fails) → alert: "Schism partial: new community created + members removed but the new roster insert failed: \<msg\>. You may need to add the breakaway members manually." Verify the alert actually fires by temporarily revoking INSERT RLS on community_members via SQL (and remember to reapply).
+- [ ] Breakaway with <13 members stays **Group** status (not Community). Grow past 13 → Community milestone notification fires normally (existing trigger from Phase B).
+
+### Historical integrity
+
+- [ ] Original community's roster history still shows the schism-leavers with `left_reason='schism'` — you can reconstruct who left for the breakaway. Query `SELECT npc_id, left_at, left_reason FROM community_members WHERE community_id=<original> AND left_reason='schism'`.
+
+---
+
+## SPRINT 4e — Migration on dissolution
+
+### Setup
+- A **dissolved** community (status='dissolved') with at least one NPC survivor (`left_reason='dissolved'`). Easiest way: find one that died from three consecutive Morale failures, or manually UPDATE an existing active community to status='dissolved' + bulk-update its members to left_reason='dissolved' for testing.
+- At least one **other** approved world_community exists somewhere (as the migration target).
+
+### Happy path — offer survivors
+
+1. Open the dissolved community in the CampaignCommunity panel. Expand.
+2. A purple-bordered **"📤 Survivor Migration"** strip sits inside the body, showing:
+   - Headline "📤 Survivor Migration"
+   - Line: "N survivor(s) can be offered to other communities in the Distemperverse."
+   - **"📤 Offer Survivors"** button.
+3. Click it. Modal opens.
+4. Verify:
+   - Survivor checklist — each NPC with a name, their relative recruitment type (Cohort, Apprentice, etc.) visible.
+   - Target picker — dropdown of all approved world_communities (should omit this dissolved community's own world row if it was published).
+   - Narrative textarea.
+5. Check 2 survivors, pick a target, type "These three wandered 90 miles before your scouts found them — looks rough.", hit **"Send Migration Offer(s)"**.
+6. Alert: "Sent 2 migration offers. The receiving GM will see them in their notifications."
+7. DB: Two new rows in `community_migrations`, status='pending', target_world_community_id set, source_member_id + source_npc_id + npc_name snapshotted, narrative stored.
+
+### Notification (receiver side) — accept
+
+1. Switch to the **target community's GM** account. Bell.
+2. Two unread notifications, one per offered survivor:
+   - Title: **"📤 Migration request"**
+   - Body: "Survivor "\<NPC name\>" from "\<source community\>" seeks shelter in your "\<target community\>": \<narrative\>"
+   - Inline **✓ Accept** / **✗ Decline** buttons (Sprint 4c).
+3. Click **✓ Accept** on one of them.
+4. DB: `community_migrations.status='accepted'` for that row.
+
+### Notification (offerer side) — response
+
+1. Switch back to the **offering GM**. Bell.
+2. New notification: "✓ Migrant accepted" with body "\<target community\> accepted "\<NPC name\>" from your "\<source community\>"".
+
+### Edge cases
+
+- [ ] Dissolved community with zero NPC survivors → strip shows the alternate line "No NPC survivors recorded. Migration only applies to NPCs scattered by the dissolution." No **Offer Survivors** button.
+- [ ] Zero approved world_communities to target → survivors list shows but an amber "No published communities exist yet to offer them to." line replaces the button.
+- [ ] Click **Offer Survivors** without picking any checkbox → alert: "Pick at least one survivor to offer."
+- [ ] Don't pick a target → alert: "Pick a target community for the survivors."
+- [ ] Withdraw: source GM can manually DELETE the migration row (no UI yet). Target notification stays but is orphaned (known deferral).
+- [ ] Non-GM on dissolved community → Migration strip hidden (gated on `isGM`).
+
+### Known gap (deferred)
+
+- **Auto-copy on acceptance is NOT implemented.** Accepting a migration flips status='accepted' and fires the response notification but does **not** copy the NPC row into the target campaign, and does **not** insert a community_members row in the target community. The target GM must manually use their existing add-member flow to bring the NPC in. This is flagged in `tasks/todo.md` for a follow-up Postgres trigger on `community_migrations` UPDATE pending→accepted.
+
+---
+
+## Known deferrals (call out in playtest if asked)
+
+- **Migration auto-copy on acceptance** — DB row flips status but doesn't copy the NPC into the target campaign. Manual add-member required. Fix: Postgres trigger on community_migrations UPDATE pending→accepted.
+- **Per-community Campfire feed** — depends on Phase 6 Campfire which isn't built.
+- **Community subscription** — players follow communities across campaigns. Phase 6.
+- **Campaign-creation wizard "Start around an existing community"** — listed in Phase E spec; will land alongside the Modules system (Phase 5).
+- **Link withdraw UI** — either GM can DELETE a `world_community_links` row via SQL, but no front-end button yet.
+- **Migration withdraw UI** — same story for `community_migrations` rows.
+
+---
+
+## Quick smoke test (~10 min covering all of Phase E)
 
 1. As Thriver, `/moderate` → 🌐 Communities → approve any pending.
 2. `/map` → see the green/blue/amber dot at the right size.
-3. Click → popup looks right.
-4. Click "🤝 My PCs encountered this" (must be GM of another campaign).
-5. Pick campaign, type narrative, send.
-6. Switch accounts → bell shows the new notification.
+3. Click a foreign community → popup looks right.
+4. Click **"🤝 My PCs encountered this"** (must be GM of another campaign) → pick campaign, narrative, send.
+5. Click **"🔗 Propose link"** on the same popup → pick source + Trade + narrative → propose.
+6. Switch to the source GM → bell shows encounter + link notifications with inline ✓/✗ buttons. Accept both.
+7. Hard-refresh `/map` → green polyline connects the two communities.
+8. In the CampaignCommunity panel for a ≥14-member community, click **⛓ Schism** → pick 2 members → confirm. See the new breakaway community in the sidebar.
+9. Dissolve a community (or pick one already dissolved) → click **📤 Offer Survivors** → pick 1 + target + narrative → send.
+10. Switch accounts → bell shows migration request; accept inline.
 
-If all five steps work, Sprints 1–4a are healthy.
+If all ten steps work, Sprints 1–4e are healthy.
