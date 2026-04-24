@@ -468,8 +468,9 @@ export default function MessagesPage() {
               </button>
             </div>
 
-            {/* Messages */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {/* Messages — spacer pushes content to bottom without the justifyContent overflow bug */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '6px', minHeight: 0 }}>
+              <div style={{ flex: 1 }} />
               {loadingMsgs && <div style={{ color: '#4d7a35', fontSize: '13px', textAlign: 'center' }}>Loading…</div>}
               {messages.map((msg, i) => {
                 const isMine = msg.sender_user_id === myId
