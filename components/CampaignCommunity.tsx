@@ -1369,6 +1369,36 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   <span style={{ fontSize: '14px', padding: '1px 6px', borderRadius: '2px', background: c.status === 'dissolved' ? '#2a1210' : isCommunity ? '#1a2e10' : '#2a2010', color: c.status === 'dissolved' ? '#f5a89a' : isCommunity ? '#7fc458' : '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                     {c.status === 'dissolved' ? 'Dissolved' : isCommunity ? 'Community' : 'Group'}
                   </span>
+                  {/* Phase E — public visibility chip. Reads from the
+                      loaded worldRows map; visible to everyone when
+                      the community is approved (world_communities RLS
+                      grants public read on approved rows) and to the
+                      GM only when pending/rejected. Matches the
+                      purple Tapestry accent used elsewhere. */}
+                  {(() => {
+                    const w = worldRows[c.id]
+                    if (!w) return null
+                    const label = w.moderation_status === 'approved' ? '🌐 Public'
+                      : w.moderation_status === 'rejected' ? '✗ Rejected'
+                      : '⏳ Pending'
+                    const color = w.moderation_status === 'approved' ? '#d48bd4'
+                      : w.moderation_status === 'rejected' ? '#f5a89a'
+                      : '#EF9F27'
+                    const bg = w.moderation_status === 'approved' ? '#2a102a'
+                      : w.moderation_status === 'rejected' ? '#2a1210'
+                      : '#2a2010'
+                    const title = w.moderation_status === 'approved'
+                      ? 'Published to the Distemperverse — visible on the world map to every GM and player.'
+                      : w.moderation_status === 'pending'
+                      ? 'Submitted for Thriver moderation. Visible on the world map once approved.'
+                      : 'Rejected by a Thriver. Edit public info and re-submit via the 🌐 strip below.'
+                    return (
+                      <span title={title}
+                        style={{ fontSize: '14px', padding: '1px 6px', borderRadius: '2px', background: bg, color, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
+                        {label}
+                      </span>
+                    )
+                  })()}
                 </div>
                 <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   {total} member{total === 1 ? '' : 's'}
