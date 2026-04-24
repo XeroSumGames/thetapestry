@@ -404,9 +404,9 @@ export default function ModerationPage() {
                 <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
                   <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {u.username}
+                    {u.email && <span style={{ color: '#cce0f5', fontWeight: 400, marginLeft: '6px', fontSize: '14px' }}>({u.email})</span>}
                   </div>
                   <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {u.email && <span style={{ color: '#d4cfc9', marginRight: '8px' }}>{u.email}</span>}
                     Joined {formatDate(u.created_at)}
                   </div>
                 </div>
