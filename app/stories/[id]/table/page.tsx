@@ -2683,6 +2683,12 @@ export default function TablePage() {
     setRecruitStep('result')
     // Reload feed so the new log row appears immediately.
     await loadRolls(id)
+    // Broadcast so any open PlayerNpcCard for this NPC re-fetches its
+    // recruit state chip without a page refresh. Success or failure,
+    // either outcome changes what the chip should display.
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tapestry:recruit-updated', { detail: { npcId: npc.id } }))
+    }
   }
 
   function closeRecruitModal() {
@@ -2787,6 +2793,12 @@ export default function TablePage() {
       inserted, apprenticeApplied,
     })
     await loadRolls(id)
+    // Broadcast — reroll can flip membership state (added or removed)
+    // or just change the logged outcome; either way the chip needs a
+    // refresh.
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tapestry:recruit-updated', { detail: { npcId: recruitNpcId } }))
+    }
   }
 
   function triggerGroupCheck() {
@@ -8619,6 +8631,9 @@ export default function TablePage() {
                           .eq('community_id', recruitResult.communityId)
                           .eq('npc_id', recruitNpcId)
                         setRecruitResult(r => r ? { ...r, apprenticeApplied: true } : r)
+                        if (typeof window !== 'undefined') {
+                          window.dispatchEvent(new CustomEvent('tapestry:recruit-updated', { detail: { npcId: recruitNpcId } }))
+                        }
                       }}
                         style={{ padding: '6px 12px', background: '#8b2e8b', border: '1px solid #d48bd4', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                         Take as Apprentice

@@ -62,6 +62,22 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
   const [enlarged, setEnlarged] = useState(false)
   const [cmod, setCmod] = useState<number | null>(null)
   const [recruitState, setRecruitState] = useState<RecruitState>(null)
+  // Bumped by the `tapestry:recruit-updated` window event so the
+  // recruit-state effect below re-runs without a full page refresh.
+  // The emit sites live in app/stories/[id]/table/page.tsx inside
+  // executeRecruitRoll / rerollRecruitDie / the "Take as Apprentice"
+  // button.
+  const [refreshTick, setRefreshTick] = useState(0)
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      if (detail?.npcId === npc.id) setRefreshTick(t => t + 1)
+    }
+    if (typeof window === 'undefined') return
+    window.addEventListener('tapestry:recruit-updated', handler)
+    return () => window.removeEventListener('tapestry:recruit-updated', handler)
+  }, [npc.id])
 
   useEffect(() => {
     if (!viewingCharacterId) { setCmod(null); return }
@@ -130,7 +146,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
       setRecruitState(null)
     })()
     return () => { cancelled = true }
-  }, [npc.id])
+  }, [npc.id, refreshTick])
 
   const wpMax = npc.wp_max ?? 10
   const rpMax = npc.rp_max ?? 6
