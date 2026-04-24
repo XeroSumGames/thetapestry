@@ -165,6 +165,19 @@ export default function NotificationBell() {
       const match = body.match(/^(.+?) has grown to (\d+) members — it'?s officially a Community now\.?$/)
       if (match) return <><span style={{ color: '#c0392b' }}>{match[1]}</span> has grown to <span style={{ color: '#EF9F27' }}>{match[2]}</span> members — it's officially a <span style={{ color: '#7fc458' }}>Community</span> now.</>
     }
+    // Phase E Sprint 4a — cross-campaign encounter. Body shape:
+    //   <username>'s campaign "<campaign>" has encountered your community "<community>"[: narrative]
+    if (type === 'community_encounter') {
+      const m = body.match(/^(.+?)'s campaign "(.+?)" has encountered your community "(.+?)"(?::\s*(.+))?$/)
+      if (m) return (
+        <>
+          <span style={{ color: '#7ab3d4' }}>{m[1]}</span>'s campaign{' '}
+          <span style={{ color: '#EF9F27' }}>"{m[2]}"</span> encountered your community{' '}
+          <span style={{ color: '#d48bd4' }}>"{m[3]}"</span>
+          {m[4] && <><br /><span style={{ color: '#cce0f5', fontStyle: 'italic' }}>"{m[4]}"</span></>}
+        </>
+      )
+    }
     return body
   }
 

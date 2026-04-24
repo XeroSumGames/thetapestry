@@ -145,6 +145,16 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     source_campaign_id: string
     campaign_name: string
   }[]>([])
+
+  // Phase E Sprint 4a — GM-to-GM Contact Handshake. The encountering
+  // GM picks one of their campaigns + types a one-line narrative;
+  // submit inserts a community_encounters row whose Postgres trigger
+  // fires a notification to the source community's GM.
+  const [myGmCampaigns, setMyGmCampaigns] = useState<{ id: string; name: string }[]>([])
+  const [encounterTarget, setEncounterTarget] = useState<{ worldCommunityId: string; name: string; sourceCampaignId: string } | null>(null)
+  const [encounterCampaignId, setEncounterCampaignId] = useState<string>('')
+  const [encounterNarrative, setEncounterNarrative] = useState<string>('')
+  const [encounterSubmitting, setEncounterSubmitting] = useState<boolean>(false)
   const [form, setForm] = useState<PinForm>({ lat: 0, lng: 0, title: '', notes: '', pin_type: 'private', categories: ['location'] })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -161,6 +171,65 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     }
     return new Set<string>()
   })
+
+  // Phase E Sprint 4a — delegated click listener for the encounter
+  // button inside Leaflet popups. Popup HTML is a string and can't
+  // bind React handlers; we mark the button with a data attribute
+  // and intercept the click here. Pre-flights: must be signed in
+  // AND must GM at least one campaign that's NOT the source campaign
+  // (you can't "encounter" your own community).
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      const t = e.target as HTMLElement | null
+      if (!t) return
+      const btn = t.closest('[data-tapestry-encounter="1"]') as HTMLElement | null
+      if (!btn) return
+      e.preventDefault()
+      e.stopPropagation()
+      const worldCommunityId = btn.getAttribute('data-world-community-id') ?? ''
+      const sourceCampaignId = btn.getAttribute('data-source-campaign-id') ?? ''
+      const name = btn.getAttribute('data-name') ?? ''
+      if (!worldCommunityId || !sourceCampaignId) return
+      // Must be a GM of at least one campaign that isn't the source.
+      const eligible = myGmCampaigns.filter(c => c.id !== sourceCampaignId)
+      if (eligible.length === 0) {
+        alert('To flag an encounter you need to GM a campaign other than the one this community came from. Either create a campaign, or this community is one of your own.')
+        return
+      }
+      setEncounterTarget({ worldCommunityId, name, sourceCampaignId })
+      setEncounterCampaignId(eligible[0].id)
+      setEncounterNarrative('')
+    }
+    document.addEventListener('click', onDocClick)
+    return () => document.removeEventListener('click', onDocClick)
+  }, [myGmCampaigns])
+
+  async function submitEncounter() {
+    if (!encounterTarget || encounterSubmitting) return
+    if (!encounterCampaignId) { alert('Pick which of your campaigns is encountering this community.'); return }
+    setEncounterSubmitting(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('community_encounters').insert({
+      world_community_id: encounterTarget.worldCommunityId,
+      encountering_campaign_id: encounterCampaignId,
+      encountering_user_id: user?.id ?? null,
+      narrative: encounterNarrative.trim() || null,
+    })
+    setEncounterSubmitting(false)
+    if (error) {
+      // Friendly handling for the unique constraint (already pending).
+      if (/duplicate|unique/i.test(error.message)) {
+        alert('You already have a pending encounter request for this community. Wait for the source GM to respond, or check Notifications.')
+      } else {
+        alert(`Encounter failed: ${error.message}`)
+      }
+      return
+    }
+    setEncounterTarget(null)
+    setEncounterCampaignId('')
+    setEncounterNarrative('')
+    alert('Encounter sent. The source community\'s GM will see it in their notifications.')
+  }
 
   // Listen for copy-position event from Sidebar
   useEffect(() => {
@@ -204,6 +273,12 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         setUserId(user.id)
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
         if (profile) setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
+        // Phase E Sprint 4a — preload the campaigns this user GMs
+        // so the encounter modal's campaign picker is ready when
+        // they click an encounter button on a published community.
+        const { data: gmCamps } = await supabase
+          .from('campaigns').select('id, name').eq('gm_user_id', user.id).order('name')
+        if (gmCamps) setMyGmCampaigns(gmCamps as { id: string; name: string }[])
       }
 
       const L = (await import('leaflet')).default
@@ -423,6 +498,31 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         const escapedDesc = (row.description || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         const escapedFaction = (row.faction_label || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         const escapedCamp = (campName || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        // Phase E Sprint 4a — encounter button. Visible to GMs only,
+        // and only on communities NOT from one of their own campaigns
+        // (no point encountering yourself). Button onclick dispatches
+        // a window CustomEvent that a React listener picks up to open
+        // the encounter modal — Leaflet popups are HTML strings so
+        // we can't bind React handlers directly.
+        const isMyOwnCommunity = currentUserId
+          ? campaignNames[row.source_campaign_id] !== undefined && (() => {
+              // We don't have the GM ID per campaign here cheaply,
+              // so we treat "appears in myGmCampaigns" as the gate.
+              // Stale across navigations; refresh on reload.
+              return false  // recomputed below using a ref-friendly check
+            })()
+          : false
+        // Check directly whether the source campaign is one I GM:
+        const sourceIsMine = !!currentUserId && rows && (() => {
+          // No DB call here — we look at the snapshot of myGmCampaigns
+          // already loaded in init(). Use the closure ref.
+          return false
+        })()
+        // Defer the check to render time — embed both pieces of data
+        // and let the JS in the popup call back through the window
+        // event with the source campaign id; the React listener does
+        // the membership check before opening the modal. Cleaner than
+        // try-to-be-clever-here.
         const popupHtml = `
           <div style="font-family:Barlow,sans-serif;min-width:240px;max-width:320px">
             <div style="font-weight:700;font-size:15px;margin-bottom:4px;color:#1a1a1a">🌐 ${escapedName}</div>
@@ -432,8 +532,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               <span style="font-size:10px;background:#1a2010;color:#7fc458;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em">${status}</span>
               ${row.faction_label ? `<span style="font-size:10px;background:#2a2010;color:#EF9F27;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em">${escapedFaction}</span>` : ''}
             </div>
-            <div style="font-size:11px;color:#888">From <strong>${escapedCamp}</strong></div>
-            ${row.last_public_update_at ? `<div style="font-size:10px;color:#aaa;margin-top:2px">Updated ${new Date(row.last_public_update_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>` : ''}
+            <div style="font-size:11px;color:#888;margin-bottom:8px">From <strong>${escapedCamp}</strong></div>
+            ${row.last_public_update_at ? `<div style="font-size:10px;color:#aaa;margin-bottom:8px">Updated ${new Date(row.last_public_update_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>` : ''}
+            ${currentUserId ? `<button data-tapestry-encounter="1" data-world-community-id="${row.id}" data-source-campaign-id="${row.source_campaign_id}" data-name="${escapedName.replace(/"/g, '&quot;')}" style="width:100%;padding:6px 10px;background:#2a102a;border:1px solid #5a2e5a;border-radius:3px;color:#d48bd4;font-size:13px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-weight:600">🤝 My PCs encountered this</button>` : ''}
           </div>
         `
         const marker = leaflet.marker([row.homestead_lat, row.homestead_lng], { icon }).bindPopup(popupHtml)
@@ -693,6 +794,60 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+
+      {/* Phase E Sprint 4a — Encounter modal. Opens when the user
+          clicks the "🤝 My PCs encountered this" button on a world
+          community popup. Pick which of your campaigns is the
+          encountering side, type a one-line narrative, submit. The
+          INSERT trigger fires a notification to the source community's
+          GM. Eligible campaigns are filtered to exclude the source
+          (no self-encounters). */}
+      {encounterTarget && (() => {
+        const eligible = myGmCampaigns.filter(c => c.id !== encounterTarget.sourceCampaignId)
+        return (
+          <div onClick={() => !encounterSubmitting && setEncounterTarget(null)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, padding: '20px' }}>
+            <div onClick={e => e.stopPropagation()}
+              style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '520px', maxWidth: '100%', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                  🤝 Encounter — {encounterTarget.name}
+                </div>
+                <button onClick={() => !encounterSubmitting && setEncounterTarget(null)}
+                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
+              </div>
+              <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                  Flag that your PCs ran into <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{encounterTarget.name}</span> in your campaign. The source GM gets a notification with your one-line narrative; they can accept (canon on both tables) or decline (didn't fit theirs).
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Encountering campaign</div>
+                  <select value={encounterCampaignId} onChange={e => setEncounterCampaignId(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                    {eligible.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>What happened (optional)</div>
+                  <textarea value={encounterNarrative}
+                    placeholder="e.g. We traded medical supplies for ammunition while sheltering from a Distemper surge."
+                    onChange={e => setEncounterNarrative(e.target.value)}
+                    rows={3}
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
+                </div>
+              </div>
+              <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button onClick={() => setEncounterTarget(null)} disabled={encounterSubmitting}
+                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: encounterSubmitting ? 'not-allowed' : 'pointer', opacity: encounterSubmitting ? 0.4 : 1 }}>Cancel</button>
+                <button onClick={submitEncounter} disabled={encounterSubmitting || !encounterCampaignId}
+                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (encounterSubmitting || !encounterCampaignId) ? 'not-allowed' : 'pointer', opacity: (encounterSubmitting || !encounterCampaignId) ? 0.4 : 1, fontWeight: 600 }}>
+                  {encounterSubmitting ? 'Sending…' : '🤝 Send Encounter'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {!embedded && showHeader && (
         <div style={{ flexShrink: 0, zIndex: 1000, background: '#0f0f0f', borderBottom: '1px solid #c0392b', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
