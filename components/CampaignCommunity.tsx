@@ -549,7 +549,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       if (next !== m.role) updates.push({ id: m.id, role: next })
     }
     if (updates.length === 0) {
-      alert('Roles are already at SRD minimums — nothing to re-balance.')
+      alert('Roles are already at their minimums — nothing to re-balance.')
       return
     }
     const results = await Promise.all(updates.map(u =>
