@@ -133,17 +133,22 @@ export default function Sidebar() {
           <span style={{ color: '#7fc458', fontSize: '14px', letterSpacing: '.12em', textTransform: 'uppercase' }}>Ghost <span style={{ fontSize: '13px' }}>— You Don&apos;t Exist</span></span>
         ) : (
           <>
-            <div style={{ fontSize: '14px', color: '#f5f2ee', letterSpacing: '.12em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '5px' }}>
-              {username}
+            {/* Line 1: Username (Role) */}
+            <div style={{ fontSize: '14px', letterSpacing: '.1em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '7px' }}>
+              <span style={{ color: '#f5f2ee' }}>{username}</span>
+              <span style={{ color: userRole === 'thriver' ? '#c0392b' : '#7fc458', marginLeft: '5px' }}>
+                ({userRole === 'thriver' ? 'Thriver' : 'Survivor'})
+              </span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              {userRole === 'thriver'
-                ? <span style={{ background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 6px', borderRadius: '2px', letterSpacing: '.06em', textTransform: 'uppercase' }}>Thriver</span>
-                : <span style={{ background: '#2d5a1b', color: '#7fc458', fontSize: '13px', padding: '1px 6px', borderRadius: '2px', letterSpacing: '.06em', textTransform: 'uppercase' }}>Survivor</span>
-              }
-              <div style={{ flex: 1 }} />
+            {/* Line 2: action icons */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <MessagesBell />
               <NotificationBell />
+              <a href="/campfire" title="The Campfire" style={{ color: '#5a5550', fontSize: '16px', lineHeight: 1, textDecoration: 'none', display: 'flex', alignItems: 'center' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#7fc458')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#5a5550')}>
+                🔥
+              </a>
             </div>
           </>
         )}

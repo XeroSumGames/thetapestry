@@ -291,7 +291,7 @@ export default function MessagesPage() {
   // ── Styles ────────────────────────────────────────────────────
   const menuItemStyle: React.CSSProperties = {
     display: 'block', width: '100%', padding: '7px 12px', background: 'none', border: 'none',
-    color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
+    color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
     letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'left',
   }
 
@@ -304,7 +304,7 @@ export default function MessagesPage() {
   const activeOther = activeConv ? otherParticipants(activeConv) : []
 
   return (
-    <div style={{ display: 'flex', height: '100%', fontFamily: 'Barlow, sans-serif', background: '#0f0f0f' }}>
+    <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden', fontFamily: 'Barlow, sans-serif', background: '#0f0f0f' }}>
 
       {/* ── Left: conversation list ─────────────────────────── */}
       <div style={{ ...panelBase, width: '280px', flexShrink: 0 }}>
@@ -316,7 +316,7 @@ export default function MessagesPage() {
           </div>
           <button onClick={() => { setSearching(s => !s); setSearchQuery(''); setSearchResults([]) }}
             title="Start a new conversation"
-            style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: searching ? '#c4a7f0' : '#d4cfc9', fontSize: '16px', cursor: 'pointer', padding: '2px 8px', lineHeight: 1 }}>
+            style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: searching ? '#c4a7f0' : '#7fc458', fontSize: '16px', cursor: 'pointer', padding: '2px 8px', lineHeight: 1 }}>
             ✏
           </button>
         </div>
@@ -342,7 +342,7 @@ export default function MessagesPage() {
               </div>
             )}
             {searchQuery.trim() && searchResults.length === 0 && (
-              <div style={{ marginTop: '6px', fontSize: '13px', color: '#5a5550', fontStyle: 'italic' }}>No users found</div>
+              <div style={{ marginTop: '6px', fontSize: '13px', color: '#4d7a35', fontStyle: 'italic' }}>No users found</div>
             )}
           </div>
         )}
@@ -350,10 +350,10 @@ export default function MessagesPage() {
         {/* Conversation list */}
         <div style={{ flex: 1, overflowY: 'auto' }} onClick={() => openMenuConvId && setOpenMenuConvId(null)}>
           {loadingConvs && (
-            <div style={{ padding: '1rem', color: '#5a5550', fontSize: '13px', textAlign: 'center' }}>Loading…</div>
+            <div style={{ padding: '1rem', color: '#4d7a35', fontSize: '13px', textAlign: 'center' }}>Loading…</div>
           )}
           {!loadingConvs && conversations.filter(c => !c.archived_at).length === 0 && !showArchived && (
-            <div style={{ padding: '1.5rem 1rem', color: '#5a5550', fontSize: '13px', textAlign: 'center', lineHeight: 1.6 }}>
+            <div style={{ padding: '1.5rem 1rem', color: '#4d7a35', fontSize: '13px', textAlign: 'center', lineHeight: 1.6 }}>
               No messages yet.<br />Hit ✏ to start a conversation.
             </div>
           )}
@@ -379,11 +379,11 @@ export default function MessagesPage() {
                   onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-                    <span style={{ flex: 1, fontSize: '13px', fontWeight: conv.unread ? 700 : 400, color: conv.unread ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ flex: 1, fontSize: '13px', fontWeight: conv.unread ? 700 : 400, color: conv.unread ? '#f5f2ee' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {label}
                     </span>
                     {conv.latest_message && (
-                      <span style={{ fontSize: '13px', color: '#5a5550', flexShrink: 0 }}>
+                      <span style={{ fontSize: '13px', color: '#4d7a35', flexShrink: 0 }}>
                         {formatTime(conv.latest_message.created_at)}
                       </span>
                     )}
@@ -392,7 +392,7 @@ export default function MessagesPage() {
                     )}
                   </div>
                   {preview && (
-                    <div style={{ fontSize: '13px', color: '#5a5550', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: '13px', color: '#4d7a35', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {conv.latest_message?.sender_user_id === myId ? 'You: ' : ''}{preview}
                     </div>
                   )}
@@ -400,9 +400,9 @@ export default function MessagesPage() {
                 {/* ⋮ menu trigger */}
                 <button
                   onClick={e => { e.stopPropagation(); setOpenMenuConvId(menuOpen ? null : conv.id) }}
-                  style={{ position: 'absolute', top: '8px', right: '6px', background: 'none', border: 'none', color: '#5a5550', fontSize: '16px', cursor: 'pointer', lineHeight: 1, padding: '2px 4px', borderRadius: '3px' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = '#d4cfc9')}
-                  onMouseLeave={e => (e.currentTarget.style.color = '#5a5550')}
+                  style={{ position: 'absolute', top: '8px', right: '6px', background: 'none', border: 'none', color: '#4d7a35', fontSize: '16px', cursor: 'pointer', lineHeight: 1, padding: '2px 4px', borderRadius: '3px' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#7fc458')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#4d7a35')}
                   title="Options"
                 >⋮</button>
                 {/* Dropdown */}
@@ -425,7 +425,7 @@ export default function MessagesPage() {
           {/* Archive toggle */}
           {!loadingConvs && conversations.some(c => c.archived_at) && (
             <button onClick={() => setShowArchived(s => !s)}
-              style={{ width: '100%', padding: '8px', background: 'none', border: 'none', color: '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderTop: '1px solid #1e1e1e' }}>
+              style={{ width: '100%', padding: '8px', background: 'none', border: 'none', color: '#4d7a35', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderTop: '1px solid #1e1e1e' }}>
               {showArchived ? '← Back' : `Archived (${conversations.filter(c => c.archived_at).length})`}
             </button>
           )}
@@ -438,7 +438,7 @@ export default function MessagesPage() {
         {!activeConvId ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
             <div style={{ fontSize: '32px' }}>💬</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', color: '#5a5550', letterSpacing: '.1em', textTransform: 'uppercase' }}>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', color: '#4d7a35', letterSpacing: '.1em', textTransform: 'uppercase' }}>
               Select a conversation or start a new one
             </div>
           </div>
@@ -463,14 +463,14 @@ export default function MessagesPage() {
                 style={{ flex: 1, padding: '9px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '20px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', outline: 'none' }}
               />
               <button onClick={handleSend} disabled={!body.trim() || sending}
-                style={{ padding: '9px 18px', background: body.trim() ? '#8b5cf6' : '#242424', border: `1px solid ${body.trim() ? '#8b5cf6' : '#3a3a3a'}`, borderRadius: '20px', color: body.trim() ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: body.trim() ? 'pointer' : 'default', transition: 'all .15s', flexShrink: 0 }}>
+                style={{ padding: '9px 18px', background: body.trim() ? '#8b5cf6' : '#242424', border: `1px solid ${body.trim() ? '#8b5cf6' : '#3a3a3a'}`, borderRadius: '20px', color: body.trim() ? '#fff' : '#4d7a35', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: body.trim() ? 'pointer' : 'default', transition: 'all .15s', flexShrink: 0 }}>
                 Send
               </button>
             </div>
 
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {loadingMsgs && <div style={{ color: '#5a5550', fontSize: '13px', textAlign: 'center' }}>Loading…</div>}
+              {loadingMsgs && <div style={{ color: '#4d7a35', fontSize: '13px', textAlign: 'center' }}>Loading…</div>}
               {messages.map((msg, i) => {
                 const isMine = msg.sender_user_id === myId
                 const prevMsg = messages[i - 1]
@@ -479,7 +479,7 @@ export default function MessagesPage() {
                 return (
                   <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start' }}>
                     {showSender && (
-                      <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', marginBottom: '2px', paddingLeft: '4px' }}>
+                      <div style={{ fontSize: '13px', color: '#4d7a35', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', marginBottom: '2px', paddingLeft: '4px' }}>
                         {senderName}
                       </div>
                     )}
@@ -493,7 +493,7 @@ export default function MessagesPage() {
                     }}>
                       {msg.body}
                     </div>
-                    <div style={{ fontSize: '13px', color: '#6a6a6a', marginTop: '1px', paddingLeft: '4px', paddingRight: '4px' }}>
+                    <div style={{ fontSize: '13px', color: '#4d7a35', marginTop: '1px', paddingLeft: '4px', paddingRight: '4px' }}>
                       {formatTime(msg.created_at)}
                     </div>
                   </div>

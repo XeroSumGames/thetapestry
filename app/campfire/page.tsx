@@ -12,7 +12,7 @@ interface Tool {
 const TOOLS: Tool[] = [
   {
     label: 'Messages',
-    description: 'Direct messages between players and GMs.',
+    description: 'Direct messages between community members.',
     href: '/messages',
     color: '#8b5cf6',
   },
@@ -55,7 +55,7 @@ export default function CampfirePage() {
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>
           The Campfire
         </div>
-        <div style={{ fontSize: '14px', color: '#7a7268', lineHeight: 1.6 }}>
+        <div style={{ fontSize: '14px', color: '#5a8a40', lineHeight: 1.6 }}>
           The meta layer — where players, GMs, and visitors connect across campaigns.
         </div>
       </div>
@@ -71,23 +71,23 @@ export default function CampfirePage() {
               border: `1px solid ${tool.soon ? '#2e2e2e' : tool.color}`,
               borderRadius: '4px',
               cursor: tool.soon ? 'default' : 'pointer',
-              opacity: tool.soon ? 0.55 : 1,
+              opacity: tool.soon ? 0.6 : 1,
               transition: 'border-color .15s, background .15s',
             }}
             onMouseEnter={e => { if (!tool.soon) (e.currentTarget as HTMLDivElement).style.background = '#242424' }}
             onMouseLeave={e => { if (!tool.soon) (e.currentTarget as HTMLDivElement).style.background = '#1a1a1a' }}
           >
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '6px' }}>
-              <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: tool.soon ? '#5a5550' : '#f5f2ee' }}>
+              <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: tool.soon ? '#4d7a35' : '#f5f2ee' }}>
                 {tool.label}
               </span>
               {tool.soon && (
-                <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', color: '#5a5550', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', color: '#4d7a35', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                   Coming Soon
                 </span>
               )}
             </div>
-            <div style={{ fontSize: '13px', color: '#7a7268', lineHeight: 1.5 }}>
+            <div style={{ fontSize: '13px', color: '#5a8a40', lineHeight: 1.5 }}>
               {tool.description}
             </div>
           </div>
