@@ -143,15 +143,43 @@ export default function ModerationPage() {
 
   async function loadWorldCommunities() {
     setCommunitiesLoading(true)
-    // Join publisher profile for attribution; filter by the shared
-    // pending/approved/rejected filter. world_communities.RLS grants
-    // Thriver full read so this shows everything they need.
-    const { data } = await supabase
+    // Plain fetch — the previous embed-join syntax
+    // `publisher:published_by(username)` fails silently because
+    // published_by FKs into `auth.users`, which has no `username`
+    // column and isn't traversable from PostgREST. Count queries
+    // happened to work (no join), which is why the tab lit up with
+    // a "1" badge while the list stayed empty. Do a two-step
+    // hydration instead — plain SELECT, then batched lookups for
+    // publisher username + source campaign name.
+    const { data, error } = await supabase
       .from('world_communities')
-      .select('*, publisher:published_by(username), campaigns:source_campaign_id(name)')
+      .select('*')
       .eq('moderation_status', filter)
       .order('created_at', { ascending: false })
-    setWorldCommunities(data ?? [])
+    if (error) {
+      console.error('[moderate/communities] load failed:', error)
+      setWorldCommunities([])
+      setCommunitiesLoading(false)
+      return
+    }
+    const rows = data ?? []
+    const userIds = Array.from(new Set(rows.map((r: any) => r.published_by).filter(Boolean)))
+    const campaignIds = Array.from(new Set(rows.map((r: any) => r.source_campaign_id).filter(Boolean)))
+    const [profilesRes, campaignsRes] = await Promise.all([
+      userIds.length > 0
+        ? supabase.from('profiles').select('id, username').in('id', userIds)
+        : Promise.resolve({ data: [] as any[], error: null as any }),
+      campaignIds.length > 0
+        ? supabase.from('campaigns').select('id, name').in('id', campaignIds)
+        : Promise.resolve({ data: [] as any[], error: null as any }),
+    ])
+    const userMap = new Map((profilesRes.data ?? []).map((p: any) => [p.id, p]))
+    const campMap = new Map((campaignsRes.data ?? []).map((c: any) => [c.id, c]))
+    setWorldCommunities(rows.map((r: any) => ({
+      ...r,
+      publisher: userMap.get(r.published_by) ?? null,
+      campaigns: campMap.get(r.source_campaign_id) ?? null,
+    })))
     setCommunitiesLoading(false)
   }
 
