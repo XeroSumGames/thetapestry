@@ -337,6 +337,7 @@ export default function TablePage() {
   const npcFetchInFlightRef = useRef(false)  // Suppress realtime callback during manual NPC re-fetch
   const rollFeedRef = useRef<HTMLDivElement>(null)
   const revealChannelRef = useRef<any>(null)
+  const communityMembersChannelRef = useRef<any>(null)
   const myCharIdRef = useRef<string | null>(null)
   // loadEntries sequence guard — see definition below.
   const loadEntriesSeqRef = useRef(0)
@@ -566,6 +567,9 @@ export default function TablePage() {
   const [recruitCommunityList, setRecruitCommunityList] = useState<{ id: string; name: string; member_count: number }[]>([])
   // NPC memberships — which community (if any) each NPC is already in.
   const [npcCommunityMap, setNpcCommunityMap] = useState<Record<string, { id: string; name: string; recruitment_type: string }>>({})
+  // Lightweight community name map for all users (players + GM). Maps npc_id → community name.
+  // Loaded at startup so the player NPC list shows "Community — {name}" buckets.
+  const [playerNpcCommunityMap, setPlayerNpcCommunityMap] = useState<Record<string, string>>({})
   // First Impression NPC picker: which NPC the check is TARGETED at.
   // Cleared when the modal closes. On roll-time the npcId is copied
   // into firstImpressionTargetRef so executeRoll can write the
@@ -817,6 +821,19 @@ export default function TablePage() {
     setChatInput('')
   }
 
+  async function loadPlayerNpcCommunityMap(campaignId: string) {
+    const { data } = await supabase
+      .from('community_members')
+      .select('npc_id, communities!inner(name, campaign_id)')
+      .is('left_at', null)
+      .eq('communities.campaign_id', campaignId)
+    const map: Record<string, string> = {}
+    for (const row of (data ?? []) as any[]) {
+      if (row.npc_id) map[row.npc_id] = row.communities?.name ?? '?'
+    }
+    setPlayerNpcCommunityMap(map)
+  }
+
   async function loadRevealedNpcs(characterId: string | null, cnpcs: any[]) {
     const query = characterId
       ? supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('character_id', characterId).eq('revealed', true)
@@ -967,6 +984,10 @@ export default function TablePage() {
         }))
       if (pubDataResult.data) setPublishedNpcIds(new Set(pubDataResult.data.map((d: any) => d.source_campaign_npc_id!)))
 
+      // Load community membership map for all users so the player NPC list
+      // shows "Community — {name}" buckets instead of "Unfiled".
+      await loadPlayerNpcCommunityMap(id)
+
       // Load revealed NPCs — GM sees all, players see their own
       if (camp.gm_user_id === user.id) {
         await loadRevealedNpcs(null, cnpcs)
@@ -987,6 +1008,14 @@ export default function TablePage() {
             .subscribe()
         }
       }
+
+      // Keep the community map fresh — when an NPC is recruited, the
+      // player roster should immediately show the community bucket.
+      communityMembersChannelRef.current = supabase.channel(`community_members_${id}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members' }, () => {
+          loadPlayerNpcCommunityMap(id)
+        })
+        .subscribe()
 
       channelRef.current = supabase.channel(`table_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'character_states', filter: `campaign_id=eq.${id}` }, () => loadEntries(id))
@@ -1174,6 +1203,7 @@ export default function TablePage() {
       if (initChannelRef.current) supabase.removeChannel(initChannelRef.current)
       if (campaignChannelRef.current) supabase.removeChannel(campaignChannelRef.current)
       if (revealChannelRef.current) supabase.removeChannel(revealChannelRef.current)
+      if (communityMembersChannelRef.current) supabase.removeChannel(communityMembersChannelRef.current)
       if (presenceChannelRef.current) supabase.removeChannel(presenceChannelRef.current)
     }
   }, [id])
@@ -6266,22 +6296,33 @@ export default function TablePage() {
                   </div>
                 )
               }
-              // Group by folder. Null / empty → "Unfiled". A dedicated
-              // "In Combat" pseudo-folder pulls active combatants up top
-              // in initiative order regardless of their actual folder so
-              // players can reach them fast during a turn.
+              // Group by folder. Recruited NPCs go into "🏘 Community — {name}"
+              // buckets (pinned after combat), others by GM-assigned folder.
+              // "Unfiled" sorts last.
               type FolderBucket = { name: string; key: string; npcs: any[] }
               const folders: FolderBucket[] = []
               if (combatNpcsInOrder.length > 0) {
                 folders.push({ name: '⚔️ In Combat', key: '__combat__', npcs: combatNpcsInOrder })
               }
+              // Community buckets — NPC is recruited (in playerNpcCommunityMap) and not in combat
+              const communityBuckets = new Map<string, any[]>()
               const byFolder = new Map<string, any[]>()
               for (const n of revealedNpcs) {
-                if (combatIdSet.has(n.id)) continue // already in the Combat bucket
-                const f = (n.folder && n.folder.trim()) ? n.folder.trim() : 'Unfiled'
-                const arr = byFolder.get(f) ?? []
-                arr.push(n)
-                byFolder.set(f, arr)
+                if (combatIdSet.has(n.id)) continue
+                const commName = playerNpcCommunityMap[n.id]
+                if (commName) {
+                  const arr = communityBuckets.get(commName) ?? []
+                  arr.push(n)
+                  communityBuckets.set(commName, arr)
+                } else {
+                  const f = (n.folder && n.folder.trim()) ? n.folder.trim() : 'Unfiled'
+                  const arr = byFolder.get(f) ?? []
+                  arr.push(n)
+                  byFolder.set(f, arr)
+                }
+              }
+              for (const [cname, cnpcs] of [...communityBuckets.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+                folders.push({ name: `🏘 Community — ${cname}`, key: `__community__${cname}`, npcs: cnpcs.sort((a, b) => a.name.localeCompare(b.name)) })
               }
               const folderNames = [...byFolder.keys()].sort((a, b) => {
                 if (a === 'Unfiled') return 1
@@ -6339,7 +6380,9 @@ export default function TablePage() {
                   // Combat pseudo-folder is always open — you don't want
                   // to hide the "it's your turn" indicator behind a click.
                   const isCombatBucket = bucket.key === '__combat__'
+                  const isCommunityBucket = bucket.key.startsWith('__community__')
                   const isOpen = isCombatBucket || playerFolderOpen.has(bucket.key)
+                  const headerColor = isCombatBucket ? '#f5a89a' : isCommunityBucket ? '#7fc458' : '#EF9F27'
                   return (
                     <div key={bucket.key} style={{ marginBottom: '6px' }}>
                       <div
@@ -6348,7 +6391,7 @@ export default function TablePage() {
                         {!isCombatBucket && (
                           <span style={{ fontSize: '13px', color: '#5a5550', width: '10px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                         )}
-                        <span style={{ fontSize: '13px', color: isCombatBucket ? '#f5a89a' : '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>
+                        <span style={{ fontSize: '13px', color: headerColor, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>
                           {bucket.name}
                         </span>
                         <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>
