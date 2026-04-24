@@ -8562,11 +8562,17 @@ export default function TablePage() {
                     )}
                   </div>
 
-                  {/* Post-roll Insight Die reroll — spend 1 to reroll a single die. */}
+                  {/* Post-roll Insight Die reroll — spend 1 to reroll a single die.
+                      Moments of Insight (double-1 Low / double-6 High) are
+                      locked per XSE rules: the double-face outcome
+                      overrides the modifier math and cannot be rerolled
+                      or otherwise altered. Hide the reroll box in that
+                      case. */}
                   {(() => {
                     const rollerEntry = entries.find(e => e.character.name === recruitResult.rollerName)
                     const insightAvail = rollerEntry?.liveState?.insight_dice ?? 0
                     if (insightAvail < 1) return null
+                    if (recruitResult.outcome === 'Low Insight' || recruitResult.outcome === 'High Insight') return null
                     const btn = (label: string, which: 1 | 2 | 3) => (
                       <button onClick={() => rerollRecruitDie(which)}
                         style={{ flex: 1, padding: '8px 10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
