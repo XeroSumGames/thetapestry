@@ -1611,7 +1611,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
                           {isPublished
                             ? <>Published as <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{world!.size_band}</span> · <span style={{ color: modColor, fontWeight: 700 }}>{modChip}</span>{world!.faction_label ? <> · <span style={{ color: '#EF9F27' }}>{world!.faction_label}</span></> : null}</>
-                            : 'Publish this community to the Distemperverse to make it visible across other campaigns.'}
+                            : 'Publish this community to the Tapestry to make it visible across other campaigns.'}
                         </div>
                       </div>
                       {isPublished ? (
@@ -1628,7 +1628,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       ) : (
                         <button onClick={() => openPublishModal(c.id)}
                           style={{ padding: '8px 14px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
-                          🌐 Publish to Distemperverse
+                          🌐 Publish to Tapestry
                         </button>
                       )}
                     </div>
@@ -2127,7 +2127,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               </div>
               <div style={{ padding: '18px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
-                  Publishing exposes the sanitized fields below to every other campaign in the Distemperverse. Your private roster, Morale rolls, and internal notes stay put. First-time publishes go through Thriver moderation before they appear on the world map.
+                  Publishing exposes the sanitized fields below to every other campaign in the Tapestry. Your private roster, Morale rolls, and internal notes stay put. Anything published goes through moderation before appearing on the world map.
                 </div>
 
                 <div style={{ padding: '12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
