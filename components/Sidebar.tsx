@@ -133,22 +133,18 @@ export default function Sidebar() {
           <span style={{ color: '#7fc458', fontSize: '14px', letterSpacing: '.12em', textTransform: 'uppercase' }}>Ghost <span style={{ fontSize: '13px' }}>— You Don&apos;t Exist</span></span>
         ) : (
           <>
-            {/* Line 1: Username (Role) */}
-            <div style={{ fontSize: '14px', letterSpacing: '.1em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '7px' }}>
+            {/* Line 1: Username (Role) — centred */}
+            <div style={{ fontSize: '14px', letterSpacing: '.1em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '7px', textAlign: 'center' }}>
               <span style={{ color: '#f5f2ee' }}>{username}</span>
               <span style={{ color: userRole === 'thriver' ? '#c0392b' : '#7fc458', marginLeft: '5px' }}>
                 ({userRole === 'thriver' ? 'Thriver' : 'Survivor'})
               </span>
             </div>
-            {/* Line 2: action icons */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Line 2: icons — evenly spaced, centred */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-evenly' }}>
               <MessagesBell />
               <NotificationBell />
-              <a href="/campfire" title="The Campfire" style={{ color: '#5a5550', fontSize: '16px', lineHeight: 1, textDecoration: 'none', display: 'flex', alignItems: 'center' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#7fc458')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#5a5550')}>
-                🔥
-              </a>
+              <span title="The Campfire — coming soon" style={{ color: '#3a3a3a', fontSize: '16px', lineHeight: 1, display: 'flex', alignItems: 'center', cursor: 'default' }}>🔥</span>
             </div>
           </>
         )}

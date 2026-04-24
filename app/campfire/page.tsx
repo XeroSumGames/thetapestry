@@ -78,7 +78,7 @@ export default function CampfirePage() {
             onMouseLeave={e => { if (!tool.soon) (e.currentTarget as HTMLDivElement).style.background = '#1a1a1a' }}
           >
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '6px' }}>
-              <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: tool.soon ? '#4d7a35' : '#f5f2ee' }}>
+              <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
                 {tool.label}
               </span>
               {tool.soon && (
