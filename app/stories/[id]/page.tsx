@@ -79,6 +79,17 @@ export default function CampaignPage() {
   // that case the Publish button flips to "Publish New Version".
   const [publishOpen, setPublishOpen] = useState(false)
   const [existingModule, setExistingModule] = useState<ModuleForCampaign | null>(null)
+  // Phase 5 Sprint 3 — subscriber-side update awareness. Holds the
+  // first active subscription for this campaign whose current
+  // cloned version is behind the module's latest_version_id. Null
+  // when up-to-date or not subscribed to anything. Populated in the
+  // same load pass below.
+  const [moduleUpdate, setModuleUpdate] = useState<{
+    moduleId: string
+    moduleName: string
+    currentVersion: string
+    latestVersion: string
+  } | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -110,6 +121,38 @@ export default function CampaignPage() {
       if (camp.gm_user_id === user.id) {
         const mod = await getModuleForCampaign(supabase, id)
         setExistingModule(mod)
+
+        // Phase 5 Sprint 3 — is there an active subscription whose
+        // cloned version is behind the source module's latest? If
+        // so, surface a "📦 Update available" button in the GM
+        // action row. Tapping it routes to the versions page.
+        const { data: subs } = await supabase
+          .from('module_subscriptions')
+          .select('module_id, current_version_id, module:modules(name, latest_version_id)')
+          .eq('campaign_id', id)
+          .eq('status', 'active')
+        for (const sub of (subs ?? []) as any[]) {
+          const modRow = Array.isArray(sub.module) ? sub.module[0] : sub.module
+          const latestId = modRow?.latest_version_id
+          if (latestId && latestId !== sub.current_version_id) {
+            // Load both version strings so the button can tell
+            // the user which bump they'd be applying.
+            const { data: vs } = await supabase
+              .from('module_versions')
+              .select('id, version')
+              .in('id', [sub.current_version_id, latestId].filter(Boolean))
+            const vMap = new Map<string, string>((vs ?? []).map((v: any) => [v.id, v.version]))
+            setModuleUpdate({
+              moduleId: sub.module_id,
+              moduleName: modRow?.name ?? 'Module',
+              currentVersion: vMap.get(sub.current_version_id) ?? '?',
+              latestVersion: vMap.get(latestId) ?? '?',
+            })
+            break  // only surface the first outdated module; a
+            // campaign that's subscribed to multiples can still get
+            // the bell notifications for each.
+          }
+        }
       }
 
       // Check if this player was kicked from the current session
@@ -290,6 +333,13 @@ export default function CampaignPage() {
               : 'Publish this campaign as a reusable module other GMs can subscribe to'}>
             📦 {existingModule ? `Module v${existingModule.latest_version?.version ?? '1.0.0'}` : 'Publish Module'}
           </button>
+          {moduleUpdate && (
+            <a href={`/stories/${id}/modules/${moduleUpdate.moduleId}/versions`}
+              style={{ ...btn('#2a1a3e', '#c4a7f0', '#8b5cf6'), textDecoration: 'none', fontWeight: 700 } as any}
+              title={`"${moduleUpdate.moduleName}" has a newer version. You're on v${moduleUpdate.currentVersion}; latest is v${moduleUpdate.latestVersion}. Click to see what changed.`}>
+              📦 v{moduleUpdate.latestVersion} ↑
+            </a>
+          )}
           <button onClick={handleDelete} style={btn('#7a1f16', '#f5a89a', '#7a1f16') as any}>
             Delete
           </button>

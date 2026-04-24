@@ -343,6 +343,23 @@ export default function NotificationBell() {
       }
     }
 
+    // Phase 5 Sprint 3 — subscriber alert when a new module version
+    // is published.
+    if (type === 'module_version_published') {
+      const name = (metadata as any)?.module_name as string | undefined
+      const version = (metadata as any)?.version as string | undefined
+      const changelog = (metadata as any)?.changelog as string | undefined
+      if (name && version) {
+        return (
+          <>
+            A new version of <span style={{ color: '#d48bd4' }}>"{name}"</span> (
+            <span style={{ color: '#c4a7f0', fontWeight: 700 }}>v{version}</span>
+            ) is available{changelog ? <>: <span style={{ color: '#cce0f5', fontStyle: 'italic' }}>{changelog}</span></> : '.'}
+          </>
+        )
+      }
+    }
+
     // Phase E — Thriver-side alert when a published community's
     // public info is edited (description / faction / homestead /
     // etc.). metadata.changed_fields is a string[].
