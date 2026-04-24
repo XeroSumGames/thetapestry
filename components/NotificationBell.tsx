@@ -378,6 +378,43 @@ export default function NotificationBell() {
       }
     }
 
+    // Phase 5 — someone started running the author's module.
+    if (type === 'module_subscriber') {
+      const name = (metadata as any)?.module_name as string | undefined
+      if (name) {
+        return (
+          <>
+            A GM started running <span style={{ color: '#c4a7f0' }}>"{name}"</span>.
+          </>
+        )
+      }
+    }
+
+    // Phase 5 — Thriver approved or rejected a listed module submission.
+    if (type === 'module_approved') {
+      const name = (metadata as any)?.module_name as string | undefined
+      if (name) {
+        return (
+          <>
+            Your module <span style={{ color: '#c4a7f0' }}>"{name}"</span> was{' '}
+            <span style={{ color: '#7fc458', fontWeight: 700 }}>approved</span> and is now listed.
+          </>
+        )
+      }
+    }
+
+    if (type === 'module_rejected') {
+      const name = (metadata as any)?.module_name as string | undefined
+      if (name) {
+        return (
+          <>
+            Your module <span style={{ color: '#c4a7f0' }}>"{name}"</span> was{' '}
+            <span style={{ color: '#f5a89a', fontWeight: 700 }}>not approved</span>. You can edit and re-submit.
+          </>
+        )
+      }
+    }
+
     // Phase E Sprint 4b — link response. Body shape:
     //   "<recipient>" <status> your <type> proposal with "<proposer>"
     if (type === 'community_link_response') {

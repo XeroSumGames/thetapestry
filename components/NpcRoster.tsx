@@ -1103,15 +1103,6 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       )
                     })}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: `repeat(${PORTRAIT_BANK.length}, 20px)`, gap: '3px' }}>
-                    {PORTRAIT_BANK.map((p, i) => (
-                      <button key={i} onClick={() => setForm(f => ({ ...f, portrait_url: p.url }))} type="button"
-                        title={p.label}
-                        style={{ width: '20px', height: '20px', borderRadius: '50%', border: form.portrait_url === p.url ? `2px solid ${p.color}` : '1px solid #3a3a3a', overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none' }}>
-                        <img src={p.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      </button>
-                    ))}
-                  </div>
               <label style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>
                 {uploading ? '...' : 'Upload'}
                 <input type="file" accept="image/*" hidden onChange={e => { if (e.target.files?.[0]) handlePortraitUpload(e.target.files[0]) }} />

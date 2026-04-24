@@ -425,6 +425,24 @@ export async function cloneModuleIntoCampaign(
     throw new Error(`module_subscription: ${subErr.message}`)
   }
 
+  // 7. Notify the module author that someone started running their module.
+  // Skip if the subscriber IS the author (self-clone during testing).
+  const { data: { user: subscriber } } = await supabase.auth.getUser()
+  const { data: mod } = await supabase
+    .from('modules')
+    .select('author_user_id, name')
+    .eq('id', source_module_id)
+    .single()
+  if (mod && subscriber && mod.author_user_id !== subscriber.id) {
+    await supabase.from('notifications').insert({
+      user_id: mod.author_user_id,
+      type: 'module_subscriber',
+      title: 'Someone is running your module',
+      body: `A GM started running "${mod.name}".`,
+      metadata: { module_id: source_module_id, module_name: mod.name },
+    })
+  }
+
   return {
     subscriptionId: subRow?.id ?? '',
     counts,

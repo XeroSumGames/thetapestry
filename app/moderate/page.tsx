@@ -51,7 +51,7 @@ const navLink: React.CSSProperties = {
 }
 
 export default function ModerationPage() {
-  const [section, setSection] = useState<'rumors' | 'users' | 'npcs' | 'communities'>('users')
+  const [section, setSection] = useState<'rumors' | 'users' | 'npcs' | 'communities' | 'modules'>('users')
   const [pins, setPins] = useState<Pin[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending')
@@ -66,6 +66,8 @@ export default function ModerationPage() {
   // approved_by + approved_at per the world_communities RLS.
   const [worldCommunities, setWorldCommunities] = useState<any[]>([])
   const [communitiesLoading, setCommunitiesLoading] = useState(false)
+  const [modules, setModules] = useState<any[]>([])
+  const [modulesLoading, setModulesLoading] = useState(false)
   // Role check — all four queues on this page are gated by an RLS
   // policy that requires profiles.role = 'thriver'. Non-Thrivers see
   // 0 rows silently, which is a trap. We pull the role once on mount
@@ -76,23 +78,25 @@ export default function ModerationPage() {
   // when there's something waiting. Users counts "new in last 7
   // days" (no moderation status concept there); rumors / npcs /
   // communities count actual pending rows.
-  const [pendingCounts, setPendingCounts] = useState<{ users: number; rumors: number; npcs: number; communities: number }>({ users: 0, rumors: 0, npcs: 0, communities: 0 })
+  const [pendingCounts, setPendingCounts] = useState<{ users: number; rumors: number; npcs: number; communities: number; modules: number }>({ users: 0, rumors: 0, npcs: 0, communities: 0, modules: 0 })
   const router = useRouter()
   const supabase = createClient()
 
   async function loadPendingCounts() {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const [rumorsRes, npcsRes, commsRes, usersRes] = await Promise.all([
+    const [rumorsRes, npcsRes, commsRes, usersRes, modulesRes] = await Promise.all([
       supabase.from('map_pins').select('id', { count: 'exact', head: true }).eq('pin_type', 'rumor').eq('status', 'pending'),
       supabase.from('world_npcs').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('world_communities').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
       supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo),
+      supabase.from('modules').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending').eq('visibility', 'listed'),
     ])
     setPendingCounts({
       rumors: rumorsRes.count ?? 0,
       npcs: npcsRes.count ?? 0,
       communities: commsRes.count ?? 0,
       users: usersRes.count ?? 0,
+      modules: modulesRes.count ?? 0,
     })
   }
 
@@ -124,6 +128,7 @@ export default function ModerationPage() {
     if (section === 'users') loadUsers()
     if (section === 'npcs') loadWorldNpcs()
     if (section === 'communities') loadWorldCommunities()
+    if (section === 'modules') loadModules()
   }, [section, filter])
 
   async function loadWorldNpcs() {
@@ -204,6 +209,52 @@ export default function ModerationPage() {
     const { error } = await supabase.from('world_communities').delete().eq('id', id)
     if (error) { alert(`Delete failed: ${error.message}`); setActing(null); return }
     setWorldCommunities(prev => prev.filter(c => c.id !== id))
+    setActing(null)
+  }
+
+  async function loadModules() {
+    setModulesLoading(true)
+    const { data, error } = await supabase
+      .from('modules')
+      .select('*')
+      .eq('moderation_status', filter)
+      .eq('visibility', 'listed')
+      .order('created_at', { ascending: false })
+    if (error) { setModulesLoading(false); return }
+    // Hydrate author usernames via profiles
+    const authorIds = [...new Set((data ?? []).map((m: any) => m.author_user_id).filter(Boolean))]
+    let profileMap: Record<string, string> = {}
+    if (authorIds.length > 0) {
+      const { data: profs } = await supabase.from('profiles').select('id, username').in('id', authorIds)
+      profileMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
+    }
+    setModules((data ?? []).map((m: any) => ({ ...m, author_username: profileMap[m.author_user_id] ?? 'unknown' })))
+    setModulesLoading(false)
+  }
+
+  async function handleModuleAction(id: string, status: 'approved' | 'rejected') {
+    setActing(id)
+    const { data: { user } } = await supabase.auth.getUser()
+    const mod = modules.find(m => m.id === id)
+    const { error } = await supabase.from('modules').update({
+      moderation_status: status,
+      approved_by: user?.id ?? null,
+      approved_at: new Date().toISOString(),
+    }).eq('id', id)
+    if (error) { alert(`Moderation action failed: ${error.message}`); setActing(null); return }
+    // Notify the author
+    if (mod?.author_user_id) {
+      await supabase.from('notifications').insert({
+        user_id: mod.author_user_id,
+        type: status === 'approved' ? 'module_approved' : 'module_rejected',
+        title: status === 'approved' ? 'Module approved' : 'Module rejected',
+        body: status === 'approved'
+          ? `Your module "${mod.name}" has been approved and is now listed.`
+          : `Your module "${mod.name}" was not approved. You can edit and re-submit.`,
+        metadata: { module_id: id, module_name: mod.name },
+      })
+    }
+    setModules(prev => prev.filter(m => m.id !== id))
     setActing(null)
   }
 
@@ -335,12 +386,13 @@ export default function ModerationPage() {
           tab keeps its red accent so the user can tell where they
           are. Count badge appears next to the label. */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        {(['users', 'rumors', 'npcs', 'communities'] as const).map(s => {
+        {(['users', 'rumors', 'npcs', 'communities', 'modules'] as const).map(s => {
           const count = pendingCounts[s]
           const hasPending = count > 0
           const isActive = section === s
           const borderColor = isActive ? '#c0392b' : (hasPending ? '#2d5a1b' : '#3a3a3a')
           const color = isActive ? '#f5a89a' : (hasPending ? '#7fc458' : '#d4cfc9')
+          const label = s === 'rumors' ? 'Rumor Queue' : s === 'users' ? 'Users' : s === 'npcs' ? 'NPCs' : s === 'communities' ? '🌐 Communities' : '📦 Modules'
           return (
             <button key={s} onClick={() => setSection(s)} style={{
               padding: '7px 16px',
@@ -352,9 +404,7 @@ export default function ModerationPage() {
               letterSpacing: '.06em', textTransform: 'uppercase',
               display: 'flex', alignItems: 'center', gap: '6px',
             }}>
-              <span>
-                {s === 'rumors' ? 'Rumor Queue' : s === 'users' ? 'Users' : s === 'npcs' ? 'NPCs' : '🌐 Communities'}
-              </span>
+              <span>{label}</span>
               {hasPending && (
                 <span style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '10px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontWeight: 700 }}>
                   {count}
@@ -676,6 +726,73 @@ export default function ModerationPage() {
                 </div>
               )
             })}
+          </div>
+        </>
+      )}
+
+      {/* ── MODULES ── */}
+      {section === 'modules' && (
+        <>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem' }}>
+            {(['pending', 'approved', 'rejected'] as const).map(f => (
+              <button key={f} onClick={() => setFilter(f)} style={{
+                padding: '7px 16px', border: `1px solid ${filter === f ? '#c0392b' : '#3a3a3a'}`,
+                background: filter === f ? '#2a1210' : '#242424', color: filter === f ? '#f5a89a' : '#d4cfc9',
+                borderRadius: '3px', cursor: 'pointer', fontSize: '13px',
+                fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
+              }}>{f}</button>
+            ))}
+          </div>
+
+          {modulesLoading && <div style={{ color: '#5a5550', fontSize: '13px' }}>Loading…</div>}
+          {!modulesLoading && modules.length === 0 && (
+            <div style={{ color: '#5a5550', fontSize: '13px', fontStyle: 'italic' }}>
+              No {filter} modules.
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {modules.map(m => (
+              <div key={m.id} style={{ padding: '14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${filter === 'approved' ? '#7fc458' : filter === 'rejected' ? '#c0392b' : '#8b5cf6'}`, borderRadius: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '19px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                      📦 {m.name}
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>
+                      By <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{m.author_username}</span>{m.created_at ? ` · submitted ${formatDate(m.created_at)}` : ''}
+                      {m.parent_setting && m.parent_setting !== 'custom' && (
+                        <span style={{ marginLeft: '8px', color: '#EF9F27' }}>· {m.parent_setting}</span>
+                      )}
+                    </div>
+                  </div>
+                  {m.tagline && (
+                    <div style={{ fontSize: '13px', color: '#c4a7f0', fontStyle: 'italic' }}>{m.tagline}</div>
+                  )}
+                </div>
+
+                {m.description && (
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a' }}>
+                    {m.description}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {filter === 'pending' && (
+                    <>
+                      <button onClick={() => handleModuleAction(m.id, 'approved')} disabled={acting === m.id} style={actionBtn('#2d5a1b', '#7fc458')}>Approve</button>
+                      <button onClick={() => handleModuleAction(m.id, 'rejected')} disabled={acting === m.id} style={actionBtn('#7a1f16', '#f5a89a')}>Reject</button>
+                    </>
+                  )}
+                  {filter === 'approved' && (
+                    <button onClick={() => handleModuleAction(m.id, 'rejected')} disabled={acting === m.id} style={actionBtn('#7a1f16', '#f5a89a')}>Revoke</button>
+                  )}
+                  {filter === 'rejected' && (
+                    <button onClick={() => handleModuleAction(m.id, 'approved')} disabled={acting === m.id} style={actionBtn('#2d5a1b', '#7fc458')}>Approve</button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </>
       )}
