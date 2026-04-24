@@ -460,15 +460,19 @@ In Supabase Studio:
 - [ ] Withdraw: source GM can manually DELETE the migration row (no UI yet). Target notification stays but is orphaned (known deferral).
 - [ ] Non-GM on dissolved community → Migration strip hidden (gated on `isGM`).
 
-### Known gap (deferred)
+### Auto-copy on acceptance (shipped)
 
-- **Auto-copy on acceptance is NOT implemented.** Accepting a migration flips status='accepted' and fires the response notification but does **not** copy the NPC row into the target campaign, and does **not** insert a community_members row in the target community. The target GM must manually use their existing add-member flow to bring the NPC in. This is flagged in `tasks/todo.md` for a follow-up Postgres trigger on `community_migrations` UPDATE pending→accepted.
+Accepting a migration offer now auto-copies the source NPC into the target campaign + inserts a community_members row in the target community, all via the `apply_community_migration_acceptance` trigger in `sql/community-migrations-autocopy.sql`. The copy preserves RAPID stats, skills, equipment, notes, motivation, portrait, and npc_type; resets wp_current/rp_current to max; parks the NPC with `campaign_pin_id = null` (old pin doesn't exist in target); and lands them as `recruitment_type='convert'`, `role='unassigned'`, `status='active'`.
+
+Edge cases handled:
+- Source NPC deleted before acceptance → skip copy, status still flips to 'accepted'.
+- Target world_community force-unpublished → skip copy, status still flips.
+- Any clone error → raised as a Postgres NOTICE in logs, status still flips so the user flow isn't broken. Falls back to the pre-trigger manual add-member flow.
 
 ---
 
 ## Known deferrals (call out in playtest if asked)
 
-- **Migration auto-copy on acceptance** — DB row flips status but doesn't copy the NPC into the target campaign. Manual add-member required. Fix: Postgres trigger on community_migrations UPDATE pending→accepted.
 - **Per-community Campfire feed** — depends on Phase 6 Campfire which isn't built.
 - **Community subscription** — players follow communities across campaigns. Phase 6.
 - **Campaign-creation wizard "Start around an existing community"** — listed in Phase E spec; will land alongside the Modules system (Phase 5).
