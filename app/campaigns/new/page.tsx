@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { logEvent } from '../../../lib/events'
@@ -8,6 +8,7 @@ import { SETTING_NPCS } from '../../../lib/setting-npcs'
 import { SETTING_SCENES } from '../../../lib/setting-scenes'
 import { SETTING_HANDOUTS } from '../../../lib/setting-handouts'
 import { CAMPAIGN_SETTING_OPTIONS } from '../../../lib/settings'
+import { listAvailableModules, cloneModuleIntoCampaign, type ModuleListing } from '../../../lib/modules'
 
 function generateCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -24,9 +25,22 @@ export default function NewCampaignPage() {
   const [locationQuery, setLocationQuery] = useState('')
   const [locationSuggestions, setLocationSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
   const [customCenter, setCustomCenter] = useState<{ lat: number; lng: number } | null>(null)
+  // Phase 5 Sprint 1 — Module picker. Mutually exclusive with the
+  // setting buttons: clicking a module button clears `setting` and
+  // vice versa. When a module is picked, handleCreate skips the
+  // setting-seed pipeline and calls cloneModuleIntoCampaign instead.
+  const [modules, setModules] = useState<ModuleListing[]>([])
+  const [pickedModuleVersionId, setPickedModuleVersionId] = useState<string>('')
+  const [pickedModuleId, setPickedModuleId] = useState<string>('')
   const debounceRef = useRef<any>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    listAvailableModules(supabase).then(setModules).catch(() => setModules([]))
+    // supabase is stable across renders, deps array intentionally empty.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleCreate() {
     if (!name.trim()) return
@@ -38,7 +52,9 @@ export default function NewCampaignPage() {
     const { data, error: err } = await supabase.from('campaigns').insert({
       name: name.trim(),
       description: description.trim(),
-      setting: setting || 'custom',
+      // Module-subscribed campaigns store 'custom' in the setting slot;
+      // the actual module link lives in module_subscriptions.
+      setting: pickedModuleVersionId ? 'custom' : (setting || 'custom'),
       map_style: mapStyle,
       map_center_lat: customCenter?.lat ?? null,
       map_center_lng: customCenter?.lng ?? null,
@@ -48,6 +64,22 @@ export default function NewCampaignPage() {
     }).select().single()
     if (err) { setError(err.message); setSaving(false); return }
     await supabase.from('campaign_members').insert({ campaign_id: data.id, user_id: user.id })
+
+    // Phase 5 Sprint 1 — module clone takes precedence over the
+    // setting-seed pipeline. If the user picked a module, run the
+    // jsonb snapshot clone and skip the TS/DB setting seeds.
+    if (pickedModuleVersionId) {
+      try {
+        await cloneModuleIntoCampaign(supabase, pickedModuleVersionId, data.id)
+        logEvent('campaign_created', { id: data.id, name, module_version_id: pickedModuleVersionId })
+        router.push(`/stories/${data.id}`)
+        return
+      } catch (cloneErr: any) {
+        setError(`Campaign created but module clone failed: ${cloneErr?.message ?? cloneErr}\n\nYou can delete and recreate, or open the campaign to see what partially seeded.`)
+        setSaving(false)
+        return
+      }
+    }
 
     const seedErrors: string[] = []
     let pinMap: Record<string, string> = {}
@@ -163,15 +195,47 @@ export default function NewCampaignPage() {
           <label style={lbl}>Setting</label>
           <div style={{ display: 'flex', gap: '6px' }}>
             {CAMPAIGN_SETTING_OPTIONS.map(s => (
-              <button key={s.value} onClick={() => setSetting(s.value)}
-                style={{ flex: 1, padding: '8px', border: `1px solid ${setting === s.value ? '#c0392b' : '#3a3a3a'}`, background: setting === s.value ? '#2a1210' : '#242424', borderRadius: '3px', color: setting === s.value ? '#f5a89a' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              <button key={s.value} onClick={() => { setSetting(s.value); setPickedModuleVersionId(''); setPickedModuleId('') }}
+                style={{ flex: 1, padding: '8px', border: `1px solid ${!pickedModuleVersionId && setting === s.value ? '#c0392b' : '#3a3a3a'}`, background: !pickedModuleVersionId && setting === s.value ? '#2a1210' : '#242424', borderRadius: '3px', color: !pickedModuleVersionId && setting === s.value ? '#f5a89a' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 {s.label}
               </button>
             ))}
           </div>
         </div>
 
-        {setting === 'custom' && (
+        {/* Phase 5 Sprint 1 — Module picker. Appears as a third
+            option below the Setting row. Picking a module clears
+            the setting selection so the two don't double-seed. */}
+        {modules.length > 0 && (
+          <div style={{ marginBottom: '16px' }}>
+            <label style={lbl}>Or start from a Module</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {modules.map(m => {
+                const picked = pickedModuleVersionId === m.latest_version_id
+                return (
+                  <button key={m.id} onClick={() => {
+                    if (picked) {
+                      setPickedModuleVersionId(''); setPickedModuleId('')
+                    } else if (m.latest_version_id) {
+                      setPickedModuleVersionId(m.latest_version_id)
+                      setPickedModuleId(m.id)
+                      setSetting('')
+                    }
+                  }}
+                    style={{ padding: '8px 10px', border: `1px solid ${picked ? '#8b5cf6' : '#3a3a3a'}`, background: picked ? '#2a1a3e' : '#242424', borderRadius: '3px', color: picked ? '#c4a7f0' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textAlign: 'left' }}>
+                    <div style={{ fontWeight: 600, textTransform: 'uppercase' }}>
+                      📦 {m.name}
+                      {m.latest_version && <span style={{ opacity: 0.7, marginLeft: '8px', fontSize: '13px' }}>v{m.latest_version.version}</span>}
+                    </div>
+                    {m.tagline && <div style={{ fontSize: '13px', opacity: 0.85, marginTop: '2px', fontFamily: 'Barlow, sans-serif', textTransform: 'none' }}>{m.tagline}</div>}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {setting === 'custom' && !pickedModuleVersionId && (
           <div style={{ marginBottom: '16px', position: 'relative' }}>
             <label style={lbl}>Starting Location</label>
             <div style={{ display: 'flex', gap: '6px' }}>
