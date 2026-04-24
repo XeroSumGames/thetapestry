@@ -1501,8 +1501,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         ))}
                       </select>
                       {homesteadPin && homesteadPin.lat != null && homesteadPin.lng != null && (
-                        <a href={`https://www.openstreetmap.org/#map=15/${homesteadPin.lat}/${homesteadPin.lng}`} target="_blank" rel="noreferrer"
-                          title="Open this homestead on OpenStreetMap"
+                        <a href={`/map?flyTo=${homesteadPin.lat},${homesteadPin.lng}`}
+                          title="Open the in-app world map centered on this Homestead"
                           style={{ padding: '4px 8px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', textDecoration: 'none' }}>
                           View
                         </a>

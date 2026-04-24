@@ -408,6 +408,24 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       }
       window.addEventListener('tapestry-fly-to', flyToHandler)
 
+      // URL-param flyTo — lets other pages deep-link into /map at
+      // specific coords (e.g. /moderate "View on map" button).
+      // Format: /map?flyTo=<lat>,<lng>[&zoom=<z>]. Runs once at
+      // init, after the map instance is ready.
+      try {
+        const qs = new URLSearchParams(window.location.search)
+        const flyTo = qs.get('flyTo')
+        if (flyTo) {
+          const [rawLat, rawLng] = flyTo.split(',')
+          const lat = parseFloat(rawLat)
+          const lng = parseFloat(rawLng)
+          const zoom = parseInt(qs.get('zoom') ?? '15', 10)
+          if (Number.isFinite(lat) && Number.isFinite(lng) && mapInstanceRef.current) {
+            mapInstanceRef.current.flyTo([lat, lng], Number.isFinite(zoom) ? zoom : 15, { duration: 1.2 })
+          }
+        }
+      } catch {}
+
       channelRef.current = supabase
         .channel('map_pins_changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'map_pins' }, () => {

@@ -440,8 +440,9 @@ export default function ModerationPage() {
                     <button onClick={() => handleAction(p.id, 'approved')} disabled={acting === p.id} style={actionBtn('#2d5a1b', '#7fc458')}>Approve</button>
                   )}
                   <button onClick={() => handleDelete(p.id)} disabled={acting === p.id} style={actionBtn('#2e2e2e', '#cce0f5')}>Delete</button>
-                  <a href={`https://www.openstreetmap.org/#map=15/${p.lat}/${p.lng}`} target="_blank" rel="noreferrer"
-                    style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', display: 'inline-block' }}>
+                  <a href={`/map?flyTo=${p.lat},${p.lng}`}
+                    style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', display: 'inline-block' }}
+                    title="Open the in-app world map centered on this pin">
                     View on map
                   </a>
                 </div>
@@ -665,8 +666,9 @@ export default function ModerationPage() {
                     )}
                     <button onClick={() => handleCommunityDelete(wc.id)} disabled={acting === wc.id} style={actionBtn('#2e2e2e', '#cce0f5')}>Delete</button>
                     {hasCoords && (
-                      <a href={`https://www.openstreetmap.org/#map=15/${wc.homestead_lat}/${wc.homestead_lng}`} target="_blank" rel="noreferrer"
-                        style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', display: 'inline-block' }}>
+                      <a href={`/map?flyTo=${wc.homestead_lat},${wc.homestead_lng}`}
+                        style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', display: 'inline-block' }}
+                        title="Open the in-app world map centered on this community's Homestead">
                         View on map
                       </a>
                     )}
