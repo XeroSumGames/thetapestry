@@ -232,6 +232,10 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // "Recent Morale" trend chip strip on the At-a-Glance block.
   const [recentMorale, setRecentMorale] = useState<Record<string, { week_number: number; outcome: string }[]>>({})
   const [myUserId, setMyUserId] = useState<string | null>(null)
+  // PC this user plays in the current campaign — drives the "leave
+  // this community" affordance on their own member row. Null when the
+  // viewer is the GM (or a player who hasn't assigned a character yet).
+  const [myCharacterId, setMyCharacterId] = useState<string | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -508,6 +512,19 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     // Cache current auth user id so the UI can check leader_user_id.
     const { data: { user } } = await supabase.auth.getUser()
     setMyUserId(user?.id ?? null)
+    // Look up this user's PC in the current campaign so the member list
+    // can show a "Leave" affordance on their own row.
+    if (user?.id) {
+      const { data: myCm } = await supabase
+        .from('campaign_members')
+        .select('character_id')
+        .eq('campaign_id', campaignId)
+        .eq('user_id', user.id)
+        .maybeSingle()
+      setMyCharacterId((myCm as any)?.character_id ?? null)
+    } else {
+      setMyCharacterId(null)
+    }
     setLoading(false)
   }
 
@@ -1077,14 +1094,20 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }
   }
 
-  async function handleRemoveMember(m: Member) {
-    if (!confirm('Remove this member from the community?')) return
+  async function handleRemoveMember(m: Member, opts?: { self?: boolean }) {
+    const isSelf = !!opts?.self
+    const prompt = isSelf
+      ? 'Leave this community? Your PC will stop counting toward morale checks and role quotas. History is preserved, so you can be re-added later.'
+      : 'Remove this member from the community?'
+    if (!confirm(prompt)) return
     // Soft-remove via left_at so history stays (Phase C morale consequences
-    // want a record). For Phase A manual removal we'll still keep the row.
+    // want a record). `left_reason` distinguishes a GM removal ('manual')
+    // from a player self-eject ('self'); downstream dashboards can count
+    // attrition vs. administrative cleanup.
     const { error } = await supabase.from('community_members')
-      .update({ left_at: new Date().toISOString(), left_reason: 'manual' })
+      .update({ left_at: new Date().toISOString(), left_reason: isSelf ? 'self' : 'manual' })
       .eq('id', m.id)
-    if (error) { alert(`Remove failed: ${error.message}`); return }
+    if (error) { alert(`${isSelf ? 'Leave' : 'Remove'} failed: ${error.message}`); return }
     // If the departing member was the acknowledged leader, auto-promote
     // per the step-down spec (next founder → longest-tenured remaining).
     // Optimistically update local members FIRST so pickAutoSuccessor
@@ -1735,6 +1758,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       || (m.role === 'assigned' && !!m.assignment_pc_id)
                     const editingTask = editingTaskMemberId === m.id
                     const taskText = m.current_task?.trim() || ''
+                    // Is this member row the viewing player's own PC? Gates
+                    // the self-leave affordance — shown alongside the GM's
+                    // remove button so a player can opt out without pinging
+                    // the GM.
+                    const isMyPc = !!myCharacterId && m.character_id === myCharacterId
                     return (
                       <div key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '6px 8px', background: '#111', border: `1px solid ${accent}`, borderRadius: '2px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1745,8 +1773,13 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                             style={{ width: '110px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
                             {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
                           </select>
-                          <button onClick={() => handleRemoveMember(m)} title="Remove"
-                            style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '16px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>×</button>
+                          {isGM ? (
+                            <button onClick={() => handleRemoveMember(m)} title="Remove from community"
+                              style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '16px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>×</button>
+                          ) : isMyPc ? (
+                            <button onClick={() => handleRemoveMember(m, { self: true })} title="Leave this community"
+                              style={{ background: 'none', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '1px 6px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>Leave</button>
+                          ) : null}
                         </div>
                         {/* Task row. Shows for Apprentices (permanent
                             PC bond) and Assigned NPCs (temporary PC-
