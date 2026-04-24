@@ -277,6 +277,25 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const [assignmentPcDraft, setAssignmentPcDraft] = useState<string>('')
   const [assignmentTaskDraft, setAssignmentTaskDraft] = useState<string>('')
 
+  // Phase E Sprint 4e — Migration on dissolution. After a community
+  // dissolves (3-failure), the GM can offer surviving NPCs to nearby
+  // published communities. Receiver GMs accept or decline. MVP scope:
+  // offer + narrative + notification; auto NPC copy on acceptance is
+  // a follow-up.
+  const [migrationCommunityId, setMigrationCommunityId] = useState<string | null>(null)
+  const [migrationTargetId, setMigrationTargetId] = useState<string>('')
+  const [migrationPickedIds, setMigrationPickedIds] = useState<Set<string>>(new Set())
+  const [migrationNarrative, setMigrationNarrative] = useState<string>('')
+  const [migrationSubmitting, setMigrationSubmitting] = useState<boolean>(false)
+  // Survivors per dissolved community (community_members where
+  // left_reason='dissolved'). Loaded alongside members.
+  const [dissolvedSurvivors, setDissolvedSurvivors] = useState<Record<string, Member[]>>({})
+  // All approved world_communities for the migration target picker.
+  // Includes the source (rare; allowed to GM-decide; we filter UI-side).
+  const [migrationTargets, setMigrationTargets] = useState<{
+    id: string; name: string; size_band: string; faction_label: string | null
+  }[]>([])
+
   // Phase E Sprint 4d — Schism. A large community splits in two: the
   // original keeps its roster minus the breakaway, the breakaway is
   // a brand-new community (same campaign) with the picked members
@@ -392,6 +411,33 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         }
       }
       setWorldRows(worldByCom)
+      // Phase E Sprint 4e — survivors per dissolved community for
+      // the Migration modal. Soft-removed rows with left_reason
+      // 'dissolved' are the eligible offer pool.
+      const dissolvedComIds = coms.filter(c => c.status === 'dissolved').map(c => c.id)
+      if (dissolvedComIds.length > 0) {
+        const { data: survivors } = await supabase
+          .from('community_members')
+          .select('*')
+          .in('community_id', dissolvedComIds)
+          .eq('left_reason', 'dissolved')
+        const byCom: Record<string, Member[]> = {}
+        for (const m of (survivors ?? []) as Member[]) {
+          (byCom[m.community_id] ||= []).push(m)
+        }
+        setDissolvedSurvivors(byCom)
+      } else {
+        setDissolvedSurvivors({})
+      }
+      // Migration target picker — every approved world_community is
+      // a potential destination. RLS already exposes approved rows
+      // publicly so this query is unauthenticated-friendly.
+      const { data: targets } = await supabase
+        .from('world_communities')
+        .select('id, name, size_band, faction_label')
+        .eq('moderation_status', 'approved')
+        .order('name')
+      setMigrationTargets((targets ?? []) as any[])
       const byCom: Record<string, Member[]> = {}
       const pendingByCom: Record<string, Member[]> = {}
       for (const m of (res.data ?? []) as Member[]) {
@@ -493,6 +539,63 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         return next ? { ...m, role: next } : m
       }),
     }))
+  }
+
+  // ── Phase E Sprint 4e — Migration handlers ──────────────────────
+  function openMigrationModal(c: Community) {
+    setMigrationCommunityId(c.id)
+    setMigrationTargetId('')
+    setMigrationPickedIds(new Set())
+    setMigrationNarrative('')
+  }
+  function closeMigrationModal() {
+    if (migrationSubmitting) return
+    setMigrationCommunityId(null)
+    setMigrationTargetId('')
+    setMigrationPickedIds(new Set())
+    setMigrationNarrative('')
+  }
+  function toggleMigrationMember(memberId: string) {
+    setMigrationPickedIds(prev => {
+      const next = new Set(prev)
+      next.has(memberId) ? next.delete(memberId) : next.add(memberId)
+      return next
+    })
+  }
+  // Submit: insert one community_migrations row per picked NPC, all
+  // pointing at the chosen target. Each insert fires the notify
+  // trigger so the target GM gets one notification per migrant.
+  async function handleMigration() {
+    if (!migrationCommunityId || migrationSubmitting) return
+    if (!migrationTargetId) { alert('Pick a target community for the survivors.'); return }
+    if (migrationPickedIds.size === 0) { alert('Pick at least one survivor to offer.'); return }
+    const original = communities.find(c => c.id === migrationCommunityId)
+    if (!original) return
+    const survivors = (dissolvedSurvivors[migrationCommunityId] ?? []).filter(m => migrationPickedIds.has(m.id) && m.npc_id)
+    if (survivors.length === 0) return
+    setMigrationSubmitting(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    // Resolve npc names for the snapshot so the notification shows
+    // them even if the source NPC is later deleted.
+    const npcById = new Map(npcs.map(n => [n.id, n.name]))
+    const rows = survivors.map(m => ({
+      source_community_id: original.id,
+      source_community_name: original.name,
+      source_member_id: m.id,
+      source_npc_id: m.npc_id,
+      npc_name: npcById.get(m.npc_id!) ?? '(unknown)',
+      target_world_community_id: migrationTargetId,
+      offered_by_user_id: user?.id ?? null,
+      narrative: migrationNarrative.trim() || null,
+    }))
+    const { error } = await supabase.from('community_migrations').insert(rows)
+    setMigrationSubmitting(false)
+    if (error) { alert(`Migration offer failed: ${error.message}`); return }
+    setMigrationCommunityId(null)
+    setMigrationTargetId('')
+    setMigrationPickedIds(new Set())
+    setMigrationNarrative('')
+    alert(`Sent ${rows.length} migration offer${rows.length === 1 ? '' : 's'}. The receiving GM will see them in their notifications.`)
   }
 
   // ── Phase E Sprint 4d — Schism handlers ──────────────────────────
@@ -1698,6 +1801,39 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   </div>
                 )}
 
+                {/* Phase E Sprint 4e — Migration on dissolution.
+                    Shows on dissolved communities only: lists the
+                    survivors (left_reason='dissolved') and offers
+                    them to nearby published communities. GM-only;
+                    receiver acceptance happens in the recipient's
+                    notification bell. */}
+                {isGM && c.status === 'dissolved' && (() => {
+                  const survivors = (dissolvedSurvivors[c.id] ?? []).filter(m => m.npc_id)
+                  return (
+                    <div style={{ padding: '10px 12px', background: '#1a102a', border: '1px solid #5a2e5a', borderRadius: '3px' }}>
+                      <div style={{ fontSize: '14px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>
+                        📤 Survivor Migration
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5, marginBottom: '8px' }}>
+                        {survivors.length === 0
+                          ? 'No NPC survivors recorded. Migration only applies to NPCs scattered by the dissolution.'
+                          : `${survivors.length} survivor${survivors.length === 1 ? '' : 's'} can be offered to other communities in the Distemperverse.`}
+                      </div>
+                      {survivors.length > 0 && migrationTargets.length > 0 && (
+                        <button onClick={() => openMigrationModal(c)}
+                          style={{ padding: '6px 14px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                          📤 Offer Survivors
+                        </button>
+                      )}
+                      {survivors.length > 0 && migrationTargets.length === 0 && (
+                        <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                          No published communities exist yet to offer them to.
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
+
                 {/* Phase E Sprint 4d — Schism. Splits this community
                     into two: original keeps its remaining roster,
                     breakaway is a brand-new community with the picked
@@ -1723,6 +1859,88 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
           </div>
         )
       })}
+
+      {/* Phase E Sprint 4e — Migration modal. Lists the dissolved
+          community's surviving NPCs + an approved-world-community
+          target picker + an optional narrative. Submit inserts one
+          community_migrations row per picked survivor; trigger fires
+          a notification per row to the target's GM. Acceptance
+          handled in the recipient's bell (Sprint 4c handler). */}
+      {migrationCommunityId && (() => {
+        const original = communities.find(c => c.id === migrationCommunityId)
+        if (!original) return null
+        const survivors = (dissolvedSurvivors[migrationCommunityId] ?? []).filter(m => m.npc_id)
+        return (
+          <div onClick={closeMigrationModal}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2100, padding: '20px' }}>
+            <div onClick={e => e.stopPropagation()}
+              style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '640px', maxWidth: '100%', maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                    📤 Offer Survivors — {original.name}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                    Send the dispossessed to a new home
+                  </div>
+                </div>
+                <button onClick={closeMigrationModal}
+                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
+              </div>
+              <div style={{ padding: '18px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                  Each picked survivor becomes a migration request to the chosen community. The receiving GM accepts (the survivor narratively joins them) or declines (the survivor's fate stays open). Picking 5 survivors sends 5 separate requests so the receiver can pick and choose.
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Target community</div>
+                  <select value={migrationTargetId} onChange={e => setMigrationTargetId(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                    <option value="">— pick a community —</option>
+                    {migrationTargets.map(t => (
+                      <option key={t.id} value={t.id}>{t.name} ({t.size_band}){t.faction_label ? ` · ${t.faction_label}` : ''}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                    Survivors to offer ({migrationPickedIds.size} / {survivors.length})
+                  </div>
+                  <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px' }}>
+                    {survivors.map(m => {
+                      const checked = migrationPickedIds.has(m.id)
+                      return (
+                        <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px', cursor: 'pointer', borderRadius: '2px', background: checked ? '#2a102a' : 'transparent' }}>
+                          <input type="checkbox" checked={checked} onChange={() => toggleMigrationMember(m.id)} />
+                          <span style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>{memberLabel(m)}</span>
+                          <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginLeft: 'auto' }}>{ROLE_LABEL[m.role]}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Narrative (optional)</div>
+                  <textarea value={migrationNarrative}
+                    placeholder="e.g. They survived the raid that broke us. They carry our last stockpile of antibiotics — please honor what's left of us."
+                    onChange={e => setMigrationNarrative(e.target.value)}
+                    rows={3}
+                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
+                </div>
+              </div>
+              <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button onClick={closeMigrationModal} disabled={migrationSubmitting}
+                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: migrationSubmitting ? 'not-allowed' : 'pointer', opacity: migrationSubmitting ? 0.4 : 1 }}>
+                  Cancel
+                </button>
+                <button onClick={handleMigration} disabled={migrationSubmitting || !migrationTargetId || migrationPickedIds.size === 0}
+                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (migrationSubmitting || !migrationTargetId || migrationPickedIds.size === 0) ? 'not-allowed' : 'pointer', opacity: (migrationSubmitting || !migrationTargetId || migrationPickedIds.size === 0) ? 0.4 : 1, fontWeight: 600 }}>
+                  {migrationSubmitting ? 'Sending…' : '📤 Send Offers'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Phase E Sprint 4d — Schism modal. Pick a name for the new
           breakaway community + optional homestead pin + which members

@@ -154,6 +154,23 @@ export default function NotificationBell() {
     if (!n.read) markAsRead(n.id)
   }
 
+  async function handleMigrationAction(n: Notification, accepted: boolean) {
+    const migrationId = n.metadata?.migration_id as string | undefined
+    if (!migrationId) return
+    setActingId(n.id)
+    const { error } = await supabase
+      .from('community_migrations')
+      .update({
+        status: accepted ? 'accepted' : 'declined',
+        responded_at: new Date().toISOString(),
+      })
+      .eq('id', migrationId)
+    setActingId(null)
+    if (error) { alert(`Action failed: ${error.message}`); return }
+    setActionedIds(prev => { const next = new Set(prev); next.add(n.id); return next })
+    if (!n.read) markAsRead(n.id)
+  }
+
   async function handleLinkAction(n: Notification, accepted: boolean) {
     const linkId = n.metadata?.link_id as string | undefined
     if (!linkId) return
@@ -246,6 +263,36 @@ export default function NotificationBell() {
             between <span style={{ color: '#EF9F27' }}>"{m[3]}"</span> and your{' '}
             <span style={{ color: '#d48bd4' }}>"{m[4]}"</span>
             {m[5] && <><br /><span style={{ color: '#cce0f5', fontStyle: 'italic' }}>"{m[5]}"</span></>}
+          </>
+        )
+      }
+    }
+    // Phase E Sprint 4e — migration request. Body shape:
+    //   Survivor "<npc>" from "<source>" seeks shelter in your "<target>"[: narrative]
+    if (type === 'community_migration') {
+      const m = body.match(/^Survivor "(.+?)" from "(.+?)" seeks shelter in your "(.+?)"(?::\s*(.+))?$/)
+      if (m) return (
+        <>
+          Survivor <span style={{ color: '#7fc458' }}>"{m[1]}"</span> from{' '}
+          <span style={{ color: '#f5a89a' }}>"{m[2]}"</span> seeks shelter in your{' '}
+          <span style={{ color: '#d48bd4' }}>"{m[3]}"</span>
+          {m[4] && <><br /><span style={{ color: '#cce0f5', fontStyle: 'italic' }}>"{m[4]}"</span></>}
+        </>
+      )
+    }
+    // Phase E Sprint 4e — migration response. Body shape:
+    //   "<target>" accepted|declined "<npc>" from your "<source>"
+    if (type === 'community_migration_response') {
+      const m = body.match(/^"(.+?)" (accepted|declined) "(.+?)" from your "(.+?)"$/)
+      if (m) {
+        const accepted = m[2] === 'accepted'
+        const statusColor = accepted ? '#7fc458' : '#f5a89a'
+        return (
+          <>
+            <span style={{ color: '#d48bd4' }}>"{m[1]}"</span>{' '}
+            <span style={{ color: statusColor, fontWeight: 700, textTransform: 'uppercase' }}>{m[2]}</span>{' '}
+            <span style={{ color: '#7fc458' }}>"{m[3]}"</span> from your{' '}
+            <span style={{ color: '#f5a89a' }}>"{m[4]}"</span>
           </>
         )
       }
@@ -360,25 +407,33 @@ export default function NotificationBell() {
                     what makes the action durable; this UI is a
                     convenience surface so the recipient doesn't have
                     to navigate to the source community to respond. */}
-                {(n.type === 'community_encounter' || n.type === 'community_link_proposal')
+                {(n.type === 'community_encounter' || n.type === 'community_link_proposal' || n.type === 'community_migration')
                   && !actionedIds.has(n.id)
-                  && (n.metadata?.encounter_id || n.metadata?.link_id) && (
+                  && (n.metadata?.encounter_id || n.metadata?.link_id || n.metadata?.migration_id) && (
                   <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }} onClick={e => e.stopPropagation()}>
                     <button
-                      onClick={() => n.type === 'community_encounter' ? handleEncounterAction(n, true) : handleLinkAction(n, true)}
+                      onClick={() => n.type === 'community_encounter'
+                        ? handleEncounterAction(n, true)
+                        : n.type === 'community_link_proposal'
+                          ? handleLinkAction(n, true)
+                          : handleMigrationAction(n, true)}
                       disabled={actingId === n.id}
                       style={{ padding: '4px 12px', background: '#1a2010', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: actingId === n.id ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: actingId === n.id ? 0.4 : 1 }}>
                       ✓ Accept
                     </button>
                     <button
-                      onClick={() => n.type === 'community_encounter' ? handleEncounterAction(n, false) : handleLinkAction(n, false)}
+                      onClick={() => n.type === 'community_encounter'
+                        ? handleEncounterAction(n, false)
+                        : n.type === 'community_link_proposal'
+                          ? handleLinkAction(n, false)
+                          : handleMigrationAction(n, false)}
                       disabled={actingId === n.id}
                       style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: actingId === n.id ? 'not-allowed' : 'pointer', opacity: actingId === n.id ? 0.4 : 1 }}>
                       ✗ Decline
                     </button>
                   </div>
                 )}
-                {actionedIds.has(n.id) && (n.type === 'community_encounter' || n.type === 'community_link_proposal') && (
+                {actionedIds.has(n.id) && (n.type === 'community_encounter' || n.type === 'community_link_proposal' || n.type === 'community_migration') && (
                   <div style={{ marginTop: '6px', fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✓ Responded</div>
                 )}
               </div>
