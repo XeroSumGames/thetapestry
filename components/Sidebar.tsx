@@ -159,7 +159,7 @@ export default function Sidebar() {
       <a href="/characters"  style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Survivors</a>
       <a href="/stories"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Stories</a>
       <a href="/communities" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Communities</a>
-      <a href="#" style={soonStyle}>The Campfire {soonSuffix}</a>
+      <a href="/campfire" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Campfire</a>
 
       {divider}
 

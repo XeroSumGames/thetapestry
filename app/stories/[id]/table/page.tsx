@@ -16,6 +16,7 @@ import PlayerNotes from '../../../../components/PlayerNotes'
 import QuickAddModal from '../../../../components/QuickAddModal'
 import CampaignCommunity from '../../../../components/CampaignCommunity'
 import NotificationBell from '../../../../components/NotificationBell'
+import MessagesBell from '../../../../components/MessagesBell'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
 const CampaignMap = dynamic(() => import('../../../../components/CampaignMap'), { ssr: false })
@@ -5179,7 +5180,7 @@ export default function TablePage() {
         <div style={{ width: '260px', flexShrink: 0, borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ padding: '6px 10px', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
             <div style={{ fontSize: '15px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
-              <span style={{ color: '#c0392b' }}>{myUsername}{isGM ? ' (GM)' : ''}</span><NotificationBell />
+              <span style={{ color: '#c0392b' }}>{myUsername}{isGM ? ' (GM)' : ''}</span><MessagesBell /><NotificationBell />
             </div>
           </div>
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
