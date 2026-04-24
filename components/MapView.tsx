@@ -1383,7 +1383,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
                                       {p.category === 'world_event'
                                         ? (p.event_date ? <span style={{ color: '#EF9F27' }}>{p.event_date}</span> : '')
-                                        : <>{usernames[p.user_id] ? `By ${usernames[p.user_id]}` : ''}{p.created_at ? ` · ${new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}</>
+                                        : <>{usernames[p.user_id] ? `By ${usernames[p.user_id]}` : ''}</>
                                       }
                                     </div>
                                     {pinAttachments[p.id] && pinAttachments[p.id].length > 0 && (
