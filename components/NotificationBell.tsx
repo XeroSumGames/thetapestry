@@ -252,10 +252,12 @@ export default function NotificationBell() {
       const match = body.match(/^(.+?) has grown to (\d+) members — it'?s officially a Community now\.?$/)
       if (match) return <><span style={{ color: '#c0392b' }}>{match[1]}</span> has grown to <span style={{ color: '#EF9F27' }}>{match[2]}</span> members — it's officially a <span style={{ color: '#7fc458' }}>Community</span> now.</>
     }
-    // Phase E Sprint 4a — cross-campaign encounter. Body shape:
-    //   <username>'s campaign "<campaign>" has encountered your community "<community>"[: narrative]
+    // Phase E Sprint 4a — cross-campaign encounter. Body shape (the
+    // trigger emits "encountered" without "has", so match either
+    // form defensively so old + new rows both colorize):
+    //   <username>'s campaign "<campaign>" [has ]encountered your community "<community>"[: narrative]
     if (type === 'community_encounter') {
-      const m = body.match(/^(.+?)'s campaign "(.+?)" has encountered your community "(.+?)"(?::\s*(.+))?$/)
+      const m = body.match(/^(.+?)'s campaign "(.+?)" (?:has )?encountered your community "(.+?)"(?::\s*(.+))?$/)
       if (m) return (
         <>
           <span style={{ color: '#7ab3d4' }}>{m[1]}</span>'s campaign{' '}
@@ -448,7 +450,16 @@ export default function NotificationBell() {
                     </button>
                   </div>
                 </div>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.4, textAlign: 'left', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{colorizeBody(n.body, n.type, (n as any).metadata)}</div>
+                <div style={{
+                  fontSize: '13px', color: '#d4cfc9', lineHeight: 1.4, textAlign: 'left',
+                  // Belt + suspenders — some earlier ancestor CSS was
+                  // still truncating with ellipsis on narrow widths.
+                  // Explicitly force normal wrap, no truncation, and
+                  // clamp to the row width.
+                  display: 'block', width: '100%', maxWidth: '100%', boxSizing: 'border-box',
+                  whiteSpace: 'normal', textOverflow: 'clip',
+                  wordWrap: 'break-word', wordBreak: 'break-word', overflowWrap: 'anywhere',
+                }}>{colorizeBody(n.body, n.type, (n as any).metadata)}</div>
                 {/* Phase E Sprint 4c — inline Accept / Decline. Shown
                     on action-bearing notifications when the user
                     hasn't yet acted on this card in the current
