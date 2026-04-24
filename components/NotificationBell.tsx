@@ -343,6 +343,24 @@ export default function NotificationBell() {
       }
     }
 
+    // Phase E — Thriver-side alert when a published community's
+    // public info is edited (description / faction / homestead /
+    // etc.). metadata.changed_fields is a string[].
+    if (type === 'world_community_updated') {
+      const editor = (metadata as any)?.editor_username as string | undefined
+      const name = (metadata as any)?.name as string | undefined
+      const fields = (metadata as any)?.changed_fields as string[] | undefined
+      if (editor && name && fields) {
+        return (
+          <>
+            <span style={{ color: '#7fc458' }}>{editor}</span> updated public info on{' '}
+            <span style={{ color: '#d48bd4' }}>"{name}"</span>{' '}
+            (<span style={{ color: '#EF9F27' }}>{fields.join(', ')}</span>).
+          </>
+        )
+      }
+    }
+
     // Phase E Sprint 4b — link response. Body shape:
     //   "<recipient>" <status> your <type> proposal with "<proposer>"
     if (type === 'community_link_response') {
