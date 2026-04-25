@@ -41,26 +41,31 @@ const DISPOSITION_COLORS: Record<string, { border: string; bg: string; color: st
   neutral:  { border: '#3a3a3a', bg: '#2e2e2e', color: '#d4cfc9' },
   hostile:  { border: '#c0392b', bg: '#2a1210', color: '#f5a89a' },
 }
-export function getNpcRingColor(disposition: string | null | undefined): { border: string; bg: string; color: string } {
-  return DISPOSITION_COLORS[disposition ?? 'neutral'] ?? DISPOSITION_COLORS.neutral
+// Single source-of-truth for NPC ring/border colors used by both the
+// roster cards (border around the portrait) and the tactical map
+// tokens (border around the token). Disposition wins when set; falls
+// back to npc_type when disposition is unset/empty so legacy or
+// setting-imported NPCs that never had an explicit disposition still
+// show the right threat signal. Both surfaces use this helper so a
+// friendly NPC can never look green on the map and red on the roster
+// (or vice versa) — they're always rendered from the same palette.
+export function getNpcRingColor(npc: { disposition?: string | null; npc_type?: string | null } | string | null | undefined): { border: string; bg: string; color: string } {
+  // Back-compat: callers used to pass just the disposition string.
+  const obj = (typeof npc === 'object' && npc !== null) ? npc : { disposition: (npc ?? null) as string | null, npc_type: null }
+  const d = obj.disposition
+  if (d === 'friendly') return DISPOSITION_COLORS.friendly
+  if (d === 'hostile')  return DISPOSITION_COLORS.hostile
+  if (d === 'neutral')  return DISPOSITION_COLORS.neutral
+  // disposition unset → infer from type
+  const t = (obj.npc_type ?? '').toLowerCase()
+  if (t === 'bystander' || t === 'friendly')             return DISPOSITION_COLORS.friendly
+  if (t === 'foe' || t === 'goon' || t === 'antagonist') return DISPOSITION_COLORS.hostile
+  return DISPOSITION_COLORS.neutral
 }
 
-// Token border color for NPCs on the tactical map. Disposition wins when
-// set, but a lot of legacy / setting-imported NPCs have disposition=null
-// while their npc_type carries the threat signal — falling back to type
-// keeps Foes/Goons/Antagonists red instead of regressing them to neutral
-// gray. Final fallback is the original hardcoded red so nothing that was
-// ever rendered as red goes silent.
+// Convenience for token rendering — keeps existing call sites short.
 export function getNpcTokenBorderColor(npc: { disposition?: string | null; npc_type?: string | null }): string {
-  const d = npc.disposition
-  if (d === 'friendly') return DISPOSITION_COLORS.friendly.border
-  if (d === 'hostile')  return DISPOSITION_COLORS.hostile.border
-  if (d === 'neutral')  return DISPOSITION_COLORS.neutral.border
-  // disposition unset → infer from type
-  const t = (npc.npc_type ?? '').toLowerCase()
-  if (t === 'bystander' || t === 'friendly')               return DISPOSITION_COLORS.friendly.border
-  if (t === 'foe' || t === 'goon' || t === 'antagonist')   return DISPOSITION_COLORS.hostile.border
-  return DISPOSITION_COLORS.hostile.border
+  return getNpcRingColor(npc).border
 }
 
 // Placeholder silhouette portraits by type. Clicking one sets
@@ -1012,11 +1017,14 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>}
                     </div>
                   </div>
-                  {/* Right: portrait — ring color = disposition
-                      (friendly green / neutral gray / hostile red).
-                      Set via the disposition picker in Edit NPC. */}
+                  {/* Right: portrait — ring color comes from disposition
+                      first, npc_type as a fallback (so a Foe-typed NPC
+                      with no explicit disposition still rings red, a
+                      Bystander rings green, etc.). Same helper drives
+                      the tactical-map token border so the two surfaces
+                      can never disagree. */}
                   {(() => {
-                    const ring = getNpcRingColor(npc.disposition)
+                    const ring = getNpcRingColor(npc)
                     return (
                       <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: ring.bg, border: `2px solid ${ring.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                         {npc.portrait_url ? (
@@ -1228,7 +1236,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                 picks a type. Placeholder bank lets them pick a
                 colored silhouette as the INSIDE image. */}
             {(() => {
-              const ring = getNpcRingColor(form.disposition || null)
+              const ring = getNpcRingColor({ disposition: form.disposition || null, npc_type: form.npc_type || null })
               return (
                 <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: ring.bg, border: `2px solid ${ring.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
