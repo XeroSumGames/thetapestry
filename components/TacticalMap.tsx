@@ -28,6 +28,11 @@ interface Token {
   destroyed_portrait_url: string | null
   grid_x: number
   grid_y: number
+  // Multi-cell footprint (objects only — defaults to 1×1). Lets a wide
+  // truck or long wall actually occupy the cells it covers, instead of
+  // visually overflowing a single-cell anchor.
+  grid_w: number
+  grid_h: number
   is_visible: boolean
   color: string
   wp_max: number | null
@@ -544,9 +549,15 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     let hasActiveAnim = false
     toks.forEach(t => {
       if (!t.is_visible && !isGM) return
+      // Multi-cell footprint (objects only — defaults to 1×1). The
+      // anchor cell stays (grid_x, grid_y); the visual is centered on
+      // the rectangle's midpoint so a 5×2 truck covers the cells it
+      // says it does.
+      const gw = t.grid_w ?? 1
+      const gh = t.grid_h ?? 1
       // Dragged token follows cursor
-      const targetPxX = offsetX + t.grid_x * cellSize + cellSize / 2
-      const targetPxY = offsetY + t.grid_y * cellSize + cellSize / 2
+      const targetPxX = offsetX + (t.grid_x + gw / 2) * cellSize
+      const targetPxY = offsetY + (t.grid_y + gh / 2) * cellSize
       let cx = targetPxX
       let cy = targetPxY
       const isBeingDragged = dragging?.tokenId === t.id && dragPosRef.current
@@ -634,26 +645,38 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       const activePortraitUrl = useDestroyedArt ? t.destroyed_portrait_url : t.portrait_url
       const portraitImg = activePortraitUrl ? portraitCacheRef.current.get(activePortraitUrl) : null
       if (isObject) {
-        // Object token. With an image, render at the image's natural
-        // aspect ratio so a wide truck (5:2) doesn't get squished into a
-        // square. The long edge fills `radius * 2`; the short edge
-        // shrinks proportionally. GM scales up via scale slider when
-        // they want the token to span multiple cells visually.
-        const half = radius
-        if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
+        // Object token footprint: gw × gh cells × scale. For multi-cell
+        // objects (gw or gh > 1) the GM has explicitly sized the token,
+        // so the image fills that exact rectangle (stretches if the
+        // chosen dimensions don't match the image aspect). For 1×1
+        // objects with an image, we preserve the image's natural aspect
+        // within the cell so a wide truck dropped at 1×1 doesn't look
+        // deformed.
+        const isMultiCell = gw > 1 || gh > 1
+        let drawW: number
+        let drawH: number
+        if (isMultiCell) {
+          drawW = gw * cellSize * tokenScale
+          drawH = gh * cellSize * tokenScale
+        } else if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
           const aspect = portraitImg.naturalWidth / portraitImg.naturalHeight
-          const drawW = aspect >= 1 ? half * 2 : half * 2 * aspect
-          const drawH = aspect >= 1 ? (half * 2) / aspect : half * 2
+          drawW = aspect >= 1 ? radius * 2 : radius * 2 * aspect
+          drawH = aspect >= 1 ? (radius * 2) / aspect : radius * 2
+        } else {
+          drawW = radius * 2
+          drawH = radius * 2
+        }
+        if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
           ctx.drawImage(portraitImg, cx - drawW / 2, cy - drawH / 2, drawW, drawH)
           ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : '#EF9F27'
           ctx.lineWidth = selectedToken === t.id ? 3 : 1.5
           ctx.strokeRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
         } else {
           ctx.fillStyle = t.is_visible ? (t.color || '#EF9F27') : 'rgba(239,159,39,0.3)'
-          ctx.fillRect(cx - half, cy - half, half * 2, half * 2)
+          ctx.fillRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
           ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,0.6)'
           ctx.lineWidth = selectedToken === t.id ? 3 : 1
-          ctx.strokeRect(cx - half, cy - half, half * 2, half * 2)
+          ctx.strokeRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
           // Emoji or initials
           ctx.fillStyle = '#f5f2ee'
           ctx.font = `${Math.max(12, radius * 1.2)}px sans-serif`
@@ -885,7 +908,15 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   }
 
   function getTokenAt(gx: number, gy: number): Token | undefined {
-    return tokens.find(t => t.grid_x === gx && t.grid_y === gy && (t.is_visible || isGM))
+    // Multi-cell objects cover (grid_x, grid_y) through (+gw-1, +gh-1).
+    // Clicking ANY cell in that footprint selects the token. PCs/NPCs
+    // (gw=gh=1) collapse to the original exact-cell match.
+    return tokens.find(t => {
+      if (!(t.is_visible || isGM)) return false
+      const gw = t.grid_w ?? 1
+      const gh = t.grid_h ?? 1
+      return gx >= t.grid_x && gx < t.grid_x + gw && gy >= t.grid_y && gy < t.grid_y + gh
+    })
   }
 
   function handleMouseDown(e: React.MouseEvent) {
@@ -1545,6 +1576,31 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
                     style={{ flex: 1, accentColor: '#EF9F27', cursor: 'pointer' }} />
                   <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', width: '28px', textAlign: 'right' }}>{(tok.rotation ?? 0).toFixed(0)}°</span>
                 </div>
+                {/* Multi-cell footprint controls — objects only. PCs/NPCs
+                    are always 1×1 (their visual is already cell-sized
+                    via the scale slider). */}
+                {tok.token_type === 'object' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', width: '30px' }}>Cells</span>
+                    <input type="number" min={1} max={20} step={1} value={tok.grid_w ?? 1}
+                      title="Width in cells"
+                      onChange={async e => {
+                        const v = Math.max(1, Math.min(20, parseInt(e.target.value, 10) || 1))
+                        setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, grid_w: v } : t))
+                        await supabase.from('scene_tokens').update({ grid_w: v }).eq('id', tok.id)
+                      }}
+                      style={{ width: '46px', padding: '2px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center' }} />
+                    <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>×</span>
+                    <input type="number" min={1} max={20} step={1} value={tok.grid_h ?? 1}
+                      title="Height in cells"
+                      onChange={async e => {
+                        const v = Math.max(1, Math.min(20, parseInt(e.target.value, 10) || 1))
+                        setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, grid_h: v } : t))
+                        await supabase.from('scene_tokens').update({ grid_h: v }).eq('id', tok.id)
+                      }}
+                      style={{ width: '46px', padding: '2px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center' }} />
+                  </div>
+                )}
               </div>
             )}
           </div>
