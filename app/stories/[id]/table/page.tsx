@@ -2072,14 +2072,45 @@ export default function TablePage() {
   // Mirrors placeFolderOnMap so the per-folder Map/Unmap toggle is
   // perfectly symmetric. Single broadcast at the end.
   async function unmapFolderFromMap(npcsToRemove: { id: string }[]) {
-    console.log('[unmapFolder] start, count=', npcsToRemove.length)
+    console.log('[unmapFolder] start, count=', npcsToRemove.length, 'ids=', npcsToRemove.map(n => n.id))
     if (npcsToRemove.length === 0) return
     const { data: activeScene, error: sceneErr } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
     if (sceneErr || !activeScene) { alert('No active tactical scene.'); return }
     const npcIds = npcsToRemove.map(n => n.id)
-    const { error } = await supabase.from('scene_tokens').delete().eq('scene_id', activeScene.id).in('npc_id', npcIds)
+    // Diagnostic: which tokens actually match BEFORE we try to delete?
+    // If this returns 0, the issue is scene/npc id mismatch (probably
+    // tokens placed under a different active scene). If it returns N
+    // but DELETE removes 0, RLS is silently blocking — the row count
+    // from the DELETE's .select() returns the genuinely-deleted rows.
+    const { data: matchingTokens } = await supabase
+      .from('scene_tokens')
+      .select('id, name, scene_id, npc_id')
+      .eq('scene_id', activeScene.id)
+      .in('npc_id', npcIds)
+    console.log('[unmapFolder] active scene', activeScene.id, 'matching tokens BEFORE delete:', matchingTokens?.length ?? 0, matchingTokens)
+    // Look across the WHOLE campaign — if tokens exist for these npc_ids
+    // but in OTHER scenes, that's why the active-scene-scoped delete
+    // returned 0. Surface this so the GM can switch scenes / decide.
+    const { data: anywhereTokens } = await supabase
+      .from('scene_tokens')
+      .select('id, scene_id, npc_id')
+      .in('npc_id', npcIds)
+    if ((anywhereTokens?.length ?? 0) > 0 && (matchingTokens?.length ?? 0) === 0) {
+      const scenes = Array.from(new Set((anywhereTokens ?? []).map((t: any) => t.scene_id)))
+      alert(`These NPCs have ${anywhereTokens!.length} token(s) on the map, but in a different scene than the active one (active=${activeScene.id}, found-on=${scenes.join(', ')}). Switch to that scene and try again.`)
+      return
+    }
+    const { data: deleted, error } = await supabase
+      .from('scene_tokens')
+      .delete()
+      .eq('scene_id', activeScene.id)
+      .in('npc_id', npcIds)
+      .select('id')
     if (error) { console.error('[unmapFolder] error:', error.message); alert('Failed to unmap: ' + error.message); return }
-    console.log('[unmapFolder] deleted tokens for npc ids', npcIds)
+    console.log('[unmapFolder] DELETE returned', deleted?.length ?? 0, 'row(s):', deleted)
+    if ((deleted?.length ?? 0) === 0 && (matchingTokens?.length ?? 0) > 0) {
+      alert(`Found ${matchingTokens!.length} token(s) but DELETE returned 0 rows — RLS is silently blocking the delete. Check sql/scene-tokens-player-update-objects.sql or similar policies.`)
+    }
     setTokenRefreshKey(k => k + 1)
     await refreshMapTokenIds()
     initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
