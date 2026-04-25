@@ -8,12 +8,21 @@ import { createClient } from '../../../lib/supabase-browser'
 // manage their own posts. Optional campaign tag surfaces which story each
 // came from.
 
+interface Attachment {
+  name: string
+  path: string
+  url: string
+  size?: number
+  type?: string
+}
+
 interface Story {
   id: string
   author_user_id: string
   campaign_id: string | null
   title: string
   body: string
+  attachments: Attachment[]
   created_at: string
   updated_at: string
 }
@@ -22,6 +31,9 @@ interface StoryWithMeta extends Story {
   author_username: string
   campaign_name: string | null
 }
+
+const BUCKET = 'war-stories'
+const IMAGE_RE = /\.(png|jpe?g|gif|webp|svg)$/i
 
 export default function WarStoriesPage() {
   const supabase = createClient()
@@ -36,6 +48,11 @@ export default function WarStoriesPage() {
   const [draft, setDraft] = useState<{ title: string; body: string; campaign_id: string }>({
     title: '', body: '', campaign_id: '',
   })
+  // Composer attachment state. `newFiles` = picks waiting to upload on save;
+  // `existingAttachments` = files already saved on the story being edited
+  // (so the editor can remove them). Fresh-post flow only uses newFiles.
+  const [newFiles, setNewFiles] = useState<File[]>([])
+  const [existingAttachments, setExistingAttachments] = useState<Attachment[]>([])
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -86,6 +103,7 @@ export default function WarStoriesPage() {
 
     setStories(list.map(s => ({
       ...s,
+      attachments: Array.isArray(s.attachments) ? s.attachments : [],
       author_username: nameMap[s.author_user_id] ?? 'Unknown',
       campaign_name: s.campaign_id ? (campMap[s.campaign_id] ?? null) : null,
     })))
@@ -95,12 +113,16 @@ export default function WarStoriesPage() {
   function startCompose() {
     setEditingId(null)
     setDraft({ title: '', body: '', campaign_id: '' })
+    setNewFiles([])
+    setExistingAttachments([])
     setComposing(true)
   }
 
   function startEdit(s: StoryWithMeta) {
     setEditingId(s.id)
     setDraft({ title: s.title, body: s.body, campaign_id: s.campaign_id ?? '' })
+    setNewFiles([])
+    setExistingAttachments(Array.isArray(s.attachments) ? s.attachments : [])
     setComposing(true)
   }
 
@@ -112,21 +134,70 @@ export default function WarStoriesPage() {
       body: draft.body.trim(),
       campaign_id: draft.campaign_id || null,
     }
+
+    // Determine the story id we'll upload attachments under. For edits the
+    // id is known; for new posts we insert first and take the returned id.
+    let storyId: string
     if (editingId) {
       const { error } = await supabase.from('war_stories').update(payload).eq('id', editingId)
       if (error) { alert('Error: ' + error.message); setSaving(false); return }
+      storyId = editingId
     } else {
-      const { error } = await supabase.from('war_stories').insert({ ...payload, author_user_id: myId })
-      if (error) { alert('Error: ' + error.message); setSaving(false); return }
+      const { data, error } = await supabase.from('war_stories')
+        .insert({ ...payload, author_user_id: myId, attachments: [] })
+        .select('id').single()
+      if (error || !data) { alert('Error: ' + (error?.message ?? 'unknown')); setSaving(false); return }
+      storyId = data.id
     }
+
+    // Upload each picked file to <author>/<story>/<filename>. upsert:true
+    // lets an editor overwrite a same-named file instead of erroring.
+    const uploaded: Attachment[] = []
+    for (const file of newFiles) {
+      const path = `${myId}/${storyId}/${file.name}`
+      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true })
+      if (upErr) { alert(`Upload failed for ${file.name}: ${upErr.message}`); continue }
+      const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(path)
+      uploaded.push({ name: file.name, path, url: urlData.publicUrl, size: file.size, type: file.type })
+    }
+
+    // Merge existing (minus any the editor removed) + newly-uploaded.
+    const merged = [...existingAttachments, ...uploaded]
+    const { error: patchErr } = await supabase.from('war_stories')
+      .update({ attachments: merged })
+      .eq('id', storyId)
+    if (patchErr) { alert('Failed to save attachments: ' + patchErr.message) }
+
     setSaving(false)
     setComposing(false)
     setEditingId(null)
+    setNewFiles([])
+    setExistingAttachments([])
     await loadStories()
+  }
+
+  // When editing, let the author drop an attachment. Removes from the
+  // bucket first, then from the local `existingAttachments` list — the
+  // subsequent save writes the updated list to the attachments column.
+  async function removeExistingAttachment(att: Attachment) {
+    if (!confirm(`Remove "${att.name}" from this story?`)) return
+    const { error } = await supabase.storage.from(BUCKET).remove([att.path])
+    if (error) { alert('Error: ' + error.message); return }
+    setExistingAttachments(prev => prev.filter(a => a.path !== att.path))
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this War Story?')) return
+    // Best-effort cleanup of the bucket folder. Stories whose attachments
+    // column is already empty just skip this. We do this BEFORE the row
+    // delete so RLS still sees the author as the owner.
+    const story = stories.find(s => s.id === id)
+    if (story && Array.isArray(story.attachments) && story.attachments.length > 0) {
+      const paths = story.attachments.map(a => a.path).filter(Boolean)
+      if (paths.length > 0) {
+        await supabase.storage.from(BUCKET).remove(paths)
+      }
+    }
     const { error } = await supabase.from('war_stories').delete().eq('id', id)
     if (error) { alert('Error: ' + error.message); return }
     await loadStories()
@@ -196,6 +267,44 @@ export default function WarStoriesPage() {
               </select>
             </div>
           )}
+          <div style={{ marginBottom: '12px' }}>
+            <label style={lbl}>Attachments (optional)</label>
+            {/* Existing (edit-only). Each row has a × to remove; removal
+                deletes from the bucket immediately so the on-save merge
+                picks up the new list correctly. */}
+            {existingAttachments.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginBottom: '6px' }}>
+                {existingAttachments.map(att => {
+                  const isImg = IMAGE_RE.test(att.name)
+                  return (
+                    <div key={att.path} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                      {isImg && <img src={att.url} alt="" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '2px' }} />}
+                      <a href={att.url} target="_blank" rel="noreferrer" style={{ flex: 1, fontSize: '13px', color: '#b87333', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.name}</a>
+                      <button onClick={() => removeExistingAttachment(att)}
+                        style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '15px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>×</button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            {/* Picker for new files (staged until save). */}
+            <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
+              {newFiles.length > 0
+                ? <span style={{ color: '#7fc458' }}>{newFiles.length} file{newFiles.length > 1 ? 's' : ''} staged</span>
+                : '+ Add files (images, PDFs, etc.)'}
+              <input type="file" multiple hidden onChange={e => {
+                if (e.target.files) setNewFiles(prev => [...prev, ...Array.from(e.target.files!)])
+                e.target.value = ''
+              }} />
+            </label>
+            {newFiles.map((f, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3px 8px', marginTop: '3px', fontSize: '13px', color: '#cce0f5', background: '#1f1f1f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+                <button onClick={() => setNewFiles(prev => prev.filter((_, j) => j !== i))}
+                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '14px', cursor: 'pointer', padding: '0 4px' }}>×</button>
+              </div>
+            ))}
+          </div>
           <div style={{ display: 'flex', gap: '6px' }}>
             <button onClick={handleSave} disabled={!draft.title.trim() || !draft.body.trim() || saving}
               style={{ flex: 1, padding: '9px', background: '#3a2516', border: '1px solid #b87333', borderRadius: '3px', color: '#b87333', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: saving ? 'wait' : 'pointer', opacity: (!draft.title.trim() || !draft.body.trim()) ? 0.5 : 1 }}>
@@ -238,9 +347,31 @@ export default function WarStoriesPage() {
                     </>
                   )}
                 </div>
-                <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: isMine ? '12px' : 0 }}>
+                <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: (s.attachments.length > 0 || isMine) ? '12px' : 0 }}>
                   {s.body}
                 </div>
+                {/* Attachments. Images render as clickable thumbnails
+                    (open full-size in new tab); non-images show as a
+                    download-link pill. The 240px max width keeps a row of
+                    thumbnails tidy when there are several. */}
+                {s.attachments.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: isMine ? '12px' : 0 }}>
+                    {s.attachments.map(att => {
+                      const isImg = IMAGE_RE.test(att.name)
+                      return isImg ? (
+                        <a key={att.path} href={att.url} target="_blank" rel="noreferrer" title={att.name}
+                          style={{ display: 'block', width: '240px', maxWidth: '100%', border: '1px solid #2e2e2e', borderRadius: '4px', overflow: 'hidden', background: '#0f0f0f' }}>
+                          <img src={att.url} alt={att.name} style={{ display: 'block', width: '100%', height: 'auto', maxHeight: '360px', objectFit: 'contain' }} />
+                        </a>
+                      ) : (
+                        <a key={att.path} href={att.url} target="_blank" rel="noreferrer"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b87333', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+                          📎 {att.name}
+                        </a>
+                      )
+                    })}
+                  </div>
+                )}
                 {isMine && (
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button onClick={() => startEdit(s)}
