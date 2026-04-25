@@ -7,6 +7,7 @@ import { SETTING_PINS } from '../../../lib/setting-pins'
 import { SETTING_NPCS } from '../../../lib/setting-npcs'
 import { SETTING_SCENES } from '../../../lib/setting-scenes'
 import { SETTING_HANDOUTS } from '../../../lib/setting-handouts'
+import { SETTING_VEHICLES } from '../../../lib/setting-vehicles'
 import { STORY_SETTING_OPTIONS } from '../../../lib/settings'
 import { listAvailableModules, cloneModuleIntoCampaign, type ModuleListing } from '../../../lib/modules'
 
@@ -153,6 +154,20 @@ export default function NewCampaignPage() {
       }))
       const { error: sceneErr } = await supabase.from('tactical_scenes').insert(sceneRows)
       if (sceneErr) seedErrors.push(`scenes: ${sceneErr.message}`)
+    }
+
+    // ── Seed Vehicles ──
+    // campaigns.vehicles is a jsonb array; we just write the seed list
+    // straight onto the row. Without this, settings that ship with a
+    // starting vehicle (e.g. Mongrels → Minnie) would render an empty
+    // Vehicles panel and the popout would show nothing.
+    const settingVehicles = SETTING_VEHICLES[setting]
+    if (settingVehicles && settingVehicles.length > 0) {
+      const { error: vehErr } = await supabase
+        .from('campaigns')
+        .update({ vehicles: settingVehicles })
+        .eq('id', data.id)
+      if (vehErr) seedErrors.push(`vehicles: ${vehErr.message}`)
     }
 
     // ── Seed Handouts: DB first, fallback to TS ──
