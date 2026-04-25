@@ -51,6 +51,9 @@ export default function LfgPage() {
     kind: 'gm_seeking_players', title: '', body: '', setting: '', schedule: '',
   })
   const [saving, setSaving] = useState(false)
+  // Which post's Share popover is open (id) and per-post copy-confirmation flash.
+  const [shareOpenId, setShareOpenId] = useState<string | null>(null)
+  const [copiedFlash, setCopiedFlash] = useState<string | null>(null)
 
   useEffect(() => {
     async function init() {
@@ -61,6 +64,64 @@ export default function LfgPage() {
     }
     init()
   }, [])
+
+  // After the first render that includes posts, if the URL has a hash like
+  // #lfg-<id>, scroll the matching card into view and flash a highlight ring.
+  // Done in a one-shot effect keyed on `loading` flipping to false so we
+  // don't fight the user's manual scroll later.
+  useEffect(() => {
+    if (loading) return
+    const hash = typeof window !== 'undefined' ? window.location.hash : ''
+    if (!hash || !hash.startsWith('#lfg-')) return
+    const el = document.getElementById(hash.slice(1))
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.style.transition = 'box-shadow .4s'
+      el.style.boxShadow = '0 0 0 2px #7ab3d4'
+      setTimeout(() => { el.style.boxShadow = '' }, 1600)
+    }
+  }, [loading])
+
+  // Close the Share popover on outside click.
+  useEffect(() => {
+    if (!shareOpenId) return
+    function onDoc(e: MouseEvent) {
+      const t = e.target as HTMLElement
+      if (!t.closest('[data-share-root]')) setShareOpenId(null)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [shareOpenId])
+
+  function postUrl(postId: string) {
+    if (typeof window === 'undefined') return ''
+    return `${window.location.origin}/campfire/lfg#lfg-${postId}`
+  }
+
+  function shareText(p: PostWithAuthor) {
+    return `${KIND_LABEL[p.kind]} on The Tapestry — ${p.title}`
+  }
+
+  async function copyLink(p: PostWithAuthor) {
+    const url = postUrl(p.id)
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiedFlash(p.id)
+      setTimeout(() => setCopiedFlash(prev => (prev === p.id ? null : prev)), 1600)
+    } catch {
+      window.prompt('Copy this link:', url)
+    }
+  }
+
+  function shareTo(target: 'reddit' | 'twitter' | 'facebook', p: PostWithAuthor) {
+    const url = encodeURIComponent(postUrl(p.id))
+    const title = encodeURIComponent(shareText(p))
+    let href = ''
+    if (target === 'reddit')   href = `https://www.reddit.com/submit?url=${url}&title=${title}`
+    if (target === 'twitter')  href = `https://twitter.com/intent/tweet?text=${title}&url=${url}`
+    if (target === 'facebook') href = `https://www.facebook.com/sharer/sharer.php?u=${url}`
+    window.open(href, '_blank', 'noopener,noreferrer,width=640,height=720')
+  }
 
   async function loadPosts() {
     setLoading(true)
@@ -147,6 +208,12 @@ export default function LfgPage() {
     display: 'block', fontSize: '13px', color: '#cce0f5',
     fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', marginBottom: '4px',
+  }
+  const shareItemStyle: React.CSSProperties = {
+    display: 'block', width: '100%', padding: '7px 12px', background: 'none',
+    border: 'none', color: '#d4cfc9', fontSize: '13px',
+    fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
+    textTransform: 'uppercase', cursor: 'pointer', textAlign: 'left',
   }
 
   return (
@@ -249,7 +316,7 @@ export default function LfgPage() {
             const isMine = p.author_user_id === myId
             const accent = KIND_ACCENT[p.kind]
             return (
-              <div key={p.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${accent}`, borderRadius: '4px', padding: '1rem 1.25rem' }}>
+              <div key={p.id} id={`lfg-${p.id}`} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${accent}`, borderRadius: '4px', padding: '1rem 1.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
                   <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', color: accent, letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700 }}>
                     {KIND_LABEL[p.kind]}
@@ -279,7 +346,7 @@ export default function LfgPage() {
                     )}
                   </div>
                 )}
-                <div style={{ display: 'flex', gap: '6px' }}>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                   {!isMine && (
                     <a href={`/messages?dm=${p.author_user_id}`}
                       style={{ padding: '6px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
@@ -298,6 +365,34 @@ export default function LfgPage() {
                       </button>
                     </>
                   )}
+                  {/* Share popover. Anchored relative to the trigger so the
+                      menu opens directly beneath it; closes on outside click
+                      via the document-level mousedown handler above. */}
+                  <div data-share-root style={{ position: 'relative' }}>
+                    <button onClick={() => setShareOpenId(prev => prev === p.id ? null : p.id)}
+                      style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      🔗 Share
+                    </button>
+                    {shareOpenId === p.id && (
+                      <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 10, minWidth: '180px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', boxShadow: '0 4px 12px rgba(0,0,0,.5)', padding: '4px', display: 'flex', flexDirection: 'column' }}>
+                        <button onClick={() => copyLink(p)} style={shareItemStyle}>
+                          📋 {copiedFlash === p.id ? 'Copied!' : 'Copy Link'}
+                        </button>
+                        <button onClick={() => { copyLink(p); }} title="Discord has no share-intent URL — paste this link into your channel; Discord will auto-render a preview." style={shareItemStyle}>
+                          💬 Discord (Copy)
+                        </button>
+                        <button onClick={() => shareTo('reddit', p)} style={shareItemStyle}>
+                          🟠 Reddit
+                        </button>
+                        <button onClick={() => shareTo('twitter', p)} style={shareItemStyle}>
+                          ✕ X (Twitter)
+                        </button>
+                        <button onClick={() => shareTo('facebook', p)} style={shareItemStyle}>
+                          🔵 Facebook
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )
