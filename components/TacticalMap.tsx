@@ -1148,9 +1148,15 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     if (!pos) return
     const tok = getTokenAt(pos.gx, pos.gy)
     if (tok && onTokenClick) { onTokenClick(tok); return }
-    // Ping is now a press-and-hold gesture (playtest #31). The old double-
-    // click-to-ping branch was removed — accidental double-clicks on empty
-    // cells were firing pings the user didn't intend. Hold ~600ms to ping.
+    // Alt+double-click on an empty cell → ping. Press-and-hold (600ms) is
+    // still the primary ping gesture (playtest #31 removed bare double-
+    // click ping because accidental doubles fired pings unintended). The
+    // Alt modifier makes the express path deliberate.
+    if (e.altKey) {
+      const color = isGM ? '#EF9F27' : '#7fc458'
+      setPing({ gx: pos.gx, gy: pos.gy, t: 0, color, count: 2 })
+      pingChannelRef.current?.send({ type: 'broadcast', event: 'gm_ping', payload: { gx: pos.gx, gy: pos.gy, color } })
+    }
   }
 
   // Scene management

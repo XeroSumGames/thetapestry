@@ -630,18 +630,19 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     loadRevealed()
   }, [npcs, pcEntries])
 
-  async function revealAllNpcs() {
-    if (!pcEntries || pcEntries.length === 0 || npcs.length === 0) return
-    const npcIds = npcs.map(n => n.id)
-    // Fetch existing relationships in one round trip.
+  // Bulk reveal/hide helpers. Both Show-All / Hide-All buttons and the
+  // per-folder Show/Hide buttons delegate here so the npc_relationships +
+  // scene_tokens update logic lives in one place.
+  async function revealNpcsByIds(npcIds: string[]) {
+    if (!pcEntries || pcEntries.length === 0 || npcIds.length === 0) return
     const { data: existing } = await supabase.from('npc_relationships').select('id, npc_id, character_id').in('npc_id', npcIds)
     const seen = new Set<string>((existing ?? []).map((r: any) => `${r.npc_id}|${r.character_id}`))
     const updates = (existing ?? []).map((r: any) => r.id)
     const inserts: any[] = []
-    for (const npc of npcs) {
+    for (const npcId of npcIds) {
       for (const pc of pcEntries) {
-        const key = `${npc.id}|${pc.characterId}`
-        if (!seen.has(key)) inserts.push({ npc_id: npc.id, character_id: pc.characterId, relationship_cmod: 0, revealed: true, reveal_level: 'name_portrait' })
+        const key = `${npcId}|${pc.characterId}`
+        if (!seen.has(key)) inserts.push({ npc_id: npcId, character_id: pc.characterId, relationship_cmod: 0, revealed: true, reveal_level: 'name_portrait' })
       }
     }
     if (updates.length > 0) {
@@ -650,18 +651,31 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     if (inserts.length > 0) {
       await supabase.from('npc_relationships').insert(inserts)
     }
-    setRevealedNpcIds(new Set(npcIds))
-    // Show all NPC tokens on tactical map
+    setRevealedNpcIds(prev => {
+      const next = new Set(prev)
+      for (const id of npcIds) next.add(id)
+      return next
+    })
     await supabase.from('scene_tokens').update({ is_visible: true }).in('npc_id', npcIds)
   }
 
-  async function hideAllNpcs() {
-    if (npcs.length === 0) return
-    const npcIds = npcs.map(n => n.id)
+  async function hideNpcsByIds(npcIds: string[]) {
+    if (npcIds.length === 0) return
     await supabase.from('npc_relationships').update({ revealed: false, reveal_level: null }).in('npc_id', npcIds)
-    setRevealedNpcIds(new Set())
-    // Hide all NPC tokens on tactical map
+    setRevealedNpcIds(prev => {
+      const next = new Set(prev)
+      for (const id of npcIds) next.delete(id)
+      return next
+    })
     await supabase.from('scene_tokens').update({ is_visible: false }).in('npc_id', npcIds)
+  }
+
+  async function revealAllNpcs() {
+    await revealNpcsByIds(npcs.map(n => n.id))
+  }
+
+  async function hideAllNpcs() {
+    await hideNpcsByIds(npcs.map(n => n.id))
   }
 
   async function quickReveal(npcId: string, e: React.MouseEvent) {
@@ -1072,6 +1086,28 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       ) : (
                         <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{folderName}</span>
                       )}
+                      {/* Per-folder reveal toggle. "Hide" if every NPC in
+                          the folder is currently revealed; otherwise "Show"
+                          (which also covers a partially-revealed folder —
+                          one click brings the rest in). stopPropagation so
+                          clicking the button doesn't also collapse the
+                          folder. */}
+                      {pcEntries && pcEntries.length > 0 && folderNpcs.length > 0 && (() => {
+                        const folderIds = folderNpcs.map(n => n.id)
+                        const allRevealed = folderIds.every(id => revealedNpcIds.has(id))
+                        const label = allRevealed ? 'Hide' : 'Show'
+                        return (
+                          <button onClick={e => {
+                            e.stopPropagation()
+                            if (allRevealed) hideNpcsByIds(folderIds)
+                            else revealNpcsByIds(folderIds)
+                          }}
+                            title={allRevealed ? `Hide all ${folderNpcs.length} NPCs in this folder` : `Reveal all ${folderNpcs.length} NPCs in this folder`}
+                            style={{ padding: '1px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
+                            {label}
+                          </button>
+                        )
+                      })()}
                       <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{folderNpcs.length}</span>
                     </div>
                     {isOpen && folderNpcs.map(renderNpcCard)}
