@@ -63,9 +63,30 @@ export function getNpcRingColor(npc: { disposition?: string | null; npc_type?: s
   return DISPOSITION_COLORS.neutral
 }
 
-// Convenience for token rendering — keeps existing call sites short.
+// Token rings on the tactical map render at small size against busy
+// background art (terrain, buildings, etc.) and need to read at a
+// glance — use brighter variants of the disposition palette than the
+// roster cards. Friendly = vivid green, Hostile = vivid red, Neutral =
+// medium gray. Roster cards keep the dimmer base palette since they
+// sit on a flat dark UI background where the muted tones work fine.
+const TOKEN_BORDER_OVERRIDES: Record<string, string> = {
+  '#2d5a1b': '#4ade80', // friendly: forest green → vivid green
+  '#c0392b': '#ef4444', // hostile: brand red → vivid red
+  '#3a3a3a': '#9ca3af', // neutral: dark → medium gray
+}
+
 export function getNpcTokenBorderColor(npc: { disposition?: string | null; npc_type?: string | null }): string {
-  return getNpcRingColor(npc).border
+  const base = getNpcRingColor(npc).border
+  return TOKEN_BORDER_OVERRIDES[base] ?? base
+}
+
+// Brightens a stored token color (from scene_tokens.color) to its vivid
+// map variant. Lets the canvas render legacy tokens placed before the
+// vivid-palette switch without a DB migration — anything that doesn't
+// match a known muted hex passes through unchanged (custom colors etc.)
+export function vividTokenBorder(color: string | null | undefined): string {
+  if (!color) return '#ef4444'
+  return TOKEN_BORDER_OVERRIDES[color] ?? color
 }
 
 // Placeholder silhouette portraits by type. Clicking one sets

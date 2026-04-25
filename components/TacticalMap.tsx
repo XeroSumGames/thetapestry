@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getWeaponByName } from '../lib/weapons'
+import { vividTokenBorder } from './NpcRoster'
 
 // Feet per band — used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -702,11 +703,13 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           ctx.restore()
           ctx.beginPath()
           ctx.arc(cx, cy, radius, 0, Math.PI * 2)
-          ctx.strokeStyle = isActive ? '#7fc458' : selectedToken === t.id ? '#f5f2ee' : t.color || '#c0392b'
+          // Brighten the stored disposition color at render time so
+          // legacy tokens get the vivid palette without a DB rewrite.
+          ctx.strokeStyle = isActive ? '#7fc458' : selectedToken === t.id ? '#f5f2ee' : vividTokenBorder(t.color)
           ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 2
           ctx.stroke()
         } else {
-          ctx.fillStyle = t.is_visible ? (t.color || '#c0392b') : 'rgba(192,57,43,0.3)'
+          ctx.fillStyle = t.is_visible ? vividTokenBorder(t.color) : 'rgba(192,57,43,0.3)'
           ctx.fill()
           ctx.strokeStyle = isActive ? '#7fc458' : selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,1)'
           ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 1.5
