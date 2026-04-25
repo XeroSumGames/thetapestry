@@ -21,7 +21,6 @@ const TOOLS: Tool[] = [
     description: 'Find campaigns to join, or players for your table.',
     href: '/campfire/lfg',
     color: '#c0392b',
-    soon: true,
   },
   {
     label: 'Forums',

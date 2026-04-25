@@ -201,7 +201,7 @@ export default function Sidebar() {
       <a href="#" style={soonStyle}>Rules {soonSuffix}</a>
       <a href="#" style={soonStyle}>Equipment {soonSuffix}</a>
       <a href="#" style={soonStyle}>Forums {soonSuffix}</a>
-      <a href="#" style={soonStyle}>Looking for Group {soonSuffix}</a>
+      <a href="/campfire/lfg" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Looking for Group</a>
 
       {/* Spacer + bottom section */}
       <div style={{ flex: 1 }} />
