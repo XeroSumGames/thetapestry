@@ -469,18 +469,30 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 <button onClick={async () => {
                   setEditingObj(obj); setEditName(obj.name); setEditWP(obj.wp_max != null ? String(obj.wp_max) : '3'); setEditIndestructible(obj.wp_max == null); setEditProps(Array.isArray(obj.properties) ? obj.properties : []); setEditContents(Array.isArray(obj.contents) ? obj.contents : []); setEditControllers(Array.isArray(obj.controlled_by_character_ids) ? obj.controlled_by_character_ids : [])
                   // Lazy-fetch campaign PCs the first time an edit modal
-                  // opens. Cheap query; doesn't change during a session.
+                  // opens. Two queries: campaign_members → characters,
+                  // then profiles → username (the embedded
+                  // profiles:user_id join is flaky because both tables
+                  // reference auth.users but not each other directly).
                   if (campaignPcs.length === 0) {
-                    const { data } = await supabase
+                    const { data: memberRows } = await supabase
                       .from('campaign_members')
-                      .select('user_id, characters:character_id(id, name), profiles:user_id(username)')
+                      .select('user_id, characters:character_id(id, name)')
                       .eq('campaign_id', campaignId)
                       .not('character_id', 'is', null)
+                    const rows = (memberRows ?? []) as any[]
+                    const userIds = Array.from(new Set(rows.map(r => r.user_id).filter(Boolean)))
+                    let nameByUser: Record<string, string> = {}
+                    if (userIds.length > 0) {
+                      const { data: profs } = await supabase
+                        .from('profiles')
+                        .select('id, username')
+                        .in('id', userIds)
+                      nameByUser = Object.fromEntries(((profs ?? []) as any[]).map(p => [p.id, p.username]))
+                    }
                     const pcs: { id: string; name: string; ownerName?: string }[] = []
-                    for (const r of ((data ?? []) as any[])) {
+                    for (const r of rows) {
                       const c = r.characters as { id: string; name: string } | null
-                      const p = r.profiles as { username?: string } | null
-                      if (c) pcs.push({ id: c.id, name: c.name, ownerName: p?.username })
+                      if (c) pcs.push({ id: c.id, name: c.name, ownerName: nameByUser[r.user_id] })
                     }
                     setCampaignPcs(pcs)
                   }
