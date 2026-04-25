@@ -83,6 +83,7 @@ interface Pin {
   created_at?: string
   sort_order?: number
   event_date?: string | null
+  address?: string | null
 }
 
 interface PinForm {
@@ -177,7 +178,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [attachments, setAttachments] = useState<File[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
-  const [editForm, setEditForm] = useState({ title: '', notes: '', categories: ['location'] as string[], event_date: '', sort_order: '' })
+  const [editForm, setEditForm] = useState({ title: '', notes: '', categories: ['location'] as string[], event_date: '', sort_order: '', lat: '', lng: '', address: '' })
   const [editAttachments, setEditAttachments] = useState<File[]>([])
   const [editExistingFiles, setEditExistingFiles] = useState<{ name: string; url: string }[]>([])
   const [editUploading, setEditUploading] = useState(false)
@@ -830,7 +831,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   async function startEdit(pin: Pin) {
   setEditingPin(pin)
   const cats = Array.isArray(pin.categories) && pin.categories.length > 0 ? pin.categories : [pin.category ?? 'location']
-  setEditForm({ title: pin.title, notes: pin.notes, categories: cats, event_date: (pin as any).event_date ?? '', sort_order: pin.sort_order != null ? String(pin.sort_order) : '' })
+  setEditForm({ title: pin.title, notes: pin.notes, categories: cats, event_date: (pin as any).event_date ?? '', sort_order: pin.sort_order != null ? String(pin.sort_order) : '', lat: pin.lat != null ? String(pin.lat) : '', lng: pin.lng != null ? String(pin.lng) : '', address: (pin as any).address ?? '' })
   setEditAttachments([])
   setShowForm(false)
   // Load existing attachments
@@ -849,7 +850,12 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   if (!editingPin || !editForm.title.trim()) return
   setEditUploading(true)
   const sortVal = editForm.sort_order.trim() ? parseInt(editForm.sort_order) : null
-  const { error } = await supabase.from('map_pins').update({ title: editForm.title, notes: editForm.notes, category: editForm.categories[0] ?? 'location', categories: editForm.categories, event_date: editForm.event_date.trim() || null, sort_order: Number.isNaN(sortVal) ? null : sortVal }).eq('id', editingPin.id)
+  const latVal = editForm.lat.trim() ? parseFloat(editForm.lat) : NaN
+  const lngVal = editForm.lng.trim() ? parseFloat(editForm.lng) : NaN
+  const updatePayload: Record<string, unknown> = { title: editForm.title, notes: editForm.notes, category: editForm.categories[0] ?? 'location', categories: editForm.categories, event_date: editForm.event_date.trim() || null, sort_order: Number.isNaN(sortVal) ? null : sortVal, address: editForm.address.trim() || null }
+  if (!Number.isNaN(latVal)) updatePayload.lat = latVal
+  if (!Number.isNaN(lngVal)) updatePayload.lng = lngVal
+  const { error } = await supabase.from('map_pins').update(updatePayload).eq('id', editingPin.id)
   if (error) { alert('Error: ' + error.message); setEditUploading(false); return }
   // Upload new attachments
   for (const file of editAttachments) {
@@ -1553,6 +1559,20 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         </div>
       </div>
     )}
+    <div style={{ marginBottom: '8px', display: 'flex', gap: '8px' }}>
+      <div style={{ flex: 1 }}>
+        <label style={lbl}>Lat</label>
+        <input style={inp} value={editForm.lat} onChange={e => setEditForm(p => ({ ...p, lat: e.target.value }))} placeholder="e.g. 39.7456" inputMode="decimal" />
+      </div>
+      <div style={{ flex: 1 }}>
+        <label style={lbl}>Lng</label>
+        <input style={inp} value={editForm.lng} onChange={e => setEditForm(p => ({ ...p, lng: e.target.value }))} placeholder="e.g. -75.5466" inputMode="decimal" />
+      </div>
+    </div>
+    <div style={{ marginBottom: '12px' }}>
+      <label style={lbl}>Address</label>
+      <input style={inp} value={editForm.address} onChange={e => setEditForm(p => ({ ...p, address: e.target.value }))} placeholder="Street, City, State" />
+    </div>
     {userRole === 'thriver' && editingPin && (
       <div style={{ marginBottom: '12px' }}>
         <label style={lbl}>Pin Type</label>
