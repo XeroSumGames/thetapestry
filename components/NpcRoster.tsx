@@ -200,6 +200,12 @@ interface Props {
   // that already have a token. Parent owns the placement logic so the
   // single-broadcast / scene-lookup pattern stays in one place.
   onPlaceFolderOnMap?: (npcs: CampaignNpc[]) => void
+  // Fires after a reveal/hide flips is_visible on scene_tokens. Parent
+  // wires to broadcast token_changed so player TacticalMaps re-fetch
+  // and pick up the new is_visible state without a manual refresh.
+  // Without this nudge the postgres_changes subscription on
+  // scene_tokens fires inconsistently for is_visible UPDATEs.
+  onTacticalRefresh?: () => void
   // Symmetric removal: when every NPC in the folder already has a token,
   // the Map button flips to UNMAP and calls this. Removes all the
   // folder's tokens from the active scene in one shot.
@@ -222,7 +228,7 @@ const emptyForm = {
   folder: '' as string,
 }
 
-export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs, onPlaceOnMap, onRemoveFromMap, onPlaceFolderOnMap, onUnmapFolder, npcIdsOnMap, onNpcDeleted }: Props) {
+export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs, onPlaceOnMap, onRemoveFromMap, onPlaceFolderOnMap, onTacticalRefresh, onUnmapFolder, npcIdsOnMap, onNpcDeleted }: Props) {
   const supabase = createClient()
   const [npcs, setNpcs] = useState<CampaignNpc[]>([])
   const [loading, setLoading] = useState(true)
@@ -1201,6 +1207,13 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                               }
                               await revealNpcsByIds(folderIds)
                             }
+                            // Final nudge so player TacticalMaps
+                            // re-fetch and pick up the latest
+                            // is_visible / archived_at state. Without
+                            // this the player has to manually refresh
+                            // because postgres_changes on scene_tokens
+                            // is unreliable for is_visible UPDATEs.
+                            onTacticalRefresh?.()
                           }}
                             title={allRevealed
                               ? `Hide all ${folderNpcs.length} NPCs (vanish from every map; positions preserved)`
