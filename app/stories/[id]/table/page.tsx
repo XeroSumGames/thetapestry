@@ -2001,6 +2001,43 @@ export default function TablePage() {
     initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
   }
 
+  // Bulk-place a folder of NPCs onto the active scene in a tidy NxN
+  // cluster anchored at top-left. Skips NPCs that already have a token
+  // so it's safe to click after partial placement. Single broadcast at
+  // the end so all clients refetch once instead of N times.
+  async function placeFolderOnMap(npcsToPlace: { id: string; name: string; portrait_url?: string | null }[]) {
+    if (npcsToPlace.length === 0) return
+    const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
+    if (!activeScene) { alert('No active tactical scene. Create a scene first.'); return }
+    // Filter out NPCs that already have a token in this scene.
+    const npcIds = npcsToPlace.map(n => n.id)
+    const { data: existing } = await supabase.from('scene_tokens').select('npc_id').eq('scene_id', activeScene.id).in('npc_id', npcIds)
+    const taken = new Set<string>((existing ?? []).map((r: any) => r.npc_id))
+    const fresh = npcsToPlace.filter(n => !taken.has(n.id))
+    if (fresh.length === 0) return
+    const cols = Math.max(1, Math.ceil(Math.sqrt(fresh.length)))
+    const rows = fresh.map((n, i) => ({
+      scene_id: activeScene.id,
+      name: n.name,
+      token_type: 'npc' as const,
+      character_id: null,
+      npc_id: n.id,
+      portrait_url: n.portrait_url ?? null,
+      grid_x: i % cols,
+      grid_y: Math.floor(i / cols),
+      // Placed-but-hidden by default if the NPC isn't yet revealed in the
+      // roster. Matches the prep workflow: GM places the gang invisibly,
+      // clicks Show on the folder when the time is right.
+      is_visible: revealedNpcIds.has(n.id),
+      color: '#c0392b',
+    }))
+    const { error } = await supabase.from('scene_tokens').insert(rows)
+    if (error) { console.error('[placeFolderOnMap] error:', error.message); alert('Failed to place tokens: ' + error.message); return }
+    setTokenRefreshKey(k => k + 1)
+    await refreshMapTokenIds()
+    initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+  }
+
   async function placeTokenOnMap(name: string, type: 'pc' | 'npc', characterId?: string, npcId?: string, portraitUrl?: string) {
     const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
     if (!activeScene) { alert('No active tactical scene. Create a scene first.'); return }
@@ -6262,7 +6299,7 @@ export default function TablePage() {
                 ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
                 : initiativeOrder
               const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
-              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}`, `npc-${npc.id}`) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} npcIdsOnMap={mapTokenNpcIds} onNpcDeleted={async (npcId) => {
+              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}`, `npc-${npc.id}`) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} onPlaceFolderOnMap={(combatActive || showTacticalMap) ? (folderNpcs) => placeFolderOnMap(folderNpcs.map(n => ({ id: n.id, name: n.name, portrait_url: n.portrait_url }))) : undefined} npcIdsOnMap={mapTokenNpcIds} onNpcDeleted={async (npcId) => {
               // Drop the NPC from every local collection immediately so the
               // initiative bar, roster card overlay, and map token disappear
               // without waiting on a realtime DELETE event.
