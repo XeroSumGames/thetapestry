@@ -549,7 +549,6 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       })
       const nearSetting = getNearSetting(pin.lat, pin.lng)
       const nearbyCount = data.filter((p: Pin) => p.id !== pin.id && Math.abs(p.lat - pin.lat) < 0.1 && Math.abs(p.lng - pin.lng) < 0.1).length
-      const dateStr = pin.created_at ? new Date(pin.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''
       const marker = leaflet.marker([pin.lat, pin.lng], { icon })
         .bindPopup(`
           <div style="font-family:Barlow,sans-serif;min-width:220px;max-width:300px">
@@ -559,7 +558,6 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               <span style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.06em;padding:1px 4px;background:#f0f0f0;border-radius:2px">${pin.category ?? 'location'}</span>
               <span style="font-size:10px;color:#999;text-transform:uppercase">${pin.pin_type === 'rumor' ? 'Rumor' : pin.pin_type === 'gm' ? 'GM' : 'Private'}</span>
             </div>
-            ${dateStr ? `<div style="font-size:10px;color:#aaa">${dateStr}</div>` : ''}
             ${nearSetting ? `<div style="font-size:10px;color:#c0392b;font-weight:700;margin-top:2px">Near ${nearSetting}</div>` : ''}
             ${nearbyCount > 0 ? `<div style="font-size:10px;color:#7ab3d4;margin-top:2px">${nearbyCount} nearby pin${nearbyCount !== 1 ? 's' : ''}</div>` : ''}
             ${(pin as any).view_count ? `<div style="font-size:10px;color:#aaa;margin-top:2px">👁 ${(pin as any).view_count} views</div>` : ''}
