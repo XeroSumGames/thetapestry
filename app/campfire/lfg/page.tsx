@@ -61,12 +61,29 @@ export default function LfgPage() {
   const [myInterests, setMyInterests] = useState<Set<string>>(new Set())
   const [interestsByPost, setInterestsByPost] = useState<Record<string, { user_id: string; username: string }[]>>({})
   const [interestPending, setInterestPending] = useState<Set<string>>(new Set())
+  // Campaigns I GM — used by the 🎟 Invite picker on my own LFG posts so I
+  // can DM an interested player a one-click join link without leaving this
+  // page. Empty array = button is hidden (nothing to invite to).
+  const [myCampaigns, setMyCampaigns] = useState<{ id: string; name: string; invite_code: string }[]>([])
+  // Which roster row's invite picker is open. Key shape: `${postId}:${userId}`.
+  const [invitingFor, setInvitingFor] = useState<string | null>(null)
+  // Per-row "✓ Invite sent" flash, same key shape as invitingFor.
+  const [inviteSentFor, setInviteSentFor] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       setMyId(user.id)
+      // Fetch the user's GM'd campaigns once. Used by the 🎟 Invite picker;
+      // cheap query that doesn't change during a session, so no need to
+      // refetch on every loadPosts call.
+      const { data: campRows } = await supabase
+        .from('campaigns')
+        .select('id, name, invite_code')
+        .eq('gm_user_id', user.id)
+        .order('name', { ascending: true })
+      setMyCampaigns((campRows ?? []) as { id: string; name: string; invite_code: string }[])
       await loadPosts()
     }
     init()
@@ -99,6 +116,44 @@ export default function LfgPage() {
     document.addEventListener('mousedown', onDoc)
     return () => document.removeEventListener('mousedown', onDoc)
   }, [shareOpenId])
+
+  // Close the Invite picker on outside click. Identical pattern to the
+  // Share popover — separate effect so each closes independently when the
+  // other opens.
+  useEffect(() => {
+    if (!invitingFor) return
+    function onDoc(e: MouseEvent) {
+      const t = e.target as HTMLElement
+      if (!t.closest('[data-invite-root]')) setInvitingFor(null)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [invitingFor])
+
+  async function sendInvite(otherUserId: string, postId: string, campaign: { id: string; name: string; invite_code: string }) {
+    if (!myId) return
+    // Use the existing get_or_create_dm RPC so we don't need to touch
+    // conversation_participants directly. SECURITY DEFINER inside the RPC
+    // handles the 1:1 conversation lookup-or-create.
+    const { data: dmId, error: dmErr } = await supabase.rpc('get_or_create_dm', { other_user_id: otherUserId })
+    if (dmErr || !dmId) { alert('Could not open DM: ' + (dmErr?.message ?? 'unknown')); return }
+    const inviteUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/join/${campaign.invite_code}`
+    const body = `You're invited to join my campaign "${campaign.name}". Tap to join: ${inviteUrl}`
+    const { error: msgErr } = await supabase.from('messages').insert({
+      conversation_id: dmId,
+      sender_user_id: myId,
+      body,
+    })
+    if (msgErr) { alert('Could not send invite DM: ' + msgErr.message); return }
+    const key = `${postId}:${otherUserId}`
+    setInvitingFor(null)
+    setInviteSentFor(prev => new Set(prev).add(key))
+    setTimeout(() => {
+      setInviteSentFor(prev => {
+        const next = new Set(prev); next.delete(key); return next
+      })
+    }, 2200)
+  }
 
   function postUrl(postId: string) {
     if (typeof window === 'undefined') return ''
@@ -485,17 +540,49 @@ export default function LfgPage() {
                       Interested ({interestsByPost[p.id].length})
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {interestsByPost[p.id].map(u => (
-                        <div key={u.user_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                          <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                            {u.username}
-                          </span>
-                          <a href={`/messages?dm=${u.user_id}`}
-                            style={{ padding: '3px 10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
-                            💬 Message
-                          </a>
-                        </div>
-                      ))}
+                      {interestsByPost[p.id].map(u => {
+                        const inviteKey = `${p.id}:${u.user_id}`
+                        const pickerOpen = invitingFor === inviteKey
+                        const justSent = inviteSentFor.has(inviteKey)
+                        return (
+                          <div key={u.user_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                            <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                              {u.username}
+                            </span>
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                              <a href={`/messages?dm=${u.user_id}`}
+                                style={{ padding: '3px 10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+                                💬 Message
+                              </a>
+                              {/* Invite picker. Hidden if the GM has no
+                                  campaigns to invite to (avoids teasing
+                                  a dead button). Anchored relative to the
+                                  trigger; click-outside closes it. */}
+                              {myCampaigns.length > 0 && (
+                                <div data-invite-root style={{ position: 'relative' }}>
+                                  <button onClick={() => setInvitingFor(prev => prev === inviteKey ? null : inviteKey)} disabled={justSent}
+                                    style={{ padding: '3px 10px', background: justSent ? '#1a2e10' : '#242424', border: `1px solid ${justSent ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: justSent ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: justSent ? 'default' : 'pointer' }}>
+                                    {justSent ? '✓ Invite Sent' : '🎟 Invite'}
+                                  </button>
+                                  {pickerOpen && (
+                                    <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, zIndex: 10, minWidth: '220px', maxHeight: '240px', overflowY: 'auto', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', boxShadow: '0 4px 12px rgba(0,0,0,.5)', padding: '4px', display: 'flex', flexDirection: 'column' }}>
+                                      <div style={{ padding: '6px 10px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+                                        Invite to…
+                                      </div>
+                                      {myCampaigns.map(c => (
+                                        <button key={c.id} onClick={() => sendInvite(u.user_id, p.id, c)}
+                                          style={{ display: 'block', width: '100%', padding: '7px 12px', background: 'none', border: 'none', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'left' }}>
+                                          {c.name}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )}
