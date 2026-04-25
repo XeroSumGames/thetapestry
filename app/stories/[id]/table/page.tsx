@@ -2072,8 +2072,14 @@ export default function TablePage() {
   // Mirrors placeFolderOnMap so the per-folder Map/Unmap toggle is
   // perfectly symmetric. Single broadcast at the end.
   async function unmapFolderFromMap(npcsToRemove: { id: string }[]) {
-    console.log('[unmapFolder] start, count=', npcsToRemove.length, 'ids=', npcsToRemove.map(n => n.id))
-    if (npcsToRemove.length === 0) return
+    // Sentinel — if you see this alert, the click reached the handler.
+    // If you click UNMAP and DON'T see this alert, the page is running
+    // a cached bundle: hard-refresh (Ctrl-Shift-R) and try again.
+    console.log('[unmapFolder] HANDLER REACHED, count=', npcsToRemove.length, 'ids=', npcsToRemove.map(n => n.id))
+    if (npcsToRemove.length === 0) {
+      alert('UNMAP clicked but the folder list was empty.')
+      return
+    }
     const { data: activeScene, error: sceneErr } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
     if (sceneErr || !activeScene) { alert('No active tactical scene.'); return }
     const npcIds = npcsToRemove.map(n => n.id)
