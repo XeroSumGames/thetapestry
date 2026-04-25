@@ -54,6 +54,13 @@ export default function LfgPage() {
   // Which post's Share popover is open (id) and per-post copy-confirmation flash.
   const [shareOpenId, setShareOpenId] = useState<string | null>(null)
   const [copiedFlash, setCopiedFlash] = useState<string | null>(null)
+  // Interest state. `myInterests` is the set of post ids I've expressed
+  // interest in (drives the toggle label). `interestsByPost` is a
+  // post_id → list-of-interested-users map populated only for posts I
+  // authored, so I can show a roster + 💬 Message buttons under my own posts.
+  const [myInterests, setMyInterests] = useState<Set<string>>(new Set())
+  const [interestsByPost, setInterestsByPost] = useState<Record<string, { user_id: string; username: string }[]>>({})
+  const [interestPending, setInterestPending] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     async function init() {
@@ -131,16 +138,82 @@ export default function LfgPage() {
       .order('updated_at', { ascending: false })
     const list = (postRows ?? []) as LfgPost[]
 
-    if (list.length === 0) { setPosts([]); setLoading(false); return }
+    if (list.length === 0) {
+      setPosts([])
+      setMyInterests(new Set())
+      setInterestsByPost({})
+      setLoading(false)
+      return
+    }
     const authorIds = Array.from(new Set(list.map(p => p.author_user_id)))
+    // Pull all interests we're allowed to see in one shot. RLS already
+    // restricts this to (a) our own interests and (b) interests on posts
+    // we authored — so nothing private leaks.
+    const { data: ints } = await supabase
+      .from('lfg_interests')
+      .select('post_id, interested_user_id')
+
+    const intRows = (ints ?? []) as { post_id: string; interested_user_id: string }[]
+
+    const interestUserIds = intRows.map(r => r.interested_user_id)
+    const allUserIds = Array.from(new Set([...authorIds, ...interestUserIds]))
     const { data: profs } = await supabase
       .from('profiles')
       .select('id, username')
-      .in('id', authorIds)
+      .in('id', allUserIds)
     const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
 
+    const myCurrentId = (await supabase.auth.getUser()).data.user?.id ?? null
+    const myInts = new Set<string>()
+    const byPost: Record<string, { user_id: string; username: string }[]> = {}
+    intRows.forEach(r => {
+      if (r.interested_user_id === myCurrentId) myInts.add(r.post_id)
+      // Only build the roster for posts I authored — the rest of the
+      // intRows visible via RLS are my own interests on others' posts.
+      const post = list.find(p => p.id === r.post_id)
+      if (post && post.author_user_id === myCurrentId) {
+        if (!byPost[r.post_id]) byPost[r.post_id] = []
+        byPost[r.post_id].push({
+          user_id: r.interested_user_id,
+          username: nameMap[r.interested_user_id] ?? 'Unknown',
+        })
+      }
+    })
+    setMyInterests(myInts)
+    setInterestsByPost(byPost)
     setPosts(list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown' })))
     setLoading(false)
+  }
+
+  async function toggleInterest(postId: string) {
+    if (!myId) return
+    if (interestPending.has(postId)) return
+    setInterestPending(prev => new Set(prev).add(postId))
+    const alreadyInterested = myInterests.has(postId)
+    if (alreadyInterested) {
+      const { error } = await supabase
+        .from('lfg_interests')
+        .delete()
+        .eq('post_id', postId)
+        .eq('interested_user_id', myId)
+      if (error) { alert('Error: ' + error.message) }
+      else {
+        setMyInterests(prev => {
+          const next = new Set(prev); next.delete(postId); return next
+        })
+      }
+    } else {
+      const { error } = await supabase
+        .from('lfg_interests')
+        .insert({ post_id: postId, interested_user_id: myId })
+      if (error) { alert('Error: ' + error.message) }
+      else {
+        setMyInterests(prev => new Set(prev).add(postId))
+      }
+    }
+    setInterestPending(prev => {
+      const next = new Set(prev); next.delete(postId); return next
+    })
   }
 
   function startCompose() {
@@ -347,12 +420,20 @@ export default function LfgPage() {
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  {!isMine && (
-                    <a href={`/messages?dm=${p.author_user_id}`}
-                      style={{ padding: '6px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
-                      💬 Message
-                    </a>
-                  )}
+                  {/* Asymmetric flow: viewers express interest with a toggle;
+                      authors see the roster of interested users below the
+                      action row and can DM them from there. The author never
+                      gets a generic "Message" affordance for random viewers. */}
+                  {!isMine && (() => {
+                    const interested = myInterests.has(p.id)
+                    const pending = interestPending.has(p.id)
+                    return (
+                      <button onClick={() => toggleInterest(p.id)} disabled={pending}
+                        style={{ padding: '6px 14px', background: interested ? '#1a2e10' : '#1a3a5c', border: `1px solid ${interested ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: interested ? '#7fc458' : '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: pending ? 'wait' : 'pointer', opacity: pending ? 0.6 : 1 }}>
+                        {interested ? '✓ Interested' : "I'm Interested"}
+                      </button>
+                    )
+                  })()}
                   {isMine && (
                     <>
                       <button onClick={() => startEdit(p)}
@@ -394,6 +475,30 @@ export default function LfgPage() {
                     )}
                   </div>
                 </div>
+                {/* Interested-user roster — author-only. RLS scopes the rows
+                    in interestsByPost so this list is empty for everyone
+                    except the post's author. The 💬 Message button here is
+                    where DMs originate from now (the asymmetric flow). */}
+                {isMine && interestsByPost[p.id] && interestsByPost[p.id].length > 0 && (
+                  <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px dashed #2e2e2e' }}>
+                    <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                      Interested ({interestsByPost[p.id].length})
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {interestsByPost[p.id].map(u => (
+                        <div key={u.user_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                            {u.username}
+                          </span>
+                          <a href={`/messages?dm=${u.user_id}`}
+                            style={{ padding: '3px 10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+                            💬 Message
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )
           })}
