@@ -30,33 +30,63 @@ export default function CampaignsPage() {
       if (!user) { setLoading(false); return }
       setUserId(user.id)
 
-      const { data: gm } = await supabase
+      // Pull both lists. Order coming back doesn't matter — we re-sort by
+      // last-played below.
+      const { data: gmRaw } = await supabase
         .from('campaigns')
         .select('*')
         .eq('gm_user_id', user.id)
-        .order('created_at', { ascending: false })
-      setGmCampaigns(gm ?? [])
 
       const { data: memberships } = await supabase
         .from('campaign_members')
         .select('campaign_id')
         .eq('user_id', user.id)
-      const ids = (memberships ?? []).map((m: any) => m.campaign_id)
-      if (ids.length > 0) {
+      const memberIds = (memberships ?? []).map((m: any) => m.campaign_id)
+
+      let playerRaw: Campaign[] = []
+      if (memberIds.length > 0) {
         const { data: player } = await supabase
           .from('campaigns')
           .select('*')
-          .in('id', ids)
+          .in('id', memberIds)
           .neq('gm_user_id', user.id)
-          .order('created_at', { ascending: false })
-        setPlayerCampaigns(player ?? [])
-        // Fetch GM usernames for player campaigns
-        const gmIds = [...new Set((player ?? []).map((c: any) => c.gm_user_id))]
+        playerRaw = (player ?? []) as Campaign[]
+        const gmIds = [...new Set(playerRaw.map((c: any) => c.gm_user_id))]
         if (gmIds.length > 0) {
           const { data: profiles } = await supabase.from('profiles').select('id, username').in('id', gmIds)
           if (profiles) setGmNames(Object.fromEntries(profiles.map((p: any) => [p.id, p.username])))
         }
       }
+
+      // Build a campaign_id → most-recent-session-start map. One query
+      // covers every campaign on the page; we reduce client-side to the
+      // max started_at per campaign. Campaigns with no sessions just fall
+      // through to the created_at fallback during sort.
+      const allIds = [...((gmRaw ?? []) as Campaign[]).map(c => c.id), ...playerRaw.map(c => c.id)]
+      const lastPlayed = new Map<string, string>()
+      if (allIds.length > 0) {
+        const { data: sess } = await supabase
+          .from('sessions')
+          .select('campaign_id, started_at')
+          .in('campaign_id', allIds)
+        for (const row of (sess ?? []) as { campaign_id: string; started_at: string | null }[]) {
+          if (!row.started_at) continue
+          const prev = lastPlayed.get(row.campaign_id)
+          if (!prev || row.started_at > prev) lastPlayed.set(row.campaign_id, row.started_at)
+        }
+      }
+
+      // Sort: most-recently-played first; never-played campaigns fall
+      // back to created_at DESC (so a brand-new campaign still appears
+      // near the top instead of getting buried at the bottom).
+      const sortByActivity = (list: Campaign[]) => [...list].sort((a, b) => {
+        const aKey = lastPlayed.get(a.id) ?? a.created_at
+        const bKey = lastPlayed.get(b.id) ?? b.created_at
+        return bKey.localeCompare(aKey)
+      })
+
+      setGmCampaigns(sortByActivity(gmRaw ?? []))
+      setPlayerCampaigns(sortByActivity(playerRaw))
       setLoading(false)
     }
     load()
