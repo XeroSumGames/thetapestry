@@ -44,6 +44,37 @@ export default function RootLayout({
   return (
     <html lang="en" style={{ height: '100%' }}>
       <head>
+        {/* Console-spam filter. A browser extension on the GM's machine
+            is logging window-rect objects of the exact shape
+            {x, y, w, h} hundreds of times, drowning out our diagnostic
+            logs. This wraps console.log to drop messages whose ONLY
+            argument is an object with EXACTLY those four keys — too
+            specific to ever swallow a legitimate app log. Inline in
+            <head> so it runs before any other script. */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            try {
+              var orig = console.log;
+              var SHAPE_KEYS = ['x','y','w','h'];
+              console.log = function() {
+                if (arguments.length === 1) {
+                  var a = arguments[0];
+                  if (a && typeof a === 'object' && !Array.isArray(a)) {
+                    var keys = Object.keys(a);
+                    if (keys.length === 4 &&
+                        keys.indexOf('x') !== -1 &&
+                        keys.indexOf('y') !== -1 &&
+                        keys.indexOf('w') !== -1 &&
+                        keys.indexOf('h') !== -1) {
+                      return;
+                    }
+                  }
+                }
+                return orig.apply(console, arguments);
+              };
+            } catch (e) { /* noop */ }
+          })();
+        ` }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
