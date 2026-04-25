@@ -2041,6 +2041,21 @@ export default function TablePage() {
     initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
   }
 
+  // Bulk-remove every token for the given NPC ids from the active scene.
+  // Mirrors placeFolderOnMap so the per-folder Map/Unmap toggle is
+  // perfectly symmetric. Single broadcast at the end.
+  async function unmapFolderFromMap(npcsToRemove: { id: string }[]) {
+    if (npcsToRemove.length === 0) return
+    const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
+    if (!activeScene) return
+    const npcIds = npcsToRemove.map(n => n.id)
+    const { error } = await supabase.from('scene_tokens').delete().eq('scene_id', activeScene.id).in('npc_id', npcIds)
+    if (error) { console.error('[unmapFolder] error:', error.message); alert('Failed to unmap: ' + error.message); return }
+    setTokenRefreshKey(k => k + 1)
+    await refreshMapTokenIds()
+    initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+  }
+
   async function placeTokenOnMap(name: string, type: 'pc' | 'npc', characterId?: string, npcId?: string, portraitUrl?: string) {
     const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
     if (!activeScene) { alert('No active tactical scene. Create a scene first.'); return }
@@ -6311,7 +6326,7 @@ export default function TablePage() {
                 ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
                 : initiativeOrder
               const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
-              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}`, `npc-${npc.id}`) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} onPlaceFolderOnMap={(combatActive || showTacticalMap) ? (folderNpcs) => placeFolderOnMap(folderNpcs.map(n => ({ id: n.id, name: n.name, portrait_url: n.portrait_url, disposition: (n as any).disposition, npc_type: (n as any).npc_type }))) : undefined} npcIdsOnMap={mapTokenNpcIds} onNpcDeleted={async (npcId) => {
+              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}`, `npc-${npc.id}`) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} onPlaceFolderOnMap={(combatActive || showTacticalMap) ? (folderNpcs) => placeFolderOnMap(folderNpcs.map(n => ({ id: n.id, name: n.name, portrait_url: n.portrait_url, disposition: (n as any).disposition, npc_type: (n as any).npc_type }))) : undefined} onUnmapFolder={(combatActive || showTacticalMap) ? (folderNpcs) => unmapFolderFromMap(folderNpcs.map(n => ({ id: n.id }))) : undefined} npcIdsOnMap={mapTokenNpcIds} onNpcDeleted={async (npcId) => {
               // Drop the NPC from every local collection immediately so the
               // initiative bar, roster card overlay, and map token disappear
               // without waiting on a realtime DELETE event.

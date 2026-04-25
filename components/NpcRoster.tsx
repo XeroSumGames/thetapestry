@@ -195,6 +195,10 @@ interface Props {
   // that already have a token. Parent owns the placement logic so the
   // single-broadcast / scene-lookup pattern stays in one place.
   onPlaceFolderOnMap?: (npcs: CampaignNpc[]) => void
+  // Symmetric removal: when every NPC in the folder already has a token,
+  // the Map button flips to UNMAP and calls this. Removes all the
+  // folder's tokens from the active scene in one shot.
+  onUnmapFolder?: (npcs: CampaignNpc[]) => void
   npcIdsOnMap?: Set<string>
   // Fired after an NPC row (and its orphaned map tokens / initiative rows)
   // are deleted, so the parent page can refresh local state without waiting
@@ -213,7 +217,7 @@ const emptyForm = {
   folder: '' as string,
 }
 
-export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs, onPlaceOnMap, onRemoveFromMap, onPlaceFolderOnMap, npcIdsOnMap, onNpcDeleted }: Props) {
+export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs, onPlaceOnMap, onRemoveFromMap, onPlaceFolderOnMap, onUnmapFolder, npcIdsOnMap, onNpcDeleted }: Props) {
   const supabase = createClient()
   const [npcs, setNpcs] = useState<CampaignNpc[]>([])
   const [loading, setLoading] = useState(true)
@@ -1113,24 +1117,34 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       ) : (
                         <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{folderName}</span>
                       )}
-                      {/* Per-folder Map button. Bulk-places every NPC in
-                          the folder onto the active scene in a tidy
-                          cluster (parent handles cluster math + single
-                          broadcast). Skips NPCs that already have a token
-                          so it's safe to click after partial placement.
-                          Hidden when every NPC in the folder is already
-                          mapped. stopPropagation so the click doesn't
-                          collapse the folder. */}
+                      {/* Per-folder Map / Unmap toggle. Mirrors Show/Hide:
+                          when every NPC in the folder is already mapped,
+                          the button flips to UNMAP and removes all the
+                          folder's tokens in one shot. When some are
+                          unmapped, MAP places only the missing ones (so
+                          mid-prep placement isn't disturbed). Always
+                          visible so the row layout stays consistent
+                          across folders. stopPropagation so the click
+                          doesn't collapse the folder. */}
                       {onPlaceFolderOnMap && folderNpcs.length > 0 && (() => {
                         const unmapped = npcIdsOnMap
                           ? folderNpcs.filter(n => !npcIdsOnMap.has(n.id))
                           : folderNpcs
-                        if (unmapped.length === 0) return null
+                        const allMapped = unmapped.length === 0
+                        if (allMapped && !onUnmapFolder) return null
+                        const label = allMapped ? 'Unmap' : 'Map'
+                        const title = allMapped
+                          ? `Remove all ${folderNpcs.length} NPC token${folderNpcs.length === 1 ? '' : 's'} from the tactical map`
+                          : `Place ${unmapped.length} NPC${unmapped.length === 1 ? '' : 's'} on the tactical map`
                         return (
-                          <button onClick={e => { e.stopPropagation(); onPlaceFolderOnMap(unmapped) }}
-                            title={`Place ${unmapped.length} NPC${unmapped.length === 1 ? '' : 's'} on the tactical map`}
-                            style={{ padding: '1px 8px', background: '#1a2030', border: '1px solid #3a4a6a', borderRadius: '2px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
-                            Map
+                          <button onClick={e => {
+                            e.stopPropagation()
+                            if (allMapped) onUnmapFolder?.(folderNpcs)
+                            else onPlaceFolderOnMap(unmapped)
+                          }}
+                            title={title}
+                            style={{ padding: '1px 8px', background: allMapped ? '#2a1210' : '#1a2030', border: `1px solid ${allMapped ? '#7a1f16' : '#3a4a6a'}`, borderRadius: '2px', color: allMapped ? '#f5a89a' : '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
+                            {label}
                           </button>
                         )
                       })()}
