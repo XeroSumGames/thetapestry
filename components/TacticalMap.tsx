@@ -634,13 +634,20 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       const activePortraitUrl = useDestroyedArt ? t.destroyed_portrait_url : t.portrait_url
       const portraitImg = activePortraitUrl ? portraitCacheRef.current.get(activePortraitUrl) : null
       if (isObject) {
-        // Square token
+        // Object token. With an image, render at the image's natural
+        // aspect ratio so a wide truck (5:2) doesn't get squished into a
+        // square. The long edge fills `radius * 2`; the short edge
+        // shrinks proportionally. GM scales up via scale slider when
+        // they want the token to span multiple cells visually.
         const half = radius
         if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
-          ctx.drawImage(portraitImg, cx - half, cy - half, half * 2, half * 2)
+          const aspect = portraitImg.naturalWidth / portraitImg.naturalHeight
+          const drawW = aspect >= 1 ? half * 2 : half * 2 * aspect
+          const drawH = aspect >= 1 ? (half * 2) / aspect : half * 2
+          ctx.drawImage(portraitImg, cx - drawW / 2, cy - drawH / 2, drawW, drawH)
           ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : '#EF9F27'
           ctx.lineWidth = selectedToken === t.id ? 3 : 1.5
-          ctx.strokeRect(cx - half, cy - half, half * 2, half * 2)
+          ctx.strokeRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
         } else {
           ctx.fillStyle = t.is_visible ? (t.color || '#EF9F27') : 'rgba(239,159,39,0.3)'
           ctx.fillRect(cx - half, cy - half, half * 2, half * 2)
