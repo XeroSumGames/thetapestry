@@ -964,9 +964,9 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                   onDragOver={e => { if (dragId) { e.preventDefault(); setDragOverId(npc.id) } }}
                   onDragLeave={() => { if (dragOverId === npc.id) setDragOverId(null) }}
                   onDrop={() => handleNpcDrop(npc.id)}
-                  style={{ padding: '6px 8px', background: dragOverId === npc.id ? '#242424' : viewingNpcIds?.has(npc.id) ? '#2a1210' : '#1a1a1a', border: `1px solid ${dragOverId === npc.id ? '#7fc458' : viewingNpcIds?.has(npc.id) ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s', opacity: dragId === npc.id ? 0.4 : 1 }}
+                  style={{ padding: '6px 8px', background: dragOverId === npc.id ? '#242424' : viewingNpcIds?.has(npc.id) ? '#1a1a2e' : '#1a1a1a', border: `1px solid ${dragOverId === npc.id ? '#7fc458' : viewingNpcIds?.has(npc.id) ? '#8b2e8b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s', opacity: dragId === npc.id ? 0.4 : 1 }}
                   onMouseEnter={e => { if (!dragId) e.currentTarget.style.background = '#242424' }}
-                  onMouseLeave={e => { if (!dragId && dragOverId !== npc.id) e.currentTarget.style.background = viewingNpcIds?.has(npc.id) ? '#2a1210' : '#1a1a1a' }}
+                  onMouseLeave={e => { if (!dragId && dragOverId !== npc.id) e.currentTarget.style.background = viewingNpcIds?.has(npc.id) ? '#1a1a2e' : '#1a1a1a' }}
                 >
                 <div style={{ display: 'flex', gap: '6px' }}>
                   {/* Left column: drag handle + delete */}
