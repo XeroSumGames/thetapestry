@@ -667,21 +667,11 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
       for (const id of npcIds) next.delete(id)
       return next
     })
-    // Hide from the tactical map too. Setting is_visible=false only affects
-    // what *players* render — GMs still draw faded tokens for hidden ones
-    // (TacticalMap.tsx:587), so the NPCs would appear to "still be there"
-    // for the GM. To genuinely remove them from the map, delete the tokens
-    // for the currently-active scene. Position is lost on re-Show — a
-    // future Show just un-hides the roster; the GM places tokens manually.
-    const { data: activeScene } = await supabase
-      .from('tactical_scenes')
-      .select('id')
-      .eq('campaign_id', campaignId)
-      .eq('is_active', true)
-      .maybeSingle()
-    if (activeScene?.id) {
-      await supabase.from('scene_tokens').delete().eq('scene_id', activeScene.id).in('npc_id', npcIds)
-    }
+    // Toggle is_visible on existing scene_tokens so positions are preserved
+    // across Hide → Show. Realtime propagates this to players so they see
+    // tokens vanish without refreshing; GMs continue to see hidden tokens
+    // faded so they can keep working with the placement.
+    await supabase.from('scene_tokens').update({ is_visible: false }).in('npc_id', npcIds)
   }
 
   async function revealAllNpcs() {
