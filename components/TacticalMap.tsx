@@ -599,10 +599,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         ctx.shadowBlur = 16
       }
 
-      // Hidden indicator
-      if (!t.is_visible && isGM) {
-        ctx.globalAlpha = 0.5
-      }
+      // GM always sees tokens at full opacity — no fading for "hidden"
+      // tokens. The is_visible flag only gates player rendering (line
+      // above: skip if !is_visible && !isGM). For the GM, the token is
+      // simply on the map; whether players can see it is the GM's
+      // workflow concern, not a visual cue they need on their canvas.
 
       // Determine mortal wound / dead status
       let tokenDead = false

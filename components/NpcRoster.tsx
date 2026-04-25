@@ -1167,54 +1167,41 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       ) : (
                         <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{folderName}</span>
                       )}
-                      {/* Per-folder Map / Unmap toggle. Mirrors Show/Hide:
-                          when every NPC in the folder is already mapped,
-                          the button flips to UNMAP and removes all the
-                          folder's tokens in one shot. When some are
-                          unmapped, MAP places only the missing ones (so
-                          mid-prep placement isn't disturbed). Always
-                          visible so the row layout stays consistent
-                          across folders. stopPropagation so the click
-                          doesn't collapse the folder. */}
-                      {onPlaceFolderOnMap && folderNpcs.length > 0 && (() => {
-                        const unmapped = npcIdsOnMap
-                          ? folderNpcs.filter(n => !npcIdsOnMap.has(n.id))
-                          : folderNpcs
-                        const allMapped = unmapped.length === 0
-                        if (allMapped && !onUnmapFolder) return null
-                        const label = allMapped ? 'Unmap' : 'Map'
-                        const title = allMapped
-                          ? `Remove all ${folderNpcs.length} NPC token${folderNpcs.length === 1 ? '' : 's'} from the tactical map`
-                          : `Place ${unmapped.length} NPC${unmapped.length === 1 ? '' : 's'} on the tactical map`
-                        return (
-                          <button onClick={e => {
-                            e.stopPropagation()
-                            if (allMapped) onUnmapFolder?.(folderNpcs)
-                            else onPlaceFolderOnMap(unmapped)
-                          }}
-                            title={title}
-                            style={{ padding: '1px 8px', background: allMapped ? '#2a1210' : '#1a2030', border: `1px solid ${allMapped ? '#7a1f16' : '#3a4a6a'}`, borderRadius: '2px', color: allMapped ? '#f5a89a' : '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
-                            {label}
-                          </button>
-                        )
-                      })()}
-                      {/* Per-folder reveal toggle. "Hide" if every NPC in
-                          the folder is currently revealed; otherwise "Show"
-                          (which also covers a partially-revealed folder —
-                          one click brings the rest in). stopPropagation so
-                          clicking the button doesn't also collapse the
-                          folder. */}
+                      {/* One-button folder visibility toggle. SHOW =
+                          place any missing tokens on the GM's map +
+                          reveal to players in the sidebar + flip
+                          is_visible=true so players see them on the
+                          canvas. HIDE = revealed=false + is_visible=
+                          false; tokens stay on the GM's map (full
+                          opacity) but disappear for players. The GM
+                          never loses sight of what they've placed. */}
                       {pcEntries && pcEntries.length > 0 && folderNpcs.length > 0 && (() => {
                         const folderIds = folderNpcs.map(n => n.id)
                         const allRevealed = folderIds.every(id => revealedNpcIds.has(id))
                         const label = allRevealed ? 'Hide' : 'Show'
+                        const unplaced = npcIdsOnMap
+                          ? folderNpcs.filter(n => !npcIdsOnMap.has(n.id))
+                          : folderNpcs
                         return (
-                          <button onClick={e => {
+                          <button onClick={async e => {
                             e.stopPropagation()
-                            if (allRevealed) hideNpcsByIds(folderIds)
-                            else revealNpcsByIds(folderIds)
+                            if (allRevealed) {
+                              await hideNpcsByIds(folderIds)
+                            } else {
+                              // Place any missing tokens first so players
+                              // (and the GM) actually see something on
+                              // the canvas after the reveal flips. Then
+                              // reveal to make them visible to players +
+                              // listed in their sidebar.
+                              if (onPlaceFolderOnMap && unplaced.length > 0) {
+                                await onPlaceFolderOnMap(unplaced)
+                              }
+                              await revealNpcsByIds(folderIds)
+                            }
                           }}
-                            title={allRevealed ? `Hide all ${folderNpcs.length} NPCs in this folder` : `Reveal all ${folderNpcs.length} NPCs in this folder`}
+                            title={allRevealed
+                              ? `Hide all ${folderNpcs.length} NPCs from players (GM still sees them)`
+                              : `Place + reveal all ${folderNpcs.length} NPCs to players`}
                             style={{ padding: '1px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
                             {label}
                           </button>
