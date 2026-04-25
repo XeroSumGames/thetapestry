@@ -45,6 +45,24 @@ export function getNpcRingColor(disposition: string | null | undefined): { borde
   return DISPOSITION_COLORS[disposition ?? 'neutral'] ?? DISPOSITION_COLORS.neutral
 }
 
+// Token border color for NPCs on the tactical map. Disposition wins when
+// set, but a lot of legacy / setting-imported NPCs have disposition=null
+// while their npc_type carries the threat signal — falling back to type
+// keeps Foes/Goons/Antagonists red instead of regressing them to neutral
+// gray. Final fallback is the original hardcoded red so nothing that was
+// ever rendered as red goes silent.
+export function getNpcTokenBorderColor(npc: { disposition?: string | null; npc_type?: string | null }): string {
+  const d = npc.disposition
+  if (d === 'friendly') return DISPOSITION_COLORS.friendly.border
+  if (d === 'hostile')  return DISPOSITION_COLORS.hostile.border
+  if (d === 'neutral')  return DISPOSITION_COLORS.neutral.border
+  // disposition unset → infer from type
+  const t = (npc.npc_type ?? '').toLowerCase()
+  if (t === 'bystander' || t === 'friendly')               return DISPOSITION_COLORS.friendly.border
+  if (t === 'foe' || t === 'goon' || t === 'antagonist')   return DISPOSITION_COLORS.hostile.border
+  return DISPOSITION_COLORS.hostile.border
+}
+
 // Placeholder silhouette portraits by type. Clicking one sets
 // portrait_url to that colored SVG. Used when the GM wants a
 // typed-looking stand-in without uploading art. The ring color of

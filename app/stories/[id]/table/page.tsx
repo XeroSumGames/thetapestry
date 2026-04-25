@@ -4,7 +4,7 @@ import { createClient } from '../../../../lib/supabase-browser'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
 import type { InventoryItem } from '../../../../components/InventoryPanel'
-import NpcRoster, { getNpcRingColor } from '../../../../components/NpcRoster'
+import NpcRoster, { getNpcTokenBorderColor } from '../../../../components/NpcRoster'
 import NpcCard from '../../../../components/NpcCard'
 import PlayerNpcCard from '../../../../components/PlayerNpcCard'
 import ObjectCard from '../../../../components/ObjectCard'
@@ -2005,7 +2005,7 @@ export default function TablePage() {
   // cluster anchored at top-left. Skips NPCs that already have a token
   // so it's safe to click after partial placement. Single broadcast at
   // the end so all clients refetch once instead of N times.
-  async function placeFolderOnMap(npcsToPlace: { id: string; name: string; portrait_url?: string | null; disposition?: string | null }[]) {
+  async function placeFolderOnMap(npcsToPlace: { id: string; name: string; portrait_url?: string | null; disposition?: string | null; npc_type?: string | null }[]) {
     if (npcsToPlace.length === 0) return
     const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
     if (!activeScene) { alert('No active tactical scene. Create a scene first.'); return }
@@ -2029,10 +2029,10 @@ export default function TablePage() {
       // roster. Matches the prep workflow: GM places the gang invisibly,
       // clicks Show on the folder when the time is right.
       is_visible: revealedNpcIds.has(n.id),
-      // Token ring color follows the NPC's disposition (friendly → green,
-      // neutral → gray, hostile → red), matching the portrait ring on the
-      // roster card. Falls back to red if disposition is unset.
-      color: getNpcRingColor(n.disposition).border,
+      // Token ring color follows the NPC's disposition; falls back to
+      // npc_type when disposition is unset (so legacy Foe/Goon NPCs
+      // stay red instead of regressing to neutral gray).
+      color: getNpcTokenBorderColor({ disposition: n.disposition, npc_type: n.npc_type }),
     }))
     const { error } = await supabase.from('scene_tokens').insert(rows)
     if (error) { console.error('[placeFolderOnMap] error:', error.message); alert('Failed to place tokens: ' + error.message); return }
@@ -2054,13 +2054,14 @@ export default function TablePage() {
       return
     }
     // Token ring color: PCs get the standard blue; NPCs use their
-    // disposition ring (friendly → green, neutral → gray, hostile →
-    // red), matching the roster card portrait ring. Looked up from
-    // campaignNpcs so the source-of-truth is the NPC row.
-    const npcDisposition = npcId ? campaignNpcs.find(n => n.id === npcId)?.disposition : null
+    // disposition (friendly → green, hostile → red), falling back to
+    // npc_type when disposition is unset (foe/goon/antagonist → red,
+    // bystander → green) so legacy NPCs without an explicit disposition
+    // don't all regress to neutral gray.
+    const npcRow = npcId ? campaignNpcs.find(n => n.id === npcId) : null
     const tokenColor = type === 'pc'
       ? '#7ab3d4'
-      : getNpcRingColor(npcDisposition).border
+      : getNpcTokenBorderColor({ disposition: npcRow?.disposition, npc_type: (npcRow as any)?.npc_type })
     // Place at top-left of the grid
     const { error: tokenErr } = await supabase.from('scene_tokens').insert({
       scene_id: activeScene.id,
@@ -6310,7 +6311,7 @@ export default function TablePage() {
                 ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
                 : initiativeOrder
               const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
-              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}`, `npc-${npc.id}`) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} onPlaceFolderOnMap={(combatActive || showTacticalMap) ? (folderNpcs) => placeFolderOnMap(folderNpcs.map(n => ({ id: n.id, name: n.name, portrait_url: n.portrait_url, disposition: (n as any).disposition }))) : undefined} npcIdsOnMap={mapTokenNpcIds} onNpcDeleted={async (npcId) => {
+              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}`, `npc-${npc.id}`) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} onPlaceFolderOnMap={(combatActive || showTacticalMap) ? (folderNpcs) => placeFolderOnMap(folderNpcs.map(n => ({ id: n.id, name: n.name, portrait_url: n.portrait_url, disposition: (n as any).disposition, npc_type: (n as any).npc_type }))) : undefined} npcIdsOnMap={mapTokenNpcIds} onNpcDeleted={async (npcId) => {
               // Drop the NPC from every local collection immediately so the
               // initiative bar, roster card overlay, and map token disappear
               // without waiting on a realtime DELETE event.
