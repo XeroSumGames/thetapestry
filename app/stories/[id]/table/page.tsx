@@ -2074,7 +2074,37 @@ export default function TablePage() {
       }
       return
     }
-    const cols = Math.max(1, Math.ceil(Math.sqrt(fresh.length)))
+    // Scan the active scene for unoccupied cells so fresh tokens don't
+    // pile on top of tokens already placed there (e.g. Frank/Hayden at
+    // 0,0 from another folder). Walk the grid row-by-row from top-left
+    // and pick the first N empty cells. Includes archived rows in the
+    // occupancy check so a future un-archive doesn't snap an old token
+    // back to a now-occupied spot.
+    const { data: occTokens } = await supabase
+      .from('scene_tokens')
+      .select('grid_x, grid_y, grid_w, grid_h')
+      .eq('scene_id', activeScene.id)
+    const occupied = new Set<string>()
+    for (const t of ((occTokens ?? []) as any[])) {
+      const w = Math.max(1, t.grid_w ?? 1)
+      const h = Math.max(1, t.grid_h ?? 1)
+      for (let dx = 0; dx < w; dx++) {
+        for (let dy = 0; dy < h; dy++) {
+          occupied.add(`${t.grid_x + dx},${t.grid_y + dy}`)
+        }
+      }
+    }
+    const sceneCols = Math.max(1, (activeScene as any).grid_cols ?? 30)
+    const positions: { x: number; y: number }[] = []
+    for (let i = 0; positions.length < fresh.length && i < sceneCols * 200; i++) {
+      const x = i % sceneCols
+      const y = Math.floor(i / sceneCols)
+      const key = `${x},${y}`
+      if (!occupied.has(key)) {
+        positions.push({ x, y })
+        occupied.add(key)
+      }
+    }
     const rows = fresh.map((n, i) => ({
       scene_id: activeScene.id,
       name: n.name,
@@ -2082,8 +2112,8 @@ export default function TablePage() {
       character_id: null,
       npc_id: n.id,
       portrait_url: n.portrait_url ?? null,
-      grid_x: i % cols,
-      grid_y: Math.floor(i / cols),
+      grid_x: positions[i]?.x ?? 0,
+      grid_y: positions[i]?.y ?? 0,
       // Placed-but-hidden by default if the NPC isn't yet revealed in the
       // roster. Matches the prep workflow: GM places the gang invisibly,
       // clicks Show on the folder when the time is right.
