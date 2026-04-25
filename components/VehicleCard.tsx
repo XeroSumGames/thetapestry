@@ -1,6 +1,4 @@
 'use client'
-import { useState } from 'react'
-import { createClient } from '../lib/supabase-browser'
 import { openPopout } from '../lib/popout'
 
 export interface VehicleCargo {
@@ -27,7 +25,19 @@ export interface Vehicle {
   three_words: string
   notes: string
   image_url: string | null
+  floorplan_url?: string | null
   cargo: VehicleCargo[]
+  // Currently-assigned driver (auto-rolls Driving check). Either a PC
+  // character id or a campaign NPC id — see crewMemberKind below.
+  driver_character_id?: string | null
+  driver_kind?: 'pc' | 'npc' | null
+  // Currently-assigned brewer (auto-rolls Mechanic*/Tinkerer brew check).
+  // Only meaningful when has_still is true.
+  brewer_character_id?: string | null
+  brewer_kind?: 'pc' | 'npc' | null
+  // Whether this vehicle has an integrated still that produces fuel via
+  // a brew check. Minnie has one; almost no other vehicle does.
+  has_still?: boolean
 }
 
 interface Props {
@@ -39,39 +49,13 @@ interface Props {
 }
 
 export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate, onClose }: Props) {
-  const supabase = createClient()
-  const [showAddCargo, setShowAddCargo] = useState(false)
-  const [cargoName, setCargoName] = useState('')
-  const [cargoQty, setCargoQty] = useState('1')
-  const [cargoNotes, setCargoNotes] = useState('')
-  const [editing, setEditing] = useState(false)
-  const [editNotes, setEditNotes] = useState(v.notes)
+  // Slim summary card — the full data (cargo, operator notes, driver/
+  // brewer dropdowns, Driving + Brew checks) lives on the popout. This
+  // card stays light enough to sit in the right-side Assets panel
+  // without dominating it.
 
   function update(patch: Partial<Vehicle>) {
     onUpdate({ ...v, ...patch })
-  }
-
-  function addCargo() {
-    if (!cargoName.trim()) return
-    const existing = v.cargo.find(c => c.name === cargoName.trim())
-    if (existing) {
-      update({ cargo: v.cargo.map(c => c === existing ? { ...c, qty: c.qty + (parseInt(cargoQty) || 1) } : c) })
-    } else {
-      update({ cargo: [...v.cargo, { name: cargoName.trim(), qty: parseInt(cargoQty) || 1, notes: cargoNotes.trim() }] })
-    }
-    setCargoName('')
-    setCargoQty('1')
-    setCargoNotes('')
-    setShowAddCargo(false)
-  }
-
-  function removeCargo(idx: number) {
-    const item = v.cargo[idx]
-    if (item.qty > 1) {
-      update({ cargo: v.cargo.map((c, i) => i === idx ? { ...c, qty: c.qty - 1 } : c) })
-    } else {
-      update({ cargo: v.cargo.filter((_, i) => i !== idx) })
-    }
   }
 
   const wpPct = v.wp_max > 0 ? v.wp_current / v.wp_max : 1
@@ -174,64 +158,8 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
         </div>
       </div>
 
-      {/* Cargo */}
-      <div style={{ marginBottom: '6px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-          <span style={lbl}>Cargo & Equipment</span>
-          <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{v.cargo.length} items</span>
-          {canEdit && (
-            <button onClick={() => setShowAddCargo(!showAddCargo)} style={{ marginLeft: 'auto', fontSize: '13px', padding: '0 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.4 }}>+</button>
-          )}
-        </div>
-        {v.cargo.map((item, idx) => (
-          <div key={`${item.name}-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '2px 4px', fontSize: '13px', color: '#d4cfc9', borderBottom: '1px solid #1a1a1a' }}>
-            <span style={{ flex: 1, fontFamily: 'Barlow Condensed, sans-serif' }}>
-              {item.name}
-              {item.qty > 1 && <span style={{ color: '#7ab3d4' }}> ×{item.qty}</span>}
-              {item.notes && <span style={{ color: '#5a5550' }}> — {item.notes}</span>}
-            </span>
-            {canEdit && (
-              <button onClick={() => removeCargo(idx)} style={{ background: 'none', border: 'none', color: '#cce0f5', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>×</button>
-            )}
-          </div>
-        ))}
-        {showAddCargo && (
-          <div style={{ marginTop: '4px', padding: '6px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
-              <input value={cargoName} onChange={e => setCargoName(e.target.value)} placeholder="Item name"
-                autoFocus style={{ flex: 1, padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
-              <input value={cargoQty} onChange={e => setCargoQty(e.target.value)} type="number" min="1" placeholder="Qty"
-                style={{ width: '40px', padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
-            </div>
-            <input value={cargoNotes} onChange={e => setCargoNotes(e.target.value)} placeholder="Notes (e.g. 300 rounds each)"
-              style={{ width: '100%', padding: '3px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', marginBottom: '4px' }} />
-            <div style={{ display: 'flex', gap: '4px' }}>
-              <button onClick={addCargo} style={{ flex: 1, padding: '4px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Add</button>
-              <button onClick={() => setShowAddCargo(false)} style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Operator Notes */}
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-          <span style={lbl}>Operator Notes</span>
-          {canEdit && <button onClick={() => { setEditing(!editing); setEditNotes(v.notes) }} style={{ marginLeft: 'auto', fontSize: '13px', padding: '0 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.4 }}>{editing ? 'Cancel' : 'Edit'}</button>}
-        </div>
-        {editing ? (
-          <div>
-            <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={4}
-              style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box' }} />
-            <button onClick={() => { update({ notes: editNotes }); setEditing(false) }}
-              style={{ marginTop: '4px', padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Save</button>
-          </div>
-        ) : (
-          <div style={{ fontSize: '13px', color: '#cce0f5', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{v.notes || 'No notes.'}</div>
-        )}
-      </div>
+      {/* Cargo, operator notes, driver/brewer, and the Driving / Brew
+          checks all live on the popout — keeps this card light. */}
     </div>
   )
 }
