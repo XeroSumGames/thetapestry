@@ -1007,8 +1007,8 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                           to npc_type via getNpcRingColor). The picked
                           dot gets a white outline so the current value
                           is unmistakable from a glance. */}
-                      <span title={`Disposition: ${npc.disposition ?? 'unset'}`}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', padding: '0 2px' }}>
+                      <span title={`Disposition: ${npc.disposition ?? 'unset'} · npc_type: ${npc.npc_type ?? 'unset'}`}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '0 2px' }}>
                         {([
                           ['friendly', '#2d5a1b', '#1a2e10'],
                           ['neutral',  '#3a3a3a', '#2e2e2e'],
@@ -1019,9 +1019,18 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                             <button key={val} type="button"
                               onClick={e => { e.stopPropagation(); quickSetDisposition(npc.id, picked ? null : val) }}
                               title={`Set disposition: ${val}${picked ? ' (click to clear)' : ''}`}
-                              style={{ width: '12px', height: '12px', borderRadius: '50%', border: `2px solid ${border}`, background: bg, cursor: 'pointer', padding: 0, outline: picked ? '2px solid #f5f2ee' : 'none', outlineOffset: '1px' }} />
+                              style={{ width: '14px', height: '14px', borderRadius: '50%', border: `2px solid ${border}`, background: bg, cursor: 'pointer', padding: 0, outline: picked ? '2px solid #f5f2ee' : 'none', outlineOffset: '1px' }} />
                           )
                         })}
+                        {/* Diagnostic — shows the actual disposition value
+                            stored in the roster's local state. If this
+                            says "—" but you've set the disposition in a
+                            popout, the realtime sub on campaign_npcs
+                            isn't firing — run
+                            sql/campaign-npcs-realtime-publication.sql. */}
+                        <span style={{ fontSize: '13px', color: npc.disposition === 'friendly' ? '#7fc458' : npc.disposition === 'hostile' ? '#f5a89a' : '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginLeft: '2px' }}>
+                          {npc.disposition ?? '—'}
+                        </span>
                       </span>
                       <button onClick={e => quickReveal(npc.id, e)}
                         style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: revealedNpcIds.has(npc.id) ? '#2a1210' : '#1a2e10', border: `1px solid ${revealedNpcIds.has(npc.id) ? '#c0392b' : '#2d5a1b'}`, color: revealedNpcIds.has(npc.id) ? '#f5a89a' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
