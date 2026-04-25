@@ -446,7 +446,19 @@ export default function TablePage() {
   const [showAddPC, setShowAddPC] = useState(false)
   const [npcName, setNpcName] = useState('')
   const [startingCombat, setStartingCombat] = useState(false)
-  const [showTacticalMap, setShowTacticalMap] = useState(false)
+  // Persist per-campaign so a refresh keeps players on the tactical view
+  // they were watching. Default false on first visit; flipped true by the
+  // GM share broadcast, the combat_ended broadcast, the GM's own toggle
+  // button, etc. — every transition writes back to localStorage via the
+  // effect below.
+  const [showTacticalMap, setShowTacticalMap] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem(`tactical_map_view_${id}`) === '1'
+  })
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    localStorage.setItem(`tactical_map_view_${id}`, showTacticalMap ? '1' : '0')
+  }, [showTacticalMap, id])
   const [tacticalShared, setTacticalShared] = useState(false)
   const [tokenRefreshKey, setTokenRefreshKey] = useState(0)
   const [moveMode, setMoveMode] = useState<{ characterId?: string; npcId?: string; feet: number } | null>(null)
