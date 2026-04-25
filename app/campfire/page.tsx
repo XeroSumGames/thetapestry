@@ -27,7 +27,6 @@ const TOOLS: Tool[] = [
     description: 'Community threads — lore, rules questions, session recaps.',
     href: '/campfire/forums',
     color: '#2d5a1b',
-    soon: true,
   },
   {
     label: 'War Stories',
