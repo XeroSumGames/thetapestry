@@ -25,10 +25,12 @@ interface Community {
   campaign_id: string
   name: string
   status: 'forming' | 'active' | 'dissolved'
+  community_status: string | null
   leader_npc_id: string | null
   leader_user_id: string | null
   consecutive_failures: number
   week_number: number
+  homestead_pin_id: string | null
 }
 
 interface Member {
@@ -527,8 +529,12 @@ export default function CommunityMoraleModal({
       week_number: newWeek,
       consecutive_failures: finalConsFailures,
       status: nextStatus,
-      ...(reallyDissolves ? { dissolved_at: now } : {}),
+      ...(reallyDissolves ? { dissolved_at: now, community_status: 'Dissolved' } : {}),
     }).eq('id', community.id)
+
+    if (reallyDissolves && community.homestead_pin_id) {
+      await supabase.from('campaign_pins').update({ revealed: false }).eq('id', community.homestead_pin_id)
+    }
 
     // 5) Log rows for the session feed. Morale card is credited to the
     //    designated leader (per SRD p.22); Fed/Clothed stay credited to
