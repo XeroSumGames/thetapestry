@@ -2006,15 +2006,28 @@ export default function TablePage() {
   // so it's safe to click after partial placement. Single broadcast at
   // the end so all clients refetch once instead of N times.
   async function placeFolderOnMap(npcsToPlace: { id: string; name: string; portrait_url?: string | null; disposition?: string | null; npc_type?: string | null }[]) {
-    if (npcsToPlace.length === 0) return
-    const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
-    if (!activeScene) { alert('No active tactical scene. Create a scene first.'); return }
+    console.log('[placeFolderOnMap] start, count=', npcsToPlace.length)
+    if (npcsToPlace.length === 0) { alert('No NPCs to place.'); return }
+    const { data: activeScene, error: sceneErr } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
+    if (sceneErr || !activeScene) {
+      console.warn('[placeFolderOnMap] no active scene:', sceneErr?.message)
+      alert('No active tactical scene. Open the Tactical Map and create or activate a scene first.')
+      return
+    }
     // Filter out NPCs that already have a token in this scene.
     const npcIds = npcsToPlace.map(n => n.id)
     const { data: existing } = await supabase.from('scene_tokens').select('npc_id').eq('scene_id', activeScene.id).in('npc_id', npcIds)
     const taken = new Set<string>((existing ?? []).map((r: any) => r.npc_id))
     const fresh = npcsToPlace.filter(n => !taken.has(n.id))
-    if (fresh.length === 0) return
+    console.log('[placeFolderOnMap] active scene', activeScene.id, 'taken=', taken.size, 'fresh=', fresh.length)
+    if (fresh.length === 0) {
+      // Sync the parent's token-on-map state so the button flips to UNMAP
+      // on the next render (the npcIdsOnMap prop was stale; the DB shows
+      // these NPCs are already mapped).
+      await refreshMapTokenIds()
+      alert('All of these NPCs are already on the map. Click UNMAP to remove them, or place individually.')
+      return
+    }
     const cols = Math.max(1, Math.ceil(Math.sqrt(fresh.length)))
     const rows = fresh.map((n, i) => ({
       scene_id: activeScene.id,
@@ -2036,21 +2049,30 @@ export default function TablePage() {
     }))
     const { error } = await supabase.from('scene_tokens').insert(rows)
     if (error) { console.error('[placeFolderOnMap] error:', error.message); alert('Failed to place tokens: ' + error.message); return }
+    console.log('[placeFolderOnMap] inserted', rows.length, 'tokens')
     setTokenRefreshKey(k => k + 1)
     await refreshMapTokenIds()
     initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+    // If the GM doesn't have the tactical map view open, they'd get no
+    // visual confirmation that the placement worked. Surface a brief
+    // alert so the click never feels silent.
+    if (!showTacticalMap) {
+      alert(`Placed ${rows.length} token${rows.length === 1 ? '' : 's'} on the active scene. Open the Tactical Map to see them.`)
+    }
   }
 
   // Bulk-remove every token for the given NPC ids from the active scene.
   // Mirrors placeFolderOnMap so the per-folder Map/Unmap toggle is
   // perfectly symmetric. Single broadcast at the end.
   async function unmapFolderFromMap(npcsToRemove: { id: string }[]) {
+    console.log('[unmapFolder] start, count=', npcsToRemove.length)
     if (npcsToRemove.length === 0) return
-    const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
-    if (!activeScene) return
+    const { data: activeScene, error: sceneErr } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
+    if (sceneErr || !activeScene) { alert('No active tactical scene.'); return }
     const npcIds = npcsToRemove.map(n => n.id)
     const { error } = await supabase.from('scene_tokens').delete().eq('scene_id', activeScene.id).in('npc_id', npcIds)
     if (error) { console.error('[unmapFolder] error:', error.message); alert('Failed to unmap: ' + error.message); return }
+    console.log('[unmapFolder] deleted tokens for npc ids', npcIds)
     setTokenRefreshKey(k => k + 1)
     await refreshMapTokenIds()
     initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
