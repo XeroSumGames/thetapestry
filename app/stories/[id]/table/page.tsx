@@ -4,7 +4,7 @@ import { createClient } from '../../../../lib/supabase-browser'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
 import type { InventoryItem } from '../../../../components/InventoryPanel'
-import NpcRoster, { getNpcTokenBorderColor } from '../../../../components/NpcRoster'
+import NpcRoster, { getNpcRingColor, getNpcTokenBorderColor } from '../../../../components/NpcRoster'
 import NpcCard from '../../../../components/NpcCard'
 import PlayerNpcCard from '../../../../components/PlayerNpcCard'
 import ObjectCard from '../../../../components/ObjectCard'
@@ -6425,13 +6425,28 @@ export default function TablePage() {
                     }}
                     style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: isOpen ? '#2a1210' : npcIsDead ? '#0f0f0f' : '#1a1a1a', border: `1px solid ${isOpen ? '#c0392b' : npcIsDead ? '#3a3a3a' : inCombat ? '#5a1b1b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s', opacity: npcIsDead ? 0.5 : 1 }}
                   >
-                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                      {npc.portrait_url ? (
-                        <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
-                      )}
-                    </div>
+                    {(() => {
+                      // Player-side NPC list. Pull disposition + npc_type
+                      // from the fresh campaign_npcs row when available
+                      // (revealedNpcs is built from npc_relationships +
+                      // an older snapshot; freshNpc has the live state)
+                      // so the ring follows the disposition picker
+                      // instantly. Same getNpcRingColor helper as the
+                      // GM roster — both surfaces never disagree.
+                      const ring = getNpcRingColor({
+                        disposition: ((freshNpc as any)?.disposition ?? npc.disposition) ?? null,
+                        npc_type: ((freshNpc as any)?.npc_type ?? npc.npc_type) ?? null,
+                      })
+                      return (
+                        <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: ring.bg, border: `2px solid ${ring.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                          {npc.portrait_url ? (
+                            <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: ring.color, fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
+                          )}
+                        </div>
+                      )
+                    })()}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.name}</div>
                       {npcIsDead && <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>💀 Dead</div>}
