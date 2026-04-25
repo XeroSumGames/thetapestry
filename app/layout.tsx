@@ -54,8 +54,9 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {
             try {
-              var orig = console.log;
-              var SHAPE_KEYS = ['x','y','w','h'];
+              // 1. Drop browser-extension log spam of the exact shape
+              //    {x, y, w, h} — too specific to ever swallow an app log.
+              var origLog = console.log;
               console.log = function() {
                 if (arguments.length === 1) {
                   var a = arguments[0];
@@ -70,7 +71,20 @@ export default function RootLayout({
                     }
                   }
                 }
-                return orig.apply(console, arguments);
+                return origLog.apply(console, arguments);
+              };
+              // 2. Drop the Supabase Realtime deprecation warning that
+              //    fires whenever channel.send() is called before the
+              //    subscription completes — purely informational; we'll
+              //    refactor the .send() callsites later, no need to drown
+              //    the console with it in the meantime.
+              var origWarn = console.warn;
+              console.warn = function() {
+                if (arguments.length >= 1 && typeof arguments[0] === 'string' &&
+                    arguments[0].indexOf('Realtime send() is automatically falling back to REST API') !== -1) {
+                  return;
+                }
+                return origWarn.apply(console, arguments);
               };
             } catch (e) { /* noop */ }
           })();
