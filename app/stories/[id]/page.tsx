@@ -533,7 +533,15 @@ export default function CampaignPage() {
                       <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>No character assigned</div>
                     )}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#cce0f5' }}>Joined {formatDate(m.joined_at)}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {m.user_id && m.user_id !== userId && (
+                      <a href={`/messages?dm=${m.user_id}`} title="Send message"
+                        style={{ padding: '3px 8px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', lineHeight: 1.4 }}>
+                        💬 Message
+                      </a>
+                    )}
+                    <div style={{ fontSize: '13px', color: '#cce0f5' }}>Joined {formatDate(m.joined_at)}</div>
+                  </div>
                 </div>
               )
             })}

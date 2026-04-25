@@ -242,6 +242,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // Source pools for adding members
   const [npcs, setNpcs] = useState<NpcOption[]>([])
   const [chars, setChars] = useState<CharOption[]>([])
+  // character_id -> user_id, so PC rows in the roster can deep-link to /messages?dm=<userId>
+  const [pcUserMap, setPcUserMap] = useState<Record<string, string>>({})
   const [pins, setPins] = useState<PinOption[]>([])
 
   // Create form state
@@ -358,7 +360,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       supabase.from('communities').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: true }),
       supabase.from('campaign_npcs').select('id, name, skills').eq('campaign_id', campaignId).order('name'),
       supabase.from('campaign_members')
-        .select('character_id, characters:character_id(id, name)')
+        .select('character_id, user_id, characters:character_id(id, name)')
         .eq('campaign_id', campaignId)
         .not('character_id', 'is', null),
       supabase.from('campaign_pins').select('id, name, lat, lng').eq('campaign_id', campaignId).order('name'),
@@ -369,6 +371,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     setChars(((charsRes.data ?? []) as any[])
       .map(r => r.characters as CharOption | null)
       .filter((c): c is CharOption => !!c && !!c.id && !!c.name))
+    const charUserMap: Record<string, string> = {}
+    ;(charsRes.data ?? []).forEach((r: any) => {
+      if (r.character_id && r.user_id) charUserMap[r.character_id] = r.user_id
+    })
+    setPcUserMap(charUserMap)
     setPins((pinsRes.data ?? []) as PinOption[])
     // Load members for every community. Split into active vs pending
     // so the roster shows confirmed members while the leader sees a
@@ -1834,6 +1841,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                             style={{ width: '110px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
                             {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
                           </select>
+                          {m.character_id && pcUserMap[m.character_id] && pcUserMap[m.character_id] !== myUserId && (
+                            <a href={`/messages?dm=${pcUserMap[m.character_id]}`} title="Send message"
+                              style={{ padding: '2px 6px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7ab3d4', fontSize: '14px', textDecoration: 'none', lineHeight: 1.2 }}>
+                              💬
+                            </a>
+                          )}
                           {isGM ? (
                             <button onClick={() => handleRemoveMember(m)} title="Remove from community"
                               style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '16px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>×</button>
