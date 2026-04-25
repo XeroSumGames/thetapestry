@@ -74,7 +74,7 @@ export default function CampfirePage() {
             The Campfire
           </div>
           <div style={{ fontSize: '13px', color: '#5a8a40', lineHeight: 1.5 }}>
-            The meta layer — connect with players, GMs, and visitors across campaigns.
+            Take a seat. Here you can connect with players, GMs, and visitors outside of campaigns.
           </div>
         </div>
 
