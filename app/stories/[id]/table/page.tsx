@@ -2028,11 +2028,23 @@ export default function TablePage() {
     //      to restore the GM's previous positioning.
     //   3. No token at all — insert fresh at cluster position.
     const npcIds = npcsToPlace.map(n => n.id)
-    const { data: existing } = await supabase
+    const { data: existing, error: existingErr } = await supabase
       .from('scene_tokens')
       .select('id, npc_id, archived_at')
       .eq('scene_id', activeScene.id)
       .in('npc_id', npcIds)
+    if (existingErr) {
+      console.error('[placeFolderOnMap] select error:', existingErr.message)
+      // If the archived_at column doesn't exist yet, the SELECT fails
+      // with a "column does not exist" message. Surface that clearly so
+      // the GM knows to run the migration instead of seeing nothing.
+      if (existingErr.message?.toLowerCase().includes('archived_at') || existingErr.code === '42703') {
+        alert('Database is missing the archived_at column. Run sql/scene-tokens-archived-at.sql in Supabase, then hard-refresh.')
+      } else {
+        alert('Failed to look up existing tokens: ' + existingErr.message)
+      }
+      return
+    }
     const live = new Set<string>(((existing ?? []) as any[]).filter(r => !r.archived_at).map(r => r.npc_id))
     const archivedByNpc = new Map<string, string>()
     for (const r of (existing ?? []) as any[]) {
@@ -2114,7 +2126,15 @@ export default function TablePage() {
       .eq('scene_id', activeScene.id)
       .in('npc_id', npcIds)
       .is('archived_at', null)
-    if (error) { console.error('[unmapFolder] error:', error.message); alert('Failed to unmap: ' + error.message); return }
+    if (error) {
+      console.error('[unmapFolder] error:', error.message)
+      if (error.message?.toLowerCase().includes('archived_at') || error.code === '42703') {
+        alert('Database is missing the archived_at column. Run sql/scene-tokens-archived-at.sql in Supabase, then hard-refresh.')
+      } else {
+        alert('Failed to unmap: ' + error.message)
+      }
+      return
+    }
     setTokenRefreshKey(k => k + 1)
     await refreshMapTokenIds()
     initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
