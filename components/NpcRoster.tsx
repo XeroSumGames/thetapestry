@@ -1167,14 +1167,16 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       ) : (
                         <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{folderName}</span>
                       )}
-                      {/* One-button folder visibility toggle. SHOW =
-                          place any missing tokens on the GM's map +
-                          reveal to players in the sidebar + flip
-                          is_visible=true so players see them on the
-                          canvas. HIDE = revealed=false + is_visible=
-                          false; tokens stay on the GM's map (full
-                          opacity) but disappear for players. The GM
-                          never loses sight of what they've placed. */}
+                      {/* One-button folder toggle that does EVERYTHING.
+                          SHOW: place any missing tokens (or un-archive
+                          existing ones to restore prior positions) +
+                          set revealed=true + is_visible=true. Result:
+                          tokens visible on every map (GM + players) AND
+                          listed in the player NPC sidebar. HIDE: archive
+                          all tokens (so they vanish from every map —
+                          GM included — but the row keeps grid_x / grid_y
+                          / scale / rotation for the next SHOW) + set
+                          revealed=false. Position is never lost. */}
                       {pcEntries && pcEntries.length > 0 && folderNpcs.length > 0 && (() => {
                         const folderIds = folderNpcs.map(n => n.id)
                         const allRevealed = folderIds.every(id => revealedNpcIds.has(id))
@@ -1186,13 +1188,14 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                           <button onClick={async e => {
                             e.stopPropagation()
                             if (allRevealed) {
+                              // HIDE: archive tokens (off every map,
+                              // position preserved) + sidebar reveal off.
+                              if (onUnmapFolder) await onUnmapFolder(folderNpcs)
                               await hideNpcsByIds(folderIds)
                             } else {
-                              // Place any missing tokens first so players
-                              // (and the GM) actually see something on
-                              // the canvas after the reveal flips. Then
-                              // reveal to make them visible to players +
-                              // listed in their sidebar.
+                              // SHOW: place / un-archive first, then
+                              // reveal so players see them on their
+                              // canvas + sidebar in one click.
                               if (onPlaceFolderOnMap && unplaced.length > 0) {
                                 await onPlaceFolderOnMap(unplaced)
                               }
@@ -1200,8 +1203,8 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                             }
                           }}
                             title={allRevealed
-                              ? `Hide all ${folderNpcs.length} NPCs from players (GM still sees them)`
-                              : `Place + reveal all ${folderNpcs.length} NPCs to players`}
+                              ? `Hide all ${folderNpcs.length} NPCs (vanish from every map; positions preserved)`
+                              : `Place + reveal all ${folderNpcs.length} NPCs (visible to GM + players)`}
                             style={{ padding: '1px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
                             {label}
                           </button>
