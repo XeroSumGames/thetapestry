@@ -1995,7 +1995,10 @@ export default function TablePage() {
   async function refreshMapTokenIds() {
     const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
     if (!activeScene) return
-    const { data: tokens } = await supabase.from('scene_tokens').select('npc_id').eq('scene_id', activeScene.id).not('npc_id', 'is', null)
+    // Only count tokens that are actually ON the map. Archived (soft-
+    // deleted) rows preserve position for a future remap but shouldn't
+    // make the folder button read UNMAP.
+    const { data: tokens } = await supabase.from('scene_tokens').select('npc_id').eq('scene_id', activeScene.id).not('npc_id', 'is', null).is('archived_at', null)
     setMapTokenNpcIds(new Set((tokens ?? []).map((t: any) => t.npc_id)))
   }
 
@@ -2013,26 +2016,50 @@ export default function TablePage() {
   // so it's safe to click after partial placement. Single broadcast at
   // the end so all clients refetch once instead of N times.
   async function placeFolderOnMap(npcsToPlace: { id: string; name: string; portrait_url?: string | null; disposition?: string | null; npc_type?: string | null }[]) {
-    console.log('[placeFolderOnMap] start, count=', npcsToPlace.length)
     if (npcsToPlace.length === 0) { alert('No NPCs to place.'); return }
     const { data: activeScene, error: sceneErr } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
     if (sceneErr || !activeScene) {
-      console.warn('[placeFolderOnMap] no active scene:', sceneErr?.message)
       alert('No active tactical scene. Open the Tactical Map and create or activate a scene first.')
       return
     }
-    // Filter out NPCs that already have a token in this scene.
+    // Three groups now exist for each NPC in the folder:
+    //   1. Live token (archived_at IS NULL) — already on map; skip.
+    //   2. Archived token (archived_at NOT NULL) — un-archive in place
+    //      to restore the GM's previous positioning.
+    //   3. No token at all — insert fresh at cluster position.
     const npcIds = npcsToPlace.map(n => n.id)
-    const { data: existing } = await supabase.from('scene_tokens').select('npc_id').eq('scene_id', activeScene.id).in('npc_id', npcIds)
-    const taken = new Set<string>((existing ?? []).map((r: any) => r.npc_id))
-    const fresh = npcsToPlace.filter(n => !taken.has(n.id))
-    console.log('[placeFolderOnMap] active scene', activeScene.id, 'taken=', taken.size, 'fresh=', fresh.length)
+    const { data: existing } = await supabase
+      .from('scene_tokens')
+      .select('id, npc_id, archived_at')
+      .eq('scene_id', activeScene.id)
+      .in('npc_id', npcIds)
+    const live = new Set<string>(((existing ?? []) as any[]).filter(r => !r.archived_at).map(r => r.npc_id))
+    const archivedByNpc = new Map<string, string>()
+    for (const r of (existing ?? []) as any[]) {
+      if (r.archived_at) archivedByNpc.set(r.npc_id, r.id)
+    }
+    const fresh = npcsToPlace.filter(n => !live.has(n.id) && !archivedByNpc.has(n.id))
+
+    // 2. Un-archive (restore position) for everyone who has a soft-
+    //    deleted row in this scene.
+    const archivedIds = Array.from(archivedByNpc.values())
+    if (archivedIds.length > 0) {
+      const { error: unErr } = await supabase
+        .from('scene_tokens')
+        .update({ archived_at: null })
+        .in('id', archivedIds)
+      if (unErr) { console.error('[placeFolderOnMap] unarchive error:', unErr.message); alert('Failed to restore tokens: ' + unErr.message); return }
+    }
+
+    // Nothing left to insert (everything was either live already or
+    // restored from archive)? Done — no top-left cluster needed.
     if (fresh.length === 0) {
-      // Sync the parent's token-on-map state so the button flips to UNMAP
-      // on the next render (the npcIdsOnMap prop was stale; the DB shows
-      // these NPCs are already mapped).
+      setTokenRefreshKey(k => k + 1)
       await refreshMapTokenIds()
-      alert('All of these NPCs are already on the map. Click UNMAP to remove them, or place individually.')
+      initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+      if (archivedIds.length > 0 && !showTacticalMap) {
+        alert(`Restored ${archivedIds.length} token${archivedIds.length === 1 ? '' : 's'} to their previous positions.`)
+      }
       return
     }
     const cols = Math.max(1, Math.ceil(Math.sqrt(fresh.length)))
@@ -2072,51 +2099,22 @@ export default function TablePage() {
   // Mirrors placeFolderOnMap so the per-folder Map/Unmap toggle is
   // perfectly symmetric. Single broadcast at the end.
   async function unmapFolderFromMap(npcsToRemove: { id: string }[]) {
-    // Sentinel — if you see this alert, the click reached the handler.
-    // If you click UNMAP and DON'T see this alert, the page is running
-    // a cached bundle: hard-refresh (Ctrl-Shift-R) and try again.
-    console.log('[unmapFolder] HANDLER REACHED, count=', npcsToRemove.length, 'ids=', npcsToRemove.map(n => n.id))
-    if (npcsToRemove.length === 0) {
-      alert('UNMAP clicked but the folder list was empty.')
-      return
-    }
+    if (npcsToRemove.length === 0) return
     const { data: activeScene, error: sceneErr } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
     if (sceneErr || !activeScene) { alert('No active tactical scene.'); return }
     const npcIds = npcsToRemove.map(n => n.id)
-    // Diagnostic: which tokens actually match BEFORE we try to delete?
-    // If this returns 0, the issue is scene/npc id mismatch (probably
-    // tokens placed under a different active scene). If it returns N
-    // but DELETE removes 0, RLS is silently blocking — the row count
-    // from the DELETE's .select() returns the genuinely-deleted rows.
-    const { data: matchingTokens } = await supabase
+    // Soft-delete: stamp archived_at = now() on the live tokens. This
+    // preserves grid_x / grid_y / scale / rotation / grid_w / grid_h
+    // so a subsequent Map click can un-archive the row and put each
+    // token back exactly where the GM had it. Filter on archived_at
+    // IS NULL so we don't keep poking already-archived rows.
+    const { error } = await supabase
       .from('scene_tokens')
-      .select('id, name, scene_id, npc_id')
+      .update({ archived_at: new Date().toISOString() })
       .eq('scene_id', activeScene.id)
       .in('npc_id', npcIds)
-    console.log('[unmapFolder] active scene', activeScene.id, 'matching tokens BEFORE delete:', matchingTokens?.length ?? 0, matchingTokens)
-    // Look across the WHOLE campaign — if tokens exist for these npc_ids
-    // but in OTHER scenes, that's why the active-scene-scoped delete
-    // returned 0. Surface this so the GM can switch scenes / decide.
-    const { data: anywhereTokens } = await supabase
-      .from('scene_tokens')
-      .select('id, scene_id, npc_id')
-      .in('npc_id', npcIds)
-    if ((anywhereTokens?.length ?? 0) > 0 && (matchingTokens?.length ?? 0) === 0) {
-      const scenes = Array.from(new Set((anywhereTokens ?? []).map((t: any) => t.scene_id)))
-      alert(`These NPCs have ${anywhereTokens!.length} token(s) on the map, but in a different scene than the active one (active=${activeScene.id}, found-on=${scenes.join(', ')}). Switch to that scene and try again.`)
-      return
-    }
-    const { data: deleted, error } = await supabase
-      .from('scene_tokens')
-      .delete()
-      .eq('scene_id', activeScene.id)
-      .in('npc_id', npcIds)
-      .select('id')
+      .is('archived_at', null)
     if (error) { console.error('[unmapFolder] error:', error.message); alert('Failed to unmap: ' + error.message); return }
-    console.log('[unmapFolder] DELETE returned', deleted?.length ?? 0, 'row(s):', deleted)
-    if ((deleted?.length ?? 0) === 0 && (matchingTokens?.length ?? 0) > 0) {
-      alert(`Found ${matchingTokens!.length} token(s) but DELETE returned 0 rows — RLS is silently blocking the delete. Check sql/scene-tokens-player-update-objects.sql or similar policies.`)
-    }
     setTokenRefreshKey(k => k + 1)
     await refreshMapTokenIds()
     initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })

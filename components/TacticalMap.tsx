@@ -172,7 +172,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   }
 
   async function loadTokens(sceneId: string) {
-    const { data } = await supabase.from('scene_tokens').select('*').eq('scene_id', sceneId)
+    // Soft-deleted tokens (archived_at not null) preserve their position
+    // for a future remap but render as if absent. Filter them out here.
+    const { data } = await supabase.from('scene_tokens').select('*').eq('scene_id', sceneId).is('archived_at', null)
     setTokens(data ?? [])
   }
 
