@@ -52,6 +52,9 @@ interface ObjectToken {
   color: string
   properties: TokenProperty[]
   contents: ContentItem[]
+  // PCs allowed to drag this object on the tactical map. Empty array
+  // (the default) means GM-only.
+  controlled_by_character_ids?: string[]
 }
 
 interface Props {
@@ -86,6 +89,10 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [editIndestructible, setEditIndestructible] = useState(false)
   const [editProps, setEditProps] = useState<TokenProperty[]>([])
   const [editContents, setEditContents] = useState<ContentItem[]>([])
+  const [editControllers, setEditControllers] = useState<string[]>([])
+  // Campaign PCs available to be assigned as controllers — fetched once
+  // when the modal opens. Shape: { id, name, ownerName? }.
+  const [campaignPcs, setCampaignPcs] = useState<{ id: string; name: string; ownerName?: string }[]>([])
   const [contentPickerValue, setContentPickerValue] = useState('')
   const [contentQty, setContentQty] = useState(1)
   const [lootingObj, setLootingObj] = useState<ObjectToken | null>(null)
@@ -459,7 +466,25 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   style={{ flex: 1, padding: '3px 0', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: obj.is_visible ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {obj.is_visible ? 'Show' : 'Hide'}
                 </button>
-                <button onClick={() => { setEditingObj(obj); setEditName(obj.name); setEditWP(obj.wp_max != null ? String(obj.wp_max) : '3'); setEditIndestructible(obj.wp_max == null); setEditProps(Array.isArray(obj.properties) ? obj.properties : []); setEditContents(Array.isArray(obj.contents) ? obj.contents : []) }}
+                <button onClick={async () => {
+                  setEditingObj(obj); setEditName(obj.name); setEditWP(obj.wp_max != null ? String(obj.wp_max) : '3'); setEditIndestructible(obj.wp_max == null); setEditProps(Array.isArray(obj.properties) ? obj.properties : []); setEditContents(Array.isArray(obj.contents) ? obj.contents : []); setEditControllers(Array.isArray(obj.controlled_by_character_ids) ? obj.controlled_by_character_ids : [])
+                  // Lazy-fetch campaign PCs the first time an edit modal
+                  // opens. Cheap query; doesn't change during a session.
+                  if (campaignPcs.length === 0) {
+                    const { data } = await supabase
+                      .from('campaign_members')
+                      .select('user_id, characters:character_id(id, name), profiles:user_id(username)')
+                      .eq('campaign_id', campaignId)
+                      .not('character_id', 'is', null)
+                    const pcs: { id: string; name: string; ownerName?: string }[] = []
+                    for (const r of ((data ?? []) as any[])) {
+                      const c = r.characters as { id: string; name: string } | null
+                      const p = r.profiles as { username?: string } | null
+                      if (c) pcs.push({ id: c.id, name: c.name, ownerName: p?.username })
+                    }
+                    setCampaignPcs(pcs)
+                  }
+                }}
                   style={{ flex: 1, padding: '3px 0', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Edit
                 </button>
@@ -657,6 +682,36 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
               </div>
             </div>
 
+            {/* Controlled By — opt-in list of PCs allowed to drag this
+                token on the tactical map. Empty = GM-only (the default).
+                Useful for vehicle objects so the driver can move the
+                token, or for any prop the GM wants a player to push
+                around without GM intervention. */}
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Controlled By</span>
+                <span style={{ fontSize: '13px', color: '#5a5550' }}>{editControllers.length === 0 ? 'GM only' : `${editControllers.length} PC${editControllers.length === 1 ? '' : 's'}`}</span>
+              </div>
+              {campaignPcs.length === 0 ? (
+                <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic' }}>No player characters in this campaign yet.</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '140px', overflowY: 'auto', padding: '4px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                  {campaignPcs.map(pc => {
+                    const checked = editControllers.includes(pc.id)
+                    return (
+                      <label key={pc.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 6px', cursor: 'pointer', borderRadius: '2px', background: checked ? '#1a2e10' : 'transparent', border: `1px solid ${checked ? '#2d5a1b' : 'transparent'}` }}>
+                        <input type="checkbox" checked={checked}
+                          onChange={() => setEditControllers(prev => checked ? prev.filter(id => id !== pc.id) : [...prev, pc.id])}
+                          style={{ accentColor: '#7fc458', cursor: 'pointer' }} />
+                        <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{pc.name}</span>
+                        {pc.ownerName && <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{pc.ownerName}</span>}
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
             <div style={{ display: 'flex', gap: '6px' }}>
               <button onClick={async () => {
                 let wpVal: number | null
@@ -673,8 +728,9 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   wp_current: wpVal,
                   properties: cleanProps,
                   contents: editContents,
+                  controlled_by_character_ids: editControllers,
                 }).eq('id', editingObj.id)
-                setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, name: editName.trim() || o.name, wp_max: wpVal, wp_current: wpVal, properties: cleanProps, contents: editContents } : o))
+                setObjects(prev => prev.map(o => o.id === editingObj.id ? { ...o, name: editName.trim() || o.name, wp_max: wpVal, wp_current: wpVal, properties: cleanProps, contents: editContents, controlled_by_character_ids: editControllers } : o))
                 setEditingObj(null)
               }}
                 style={{ ...chipBtn, flex: 1, background: '#c0392b', border: '1px solid #c0392b', color: '#fff' }}>Save</button>

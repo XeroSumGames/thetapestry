@@ -33,6 +33,9 @@ interface Token {
   // visually overflowing a single-cell anchor.
   grid_w: number
   grid_h: number
+  // PCs that the GM has opted-in to move this token (objects only — a
+  // PC token is implicitly controlled by its owner). Empty = GM-only.
+  controlled_by_character_ids?: string[] | null
   is_visible: boolean
   color: string
   wp_max: number | null
@@ -996,7 +999,17 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           ? initiativeOrder.find((e: any) => e.character_id === tok.character_id)
           : null
         const playerLocked = ownInitEntry != null && (ownInitEntry.actions_remaining ?? 0) <= 0
-        const canDrag = isGM || (!!myCharacterId && tok.character_id === myCharacterId && !playerLocked)
+        // A non-GM player can drag a token if (a) it's their own PC and
+        // they aren't action-locked, OR (b) it's an object the GM has
+        // explicitly added them to via the Edit Object → Controlled By
+        // list (e.g. the driver of a vehicle moving the vehicle token).
+        const isControlledObject = !!myCharacterId
+          && tok.token_type === 'object'
+          && Array.isArray(tok.controlled_by_character_ids)
+          && tok.controlled_by_character_ids.includes(myCharacterId)
+        const canDrag = isGM
+          || (!!myCharacterId && tok.character_id === myCharacterId && !playerLocked)
+          || isControlledObject
         if (canDrag && canvasRef.current) {
           const rect = canvasRef.current.getBoundingClientRect()
           const mx = (e.clientX - rect.left) / zoom
