@@ -219,20 +219,25 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     loadObjects()
   }
 
-  // Generic uploader — takes a Blob (cropper outputs JPEG) and returns the public URL.
+  // Generic uploader — takes a Blob (cropper outputs JPEG or PNG depending
+  // on whether the input had transparency) and returns the public URL.
   async function uploadBlob(blob: Blob, ext = 'jpg'): Promise<string | null> {
     const path = `${campaignId}/${crypto.randomUUID()}.${ext}`
-    const { error } = await supabase.storage.from('object-tokens').upload(path, blob, { contentType: blob.type || 'image/jpeg' })
+    const contentType = blob.type || (ext === 'png' ? 'image/png' : 'image/jpeg')
+    const { error } = await supabase.storage.from('object-tokens').upload(path, blob, { contentType })
     if (error) { console.warn('[CampaignObjects] upload error:', error.message); return null }
     const { data: urlData } = supabase.storage.from('object-tokens').getPublicUrl(path)
     return urlData.publicUrl
   }
 
   // Cropper confirmed — upload the cropped blob and route to the right target.
-  async function handleCropConfirm(blob: Blob) {
+  // mimeType comes from the cropper: 'image/png' if the input was PNG (so
+  // transparent backgrounds round-trip correctly), 'image/jpeg' otherwise.
+  async function handleCropConfirm(blob: Blob, mimeType: string = 'image/jpeg') {
     if (!cropFile) return
     setUploading(true)
-    const url = await uploadBlob(blob)
+    const ext = mimeType === 'image/png' ? 'png' : 'jpg'
+    const url = await uploadBlob(blob, ext)
     if (url) {
       const defaultName = cropFile.file.name.replace(/\.[^.]+$/, '')
       if (cropFile.target === 'add') {
@@ -685,7 +690,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
         <ObjectImageCropper
           file={cropFile.file}
           onCancel={() => setCropFile(null)}
-          onCrop={blob => handleCropConfirm(blob)}
+          onCrop={(blob, _preview, mimeType) => handleCropConfirm(blob, mimeType)}
         />
       )}
     </div>

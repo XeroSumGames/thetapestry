@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from 'react'
 interface Props {
   file: File
   onCancel: () => void
-  onCrop: (cropped: Blob, previewUrl: string) => void
+  // mimeType is the format of `cropped` ('image/png' for PNG inputs to
+  // preserve transparency, 'image/jpeg' otherwise) so callers can pick
+  // the correct file extension when uploading.
+  onCrop: (cropped: Blob, previewUrl: string, mimeType: string) => void
 }
 
 // Free-aspect cropper for object-token images. Loads the selected File,
@@ -104,11 +107,18 @@ export default function ObjectImageCropper({ file, onCancel, onCrop }: Props) {
       const ctx = canvas.getContext('2d')
       if (!ctx) { setProcessing(false); return }
       ctx.drawImage(img, box.x, box.y, box.w, box.h, 0, 0, outW, outH)
+      // Output format follows the input. PNG inputs may have a
+      // transparent background (top-down vehicle art typically does);
+      // JPEG would composite that onto black. Preserve transparency by
+      // re-encoding as PNG when the source is PNG. For JPEG/other
+      // sources, stick with JPEG for the smaller file size.
+      const isPng = file.type === 'image/png'
+      const outMime = isPng ? 'image/png' : 'image/jpeg'
       canvas.toBlob(blob => {
         if (!blob) { setProcessing(false); return }
-        const previewUrl = canvas.toDataURL('image/jpeg', 0.9)
-        onCrop(blob, previewUrl)
-      }, 'image/jpeg', 0.9)
+        const previewUrl = canvas.toDataURL(outMime, isPng ? undefined : 0.9)
+        onCrop(blob, previewUrl, outMime)
+      }, outMime, isPng ? undefined : 0.9)
     }
     img.src = srcUrl
   }
