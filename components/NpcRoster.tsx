@@ -714,6 +714,16 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     await hideNpcsByIds(npcs.map(n => n.id))
   }
 
+  // Inline disposition update for the roster card. Wraps the supabase
+  // write + local state update so the picker on each card can fire
+  // without opening the full Edit modal — fastest way to fix a
+  // mis-set disposition in bulk.
+  async function quickSetDisposition(npcId: string, value: 'friendly' | 'neutral' | 'hostile' | null) {
+    const { error } = await supabase.from('campaign_npcs').update({ disposition: value }).eq('id', npcId)
+    if (error) { alert('Error: ' + error.message); return }
+    setNpcs(prev => prev.map(n => n.id === npcId ? ({ ...n, disposition: value } as any) : n))
+  }
+
   async function quickReveal(npcId: string, e: React.MouseEvent) {
     e.stopPropagation()
     if (!pcEntries || pcEntries.length === 0) return
@@ -988,8 +998,31 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                   {/* Center: name + badges */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', lineHeight: 1.2 }}>{npc.name}</div>
-                    <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginTop: '3px' }}>
+                    <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginTop: '3px', alignItems: 'center' }}>
                       <span style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.status}</span>
+                      {/* Inline disposition picker — three dots
+                          (friendly / neutral / hostile). Click cycles
+                          to that value; clicking the already-picked
+                          dot clears it back to null (which falls back
+                          to npc_type via getNpcRingColor). The picked
+                          dot gets a white outline so the current value
+                          is unmistakable from a glance. */}
+                      <span title={`Disposition: ${npc.disposition ?? 'unset'}`}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', padding: '0 2px' }}>
+                        {([
+                          ['friendly', '#2d5a1b', '#1a2e10'],
+                          ['neutral',  '#3a3a3a', '#2e2e2e'],
+                          ['hostile',  '#c0392b', '#2a1210'],
+                        ] as const).map(([val, border, bg]) => {
+                          const picked = npc.disposition === val
+                          return (
+                            <button key={val} type="button"
+                              onClick={e => { e.stopPropagation(); quickSetDisposition(npc.id, picked ? null : val) }}
+                              title={`Set disposition: ${val}${picked ? ' (click to clear)' : ''}`}
+                              style={{ width: '12px', height: '12px', borderRadius: '50%', border: `2px solid ${border}`, background: bg, cursor: 'pointer', padding: 0, outline: picked ? '2px solid #f5f2ee' : 'none', outlineOffset: '1px' }} />
+                          )
+                        })}
+                      </span>
                       <button onClick={e => quickReveal(npc.id, e)}
                         style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: revealedNpcIds.has(npc.id) ? '#2a1210' : '#1a2e10', border: `1px solid ${revealedNpcIds.has(npc.id) ? '#c0392b' : '#2d5a1b'}`, color: revealedNpcIds.has(npc.id) ? '#f5a89a' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                         {revealedNpcIds.has(npc.id) ? 'Hide' : 'Show'}
