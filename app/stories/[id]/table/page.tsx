@@ -986,6 +986,13 @@ export default function TablePage() {
         loadEntries(id), loadRolls(id), loadInitiative(id), loadChat(id),
         supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
         supabase.from('world_npcs').select('source_campaign_npc_id').not('source_campaign_npc_id', 'is', null),
+        // Hydrate the "which NPCs already have a token in the active
+        // scene?" set on initial load so the folder MAP/UNMAP button
+        // shows the correct state from the start. Without this, the
+        // set stays empty until the user opens the tactical map view
+        // and the button stays "MAP" even when everything is already
+        // placed from a prior session.
+        refreshMapTokenIds(),
       ])
       const cnpcs = cnpcsResult.data ?? []
       setCampaignNpcs(cnpcs)
