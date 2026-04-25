@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import MessagesPage from '../messages/page'
 import LfgPage from './lfg/page'
 import ForumsPage from './forums/page'
+import WarStoriesPage from './war-stories/page'
 
 // /campfire — one-stop-shop. Each Campfire feature is rendered as a tab
 // here; we import the existing route components directly so deep-links
@@ -29,7 +30,7 @@ const TABS: TabDef[] = [
   { id: 'messages',     label: 'Messages',           accent: '#8b5cf6' },
   { id: 'lfg',          label: 'Looking for Group',  accent: '#c0392b' },
   { id: 'forums',       label: 'Forums',             accent: '#7fc458' },
-  { id: 'war-stories',  label: 'War Stories',        accent: '#b87333', soon: true },
+  { id: 'war-stories',  label: 'War Stories',        accent: '#b87333' },
   { id: 'homebrew',     label: 'Homebrew',           accent: '#1a4a6b', soon: true },
 ]
 
@@ -116,13 +117,14 @@ export default function CampfirePage() {
         {activeTab === 'messages' && <MessagesPage />}
         {activeTab === 'lfg' && <LfgPage />}
         {activeTab === 'forums' && <ForumsPage />}
-        {(activeTab === 'war-stories' || activeTab === 'homebrew') && (
+        {activeTab === 'war-stories' && <WarStoriesPage />}
+        {activeTab === 'homebrew' && (
           <div style={{ maxWidth: '600px', margin: '4rem auto', padding: '2rem 1.5rem', textAlign: 'center', background: '#1a1a1a', border: `1px solid ${active.accent}`, borderRadius: '4px', opacity: 0.7 }}>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: active.accent, marginBottom: '8px' }}>
               {active.label}
             </div>
             <div style={{ fontSize: '14px', color: '#5a8a40', lineHeight: 1.6 }}>
-              Coming soon. {activeTab === 'war-stories' ? 'Share session highlights, character moments, and legendary plays.' : 'Custom rules, house variants, fan content — all in one place.'}
+              Coming soon. Custom rules, house variants, fan content — all in one place.
             </div>
           </div>
         )}
