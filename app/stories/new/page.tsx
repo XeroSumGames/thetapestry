@@ -19,7 +19,7 @@ export default function NewCampaignPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [setting, setSetting] = useState('')
-  const [mapStyle, setMapStyle] = useState('street')
+  const [mapStyle, setMapStyle] = useState('topo')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [locationQuery, setLocationQuery] = useState('')
