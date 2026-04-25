@@ -3,9 +3,37 @@ import "./globals.css";
 import LayoutShell from "../components/LayoutShell";
 import VisitLogger from "../components/VisitLogger";
 
+// Site-wide defaults. Per-route layouts can override `title`, `description`,
+// `openGraph`, or `twitter`; everything else falls through here. The
+// `metadataBase` lets us write image paths like '/DistemperLogoRedv5.png'
+// and have Next resolve them to absolute URLs that scrapers (Discord,
+// Reddit, Facebook, X) can fetch.
+const SITE_TITLE = 'The Tapestry — Distemper'
+const SITE_DESCRIPTION = 'The DistemperVerse community platform — campaigns, characters, communities, and shared world-state across every story.'
+const SITE_URL = 'https://thetapestry.distemperverse.com'
+const SITE_OG_IMAGE = '/DistemperLogoRedv5.png'
+
 export const metadata: Metadata = {
-  title: "The Tapestry — Distemper",
-  description: "The Tapestry — DistemperVerse community platform",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_TITLE,
+    template: '%s — The Tapestry',
+  },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: 'website',
+    siteName: 'The Tapestry',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    images: [{ url: SITE_OG_IMAGE, alt: 'The Tapestry — Distemper' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [SITE_OG_IMAGE],
+  },
 };
 
 export default function RootLayout({
