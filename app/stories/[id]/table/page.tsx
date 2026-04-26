@@ -4140,13 +4140,17 @@ export default function TablePage() {
         }
         if (appliedTo.length > 0) {
           coordinateResult = `${appliedTo.join(', ')} get${appliedTo.length === 1 ? 's' : ''} +${bonus} CMod when attacking ${coordTarget}${outcome === 'Wild Success' ? ' (carries +1 next round)' : ''}.`
-          // Log each ally who benefits so it's clear in the feed
-          const coordLogs = appliedTo.map(name => ({
+          // Log trimming: one summary row instead of one row per ally
+          // (used to write N rows for N allies, which cluttered the
+          // feed). Names are joined into a single banner; the underlying
+          // initiative_order.coordinate_bonus update is what actually
+          // grants the CMod, so dropping the per-ally rows is purely
+          // cosmetic.
+          await supabase.from('roll_log').insert({
             campaign_id: id, user_id: userId, character_name: 'System',
-            label: `🎯 ${name} gets +${bonus} CMod when attacking ${coordTarget}`,
+            label: `🎯 ${appliedTo.join(', ')} get${appliedTo.length === 1 ? 's' : ''} +${bonus} CMod when attacking ${coordTarget}`,
             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'coordinate',
-          }))
-          await supabase.from('roll_log').insert(coordLogs)
+          })
         } else {
           coordinateResult = 'No allies within Close range to receive the bonus.'
         }

@@ -152,7 +152,7 @@ When picking this back up:
 - [x] **Insight Dice pre-roll CMod** — confirmed +3 CMod (per SRD)
 - [x] **Insight Dice sequential reroll** — `f2e708f` `spent` boolean → `insightUsed: 'pre' | 'die1' | 'die2' | 'both' | null`. After rerolling one die, only the OTHER die's button remains; second spend locks the panel. Pre-roll 3d6 still locks post-roll rerolls.
 - [x] **Whisper chat** — click a player's portrait → private whisper between you two (GM + other players do not see it). Chat tab auto-switches when a whisper arrives addressed to you. Purple styling distinguishes whispers from group chat.
-- [ ] **NPC health as narrative feeling** — player-facing NPC cards should show WP/RP as a descriptive state (Healthy, Ragged, Beaten, Dying, etc.) instead of exact numbers — GM still sees the dots
+- [~] **NPC health as narrative feeling** — *DEFERRED 2026-04-26 → long-term review list. User decided not to ship as currently scoped (narrative state strings replacing pip numbers for non-GM). Re-open if a different framing comes up.*
 
 ---
 
