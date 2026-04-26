@@ -6199,7 +6199,7 @@ export default function TablePage() {
                     position: 'absolute',
                     left: pos?.x ?? 10 + i * 20,
                     top: pos?.y ?? 10 + i * 20,
-                    width: '304px',
+                    width: '250px',
                     // Let height track the NpcCard's natural size instead of
                     // pinning to 357px — Foes/Goons render shorter than PCs
                     // and the leftover space showed up as a dead "shadow box"
