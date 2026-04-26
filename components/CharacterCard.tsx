@@ -7,6 +7,7 @@ import InventoryPanel, { InventoryItem } from './InventoryPanel'
 import ProgressionLog, { LogEntry, createLogEntry } from './ProgressionLog'
 import { openPopout } from '../lib/popout'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, CONDITIONS, Condition, ALL_WEAPONS, MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getTraitValue } from '../lib/weapons'
+import { computeEncumbrance } from '../lib/encumbrance'
 import PrintSheet from './wizard/PrintSheet'
 import { WizardState, createWizardState } from '../lib/xse-engine'
 import { SKILLS } from '../lib/xse-schema'
@@ -721,14 +722,8 @@ export default function CharacterCard({
           {/* Encumbrance tracker */}
           {(() => {
             const inv: InventoryItem[] = c.data?.inventory ?? []
-            const invEnc = inv.reduce((sum: number, item: InventoryItem) => sum + item.enc * item.qty, 0)
-            const hasBackpack = inv.some((i: InventoryItem) => i.name === 'Backpack' || i.name === 'Military Backpack')
-            const backpackBonus = hasBackpack ? 2 : 0
-            const encLimit = 6 + (rapid.PHY ?? 0) + backpackBonus
-            const wp = getWeaponByName(weaponPrimary.weaponName)
-            const ws = getWeaponByName(weaponSecondary.weaponName)
-            const currentEnc = (wp?.enc ?? 0) + (ws?.enc ?? 0) + invEnc
-            const overloaded = currentEnc > encLimit
+            const { currentEnc, encLimit, overloaded } =
+              computeEncumbrance(inv, weaponPrimary.weaponName, weaponSecondary.weaponName, rapid.PHY ?? 0)
             return (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif' }}>
                 <span style={{ color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.06em' }}>Encumbrance:</span>

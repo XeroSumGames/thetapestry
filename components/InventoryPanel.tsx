@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
 import { EQUIPMENT, EquipmentItem } from '../lib/xse-schema'
-import { ALL_WEAPONS, getWeaponByName } from '../lib/weapons'
+import { ALL_WEAPONS } from '../lib/weapons'
+import { computeEncumbrance, BASE_ENC_LIMIT } from '../lib/encumbrance'
 
 // Combined inventory catalog — SRD equipment + all weapons.
 // Weapons are normalized into the EquipmentItem shape (name/enc/rarity/notes)
@@ -60,16 +61,8 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
   const [givingItem, setGivingItem] = useState<InventoryItem | null>(null)
   const [giveQty, setGiveQty] = useState(1)
 
-  // Encumbrance calculation
-  const wp = getWeaponByName(weaponPrimaryName)
-  const ws = getWeaponByName(weaponSecondaryName)
-  const weaponEnc = (wp?.enc ?? 0) + (ws?.enc ?? 0)
-  const invEnc = inventory.reduce((sum, item) => sum + (item.enc ?? 0) * (item.qty ?? 1), 0)
-  const hasBackpack = inventory.some(i => i.name === 'Backpack' || i.name === 'Military Backpack')
-  const backpackBonus = hasBackpack ? 2 : 0
-  const encLimit = 6 + phyMod + backpackBonus
-  const currentEnc = weaponEnc + invEnc
-  const overloaded = currentEnc > encLimit
+  const { weaponEnc, invEnc, currentEnc, encLimit, backpackBonus, overloaded } =
+    computeEncumbrance(inventory, weaponPrimaryName, weaponSecondaryName, phyMod)
 
   function addItem(item: EquipmentItem) {
     const existing = inventory.find(i => i.name === item.name && !i.custom)
@@ -154,7 +147,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
         <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', display: 'flex', gap: '12px' }}>
           <span>Weapons: {weaponEnc}</span>
           <span>Gear: {invEnc}</span>
-          <span>Limit: 6 + PHY({phyMod}){backpackBonus > 0 ? ` + Pack(${backpackBonus})` : ''} = {encLimit}</span>
+          <span>Limit: {BASE_ENC_LIMIT} + PHY({phyMod}){backpackBonus > 0 ? ` + Pack(${backpackBonus})` : ''} = {encLimit}</span>
         </div>
 
         {/* Item list */}
