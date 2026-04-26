@@ -1078,7 +1078,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                           </button>
                         )
                       })()}
-                      <button onClick={e => { e.stopPropagation(); openPopout(`/npc-sheet?c=${campaignId}&npc=${npc.id}`, `npc-${npc.id}`, isGM ? undefined : { w: 140, h: 140 }) }}
+                      <button onClick={e => { e.stopPropagation(); openPopout(`/npc-sheet?c=${campaignId}&npc=${npc.id}`, `npc-${npc.id}`) }}
                         title="Pop this NPC out into its own window"
                         style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: '#2a102a', border: '1px solid #8b2e8b', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                         Popout
