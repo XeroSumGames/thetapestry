@@ -179,6 +179,11 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
   const [editForm, setEditForm] = useState({ title: '', notes: '', categories: ['location'] as string[], event_date: '', sort_order: '', lat: '', lng: '', address: '' })
+  // Address autocomplete (Nominatim) state for the Edit Pin modal.
+  // Mirrors the world-map address-search bar at the top — type 3+ chars
+  // and we offer matching geocodes; click one to fill lat/lng/address.
+  const [editAddressSuggestions, setEditAddressSuggestions] = useState<any[]>([])
+  const editAddressDebounceRef = useRef<any>(null)
   const [editAttachments, setEditAttachments] = useState<File[]>([])
   const [editExistingFiles, setEditExistingFiles] = useState<{ name: string; url: string }[]>([])
   const [editUploading, setEditUploading] = useState(false)
@@ -1567,9 +1572,47 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         <input style={inp} value={editForm.lng} onChange={e => setEditForm(p => ({ ...p, lng: e.target.value }))} placeholder="e.g. -75.5466" inputMode="decimal" />
       </div>
     </div>
-    <div style={{ marginBottom: '12px' }}>
+    <div style={{ marginBottom: '12px', position: 'relative' }}>
       <label style={lbl}>Address</label>
-      <input style={inp} value={editForm.address} onChange={e => setEditForm(p => ({ ...p, address: e.target.value }))} placeholder="Street, City, State" />
+      <input style={inp} value={editForm.address}
+        placeholder="Street, City, State — start typing to search"
+        onChange={e => {
+          const v = e.target.value
+          setEditForm(p => ({ ...p, address: v }))
+          if (editAddressDebounceRef.current) clearTimeout(editAddressDebounceRef.current)
+          if (v.trim().length >= 3) {
+            editAddressDebounceRef.current = setTimeout(async () => {
+              try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(v)}&limit=5`)
+                const data = await res.json()
+                setEditAddressSuggestions(Array.isArray(data) ? data : [])
+              } catch { setEditAddressSuggestions([]) }
+            }, 300)
+          } else {
+            setEditAddressSuggestions([])
+          }
+        }}
+        onBlur={() => {
+          // Delay clearing so the click event on a suggestion fires first.
+          setTimeout(() => setEditAddressSuggestions([]), 200)
+        }} />
+      {editAddressSuggestions.length > 0 && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '0 0 3px 3px', maxHeight: '200px', overflowY: 'auto', zIndex: 100, marginTop: '-1px' }}>
+          {editAddressSuggestions.map((s, i) => (
+            <div key={i} onClick={() => {
+              const lat = parseFloat(s.lat)
+              const lon = parseFloat(s.lon)
+              setEditForm(p => ({ ...p, lat: String(lat), lng: String(lon), address: s.display_name }))
+              setEditAddressSuggestions([])
+            }}
+              style={{ padding: '6px 10px', fontSize: '13px', color: '#cce0f5', cursor: 'pointer', borderBottom: i < editAddressSuggestions.length - 1 ? '1px solid #2e2e2e' : 'none' }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+              {s.display_name}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
     {userRole === 'thriver' && editingPin && (
       <div style={{ marginBottom: '12px' }}>
