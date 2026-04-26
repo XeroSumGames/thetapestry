@@ -32,7 +32,23 @@ export default function NpcSheetPage() {
       setLoading(false)
     }
     load()
+  }, [npcId, campaignId])
 
+  // Force the popout to the right size for the viewer's role. window.open
+  // ignores width/height when a window with the same name was opened before
+  // (Chrome remembers the last geometry per name), so changing the size in
+  // the openPopout call alone doesn't fix already-cached windows. resizeTo
+  // applies once we know the role.
+  useEffect(() => {
+    if (loading) return
+    if (typeof window === 'undefined') return
+    if (!window.opener) return  // not actually a popout
+    try {
+      window.resizeTo(isGM ? 571 : 140, isGM ? 257 : 140)
+    } catch { /* some browsers block resizeTo on already-shown windows; harmless */ }
+  }, [loading, isGM])
+
+  useEffect(() => {
     if (!npcId) return
     // Realtime sync — two channels, both converging to the same setNpc:
     //   postgres_changes UPDATE — reliable but can lag 0.5-2s on busy projects.
