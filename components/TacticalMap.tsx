@@ -192,6 +192,13 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       .on('broadcast', { event: 'token_moved' }, () => {
         if (sceneRef.current) loadTokens(sceneRef.current.id)
       })
+      .on('broadcast', { event: 'scene_activated' }, () => {
+        // GM activated a different tactical scene. Reload the scene
+        // list — loadScenes auto-picks the is_active=true row, so the
+        // player's view follows immediately whether their pane is
+        // open or closed.
+        loadScenes()
+      })
       .on('broadcast', { event: 'tactical_zoom' }, (msg: any) => {
         // GM zoom snaps players' view to match (playtest #27). Players
         // can still zoom locally afterwards — the sync only fires when
@@ -1235,6 +1242,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', campaignId)
     await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', sceneId)
     await loadScenes()
+    // Force-push the scene switch to every connected client. Even if the
+    // postgres_changes UPDATE on tactical_scenes is delivered, the
+    // broadcast is a guaranteed nudge — particularly important so
+    // players whose TacticalMap pane is closed open it on the new scene.
+    tacticalChannelRef.current?.send({ type: 'broadcast', event: 'scene_activated', payload: { sceneId } })
   }
 
   async function uploadBackground(file: File) {
