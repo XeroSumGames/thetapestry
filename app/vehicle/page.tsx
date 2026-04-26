@@ -24,6 +24,11 @@ interface CrewMember {
 type CheckKind = 'driving' | 'brew' | 'attack'
 type BrewSkill = 'mechanic' | 'tinkerer'
 
+interface AttackTarget {
+  id: string         // campaign_npcs.id
+  name: string
+}
+
 interface CheckState {
   kind: CheckKind
   crewId: string
@@ -32,6 +37,8 @@ interface CheckState {
   cmod: number
   brewSkill: BrewSkill         // ignored for driving / attack
   weaponIndex?: number         // for kind='attack': index into vehicle.mounted_weapons
+  targetNpcId?: string          // for kind='attack': which NPC is being shot at
+  targets?: AttackTarget[]     // for kind='attack': dropdown options (NPCs on active scene)
   rolling: boolean
   result: { die1: number; die2: number; total: number; outcome: string } | null
 }
@@ -184,7 +191,7 @@ export default function VehiclePage() {
   // Open the check modal for the assigned driver / brewer with sensible
   // defaults. Brew picks Mechanic* vs Tinkerer by whichever is higher
   // (ties → Mechanic*); GM can override in the modal.
-  function openCheck(kind: CheckKind, weaponIdx?: number) {
+  async function openCheck(kind: CheckKind, weaponIdx?: number) {
     if (!vehicle) return
     let crewId: string | null | undefined
     if (kind === 'driving') crewId = vehicle.driver_character_id
@@ -219,7 +226,36 @@ export default function VehiclePage() {
         rolling: false, result: null,
       })
     } else {
-      // attack — Ranged Combat (DEX) check against the weapon.
+      // attack — Ranged Combat (DEX) check against the weapon. Pull
+      // the NPCs currently on the active tactical scene as the target
+      // dropdown so the GM can fire at someone who's actually there.
+      let targets: AttackTarget[] = []
+      if (campaignId) {
+        const { data: activeScene } = await supabase
+          .from('tactical_scenes')
+          .select('id')
+          .eq('campaign_id', campaignId)
+          .eq('is_active', true)
+          .maybeSingle()
+        if (activeScene?.id) {
+          const { data: tokenRows } = await supabase
+            .from('scene_tokens')
+            .select('npc_id')
+            .eq('scene_id', activeScene.id)
+            .is('archived_at', null)
+            .not('npc_id', 'is', null)
+          const npcIds = Array.from(new Set(((tokenRows ?? []) as any[]).map(r => r.npc_id))).filter(Boolean)
+          if (npcIds.length > 0) {
+            const { data: npcRows } = await supabase
+              .from('campaign_npcs')
+              .select('id, name')
+              .in('id', npcIds)
+            targets = ((npcRows ?? []) as any[])
+              .map(n => ({ id: n.id as string, name: n.name as string }))
+              .sort((a, b) => a.name.localeCompare(b.name))
+          }
+        }
+      }
       setCheck({
         kind: 'attack', crewId: member.id,
         amod: member.dex,
@@ -227,6 +263,8 @@ export default function VehiclePage() {
         cmod: 0,
         brewSkill: 'mechanic',
         weaponIndex: weaponIdx,
+        targets,
+        targetNpcId: targets[0]?.id ?? undefined,
         rolling: false, result: null,
       })
     }
@@ -269,11 +307,14 @@ export default function VehiclePage() {
       : check.kind === 'brew'
         ? (check.brewSkill === 'tinkerer' ? 'Tinkerer (DEX)' : 'Mechanic* (RSN)')
         : 'Ranged Combat (DEX)'
+    const targetName = check.kind === 'attack' && check.targetNpcId
+      ? (check.targets?.find(t => t.id === check.targetNpcId)?.name ?? null)
+      : null
     const verb = check.kind === 'driving'
       ? '🚗 Driving check'
       : check.kind === 'brew'
         ? '⚗️ Brew check'
-        : `🎯 ${weapon?.name ?? 'Mounted weapon'} attack`
+        : `🎯 ${weapon?.name ?? 'Mounted weapon'} attack${targetName ? ` → ${targetName}` : ''}`
     const fuelDelta = check.kind === 'brew' && (outcome === 'Wild Success' || outcome === 'Success' || outcome === 'High Insight') ? 1 : 0
     const newFuel = Math.min(vehicle.fuel_max, vehicle.fuel_current + fuelDelta)
     const fuelNote = fuelDelta > 0 && newFuel > vehicle.fuel_current
@@ -304,6 +345,8 @@ export default function VehiclePage() {
         weaponName: weapon?.name ?? null,
         weaponDamage: weaponDef?.damage ?? null,
         weaponRpPercent: weaponDef?.rpPercent ?? null,
+        targetNpcId: check.targetNpcId ?? null,
+        targetName,
       },
     })
     if (newFuel !== vehicle.fuel_current) {
@@ -664,6 +707,28 @@ export default function VehiclePage() {
                 {member?.name ?? '—'} · {vehicle.name}
               </div>
 
+              {/* Target picker — NPCs currently on the active scene
+                  (live tokens). Pre-selected to the first option;
+                  empty if no NPCs are on the map. */}
+              {check.kind === 'attack' && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={lbl}>Target</div>
+                  {(check.targets?.length ?? 0) === 0 ? (
+                    <div style={{ fontSize: '13px', color: '#f5a89a', fontStyle: 'italic', padding: '6px 0' }}>
+                      No NPCs on the active scene to target. Place some on the tactical map first.
+                    </div>
+                  ) : (
+                    <select value={check.targetNpcId ?? ''}
+                      onChange={e => setCheck({ ...check, targetNpcId: e.target.value || undefined })}
+                      style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', boxSizing: 'border-box' }}>
+                      {check.targets!.map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+
               {/* Brew skill picker — Mechanic* (RSN) vs Tinkerer (DEX) */}
               {check.kind === 'brew' && (
                 <div style={{ marginBottom: '12px' }}>
@@ -726,22 +791,28 @@ export default function VehiclePage() {
                       separately and applies via the standard combat
                       flow — this is just a reminder of the weapon's
                       stats so they don't have to look them up. */}
-                  {check.kind === 'attack' && modalWeaponDef && (check.result.outcome === 'Success' || check.result.outcome === 'Wild Success' || check.result.outcome === 'High Insight') && (
-                    <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '4px' }}>
-                      🎯 Hit · damage {modalWeaponDef.damage} · {modalWeaponDef.rpPercent}% RP
-                    </div>
-                  )}
-                  {check.kind === 'attack' && (check.result.outcome === 'Failure' || check.result.outcome === 'Dire Failure' || check.result.outcome === 'Low Insight') && (
-                    <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '4px' }}>
-                      ✗ Miss
-                    </div>
-                  )}
+                  {check.kind === 'attack' && modalWeaponDef && (check.result.outcome === 'Success' || check.result.outcome === 'Wild Success' || check.result.outcome === 'High Insight') && (() => {
+                    const targetName = check.targets?.find(t => t.id === check.targetNpcId)?.name
+                    return (
+                      <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '4px' }}>
+                        🎯 Hit{targetName ? ` on ${targetName}` : ''} · damage {modalWeaponDef.damage} · {modalWeaponDef.rpPercent}% RP
+                      </div>
+                    )
+                  })()}
+                  {check.kind === 'attack' && (check.result.outcome === 'Failure' || check.result.outcome === 'Dire Failure' || check.result.outcome === 'Low Insight') && (() => {
+                    const targetName = check.targets?.find(t => t.id === check.targetNpcId)?.name
+                    return (
+                      <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '4px' }}>
+                        ✗ Miss{targetName ? ` (${targetName} unhurt)` : ''}
+                      </div>
+                    )
+                  })()}
                 </div>
               ) : null}
 
               {/* Actions */}
               <div style={{ display: 'flex', gap: '6px' }}>
-                <button onClick={rollCheck} disabled={check.rolling || !!check.result}
+                <button onClick={rollCheck} disabled={check.rolling || !!check.result || (check.kind === 'attack' && !check.targetNpcId)}
                   style={{ flex: 1, padding: '10px', background: accentBg, border: `1px solid ${accent}`, borderRadius: '3px', color: accent, fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, cursor: check.rolling ? 'wait' : (check.result ? 'default' : 'pointer'), opacity: check.result ? 0.5 : 1 }}>
                   {check.rolling ? 'Rolling...' : check.result ? 'Rolled' : `🎲 Roll ${verb}`}
                 </button>
