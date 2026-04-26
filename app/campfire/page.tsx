@@ -5,6 +5,7 @@ import MessagesPage from '../messages/page'
 import LfgPage from './lfg/page'
 import ForumsPage from './forums/page'
 import WarStoriesPage from './war-stories/page'
+import TimestampPage from './timestamp/page'
 
 // /campfire — one-stop-shop. Each Campfire feature is rendered as a tab
 // here; we import the existing route components directly so deep-links
@@ -17,7 +18,7 @@ import WarStoriesPage from './war-stories/page'
 // are also forwarded into the embedded component (e.g. ?dm=<id> still
 // works for the Messages tab).
 
-type TabId = 'messages' | 'lfg' | 'forums' | 'war-stories' | 'homebrew'
+type TabId = 'messages' | 'lfg' | 'forums' | 'war-stories' | 'timestamps' | 'homebrew'
 
 interface TabDef {
   id: TabId
@@ -31,6 +32,7 @@ const TABS: TabDef[] = [
   { id: 'lfg',          label: 'Looking for Group',  accent: '#c0392b' },
   { id: 'forums',       label: 'Forums',             accent: '#7fc458' },
   { id: 'war-stories',  label: 'War Stories',        accent: '#b87333' },
+  { id: 'timestamps',   label: 'Timestamps',         accent: '#7ab3d4' },
   { id: 'homebrew',     label: 'Homebrew',           accent: '#1a4a6b', soon: true },
 ]
 
@@ -118,6 +120,7 @@ export default function CampfirePage() {
         {activeTab === 'lfg' && <LfgPage />}
         {activeTab === 'forums' && <ForumsPage />}
         {activeTab === 'war-stories' && <WarStoriesPage />}
+        {activeTab === 'timestamps' && <TimestampPage />}
         {activeTab === 'homebrew' && (
           <div style={{ maxWidth: '600px', margin: '4rem auto', padding: '2rem 1.5rem', textAlign: 'center', background: '#1a1a1a', border: `1px solid ${active.accent}`, borderRadius: '4px', opacity: 0.7 }}>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: active.accent, marginBottom: '8px' }}>
