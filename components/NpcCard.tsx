@@ -356,19 +356,28 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
             // syncs to other clients (no blocking spinner needed).
             await supabase.from('campaign_npcs').update({ inventory: next }).eq('id', npc.id)
           }}
-          onGiveTo={async (item, targetCharId) => {
+          onGiveTo={async (item, targetCharId, qty) => {
             // Loot transfer: NPC inventory → target PC's character.data.
-            // InventoryPanel removes the item from `inventory` locally
-            // after this callback (via onUpdate), so we only need to
-            // handle the receiver side here.
+            // InventoryPanel decrements the sender side itself (via
+            // onUpdate); we own the receiver side + the cross-user
+            // notification.
             const { data: charRow } = await supabase.from('characters').select('data').eq('id', targetCharId).single()
             const targetData = (charRow as any)?.data ?? {}
             const targetInv: InventoryItem[] = Array.isArray(targetData.inventory) ? targetData.inventory : []
             const existing = targetInv.find(i => i.name === item.name && (i.custom ?? false) === (item.custom ?? false))
             const newTargetInv = existing
-              ? targetInv.map(i => i === existing ? { ...i, qty: (i.qty ?? 1) + 1 } : i)
-              : [...targetInv, { ...item, qty: 1 }]
+              ? targetInv.map(i => i === existing ? { ...i, qty: (i.qty ?? 1) + qty } : i)
+              : [...targetInv, { ...item, qty }]
             await supabase.from('characters').update({ data: { ...targetData, inventory: newTargetInv } }).eq('id', targetCharId)
+            // Cross-user notification — RPC bypasses notifications RLS
+            // via SECURITY DEFINER. Loot from an NPC reads as "from
+            // <NPC name>" so the player sees who they pulled it off.
+            await supabase.rpc('notify_inventory_received', {
+              target_character_id: targetCharId,
+              item_name: item.name,
+              item_qty: qty,
+              from_label: npc.name,
+            })
           }}
           onClose={() => setShowInventory(false)}
         />

@@ -41,7 +41,7 @@ interface Props {
   onClose: () => void
   // Loot/trade
   otherCharacters?: { id: string; name: string }[]
-  onGiveTo?: (item: InventoryItem, targetCharId: string) => void
+  onGiveTo?: (item: InventoryItem, targetCharId: string, qty: number) => void
 }
 
 const RARITY_COLORS: Record<string, { color: string; bg: string; border: string }> = {
@@ -58,6 +58,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
   const [customEnc, setCustomEnc] = useState('0')
   const [customNotes, setCustomNotes] = useState('')
   const [givingItem, setGivingItem] = useState<InventoryItem | null>(null)
+  const [giveQty, setGiveQty] = useState(1)
 
   // Encumbrance calculation
   const wp = getWeaponByName(weaponPrimaryName)
@@ -101,15 +102,26 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
   }
 
   function giveItem(idx: number) {
-    setGivingItem(inventory[idx])
+    const item = inventory[idx]
+    setGivingItem(item)
+    // Default = full stack (the common case is "give all of these to X").
+    setGiveQty(item.qty)
   }
 
   function confirmGive(targetCharId: string) {
     if (!givingItem || !onGiveTo) return
-    onGiveTo(givingItem, targetCharId)
-    // Remove one from our inventory
-    const idx = inventory.findIndex(i => i.name === givingItem.name)
-    if (idx >= 0) removeItem(idx)
+    const qty = Math.max(1, Math.min(giveQty, givingItem.qty))
+    onGiveTo(givingItem, targetCharId, qty)
+    // Decrement sender by exactly the chosen qty (drop the row if all gone).
+    const idx = inventory.findIndex(i => i === givingItem || (i.name === givingItem.name && i.custom === givingItem.custom))
+    if (idx >= 0) {
+      const remaining = inventory[idx].qty - qty
+      if (remaining <= 0) {
+        onUpdate(inventory.filter((_, j) => j !== idx))
+      } else {
+        onUpdate(inventory.map((i, j) => j === idx ? { ...i, qty: remaining } : i))
+      }
+    }
     setGivingItem(null)
   }
 
@@ -181,7 +193,23 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
         {/* Give modal */}
         {givingItem && (
           <div style={{ padding: '8px', background: '#111', border: '1px solid #2e2e5a', borderRadius: '3px', marginBottom: '8px' }}>
-            <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '4px' }}>Give {givingItem.name} to:</div>
+            <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '6px' }}>Give {givingItem.name}</div>
+            {givingItem.qty > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Qty:</span>
+                <button onClick={() => setGiveQty(q => Math.max(1, q - 1))}
+                  style={{ width: '22px', height: '22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1 }}>−</button>
+                <input type="number" min={1} max={givingItem.qty} value={giveQty}
+                  onChange={e => setGiveQty(Math.max(1, Math.min(givingItem.qty, parseInt(e.target.value) || 1)))}
+                  style={{ width: '50px', padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
+                <button onClick={() => setGiveQty(q => Math.min(givingItem.qty, q + 1))}
+                  style={{ width: '22px', height: '22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1 }}>+</button>
+                <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>of {givingItem.qty}</span>
+                <button onClick={() => setGiveQty(givingItem.qty)}
+                  style={{ marginLeft: 'auto', padding: '2px 6px', background: 'transparent', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>All</button>
+              </div>
+            )}
+            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', marginBottom: '4px' }}>To:</div>
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
               {(otherCharacters ?? []).map(ch => (
                 <button key={ch.id} onClick={() => confirmGive(ch.id)}

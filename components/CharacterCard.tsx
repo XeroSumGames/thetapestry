@@ -93,7 +93,7 @@ interface Props {
   inline?: boolean
   campaignId?: string
   otherCharacters?: { id: string; name: string }[]
-  onGiveItem?: (item: InventoryItem, targetCharId: string) => void
+  onGiveItem?: (item: InventoryItem, targetCharId: string, qty: number) => void
   onInventoryChange?: (newInventory: InventoryItem[]) => void
   onWeaponChange?: (slot: 'weaponPrimary' | 'weaponSecondary', newWeapon: any) => void
 }

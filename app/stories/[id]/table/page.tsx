@@ -6431,17 +6431,27 @@ export default function TablePage() {
                 onPlaceOnMap={(combatActive || showTacticalMap || tacticalShared) && syncedSelectedEntry.userId === userId ? () => placeTokenOnMap(syncedSelectedEntry.character.name, 'pc', syncedSelectedEntry.character.id, undefined, getCharPhoto(syncedSelectedEntry) || undefined) : undefined}
                 inline={true}
                 otherCharacters={entries.filter(e => e.character.id !== syncedSelectedEntry.character.id).map(e => ({ id: e.character.id, name: e.character.name }))}
-                onGiveItem={async (item: InventoryItem, targetCharId: string) => {
+                onGiveItem={async (item: InventoryItem, targetCharId: string, qty: number) => {
                   const targetEntry = entries.find(e => e.character.id === targetCharId)
                   if (!targetEntry) return
                   const targetData = targetEntry.character.data ?? {}
                   const targetInv: InventoryItem[] = targetData.inventory ?? []
                   const existing = targetInv.find((i: InventoryItem) => i.name === item.name && i.custom === item.custom)
                   const newTargetInv = existing
-                    ? targetInv.map((i: InventoryItem) => i === existing ? { ...i, qty: i.qty + 1 } : i)
-                    : [...targetInv, { ...item, qty: 1 }]
+                    ? targetInv.map((i: InventoryItem) => i === existing ? { ...i, qty: i.qty + qty } : i)
+                    : [...targetInv, { ...item, qty }]
                   await supabase.from('characters').update({ data: { ...targetData, inventory: newTargetInv } }).eq('id', targetCharId)
                   initChannelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: { targetCharId } })
+                  // Cross-user notification — RPC bypasses notifications
+                  // RLS via SECURITY DEFINER. from_label is the giver's
+                  // character name so the receiver sees who handed it
+                  // over without parsing the body.
+                  await supabase.rpc('notify_inventory_received', {
+                    target_character_id: targetCharId,
+                    item_name: item.name,
+                    item_qty: qty,
+                    from_label: syncedSelectedEntry.character.name,
+                  })
                 }}
                 onInventoryChange={(newInventory: InventoryItem[]) => {
                   // Patch our entries state so the new inventory persists when

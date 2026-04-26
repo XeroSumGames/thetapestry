@@ -427,6 +427,24 @@ export default function NotificationBell() {
       }
     }
 
+    // Inventory wedge B — cross-user item transfer. metadata carries
+    // item_name / qty / from_label / target_character_name. Body shape
+    // (from notify_inventory_received RPC):
+    //   You received <qty>× <item> from <from_label>
+    if (type === 'inventory_received') {
+      const itemName = (metadata as any)?.item_name as string | undefined
+      const qty = (metadata as any)?.qty as number | undefined
+      const fromLabel = (metadata as any)?.from_label as string | undefined
+      if (itemName && qty != null && fromLabel) {
+        return (
+          <>
+            You received <span style={{ color: '#7fc458', fontWeight: 700 }}>{qty}× {itemName}</span> from{' '}
+            <span style={{ color: '#7ab3d4' }}>{fromLabel}</span>
+          </>
+        )
+      }
+    }
+
     // Phase E Sprint 4b — link response. Body shape:
     //   "<recipient>" <status> your <type> proposal with "<proposer>"
     if (type === 'community_link_response') {
