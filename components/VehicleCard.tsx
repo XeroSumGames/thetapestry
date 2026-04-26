@@ -38,6 +38,17 @@ export interface Vehicle {
   // Whether this vehicle has an integrated still that produces fuel via
   // a brew check. Minnie has one; almost no other vehicle does.
   has_still?: boolean
+  // Weapons fitted to the vehicle (sniper nest, mounted MG, etc.).
+  // Each entry pairs with a shooter so the Attack button on the popout
+  // auto-pulls AMOD (DEX) + SMOD (Ranged Combat) from that PC/NPC.
+  // Weapon stats (damage, range, RP%) are looked up by name from
+  // lib/weapons.ts at attack time so seed data stays light.
+  mounted_weapons?: {
+    name: string
+    notes?: string
+    shooter_character_id?: string | null
+    shooter_kind?: 'pc' | 'npc' | null
+  }[]
 }
 
 interface Props {

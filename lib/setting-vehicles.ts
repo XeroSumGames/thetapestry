@@ -35,6 +35,7 @@ export interface SeedVehicle {
   image_url?: string | null
   floorplan_url?: string | null
   has_still?: boolean
+  mounted_weapons?: { name: string; notes?: string }[]
   cargo: SeedVehicleCargo[]
 }
 
@@ -63,6 +64,12 @@ const MINNIE: SeedVehicle = {
   image_url: null,
   floorplan_url: '/minnie-floorplan.png',
   has_still: true,
+  mounted_weapons: [
+    {
+      name: "Sniper's Rifle",
+      notes: 'Mounted in the roof sniper nest between the AC units. Fires forward in a 90° arc only.',
+    },
+  ],
   cargo: [
     { name: 'Tactical Vests',       qty: 6,  notes: '-3 DMR/DMM' },
     { name: 'Tactical Helmets',     qty: 6,  notes: '-1 DMR/DMM' },

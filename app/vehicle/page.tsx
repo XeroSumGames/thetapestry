@@ -4,6 +4,7 @@ import { createClient } from '../../lib/supabase-browser'
 import { useSearchParams } from 'next/navigation'
 import VehicleCard, { Vehicle } from '../../components/VehicleCard'
 import { classifyRoll } from '../../lib/community-logic'
+import { getWeaponByName } from '../../lib/weapons'
 
 // Eligible driver / brewer — a campaign PC or campaign NPC. Stats are
 // pulled at load time so the Driving / Brew check modal can prefill
@@ -14,12 +15,13 @@ interface CrewMember {
   kind: 'pc' | 'npc'
   dex: number
   rsn: number
-  drivingLevel: number     // SMOD for Driving check
-  mechanicLevel: number    // SMOD for Mechanic* (uses RSN)
-  tinkererLevel: number    // SMOD for Tinkerer (uses DEX)
+  drivingLevel: number       // SMOD for Driving check
+  mechanicLevel: number      // SMOD for Mechanic* (uses RSN)
+  tinkererLevel: number      // SMOD for Tinkerer (uses DEX)
+  rangedCombatLevel: number  // SMOD for mounted-weapon attack (uses DEX)
 }
 
-type CheckKind = 'driving' | 'brew'
+type CheckKind = 'driving' | 'brew' | 'attack'
 type BrewSkill = 'mechanic' | 'tinkerer'
 
 interface CheckState {
@@ -28,7 +30,8 @@ interface CheckState {
   amod: number
   smod: number
   cmod: number
-  brewSkill: BrewSkill   // ignored for driving
+  brewSkill: BrewSkill         // ignored for driving / attack
+  weaponIndex?: number         // for kind='attack': index into vehicle.mounted_weapons
   rolling: boolean
   result: { die1: number; die2: number; total: number; outcome: string } | null
 }
@@ -93,6 +96,7 @@ export default function VehiclePage() {
             drivingLevel: lvl('Driving'),
             mechanicLevel: lvl('Mechanic*'),
             tinkererLevel: lvl('Tinkerer'),
+            rangedCombatLevel: lvl('Ranged Combat'),
           }
         })
 
@@ -115,6 +119,7 @@ export default function VehiclePage() {
             drivingLevel: lvl('Driving'),
             mechanicLevel: lvl('Mechanic*'),
             tinkererLevel: lvl('Tinkerer'),
+            rangedCombatLevel: lvl('Ranged Combat'),
           }
         })
 
@@ -160,17 +165,38 @@ export default function VehiclePage() {
     await updateVehicle({ ...vehicle, ...patch })
   }
 
+  // Persist the shooter assignment for a specific mounted weapon.
+  // Updates that weapon's entry in the mounted_weapons array; leaves
+  // other weapons (and their shooters) untouched.
+  async function setShooterAssignment(weaponIdx: number, crewId: string) {
+    if (!vehicle) return
+    const weapons = (vehicle.mounted_weapons ?? []).slice()
+    if (!weapons[weaponIdx]) return
+    const member = crew.find(c => c.id === crewId)
+    weapons[weaponIdx] = {
+      ...weapons[weaponIdx],
+      shooter_character_id: crewId || null,
+      shooter_kind: member?.kind ?? null,
+    }
+    await updateVehicle({ ...vehicle, mounted_weapons: weapons })
+  }
+
   // Open the check modal for the assigned driver / brewer with sensible
   // defaults. Brew picks Mechanic* vs Tinkerer by whichever is higher
   // (ties → Mechanic*); GM can override in the modal.
-  function openCheck(kind: CheckKind) {
+  function openCheck(kind: CheckKind, weaponIdx?: number) {
     if (!vehicle) return
-    const crewId = kind === 'driving' ? vehicle.driver_character_id : vehicle.brewer_character_id
+    let crewId: string | null | undefined
+    if (kind === 'driving') crewId = vehicle.driver_character_id
+    else if (kind === 'brew') crewId = vehicle.brewer_character_id
+    else crewId = vehicle.mounted_weapons?.[weaponIdx ?? 0]?.shooter_character_id
     const member = crew.find(c => c.id === crewId)
     if (!member) {
       alert(kind === 'driving'
         ? 'Pick a driver from the dropdown first.'
-        : 'Pick a brewer from the dropdown first.')
+        : kind === 'brew'
+          ? 'Pick a brewer from the dropdown first.'
+          : 'Pick a shooter for this weapon first.')
       return
     }
     if (kind === 'driving') {
@@ -182,7 +208,7 @@ export default function VehiclePage() {
         brewSkill: 'mechanic',
         rolling: false, result: null,
       })
-    } else {
+    } else if (kind === 'brew') {
       const useTinkerer = member.tinkererLevel > member.mechanicLevel
       setCheck({
         kind, crewId: member.id,
@@ -190,6 +216,17 @@ export default function VehiclePage() {
         smod: useTinkerer ? member.tinkererLevel : member.mechanicLevel,
         cmod: 0,
         brewSkill: useTinkerer ? 'tinkerer' : 'mechanic',
+        rolling: false, result: null,
+      })
+    } else {
+      // attack — Ranged Combat (DEX) check against the weapon.
+      setCheck({
+        kind: 'attack', crewId: member.id,
+        amod: member.dex,
+        smod: member.rangedCombatLevel,
+        cmod: 0,
+        brewSkill: 'mechanic',
+        weaponIndex: weaponIdx,
         rolling: false, result: null,
       })
     }
@@ -223,10 +260,20 @@ export default function VehiclePage() {
     const total = die1 + die2 + check.amod + check.smod + check.cmod
     const outcome = classifyRoll(total, die1, die2)
     const member = crew.find(c => c.id === check.crewId)
+    const weapon = check.kind === 'attack' && check.weaponIndex != null
+      ? vehicle.mounted_weapons?.[check.weaponIndex]
+      : undefined
+    const weaponDef = weapon ? getWeaponByName(weapon.name) : undefined
     const skillLabel = check.kind === 'driving'
       ? 'Driving (DEX)'
-      : check.brewSkill === 'tinkerer' ? 'Tinkerer (DEX)' : 'Mechanic* (RSN)'
-    const verb = check.kind === 'driving' ? '🚗 Driving check' : '⚗️ Brew check'
+      : check.kind === 'brew'
+        ? (check.brewSkill === 'tinkerer' ? 'Tinkerer (DEX)' : 'Mechanic* (RSN)')
+        : 'Ranged Combat (DEX)'
+    const verb = check.kind === 'driving'
+      ? '🚗 Driving check'
+      : check.kind === 'brew'
+        ? '⚗️ Brew check'
+        : `🎯 ${weapon?.name ?? 'Mounted weapon'} attack`
     const fuelDelta = check.kind === 'brew' && (outcome === 'Wild Success' || outcome === 'Success' || outcome === 'High Insight') ? 1 : 0
     const newFuel = Math.min(vehicle.fuel_max, vehicle.fuel_current + fuelDelta)
     const fuelNote = fuelDelta > 0 && newFuel > vehicle.fuel_current
@@ -254,6 +301,9 @@ export default function VehiclePage() {
         fuelDelta,
         fuelBefore: vehicle.fuel_current,
         fuelAfter: newFuel,
+        weaponName: weapon?.name ?? null,
+        weaponDamage: weaponDef?.damage ?? null,
+        weaponRpPercent: weaponDef?.rpPercent ?? null,
       },
     })
     if (newFuel !== vehicle.fuel_current) {
@@ -350,6 +400,61 @@ export default function VehiclePage() {
           )}
         </div>
       </div>
+
+      {/* Mounted Weapons — fitted weapons (sniper nest, MG, etc.).
+          Each entry has its own Shooter dropdown so different crew
+          members can man different stations. */}
+      {(vehicle.mounted_weapons?.length ?? 0) > 0 && (
+        <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginBottom: '16px' }}>
+          <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Mounted Weapons</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {vehicle.mounted_weapons!.map((w, i) => {
+              const def = getWeaponByName(w.name)
+              return (
+                <div key={i} style={{ background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>{w.name}</span>
+                    {def && (
+                      <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                        {def.range} · {def.damage} · {def.rpPercent}% RP
+                      </span>
+                    )}
+                  </div>
+                  {w.notes && <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic', marginBottom: '6px' }}>{w.notes}</div>}
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <span style={{ ...lbl, marginBottom: 0, flexShrink: 0 }}>Shooter</span>
+                    <select value={w.shooter_character_id ?? ''}
+                      onChange={e => setShooterAssignment(i, e.target.value)}
+                      disabled={!canEdit}
+                      style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
+                      <option value="">— Select shooter —</option>
+                      {crew.filter(c => c.kind === 'pc').length > 0 && (
+                        <optgroup label="Player Characters">
+                          {crew.filter(c => c.kind === 'pc').map(c => (
+                            <option key={c.id} value={c.id}>{c.name} (DEX +{c.dex} · RC +{c.rangedCombatLevel})</option>
+                          ))}
+                        </optgroup>
+                      )}
+                      {crew.filter(c => c.kind === 'npc').length > 0 && (
+                        <optgroup label="NPCs">
+                          {crew.filter(c => c.kind === 'npc').map(c => (
+                            <option key={c.id} value={c.id}>{c.name} (DEX +{c.dex} · RC +{c.rangedCombatLevel})</option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </select>
+                    <button onClick={() => openCheck('attack', i)}
+                      disabled={!w.shooter_character_id}
+                      style={{ padding: '6px 14px', background: w.shooter_character_id ? '#2a1210' : '#242424', border: `1px solid ${w.shooter_character_id ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: w.shooter_character_id ? '#f5a89a' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: w.shooter_character_id ? 'pointer' : 'not-allowed' }}>
+                      🎯 Attack
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
 
@@ -532,9 +637,17 @@ export default function VehiclePage() {
           brew Success / Wild Success) bumps fuel_current. */}
       {check && vehicle && (() => {
         const member = crew.find(c => c.id === check.crewId)
-        const verb = check.kind === 'driving' ? 'Driving Check' : 'Brew Check'
-        const accent = check.kind === 'driving' ? '#7ab3d4' : '#b87333'
-        const accentBg = check.kind === 'driving' ? '#1a3a5c' : '#3a2516'
+        const modalWeapon = check.kind === 'attack' && check.weaponIndex != null
+          ? vehicle.mounted_weapons?.[check.weaponIndex]
+          : undefined
+        const modalWeaponDef = modalWeapon ? getWeaponByName(modalWeapon.name) : undefined
+        const verb = check.kind === 'driving'
+          ? 'Driving Check'
+          : check.kind === 'brew'
+            ? 'Brew Check'
+            : `${modalWeapon?.name ?? 'Mounted Weapon'} Attack`
+        const accent = check.kind === 'driving' ? '#7ab3d4' : check.kind === 'brew' ? '#b87333' : '#c0392b'
+        const accentBg = check.kind === 'driving' ? '#1a3a5c' : check.kind === 'brew' ? '#3a2516' : '#2a1210'
         const outcomeColor = (o: string) =>
           o === 'High Insight' || o === 'Wild Success' ? '#7fc458'
           : o === 'Success' ? '#cce0f5'
@@ -607,6 +720,20 @@ export default function VehiclePage() {
                   {check.kind === 'brew' && (check.result.outcome === 'Success' || check.result.outcome === 'Wild Success' || check.result.outcome === 'High Insight') && (
                     <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '4px' }}>
                       ⛽ +1 day fuel produced
+                    </div>
+                  )}
+                  {/* Attack damage info on a hit. The GM rolls damage
+                      separately and applies via the standard combat
+                      flow — this is just a reminder of the weapon's
+                      stats so they don't have to look them up. */}
+                  {check.kind === 'attack' && modalWeaponDef && (check.result.outcome === 'Success' || check.result.outcome === 'Wild Success' || check.result.outcome === 'High Insight') && (
+                    <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '4px' }}>
+                      🎯 Hit · damage {modalWeaponDef.damage} · {modalWeaponDef.rpPercent}% RP
+                    </div>
+                  )}
+                  {check.kind === 'attack' && (check.result.outcome === 'Failure' || check.result.outcome === 'Dire Failure' || check.result.outcome === 'Low Insight') && (
+                    <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginTop: '4px' }}>
+                      ✗ Miss
                     </div>
                   )}
                 </div>
