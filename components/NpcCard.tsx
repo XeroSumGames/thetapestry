@@ -5,6 +5,7 @@ import { CampaignNpc, getNpcRingColor } from './NpcRoster'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, Condition, getTraitValue } from '../lib/weapons'
 import { createClient } from '../lib/supabase-browser'
 import { openPopout } from '../lib/popout'
+import InventoryPanel, { InventoryItem } from './InventoryPanel'
 
 const TYPE_COLORS: Record<string, { bg: string; border: string; color: string }> = {
   bystander: { bg: '#1a2e10', border: '#2d5a1b', color: '#7fc458' },
@@ -33,11 +34,19 @@ interface Props {
   onPlaceOnMap?: () => void
   // Set to enable a "Popout" button that opens this NPC in a standalone window.
   campaignId?: string
+  // PCs in the campaign that loot can be transferred to. When provided,
+  // an "Inventory" button opens a panel where the GM can manage the
+  // NPC's inventory and Give items to a PC (the loot-from-NPC flow).
+  pcCharacters?: { id: string; name: string }[]
 }
 
-export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPublished, onPlaceOnMap, campaignId }: Props) {
+export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPublished, onPlaceOnMap, campaignId, pcCharacters }: Props) {
   const supabase = createClient()
   const [enlarged, setEnlarged] = useState(false)
+  const [showInventory, setShowInventory] = useState(false)
+  // Local mirror of NPC inventory so the panel reads/writes without
+  // forcing a full NPC refetch each keystroke; persisted on every change.
+  const [inv, setInv] = useState<InventoryItem[]>(() => Array.isArray((npc as any).inventory) ? (npc as any).inventory : [])
   const rapid: Record<string, number> = { RSN: npc.reason, ACU: npc.acumen, PHY: npc.physicality, INF: npc.influence, DEX: npc.dexterity }
   const tc = TYPE_COLORS[npc.npc_type ?? ''] ?? TYPE_COLORS.goon
 
@@ -163,6 +172,21 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
           {onPlaceOnMap && (
             <button onClick={onPlaceOnMap} style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Map</button>
           )}
+          {/* Inventory — GM-side editor and the loot-from-NPC entry
+              point. Color flips amber when the NPC has anything in their
+              pack (visual nudge that there's something to grab) and to
+              red while the NPC is dead (the canonical "loot me" cue). */}
+          <button onClick={() => setShowInventory(true)}
+            title={(displayStatus === 'dead' || displayStatus === 'mortally wounded')
+              ? `${inv.length} item${inv.length === 1 ? '' : 's'} to loot`
+              : `${inv.length} item${inv.length === 1 ? '' : 's'} in pack`}
+            style={{ padding: '2px 6px', background: (displayStatus === 'dead' || displayStatus === 'mortally wounded') && inv.length > 0 ? '#2a1210' : inv.length > 0 ? '#2a2010' : '#242424', border: `1px solid ${(displayStatus === 'dead' || displayStatus === 'mortally wounded') && inv.length > 0 ? '#c0392b' : inv.length > 0 ? '#5a4a1b' : '#3a3a3a'}`, borderRadius: '3px', color: (displayStatus === 'dead' || displayStatus === 'mortally wounded') && inv.length > 0 ? '#f5a89a' : inv.length > 0 ? '#EF9F27' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+            {(displayStatus === 'dead' || displayStatus === 'mortally wounded') && inv.length > 0
+              ? `🎒 Loot (${inv.length})`
+              : inv.length > 0
+                ? `🎒 ${inv.length}`
+                : '🎒 Pack'}
+          </button>
           {campaignId && (
             <button onClick={() => openPopout(`/npc-sheet?c=${campaignId}&npc=${npc.id}`, `npc-${npc.id}`)}
               title="Pop out to its own window"
@@ -316,6 +340,38 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         <div onClick={() => setEnlarged(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}>
           <img src={npc.portrait_url} alt={npc.name} style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: '4px', border: '2px solid #c0392b' }} />
         </div>
+      )}
+      {showInventory && (
+        <InventoryPanel
+          inventory={inv}
+          weaponPrimaryName=""
+          weaponSecondaryName=""
+          phyMod={npc.physicality}
+          canEdit={true}
+          otherCharacters={pcCharacters ?? []}
+          onUpdate={async next => {
+            setInv(next)
+            // Persist NPC inventory back to campaign_npcs.inventory.
+            // Fire-and-forget; a downstream realtime UPDATE eventually
+            // syncs to other clients (no blocking spinner needed).
+            await supabase.from('campaign_npcs').update({ inventory: next }).eq('id', npc.id)
+          }}
+          onGiveTo={async (item, targetCharId) => {
+            // Loot transfer: NPC inventory → target PC's character.data.
+            // InventoryPanel removes the item from `inventory` locally
+            // after this callback (via onUpdate), so we only need to
+            // handle the receiver side here.
+            const { data: charRow } = await supabase.from('characters').select('data').eq('id', targetCharId).single()
+            const targetData = (charRow as any)?.data ?? {}
+            const targetInv: InventoryItem[] = Array.isArray(targetData.inventory) ? targetData.inventory : []
+            const existing = targetInv.find(i => i.name === item.name && (i.custom ?? false) === (item.custom ?? false))
+            const newTargetInv = existing
+              ? targetInv.map(i => i === existing ? { ...i, qty: (i.qty ?? 1) + 1 } : i)
+              : [...targetInv, { ...item, qty: 1 }]
+            await supabase.from('characters').update({ data: { ...targetData, inventory: newTargetInv } }).eq('id', targetCharId)
+          }}
+          onClose={() => setShowInventory(false)}
+        />
       )}
     </div>
   )

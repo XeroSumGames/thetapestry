@@ -6202,6 +6202,7 @@ export default function TablePage() {
                     isPublished={publishedNpcIds.has(npc.id)}
                     onPlaceOnMap={(combatActive || showTacticalMap) ? () => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined}
                     campaignId={id}
+                    pcCharacters={entries.map(e => ({ id: e.character.id, name: e.character.name }))}
                   />
                 ) : (
                   <PlayerNpcCard key={cardKey}
@@ -6292,6 +6293,7 @@ export default function TablePage() {
                       isPublished={publishedNpcIds.has(npc.id)}
                       onPlaceOnMap={() => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined)}
                       campaignId={id}
+                      pcCharacters={entries.map(e => ({ id: e.character.id, name: e.character.name }))}
                       />
                   ) : (
                     <PlayerNpcCard
