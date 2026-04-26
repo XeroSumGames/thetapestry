@@ -115,6 +115,7 @@ export const EXPLOSIVE_WEAPONS: Weapon[] = [
 export const HEAVY_WEAPONS: Weapon[] = [
   { name: 'Flamethrower', category: 'heavy', skill: 'Demolitions', range: 'Close', rarity: 'Rare', damage: '3+2d6', rpPercent: 50, enc: 2, clip: 30, traits: ['Burning (3)'] },
   { name: 'Mounted Turret / Gatling Gun', category: 'heavy', skill: 'Heavy Weapons', range: 'Long', rarity: 'Rare', damage: '5+2d6', rpPercent: 50, enc: 3, ammo: 'Uncommon', clip: 100, traits: ['Automatic Burst (5)', 'Cumbersome (2)'] },
+  { name: 'M60 (Mounted)', category: 'heavy', skill: 'Heavy Weapons', range: 'Long', rarity: 'Rare', damage: '4+2d6', rpPercent: 50, enc: 3, ammo: 'Uncommon', clip: 100, traits: ['Automatic Burst (5)', 'Cumbersome (2)'] },
 ]
 
 export const ALL_WEAPONS: Weapon[] = [...MELEE_WEAPONS, ...RANGED_WEAPONS, ...EXPLOSIVE_WEAPONS, ...HEAVY_WEAPONS]

@@ -24,10 +24,13 @@ UPDATE campaigns SET vehicles = '[
     "fuel_max": 4,
     "fuel_current": 4,
     "three_words": "Cramped and Noisy",
-    "notes": "An alcohol Distillery has been fitted to this Winnebago \"Minnie\".\n- The still can only be operated when the vehicle is stopped or it has a 50% chance (1-3 on 1d6) of catching fire or exploding.\n- It takes 1 day of gathering materials and 1 day of distilling to produce 2 days of fuel. Requires a Tinkerer or Mechanic* check.\n- There are storage tanks built into the RV''s bodywork that allow for the storage of up to 4 days of fuel.\n- Has a snipernest built on the top, between the AC units, with a fitted sniper rifle that only fires forward in a 90 degree arc.",
+    "notes": "An alcohol Distillery has been fitted to this Winnebago \"Minnie\".\n- The still can only be operated when the vehicle is stopped or it has a 50% chance (1-3 on 1d6) of catching fire or exploding.\n- It takes 1 day of gathering materials and 1 day of distilling to produce 2 days of fuel. Requires a Tinkerer or Mechanic* check.\n- There are storage tanks built into the RV''s bodywork that allow for the storage of up to 4 days of fuel.\n- Has a weapon nest built on the top, between the AC units, with a fitted M60 that only fires forward in a 90 degree arc.",
     "image_url": null,
     "floorplan_url": "/minnie-floorplan.png",
     "has_still": true,
+    "mounted_weapons": [
+      {"name": "M60 (Mounted)", "notes": "Mounted in the roof weapon nest between the AC units. Fires forward in a 90° arc only."}
+    ],
     "cargo": [
       {"name": "Tactical Vests", "qty": 6, "notes": "-3 DMR/DMM"},
       {"name": "Tactical Helmets", "qty": 6, "notes": "-1 DMR/DMM"},
@@ -37,7 +40,7 @@ UPDATE campaigns SET vehicles = '[
       {"name": "Heavy Pistols", "qty": 6, "notes": "90 rounds each"},
       {"name": "Light Pistols", "qty": 10, "notes": "90 rounds each"},
       {"name": "Hunting Rifle", "qty": 2, "notes": "50 rounds each"},
-      {"name": "Sniper Rifle (fitted)", "qty": 1, "notes": "150 rounds"},
+      {"name": "M60 (Mounted)", "qty": 1, "notes": "300 rounds belt-fed"},
       {"name": "Tactical Batons", "qty": 6, "notes": ""},
       {"name": "Tasers", "qty": 3, "notes": ""},
       {"name": "Grenades", "qty": 20, "notes": ""},
