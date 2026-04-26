@@ -13,6 +13,9 @@ interface Campaign {
   gm_user_id: string
   status: string
   created_at: string
+  // Bumped to now() any time anyone opens this campaign's table page.
+  // Drives both the "Last Run" label and the sort order on My Stories.
+  last_accessed_at?: string | null
 }
 
 export default function CampaignsPage() {
@@ -21,6 +24,9 @@ export default function CampaignsPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [gmNames, setGmNames] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
+  // campaign_id → ISO string of latest activity. Used both for sort and
+  // for the "Last Run" display label on each card.
+  const [lastActivity, setLastActivity] = useState<Map<string, string>>(new Map())
   const router = useRouter()
   const supabase = createClient()
 
@@ -58,10 +64,12 @@ export default function CampaignsPage() {
         }
       }
 
-      // Build a campaign_id → most-recent-session-start map. One query
-      // covers every campaign on the page; we reduce client-side to the
-      // max started_at per campaign. Campaigns with no sessions just fall
-      // through to the created_at fallback during sort.
+      // Build a campaign_id → most-recent-activity map. We layer two
+      // signals — the campaign's last_accessed_at (bumped on every
+      // table-page open) and the most recent session.started_at —
+      // taking whichever is later. Either signal beats created_at
+      // when present, so a campaign you've prepped + opened sorts
+      // above one you only created.
       const allIds = [...((gmRaw ?? []) as Campaign[]).map(c => c.id), ...playerRaw.map(c => c.id)]
       const lastPlayed = new Map<string, string>()
       if (allIds.length > 0) {
@@ -75,8 +83,18 @@ export default function CampaignsPage() {
           if (!prev || row.started_at > prev) lastPlayed.set(row.campaign_id, row.started_at)
         }
       }
+      // Merge campaign.last_accessed_at into the same map (taking the
+      // later of the two). Cheap because we already have every campaign
+      // in memory.
+      for (const c of [...((gmRaw ?? []) as Campaign[]), ...playerRaw]) {
+        if (c.last_accessed_at) {
+          const prev = lastPlayed.get(c.id)
+          if (!prev || c.last_accessed_at > prev) lastPlayed.set(c.id, c.last_accessed_at)
+        }
+      }
+      setLastActivity(lastPlayed)
 
-      // Sort: most-recently-played first; never-played campaigns fall
+      // Sort: most-recently-touched first; never-touched campaigns fall
       // back to created_at DESC (so a brand-new campaign still appears
       // near the top instead of getting buried at the bottom).
       const sortByActivity = (list: Campaign[]) => [...list].sort((a, b) => {
@@ -143,6 +161,7 @@ export default function CampaignsPage() {
                     <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>{c.name}</div>
                     <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px' }}>
                       {SETTINGS[c.setting] ?? c.setting} &middot; Created {formatDate(c.created_at)}
+                      {lastActivity.get(c.id) && <> &middot; <span style={{ color: '#7fc458' }}>Last Run: {formatDate(lastActivity.get(c.id)!)}</span></>}
                     </div>
                     {c.description && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '6px', lineHeight: 1.5 }}>{c.description}</div>}
                   </div>
@@ -176,6 +195,7 @@ export default function CampaignsPage() {
                   <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>{c.name}</div>
                   <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '2px' }}>
                     {SETTINGS[c.setting] ?? c.setting}{gmNames[c.gm_user_id] ? <> &middot; <span style={{ color: '#c0392b' }}>GM: {gmNames[c.gm_user_id]}</span></> : ''} &middot; Joined {formatDate(c.created_at)}
+                    {lastActivity.get(c.id) && <> &middot; <span style={{ color: '#7fc458' }}>Last Run: {formatDate(lastActivity.get(c.id)!)}</span></>}
                   </div>
                   {c.description && <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '6px', lineHeight: 1.5 }}>{c.description}</div>}
                 </div>

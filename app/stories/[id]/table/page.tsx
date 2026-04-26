@@ -293,6 +293,45 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
   if (r.outcome === 'fed_check' || r.outcome === 'clothed_check' || r.outcome === 'morale_check' || r.outcome === 'retention_check') {
     return r.label.replace(/^[\u{1F33E}\u{1F527}\u{1F4CA}\u{1F64F}]\s*/u, '')
   }
+  // Vehicle mounted-weapon attack — label format from /vehicle popout:
+  //   "🎯 <weapon> attack → <target> · <vehicle> · <crew> · Ranged Combat (DEX) · <outcome>"
+  //   (or without "→ <target>" when no target was selected)
+  // Narrative form: "Knox Koss shot at and hit <target> using Minnie's
+  // Sniper's Rifle". Expanded view keeps the original label/dice for
+  // GMs who want to audit. Lives ahead of the loot block because the
+  // 🎯 prefix is unambiguous.
+  const vehAtkMatch = r.label.match(/^🎯\s+(.+?)\s+attack(?:\s+→\s+(.+?))?\s+·\s+([^·]+?)\s+·\s+([^·]+?)\s+·\s+Ranged Combat/)
+  if (vehAtkMatch) {
+    const weapon  = vehAtkMatch[1].trim()
+    const target  = vehAtkMatch[2]?.trim() || null
+    const vehicle = vehAtkMatch[3].trim()
+    const crew    = vehAtkMatch[4].trim()
+    const verbTail = `using ${vehicle}'s ${weapon}`
+    if (target) {
+      if (hit)  return `${crew} shot at and hit ${target} ${verbTail}${outcomeTag}`
+      return `${crew} shot at and missed ${target} ${verbTail}${outcomeTag}`
+    }
+    return hit
+      ? `${crew} fired ${verbTail}${outcomeTag}`
+      : `${crew} missed firing ${verbTail}${outcomeTag}`
+  }
+  // Vehicle Driving / Brew checks — keep them readable in the feed too.
+  const drivingMatch = r.label.match(/^🚗\s+Driving check\s+·\s+([^·]+?)\s+·\s+([^·]+?)\s+·/)
+  if (drivingMatch) {
+    const vehicle = drivingMatch[1].trim()
+    const driver  = drivingMatch[2].trim()
+    return hit
+      ? `${driver} drives ${vehicle}${outcomeTag}`
+      : `${driver} struggles driving ${vehicle}${outcomeTag}`
+  }
+  const brewMatch = r.label.match(/^⚗️\s+Brew check\s+·\s+([^·]+?)\s+·\s+([^·]+?)\s+·/)
+  if (brewMatch) {
+    const vehicle = brewMatch[1].trim()
+    const brewer  = brewMatch[2].trim()
+    return hit
+      ? `${brewer} brews fuel in ${vehicle}${outcomeTag}`
+      : `${brewer} botches the brew in ${vehicle}${outcomeTag}`
+  }
   // Loot — label "🎒 <name> looted <items> from <container>". Narrative
   // compact banner hides WHAT was looted (keeps players reading the log
   // without spoiling everyone's hauls); ▸ expand reveals the full list.
@@ -948,6 +987,11 @@ export default function TablePage() {
       const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
       if (!camp) { router.push('/stories'); return }
       setCampaign(camp)
+      // Bump last_accessed_at so the My Stories list can sort by
+      // most-recently-touched and surface "Last Run: <date>". Fire-and-
+      // forget — failure here doesn't block the table view.
+      supabase.from('campaigns').update({ last_accessed_at: new Date().toISOString() }).eq('id', id)
+        .then(({ error }: any) => { if (error) console.warn('[table] last_accessed_at bump failed:', error.message) })
       setVehicles(camp.vehicles ?? [])
       setIsGM(camp.gm_user_id === user.id)
       setSessionStatus(camp.session_status === 'active' ? 'active' : 'idle')
