@@ -1079,64 +1079,18 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     })
   }
 
-  // Start a pan with window-level mousemove/mouseup listeners. Without
-  // this, fast cursor movement that briefly leaves the canvas (over a
-  // scrollbar, sidebar, or the browser chrome) stops the in-component
-  // onMouseMove from firing — pan freezes for a beat, then catches up
-  // when the cursor returns. That stop-and-go is exactly what reads
-  // as 'twitchy' to the player. Window listeners catch events anywhere
-  // on the page, so pan stays buttery regardless of cursor position.
+  // Pan starts on mousedown. Move/up are handled by the React onMouseMove
+  // / onMouseUp on the canvas (see handleMouseMove pan branch + handleMouseUp
+  // pan branch). Window-level listener variant was tried earlier and broke
+  // baseline pan; reverted to React handlers which work reliably.
   function startPan(startClientX: number, startClientY: number) {
     if (!containerRef.current) return
-    const startScrollX = containerRef.current.scrollLeft
-    const startScrollY = containerRef.current.scrollTop
-    setPanning({ startX: startClientX, startY: startClientY, startPanX: startScrollX, startPanY: startScrollY })
-
-    function flushPan() {
-      const t = panTargetRef.current
-      if (t && containerRef.current) {
-        containerRef.current.scrollLeft = t.x
-        containerRef.current.scrollTop = t.y
-      }
-    }
-
-    function onWindowMove(ev: MouseEvent) {
-      const dx = ev.clientX - startClientX
-      const dy = ev.clientY - startClientY
-      // Cancel a pending press-and-hold ping if cursor drifted >7px.
-      if (pingHoldRef.current) {
-        const pdx = ev.clientX - pingHoldRef.current.startX
-        const pdy = ev.clientY - pingHoldRef.current.startY
-        if (pdx * pdx + pdy * pdy > 49) {
-          window.clearTimeout(pingHoldRef.current.timer)
-          pingHoldRef.current = null
-        }
-      }
-      panTargetRef.current = { x: startScrollX - dx, y: startScrollY - dy }
-      if (panRAFRef.current == null) {
-        panRAFRef.current = requestAnimationFrame(() => {
-          panRAFRef.current = null
-          flushPan()
-        })
-      }
-    }
-
-    function onWindowUp() {
-      // Final flush so the last pan target lands even if the rAF
-      // hadn't fired yet.
-      if (panRAFRef.current != null) {
-        cancelAnimationFrame(panRAFRef.current)
-        panRAFRef.current = null
-      }
-      flushPan()
-      panTargetRef.current = null
-      setPanning(null)
-      window.removeEventListener('mousemove', onWindowMove)
-      window.removeEventListener('mouseup', onWindowUp)
-    }
-
-    window.addEventListener('mousemove', onWindowMove)
-    window.addEventListener('mouseup', onWindowUp)
+    setPanning({
+      startX: startClientX,
+      startY: startClientY,
+      startPanX: containerRef.current.scrollLeft,
+      startPanY: containerRef.current.scrollTop,
+    })
   }
 
   function handleMouseDown(e: React.MouseEvent) {
@@ -1329,10 +1283,36 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       setImgScale(Math.max(0.1, Math.min(5, resizing.startZoom + scaleDelta)))
       return
     }
-    // Pan is handled by window-level listeners attached in startPan(),
-    // not here — see comment in startPan for the why. Branch removed
-    // intentionally; do NOT re-add a panning case to this in-component
-    // handler.
+    if (panning && containerRef.current) {
+      const dx = e.clientX - panning.startX
+      const dy = e.clientY - panning.startY
+      // Cancel a pending press-and-hold ping if the cursor drifted more
+      // than ~7px — means the user was panning, not holding.
+      if (pingHoldRef.current) {
+        const pdx = e.clientX - pingHoldRef.current.startX
+        const pdy = e.clientY - pingHoldRef.current.startY
+        if (pdx * pdx + pdy * pdy > 49) {
+          window.clearTimeout(pingHoldRef.current.timer)
+          pingHoldRef.current = null
+        }
+      }
+      // Buffer the target and let requestAnimationFrame flush it at the
+      // browser's paint cadence. Mousemove can fire hundreds of times per
+      // second; writing scroll every time thrashes layout. rAF coalesces
+      // into one write per frame.
+      panTargetRef.current = { x: panning.startPanX - dx, y: panning.startPanY - dy }
+      if (panRAFRef.current == null) {
+        panRAFRef.current = requestAnimationFrame(() => {
+          panRAFRef.current = null
+          const t = panTargetRef.current
+          if (t && containerRef.current) {
+            containerRef.current.scrollLeft = t.x
+            containerRef.current.scrollTop = t.y
+          }
+        })
+      }
+      return
+    }
     if (dragging && canvasRef.current) {
       const rect = canvasRef.current.getBoundingClientRect()
       const mx = (e.clientX - rect.left) / zoom
@@ -1381,11 +1361,21 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       setResizing(null)
       return
     }
-    // Pan release is handled by window-level mouseup attached in
-    // startPan(). If the user releases over the canvas, that listener
-    // fires and cleans up; if they release outside the canvas (over
-    // sidebar / scrollbar), the same window listener still fires.
-    // No work needed here for pan.
+    if (panning) {
+      // Flush any pending rAF so the last pan target lands before release.
+      if (panRAFRef.current != null) {
+        cancelAnimationFrame(panRAFRef.current)
+        panRAFRef.current = null
+        const t = panTargetRef.current
+        if (t && containerRef.current) {
+          containerRef.current.scrollLeft = t.x
+          containerRef.current.scrollTop = t.y
+        }
+      }
+      panTargetRef.current = null
+      setPanning(null)
+      return
+    }
     if (!dragging) return
     const tokenId = dragging.tokenId
     const tok = tokensRef.current.find(t => t.id === tokenId)
