@@ -3516,11 +3516,19 @@ export default function TablePage() {
         traitNotes.push(`Automatic Burst — ${rolls} rounds fired`)
       }
 
-      // Blast Radius note
+      // Blast Radius note + splash baseline
+      // Per CRB p.71-72: "The damage is calculated once for the
+      // explosion and the same amount is dealt to each person caught
+      // in the blast." Splash uses the RAW rolled WP (before primary's
+      // mitigation) — splash victims don't inherit the primary's
+      // PHY/DEX defense. Primary is still mitigated as the named
+      // attack recipient (handled separately above via calculateDamage).
+      const blastRawWP = totalWP + unarmedBonus
+      const blastRawRP = Math.floor(blastRawWP * (weapon.rpPercent / 100))
       if (hasBlast) {
-        const halfWP = Math.floor(finalWP / 2)
-        const quarterWP = Math.floor(finalWP / 4)
-        traitNotes.push(`Blast Radius — Engaged: ${finalWP} WP | Close: ${halfWP} WP | Further: ${quarterWP} WP`)
+        const halfWP = Math.floor(blastRawWP / 2)
+        const quarterWP = Math.floor(blastRawWP / 4)
+        traitNotes.push(`Blast Radius — Engaged: ${blastRawWP} WP | Close: ${halfWP} WP | Further: ${quarterWP} WP`)
       }
 
       // Burning note
@@ -3879,8 +3887,10 @@ export default function TablePage() {
             if (feet > 100) continue
             // Engaged (<=5ft) = full, Close (<=30ft) = 50%, further = 25%
             const scale = feet <= 5 ? 1.0 : feet <= 30 ? 0.5 : 0.25
-            const splashWP = Math.max(1, Math.floor(finalWP * scale))
-            const splashRP = Math.max(0, Math.floor(finalRP * scale))
+            // Splash uses raw blast WP/RP — see CRB note where blastRawWP
+            // is computed. Splash victims don't inherit primary's mitigation.
+            const splashWP = Math.max(1, Math.floor(blastRawWP * scale))
+            const splashRP = Math.max(0, Math.floor(blastRawRP * scale))
             const splashPC = entries.find(e => e.character.id === tok.character_id)
             const splashNpc = campaignNpcs.find((n: any) => n.id === tok.npc_id)
             const splashName = splashPC?.character.name ?? splashNpc?.name ?? tok.name
