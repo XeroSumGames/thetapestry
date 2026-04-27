@@ -853,6 +853,43 @@ export default function TablePage() {
     let recipientUserId: string | null = whisperTarget?.userId ?? null
     let isWhisper = !!whisperTarget
     let messageBody = trimmed
+    // Dice roller — `/d <expr>` or `/dice <expr>`. Expression is
+    // NdM with optional +/- modifiers, e.g. `/d 1d6`, `/d 3d20+3+2-1`,
+    // `/d 1d100`. Modifiers are summed into a single net adjustment.
+    // Output replaces the chat message body with a formatted result
+    // line; the message goes through the normal chat send (respects
+    // current whisper target — set whisper to GM first if you want
+    // a secret roll). Honors a max of 100 dice and 1000 sides as a
+    // safety guard.
+    const diceCmd = trimmed.match(/^\/d(?:ice)?\s+(.+)$/i)
+    if (diceCmd) {
+      const expr = diceCmd[1].replace(/\s+/g, '')
+      const m = expr.match(/^(\d+)d(\d+)((?:[+\-]\d+)*)$/i)
+      if (!m) {
+        // Invalid expression — show inline error to help the player
+        // self-correct without spamming the public chat. Treat as
+        // a no-op send.
+        alert(`Bad dice expression: "${diceCmd[1]}"\n\nFormat: /d NdM[+/-K] — e.g. /d 1d6, /d 3d20+3+2-1, /d 1d100-2`)
+        return
+      }
+      const count = Math.min(100, Math.max(1, parseInt(m[1])))
+      const sides = Math.min(1000, Math.max(2, parseInt(m[2])))
+      let modifier = 0
+      const modPart = m[3] ?? ''
+      const modMatches = modPart.matchAll(/([+\-])(\d+)/g)
+      for (const mm of modMatches) {
+        modifier += (mm[1] === '+' ? 1 : -1) * parseInt(mm[2])
+      }
+      const rolls: number[] = []
+      for (let i = 0; i < count; i++) rolls.push(Math.floor(Math.random() * sides) + 1)
+      const sum = rolls.reduce((a, b) => a + b, 0)
+      const total = sum + modifier
+      const exprPretty = modifier === 0
+        ? `${count}d${sides}`
+        : `${count}d${sides}${modifier > 0 ? '+' : ''}${modifier}`
+      const modStr = modifier === 0 ? '' : modifier > 0 ? ` +${modifier}` : ` ${modifier}`
+      messageBody = `🎲 ${exprPretty} → [${rolls.join('+')}]${modStr} = ${total}`
+    }
     const slashHead = trimmed.match(/^\/(?:w|whisper)\s+([\s\S]+)$/i)
     if (slashHead) {
       const rest = slashHead[1].trim()
