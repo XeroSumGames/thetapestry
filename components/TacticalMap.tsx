@@ -70,7 +70,7 @@ interface Props {
   campaignNpcs?: any[]
   entries?: any[]
   myCharacterId?: string | null
-  moveMode?: { characterId?: string; npcId?: string; feet: number } | null
+  moveMode?: { characterId?: string; npcId?: string; objectTokenId?: string; feet: number } | null
   onMoveComplete?: () => void
   onMoveCancel?: () => void
   // Throw-to-cell mode for grenades / thrown explosives. When set, the
@@ -427,7 +427,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       const moveCells = Math.floor(moveMode.feet / ft)
       const moveTok = tokensRef.current.find(t =>
         (moveMode.characterId && t.character_id === moveMode.characterId) ||
-        (moveMode.npcId && t.npc_id === moveMode.npcId)
+        (moveMode.npcId && t.npc_id === moveMode.npcId) ||
+        (moveMode.objectTokenId && t.id === moveMode.objectTokenId)
       )
       if (moveTok) {
         const occupied = new Set(tokensRef.current.filter(t => t.id !== moveTok.id).map(t => `${t.grid_x},${t.grid_y}`))
@@ -968,7 +969,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         const moveCells = Math.floor(moveMode.feet / ft)
         const moveTok = tokens.find(t =>
           (moveMode.characterId && t.character_id === moveMode.characterId) ||
-          (moveMode.npcId && t.npc_id === moveMode.npcId)
+          (moveMode.npcId && t.npc_id === moveMode.npcId) ||
+          (moveMode.objectTokenId && t.id === moveMode.objectTokenId)
         )
         if (moveTok) {
           const dist = Math.max(Math.abs(pos.gx - moveTok.grid_x), Math.abs(pos.gy - moveTok.grid_y))

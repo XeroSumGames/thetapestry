@@ -500,7 +500,7 @@ export default function TablePage() {
   }, [showTacticalMap, id])
   const [tacticalShared, setTacticalShared] = useState(false)
   const [tokenRefreshKey, setTokenRefreshKey] = useState(0)
-  const [moveMode, setMoveMode] = useState<{ characterId?: string; npcId?: string; feet: number } | null>(null)
+  const [moveMode, setMoveMode] = useState<{ characterId?: string; npcId?: string; objectTokenId?: string; feet: number } | null>(null)
   const [mapTokens, setMapTokens] = useState<{ id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null }[]>([])
   const [mapCellFeet, setMapCellFeet] = useState(3)
   const [mapTokenNpcIds, setMapTokenNpcIds] = useState<Set<string>>(new Set())
@@ -6100,6 +6100,15 @@ export default function TablePage() {
                 setMapCellFeet(cellFeet)
               }}
               onMoveComplete={async () => {
+                // Vehicle / object-token moves: the token physically moved
+                // via scene_tokens.grid_x/y, but no character/NPC consumed
+                // an action — vehicles aren't combatants and the driver's
+                // action economy isn't coupled to the wheel here. Just
+                // clear the mode and bail before the action-consume logic.
+                if (moveMode?.objectTokenId) {
+                  setMoveMode(null)
+                  return
+                }
                 // The mover is whoever moveMode references — NOT necessarily the
                 // current active combatant. Turn could auto-advance between Move
                 // click and target-cell click, leaving stale active state, in
@@ -6384,6 +6393,22 @@ export default function TablePage() {
                     await loadEntries(id)
                     await loadRolls(id)
                   }}
+                  onMove={(() => {
+                    // GM can always reposition. Players can only move an object
+                    // they're listed in `controlled_by_character_ids` for —
+                    // typically the driver(s) of a vehicle. No action burned
+                    // (vehicles aren't combatants); the move mode just lets the
+                    // mover pick a valid cell within 10 ft same as a PC.
+                    const me = entries.find(e => e.userId === userId)
+                    const controllers = (liveTok as any)?.controlled_by_character_ids
+                    const canControl = isGM
+                      || (!!me && Array.isArray(controllers) && controllers.includes(me.character.id))
+                    if (!canControl) return undefined
+                    return () => {
+                      setViewingObjects(prev => prev.filter(o => o.tokenId !== obj.tokenId))
+                      setMoveMode({ objectTokenId: obj.tokenId, feet: 10 })
+                    }
+                  })()}
                   onClose={() => setViewingObjects(prev => prev.filter(o => o.tokenId !== obj.tokenId))}
                 />
               </div>

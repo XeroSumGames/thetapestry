@@ -31,6 +31,12 @@ interface Props {
   // can self-loot items without going through the GM.
   myCharacter?: { id: string; name: string; data?: any } | null
   onLoot?: (objectName: string, item: ContentItem, characterId: string, characterName: string) => void | Promise<void>
+  // When provided, renders a "Move" button at the top of the card. Parent
+  // decides who gets to see it (GM always; players who are in the token's
+  // controlled_by_character_ids list — e.g. drivers of a vehicle). Clicking
+  // closes the card and enters move mode anchored on this token; vehicle
+  // moves intentionally don't consume any combatant's action.
+  onMove?: () => void
   onClose: () => void
 }
 
@@ -40,7 +46,7 @@ function wpBarColor(pct: number): string {
   return '#c0392b'
 }
 
-export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, portraitUrl, isGM, entries, myCharacter, onLoot, onClose }: Props) {
+export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, portraitUrl, isGM, entries, myCharacter, onLoot, onMove, onClose }: Props) {
   const supabase = createClient()
   const [properties, setProperties] = useState<TokenProperty[]>([])
   const [contents, setContents] = useState<ContentItem[]>([])
@@ -153,6 +159,13 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
           <div style={{ width: '36px', height: '36px', borderRadius: '4px', background: color || '#3a3a3a', border: '1px solid #2e2e2e' }} />
         )}
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', flex: 1 }}>{name}</div>
+        {onMove && (
+          <button onClick={onMove}
+            title="Move this token on the tactical map"
+            style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            Move
+          </button>
+        )}
         <button onClick={onClose}
           style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
           Close
