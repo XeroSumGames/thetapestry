@@ -145,7 +145,13 @@ export default function Sidebar() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-evenly' }}>
               <MessagesBell />
               <NotificationBell />
-              <span title="The Campfire — coming soon" style={{ color: '#3a3a3a', fontSize: '16px', lineHeight: 1, display: 'flex', alignItems: 'center', cursor: 'default' }}>🔥</span>
+              {/* Campfire shortcut — emoji glyphs ignore CSS color, so
+                  use opacity + grayscale to actually grey the icon out
+                  while it's a placeholder ('coming soon' from the
+                  user-header surface; the full /campfire page is still
+                  reachable from the main nav below). Matches the
+                  MessagesBell dim-when-idle treatment. */}
+              <span title="The Campfire — coming soon" style={{ fontSize: '16px', lineHeight: 1, display: 'flex', alignItems: 'center', cursor: 'default', opacity: 0.45, filter: 'grayscale(1)' }}>🔥</span>
             </div>
           </>
         )}

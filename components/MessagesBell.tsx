@@ -67,12 +67,17 @@ export default function MessagesBell() {
     }
   }, [])
 
+  // Dim the icon when there's nothing to look at — opacity + grayscale
+  // because emoji glyphs ignore the CSS `color` property (they render
+  // in their native palette regardless). Bright + full color when an
+  // unread message is waiting.
+  const dim = unread === 0
   return (
     <a
       href="/messages"
       target="_blank"
       rel="noopener noreferrer"
-      title="Messages (opens in new tab)"
+      title={dim ? 'Messages — no unread (opens in new tab)' : 'Messages (opens in new tab)'}
       style={{
         position: 'relative',
         background: 'none',
@@ -86,6 +91,9 @@ export default function MessagesBell() {
         textDecoration: 'none',
         display: 'inline-flex',
         alignItems: 'center',
+        opacity: dim ? 0.45 : 1,
+        filter: dim ? 'grayscale(1)' : 'none',
+        transition: 'opacity 0.15s, filter 0.15s',
       }}
     >
       💬
