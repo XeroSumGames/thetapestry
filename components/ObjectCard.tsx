@@ -37,6 +37,12 @@ interface Props {
   // closes the card and enters move mode anchored on this token; vehicle
   // moves intentionally don't consume any combatant's action.
   onMove?: () => void
+  // Fired after the rotation slider commits a new value to scene_tokens.
+  // Parent uses it for the optimistic local-state update + broadcast so
+  // the canvas re-renders immediately on the GM's own client (the
+  // realtime postgres_changes round-trip is too slow / unreliable to
+  // rely on for the initiator's own visual feedback).
+  onRotate?: (degrees: number) => void
   onClose: () => void
 }
 
@@ -46,7 +52,7 @@ function wpBarColor(pct: number): string {
   return '#c0392b'
 }
 
-export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, portraitUrl, isGM, entries, myCharacter, onLoot, onMove, onClose }: Props) {
+export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, portraitUrl, isGM, entries, myCharacter, onLoot, onMove, onRotate, onClose }: Props) {
   const supabase = createClient()
   const [properties, setProperties] = useState<TokenProperty[]>([])
   const [contents, setContents] = useState<ContentItem[]>([])
@@ -182,7 +188,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
       {wpM > 0 && (
         <div style={{ marginBottom: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '3px' }}>
-            <span>Integrity</span>
+            <span>WP</span>
             <span>{wpC} / {wpM}</span>
           </div>
           <div style={{ height: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', overflow: 'hidden' }}>
@@ -203,6 +209,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
             onChange={async e => {
               const v = parseFloat(e.target.value)
               setRotation(v)
+              onRotate?.(v) // optimistic parent + canvas update
               await supabase.from('scene_tokens').update({ rotation: v }).eq('id', tokenId)
             }}
             style={{ flex: 1, accentColor: '#EF9F27', cursor: 'pointer' }} />

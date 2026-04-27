@@ -534,7 +534,7 @@ export default function TablePage() {
   const [tacticalShared, setTacticalShared] = useState(false)
   const [tokenRefreshKey, setTokenRefreshKey] = useState(0)
   const [moveMode, setMoveMode] = useState<{ characterId?: string; npcId?: string; objectTokenId?: string; feet: number } | null>(null)
-  const [mapTokens, setMapTokens] = useState<{ id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null }[]>([])
+  const [mapTokens, setMapTokens] = useState<{ id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null; controlled_by_character_ids?: string[] | null; rotation?: number }[]>([])
   const [mapCellFeet, setMapCellFeet] = useState(3)
   const [mapTokenNpcIds, setMapTokenNpcIds] = useState<Set<string>>(new Set())
   const [showNpcPicker, setShowNpcPicker] = useState(false)
@@ -6473,11 +6473,21 @@ export default function TablePage() {
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3px', cursor: 'grab', borderRadius: '4px 4px 0 0', background: '#242424', border: '1px solid #3a3a3a', borderBottom: 'none', userSelect: 'none' }}>
                   <div style={{ width: '40px', height: '3px', borderRadius: '2px', background: '#5a5a5a' }} />
                 </div>
+                {(() => {
+                  // Resolve WP/WPmax: prefer the token's own values (so per-
+                  // instance damage persists), fall back to the matching
+                  // vehicle's wp_max/wp_current. Without the fallback, a
+                  // freshly-placed Minnie token shows 0/0 because the token
+                  // was created without copying the vehicle's stats.
+                  const matchingVehicleForWp = vehicles.find(v => v.name === obj.name)
+                  const fallbackWpMax = matchingVehicleForWp?.wp_max ?? null
+                  const fallbackWpCurrent = matchingVehicleForWp?.wp_current ?? matchingVehicleForWp?.wp_max ?? null
+                  return (
                 <ObjectCard
                   tokenId={obj.tokenId}
                   name={obj.name}
-                  wpCurrent={liveTok?.wp_current ?? null}
-                  wpMax={liveTok?.wp_max ?? null}
+                  wpCurrent={liveTok?.wp_current ?? fallbackWpCurrent}
+                  wpMax={liveTok?.wp_max ?? fallbackWpMax}
                   color={obj.color}
                   portraitUrl={obj.portraitUrl}
                   isGM={isGM}
@@ -6525,8 +6535,20 @@ export default function TablePage() {
                       setMoveMode({ objectTokenId: obj.tokenId, feet: moveFeet })
                     }
                   })()}
+                  onRotate={(degrees) => {
+                    // Optimistic local update so the GM (or driver) sees the
+                    // rotation immediately. tokenRefreshKey bump triggers
+                    // TacticalMap.loadTokens() via its useEffect dep — the
+                    // canonical re-fetch path that mirrors what the existing
+                    // GM Edit Object panel uses. Belt + suspenders for the
+                    // realtime postgres_changes round-trip.
+                    setMapTokens(prev => prev.map(t => t.id === obj.tokenId ? { ...t, rotation: degrees } : t))
+                    setTokenRefreshKey(k => k + 1)
+                  }}
                   onClose={() => setViewingObjects(prev => prev.filter(o => o.tokenId !== obj.tokenId))}
                 />
+                  )
+                })()}
               </div>
             )
           })}

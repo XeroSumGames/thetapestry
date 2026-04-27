@@ -297,7 +297,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   // Notify parent of token positions for range calculations
   useEffect(() => {
     if (onTokensUpdate && scene) {
-      onTokensUpdate(tokens.map(t => ({ id: t.id, name: t.name, token_type: t.token_type, character_id: t.character_id, npc_id: t.npc_id, grid_x: t.grid_x, grid_y: t.grid_y, wp_max: t.wp_max, wp_current: t.wp_current })), scene.cell_feet ?? 3)
+      onTokensUpdate(tokens.map(t => ({ id: t.id, name: t.name, token_type: t.token_type, character_id: t.character_id, npc_id: t.npc_id, grid_x: t.grid_x, grid_y: t.grid_y, wp_max: t.wp_max, wp_current: t.wp_current, controlled_by_character_ids: t.controlled_by_character_ids ?? null, rotation: t.rotation ?? 0 })), scene.cell_feet ?? 3)
     }
   }, [tokens, scene?.cell_feet])
 
