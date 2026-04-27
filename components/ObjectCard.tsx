@@ -206,11 +206,38 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
           <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', width: '36px' }}>Rot</span>
           <input type="range" min={0} max={360} step={5} value={rotation}
-            onChange={async e => {
-              const v = parseFloat(e.target.value)
-              setRotation(v)
-              onRotate?.(v) // optimistic parent + canvas update
+            onChange={e => {
+              // Drag-time: just update the local label/slider position so
+              // the input stays responsive. Do NOT hit the DB or refresh
+              // tokens on every onChange — that fires hundreds of times
+              // per drag and queues conflicting writes.
+              setRotation(parseFloat(e.target.value))
+            }}
+            onMouseUp={async e => {
+              // Commit on release: write DB FIRST so the subsequent
+              // tokenRefreshKey bump (in onRotate) re-reads the new
+              // value, then call onRotate to trigger TacticalMap's
+              // loadTokens → canvas re-render. Order matters — if
+              // we bumped first, the reload would race the DB write
+              // and pull the stale rotation.
+              const v = parseFloat((e.target as HTMLInputElement).value)
               await supabase.from('scene_tokens').update({ rotation: v }).eq('id', tokenId)
+              onRotate?.(v)
+            }}
+            onTouchEnd={async e => {
+              const v = parseFloat((e.target as HTMLInputElement).value)
+              await supabase.from('scene_tokens').update({ rotation: v }).eq('id', tokenId)
+              onRotate?.(v)
+            }}
+            onKeyUp={async e => {
+              // Keyboard arrow-key adjustment of the slider — same commit
+              // path as mouseup. Without this, hitting Enter / leaving
+              // focus wouldn't persist the rotation.
+              if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'].includes(e.key)) {
+                const v = parseFloat((e.target as HTMLInputElement).value)
+                await supabase.from('scene_tokens').update({ rotation: v }).eq('id', tokenId)
+                onRotate?.(v)
+              }
             }}
             style={{ flex: 1, accentColor: '#EF9F27', cursor: 'pointer' }} />
           <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', width: '36px', textAlign: 'right' }}>{rotation.toFixed(0)}°</span>
