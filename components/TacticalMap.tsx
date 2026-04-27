@@ -1719,14 +1719,25 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
             style={{ width: '60px', accentColor: '#7ab3d4', cursor: 'pointer' }} />
           <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>100%</span>
         </div>
-        <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'auto' }}>
+        <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'auto', contain: 'layout paint', overscrollBehavior: 'contain' }}>
         <canvas ref={canvasRef}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onDoubleClick={handleDoubleClick}
           onWheel={undefined}
-          style={{ display: 'block', cursor: panning ? 'grabbing' : spaceHeld ? 'grab' : resizing ? 'nwse-resize' : dragging ? 'grabbing' : 'default' }}
+          style={{
+            display: 'block',
+            cursor: panning ? 'grabbing' : spaceHeld ? 'grab' : resizing ? 'nwse-resize' : dragging ? 'grabbing' : 'default',
+            // Promote the canvas to its own GPU compositor layer so the
+            // browser doesn't repaint the entire visible region on every
+            // scroll write. Removes the 'twitch' that appears on large
+            // backgrounds when the layout system has to recalculate
+            // paint regions every mousemove. translateZ(0) is the
+            // canonical layer-promotion hint; will-change reinforces it.
+            transform: 'translateZ(0)',
+            willChange: 'transform',
+          }}
         />
         </div>
 
