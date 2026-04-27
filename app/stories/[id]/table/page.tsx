@@ -6153,11 +6153,25 @@ export default function TablePage() {
               onMoveComplete={async () => {
                 // Vehicle / object-token moves: the token physically moved
                 // via scene_tokens.grid_x/y, but no character/NPC consumed
-                // an action — vehicles aren't combatants and the driver's
-                // action economy isn't coupled to the wheel here. Just
-                // clear the mode and bail before the action-consume logic.
+                // an action — vehicles aren't combatants. Bump the token's
+                // current_speed (acceleration ramp), capped at the parent
+                // vehicle's max Speed, so the next Move can cover more
+                // ground. Then bail before the action-consume logic.
                 if (moveMode?.objectTokenId) {
+                  const objTokenId = moveMode.objectTokenId
                   setMoveMode(null)
+                  const tok = mapTokens.find(t => t.id === objTokenId)
+                  if (tok) {
+                    const matchingVehicle = vehicles.find(v => v.name === tok.name)
+                    const maxSpeed = matchingVehicle?.speed ?? 1
+                    const cur = Math.max(1, (tok as any).current_speed ?? 1)
+                    const next = Math.min(maxSpeed, cur + 1)
+                    if (next !== cur) {
+                      await supabase.from('scene_tokens').update({ current_speed: next }).eq('id', objTokenId)
+                      setMapTokens(prev => prev.map(t => t.id === objTokenId ? { ...t, current_speed: next } as any : t))
+                      initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+                    }
+                  }
                   return
                 }
                 // The mover is whoever moveMode references — NOT necessarily the
@@ -6449,25 +6463,26 @@ export default function TablePage() {
                     // they're listed in `controlled_by_character_ids` for —
                     // typically the driver(s) of a vehicle. No action burned
                     // (vehicles aren't combatants); the move mode picks a
-                    // valid cell within the vehicle's speed-derived range.
+                    // valid cell within the vehicle's CURRENT speed range
+                    // (which ramps up over consecutive Move actions —
+                    // see onMoveComplete).
                     const me = entries.find(e => e.userId === userId)
                     const controllers = (liveTok as any)?.controlled_by_character_ids
                     const canControl = isGM
                       || (!!me && Array.isArray(controllers) && controllers.includes(me.character.id))
                     if (!canControl) return undefined
-                    // Per Distemper CRB pp.137-139, vehicle Speed is a 1-5
-                    // stat (1 = human running, 2 = bicycle, 3 = horse, 4 =
-                    // car, 5 = sports car). CRB uses Speed only in Chase
-                    // mechanics (range bands), with no tactical-grid
-                    // mapping — so we anchor Speed 1 to the human Sprint
-                    // distance (30ft) and scale linearly. Minnie at Speed 2
-                    // gets 60ft/round; a sports car at Speed 5 gets 150ft.
-                    // Non-vehicle objects (any controllable object that
-                    // isn't in the campaign's vehicles list) default to
-                    // 30ft = a single Sprint distance.
+                    // Acceleration model: per Distemper CRB pp.137-139,
+                    // vehicle Speed is a 1-5 stat. To represent the old
+                    // and broken nature of beat-up vehicles like Minnie,
+                    // we ramp up from current_speed = 1 on the first
+                    // move, then +1 per consecutive Move action, capped
+                    // at the vehicle's max Speed. So Minnie (max Speed 3)
+                    // moves 30ft round 1, 60ft round 2, 90ft round 3+.
+                    // Non-vehicle controllable objects use a flat 30ft.
                     const matchingVehicle = vehicles.find(v => v.name === obj.name)
-                    const vehicleSpeed = matchingVehicle?.speed ?? 1
-                    const moveFeet = vehicleSpeed * 30
+                    const maxSpeed = matchingVehicle?.speed ?? 1
+                    const currentSpeed = Math.max(1, Math.min(maxSpeed, (liveTok as any)?.current_speed ?? 1))
+                    const moveFeet = currentSpeed * 30
                     return () => {
                       setViewingObjects(prev => prev.filter(o => o.tokenId !== obj.tokenId))
                       setMoveMode({ objectTokenId: obj.tokenId, feet: moveFeet })
