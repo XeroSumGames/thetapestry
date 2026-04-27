@@ -1,11 +1,9 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
 
 export default function MessagesBell() {
   const supabase = createClient()
-  const router = useRouter()
   const [unread, setUnread] = useState(0)
   const channelRef = useRef<any>(null)
   const userIdRef = useRef<string | null>(null)
@@ -70,9 +68,11 @@ export default function MessagesBell() {
   }, [])
 
   return (
-    <button
-      onClick={() => router.push('/messages')}
-      title="Messages"
+    <a
+      href="/messages"
+      target="_blank"
+      rel="noopener noreferrer"
+      title="Messages (opens in new tab)"
       style={{
         position: 'relative',
         background: 'none',
@@ -83,6 +83,9 @@ export default function MessagesBell() {
         fontSize: '16px',
         lineHeight: 1,
         marginRight: '4px',
+        textDecoration: 'none',
+        display: 'inline-flex',
+        alignItems: 'center',
       }}
     >
       💬
@@ -106,6 +109,6 @@ export default function MessagesBell() {
           {unread > 9 ? '9+' : unread}
         </span>
       )}
-    </button>
+    </a>
   )
 }
