@@ -66,7 +66,7 @@ const MINNIE: SeedVehicle = {
     "- There are storage tanks built into the RV's bodywork that allow for the storage of up to 4 days of fuel.\n" +
     '- Has a weapon nest built on the top, between the AC units, with a fitted M60 that only fires forward in a 90 degree arc.',
   image_url: null,
-  floorplan_url: '/minnie-floorplan.png',
+  floorplan_url: '/minnie-floorplan.png?v=20260427',
   has_still: true,
   mounted_weapons: [
     {
