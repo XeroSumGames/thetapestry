@@ -2123,7 +2123,16 @@ export default function TablePage() {
   async function removeTokenFromMap(name: string) {
     const { data: activeScene } = await supabase.from('tactical_scenes').select('id').eq('campaign_id', id).eq('is_active', true).single()
     if (!activeScene) return
-    await supabase.from('scene_tokens').delete().eq('scene_id', activeScene.id).eq('name', name)
+    // Soft-delete (stamp archived_at) instead of hard-delete so the
+    // token's grid_x / grid_y / scale / rotation persist for the next
+    // SHOW. Hard-delete loses position and the token reappears at
+    // (0,0) — what the playtest hit. Mirrors the pattern already used
+    // by unmapFolderFromMap.
+    await supabase.from('scene_tokens')
+      .update({ archived_at: new Date().toISOString() })
+      .eq('scene_id', activeScene.id)
+      .eq('name', name)
+      .is('archived_at', null)
     setTokenRefreshKey(k => k + 1)
     await refreshMapTokenIds()
     initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
@@ -2291,10 +2300,30 @@ export default function TablePage() {
   async function placeTokenOnMap(name: string, type: 'pc' | 'npc', characterId?: string, npcId?: string, portraitUrl?: string) {
     const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
     if (!activeScene) { alert('No active tactical scene. Create a scene first.'); return }
-    // Toggle: if token already exists, remove it
-    const { data: existing } = await supabase.from('scene_tokens').select('id').eq('scene_id', activeScene.id).eq('name', name).limit(1)
+    // Three-way toggle: live → archive (off-map, position preserved);
+    // archived → un-archive (back on map at original cell);
+    // no row → insert fresh at (0,0). Hard-delete used to be the off
+    // path here, which wiped grid_x/y so the token came back at
+    // top-left after re-placement. Mirrors placeFolderOnMap.
+    const { data: existing } = await supabase
+      .from('scene_tokens')
+      .select('id, archived_at')
+      .eq('scene_id', activeScene.id)
+      .eq('name', name)
+      .limit(1)
     if (existing && existing.length > 0) {
-      await supabase.from('scene_tokens').delete().eq('id', existing[0].id)
+      const row = existing[0] as { id: string; archived_at: string | null }
+      if (row.archived_at) {
+        // Archived → un-archive in place to restore the GM's prior position.
+        await supabase.from('scene_tokens')
+          .update({ archived_at: null })
+          .eq('id', row.id)
+      } else {
+        // Live → archive (off-map) but keep grid_x/y for the next show.
+        await supabase.from('scene_tokens')
+          .update({ archived_at: new Date().toISOString() })
+          .eq('id', row.id)
+      }
       setTokenRefreshKey(k => k + 1)
       await refreshMapTokenIds()
       initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
