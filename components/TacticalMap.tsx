@@ -311,16 +311,87 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     tacticalChannelRef.current.send({ type: 'broadcast', event: 'tactical_zoom', payload: { zoom } })
   }, [zoom, isGM])
 
-  // Spacebar = pan mode
+  // Spacebar = pan-mode visual cue + click-and-drag override.
+  // Arrow keys (or WASD) = continuous smooth pan via rAF, no mouse
+  // needed. Multiple keys can be held for diagonal pan. Steady 60fps
+  // velocity decouples pan from mouse jitter — fixes the "still
+  // jerky" complaint where mouse-rate-bound drag was the bottleneck.
   useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.code === 'Space' && !e.repeat && !['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) { e.preventDefault(); setSpaceHeld(true) }
-      if (e.code === 'Escape' && onMoveCancel) { onMoveCancel() }
+    const heldKeys = new Set<string>()
+    let rafId: number | null = null
+    const PAN_PX_PER_FRAME = 14
+
+    function tick() {
+      if (heldKeys.size === 0 || !containerRef.current) {
+        rafId = null
+        return
+      }
+      let dx = 0, dy = 0
+      if (heldKeys.has('ArrowLeft') || heldKeys.has('KeyA')) dx -= PAN_PX_PER_FRAME
+      if (heldKeys.has('ArrowRight') || heldKeys.has('KeyD')) dx += PAN_PX_PER_FRAME
+      if (heldKeys.has('ArrowUp') || heldKeys.has('KeyW')) dy -= PAN_PX_PER_FRAME
+      if (heldKeys.has('ArrowDown') || heldKeys.has('KeyS')) dy += PAN_PX_PER_FRAME
+      if (dx !== 0 || dy !== 0) {
+        // Diagonal normalization — keep total speed consistent so
+        // diagonals don't outpace cardinals by 1.41×.
+        if (dx !== 0 && dy !== 0) {
+          dx *= 0.707
+          dy *= 0.707
+        }
+        containerRef.current.scrollLeft += dx
+        containerRef.current.scrollTop += dy
+      }
+      rafId = requestAnimationFrame(tick)
     }
-    function onKeyUp(e: KeyboardEvent) { if (e.code === 'Space') { setSpaceHeld(false) } }
+
+    function isInputTarget(t: EventTarget | null): boolean {
+      if (!t) return false
+      const tag = (t as HTMLElement).tagName
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+    }
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (isInputTarget(e.target)) return
+      if (e.code === 'Space' && !e.repeat) {
+        e.preventDefault()
+        setSpaceHeld(true)
+        return
+      }
+      if (e.code === 'Escape' && onMoveCancel) {
+        onMoveCancel()
+        return
+      }
+      const isPanKey = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','KeyW','KeyA','KeyS','KeyD'].includes(e.code)
+      if (isPanKey) {
+        e.preventDefault()
+        if (!heldKeys.has(e.code)) {
+          heldKeys.add(e.code)
+          if (rafId == null) rafId = requestAnimationFrame(tick)
+        }
+      }
+    }
+
+    function onKeyUp(e: KeyboardEvent) {
+      if (e.code === 'Space') setSpaceHeld(false)
+      heldKeys.delete(e.code)
+    }
+
+    // Visibility/blur safety: if the user tabs away mid-pan, drop all
+    // held keys so the pan doesn't run forever in the background.
+    function onBlur() {
+      heldKeys.clear()
+      setSpaceHeld(false)
+    }
+
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
-    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
+    window.addEventListener('blur', onBlur)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+      window.removeEventListener('blur', onBlur)
+      if (rafId != null) cancelAnimationFrame(rafId)
+    }
   }, [onMoveCancel])
 
   // Resize observer
