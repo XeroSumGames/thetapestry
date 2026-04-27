@@ -258,6 +258,21 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
     return hit ? `${r.character_name} unjams ${wName}${outcomeTag}`
                : `${r.character_name} fails to unjam ${wName}${outcomeTag}`
   }
+  // Upkeep — "Upkeep — <weaponName>". Each outcome maps to its own
+  // narrative because the mechanical effect varies (improve vs.
+  // maintain vs. degrade vs. break). The condition delta itself is
+  // applied inline by executeRoll's upkeep block; this banner just
+  // narrates what the player sees in the feed.
+  const upkeepMatch = suffix.match(/^Upkeep\s+—\s+(.+)$/)
+  if (upkeepMatch) {
+    const wName = upkeepMatch[1].trim()
+    if (r.outcome === 'Wild Success' || r.outcome === 'High Insight') return `${r.character_name} tunes up ${wName}${outcomeTag}`
+    if (r.outcome === 'Success') return `${r.character_name} maintains ${wName}`
+    if (r.outcome === 'Failure') return `${r.character_name} fails upkeep — ${wName} degrades`
+    if (r.outcome === 'Dire Failure') return `${r.character_name} breaks ${wName} during upkeep`
+    if (r.outcome === 'Low Insight') return `${r.character_name} breaks ${wName} during upkeep${outcomeTag}`
+    return `${r.character_name} attempts upkeep on ${wName}`
+  }
   // Grapple — label "<name> — Grapple <target>[ (insight tag)]". The
   // outcome here is a custom grapple-result string ('Grappled!',
   // 'Failed — 1 RP', 'No clear victor') written by executeGrapple,
