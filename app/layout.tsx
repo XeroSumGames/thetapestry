@@ -71,6 +71,21 @@ export default function RootLayout({
                     }
                   }
                 }
+                // Drop bare-two-number window-dimension spam
+                // (e.g. console.log(window.outerWidth, window.outerHeight))
+                // from a browser extension. Heuristic: exactly two args,
+                // both integers between 100 and 10000. Real app logs of
+                // numeric pairs always include a label string as the first
+                // arg, so this is safe.
+                if (arguments.length === 2) {
+                  var a0 = arguments[0], a1 = arguments[1];
+                  if (typeof a0 === 'number' && typeof a1 === 'number' &&
+                      Number.isInteger(a0) && Number.isInteger(a1) &&
+                      a0 >= 100 && a0 <= 10000 &&
+                      a1 >= 100 && a1 <= 10000) {
+                    return;
+                  }
+                }
                 return origLog.apply(console, arguments);
               };
               // 2. Drop the Supabase Realtime deprecation warning that
