@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import MessagesPage from '../messages/page'
 import LfgPage from './lfg/page'
 import ForumsPage from './forums/page'
+import Forums2Page from './forums2/page'
 import WarStoriesPage from './war-stories/page'
 import TimestampPage from './timestamp/page'
 
@@ -18,19 +19,21 @@ import TimestampPage from './timestamp/page'
 // are also forwarded into the embedded component (e.g. ?dm=<id> still
 // works for the Messages tab).
 
-type TabId = 'messages' | 'lfg' | 'forums' | 'war-stories' | 'timestamps' | 'homebrew'
+type TabId = 'messages' | 'lfg' | 'forums' | 'forums2' | 'war-stories' | 'timestamps' | 'homebrew'
 
 interface TabDef {
   id: TabId
   label: string
   accent: string
   soon?: boolean
+  preview?: boolean
 }
 
 const TABS: TabDef[] = [
   { id: 'messages',     label: 'Messages',           accent: '#8b5cf6' },
   { id: 'lfg',          label: 'Looking for Group',  accent: '#c0392b' },
   { id: 'forums',       label: 'Forums',             accent: '#7fc458' },
+  { id: 'forums2',      label: 'Forums B',           accent: '#7ab3d4', preview: true },
   { id: 'war-stories',  label: 'War Stories',        accent: '#b87333' },
   { id: 'timestamps',   label: 'Timestamps',         accent: '#7ab3d4' },
   { id: 'homebrew',     label: 'Homebrew',           accent: '#1a4a6b', soon: true },
@@ -105,7 +108,9 @@ export default function CampfirePage() {
                 onMouseEnter={e => { if (!t.soon && !selected) (e.currentTarget as HTMLButtonElement).style.color = '#f5f2ee' }}
                 onMouseLeave={e => { if (!t.soon && !selected) (e.currentTarget as HTMLButtonElement).style.color = '#d4cfc9' }}
               >
-                {t.label}{t.soon && <span style={{ marginLeft: '6px', fontSize: '13px', color: '#3a3a3a' }}>— soon</span>}
+                {t.label}
+                {t.soon && <span style={{ marginLeft: '6px', fontSize: '13px', color: '#cce0f5', opacity: .4 }}>— soon</span>}
+                {t.preview && <span style={{ marginLeft: '6px', fontSize: '13px', color: t.accent, opacity: .7 }}>· preview</span>}
               </button>
             )
           })}
@@ -119,6 +124,7 @@ export default function CampfirePage() {
         {activeTab === 'messages' && <MessagesPage />}
         {activeTab === 'lfg' && <LfgPage />}
         {activeTab === 'forums' && <ForumsPage />}
+        {activeTab === 'forums2' && <Forums2Page />}
         {activeTab === 'war-stories' && <WarStoriesPage />}
         {activeTab === 'timestamps' && <TimestampPage />}
         {activeTab === 'homebrew' && (

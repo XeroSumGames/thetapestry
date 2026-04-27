@@ -1,11 +1,11 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// /campfire/forums — index of community threads. Pinned threads float
-// to the top; the rest sort by latest_reply_at DESC. Cross-campaign by
-// design (Campfire = the meta layer).
+// /campfire/forums — Discourse-style index. Avatar bubble + category pill
+// + title + first-line excerpt on the left; reply count + latest activity
+// on the right. Pinned threads float to the top; rest sort by latest_reply_at.
 
 type Category = 'lore' | 'rules' | 'session-recaps' | 'general'
 
@@ -21,6 +21,18 @@ const CATEGORY_ACCENT: Record<Category, string> = {
   rules: '#7ab3d4',
   'session-recaps': '#8b5cf6',
   general: '#7fc458',
+}
+
+// Deterministic avatar tint from a user id so each author gets a consistent
+// color without us having to store one. Hash-mod into a curated palette.
+const AVATAR_PALETTE = [
+  '#b87333', '#7ab3d4', '#8b5cf6', '#7fc458', '#EF9F27',
+  '#c0392b', '#1abc9c', '#e67e22', '#9b59b6', '#3498db',
+]
+function avatarColor(id: string) {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
+  return AVATAR_PALETTE[h % AVATAR_PALETTE.length]
 }
 
 interface Thread {
@@ -110,15 +122,20 @@ export default function ForumsIndexPage() {
     const ms = Date.now() - d.getTime()
     const mins = Math.floor(ms / 60000)
     if (mins < 1) return 'just now'
-    if (mins < 60) return `${mins}m ago`
+    if (mins < 60) return `${mins}m`
     const hours = Math.floor(mins / 60)
-    if (hours < 24) return `${hours}h ago`
+    if (hours < 24) return `${hours}h`
     const days = Math.floor(hours / 24)
-    if (days < 7) return `${days}d ago`
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    if (days < 7) return `${days}d`
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
   const visible = filter === 'all' ? threads : threads.filter(t => t.category === filter)
+  const counts = useMemo(() => {
+    const c: Record<Filter, number> = { all: threads.length, lore: 0, rules: 0, 'session-recaps': 0, general: 0 }
+    threads.forEach(t => { c[t.category]++ })
+    return c
+  }, [threads])
 
   const inp: React.CSSProperties = {
     width: '100%', padding: '8px 10px', background: '#242424',
@@ -132,10 +149,10 @@ export default function ForumsIndexPage() {
   }
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Barlow, sans-serif' }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', gap: '1rem' }}>
         <div>
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>
             Forums
@@ -146,7 +163,7 @@ export default function ForumsIndexPage() {
         </div>
         {!composing && (
           <button onClick={startCompose}
-            style={{ padding: '9px 16px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '9px 16px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             + New Thread
           </button>
         )}
@@ -190,21 +207,28 @@ export default function ForumsIndexPage() {
         </div>
       )}
 
-      {/* Filter chips */}
+      {/* Filter chips with per-category counts */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '1rem', flexWrap: 'wrap' }}>
-        <button onClick={() => setFilter('all')}
-          style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${filter === 'all' ? '#f5f2ee' : '#3a3a3a'}`, background: filter === 'all' ? '#242424' : '#1a1a1a', color: filter === 'all' ? '#f5f2ee' : '#d4cfc9' }}>
-          All
-        </button>
+        <FilterChip
+          label="All"
+          count={counts.all}
+          accent="#f5f2ee"
+          active={filter === 'all'}
+          onClick={() => setFilter('all')}
+        />
         {(Object.keys(CATEGORY_LABEL) as Category[]).map(c => (
-          <button key={c} onClick={() => setFilter(c)}
-            style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${filter === c ? CATEGORY_ACCENT[c] : '#3a3a3a'}`, background: filter === c ? '#242424' : '#1a1a1a', color: filter === c ? CATEGORY_ACCENT[c] : '#d4cfc9' }}>
-            {CATEGORY_LABEL[c]}
-          </button>
+          <FilterChip
+            key={c}
+            label={CATEGORY_LABEL[c]}
+            count={counts[c]}
+            accent={CATEGORY_ACCENT[c]}
+            active={filter === c}
+            onClick={() => setFilter(c)}
+          />
         ))}
       </div>
 
-      {/* Thread list */}
+      {/* Thread list — Discourse-style row: avatar + (pill, title, excerpt) + meta-stack */}
       {loading ? (
         <div style={{ fontSize: '13px', color: '#cce0f5', textAlign: 'center', padding: '2rem' }}>Loading...</div>
       ) : visible.length === 0 ? (
@@ -212,30 +236,111 @@ export default function ForumsIndexPage() {
           {filter === 'all' ? 'No threads yet. Start one.' : 'No threads in this category.'}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {visible.map(t => {
+        <div style={{ background: '#141414', border: '1px solid #2e2e2e', borderRadius: '6px', overflow: 'hidden' }}>
+          {visible.map((t, i) => {
             const accent = CATEGORY_ACCENT[t.category]
+            const initial = (t.author_username || '?').charAt(0).toUpperCase()
+            const tint = avatarColor(t.author_user_id)
+            const excerpt = t.body.replace(/\s+/g, ' ').trim().slice(0, 140)
             return (
               <a key={t.id} href={`/campfire/forums/${t.id}`}
-                style={{ display: 'block', textDecoration: 'none', background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${accent}`, borderRadius: '4px', padding: '10px 14px' }}
-                onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.background = '#242424'}
-                onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.background = '#1a1a1a'}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                  {t.pinned && <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>📌 Pinned</span>}
-                  <span style={{ fontSize: '13px', color: accent, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>
-                    {CATEGORY_LABEL[t.category]}
-                  </span>
-                  {t.locked && <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🔒 Locked</span>}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '40px 1fr auto',
+                  gap: '14px',
+                  alignItems: 'center',
+                  padding: '14px 16px',
+                  borderTop: i === 0 ? 'none' : '1px solid #242424',
+                  textDecoration: 'none',
+                  background: '#141414',
+                  transition: 'background .12s',
+                }}
+                onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.background = '#1c1c1c'}
+                onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.background = '#141414'}
+              >
+                {/* Avatar bubble — author initial in a tinted circle */}
+                <div style={{
+                  width: '40px', height: '40px', borderRadius: '50%',
+                  background: `linear-gradient(135deg, ${tint}, ${tint}aa)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700,
+                  fontSize: '17px', color: '#0f0f0f',
+                  border: '1px solid #2e2e2e',
+                }}>
+                  {initial}
                 </div>
-                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '17px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '4px' }}>
-                  {t.title}
+
+                {/* Middle: pill row + title + excerpt */}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                    {/* Category pill */}
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '2px 10px',
+                      background: `${accent}22`,
+                      color: accent,
+                      border: `1px solid ${accent}55`,
+                      borderRadius: '999px',
+                      fontFamily: 'Barlow Condensed, sans-serif',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      letterSpacing: '.08em',
+                      textTransform: 'uppercase',
+                    }}>
+                      {CATEGORY_LABEL[t.category]}
+                    </span>
+                    {t.pinned && <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>📌 Pinned</span>}
+                    {t.locked && <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🔒 Locked</span>}
+                    <span style={{ fontSize: '13px', color: '#cce0f5' }}>· {t.author_username}</span>
+                  </div>
+                  <div style={{
+                    fontFamily: 'Barlow Condensed, sans-serif',
+                    fontSize: '17px',
+                    fontWeight: 700,
+                    color: '#f5f2ee',
+                    letterSpacing: '.04em',
+                    textTransform: 'uppercase',
+                    marginBottom: '4px',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    {t.title}
+                  </div>
+                  <div style={{
+                    fontSize: '13px',
+                    color: '#9aa5b0',
+                    lineHeight: 1.45,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {excerpt || '—'}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#cce0f5' }}>
-                  <span>by {t.author_username}</span>
-                  <span style={{ color: '#5a5550' }}>·</span>
-                  <span>{t.reply_count} repl{t.reply_count === 1 ? 'y' : 'ies'}</span>
-                  <span style={{ color: '#5a5550' }}>·</span>
-                  <span>{formatRelative(t.latest_reply_at)}</span>
+
+                {/* Right: replies + relative time, stacked */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', minWidth: '70px' }}>
+                  <div style={{
+                    fontFamily: 'Barlow Condensed, sans-serif',
+                    fontSize: '20px',
+                    fontWeight: 700,
+                    color: t.reply_count > 0 ? '#f5f2ee' : '#5a5550',
+                    letterSpacing: '.04em',
+                    lineHeight: 1,
+                  }}>
+                    {t.reply_count}
+                  </div>
+                  <div style={{
+                    fontFamily: 'Barlow Condensed, sans-serif',
+                    fontSize: '13px',
+                    color: '#cce0f5',
+                    letterSpacing: '.06em',
+                    textTransform: 'uppercase',
+                  }}>
+                    {t.reply_count === 1 ? 'reply' : 'replies'}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#7a7570', marginTop: '2px' }}>
+                    {formatRelative(t.latest_reply_at)}
+                  </div>
                 </div>
               </a>
             )
@@ -243,5 +348,36 @@ export default function ForumsIndexPage() {
         </div>
       )}
     </div>
+  )
+}
+
+function FilterChip({ label, count, accent, active, onClick }: {
+  label: string; count: number; accent: string; active: boolean; onClick: () => void
+}) {
+  return (
+    <button onClick={onClick}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: '6px',
+        padding: '6px 12px',
+        fontSize: '13px',
+        fontFamily: 'Barlow Condensed, sans-serif',
+        letterSpacing: '.06em',
+        textTransform: 'uppercase',
+        cursor: 'pointer',
+        borderRadius: '999px',
+        border: `1px solid ${active ? accent : '#3a3a3a'}`,
+        background: active ? `${accent}22` : '#1a1a1a',
+        color: active ? accent : '#d4cfc9',
+      }}>
+      <span>{label}</span>
+      <span style={{
+        background: active ? `${accent}33` : '#242424',
+        color: active ? accent : '#9aa5b0',
+        padding: '1px 7px',
+        borderRadius: '999px',
+        fontSize: '13px',
+        fontWeight: 700,
+      }}>{count}</span>
+    </button>
   )
 }
