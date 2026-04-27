@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { EQUIPMENT, EquipmentItem } from '../lib/xse-schema'
-import { ALL_WEAPONS } from '../lib/weapons'
+import { ALL_WEAPONS, getWeaponByName } from '../lib/weapons'
 import { computeEncumbrance, BASE_ENC_LIMIT } from '../lib/encumbrance'
 
 // Combined inventory catalog — SRD equipment + all weapons.
@@ -97,8 +97,15 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
   function giveItem(idx: number) {
     const item = inventory[idx]
     setGivingItem(item)
-    // Default = full stack (the common case is "give all of these to X").
-    setGiveQty(item.qty)
+    // Single-use explosives (Grenade, Molotov, Shiv-Grenade, Flash-Bang,
+    // RPG round) default to qty 1 — each one is a discrete consumable
+    // and "give the whole pile" is rarely what the player wants. For
+    // every other stackable item, default = full stack (give-all-of-X
+    // is the common case). User can override either way via the +/-
+    // buttons or the [All] shortcut.
+    const weapon = getWeaponByName(item.name)
+    const isSingleUse = weapon?.category === 'explosive'
+    setGiveQty(isSingleUse ? 1 : item.qty)
   }
 
   function confirmGive(targetCharId: string) {
