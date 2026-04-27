@@ -3913,8 +3913,13 @@ export default function TablePage() {
               (targetObject && tok.id === targetObject.id) ||
               (tok.grid_x === targetTok.grid_x && tok.grid_y === targetTok.grid_y)
             )
-            const isAttacker = active && ((active.character_id && tok.character_id && tok.character_id === active.character_id) || (active.npc_id && tok.npc_id && tok.npc_id === active.npc_id))
-            if (isPrimary || isAttacker) continue
+            // Per CRB p.71-72: the blast damages everyone in radius —
+            // no carve-out for the thrower. Standing in your own blast
+            // is intentionally brutal (the throw modal warns first via
+            // the friendly-fire confirm in TacticalMap). Only the
+            // primary target is skipped here because they take damage
+            // through the named-attack path above.
+            if (isPrimary) continue
             const dist = Math.max(Math.abs(tok.grid_x - targetTok.grid_x), Math.abs(tok.grid_y - targetTok.grid_y))
             const feet = dist * ft
             if (feet > 100) continue

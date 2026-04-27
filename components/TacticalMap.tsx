@@ -1075,22 +1075,32 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
             // the player by name + band before firing the throw.
             // Cancel keeps throwMode active so they can pick again
             // without re-clicking the Attack button.
+            // Friendly-fire scan now includes the attacker themselves
+            // (the splash code no longer carves out the thrower per
+            // CRB p.71-72 — they take damage if they're in radius).
+            // Self-hits get a (YOU) tag in the confirm dialog so the
+            // player knows what they're doing before they cook off a
+            // grenade at their own feet.
             const friendlies = throwMode.friendlyCharacterIds ?? []
-            if (throwMode.hasBlast && friendlies.length > 0) {
+            const attackerCharId = throwMode.attackerCharId
+            if (throwMode.hasBlast && (friendlies.length > 0 || attackerCharId)) {
               const farCells = Math.max(1, Math.round(100 / ft))
               const engagedCells = Math.max(1, Math.round(5 / ft))
               const closeCells = Math.max(1, Math.round(30 / ft))
-              const hits: { name: string; band: string }[] = []
+              const hits: { name: string; band: string; isSelf: boolean }[] = []
               for (const tok of tokens) {
-                if (!tok.character_id || !friendlies.includes(tok.character_id)) continue
+                if (!tok.character_id) continue
+                const isSelf = !!attackerCharId && tok.character_id === attackerCharId
+                const isFriendly = friendlies.includes(tok.character_id)
+                if (!isSelf && !isFriendly) continue
                 const d = Math.max(Math.abs(tok.grid_x - pos.gx), Math.abs(tok.grid_y - pos.gy))
                 if (d > farCells) continue
                 const band = d <= engagedCells ? 'Engaged' : d <= closeCells ? 'Close' : 'Far'
-                hits.push({ name: tok.name, band })
+                hits.push({ name: tok.name, band, isSelf })
               }
               if (hits.length > 0) {
-                const list = hits.map(h => `  • ${h.name} (${h.band})`).join('\n')
-                const ok = window.confirm(`This blast will hit your allies:\n\n${list}\n\nThrow anyway?`)
+                const list = hits.map(h => `  • ${h.name}${h.isSelf ? ' (YOU)' : ''} (${h.band})`).join('\n')
+                const ok = window.confirm(`This blast will hit:\n\n${list}\n\nThrow anyway?`)
                 if (!ok) return // stay in throwMode so the player can pick a different cell
               }
             }
