@@ -50,6 +50,12 @@ export default function VehiclePage() {
   const vehicleId = params.get('v')
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [floorplanEnlarged, setFloorplanEnlarged] = useState(false)
+  // Matching scene_token for this vehicle (looked up by name match).
+  // When non-null, the popout exposes a Rotation slider that writes
+  // back to scene_tokens.rotation for live re-orientation on the
+  // tactical map without having to open the GM Edit Object panel.
+  const [mapToken, setMapToken] = useState<{ id: string; rotation: number } | null>(null)
+  const [rotationDraft, setRotationDraft] = useState(0)
   const [isGM, setIsGM] = useState(false)
   const [canEdit, setCanEdit] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -78,6 +84,33 @@ export default function VehiclePage() {
       setCanEdit(camp.gm_user_id === user.id || !!membership)
       const v = (camp.vehicles ?? []).find((v: Vehicle) => v.id === vehicleId)
       setVehicle(v ?? null)
+
+      // Look up the matching scene_token for this vehicle (by name match
+      // against the active scene's tokens). When found, expose the
+      // rotation slider so the GM/driver can straighten the vehicle on
+      // the tactical map without leaving the popout.
+      if (v?.name) {
+        const { data: activeScene } = await supabase
+          .from('tactical_scenes')
+          .select('id')
+          .eq('campaign_id', campaignId)
+          .eq('is_active', true)
+          .maybeSingle()
+        if (activeScene?.id) {
+          const { data: tokens } = await supabase
+            .from('scene_tokens')
+            .select('id, rotation')
+            .eq('scene_id', activeScene.id)
+            .eq('name', v.name)
+            .eq('token_type', 'object')
+            .limit(1)
+          const tok = (tokens ?? [])[0] as { id: string; rotation: number } | undefined
+          if (tok) {
+            setMapToken({ id: tok.id, rotation: tok.rotation ?? 0 })
+            setRotationDraft(tok.rotation ?? 0)
+          }
+        }
+      }
 
       // ── Crew pool: PCs (campaign_members → characters) + NPCs ──
       const [memberRes, npcRes] = await Promise.all([
@@ -581,6 +614,30 @@ export default function VehiclePage() {
               ))}
             </div>
           </div>
+
+          {/* Tactical map orientation — only shown when this vehicle has a
+              token on the active scene. Mirrors the rotation slider in
+              the GM Edit Object panel (TacticalMap.tsx:1810-1820) so the
+              driver can straighten the vehicle without opening that
+              panel. Writes directly to scene_tokens.rotation; the
+              TacticalMap canvas already renders the rotation. */}
+          {mapToken && (
+            <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginTop: '12px' }}>
+              <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Map Orientation</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', width: '40px' }}>Rot</span>
+                <input type="range" min={0} max={360} step={5} value={rotationDraft}
+                  onChange={async e => {
+                    const v = parseFloat(e.target.value)
+                    setRotationDraft(v)
+                    setMapToken(prev => prev ? { ...prev, rotation: v } : prev)
+                    await supabase.from('scene_tokens').update({ rotation: v }).eq('id', mapToken.id)
+                  }}
+                  style={{ flex: 1, accentColor: '#EF9F27', cursor: 'pointer' }} />
+                <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', width: '36px', textAlign: 'right' }}>{rotationDraft.toFixed(0)}°</span>
+              </div>
+            </div>
+          )}
 
           {/* Floorplan */}
           {(vehicle as any).floorplan_url && (
