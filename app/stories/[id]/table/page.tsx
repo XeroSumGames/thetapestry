@@ -6147,6 +6147,21 @@ export default function TablePage() {
               campaignNpcs={campaignNpcs}
               entries={entries}
               myCharacterId={myCharIdRef.current}
+              vehicles={vehicles}
+              onObjectMove={(tokenId: string) => {
+                // Mirror the same speed × current_speed × 30ft logic the
+                // ObjectCard's onMove uses, so the in-map panel's Move
+                // button feels identical. Acceleration ramp also kicks
+                // in via onMoveComplete (which already handles the
+                // objectTokenId branch and bumps current_speed).
+                const tok = mapTokens.find(t => t.id === tokenId)
+                if (!tok) return
+                const matchingVehicle = vehicles.find(v => v.name === tok.name)
+                const maxSpeed = matchingVehicle?.speed ?? 1
+                const currentSpeed = Math.max(1, Math.min(maxSpeed, (tok as any).current_speed ?? 1))
+                const moveFeet = currentSpeed * 30
+                setMoveMode({ objectTokenId: tokenId, feet: moveFeet })
+              }}
               onTokenClick={(token: any) => {
                 // Double-click = opens a card AND selects the token as attack target,
                 // so hitting ATTACK right after peeking at a zombie pre-populates it.

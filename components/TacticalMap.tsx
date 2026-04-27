@@ -90,9 +90,17 @@ interface Props {
   onTokensUpdate?: (tokens: { id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null }[], cellFeet: number) => void
   onTokenChanged?: () => void                               // Notify parent to broadcast token_changed so other clients re-fetch
   onPlayerDragMove?: (characterId: string) => void          // Player finished a valid drag-move; parent consumes 1 action
+  // Campaign vehicle data — used as a fallback for object tokens that
+  // were placed without their wp_max/wp_current copied across (so the
+  // selected-token panel still shows the correct stats by name match).
+  vehicles?: { name: string; wp_max?: number; wp_current?: number; speed?: number }[]
+  // Player-or-GM clicks Move on an object token in the in-map panel.
+  // Parent owns the moveMode state + the speed × 30ft / acceleration
+  // ramp logic, so we just hand off the tokenId.
+  onObjectMove?: (tokenId: string) => void
 }
 
-export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, throwMode, onThrowComplete, onThrowCancel, onTokensUpdate, onTokenChanged, onPlayerDragMove }: Props) {
+export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, throwMode, onThrowComplete, onThrowCancel, onTokensUpdate, onTokenChanged, onPlayerDragMove, vehicles, onObjectMove }: Props) {
   const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -1804,17 +1812,54 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               <button onClick={() => setSelectedToken(null)} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '14px', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>✕</button>
             </div>
             <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{tok.token_type} · {String.fromCharCode(65 + tok.grid_x)}{tok.grid_y + 1}</div>
-            {isGM && (
-              <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
-                <button onClick={() => toggleTokenVisibility(tok.id)}
-                  style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: tok.is_visible ? '#7fc458' : '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  {tok.is_visible ? 'Hide' : 'Reveal'}
-                </button>
-                <button onClick={() => { removeToken(tok.id); setSelectedToken(null) }}
-                  style={{ padding: '2px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  Remove
-                </button>
-                {tok.token_type === 'object' && onTokenClick && (
+            {/* WP bar — object tokens only. Falls back to the matching
+                vehicle's wp_max/wp_current when the token itself was
+                placed without those stats copied across. Same fallback
+                logic as ObjectCard so the two surfaces agree. */}
+            {tok.token_type === 'object' && (() => {
+              const veh = vehicles?.find(v => v.name === tok.name)
+              const wpMax = tok.wp_max ?? veh?.wp_max ?? null
+              const wpCurrent = tok.wp_current ?? veh?.wp_current ?? wpMax
+              if (!wpMax || wpMax <= 0) return null
+              const pct = Math.max(0, Math.min(1, (wpCurrent ?? wpMax) / wpMax))
+              const barColor = pct > 0.66 ? '#7fc458' : pct > 0.33 ? '#EF9F27' : '#c0392b'
+              return (
+                <div style={{ marginTop: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '2px' }}>
+                    <span>WP</span>
+                    <span>{wpCurrent ?? wpMax} / {wpMax}</span>
+                  </div>
+                  <div style={{ height: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct * 100}%`, background: barColor, transition: 'width 0.2s' }} />
+                  </div>
+                </div>
+              )
+            })()}
+            {/* Action buttons — split into two groups so the GM-only
+                ones (Hide/Reveal/Remove/Edit) stay gated while Move
+                is available to anyone who can rotate the token (i.e.
+                listed in controlled_by_character_ids). */}
+            {(isGM || (canRotate && tok.token_type === 'object' && onObjectMove)) && (
+              <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
+                {canRotate && tok.token_type === 'object' && onObjectMove && (
+                  <button onClick={() => { onObjectMove(tok.id); setSelectedToken(null) }}
+                    style={{ padding: '2px 6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Move
+                  </button>
+                )}
+                {isGM && (
+                  <button onClick={() => toggleTokenVisibility(tok.id)}
+                    style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: tok.is_visible ? '#7fc458' : '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    {tok.is_visible ? 'Hide' : 'Reveal'}
+                  </button>
+                )}
+                {isGM && (
+                  <button onClick={() => { removeToken(tok.id); setSelectedToken(null) }}
+                    style={{ padding: '2px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Remove
+                  </button>
+                )}
+                {isGM && tok.token_type === 'object' && onTokenClick && (
                   <button onClick={() => { onTokenClick(tok); setSelectedToken(null) }}
                     style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Edit
