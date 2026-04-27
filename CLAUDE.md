@@ -6,7 +6,7 @@
     – Don't skip steps & be explicit. 
     – Give full commands like "notepad app\campaigns\page.tsx" instead of just "app\campaigns\page.tsx"
     – Give me a testing plan each time to confirm the changes work. 
-    – Write the testplan to C:\TheTapestry\tasks\testplan.md
+    – Write the testplan to C:\TheTapestry\tasks\<topic>testplan.md (descriptive name, NOT generic testplan.md — e.g. loadtimestestplan.md, preplaytestsmoke-YYYY-MM-DD.md). This keeps multiple in-flight test plans from stomping each other.
     – You are keeping a running TODO list, item for the learn.md file, and a roadmap. I will ask you periodically to export them so I can add them to the project
 
 ### 1. Plan Node Default
