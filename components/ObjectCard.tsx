@@ -207,11 +207,18 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
           <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', width: '36px' }}>Rot</span>
           <input type="range" min={0} max={360} step={5} value={rotation}
             onChange={e => {
-              // Drag-time: just update the local label/slider position so
-              // the input stays responsive. Do NOT hit the DB or refresh
-              // tokens on every onChange — that fires hundreds of times
-              // per drag and queues conflicting writes.
-              setRotation(parseFloat(e.target.value))
+              // Drag-time: update local label + push a live patch to
+              // TacticalMap's tokens state via window-level event so
+              // the canvas re-renders smoothly while the user drags
+              // (no DB hit, no realtime round-trip). DB commit happens
+              // once on release (mouseup / touchend / keyup below).
+              const v = parseFloat(e.target.value)
+              setRotation(v)
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('tapestry:token-patch', {
+                  detail: { tokenId, patch: { rotation: v } },
+                }))
+              }
             }}
             onMouseUp={async e => {
               // Commit on release: write DB FIRST so the subsequent

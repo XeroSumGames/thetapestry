@@ -290,6 +290,24 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   // Refresh tokens when parent signals a change
   useEffect(() => { if (sceneRef.current) loadTokens(sceneRef.current.id) }, [tokenRefreshKey])
 
+  // Live token-patch listener — lets external popups (like ObjectCard's
+  // rotation slider) push optimistic patches into our `tokens` state
+  // mid-drag without going through DB → realtime → reload, which is
+  // too slow for slider-style continuous interaction. The DB write
+  // still happens on commit (mouseup) so other clients sync via the
+  // normal postgres_changes path. Window-level CustomEvent because
+  // ObjectCard is rendered outside TacticalMap's tree.
+  useEffect(() => {
+    function onPatch(ev: Event) {
+      const detail = (ev as CustomEvent).detail
+      if (!detail?.tokenId || typeof detail.patch !== 'object') return
+      setTokens(prev => prev.map(t => t.id === detail.tokenId ? { ...t, ...detail.patch } : t))
+    }
+    if (typeof window === 'undefined') return
+    window.addEventListener('tapestry:token-patch', onPatch)
+    return () => window.removeEventListener('tapestry:token-patch', onPatch)
+  }, [])
+
   // Redraw on token/scene changes
   // campaignNpcs/entries are in the dep list so HP damage repaints the pips immediately — missing them meant tokens stayed stale until some other dependency (click, zoom, move) forced a redraw.
   useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries])
