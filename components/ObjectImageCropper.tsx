@@ -8,6 +8,10 @@ interface Props {
   // preserve transparency, 'image/jpeg' otherwise) so callers can pick
   // the correct file extension when uploading.
   onCrop: (cropped: Blob, previewUrl: string, mimeType: string) => void
+  // Caller signals upload failure so we can clear `processing` and let
+  // the GM retry from the same modal instead of starting over.
+  uploadError?: string | null
+  onClearError?: () => void
 }
 
 // Free-aspect cropper for object-token images. Loads the selected File,
@@ -15,7 +19,7 @@ interface Props {
 // rectangle — not forced square), and outputs a JPEG blob at the
 // cropped aspect ratio. Long edge is capped at OUT_LONG_EDGE so the
 // upload size stays sane for wide truck art.
-export default function ObjectImageCropper({ file, onCancel, onCrop }: Props) {
+export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError, onClearError }: Props) {
   const [srcUrl, setSrcUrl] = useState<string | null>(null)
   const [imgSize, setImgSize] = useState<{ w: number; h: number } | null>(null)
   // Crop rect in NATURAL image pixels (not display pixels). Free aspect:
@@ -24,8 +28,19 @@ export default function ObjectImageCropper({ file, onCancel, onCrop }: Props) {
   // immediately.
   const [box, setBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
   const [processing, setProcessing] = useState(false)
+  const [localError, setLocalError] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<{ kind: 'move' | 'resize'; startX: number; startY: number; startBox: { x: number; y: number; w: number; h: number } } | null>(null)
+  // Cache the decoded source image so handleConfirm doesn't need a
+  // second `new Image() + onload` round-trip. The original hang surfaced
+  // because that second decode never fired its onload on certain PNG
+  // inputs, leaving the cropper stuck at "Processing…" forever.
+  const decodedImgRef = useRef<HTMLImageElement | null>(null)
+
+  // Parent reports upload failure → clear processing so the user can retry
+  useEffect(() => {
+    if (uploadError) setProcessing(false)
+  }, [uploadError])
 
   // Output JPEG: cap the longer edge at this many pixels. Preserves
   // aspect; a 5:2 truck stays 5:2, just downscaled if huge.
@@ -34,11 +49,14 @@ export default function ObjectImageCropper({ file, onCancel, onCrop }: Props) {
   // Load the file as a data URL + measure dimensions
   useEffect(() => {
     const reader = new FileReader()
+    reader.onerror = () => setLocalError('Could not read the file. Try a different image.')
     reader.onload = () => {
       const url = reader.result as string
       setSrcUrl(url)
       const img = new Image()
+      img.onerror = () => setLocalError('Could not decode the image. Try a different file or format.')
       img.onload = () => {
+        decodedImgRef.current = img
         setImgSize({ w: img.naturalWidth, h: img.naturalHeight })
         // Default crop: the entire image at its native aspect.
         setBox({ x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight })
@@ -86,9 +104,18 @@ export default function ObjectImageCropper({ file, onCancel, onCrop }: Props) {
 
   async function handleConfirm() {
     if (!srcUrl || !box || !imgSize) return
+    const img = decodedImgRef.current
+    if (!img) {
+      // Source still loading — protect against double-click before the
+      // initial decode fires. The button is disabled in this state too,
+      // but the guard makes the failure mode obvious.
+      setLocalError('Image is still loading. Wait a moment and try again.')
+      return
+    }
     setProcessing(true)
-    const img = new Image()
-    img.onload = () => {
+    setLocalError(null)
+    onClearError?.()
+    try {
       // Output dimensions: long edge clamped to OUT_LONG_EDGE,
       // short edge scaled to preserve the cropped aspect ratio.
       const aspect = box.w / box.h
@@ -101,11 +128,12 @@ export default function ObjectImageCropper({ file, onCancel, onCrop }: Props) {
         outH = Math.min(OUT_LONG_EDGE, Math.round(box.h))
         outW = Math.round(outH * aspect)
       }
+      console.log('[crop] encoding', { outW, outH, srcMime: file.type, srcSizeKB: Math.round(file.size / 1024) })
       const canvas = document.createElement('canvas')
       canvas.width = outW
       canvas.height = outH
       const ctx = canvas.getContext('2d')
-      if (!ctx) { setProcessing(false); return }
+      if (!ctx) throw new Error('Browser refused to create a 2D canvas context.')
       ctx.drawImage(img, box.x, box.y, box.w, box.h, 0, 0, outW, outH)
       // Output format follows the input. PNG inputs may have a
       // transparent background (top-down vehicle art typically does);
@@ -114,13 +142,26 @@ export default function ObjectImageCropper({ file, onCancel, onCrop }: Props) {
       // sources, stick with JPEG for the smaller file size.
       const isPng = file.type === 'image/png'
       const outMime = isPng ? 'image/png' : 'image/jpeg'
-      canvas.toBlob(blob => {
-        if (!blob) { setProcessing(false); return }
-        const previewUrl = canvas.toDataURL(outMime, isPng ? undefined : 0.9)
-        onCrop(blob, previewUrl, outMime)
-      }, outMime, isPng ? undefined : 0.9)
+      // Watchdog: canvas.toBlob occasionally never fires its callback
+      // on memory-pressured browsers or huge canvases. 15 s is enough
+      // for any sane 1024×1024 PNG encode; if we hit it, surface an
+      // error instead of hanging the modal.
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('Image encoding timed out after 15s.')), 15000)
+        canvas.toBlob(b => {
+          clearTimeout(timer)
+          if (b) resolve(b)
+          else reject(new Error('Image encoding returned no data.'))
+        }, outMime, isPng ? undefined : 0.9)
+      })
+      const previewUrl = canvas.toDataURL(outMime, isPng ? undefined : 0.9)
+      console.log('[crop] encoded', { blobKB: Math.round(blob.size / 1024), mime: outMime })
+      onCrop(blob, previewUrl, outMime)
+    } catch (err: any) {
+      console.error('[crop] encoding failed', err)
+      setLocalError(err?.message || 'Image encoding failed. Try a smaller image.')
+      setProcessing(false)
     }
-    img.src = srcUrl
   }
 
   return (
@@ -157,8 +198,14 @@ export default function ObjectImageCropper({ file, onCancel, onCrop }: Props) {
           <div style={{ padding: '2rem', textAlign: 'center', color: '#5a5550' }}>Loading…</div>
         )}
 
+        {(localError || uploadError) && (
+          <div style={{ marginBottom: '8px', padding: '6px 10px', background: '#2a1010', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+            {localError || uploadError}
+          </div>
+        )}
+
         <div style={{ display: 'flex', gap: '6px' }}>
-          <button onClick={handleConfirm} disabled={!box || processing}
+          <button onClick={handleConfirm} disabled={!box || processing || !decodedImgRef.current}
             style={{ flex: 1, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: processing ? 'wait' : 'pointer', opacity: processing ? 0.6 : 1 }}>
             {processing ? 'Processing…' : 'Crop & Upload'}
           </button>
