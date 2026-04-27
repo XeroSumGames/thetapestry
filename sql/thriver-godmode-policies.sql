@@ -35,9 +35,13 @@ LANGUAGE sql
 STABLE
 SECURITY DEFINER
 AS $$
+  -- profiles.role is auto-lowercased by trg_normalize_role (see
+  -- tasks/lessons.md), so compare against 'thriver' (lowercase).
+  -- The original 'Thriver' check silently no-op'd every godmode
+  -- policy — fixed by sql/thriver-role-case-fix.sql.
   SELECT EXISTS (
     SELECT 1 FROM public.profiles
-    WHERE id = auth.uid() AND role = 'Thriver'
+    WHERE id = auth.uid() AND role = 'thriver'
   );
 $$;
 

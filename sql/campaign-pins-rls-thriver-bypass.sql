@@ -16,16 +16,18 @@
 DROP POLICY IF EXISTS "Thrivers can manage campaign pins" ON public.campaign_pins;
 CREATE POLICY "Thrivers can manage campaign pins"
   ON public.campaign_pins FOR ALL TO authenticated
+  -- profiles.role is auto-lowercased by trg_normalize_role (see
+  -- tasks/lessons.md), so compare against 'thriver' (lowercase).
   USING (
     EXISTS (
       SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid() AND p.role = 'Thriver'
+      WHERE p.id = auth.uid() AND p.role = 'thriver'
     )
   )
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid() AND p.role = 'Thriver'
+      WHERE p.id = auth.uid() AND p.role = 'thriver'
     )
   );
 
