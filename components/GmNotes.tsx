@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import NoteAttachmentsView, { NoteAttachment } from './NoteAttachmentsView'
 import { openPopout } from '../lib/popout'
+import { renderRichText } from '../lib/rich-text'
 
 type Attachment = NoteAttachment
 
@@ -216,7 +217,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
           {expanded.has(n.id) && (
             <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
               <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: '1.5', margin: '10px 0' }}>
-                {n.content}
+                {renderRichText(n.content, { linkify: true })}
               </pre>
 
               {/* Attachments — large inline image previews + lightbox */}

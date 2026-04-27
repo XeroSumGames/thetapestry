@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
+import { renderRichText } from '../../lib/rich-text'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 interface Participant {
@@ -30,34 +31,6 @@ interface Message {
 interface UserResult {
   id: string
   username: string
-}
-
-// Render a message body with auto-linkified URLs. Splits the text on the
-// first http(s) URL boundary and recurses, returning a flat array of
-// strings interleaved with anchor tags. Each link opens in a new tab so
-// tapping an invite doesn't yank the user out of the DM thread. Without
-// this every message body was rendered as plain text — meaning the
-// "Tap to join: https://…" invite copy was uncopyable on mobile and
-// unclickable everywhere.
-const URL_RE = /(https?:\/\/[^\s]+)/i
-function linkifyBody(body: string): React.ReactNode[] {
-  const out: React.ReactNode[] = []
-  let rest = body
-  let key = 0
-  while (rest) {
-    const m = rest.match(URL_RE)
-    if (!m || m.index == null) { out.push(rest); break }
-    if (m.index > 0) out.push(rest.slice(0, m.index))
-    const url = m[0]
-    out.push(
-      <a key={`l${key++}`} href={url} target="_blank" rel="noreferrer"
-        style={{ color: '#7ab3d4', textDecoration: 'underline', wordBreak: 'break-all' }}>
-        {url}
-      </a>
-    )
-    rest = rest.slice(m.index + url.length)
-  }
-  return out
 }
 
 export default function MessagesPage() {
@@ -520,7 +493,7 @@ export default function MessagesPage() {
                       fontSize: '14px', color: '#f5f2ee', lineHeight: 1.5,
                       wordBreak: 'break-word',
                     }}>
-                      {linkifyBody(msg.body)}
+                      {renderRichText(msg.body, { linkify: true })}
                     </div>
                     <div style={{ fontSize: '13px', color: '#4d7a35', marginTop: '1px', paddingLeft: '4px', paddingRight: '4px' }}>
                       {formatTime(msg.created_at)}

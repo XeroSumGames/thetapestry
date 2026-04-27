@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
+import { renderRichText } from '../../../lib/rich-text'
 import { useRouter } from 'next/navigation'
 
 // /campfire/lfg — bulletin board for finding GMs and players. Cross-campaign
@@ -458,7 +459,7 @@ export default function LfgPage() {
                   {p.title}
                 </div>
                 <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.55, whiteSpace: 'pre-wrap', marginBottom: '10px' }}>
-                  {p.body}
+                  {renderRichText(p.body, { linkify: true })}
                 </div>
                 {(p.setting || p.schedule) && (
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>

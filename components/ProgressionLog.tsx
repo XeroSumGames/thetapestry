@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { renderRichText } from '../lib/rich-text'
 
 export interface LogEntry {
   date: string
@@ -113,7 +114,7 @@ export default function ProgressionLog({ characterId, log, canEdit, onUpdate, co
         displayed.map((entry, idx) => (
           <div key={`${entry.date}-${idx}`} style={{ display: 'flex', gap: '6px', padding: '3px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>
             <span style={{ fontSize: '13px', color: TYPE_COLORS[entry.type] ?? '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', minWidth: '50px', flexShrink: 0 }}>{TYPE_LABELS[entry.type] ?? entry.type}</span>
-            <span style={{ color: '#d4cfc9', flex: 1 }}>{entry.text}</span>
+            <span style={{ color: '#d4cfc9', flex: 1 }}>{renderRichText(entry.text)}</span>
             <span style={{ fontSize: '13px', color: '#cce0f5', flexShrink: 0 }}>{new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
             {canEdit && entry.type === 'note' && (
               <button onClick={() => removeEntry(idx)} style={{ background: 'none', border: 'none', color: '#cce0f5', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}

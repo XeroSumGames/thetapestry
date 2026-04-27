@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '../../../../lib/supabase-browser'
+import { renderRichText } from '../../../../lib/rich-text'
 
 // /campfire/forums/[id] — thread detail. Original post + reply chain +
 // reply composer at the bottom. Authors can edit/delete their own posts;
@@ -240,7 +241,7 @@ export default function ForumThreadPage() {
             </div>
             {renderAuthorRow(thread.author_user_id, thread.created_at)}
             <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '12px' }}>
-              {thread.body}
+              {renderRichText(thread.body, { linkify: true })}
             </div>
             {isMyThread && (
               <div style={{ display: 'flex', gap: '6px' }}>
@@ -287,7 +288,7 @@ export default function ForumThreadPage() {
               ) : (
                 <>
                   <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.55, whiteSpace: 'pre-wrap', marginBottom: isMine ? '8px' : '0' }}>
-                    {r.body}
+                    {renderRichText(r.body, { linkify: true })}
                   </div>
                   {isMine && (
                     <div style={{ display: 'flex', gap: '6px' }}>

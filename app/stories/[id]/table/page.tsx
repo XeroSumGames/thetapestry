@@ -28,6 +28,7 @@ const CampaignObjects = dynamic(() => import('../../../../components/CampaignObj
 import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
+import { renderRichText } from '../../../../lib/rich-text'
 import { rollDamage, calculateDamage } from '../../../../lib/damage'
 import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/weapons'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
@@ -5926,7 +5927,7 @@ export default function TablePage() {
                         </span>
                         <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(m.created_at)}</span>
                       </div>
-                      <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{m.message}</div>
+                      <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{renderRichText(m.message)}</div>
                     </div>
                   )
                 })
@@ -5955,7 +5956,7 @@ export default function TablePage() {
                     <span style={{ fontSize: '13px', fontWeight: 700, color: mW ? '#d48bd4' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{mW ? wLabel : item.data.character_name}</span>
                     <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
-                  <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{item.data.message}</div>
+                  <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{renderRichText(item.data.message)}</div>
                 </div>)
               })() : item.data.outcome === 'combat_start' && (item.data.damage_json as any)?.combatants ? (
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
