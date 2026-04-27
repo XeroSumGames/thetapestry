@@ -187,8 +187,11 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
                 ? `🎒 ${inv.length}`
                 : '🎒 Pack'}
           </button>
+          {/* NpcCard is the GM-only view (PlayerNpcCard is the player one),
+              so the popout URL hard-codes gm=1 — the popout uses that hint
+              to skip an extra auth.getUser() + campaigns query on mount. */}
           {campaignId && (
-            <button onClick={() => openPopout(`/npc-sheet?c=${campaignId}&npc=${npc.id}`, `npc-${npc.id}`)}
+            <button onClick={() => openPopout(`/npc-sheet?c=${campaignId}&npc=${npc.id}&gm=1`, `npc-${npc.id}`)}
               title="Pop out to its own window"
               style={{ padding: '2px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Popout</button>
           )}

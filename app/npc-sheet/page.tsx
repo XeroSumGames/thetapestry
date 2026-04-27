@@ -11,28 +11,43 @@ export default function NpcSheetPage() {
   const params = useSearchParams()
   const campaignId = params.get('c')
   const npcId = params.get('npc')
+  // Opener passes &gm=1 or &gm=0 because it already knows the viewer's role.
+  // When the hint is present (the common case), we skip the auth.getUser() +
+  // campaigns gm_user_id round-trips entirely — the popout used to do three
+  // sequential queries on mount before rendering anything; with this hint
+  // it does one. Falls back to a runtime check for old bookmarked URLs that
+  // predate the hint. Security: GM vs Player view is purely a UI selection,
+  // all mutations are RLS-gated server-side, so a forged &gm=1 cannot bypass
+  // permissions.
+  const gmHint = params.get('gm')
   const [npc, setNpc] = useState<CampaignNpc | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isGM, setIsGM] = useState(false)
+  const [isGM, setIsGM] = useState(gmHint === '1')
 
   useEffect(() => {
+    let cancelled = false
     async function load() {
       if (!npcId) { setLoading(false); return }
-      const { data } = await supabase.from('campaign_npcs').select('*').eq('id', npcId).maybeSingle()
-      setNpc(data as CampaignNpc | null)
-      // Check viewer is the campaign's GM so the popout renders the right
-      // card. Players who pop out should only ever see the read-only view.
-      if (campaignId) {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: camp } = await supabase.from('campaigns').select('gm_user_id').eq('id', campaignId).maybeSingle()
-          setIsGM(!!camp && camp.gm_user_id === user.id)
-        }
-      }
+      // Run the NPC fetch and (if needed) the role-check fetches in parallel,
+      // not serially. Saves up to two round-trips of latency on cold opens.
+      const npcPromise = supabase.from('campaign_npcs').select('*').eq('id', npcId).maybeSingle()
+      const rolePromise = (gmHint == null && campaignId)
+        ? (async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return null
+            const { data: camp } = await supabase.from('campaigns').select('gm_user_id').eq('id', campaignId).maybeSingle()
+            return !!camp && camp.gm_user_id === user.id
+          })()
+        : Promise.resolve(null)
+      const [{ data: npcData }, roleResult] = await Promise.all([npcPromise, rolePromise])
+      if (cancelled) return
+      setNpc(npcData as CampaignNpc | null)
+      if (roleResult !== null) setIsGM(roleResult)
       setLoading(false)
     }
     load()
-  }, [npcId, campaignId])
+    return () => { cancelled = true }
+  }, [npcId, campaignId, gmHint])
 
   // Force the popout to the right size for the viewer's role. window.open
   // ignores width/height when a window with the same name was opened before
