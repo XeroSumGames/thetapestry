@@ -49,6 +49,7 @@ export default function VehiclePage() {
   const campaignId = params.get('c')
   const vehicleId = params.get('v')
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
+  const [floorplanEnlarged, setFloorplanEnlarged] = useState(false)
   const [isGM, setIsGM] = useState(false)
   const [canEdit, setCanEdit] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -585,7 +586,10 @@ export default function VehiclePage() {
           {(vehicle as any).floorplan_url && (
             <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginTop: '12px' }}>
               <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Floorplan</div>
-              <img src={(vehicle as any).floorplan_url} alt="Floorplan" style={{ width: '100%', borderRadius: '3px', border: '1px solid #2e2e2e' }} />
+              <img src={(vehicle as any).floorplan_url} alt="Floorplan"
+                onClick={() => setFloorplanEnlarged(true)}
+                title="Click to enlarge"
+                style={{ width: '100%', borderRadius: '3px', border: '1px solid #2e2e2e', cursor: 'zoom-in' }} />
             </div>
           )}
         </div>
@@ -825,6 +829,16 @@ export default function VehiclePage() {
           </div>
         )
       })()}
+
+      {/* Floorplan lightbox — click image to enlarge, click backdrop
+          to close. Mirrors the NpcCard portrait enlarge pattern. */}
+      {floorplanEnlarged && (vehicle as any).floorplan_url && (
+        <div onClick={() => setFloorplanEnlarged(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out', padding: '2rem' }}>
+          <img src={(vehicle as any).floorplan_url} alt="Floorplan"
+            style={{ maxWidth: '95vw', maxHeight: '95vh', borderRadius: '4px', border: '2px solid #c0392b', objectFit: 'contain' }} />
+        </div>
+      )}
     </div>
   )
 }
