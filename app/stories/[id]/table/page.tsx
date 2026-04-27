@@ -8,19 +8,23 @@ import NpcRoster, { getNpcRingColor, getNpcTokenBorderColor } from '../../../../
 import NpcCard from '../../../../components/NpcCard'
 import PlayerNpcCard from '../../../../components/PlayerNpcCard'
 import ObjectCard from '../../../../components/ObjectCard'
-import CampaignPins from '../../../../components/CampaignPins'
-import CampaignObjects from '../../../../components/CampaignObjects'
 import VehicleCard, { Vehicle } from '../../../../components/VehicleCard'
-import GmNotes from '../../../../components/GmNotes'
-import PlayerNotes from '../../../../components/PlayerNotes'
-import QuickAddModal from '../../../../components/QuickAddModal'
-import CampaignCommunity from '../../../../components/CampaignCommunity'
 import NotificationBell from '../../../../components/NotificationBell'
 import MessagesBell from '../../../../components/MessagesBell'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
 const CampaignMap = dynamic(() => import('../../../../components/CampaignMap'), { ssr: false })
 const TacticalMap = dynamic(() => import('../../../../components/TacticalMap'), { ssr: false })
+// Lazy: gated behind tabs / modals / GM toggle. None render on initial paint,
+// so chunking them out shrinks the first-load bundle without changing UX.
+// `loading: () => null` keeps the gate's outer container empty during the
+// chunk fetch instead of showing a Next.js default placeholder.
+const QuickAddModal = dynamic(() => import('../../../../components/QuickAddModal'), { ssr: false, loading: () => null })
+const CampaignCommunity = dynamic(() => import('../../../../components/CampaignCommunity'), { ssr: false, loading: () => null })
+const GmNotes = dynamic(() => import('../../../../components/GmNotes'), { ssr: false, loading: () => null })
+const PlayerNotes = dynamic(() => import('../../../../components/PlayerNotes'), { ssr: false, loading: () => null })
+const CampaignPins = dynamic(() => import('../../../../components/CampaignPins'), { ssr: false, loading: () => null })
+const CampaignObjects = dynamic(() => import('../../../../components/CampaignObjects'), { ssr: false, loading: () => null })
 import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
