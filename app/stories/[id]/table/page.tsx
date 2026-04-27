@@ -8135,33 +8135,77 @@ export default function TablePage() {
                   const isDead = wp === 0 && n.death_countdown != null && n.death_countdown <= 0
                   return !isDead
                 })
-                return aliveNpcs.length === 0 ? (
-                <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem' }}>No active NPCs in roster. You can add them during combat.</div>
-              ) : (
-                aliveNpcs.map(npc => (
-                  <label key={npc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', background: selectedNpcIds.has(npc.id) ? '#2a1210' : '#1a1a1a', border: `1px solid ${selectedNpcIds.has(npc.id) ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={selectedNpcIds.has(npc.id)} onChange={() => {
-                      setSelectedNpcIds(prev => {
-                        const next = new Set(prev)
-                        if (next.has(npc.id)) next.delete(npc.id)
-                        else next.add(npc.id)
-                        return next
-                      })
-                    }} style={{ accentColor: '#c0392b' }} />
-                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                      {npc.portrait_url ? (
-                        <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
-                      )}
+                if (aliveNpcs.length === 0) {
+                  return <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem' }}>No active NPCs in roster. You can add them during combat.</div>
+                }
+                // Group NPCs by folder so the GM can sweep an entire
+                // group in or out before fine-tuning individual picks.
+                // Uncategorized always renders last (matches the
+                // NpcRoster sort + lets the GM exclude the bucket
+                // quickly).
+                const folderMap: Record<string, typeof aliveNpcs> = {}
+                for (const npc of aliveNpcs) {
+                  const f = (npc as any).folder ?? 'Uncategorized'
+                  if (!folderMap[f]) folderMap[f] = []
+                  folderMap[f].push(npc)
+                }
+                const folderNames = Object.keys(folderMap).sort((a, b) => {
+                  if (a === 'Uncategorized') return 1
+                  if (b === 'Uncategorized') return -1
+                  return a.localeCompare(b)
+                })
+                return folderNames.map(folderName => {
+                  const folderNpcs = folderMap[folderName]
+                  const folderIds = folderNpcs.map(n => n.id)
+                  const allInFolder = folderIds.every(id => selectedNpcIds.has(id))
+                  const someInFolder = folderIds.some(id => selectedNpcIds.has(id))
+                  return (
+                    <div key={folderName} style={{ marginBottom: '8px' }}>
+                      {/* Folder header — checkbox toggles every NPC in
+                          this folder. Uses indeterminate state when
+                          some-but-not-all are selected. */}
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', marginBottom: '2px', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={allInFolder}
+                          ref={el => { if (el) el.indeterminate = !allInFolder && someInFolder }}
+                          onChange={() => {
+                            setSelectedNpcIds(prev => {
+                              const next = new Set(prev)
+                              if (allInFolder) folderIds.forEach(id => next.delete(id))
+                              else folderIds.forEach(id => next.add(id))
+                              return next
+                            })
+                          }}
+                          style={{ accentColor: '#7ab3d4' }} />
+                        <span style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>{folderName}</span>
+                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{folderNpcs.filter(n => selectedNpcIds.has(n.id)).length}/{folderNpcs.length}</span>
+                      </label>
+                      {folderNpcs.map(npc => (
+                        <label key={npc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', paddingLeft: '24px', background: selectedNpcIds.has(npc.id) ? '#2a1210' : '#1a1a1a', border: `1px solid ${selectedNpcIds.has(npc.id) ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '2px', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={selectedNpcIds.has(npc.id)} onChange={() => {
+                            setSelectedNpcIds(prev => {
+                              const next = new Set(prev)
+                              if (next.has(npc.id)) next.delete(npc.id)
+                              else next.add(npc.id)
+                              return next
+                            })
+                          }} style={{ accentColor: '#c0392b' }} />
+                          <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                            {npc.portrait_url ? (
+                              <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
+                            )}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
+                            {npc.npc_type && <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
+                          </div>
+                        </label>
+                      ))}
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
-                      {npc.npc_type && <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
-                    </div>
-                  </label>
-                ))
-              )})()}
+                  )
+                })
+              })()}
             </div>
             {/* Getting The Drop */}
             <div style={{ marginBottom: '1rem', padding: '8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
