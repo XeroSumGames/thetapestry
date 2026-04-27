@@ -6978,26 +6978,19 @@ export default function TablePage() {
                       <div style={{ padding: '4px' }}>
                         {vehicles.map((v: Vehicle) => (
                           <div key={v.id} style={{ marginBottom: '4px' }}>
-                            {expandedVehicleId === v.id ? (
-                              <VehicleCard vehicle={v} campaignId={id} canEdit={true}
-                                onUpdate={async (updated: Vehicle) => {
-                                  const newVehicles = vehicles.map(vv => vv.id === updated.id ? updated : vv)
-                                  setVehicles(newVehicles)
-                                  await supabase.from('campaigns').update({ vehicles: newVehicles }).eq('id', id)
-                                }}
-                                onClose={() => setExpandedVehicleId(null)} />
-                            ) : (
-                              <div onClick={() => setExpandedVehicleId(v.id)}
-                                style={{ padding: '6px 8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-                                onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
-                                onMouseLeave={e => (e.currentTarget.style.background = '#1a1a1a')}>
-                                <span style={{ fontSize: '14px' }}>🚗</span>
-                                <div style={{ flex: 1 }}>
-                                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{v.name}</div>
-                                  <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif' }}>{v.type} · WP {v.wp_current}/{v.wp_max}</div>
-                                </div>
-                              </div>
-                            )}
+                            {/* Vehicles render their full card directly inside
+                                the expanded Vehicles folder — no second click
+                                needed. The compact "Recreational Vehicle · WP
+                                X/Y" row this used to be was a redundant gate
+                                given that the folder header already groups
+                                them. expandedVehicleId state retained for
+                                forward-compat (other surfaces may want it). */}
+                            <VehicleCard vehicle={v} campaignId={id} canEdit={true}
+                              onUpdate={async (updated: Vehicle) => {
+                                const newVehicles = vehicles.map(vv => vv.id === updated.id ? updated : vv)
+                                setVehicles(newVehicles)
+                                await supabase.from('campaigns').update({ vehicles: newVehicles }).eq('id', id)
+                              }} />
                           </div>
                         ))}
                       </div>

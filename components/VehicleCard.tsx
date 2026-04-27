@@ -56,7 +56,9 @@ interface Props {
   campaignId: string
   canEdit: boolean
   onUpdate: (vehicle: Vehicle) => void
-  onClose: () => void
+  // Optional — when omitted, the close ✕ button hides. Used by surfaces
+  // that render the card inline (no separate close affordance needed).
+  onClose?: () => void
 }
 
 export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate, onClose }: Props) {
@@ -91,7 +93,9 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
         </div>
         <button onClick={() => openPopout(`/vehicle?c=${campaignId}&v=${v.id}`, `vehicle-${v.id}`, { w: 900, h: 700 })} title="Pop out"
           style={{ background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Popout</button>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '16px', cursor: 'pointer', padding: '0 4px' }}>✕</button>
+        {onClose && (
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '16px', cursor: 'pointer', padding: '0 4px' }}>✕</button>
+        )}
       </div>
 
       {/* Stats row */}
