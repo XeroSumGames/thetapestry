@@ -5,18 +5,19 @@
 -- her actual road pace and gives her 90 ft/round on the tactical
 -- Move button (Speed × 30 ft/round mapping).
 --
--- Idempotent — safe to re-run. Uses jsonb_set to mutate only the
--- 'speed' field on the first vehicle (Minnie is always vehicles[0]
--- in the seed). Skips campaigns whose first vehicle isn't named
--- "Minnie" so a campaign that customized vehicles[0] for something
--- else won't get clobbered.
+-- Idempotent — safe to re-run. Mirrors the style of
+-- sql/minnie-floorplan-update.sql which is known to work.
 --
 -- For brand-new campaigns this is unnecessary — the seed at
 -- lib/setting-vehicles.ts already has speed 3.
 
-UPDATE campaigns
-SET vehicles = jsonb_set(vehicles, '{0,speed}', '3'::jsonb)
-WHERE jsonb_typeof(vehicles) = 'array'
+UPDATE public.campaigns
+SET vehicles = jsonb_set(
+  vehicles,
+  '{0,speed}',
+  '3'::jsonb
+)
+WHERE setting = 'mongrels'
+  AND vehicles IS NOT NULL
   AND jsonb_array_length(vehicles) > 0
-  AND vehicles->0->>'name' = 'Minnie'
-  AND COALESCE((vehicles->0->>'speed')::int, 0) <> 3;
+  AND vehicles->0->>'name' = 'Minnie';
