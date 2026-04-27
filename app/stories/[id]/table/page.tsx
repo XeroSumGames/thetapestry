@@ -474,6 +474,8 @@ export default function TablePage() {
     smod: number
     rangeFeet: number
     label: string
+    hasBlast?: boolean
+    friendlyCharacterIds?: string[]
   } | null>(null)
   const [grenadeTargetCell, setGrenadeTargetCell] = useState<{ gx: number; gy: number } | null>(null)
 
@@ -5141,12 +5143,24 @@ export default function TablePage() {
                   if (w.category === 'explosive') {
                     const rangeFeetMap: Record<string, number> = { Engaged: 5, Close: 30, Medium: 100, Long: 300, Distant: 1000 }
                     const rangeFeet = rangeFeetMap[w.range] ?? 30
+                    // Friendly list = every other PC currently on the
+                    // initiative roster. Used by TacticalMap to prompt
+                    // the player before lobbing a grenade onto their
+                    // own teammates. Attacker themselves is excluded
+                    // (their own PHY-mitigated splash is their problem
+                    // alone — no warning).
+                    const hasBlast = (w.traits ?? []).some((t: string) => t.startsWith('Blast Radius'))
+                    const friendlyCharacterIds = entries
+                      .map(e => e.character.id)
+                      .filter(cid => cid !== activeEntry.character_id)
                     setThrowMode({
                       attackerCharId: activeEntry.character_id,
                       attackerNpcId: activeEntry.npc_id,
                       weapon: weaponCtx,
                       amod, smod, rangeFeet,
                       label: `${activeEntry.character_name} — Attack (${w.name})`,
+                      hasBlast,
+                      friendlyCharacterIds,
                     })
                     return
                   }
@@ -5498,7 +5512,7 @@ export default function TablePage() {
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Combat Started</span>
                       <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                     </div>
-                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
+                    <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
                       Between {((r.damage_json as any).combatants as string[]).map((n, i, arr) => (
                         <span key={i}>
                           <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{n}</span>
@@ -5513,7 +5527,7 @@ export default function TablePage() {
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.label}</span>
                       <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                     </div>
-                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
+                    <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
                   </div>
                 ) : r.outcome === 'defer' ? (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f1a2e', border: '1px solid #7ab3d4', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
@@ -5546,7 +5560,7 @@ export default function TablePage() {
                         )}
                       </div>
                     </div>
-                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>{r.label.replace(/^🏃\s*/, '')}</div>
+                    <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>{r.label.replace(/^🏃\s*/, '')}</div>
                     {tr && isExpanded && (
                       <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
                         <div>
@@ -5570,7 +5584,7 @@ export default function TablePage() {
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.character_name}</span>
                       <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                     </div>
-                    <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>{r.label}</div>
+                    <div style={{ fontSize: '15px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>{r.label}</div>
                   </div>
                 ) : r.outcome === 'combat_end' && (r.damage_json as any)?.combatants ? (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
@@ -5579,7 +5593,7 @@ export default function TablePage() {
                       <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                     </div>
                     {((r.damage_json as any).combatants as string[]).length > 0 && (
-                      <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
+                      <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
                         Between {((r.damage_json as any).combatants as string[]).map((n, i, arr) => (
                           <span key={i}>
                             <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{n}</span>
@@ -5751,7 +5765,7 @@ export default function TablePage() {
                       </div>
                     ) : (
                       <>
-                        <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>
+                        <div style={{ fontSize: '15px', color: '#d4cfc9', marginBottom: '4px' }}>
                           {r.label.startsWith(r.character_name + ' — ') ? r.label.slice(r.character_name.length + 3) : r.label}
                           {r.target_name && <span style={{ color: '#EF9F27' }}> → {r.target_name}</span>}
                         </div>
@@ -5840,7 +5854,7 @@ export default function TablePage() {
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Combat Started</span>
                     <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
+                  <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
                     Between {((item.data.damage_json as any).combatants as string[]).map((n, i, arr) => (
                       <span key={i}>
                         <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{n}</span>
@@ -5850,13 +5864,14 @@ export default function TablePage() {
                   </div>
                 </div>
               ) : item.data.outcome === 'combat_end' && (item.data.damage_json as any)?.combatants ? (
+                // Feed-2 combat_end render — see feed-1 for body comments.
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Combat Ended</span>
                     <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
                   {((item.data.damage_json as any).combatants as string[]).length > 0 && (
-                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
+                    <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', lineHeight: 1.5 }}>
                       Between {((item.data.damage_json as any).combatants as string[]).map((n, i, arr) => (
                         <span key={i}>
                           <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{n}</span>
@@ -5910,7 +5925,7 @@ export default function TablePage() {
                       )}
                     </div>
                   </div>
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>{item.data.label.replace(/^🏃\s*/, '')}</div>
+                  <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>{item.data.label.replace(/^🏃\s*/, '')}</div>
                   {tr && isExpanded && (
                     <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #3a3a3a', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
                       <div>
@@ -5934,7 +5949,7 @@ export default function TablePage() {
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{item.data.label}</span>
                     <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
+                  <div style={{ fontSize: '15px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>Acts alone with 1 action before initiative is rolled.</div>
                 </div>
               ) : item.data.outcome === 'defer' ? (
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#0f1a2e', border: '1px solid #7ab3d4', borderRadius: '3px', borderLeft: '3px solid #7ab3d4' }}>
@@ -5949,7 +5964,7 @@ export default function TablePage() {
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{item.data.character_name}</span>
                     <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                   </div>
-                  <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>{item.data.label}</div>
+                  <div style={{ fontSize: '15px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>{item.data.label}</div>
                 </div>
               ) : (() => {
                 const r = item.data
@@ -5978,7 +5993,7 @@ export default function TablePage() {
                     </div>
                   ) : (
                     <>
-                      <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>
+                      <div style={{ fontSize: '15px', color: '#d4cfc9', marginBottom: '4px' }}>
                         {r.label}
                         {r.target_name && <span style={{ color: '#EF9F27' }}> → {r.target_name}</span>}
                       </div>
@@ -6183,7 +6198,7 @@ export default function TablePage() {
                 }
               }}
               onMoveCancel={() => { pendingChargeRef.current = null; sprintPendingRef.current = false; setMoveMode(null) }}
-              throwMode={throwMode ? { attackerCharId: throwMode.attackerCharId, attackerNpcId: throwMode.attackerNpcId, rangeFeet: throwMode.rangeFeet } : null}
+              throwMode={throwMode ? { attackerCharId: throwMode.attackerCharId, attackerNpcId: throwMode.attackerNpcId, rangeFeet: throwMode.rangeFeet, hasBlast: throwMode.hasBlast, friendlyCharacterIds: throwMode.friendlyCharacterIds } : null}
               onThrowComplete={(gx, gy) => {
                 // Commit the cell target and open the roll modal. We keep
                 // throwMode cleared from here so a second click doesn't
@@ -7344,11 +7359,52 @@ export default function TablePage() {
                     Out of range
                   </div>
                 )}
-                {grenadeTargetCell && (
-                  <div style={{ padding: '6px 10px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>
-                    💥 Throwing at cell ({grenadeTargetCell.gx}, {grenadeTargetCell.gy}) — splash damage will apply
-                  </div>
-                )}
+                {grenadeTargetCell && (() => {
+                  // Replace the meaningless "(17, 14)" coordinate with a
+                  // human-readable list of who's actually in the blast.
+                  // Walk every map token, classify by Chebyshev distance
+                  // from the target cell into Engaged/Close/Far bands,
+                  // and render names grouped by band. Empty list (the
+                  // throw landed in vacant ground) → fall back to a
+                  // generic "splash damage will apply" so the player
+                  // still sees confirmation that the throw is committed.
+                  const ft = mapCellFeet || 3
+                  const engagedCells = Math.max(1, Math.round(5 / ft))
+                  const closeCells = Math.max(1, Math.round(30 / ft))
+                  const farCells = Math.max(1, Math.round(100 / ft))
+                  const groups: { engaged: string[]; close: string[]; far: string[] } = { engaged: [], close: [], far: [] }
+                  for (const tok of mapTokens) {
+                    const isCombatant = !!tok.character_id || !!tok.npc_id
+                    const isDestructibleObject = tok.token_type === 'object' && tok.wp_max != null && tok.wp_max > 0
+                    if (!isCombatant && !isDestructibleObject) continue
+                    const d = Math.max(Math.abs(tok.grid_x - grenadeTargetCell.gx), Math.abs(tok.grid_y - grenadeTargetCell.gy))
+                    if (d > farCells) continue
+                    if (d <= engagedCells) groups.engaged.push(tok.name)
+                    else if (d <= closeCells) groups.close.push(tok.name)
+                    else groups.far.push(tok.name)
+                  }
+                  const total = groups.engaged.length + groups.close.length + groups.far.length
+                  return (
+                    <div style={{ padding: '6px 10px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'left', marginBottom: '8px' }}>
+                      {total === 0 ? (
+                        <span>💥 Throwing into open ground — no targets in blast radius</span>
+                      ) : (
+                        <>
+                          <div style={{ marginBottom: '4px' }}>💥 Blast will hit:</div>
+                          {groups.engaged.length > 0 && (
+                            <div style={{ color: '#f5a89a' }}>Engaged (full): {groups.engaged.join(', ')}</div>
+                          )}
+                          {groups.close.length > 0 && (
+                            <div style={{ color: '#EF9F27' }}>Close (50%): {groups.close.join(', ')}</div>
+                          )}
+                          {groups.far.length > 0 && (
+                            <div style={{ color: '#cce0f5' }}>Far (25%): {groups.far.join(', ')}</div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )
+                })()}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={closeRollModal} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                   <button onClick={executeRoll} disabled={rolling || (!!pendingRoll.weapon && !!targetName && !grenadeTargetCell && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))} style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: (rolling || (!!pendingRoll.weapon && !!targetName && !grenadeTargetCell && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 'not-allowed' : 'pointer', opacity: (rolling || (!!pendingRoll.weapon && !!targetName && !grenadeTargetCell && !pendingRoll.label.includes('Charge') && !isInRange(pendingRoll.weapon.weaponName, rangeBand))) ? 0.6 : 1 }}>

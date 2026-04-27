@@ -78,7 +78,13 @@ interface Props {
   // a click on a valid cell calls onThrowComplete(gx, gy). Separate from
   // moveMode because the cell-click resolves to a blast center, not a
   // token move, and the range math uses weapon range not movement feet.
-  throwMode?: { attackerCharId: string | null; attackerNpcId: string | null; rangeFeet: number } | null
+  // hasBlast: when true, the TacticalMap renders Engaged/Close/Far rings
+  // around the cell under the cursor so the thrower can SEE the blast
+  // footprint before committing. friendlyCharacterIds: any of these PCs
+  // inside the 100ft far-band trigger a confirm() prompt before the
+  // throw fires — saves the player from accidentally lobbing a grenade
+  // into their own teammates.
+  throwMode?: { attackerCharId: string | null; attackerNpcId: string | null; rangeFeet: number; hasBlast?: boolean; friendlyCharacterIds?: string[] } | null
   onThrowComplete?: (gx: number, gy: number) => void
   onThrowCancel?: () => void
   onTokensUpdate?: (tokens: { id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null }[], cellFeet: number) => void
@@ -102,6 +108,10 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   // beyond a small jitter threshold cancels the hold, leaving just a pan.
   const pingHoldRef = useRef<{ timer: number; gx: number; gy: number; startX: number; startY: number } | null>(null)
   const bgImageRef = useRef<HTMLImageElement | null>(null)
+  // Hover cell tracked during throwMode so the blast preview rings
+  // (Engaged/Close/Far) follow the cursor. Null when not in throw mode
+  // or cursor is off-grid. See draw() and handleMouseMove.
+  const [throwHoverCell, setThrowHoverCell] = useState<{ gx: number; gy: number } | null>(null)
   const [scene, setScene] = useState<Scene | null>(null)
   const [scenes, setScenes] = useState<Scene[]>([])
   const [tokens, setTokens] = useState<Token[]>([])
@@ -282,7 +292,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
 
   // Redraw on token/scene changes
   // campaignNpcs/entries are in the dep list so HP damage repaints the pips immediately — missing them meant tokens stayed stale until some other dependency (click, zoom, move) forced a redraw.
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, showRangeOverlay, ping, dragging, campaignNpcs, entries])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
@@ -474,6 +484,42 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
               ctx.lineWidth = 1
               ctx.strokeRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
             }
+          }
+        }
+
+        // Blast preview — when the weapon has Blast Radius, paint
+        // Engaged/Close/Far rings around the cell under the cursor so
+        // the thrower can see the splash footprint before committing.
+        // Bands per CRB p.71-72: Engaged = 5ft full, Close = 30ft 50%,
+        // Far = 100ft 25%. Only drawn for cells the thrower can
+        // actually reach (filtered by rangeCells gate above) so the
+        // preview doesn't follow the cursor off into unreachable
+        // territory.
+        if (throwMode.hasBlast && throwHoverCell) {
+          const hov = throwHoverCell
+          const reachDist = Math.max(Math.abs(hov.gx - throwerTok.grid_x), Math.abs(hov.gy - throwerTok.grid_y))
+          if (reachDist <= rangeCells) {
+            const engagedCells = Math.max(1, Math.round(5 / ft))
+            const closeCells = Math.max(1, Math.round(30 / ft))
+            const farCells = Math.max(1, Math.round(100 / ft))
+            for (let gx = 0; gx < s.grid_cols; gx++) {
+              for (let gy = 0; gy < s.grid_rows; gy++) {
+                const d = Math.max(Math.abs(gx - hov.gx), Math.abs(gy - hov.gy))
+                let fill: string | null = null
+                if (d <= engagedCells) fill = 'rgba(192,57,43,0.45)'      // red — full damage
+                else if (d <= closeCells) fill = 'rgba(239,159,39,0.32)'  // amber — 50%
+                else if (d <= farCells) fill = 'rgba(239,159,39,0.16)'    // amber faint — 25%
+                if (fill) {
+                  ctx.fillStyle = fill
+                  ctx.fillRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
+                }
+              }
+            }
+            // Outline the impact cell brightly so the player can read it
+            // through all the band shading.
+            ctx.strokeStyle = 'rgba(255,255,255,0.9)'
+            ctx.lineWidth = 2
+            ctx.strokeRect(offsetX + hov.gx * cellSize + 1, offsetY + hov.gy * cellSize + 1, cellSize - 2, cellSize - 2)
           }
         }
       }
@@ -952,6 +998,31 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
         if (throwerTok) {
           const dist = Math.max(Math.abs(pos.gx - throwerTok.grid_x), Math.abs(pos.gy - throwerTok.grid_y))
           if (dist <= rangeCells) {
+            // Friendly-fire confirm — for Blast Radius weapons, scan
+            // the 100ft far-band for any token whose character_id is
+            // in the friendlyCharacterIds list. If we find any, prompt
+            // the player by name + band before firing the throw.
+            // Cancel keeps throwMode active so they can pick again
+            // without re-clicking the Attack button.
+            const friendlies = throwMode.friendlyCharacterIds ?? []
+            if (throwMode.hasBlast && friendlies.length > 0) {
+              const farCells = Math.max(1, Math.round(100 / ft))
+              const engagedCells = Math.max(1, Math.round(5 / ft))
+              const closeCells = Math.max(1, Math.round(30 / ft))
+              const hits: { name: string; band: string }[] = []
+              for (const tok of tokens) {
+                if (!tok.character_id || !friendlies.includes(tok.character_id)) continue
+                const d = Math.max(Math.abs(tok.grid_x - pos.gx), Math.abs(tok.grid_y - pos.gy))
+                if (d > farCells) continue
+                const band = d <= engagedCells ? 'Engaged' : d <= closeCells ? 'Close' : 'Far'
+                hits.push({ name: tok.name, band })
+              }
+              if (hits.length > 0) {
+                const list = hits.map(h => `  • ${h.name} (${h.band})`).join('\n')
+                const ok = window.confirm(`This blast will hit your allies:\n\n${list}\n\nThrow anyway?`)
+                if (!ok) return // stay in throwMode so the player can pick a different cell
+              }
+            }
             onThrowComplete?.(pos.gx, pos.gy)
             return
           }
@@ -1082,6 +1153,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   }
 
   function handleMouseMove(e: React.MouseEvent) {
+    // Update blast preview hover cell first so it tracks even while
+    // the player is panning / dragging in the rare overlap case.
+    updateThrowHover(e)
     if (resizing) {
       const delta = e.clientX - resizing.startX
       const scaleDelta = delta / 300
@@ -1134,6 +1208,25 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           draw()
         })
       }
+    }
+  }
+
+  // While in throwMode, track the hovered grid cell so draw() can paint
+  // the blast preview rings (Engaged/Close/Far) under the cursor. Mouse
+  // events fire often; throttling isn't worth it because draw() already
+  // skips redundant frames via the same dependency array.
+  function updateThrowHover(e: React.MouseEvent) {
+    if (!throwMode?.hasBlast) {
+      if (throwHoverCell) setThrowHoverCell(null)
+      return
+    }
+    const pos = getGridPos(e)
+    if (!pos) {
+      if (throwHoverCell) setThrowHoverCell(null)
+      return
+    }
+    if (!throwHoverCell || throwHoverCell.gx !== pos.gx || throwHoverCell.gy !== pos.gy) {
+      setThrowHoverCell({ gx: pos.gx, gy: pos.gy })
     }
   }
 
