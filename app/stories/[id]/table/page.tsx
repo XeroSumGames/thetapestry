@@ -8287,47 +8287,51 @@ export default function TablePage() {
           setShowReadyWeaponModal(false)
         }
 
-        // Equip a weapon from inventory into the primary slot (playtest #15).
-        // Closes the loot→ready loop: looted weapons land in
-        // `character.data.inventory[]` (PC) or `campaign_npcs.inventory`
-        // (NPC) as InventoryItem rows; previously there was no pathway
-        // to promote them into an active slot short of hand-editing
-        // the sheet. Now clicking Equip on an inventory weapon here:
+        // Equip a weapon from inventory into the primary or secondary slot
+        // (playtest #15 + #16 follow-up). Closes the loot→ready loop:
+        // looted weapons land in `character.data.inventory[]` (PC) or
+        // `campaign_npcs.inventory` (NPC) as InventoryItem rows. Now
+        // clicking Equip on an inventory weapon here:
         //   - decrements that weapon's qty in inventory (removes if 0)
-        //   - pushes the existing primary (if any) back to inventory
+        //   - pushes the existing slot weapon (if any) back to inventory
         //     (stacks with matching entry if one exists)
-        //   - writes the inventory weapon into the primary slot with Used
+        //   - writes the inventory weapon into the chosen slot with Used
         //     condition, full clip, and rolled reloads
         //   - consumes the Ready Weapon action
         // Nothing is ever lost — displaced weapons return to inventory.
-        async function doEquipFromInventory(invItemName: string) {
+        // NPCs ignore the `slot` param — they only have a single
+        // weapon slot under skills.weapon.
+        async function doEquipFromInventory(invItemName: string, slot: 'primary' | 'secondary' = 'primary') {
           const w = getWeaponByName(invItemName)
           if (!w) return
           // Branch on PC vs NPC. Both carry InventoryItem[]; the target
-          // row (characters.data vs campaign_npcs.*) and the primary slot
-          // shape (weaponPrimary vs skills.weapon) differ.
+          // row (characters.data vs campaign_npcs.*) and the slot shape
+          // (weaponPrimary/Secondary vs skills.weapon) differ.
           if (charEntry) {
             const inv: InventoryItem[] = (charData.inventory ?? []) as InventoryItem[]
             let newInv: InventoryItem[] = inv
               .map(i => i.name === invItemName ? { ...i, qty: i.qty - 1 } : i)
               .filter(i => i.qty > 0)
-            if (primary?.weaponName) {
-              const existingW = getWeaponByName(primary.weaponName)
-              const idx = newInv.findIndex(i => i.name === primary.weaponName && !i.custom)
+            const displaced = slot === 'primary' ? primary : secondary
+            if (displaced?.weaponName) {
+              const existingW = getWeaponByName(displaced.weaponName)
+              const idx = newInv.findIndex(i => i.name === displaced.weaponName && !i.custom)
               if (idx >= 0) {
                 newInv = newInv.map((i, j) => j === idx ? { ...i, qty: i.qty + 1 } : i)
               } else if (existingW) {
-                newInv = [...newInv, { name: primary.weaponName, enc: existingW.enc, rarity: existingW.rarity, notes: '', qty: 1, custom: false }]
+                newInv = [...newInv, { name: displaced.weaponName, enc: existingW.enc, rarity: existingW.rarity, notes: '', qty: 1, custom: false }]
               }
             }
-            const newPrimary = {
+            const newSlotData = {
               weaponName: invItemName,
               condition: 'Used',
               ammoCurrent: w.clip ?? 0,
               ammoMax: w.clip ?? 0,
               reloads: w.ammo ? Math.floor(Math.random() * 3) + 1 : 0,
             }
-            const newData = { ...charData, weaponPrimary: newPrimary, inventory: newInv }
+            const newData = slot === 'primary'
+              ? { ...charData, weaponPrimary: newSlotData, inventory: newInv }
+              : { ...charData, weaponSecondary: newSlotData, inventory: newInv }
             await supabase.from('characters').update({ data: newData }).eq('id', charEntry.character.id)
             setEntries(prev => prev.map(e => e.character.id === charEntry.character.id ? { ...e, character: { ...e.character, data: newData } } : e))
           } else if (npcForWeapon) {
@@ -8362,7 +8366,36 @@ export default function TablePage() {
             return
           }
           clearAimIfActive(active.id)
-          consumeAction(active.id, `${active.character_name} — Ready ${invItemName}`)
+          consumeAction(active.id, `${active.character_name} — Ready ${invItemName}${charEntry && slot === 'secondary' ? ' (Secondary)' : ''}`)
+          setShowReadyWeaponModal(false)
+        }
+
+        // Unequip a weapon back to inventory (PC only — NPCs have a
+        // single weapon slot and "unequipping" them would leave them
+        // unarmed, which the combat bar doesn't model). The slot's
+        // weapon stacks with a matching inventory entry if present;
+        // otherwise it's added as a fresh row. Costs 1 action like
+        // any other Ready Weapon op.
+        async function doUnequip(slot: 'primary' | 'secondary') {
+          if (!charEntry) return
+          const target = slot === 'primary' ? primary : secondary
+          if (!target?.weaponName) return
+          const inv: InventoryItem[] = (charData.inventory ?? []) as InventoryItem[]
+          const existingW = getWeaponByName(target.weaponName)
+          let newInv: InventoryItem[] = inv
+          const idx = newInv.findIndex(i => i.name === target.weaponName && !i.custom)
+          if (idx >= 0) {
+            newInv = newInv.map((i, j) => j === idx ? { ...i, qty: i.qty + 1 } : i)
+          } else if (existingW) {
+            newInv = [...inv, { name: target.weaponName, enc: existingW.enc, rarity: existingW.rarity, notes: '', qty: 1, custom: false }]
+          }
+          const newData = slot === 'primary'
+            ? { ...charData, weaponPrimary: null, inventory: newInv }
+            : { ...charData, weaponSecondary: null, inventory: newInv }
+          await supabase.from('characters').update({ data: newData }).eq('id', charEntry.character.id)
+          setEntries(prev => prev.map(e => e.character.id === charEntry.character.id ? { ...e, character: { ...e.character, data: newData } } : e))
+          clearAimIfActive(active.id)
+          consumeAction(active.id, `${active.character_name} — Unequip ${target.weaponName}`)
           setShowReadyWeaponModal(false)
         }
 
@@ -8425,14 +8458,32 @@ export default function TablePage() {
 
               {/* Current weapon info */}
               <div style={{ marginBottom: '1rem', padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Primary</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Primary</span>
+                  {charEntry && primary?.weaponName && (
+                    <button onClick={() => doUnequip('primary')}
+                      title="Move to inventory"
+                      style={{ padding: '1px 6px', background: 'transparent', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      Unequip
+                    </button>
+                  )}
+                </div>
                 <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase' }}>{primary?.weaponName ?? 'None'}</div>
                 {primary && <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   Condition: <span style={{ color: condIdx <= 1 ? '#7fc458' : condIdx === 2 ? '#EF9F27' : '#f5a89a' }}>{primary.condition ?? 'Used'}</span>
                   {primaryW?.clip ? <> · Ammo: <span style={{ color: '#EF9F27' }}>{primary.ammoCurrent ?? 0}/{primaryW.clip}</span> · Reloads: <span style={{ color: '#7ab3d4' }}>{primary.reloads ?? 0}</span></> : null}
                 </div>}
                 {secondary?.weaponName && <>
-                  <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginTop: '6px', marginBottom: '2px' }}>Secondary</div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: '6px', marginBottom: '2px' }}>
+                    <span style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Secondary</span>
+                    {charEntry && (
+                      <button onClick={() => doUnequip('secondary')}
+                        title="Move to inventory"
+                        style={{ padding: '1px 6px', background: 'transparent', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        Unequip
+                      </button>
+                    )}
+                  </div>
                   <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{secondary.weaponName}</div>
                 </>}
               </div>
@@ -8464,13 +8515,31 @@ export default function TablePage() {
                       {invWeapons.map(item => {
                         const w = getWeaponByName(item.name)!
                         return (
-                          <button key={item.name} onClick={() => doEquipFromInventory(item.name)}
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'left', cursor: 'pointer' }}>
-                            <span style={{ flex: 1, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em' }}>{item.name}</span>
-                            <span style={{ fontSize: '13px', color: '#cce0f5' }}>{w.damage} · {w.range}</span>
-                            {item.qty > 1 && <span style={{ fontSize: '13px', color: '#cce0f5' }}>×{item.qty}</span>}
-                            <span style={{ fontSize: '13px', color: '#7fc458', fontWeight: 700, letterSpacing: '.04em' }}>READY →</span>
-                          </button>
+                          <div key={item.name}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px' }}>
+                            <span style={{ flex: 1, color: '#7fc458', fontWeight: 700, fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{item.name}</span>
+                            <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>{w.damage} · {w.range}</span>
+                            {item.qty > 1 && <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>×{item.qty}</span>}
+                            {charEntry ? (
+                              <>
+                                <button onClick={() => doEquipFromInventory(item.name, 'primary')}
+                                  title="Equip to Primary"
+                                  style={{ padding: '3px 8px', background: '#2d5a1b', border: '1px solid #7fc458', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer' }}>
+                                  → 1°
+                                </button>
+                                <button onClick={() => doEquipFromInventory(item.name, 'secondary')}
+                                  title="Equip to Secondary"
+                                  style={{ padding: '3px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer' }}>
+                                  → 2°
+                                </button>
+                              </>
+                            ) : (
+                              <button onClick={() => doEquipFromInventory(item.name, 'primary')}
+                                style={{ padding: '3px 10px', background: '#2d5a1b', border: '1px solid #7fc458', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer' }}>
+                                READY →
+                              </button>
+                            )}
+                          </div>
                         )
                       })}
                     </div>
