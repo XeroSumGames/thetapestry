@@ -3546,7 +3546,19 @@ export default function TablePage() {
     // inserted inline and landed ahead of the attack in the feed, reading
     // as a time-travel paradox to players.
     const pendingLootLogs: any[] = []
-    if (pendingRoll.weapon && targetName && (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight')) {
+
+    // Grenade fumbles — once the pin is pulled, the grenade detonates no
+    // matter how the throwing roll lands. Failure/Dire scatter the impact
+    // point in a random direction (like a fumbled shot); Low Insight has
+    // the grenade going off in the thrower's own hand. The clean-throw
+    // outcomes (Success / Wild / High Insight) fall through to the normal
+    // damage path below. Restricted to weapons with the Blast Radius trait
+    // so a missed melee swing doesn't trigger any of this.
+    const isGrenadeFumble = !!pendingRoll.weapon &&
+      getTraitValue(pendingRoll.weapon.traits ?? [], 'Blast Radius') !== null &&
+      (outcome === 'Failure' || outcome === 'Dire Failure' || outcome === 'Low Insight')
+
+    if (pendingRoll.weapon && targetName && (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight' || isGrenadeFumble)) {
       const weapon = pendingRoll.weapon
       const w = getWeaponByName(weapon.weaponName)
       // 'Unarmed' is a pseudo-weapon fabricated inline by the CharacterCard
@@ -3563,6 +3575,69 @@ export default function TablePage() {
       const burningVal = getTraitValue(traits, 'Burning')
       const hasCloseUp = getTraitValue(traits, 'Close-Up') !== null
       const hasConeUp = getTraitValue(traits, 'Cone-Up') !== null
+
+      // Grenade fumble — compute the actual blast center now so it can
+      // override the normal cell/token lookup in the AoE block below.
+      // Push a descriptive log line into traitNotes so the expanded chat
+      // entry shows what happened ("scattered NE 3 cells" etc.).
+      let blastCenterOverride: { gx: number; gy: number } | null = null
+      if (isGrenadeFumble) {
+        const FUMBLE_DIRS: { dx: number; dy: number; name: string }[] = [
+          { dx: 0,  dy: -1, name: 'N'  },
+          { dx: 1,  dy: -1, name: 'NE' },
+          { dx: 1,  dy: 0,  name: 'E'  },
+          { dx: 1,  dy: 1,  name: 'SE' },
+          { dx: 0,  dy: 1,  name: 'S'  },
+          { dx: -1, dy: 1,  name: 'SW' },
+          { dx: -1, dy: 0,  name: 'W'  },
+          { dx: -1, dy: -1, name: 'NW' },
+        ]
+        const activeIE = initiativeOrder.find(ie => ie.is_active)
+        const throwerTok = activeIE
+          ? mapTokens.find(t =>
+              (activeIE.character_id && t.character_id === activeIE.character_id) ||
+              (activeIE.npc_id && t.npc_id === activeIE.npc_id)
+            )
+          : null
+        if (outcome === 'Low Insight') {
+          if (throwerTok) {
+            blastCenterOverride = { gx: throwerTok.grid_x, gy: throwerTok.grid_y }
+            traitNotes.push(`💥 Moment of Low Insight — grenade detonates in hand at thrower's cell (${throwerTok.grid_x},${throwerTok.grid_y}).`)
+          } else {
+            traitNotes.push(`💥 Moment of Low Insight — grenade detonates, but the thrower has no map token, so no AoE applied.`)
+          }
+        } else {
+          // Failure / Dire Failure — find the intended cell, then scatter.
+          let intended: { gx: number; gy: number } | null = null
+          if (grenadeTargetCell) {
+            intended = { gx: grenadeTargetCell.gx, gy: grenadeTargetCell.gy }
+          } else {
+            const tok = mapTokens.find(mt => {
+              const pe = entries.find(e => e.character.name === targetName)
+              if (pe && mt.character_id === pe.character.id) return true
+              const npc = campaignNpcs.find((n: any) => n.name === targetName)
+              if (npc && mt.npc_id === npc.id) return true
+              return false
+            })
+            if (tok) intended = { gx: tok.grid_x, gy: tok.grid_y }
+          }
+          if (intended) {
+            const dir = FUMBLE_DIRS[Math.floor(Math.random() * 8)]
+            // Failure: 1d4 cells. Dire Failure: 2d4 cells.
+            const distRoll = outcome === 'Dire Failure'
+              ? (Math.floor(Math.random() * 4) + 1) + (Math.floor(Math.random() * 4) + 1)
+              : (Math.floor(Math.random() * 4) + 1)
+            const newGx = Math.max(1, intended.gx + dir.dx * distRoll)
+            const newGy = Math.max(1, intended.gy + dir.dy * distRoll)
+            blastCenterOverride = { gx: newGx, gy: newGy }
+            const ft = mapCellFeet || 3
+            const tier = outcome === 'Dire Failure' ? '⚠️ Dire Failure' : '🎲 Wild throw'
+            traitNotes.push(`${tier} — scattered ${dir.name} ${distRoll} cell${distRoll !== 1 ? 's' : ''} (${distRoll * ft} ft). Impact: (${newGx},${newGy}).`)
+          } else {
+            traitNotes.push(`🎲 Wild throw — but no valid origin cell, blast not resolved.`)
+          }
+        }
+      }
 
       // Automatic Burst: roll damage multiple times (only if player opted in)
       const rolls = (useBurst && burstCount !== null && burstCount > 0) ? burstCount : 1
@@ -3664,7 +3739,12 @@ export default function TablePage() {
 
       // Auto-apply damage to target (PC or NPC)
       console.warn('[damage] target lookup:', { targetName, targetEntry: !!targetEntry, hasLiveState: !!targetEntry?.liveState, targetNpc: !!targetNpc, finalWP, finalRP })
-      if (targetEntry?.liveState) {
+      if (isGrenadeFumble) {
+        // Grenade fumbles skip the named-target damage path entirely —
+        // there's no "primary" hit because the throw missed. Damage is
+        // applied through the blast AoE below using blastCenterOverride.
+        console.warn('[damage] grenade fumble — primary skipped, blast AoE will resolve from override center', blastCenterOverride)
+      } else if (targetEntry?.liveState) {
         // PC target — use character_states
         // Re-fetch fresh HP from DB to avoid stale closure values
         const { data: freshState } = await supabase.from('character_states').select('*').eq('id', targetEntry.stateId).single()
@@ -3945,21 +4025,26 @@ export default function TablePage() {
       // Blast Radius AoE — apply scaled damage to nearby tokens on the
       // tactical map. Center is the target token by default, or the
       // cell the player clicked when it's a grenade throw-to-cell.
-      if (hasBlast && mapTokens.length > 0 && (targetName || grenadeTargetCell)) {
+      if (hasBlast && mapTokens.length > 0 && (targetName || grenadeTargetCell || blastCenterOverride)) {
         const active = initiativeOrder.find(ie => ie.is_active)
-        // Resolve blast center: cell takes precedence over token lookup.
-        const center = grenadeTargetCell
-          ? { gx: grenadeTargetCell.gx, gy: grenadeTargetCell.gy }
-          : (() => {
-              const t = mapTokens.find(mt => {
-                const pe = entries.find(e => e.character.name === targetName)
-                if (pe && mt.character_id === pe.character.id) return true
-                const npc = campaignNpcs.find((n: any) => n.name === targetName)
-                if (npc && mt.npc_id === npc.id) return true
-                return false
-              })
-              return t ? { gx: t.grid_x, gy: t.grid_y } : null
-            })()
+        // Resolve blast center. Order of precedence:
+        //   1. Fumble override (Low Insight = thrower, Failure/Dire = scatter)
+        //   2. Explicit cell-throw target (grenadeTargetCell)
+        //   3. Token-name lookup (clean throw at a named target)
+        const center = blastCenterOverride
+          ? { gx: blastCenterOverride.gx, gy: blastCenterOverride.gy }
+          : grenadeTargetCell
+            ? { gx: grenadeTargetCell.gx, gy: grenadeTargetCell.gy }
+            : (() => {
+                const t = mapTokens.find(mt => {
+                  const pe = entries.find(e => e.character.name === targetName)
+                  if (pe && mt.character_id === pe.character.id) return true
+                  const npc = campaignNpcs.find((n: any) => n.name === targetName)
+                  if (npc && mt.npc_id === npc.id) return true
+                  return false
+                })
+                return t ? { gx: t.grid_x, gy: t.grid_y } : null
+              })()
         const targetTok = center ? { grid_x: center.gx, grid_y: center.gy } : null
         if (targetTok) {
           const ft = mapCellFeet || 3
@@ -3973,11 +4058,12 @@ export default function TablePage() {
             const isDestructibleObject = tok.token_type === 'object' && tok.wp_max != null && tok.wp_max > 0
             if (!isCombatant && !isDestructibleObject) continue
             // Skip primary target (already damaged via token path) and
-            // attacker. For cell-throws (grenadeTargetCell), there IS no
-            // primary — the cell is empty ground — so tokens AT the
-            // center cell should take full blast damage instead of being
-            // skipped. isPrimary only fires for token-targeted attacks.
-            const isPrimary = !grenadeTargetCell && (
+            // attacker. For cell-throws (grenadeTargetCell) and grenade
+            // fumbles, there IS no primary — the impact is just empty
+            // ground — so tokens AT the center cell should take full
+            // blast damage instead of being skipped. isPrimary only
+            // fires for clean token-targeted attacks.
+            const isPrimary = !grenadeTargetCell && !isGrenadeFumble && (
               (targetEntry && tok.character_id && tok.character_id === targetEntry.character.id) ||
               (targetNpc && tok.npc_id && tok.npc_id === targetNpc.id) ||
               (targetObject && tok.id === targetObject.id) ||
