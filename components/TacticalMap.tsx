@@ -1787,6 +1787,16 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       {selectedToken && (() => {
         const tok = tokens.find(t => t.id === selectedToken)
         if (!tok) return null
+        // Players who are listed in this token's controlled_by_character_ids
+        // (e.g. the driver of a vehicle) get the Rot slider here too —
+        // matches the GM's instant-feedback experience for their own
+        // controllable tokens. Size / Cells / Hide / Remove / Edit
+        // stay GM-only since those are bookkeeping ops the player
+        // shouldn't tweak.
+        const isControllerOfThis = !!myCharacterId
+          && Array.isArray(tok.controlled_by_character_ids)
+          && tok.controlled_by_character_ids.includes(myCharacterId)
+        const canRotate = isGM || isControllerOfThis
         return (
           <div style={{ position: 'absolute', bottom: '8px', left: '8px', zIndex: 10, background: 'rgba(15,15,15,.9)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 12px', minWidth: '150px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1812,8 +1822,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
                 )}
               </div>
             )}
-            {isGM && (
+            {(isGM || canRotate) && (
               <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {isGM && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', width: '30px' }}>Size</span>
                   <input type="range" min={0.3} max={10} step={0.1} value={tok.scale ?? 1}
@@ -1825,6 +1836,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
                     style={{ flex: 1, accentColor: '#7ab3d4', cursor: 'pointer' }} />
                   <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', width: '28px', textAlign: 'right' }}>{((tok.scale ?? 1) * 100).toFixed(0)}%</span>
                 </div>
+                )}
+                {canRotate && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', width: '30px' }}>Rot</span>
                   <input type="range" min={0} max={360} step={5} value={tok.rotation ?? 0}
@@ -1836,10 +1849,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
                     style={{ flex: 1, accentColor: '#EF9F27', cursor: 'pointer' }} />
                   <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', width: '28px', textAlign: 'right' }}>{(tok.rotation ?? 0).toFixed(0)}°</span>
                 </div>
-                {/* Multi-cell footprint controls — objects only. PCs/NPCs
-                    are always 1×1 (their visual is already cell-sized
-                    via the scale slider). */}
-                {tok.token_type === 'object' && (
+                )}
+                {/* Multi-cell footprint controls — objects only, GM only.
+                    PCs/NPCs are always 1×1 (their visual is already cell-
+                    sized via the scale slider). */}
+                {isGM && tok.token_type === 'object' && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', width: '30px' }}>Cells</span>
                     <input type="number" min={1} max={20} step={1} value={tok.grid_w ?? 1}
