@@ -42,9 +42,11 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
     if (uploadError) setProcessing(false)
   }, [uploadError])
 
-  // Output JPEG: cap the longer edge at this many pixels. Preserves
-  // aspect; a 5:2 truck stays 5:2, just downscaled if huge.
-  const OUT_LONG_EDGE = 1024
+  // Output JPEG/PNG: cap the longer edge at this many pixels. Tokens
+  // display at 64-128 px on the tactical map, so 768 is plenty of detail
+  // for any zoom and ~44 % less pixel count than 1024 — meaningful upload
+  // savings on slow connections.
+  const OUT_LONG_EDGE = 768
 
   // Load the file as a data URL + measure dimensions
   useEffect(() => {
@@ -135,27 +137,36 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
       const ctx = canvas.getContext('2d')
       if (!ctx) throw new Error('Browser refused to create a 2D canvas context.')
       ctx.drawImage(img, box.x, box.y, box.w, box.h, 0, 0, outW, outH)
-      // Output format follows the input. PNG inputs may have a
-      // transparent background (top-down vehicle art typically does);
-      // JPEG would composite that onto black. Preserve transparency by
-      // re-encoding as PNG when the source is PNG. For JPEG/other
-      // sources, stick with JPEG for the smaller file size.
+      // Output format. PNG inputs MAY have transparency (top-down vehicle
+      // art typically does) — but only the actually-cropped region matters,
+      // so we sample the canvas to check. If the crop has no transparent
+      // pixels, fall back to JPEG even for PNG sources — typically 5-10×
+      // smaller for the same visible result. Big upload-speed win on
+      // photos saved as PNG by mistake.
       const isPng = file.type === 'image/png'
-      const outMime = isPng ? 'image/png' : 'image/jpeg'
+      let hasTransparency = false
+      if (isPng) {
+        const sample = ctx.getImageData(0, 0, outW, outH).data
+        for (let i = 3; i < sample.length; i += 4) {
+          if (sample[i] < 255) { hasTransparency = true; break }
+        }
+      }
+      const outMime = (isPng && hasTransparency) ? 'image/png' : 'image/jpeg'
+      const jpegQuality = 0.85
       // Watchdog: canvas.toBlob occasionally never fires its callback
       // on memory-pressured browsers or huge canvases. 15 s is enough
-      // for any sane 1024×1024 PNG encode; if we hit it, surface an
-      // error instead of hanging the modal.
+      // for any sane 768-edge encode; if we hit it, surface an error
+      // instead of hanging the modal.
       const blob = await new Promise<Blob>((resolve, reject) => {
         const timer = setTimeout(() => reject(new Error('Image encoding timed out after 15s.')), 15000)
         canvas.toBlob(b => {
           clearTimeout(timer)
           if (b) resolve(b)
           else reject(new Error('Image encoding returned no data.'))
-        }, outMime, isPng ? undefined : 0.9)
+        }, outMime, outMime === 'image/png' ? undefined : jpegQuality)
       })
-      const previewUrl = canvas.toDataURL(outMime, isPng ? undefined : 0.9)
-      console.log('[crop] encoded', { blobKB: Math.round(blob.size / 1024), mime: outMime })
+      const previewUrl = canvas.toDataURL(outMime, outMime === 'image/png' ? undefined : jpegQuality)
+      console.log('[crop] encoded', { blobKB: Math.round(blob.size / 1024), mime: outMime, hasTransparency, savedToJpeg: isPng && !hasTransparency })
       onCrop(blob, previewUrl, outMime)
     } catch (err: any) {
       console.error('[crop] encoding failed', err)

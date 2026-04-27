@@ -104,6 +104,12 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   // Surfaces upload failures inside the cropper modal so the GM can retry
   // without losing their crop selection.
   const [cropUploadError, setCropUploadError] = useState<string | null>(null)
+  // Forces React to remount the file inputs after every upload so the
+  // browser-side selection is guaranteed clean. Some browsers stick on
+  // the previously-picked file even after `e.target.value = ''`, so the
+  // user can't pick the same (or sometimes any) file again. Bumping this
+  // counter changes the input's React key → fresh element each time.
+  const [fileInputKey, setFileInputKey] = useState(0)
   const [dragObjId, setDragObjId] = useState<string | null>(null)
   const [dragOverObjId, setDragOverObjId] = useState<string | null>(null)
 
@@ -259,8 +265,11 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     setUploading(true)
     setCropUploadError(null)
     const ext = mimeType === 'image/png' ? 'png' : 'jpg'
+    const t0 = performance.now()
     try {
       const url = await uploadBlob(blob, ext)
+      const tUpload = performance.now()
+      console.log(`[crop] upload phase took ${Math.round(tUpload - t0)}ms`)
       const defaultName = cropFile.file.name.replace(/\.[^.]+$/, '')
       if (cropFile.target === 'add') {
         setAddCustomUrl(url)
@@ -279,7 +288,9 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
         const libName = `${(editName.trim() || editingObj.name || defaultName).slice(0, 74)} (broken)`
         await saveToLibrary(url, libName)
       }
+      console.log(`[crop] full upload+save took ${Math.round(performance.now() - t0)}ms`)
       setCropFile(null)
+      setFileInputKey(k => k + 1)
     } catch (err: any) {
       console.error('[crop] upload failed', err)
       setCropUploadError(err?.message || 'Upload failed. Try again.')
@@ -328,10 +339,16 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             ))}
           </div>
 
-          <label style={{ display: 'block', padding: '6px', background: addCustomUrl ? '#1a2e10' : '#242424', border: `1px dashed ${addCustomUrl ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: addCustomUrl ? '#7fc458' : '#5a5550', fontSize: '13px', textAlign: 'center', cursor: 'pointer', marginBottom: '6px' }}>
-            {uploading ? 'Uploading...' : addCustomUrl ? '✓ Custom image uploaded' : 'Or upload custom image'}
-            <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'add' }); e.target.value = '' }} />
-          </label>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
+            <label style={{ flex: 1, display: 'block', padding: '6px', background: addCustomUrl ? '#1a2e10' : '#242424', border: `1px dashed ${addCustomUrl ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: addCustomUrl ? '#7fc458' : '#5a5550', fontSize: '13px', textAlign: 'center', cursor: 'pointer' }}>
+              {uploading ? 'Uploading...' : addCustomUrl ? '✓ Custom image — click to replace' : 'Or upload custom image'}
+              <input key={`add-${fileInputKey}`} type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'add' }); e.target.value = '' }} />
+            </label>
+            {addCustomUrl && !uploading && (
+              <button onClick={() => setAddCustomUrl(null)} title="Clear uploaded image"
+                style={{ padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>×</button>
+            )}
+          </div>
 
           {/* Library picker — image items set portrait; template items (metadata) can be placed directly */}
           <div style={{ marginBottom: '6px' }}>
@@ -606,7 +623,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
               <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Image</div>
               <label style={{ display: 'block', padding: '6px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', textAlign: 'center', cursor: 'pointer', marginBottom: '4px' }}>
                 {uploading ? 'Uploading...' : 'Upload new image'}
-                <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'edit' }); e.target.value = '' }} />
+                <input key={`edit-${fileInputKey}`} type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'edit' }); e.target.value = '' }} />
               </label>
               {/* Library picker — always visible so GM knows it exists */}
               <div>
@@ -644,7 +661,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 )}
                 <label style={{ flex: 1, display: 'block', padding: '6px', background: editingObj.destroyed_portrait_url ? '#1a2e10' : '#242424', border: `1px dashed ${editingObj.destroyed_portrait_url ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: editingObj.destroyed_portrait_url ? '#7fc458' : '#5a5550', fontSize: '13px', textAlign: 'center', cursor: 'pointer' }}>
                   {uploading ? 'Uploading...' : editingObj.destroyed_portrait_url ? 'Replace destroyed image' : 'Upload destroyed image'}
-                  <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'edit-destroyed' }); e.target.value = '' }} />
+                  <input key={`destroyed-${fileInputKey}`} type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'edit-destroyed' }); e.target.value = '' }} />
                 </label>
               </div>
               <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', fontStyle: 'italic', marginTop: '3px' }}>Shown on the tactical map when WP hits 0. Leave blank to keep the fade + shatter overlay.</div>
