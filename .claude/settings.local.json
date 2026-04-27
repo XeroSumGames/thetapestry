@@ -66,7 +66,7 @@
       "Bash(C:/TheTapestry/scripts/extract-rules.sh \"C:/TheTapestry/docs/Rules/XSE SRD v1.1.17 \\(Small\\).pdf\" /tmp/combat.txt)",
       "Bash(C:/TheTapestry/scripts/extract-rules.sh \"C:/TheTapestry/docs/Rules/XSE SRD v1.1.17 \\(Small\\).pdf\" /tmp/combat_pages.txt 14 17)",
       "Bash(chmod +x C:/thetableau/scripts/extract-rules.sh)",
-      "Bash(node scripts/check-font-sizes.mjs)"
+      "Bash(git -C C:/TheTapestry log --oneline -3)"
     ]
   }
 }
