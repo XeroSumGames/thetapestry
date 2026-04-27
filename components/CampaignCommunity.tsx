@@ -341,6 +341,14 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // auto-expand the first community so the Status view drops the
   // user directly into the unfolded roster/roles. For 'create' we
   // flip open the "+ New Community" create form.
+  //
+  // CRITICAL: do NOT include `communities` in the deps. The effect
+  // re-firing every time communities changes means right after a
+  // successful create (which appends to communities), this would
+  // snap showCreate back to true on top of the new community —
+  // playtest caught it as 'create modal lingering above the new
+  // group'. We rely on initialModeToken to retrigger if the caller
+  // wants the create form re-opened.
   useEffect(() => {
     if (loading || !initialMode) return
     if (initialMode === 'status' && communities.length > 0 && !openId) {
@@ -349,10 +357,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     if (initialMode === 'create') {
       setShowCreate(true)
     }
-  // Re-runs when the caller bumps initialModeToken or when the
-  // loading→loaded transition happens. openId inclusion prevents
-  // us from re-expanding something the user manually collapsed.
-  }, [loading, initialMode, initialModeToken, communities])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, initialMode, initialModeToken])
 
   async function load() {
     setLoading(true)
