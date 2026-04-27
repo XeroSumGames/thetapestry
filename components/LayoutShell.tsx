@@ -45,40 +45,72 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   const supabase = createClient()
   const [suspended, setSuspended] = useState(false)
   const [checked, setChecked] = useState(false)
-  const [onboarded, setOnboarded] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
+  // Auth check runs ONCE on mount, then again only on real auth events
+  // (SIGNED_IN / SIGNED_OUT). Previously the dep array was [pathname], which
+  // fired a getUser() + profiles select on every navigation — a network
+  // round-trip in front of every link click. Pathname changes don't change
+  // who's logged in, so this was wasted work that made soft-nav feel slow.
   useEffect(() => {
+    let cancelled = false
+
+    async function loadProfile(userId: string) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('suspended')
+        .eq('id', userId)
+        .single()
+      if (cancelled) return
+      setSuspended(!!profile?.suspended)
+    }
+
     async function checkSession() {
       try {
         const { data: { user }, error: userError } = await supabase.auth.getUser()
-
+        if (cancelled) return
         if (userError || !user) {
           await supabase.auth.signOut()
+          if (cancelled) return
           setIsAuthenticated(false)
           setChecked(true)
           return
         }
-
         setIsAuthenticated(true)
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('suspended, onboarded')
-          .eq('id', user.id)
-          .single()
-
-        if (profile?.suspended) setSuspended(true)
-        if (profile?.onboarded) setOnboarded(true)
+        await loadProfile(user.id)
+        if (cancelled) return
         setChecked(true)
       } catch (e) {
         await supabase.auth.signOut()
+        if (cancelled) return
         setIsAuthenticated(false)
         setChecked(true)
       }
     }
+
     checkSession()
-  }, [pathname])
+
+    // React to real auth state changes — sign-in (e.g. after the
+    // /login flow), sign-out (sign-out button or token failure
+    // elsewhere). TOKEN_REFRESHED fires on background refresh and
+    // doesn't change identity, so we ignore it.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
+      if (event === 'SIGNED_OUT' || !session?.user) {
+        setIsAuthenticated(false)
+        setSuspended(false)
+        setChecked(true)
+      } else if (event === 'SIGNED_IN') {
+        setIsAuthenticated(true)
+        loadProfile(session.user.id)
+        setChecked(true)
+      }
+    })
+
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
+  }, [])
 
   if (!checked) return <div style={{ flex: 1, background: '#0f0f0f' }} />
 
