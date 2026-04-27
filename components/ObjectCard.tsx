@@ -56,15 +56,21 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
   // Per-row "give to" character selection, keyed by item name+type to survive index shifts.
   const [givePick, setGivePick] = useState<Record<string, string>>({})
   const [giving, setGiving] = useState<string | null>(null)
+  // Rotation control — paired with the existing Move button so a driver
+  // can both reposition AND straighten the vehicle from the same popup.
+  // Visible whenever onMove is wired (i.e. the viewer can control this
+  // token); slider writes back to scene_tokens.rotation directly.
+  const [rotation, setRotation] = useState(0)
 
   useEffect(() => {
     let cancelled = false
     async function load() {
-      const { data } = await supabase.from('scene_tokens').select('properties, contents, lootable').eq('id', tokenId).single()
+      const { data } = await supabase.from('scene_tokens').select('properties, contents, lootable, rotation').eq('id', tokenId).single()
       if (cancelled) return
       setProperties(Array.isArray(data?.properties) ? data!.properties : [])
       setContents(Array.isArray(data?.contents) ? data!.contents : [])
       setLootable(!!data?.lootable)
+      setRotation((data as any)?.rotation ?? 0)
       setLoading(false)
     }
     load()
@@ -182,6 +188,25 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
           <div style={{ height: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${pct * 100}%`, background: wpBarColor(pct), transition: 'width 0.2s' }} />
           </div>
+        </div>
+      )}
+
+      {/* Rotation slider — paired with the Move button so a controller
+          (driver / GM) can both reposition and straighten the token
+          from the same double-click popup. Hidden when onMove isn't
+          wired (i.e. viewer can't control this token), since rotating
+          a token you can't move makes no sense. */}
+      {onMove && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', width: '36px' }}>Rot</span>
+          <input type="range" min={0} max={360} step={5} value={rotation}
+            onChange={async e => {
+              const v = parseFloat(e.target.value)
+              setRotation(v)
+              await supabase.from('scene_tokens').update({ rotation: v }).eq('id', tokenId)
+            }}
+            style={{ flex: 1, accentColor: '#EF9F27', cursor: 'pointer' }} />
+          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', width: '36px', textAlign: 'right' }}>{rotation.toFixed(0)}°</span>
         </div>
       )}
 
