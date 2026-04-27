@@ -711,6 +711,11 @@ export default function TablePage() {
   const sheetDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
   const [npcPositions, setNpcPositions] = useState<Record<string, { x: number; y: number }>>({})
   const npcDragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null)
+  // Per-card width/height overrides for the bottom-right resize handle.
+  // Session-only — not persisted across reloads. Default width is 250 px
+  // (see card wrapper); height tracks content unless the user resizes.
+  const [npcCardSizes, setNpcCardSizes] = useState<Record<string, { w: number; h: number }>>({})
+  const npcResizeRef = useRef<{ id: string; startX: number; startY: number; origW: number; origH: number } | null>(null)
   // Roll modal position — null means "use default centered placement". Once
   // the user drags the roll panel, its position persists across re-opens so
   // attacks don't keep snapping back over the map.
@@ -6501,20 +6506,20 @@ export default function TablePage() {
               const fresh = campaignNpcs.find((c: any) => c.id === npc.id)
               const liveNpc = fresh ? { ...fresh } as CampaignNpc : npc
               const pos = npcPositions[npc.id]
+              const size = npcCardSizes[npc.id]
               return (
                 <div key={`${npc.id}-${liveNpc.wp_current}-${liveNpc.rp_current}-${liveNpc.death_countdown}`}
                   style={{
                     position: 'absolute',
                     left: pos?.x ?? 10 + i * 20,
                     top: pos?.y ?? 10 + i * 20,
-                    width: '250px',
-                    // Let height track the NpcCard's natural size instead of
-                    // pinning to 357px — Foes/Goons render shorter than PCs
-                    // and the leftover space showed up as a dead "shadow box"
-                    // outlined by the wrapper's boxShadow. If a particularly
-                    // tall NPC ever overflows the viewport we can add a
-                    // maxHeight+overflow:auto, but most fit comfortably.
-                    maxHeight: '80vh',
+                    width: size?.w ?? 250,
+                    // Default: let height track natural content size (most
+                    // NPCs fit comfortably, Foes/Goons render shorter than
+                    // PCs). Once the user drags the resize handle in the
+                    // bottom-right we lock to their height.
+                    height: size?.h,
+                    maxHeight: size?.h ? undefined : '80vh',
                     overflow: 'auto',
                     zIndex: 1100 + i,
                     borderRadius: '4px',
@@ -6566,6 +6571,44 @@ export default function TablePage() {
                       onRecruit={sessionStatus === 'active' ? () => openRecruitModal(npc.id) : undefined}
                     />
                   )}
+                  {/* Resize handle — bottom-right corner. Drag to resize the
+                      card. Constrained 200-700 px wide and 150 px to 95vh
+                      tall. Session-only sizing (not persisted across reloads). */}
+                  <div
+                    onMouseDown={e => {
+                      e.stopPropagation()
+                      const wrapper = e.currentTarget.parentElement as HTMLElement
+                      const rect = wrapper.getBoundingClientRect()
+                      npcResizeRef.current = { id: npc.id, startX: e.clientX, startY: e.clientY, origW: rect.width, origH: rect.height }
+                      const onMove = (ev: MouseEvent) => {
+                        if (!npcResizeRef.current) return
+                        const dx = ev.clientX - npcResizeRef.current.startX
+                        const dy = ev.clientY - npcResizeRef.current.startY
+                        const newW = Math.max(200, Math.min(700, npcResizeRef.current.origW + dx))
+                        const newH = Math.max(150, Math.min(window.innerHeight * 0.95, npcResizeRef.current.origH + dy))
+                        setNpcCardSizes(prev => ({ ...prev, [npc.id]: { w: newW, h: newH } }))
+                      }
+                      const onUp = () => {
+                        npcResizeRef.current = null
+                        window.removeEventListener('mousemove', onMove)
+                        window.removeEventListener('mouseup', onUp)
+                      }
+                      window.addEventListener('mousemove', onMove)
+                      window.addEventListener('mouseup', onUp)
+                    }}
+                    title="Drag to resize"
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      right: 0,
+                      width: '16px',
+                      height: '16px',
+                      cursor: 'nwse-resize',
+                      background: 'linear-gradient(135deg, transparent 0%, transparent 55%, #7ab3d4 55%, #7ab3d4 65%, transparent 65%, transparent 78%, #7ab3d4 78%, #7ab3d4 88%, transparent 88%)',
+                      borderBottomRightRadius: '4px',
+                      zIndex: 10,
+                    }}
+                  />
                 </div>
               )
             })

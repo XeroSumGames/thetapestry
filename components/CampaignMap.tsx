@@ -253,7 +253,10 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
       const settingView = setting ? SETTING_CENTERS[setting] : undefined
       const customCenter = (mapCenterLat != null && mapCenterLng != null) ? { center: [mapCenterLat, mapCenterLng] as [number, number], zoom: 12 } : undefined
-      const view = customCenter ?? settingView ?? { center: [39, -111] as [number, number], zoom: 5 }
+      // Default fallback: Mediterranean (Tyrrhenian Sea, near Stromboli) at
+      // zoom 3 — wide regional view that frames Europe + N Africa for any
+      // campaign that hasn't picked a setting or set a custom center.
+      const view = customCenter ?? settingView ?? { center: [38.6169, 15.2930] as [number, number], zoom: 3 }
       const map = L.map(mapRef.current, { center: view.center, zoom: view.zoom, zoomControl: true })
       const t = TILE_LAYERS[mapLayer]
       tileLayerRef.current = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19 }).addTo(map)
