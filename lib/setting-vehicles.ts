@@ -45,7 +45,11 @@ const MINNIE: SeedVehicle = {
   type: 'Recreational Vehicle',
   rarity: 'Common',
   size: 5,
-  speed: 2,
+  // Bumped from 2 → 3 (2026-04-26): Speed 2 = bicycle, which read too
+  // slow for a 9000lb RV. Speed 3 (= horse galloping) better reflects
+  // Minnie's actual road pace and gives her 90ft/round on the tactical
+  // grid via the vehicle Move button (Speed × 30ft/round mapping).
+  speed: 3,
   passengers: 5,
   encumbrance: 100,
   range: '660 (231/132)',

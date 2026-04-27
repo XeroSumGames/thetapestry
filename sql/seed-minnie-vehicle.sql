@@ -14,7 +14,7 @@ UPDATE campaigns SET vehicles = '[
     "type": "Recreational Vehicle",
     "rarity": "Common",
     "size": 5,
-    "speed": 2,
+    "speed": 3,
     "passengers": 5,
     "encumbrance": 100,
     "range": "660 (231/132)",
