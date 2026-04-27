@@ -604,16 +604,16 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           const hov = throwHoverCell
           const reachDist = Math.max(Math.abs(hov.gx - throwerTok.grid_x), Math.abs(hov.gy - throwerTok.grid_y))
           if (reachDist <= rangeCells) {
+            // Per playtest 2026-04-27: only Engaged + Close bands are
+            // damaging. Drop the Far/25% faint shading from the preview.
             const engagedCells = Math.max(1, Math.round(5 / ft))
             const closeCells = Math.max(1, Math.round(30 / ft))
-            const farCells = Math.max(1, Math.round(100 / ft))
             for (let gx = 0; gx < s.grid_cols; gx++) {
               for (let gy = 0; gy < s.grid_rows; gy++) {
                 const d = Math.max(Math.abs(gx - hov.gx), Math.abs(gy - hov.gy))
                 let fill: string | null = null
                 if (d <= engagedCells) fill = 'rgba(192,57,43,0.45)'      // red — full damage
                 else if (d <= closeCells) fill = 'rgba(239,159,39,0.32)'  // amber — 50%
-                else if (d <= farCells) fill = 'rgba(239,159,39,0.16)'    // amber faint — 25%
                 if (fill) {
                   ctx.fillStyle = fill
                   ctx.fillRect(offsetX + gx * cellSize + 1, offsetY + gy * cellSize + 1, cellSize - 2, cellSize - 2)
@@ -1132,7 +1132,9 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
             const friendlies = throwMode.friendlyCharacterIds ?? []
             const attackerCharId = throwMode.attackerCharId
             if (throwMode.hasBlast && (friendlies.length > 0 || attackerCharId)) {
-              const farCells = Math.max(1, Math.round(100 / ft))
+              // Per playtest 2026-04-27: blast only damages Engaged and
+              // Close. Anything beyond 30ft takes no damage, so don't
+              // warn the player about it.
               const engagedCells = Math.max(1, Math.round(5 / ft))
               const closeCells = Math.max(1, Math.round(30 / ft))
               const hits: { name: string; band: string; isSelf: boolean }[] = []
@@ -1142,8 +1144,8 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
                 const isFriendly = friendlies.includes(tok.character_id)
                 if (!isSelf && !isFriendly) continue
                 const d = Math.max(Math.abs(tok.grid_x - pos.gx), Math.abs(tok.grid_y - pos.gy))
-                if (d > farCells) continue
-                const band = d <= engagedCells ? 'Engaged' : d <= closeCells ? 'Close' : 'Far'
+                if (d > closeCells) continue
+                const band = d <= engagedCells ? 'Engaged' : 'Close'
                 hits.push({ name: tok.name, band, isSelf })
               }
               if (hits.length > 0) {

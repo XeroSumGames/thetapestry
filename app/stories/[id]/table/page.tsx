@@ -3630,8 +3630,7 @@ export default function TablePage() {
       const blastRawRP = Math.floor(blastRawWP * (weapon.rpPercent / 100))
       if (hasBlast) {
         const halfWP = Math.floor(blastRawWP / 2)
-        const quarterWP = Math.floor(blastRawWP / 4)
-        traitNotes.push(`Blast Radius — Engaged: ${blastRawWP} WP | Close: ${halfWP} WP | Further: ${quarterWP} WP`)
+        traitNotes.push(`Blast Radius — Engaged: ${blastRawWP} WP | Close: ${halfWP} WP`)
       }
 
       // Burning note
@@ -3992,9 +3991,13 @@ export default function TablePage() {
             if (isPrimary) continue
             const dist = Math.max(Math.abs(tok.grid_x - targetTok.grid_x), Math.abs(tok.grid_y - targetTok.grid_y))
             const feet = dist * ft
-            if (feet > 100) continue
-            // Engaged (<=5ft) = full, Close (<=30ft) = 50%, further = 25%
-            const scale = feet <= 5 ? 1.0 : feet <= 30 ? 0.5 : 0.25
+            // Per playtest 2026-04-27: drop the Medium 25% tier. Grenades
+            // stay dangerous to throwers but stop killing bystanders 50ft+
+            // away through walls. Engaged = full, Close = half, beyond
+            // Close = nothing. The Medium tier may come back later if
+            // larger explosives (RPG, mortar) need it.
+            if (feet > 30) continue
+            const scale = feet <= 5 ? 1.0 : 0.5
             // Splash uses raw blast WP/RP — see CRB note where blastRawWP
             // is computed. Splash victims don't inherit primary's mitigation.
             const splashWP = Math.max(1, Math.floor(blastRawWP * scale))
@@ -7532,22 +7535,23 @@ export default function TablePage() {
                   // throw landed in vacant ground) → fall back to a
                   // generic "splash damage will apply" so the player
                   // still sees confirmation that the throw is committed.
+                  // Per playtest 2026-04-27: blast preview only counts
+                  // Engaged (full) + Close (50%). Anything beyond 30ft
+                  // takes no damage, so don't show it in the preview.
                   const ft = mapCellFeet || 3
                   const engagedCells = Math.max(1, Math.round(5 / ft))
                   const closeCells = Math.max(1, Math.round(30 / ft))
-                  const farCells = Math.max(1, Math.round(100 / ft))
-                  const groups: { engaged: string[]; close: string[]; far: string[] } = { engaged: [], close: [], far: [] }
+                  const groups: { engaged: string[]; close: string[] } = { engaged: [], close: [] }
                   for (const tok of mapTokens) {
                     const isCombatant = !!tok.character_id || !!tok.npc_id
                     const isDestructibleObject = tok.token_type === 'object' && tok.wp_max != null && tok.wp_max > 0
                     if (!isCombatant && !isDestructibleObject) continue
                     const d = Math.max(Math.abs(tok.grid_x - grenadeTargetCell.gx), Math.abs(tok.grid_y - grenadeTargetCell.gy))
-                    if (d > farCells) continue
+                    if (d > closeCells) continue
                     if (d <= engagedCells) groups.engaged.push(tok.name)
-                    else if (d <= closeCells) groups.close.push(tok.name)
-                    else groups.far.push(tok.name)
+                    else groups.close.push(tok.name)
                   }
-                  const total = groups.engaged.length + groups.close.length + groups.far.length
+                  const total = groups.engaged.length + groups.close.length
                   return (
                     <div style={{ padding: '6px 10px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'left', marginBottom: '8px' }}>
                       {total === 0 ? (
@@ -7560,9 +7564,6 @@ export default function TablePage() {
                           )}
                           {groups.close.length > 0 && (
                             <div style={{ color: '#EF9F27' }}>Close (50%): {groups.close.join(', ')}</div>
-                          )}
-                          {groups.far.length > 0 && (
-                            <div style={{ color: '#cce0f5' }}>Far (25%): {groups.far.join(', ')}</div>
                           )}
                         </>
                       )}

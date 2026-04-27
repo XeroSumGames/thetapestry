@@ -19,15 +19,27 @@
 
 ## 2. Range
 
-*Extract: Range bands + distances + weapon-band penalties.*
+*CRB describes range bands as abstract movement-round increments
+(Engaged → Close = 1 round, Engaged → Distant = 10 rounds). Below
+is our tactical-grid translation in feet, locked 2026-04-27. Used
+by `lib/range-profiles.ts`, the throw-mode highlight, the move
+highlight, the blast-radius scaling, and every range circle drawn
+on the canvas. **Do not change without flagging — these are
+canonical and the user has corrected the assistant on them.***
 
 | Band | Feet | Notes |
 |---|---|---|
-| Engaged | TBD | Melee reach |
-| Close | TBD | |
-| Medium | TBD | |
-| Long | TBD | |
-| Distant | TBD | |
+| **Engaged** | ≤ 5 ft | "Whites of their eyes." Melee reach. Point-blank. |
+| **Close** | ≤ 30 ft | Pistol's ideal range. Grenade's ideal range. |
+| **Medium** | ≤ 100 ft | Shotgun / carbine sweet spot. Far throw. |
+| **Long** | ≤ 300 ft | Hunting rifle / sniper rifle territory. |
+| **Distant** | ≤ 1000 ft | Heavy weapons, mortars, RPGs. |
+
+CRB rules on weapon-band penalties:
+- One band down from a weapon's listed range: no penalty.
+- One band up from listed range: -3 CMod.
+- More than one band down from listed: -2 CMod.
+- Sniper's Rifle (and similar) carry weapon-specific extra penalties; see notes column on that weapon.
 
 ## 3. Combat Actions (Table 10)
 
