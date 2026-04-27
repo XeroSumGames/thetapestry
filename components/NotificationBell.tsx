@@ -548,7 +548,7 @@ export default function NotificationBell() {
                 onMouseLeave={e => (e.currentTarget.style.background = n.read ? 'transparent' : '#111')}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px', gap: '8px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: 0, flex: 1, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{n.title}</span>
+                  <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: 0, flex: 1, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{n.title}</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexShrink: 0, marginLeft: '8px' }}>
                     <span style={{ fontSize: '13px', color: '#cce0f5' }}>{timeAgo(n.created_at)}</span>
                     <button onClick={(e) => { e.stopPropagation(); deleteNotification(n.id) }}
@@ -560,7 +560,7 @@ export default function NotificationBell() {
                   </div>
                 </div>
                 <div style={{
-                  fontSize: '13px', color: '#d4cfc9', lineHeight: 1.4, textAlign: 'left',
+                  fontSize: '14px', color: '#d4cfc9', lineHeight: 1.4, textAlign: 'left',
                   // Belt + suspenders — some earlier ancestor CSS was
                   // still truncating with ellipsis on narrow widths.
                   // Explicitly force normal wrap, no truncation, and
