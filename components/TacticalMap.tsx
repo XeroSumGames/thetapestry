@@ -378,9 +378,17 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
 
     function onKeyDown(e: KeyboardEvent) {
       if (isInputTarget(e.target)) return
-      if (e.code === 'Space' && !e.repeat) {
+      // preventDefault on EVERY spacebar keydown (including the
+      // auto-repeats fired while held), not just the first. The
+      // browser default for spacebar is page-down scroll, and on
+      // auto-repeat each repeat fires another scroll — which during
+      // a spacebar+drag pan reads as the page constantly jumping
+      // back up against the user's drag. The state-set gates on
+      // !e.repeat so we don't churn the spaceHeld state every frame,
+      // but the preventDefault must always fire while space is down.
+      if (e.code === 'Space') {
         e.preventDefault()
-        setSpaceHeld(true)
+        if (!e.repeat) setSpaceHeld(true)
         return
       }
       if (e.code === 'Escape' && onMoveCancel) {
