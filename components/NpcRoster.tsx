@@ -1094,8 +1094,14 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       can never disagree. */}
                   {(() => {
                     const ring = getNpcRingColor(npc)
+                    // Use the vivid border (same as the tactical map
+                    // tokens) so the roster reads at a glance without
+                    // squinting at the dim base palette. Background +
+                    // text color stay muted so the portrait stays
+                    // legible.
+                    const vividBorder = getNpcTokenBorderColor(npc)
                     return (
-                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: ring.bg, border: `2px solid ${ring.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: ring.bg, border: `2px solid ${vividBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                         {npc.portrait_url ? (
                           <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
