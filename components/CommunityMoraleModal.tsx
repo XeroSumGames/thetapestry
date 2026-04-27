@@ -464,7 +464,18 @@ export default function CommunityMoraleModal({
       },
     ])
 
-    // 2) Insert Morale check with full slot snapshot
+    // 2) Insert Morale check with full slot snapshot + role distribution
+    // snapshot for the Phase D dashboard's role-coverage-over-time chart.
+    // Counts members BEFORE departures so the chart reflects the state
+    // that drove this morale check, not the post-consequence state.
+    const roleSnap = { gatherer: 0, maintainer: 0, safety: 0, unassigned: 0 }
+    for (const m of members) {
+      const r = m.role
+      if (r === 'gatherer') roleSnap.gatherer++
+      else if (r === 'maintainer') roleSnap.maintainer++
+      else if (r === 'safety') roleSnap.safety++
+      else roleSnap.unassigned++ // 'unassigned' or legacy 'assigned'
+    }
     await supabase.from('community_morale_checks').insert({
       community_id: community.id,
       week_number: newWeek,
@@ -475,6 +486,7 @@ export default function CommunityMoraleModal({
       cmod_for_next: nextMoraleCmod,
       modifiers_json: moraleSlots,
       members_before: membersBefore, members_after: membersAfter,
+      role_snapshot: roleSnap,
     })
 
     // Retention overrides dissolution if a successful Retention Check

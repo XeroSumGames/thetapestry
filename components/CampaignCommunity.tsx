@@ -231,6 +231,15 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // Last-5 Morale outcomes per community, newest-first. Drives the
   // "Recent Morale" trend chip strip on the At-a-Glance block.
   const [recentMorale, setRecentMorale] = useState<Record<string, { week_number: number; outcome: string }[]>>({})
+  // Phase D dashboard: lazy-loaded full history per community when the
+  // GM opens the Dashboard panel. Three slices: full Morale timeline,
+  // role-snapshot history, recruit attempts.
+  type DashRow = { week_number: number; outcome: string; members_before: number; members_after: number; role_snapshot: { gatherer: number; maintainer: number; safety: number; unassigned: number } | null; rolled_at: string }
+  type RecruitRow = { rollerName: string; npcName: string; outcome: string; approach: string; communityId: string | null; communityName: string | null; created_at: string }
+  const [dashboardOpen, setDashboardOpen] = useState<Set<string>>(new Set())
+  const [dashboardMorale, setDashboardMorale] = useState<Record<string, DashRow[]>>({})
+  const [dashboardRecruits, setDashboardRecruits] = useState<Record<string, RecruitRow[]>>({})
+  const [dashboardLoading, setDashboardLoading] = useState<Set<string>>(new Set())
   const [myUserId, setMyUserId] = useState<string | null>(null)
   // PC this user plays in the current campaign — drives the "leave
   // this community" affordance on their own member row. Null when the
@@ -359,6 +368,71 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, initialMode, initialModeToken])
+
+  // Phase D dashboard loader — fetches full Morale history (with
+  // role_snapshot) + recruit attempts from roll_log for one community.
+  // Lazy: runs only when the GM expands the Dashboard panel for that
+  // community, so we don't pay the round-trip up front for everyone.
+  async function loadCommunityDashboard(communityId: string, communityName: string) {
+    if (dashboardLoading.has(communityId)) return
+    setDashboardLoading(prev => { const n = new Set(prev); n.add(communityId); return n })
+    const [moraleRes, recruitRes] = await Promise.all([
+      supabase
+        .from('community_morale_checks')
+        .select('week_number, outcome, members_before, members_after, role_snapshot, rolled_at')
+        .eq('community_id', communityId)
+        .order('week_number', { ascending: true }),
+      // Recruit attempts target this campaign + this community via
+      // damage_json.communityId. Pull all and filter client-side
+      // (jsonb -> equality on a sub-key is awkward via .eq).
+      supabase
+        .from('roll_log')
+        .select('character_name, label, damage_json, created_at')
+        .eq('campaign_id', campaignId)
+        .eq('outcome', 'recruit')
+        .order('created_at', { ascending: false })
+        .limit(200),
+    ])
+    setDashboardMorale(prev => ({ ...prev, [communityId]: (moraleRes.data ?? []) as any }))
+    const recruits: RecruitRow[] = []
+    for (const row of (recruitRes.data ?? []) as any[]) {
+      const dj = row.damage_json ?? {}
+      if (dj.communityId !== communityId) continue
+      // Pull NPC name from the label since damage_json doesn't carry
+      // it directly. Label shape: '🤝 X recruited Y to Z' (success) or
+      // '🤝 X tried to recruit Y — outcome' (fail). Y is what we want.
+      const succ = String(row.label).match(/🤝\s+.+?\s+recruited\s+(.+?)(?:\s+as\s+|\s+to\s+)/)
+      const fail = String(row.label).match(/🤝\s+.+?\s+tried to recruit\s+(.+?)\s+—/)
+      const npcName = succ?.[1] ?? fail?.[1] ?? '?'
+      recruits.push({
+        rollerName: row.character_name ?? '?',
+        npcName,
+        outcome: dj.rollOutcome ?? '?',
+        approach: dj.approach ?? '?',
+        communityId: dj.communityId ?? null,
+        communityName: dj.communityName ?? communityName,
+        created_at: row.created_at,
+      })
+    }
+    setDashboardRecruits(prev => ({ ...prev, [communityId]: recruits }))
+    setDashboardLoading(prev => { const n = new Set(prev); n.delete(communityId); return n })
+  }
+
+  function toggleDashboard(communityId: string, communityName: string) {
+    setDashboardOpen(prev => {
+      const n = new Set(prev)
+      if (n.has(communityId)) {
+        n.delete(communityId)
+      } else {
+        n.add(communityId)
+        // Fire the load on first open; cached data on subsequent opens.
+        if (!dashboardMorale[communityId] || !dashboardRecruits[communityId]) {
+          void loadCommunityDashboard(communityId, communityName)
+        }
+      }
+      return n
+    })
+  }
 
   async function load() {
     setLoading(true)
@@ -1501,8 +1575,141 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                             ))}
                           </div>
                           <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>oldest → newest</span>
+                          {/* Phase D dashboard toggle — GM-only. Lazy-loads
+                              full morale history + recruit attempts on
+                              first open. */}
+                          {isGM && (
+                            <button onClick={() => toggleDashboard(c.id, c.name)}
+                              style={{ marginLeft: 'auto', padding: '2px 10px', background: dashboardOpen.has(c.id) ? '#1a2e10' : 'transparent', border: `1px solid ${dashboardOpen.has(c.id) ? '#2d5a1b' : '#1a3a5c'}`, borderRadius: '3px', color: dashboardOpen.has(c.id) ? '#7fc458' : '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                              {dashboardOpen.has(c.id) ? '▼ Hide Dashboard' : '▶ Dashboard'}
+                            </button>
+                          )}
                         </div>
                       )}
+                      {/* Phase D Dashboard panel — full timeline, role
+                          coverage chart, recruit success rate. GM-only. */}
+                      {isGM && dashboardOpen.has(c.id) && (() => {
+                        const moraleHist = dashboardMorale[c.id]
+                        const recruits = dashboardRecruits[c.id]
+                        const isLoading = dashboardLoading.has(c.id)
+                        if (isLoading || !moraleHist || !recruits) {
+                          return <div style={{ padding: '8px 0', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>Loading dashboard…</div>
+                        }
+                        // Module 1: full morale timeline (chip per week,
+                        // tooltip carries member-count delta).
+                        const fullTimeline = (
+                          <div>
+                            <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>Full Morale Timeline ({moraleHist.length} {moraleHist.length === 1 ? 'check' : 'checks'})</div>
+                            {moraleHist.length === 0 ? (
+                              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>No morale checks yet.</div>
+                            ) : (
+                              <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
+                                {moraleHist.map((m, i) => {
+                                  const delta = m.members_after - m.members_before
+                                  return (
+                                    <span key={i} title={`Week ${m.week_number} — ${m.outcome.replace(/_/g, ' ')} · members ${m.members_before} → ${m.members_after}${delta !== 0 ? ` (${delta > 0 ? '+' : ''}${delta})` : ''}`}
+                                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '3px', background: outcomeChipColor(m.outcome) + '22', border: `1px solid ${outcomeChipColor(m.outcome)}`, color: outcomeChipColor(m.outcome), fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: '14px' }}>
+                                      {outcomeChipLetter(m.outcome)}
+                                    </span>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )
+                        // Module 3: role coverage over time. Each row of
+                        // 4 colored segments shows the role distribution
+                        // at that morale check; missing snapshots (rows
+                        // before the role_snapshot column landed) render
+                        // as a faint gray placeholder.
+                        const totalForRow = (rs: { gatherer: number; maintainer: number; safety: number; unassigned: number } | null) =>
+                          rs ? rs.gatherer + rs.maintainer + rs.safety + rs.unassigned : 0
+                        const roleChart = (
+                          <div>
+                            <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>Role Coverage Over Time</div>
+                            {moraleHist.length === 0 ? (
+                              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>No data yet.</div>
+                            ) : (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                {moraleHist.map((m, i) => {
+                                  const rs = m.role_snapshot
+                                  const total = totalForRow(rs)
+                                  if (!rs || total === 0) {
+                                    return (
+                                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#5a5550' }}>
+                                        <span style={{ width: '40px', textAlign: 'right', letterSpacing: '.04em' }}>W{m.week_number}</span>
+                                        <div style={{ flex: 1, height: '12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '2px' }} />
+                                        <span style={{ width: '60px', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '.04em' }}>no data</span>
+                                      </div>
+                                    )
+                                  }
+                                  return (
+                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#cce0f5' }}>
+                                      <span style={{ width: '40px', textAlign: 'right', letterSpacing: '.04em' }}>W{m.week_number}</span>
+                                      <div style={{ flex: 1, height: '12px', display: 'flex', borderRadius: '2px', overflow: 'hidden', border: '1px solid #2e2e2e' }}
+                                        title={`Gatherers ${rs.gatherer} · Maintainers ${rs.maintainer} · Safety ${rs.safety} · Unassigned ${rs.unassigned}`}>
+                                        <div style={{ width: `${(rs.gatherer / total) * 100}%`, background: '#7fc458' }} />
+                                        <div style={{ width: `${(rs.maintainer / total) * 100}%`, background: '#7ab3d4' }} />
+                                        <div style={{ width: `${(rs.safety / total) * 100}%`, background: '#EF9F27' }} />
+                                        <div style={{ width: `${(rs.unassigned / total) * 100}%`, background: '#5a5550' }} />
+                                      </div>
+                                      <span style={{ width: '60px', fontSize: '13px', letterSpacing: '.04em', color: '#5a5550' }}>{total} total</span>
+                                    </div>
+                                  )
+                                })}
+                                <div style={{ display: 'flex', gap: '10px', marginTop: '4px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#cce0f5', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                                  <span><span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#7fc458', marginRight: '4px', verticalAlign: 'middle' }} />Gatherer</span>
+                                  <span><span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#7ab3d4', marginRight: '4px', verticalAlign: 'middle' }} />Maintainer</span>
+                                  <span><span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#EF9F27', marginRight: '4px', verticalAlign: 'middle' }} />Safety</span>
+                                  <span><span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#5a5550', marginRight: '4px', verticalAlign: 'middle' }} />Unassigned</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                        // Module 2: recruit success rate. Aggregate by
+                        // PC roller and overall — count attempts, count
+                        // successes (Success / Wild Success / High Insight).
+                        const isSuccessOutcome = (o: string) => o === 'Success' || o === 'Wild Success' || o === 'High Insight'
+                        const totalAttempts = recruits.length
+                        const totalSucc = recruits.filter(r => isSuccessOutcome(r.outcome)).length
+                        const byRoller: Record<string, { attempts: number; succ: number }> = {}
+                        for (const r of recruits) {
+                          if (!byRoller[r.rollerName]) byRoller[r.rollerName] = { attempts: 0, succ: 0 }
+                          byRoller[r.rollerName].attempts++
+                          if (isSuccessOutcome(r.outcome)) byRoller[r.rollerName].succ++
+                        }
+                        const recruitStats = (
+                          <div>
+                            <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>Recruitment Success Rate</div>
+                            {totalAttempts === 0 ? (
+                              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>No recruit attempts logged yet.</div>
+                            ) : (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', color: '#cce0f5' }}>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '4px' }}>
+                                  <span style={{ color: '#f5f2ee', fontWeight: 700 }}>Overall</span>
+                                  <span style={{ color: '#7fc458', fontWeight: 700 }}>{totalSucc}/{totalAttempts}</span>
+                                  <span style={{ color: '#5a5550' }}>({Math.round((totalSucc / totalAttempts) * 100)}%)</span>
+                                </div>
+                                {Object.entries(byRoller).sort((a, b) => b[1].attempts - a[1].attempts).map(([name, s]) => (
+                                  <div key={name} style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
+                                    <span style={{ width: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+                                    <span style={{ color: s.succ > 0 ? '#7fc458' : '#f5a89a' }}>{s.succ}/{s.attempts}</span>
+                                    <span style={{ color: '#5a5550' }}>({s.attempts === 0 ? 0 : Math.round((s.succ / s.attempts) * 100)}%)</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '8px', background: '#0a1422', border: '1px solid #1a3a5c', borderRadius: '3px' }}>
+                            {fullTimeline}
+                            {roleChart}
+                            {recruitStats}
+                          </div>
+                        )
+                      })()}
                       {viewerIsMember && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', color: '#cce0f5' }}>
                           <span style={{ color: '#7ab3d4', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>You</span>
