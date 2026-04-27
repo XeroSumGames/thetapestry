@@ -70,7 +70,7 @@ User's concept: when an action produces both a "roll log" (raw dice breakdown) e
 - [x] **Stabilize** — *Verified 2026-04-26: already trims to a single row. `compactRollSummary` (page.tsx:240-246) collapses `<name> — Stabilize <target>` labels into "X stabilizes Y" / "X fails to stabilize Y" with ▸ expand for dice. No separate insert exists. No code change needed — playtest doc was overstating the work.*
 - [x] **Coordinate** — *Shipped 2026-04-26: was writing one extra `🎯 ally gets +N CMod` row per ally that received the bonus (1 + N rows total per Coordinate action). Collapsed into a single `🎯 X, Y, Z get +N CMod when attacking T` summary row. The CMod itself is granted via `initiative_order.coordinate_bonus` so removing the per-ally rows is purely cosmetic.*
 - [x] **Unjam** — *Verified 2026-04-26: already trims to a single row. `compactRollSummary` (page.tsx:254-260) collapses `Unjam — <weapon> (<skill>)` labels into "X unjams weapon" / "X fails to unjam weapon" with ▸ expand for dice. No separate insert exists. No code change needed.*
-- [ ] **Grapple** — opposed check plus the "X grappled Y" outcome. Consolidate.
+- [x] **Grapple** — *Shipped 2026-04-26: added a Grapple branch to `compactRollSummary` (page.tsx:261-275). The opposed check now collapses to a one-liner — "X grapples Y" / "X fails to grapple Y" / "X unsuccessfully attempts to grapple Y" depending on the custom grapple outcome ('Grappled!' / 'Failed — 1 RP' / 'No clear victor') stored in r.outcome. Dice breakdown still available via the ▸ expand. Trailing insight tag is stripped from the compact form.*
 - [ ] **Upkeep** — weapon condition roll plus the repair outcome. Consolidate.
 
 Pattern to follow (from Sprint commit):

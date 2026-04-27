@@ -258,6 +258,22 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
     return hit ? `${r.character_name} unjams ${wName}${outcomeTag}`
                : `${r.character_name} fails to unjam ${wName}${outcomeTag}`
   }
+  // Grapple — label "<name> — Grapple <target>[ (insight tag)]". The
+  // outcome here is a custom grapple-result string ('Grappled!',
+  // 'Failed — 1 RP', 'No clear victor') written by executeGrapple,
+  // not the standard hit/miss enum, so we pick the narrative off
+  // r.outcome directly. Trailing insight tag is dropped from the
+  // target name for the compact form — the dice breakdown still
+  // shows the bonus when the row is expanded.
+  const grappleMatch = suffix.match(/^Grapple\s+(.+?)(?:\s+\(.+\))?$/)
+  if (grappleMatch) {
+    const tgt = grappleMatch[1].trim()
+    if (r.outcome === 'Grappled!') return `${r.character_name} grapples ${tgt}`
+    if (r.outcome === 'Failed — 1 RP') return `${r.character_name} fails to grapple ${tgt}`
+    if (r.outcome === 'No clear victor') return `${r.character_name} unsuccessfully attempts to grapple ${tgt}`
+    // Fallback for any future grapple outcome we haven't handled.
+    return `${r.character_name} attempts to grapple ${tgt}`
+  }
   // Special narrative checks — Perception, Gut Instinct, First Impression
   const narrativeMatch = suffix.match(/^(Perception Check|Gut Instinct|First Impression)/)
   if (narrativeMatch) {
