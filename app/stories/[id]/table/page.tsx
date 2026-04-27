@@ -4744,11 +4744,11 @@ export default function TablePage() {
             {
               label: 'Sessions',
               hidden: sessionCount <= 0,
-              onClick: () => { window.location.href = `/stories/${id}/sessions` },
+              onClick: () => router.push(`/stories/${id}/sessions`),
             },
             {
               label: 'Stories',
-              onClick: () => { window.location.href = `/stories/${id}` },
+              onClick: () => router.push(`/stories/${id}`),
             },
           ],
           hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'),

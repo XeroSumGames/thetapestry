@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import Link from 'next/link'
 
@@ -37,6 +38,7 @@ interface PinOption {
 
 export default function CommunitiesIndexPage() {
   const supabase = createClient()
+  const router = useRouter()
   const [rows, setRows] = useState<CommunityRow[]>([])
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
@@ -183,7 +185,7 @@ export default function CommunitiesIndexPage() {
     if (data?.id) {
       // Jump straight into the new community so the user can start
       // adding members without an extra click back through the index.
-      window.location.href = `/communities/${data.id}`
+      router.push(`/communities/${data.id}`)
     }
   }
 

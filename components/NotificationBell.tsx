@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
 
 interface Notification {
@@ -31,6 +32,7 @@ function timeAgo(iso: string): string {
 
 export default function NotificationBell() {
   const supabase = createClient()
+  const router = useRouter()
   const [userId, setUserId] = useState<string | null>(null)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -127,7 +129,12 @@ export default function NotificationBell() {
 
   function handleNotifClick(n: Notification) {
     if (!n.read) markAsRead(n.id)
-    if (n.link) window.location.href = n.link
+    if (n.link) {
+      // Internal app paths get soft-nav (no full reload); external URLs
+      // fall through to a hard navigation as before.
+      if (n.link.startsWith('/')) router.push(n.link)
+      else window.location.href = n.link
+    }
     setOpen(false)
   }
 
