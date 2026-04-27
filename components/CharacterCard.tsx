@@ -345,7 +345,7 @@ export default function CharacterCard({
           </div>
           {showButtons && (
             <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-              {onPlaceOnMap && <button onClick={onPlaceOnMap} style={btn('#1a1a2e', '#7ab3d4')}>Map</button>}
+              {onPlaceOnMap && <button onClick={onPlaceOnMap} style={btn('#2a2010', '#EF9F27')}>Map</button>}
               <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={btn('#c0392b', '#f5a89a')}>Edit</button>
               <button onClick={() => setShowInventory(true)} style={btn('#2a2010', '#EF9F27')}>Inventory</button>
               {/* Apprentice placeholder — unwired for now. Will surface

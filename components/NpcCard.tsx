@@ -170,7 +170,7 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
             }} style={{ padding: '2px 6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Restore</button>
           )}
           {onPlaceOnMap && (
-            <button onClick={onPlaceOnMap} style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Map</button>
+            <button onClick={onPlaceOnMap} style={{ padding: '2px 6px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Map</button>
           )}
           {/* Inventory — GM-side editor and the loot-from-NPC entry
               point. Color flips amber when the NPC has anything in their

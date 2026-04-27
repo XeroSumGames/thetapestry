@@ -1073,7 +1073,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                         const isOnMap = npcIdsOnMap?.has(npc.id) ?? false
                         return (
                           <button onClick={e => { e.stopPropagation(); isOnMap && onRemoveFromMap ? onRemoveFromMap(npc) : onPlaceOnMap(npc) }}
-                            style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: isOnMap ? '#1a2e10' : '#1a1a2e', border: `1px solid ${isOnMap ? '#2d5a1b' : '#2e2e5a'}`, color: isOnMap ? '#7fc458' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: isOnMap ? '#1a2e10' : '#2a2010', border: `1px solid ${isOnMap ? '#2d5a1b' : '#5a4a1b'}`, color: isOnMap ? '#7fc458' : '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                             Map
                           </button>
                         )
