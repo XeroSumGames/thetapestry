@@ -1145,6 +1145,15 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
               const communitySections = Object.entries(communityGroups).map(([cname, cnpcs]) => {
                 const key = `__community__${cname}`
                 const isOpen = expandedFolders.has(key)
+                // Same SHOW/HIDE toggle as regular folders. Community
+                // groups are just NPC collections — the underlying
+                // place/reveal operations work the same way.
+                const cIds = cnpcs.map(n => n.id)
+                const cAllRevealed = cIds.length > 0 && cIds.every(id => revealedNpcIds.has(id))
+                const cLabel = cAllRevealed ? 'Hide' : 'Show'
+                const cUnplaced = npcIdsOnMap
+                  ? cnpcs.filter(n => !npcIdsOnMap.has(n.id))
+                  : cnpcs
                 return (
                   <div key={key} style={{ marginBottom: '2px' }}>
                     <div onClick={() => toggleFolder(key)}
@@ -1154,6 +1163,27 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                       <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                       <span style={{ fontSize: '13px', color: '#7fc458', marginRight: '2px' }}>🏘</span>
                       <span style={{ flex: 1, fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>Community — {cname}</span>
+                      {cnpcs.length > 0 && (
+                        <button onClick={async e => {
+                          e.stopPropagation()
+                          if (cAllRevealed) {
+                            if (onUnmapFolder) await onUnmapFolder(cnpcs)
+                            await hideNpcsByIds(cIds)
+                          } else {
+                            if (onPlaceFolderOnMap && cUnplaced.length > 0) {
+                              await onPlaceFolderOnMap(cUnplaced)
+                            }
+                            await revealNpcsByIds(cIds)
+                          }
+                          onTacticalRefresh?.()
+                        }}
+                          title={cAllRevealed
+                            ? `Hide all ${cnpcs.length} NPCs (vanish from every map; positions preserved)`
+                            : `Place + reveal all ${cnpcs.length} NPCs (visible to GM + players)`}
+                          style={{ padding: '1px 8px', background: cAllRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${cAllRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: cAllRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
+                          {cLabel}
+                        </button>
+                      )}
                       <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{cnpcs.length}</span>
                     </div>
                     {isOpen && cnpcs.map(renderNpcCard)}
@@ -1204,7 +1234,13 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                           GM included — but the row keeps grid_x / grid_y
                           / scale / rotation for the next SHOW) + set
                           revealed=false. Position is never lost. */}
-                      {pcEntries && pcEntries.length > 0 && folderNpcs.length > 0 && (() => {
+                      {folderNpcs.length > 0 && (() => {
+                        // Gate previously required pcEntries.length > 0 (a
+                        // PC must be in the session). Dropped per playtest:
+                        // GM testing solo / before players join still wants
+                        // to place + hide tokens on the map. The reveal-
+                        // to-players half just becomes a no-op when there
+                        // are no PCs to reveal to.
                         const folderIds = folderNpcs.map(n => n.id)
                         const allRevealed = folderIds.every(id => revealedNpcIds.has(id))
                         const label = allRevealed ? 'Hide' : 'Show'
