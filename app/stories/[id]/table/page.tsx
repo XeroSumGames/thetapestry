@@ -6448,16 +6448,29 @@ export default function TablePage() {
                     // GM can always reposition. Players can only move an object
                     // they're listed in `controlled_by_character_ids` for —
                     // typically the driver(s) of a vehicle. No action burned
-                    // (vehicles aren't combatants); the move mode just lets the
-                    // mover pick a valid cell within 10 ft same as a PC.
+                    // (vehicles aren't combatants); the move mode picks a
+                    // valid cell within the vehicle's speed-derived range.
                     const me = entries.find(e => e.userId === userId)
                     const controllers = (liveTok as any)?.controlled_by_character_ids
                     const canControl = isGM
                       || (!!me && Array.isArray(controllers) && controllers.includes(me.character.id))
                     if (!canControl) return undefined
+                    // Per Distemper CRB pp.137-139, vehicle Speed is a 1-5
+                    // stat (1 = human running, 2 = bicycle, 3 = horse, 4 =
+                    // car, 5 = sports car). CRB uses Speed only in Chase
+                    // mechanics (range bands), with no tactical-grid
+                    // mapping — so we anchor Speed 1 to the human Sprint
+                    // distance (30ft) and scale linearly. Minnie at Speed 2
+                    // gets 60ft/round; a sports car at Speed 5 gets 150ft.
+                    // Non-vehicle objects (any controllable object that
+                    // isn't in the campaign's vehicles list) default to
+                    // 30ft = a single Sprint distance.
+                    const matchingVehicle = vehicles.find(v => v.name === obj.name)
+                    const vehicleSpeed = matchingVehicle?.speed ?? 1
+                    const moveFeet = vehicleSpeed * 30
                     return () => {
                       setViewingObjects(prev => prev.filter(o => o.tokenId !== obj.tokenId))
-                      setMoveMode({ objectTokenId: obj.tokenId, feet: 10 })
+                      setMoveMode({ objectTokenId: obj.tokenId, feet: moveFeet })
                     }
                   })()}
                   onClose={() => setViewingObjects(prev => prev.filter(o => o.tokenId !== obj.tokenId))}
