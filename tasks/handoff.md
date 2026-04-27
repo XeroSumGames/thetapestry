@@ -1,167 +1,103 @@
-# Session Handoff — 2026-04-24 (continued)
+# Session Handoff — 2026-04-27
 
 ## TL;DR
-- This session shipped **the entire Campfire flagship** (Messages realtime fix, LFG with Share + Interest + Invite, Forums, War Stories with attachments, OG metadata, one-stop-shop tabbed hub) plus a stack of pin-edit polish.
-- **Tomorrow = Inventory.** Surprise: ~80% of inventory already exists and works. The real next step is filling gaps, not building from scratch. See § Inventory below.
-- **9 SQL migrations** were shipped this session. You confirmed running 2 early (`messages-rls-fix`, `messages-actions`) but the rest may not have been run yet — see checklist.
+- Big day post-Mongrels playtest. Drained the **last-minute fix list** (9 items, 3 parked pending repro), shipped **Communities Phase D GM dashboard**, polished a stack of UI surfaces. ~25 commits on the day.
+- **Two SQL migrations may need running** in Supabase — see § Run-Me SQL.
+- **Three parked items** waiting on table data: damage-math repro (PLAYTEST #1), failed-skill-check action burn (#2), and the inventory Give/Unequip verification (last-minute #8/#9).
+- Worktree is `C:\TheTapestry\.claude\worktrees\romantic-chatelet-3647bb` — `claude/romantic-chatelet-3647bb` branch tracks main.
 
----
+## Run-Me SQL (do first if not already)
+User confirmed they ran the earlier batch mid-session. New ones from this session:
+```
+notepad C:\TheTapestry\sql\community-morale-role-snapshot.sql
+notepad C:\TheTapestry\sql\patch-minnie-floorplan-cachebust.sql
+```
+1. `community-morale-role-snapshot.sql` — adds `role_snapshot jsonb` to `community_morale_checks`. Without it, Phase D dashboard's role-coverage chart shows empty rows.
+2. `patch-minnie-floorplan-cachebust.sql` — bumps Minnie's floorplan_url to `?v=20260427` so browsers stop serving the cached old image.
 
-## ⚠️ Pending Supabase migrations (run in order, all idempotent)
+Older SQL queued, likely already run (idempotent — re-running is safe):
+- `sql/community-members-add-member-type.sql`
+- `sql/scene-tokens-current-speed.sql`
+- `sql/scene-tokens-rotation.sql`
+- `sql/notify-inventory-received.sql`
+- `sql/patch-minnie-speed-3.sql`
 
-Each is a single paste-and-run in the Supabase SQL Editor. Skip any you've already run.
+## What just shipped (last 25 commits, newest first)
+- `3541fc3` grey-out idle message + campfire icons (opacity + grayscale; CSS `color` doesn't affect emoji)
+- `da049fb` 💬 messages icon opens `/messages` in a new tab
+- `9f6b049` NPC roster avatar borders use vivid disposition palette (matches map tokens)
+- `4ad9aff` NPC popout 571×257 → 600×800
+- `f91845a` **Communities Phase D GM dashboard** — full morale timeline + role coverage chart + recruit success rate, lazy-loaded per community, GM-only
+- `d3c7478` Forums Discourse-style redesign + Reddit/Lemmy preview tab
+- `904c372` Notification title + body 13px → 14px
+- `d6251bf` Start Combat NPC picker groups by folder w/ tri-state checkbox + Uncategorized last
+- `eeba9a3` **Committed the actual new Minnie floorplan PNG** (was missing from the worktree — user dropped it in main checkout, worktree had old file)
+- `6404368` Community create modal stops re-opening above the new community
+- `e1add58` Floorplan URL cache-bust (`?v=20260427`)
+- `3d9a3c3` **Grenade blast: Engaged 100% / Close 50% / nothing beyond** (dropped Medium tier)
+- `40db7ae` Per-row MAP toggle preserves position via soft-delete (no more top-left snap on hide/show)
+- `0dbc263` NPC popout perf: GM hint in URL, parallel queries
+- `c772fa6` SHOW/HIDE on every folder (community + regular), drop pcEntries gate
+- `0e09c72` MAP button colors orange/green platform-wide
+- `a39af4d` Lazy-load 6 gated panels/modals on the table page
+- `ff96650` Player-bar MAP button orange off-map / green on-map
+- `bf958b2` RLS fix: `is_thriver()` lowercase 'thriver' role compare
+- `34257c8` Route-level `loading.tsx` for the table page
+- `6b277dd` Rejoin Session instantly opens table in new tab
+- `bbd00da` **Spacebar pan: preventDefault on every keydown** (kills auto-repeat page-scroll fight)
+- `17edc4d` Sidebar `<a>` → `<Link>` for soft-nav
+- `19b3c31` Defer mouse-drag pan to long-term-fixes.md
+- `9e623ec` Last-minute fix #1: revert pan to React handlers (window listeners broke baseline)
 
-| Order | File | Purpose |
-|------:|------|---------|
-| 1 | `sql/messages-rls-fix.sql` | (confirmed run) DM visibility |
-| 2 | `sql/messages-actions.sql` | (confirmed run) archive/block columns |
-| 3 | `sql/pin-address.sql` | Add `address` column to `map_pins` (Edit Pin modal) |
-| 4 | `sql/messages-realtime-publication.sql` | Adds `messages` + `conversation_participants` to `supabase_realtime` publication. **This was the fix for "messages don't show without refresh."** |
-| 5 | `sql/lfg.sql` | LFG posts table + RLS |
-| 6 | `sql/lfg-interests.sql` | LFG `lfg_interests` table + notification trigger |
-| 7 | `sql/forums.sql` | `forum_threads` + `forum_replies` + triggers |
-| 8 | `sql/war-stories.sql` | `war_stories` table + RLS |
-| 9 | `sql/war-stories-attachments.sql` | `attachments` jsonb column + `war-stories` storage bucket + storage RLS |
+## What's parked / blocked
+**PLAYTEST_TODO** — `tasks/PLAYTEST_TODO.md`:
+- **#1 Damage math** — `2+2d6 (6) = 8 raw → should be 7 WP / 7 RP (1 mitigated)`. Need a screenshot of the actual log row (showing the buggy output) so we know which path is broken. Code review can't isolate it.
+- **#2 Failed skill checks still leave 2 actions** — code looks correct on paper. Need a repro: which character, which skill, what the `[consumeAction]` console log shows.
 
-After running, hard-refresh the live site (Ctrl-Shift-R) to clear stale schemas.
+**Last-minute fixes** — `tasks/long-term-fixes.md` for #1; rest in conversation:
+- **Last-minute #8 — Give qty picker** — code looks correct on inspection. User said they'll test in play. If broken, need to know:
+  1. Did the Give button appear on the stackable row?
+  2. When clicked, what happened (modal opens/nothing/error)?
+  3. If modal opened, was the qty `−`/`+`/`[All]` row visible?
+- **Last-minute #9 — Primary/Secondary Unequip buttons** — code looks correct. Need: modal close behavior on click, weapon visibility after, console errors if any.
+- **Mouse-drag pan in tactical** — broken across multiple architectural attempts. Arrow keys / WASD work as the workaround. See `tasks/long-term-fixes.md` for the trail of failed approaches and likely-cause hypotheses.
 
----
+## What's next on the roadmap (user's pick)
+Last asked status was a high-level breakdown:
+- **Communities Phase D continued** — Lv4 auto-CMods (Inspiration / Psychology Lv4 grant +1 morale CMod), Apprentice task delegation UI
+- **Modules MVP** — content engine, spec at `tasks/spec-modules.md`
+- **HammerTime `<t:UNIX>` renderer** — Discord timestamp tokens render literally outside Discord
+- **Inventory polish** — qty picker / Unequip verification (parked above), custom-item loot UI, full encumbrance UX
+- **GM role transfer + session scheduling**
+- **Allow characters in multiple campaigns**
 
-## What shipped this session
+User picked **GM dashboard (Phase D)** this session — shipped. Next pick is open.
 
-### Pin polish
-- **Edit Pin modal: Lat / Lng + Address** (`components/MapView.tsx`) — Thrivers can move pins or attach a street address inline. Empty/invalid lat/lng skip on save (won't null existing coords).
-- **Topo as default for new campaigns/adventures** (`app/campaigns/new/page.tsx` and `app/stories/new/page.tsx`).
-- **Pin popup: created_at line removed** — was clutter.
+## Test plan for next session
+Pre-existing: `tasks/preplaytestsmoke-2026-04-27.md` covers most of the table surfaces. Add to it:
+- **Phase D Dashboard** — open a community, click ▶ Dashboard, verify all three modules (timeline, role chart, recruit stats) render with data. New campaigns will have empty role chart until at least one morale check rolls.
+- **Vivid roster borders** — friendly NPCs ring vivid green, hostiles vivid red, neutrals medium gray. Should match the map tokens.
+- **💬 messages icon** — dim/grayscale by default, brightens to color the moment an unread message arrives, opens in a new tab when clicked.
+- **NPC popout size** — should fill ~600×800 window, not the cramped 571×257.
+- **Grenade blast** — drops to nothing past 30 ft. Engaged = 100%, Close = 50%.
+- **Per-row MAP toggle** — hide a token, re-show, verify it returns to its original position (not 0,0).
 
-### Messaging realtime fix
-- `sql/messages-realtime-publication.sql` — root cause for "had to refresh to see new messages." Both tables now in the `supabase_realtime` publication; sets `REPLICA IDENTITY FULL` on `conversation_participants` so the bell's UPDATE filter matches.
+## Working tree state
+- Branch: `claude/romantic-chatelet-3647bb` worktree at `C:\TheTapestry\.claude\worktrees\romantic-chatelet-3647bb`.
+- All commits pushed to `origin/main`.
+- `C:\TheTapestry` main checkout synced via `git -C C:/TheTapestry pull origin main` (per memory rule).
+- Vercel deploy pipeline auto-runs on push to main, ~60s lag.
 
-### Send Message deep-links (DM scaffolding)
-- Campaign members list (`app/stories/[id]/page.tsx`): 💬 Message next to every other player's join date.
-- Community PC rosters (`components/CampaignCommunity.tsx`): 💬 button next to role selector. NPC rows skip automatically.
+## Known gotchas (lessons from this session)
+- **Worktree vs main-checkout file drift** — user dropped the new Minnie floorplan PNG into `C:\TheTapestry\public\` (main checkout) but the worktree at `.claude\worktrees\romantic-chatelet-3647bb\public\` still had the old file. Vercel deploys from the WORKTREE's commits, so the new file never went out. Fix: `cp` from main into worktree, commit, push. Pattern to remember whenever the user uploads assets directly.
+- **Emoji glyphs ignore CSS `color`** — emoji always renders in its native palette. Use `opacity` + `filter: grayscale(1)` to grey it out instead. Bit me on the messages bell + campfire shortcut.
+- **`!e.repeat` gate on key handlers**: spacebar (and any held key) fires repeated keydown events while held. If the handler only `preventDefault`s on `!e.repeat`, the browser's default action (page-down scroll for spacebar) fires every repeat — exactly the "twitchy spacebar pan" the user reported. Always preventDefault on every event when the action involves a held key.
+- **Soft-delete pattern for tokens** — `archived_at timestamptz` instead of `.delete()` preserves grid_x/y/scale/rotation across hide → show cycles. Both folder SHOW/HIDE and per-row MAP toggle now use this.
+- **Range bands are CANONICAL** — locked into `tasks/rules-extract-combat.md`. Engaged 5 / Close 30 / Medium 100 / Long 300 / Distant 1000 ft. The user has corrected the assistant on these multiple times — don't second-guess. Don't suggest "maybe bump to 50ft" when canonical Close is 30ft.
+- **Realtime publication still bites** — any new table that needs `postgres_changes` events must be added to the `supabase_realtime` publication. Enabling RLS isn't enough.
+- **Pan architecture parked** — multiple attempts (rAF coalescing, GPU layer, layout containment, window-level mouse listeners) didn't stick. Ariow keys / WASD path works fine. The persistent failure mode is "click+drag empty cell does nothing" — likely the canvas isn't actually overflowing the container at typical zoom levels. See `tasks/long-term-fixes.md` for the next-investigation list.
 
-### Campfire — built top-to-bottom
-- **Looking for Group** (`/campfire/lfg`): bulletin board with two post kinds (GM seeking players / Player seeking game), filter chips, inline composer.
-  - **🔗 Share popover**: Copy Link / Discord (copy) / Reddit / X / Facebook with deep-link hash anchors.
-  - **Asymmetric "I'm Interested" flow** (replaces cold-DM): viewers express interest with a toggle; the post author sees a roster of interested users and only THEY see 💬 Message buttons. Notification fires for the author when someone presses Interested.
-  - **🎟 Invite picker**: roster Message + Invite (sends DM with /join/<code> link to one of the GM's campaigns). Reuses existing `/join/<code>` route.
-- **Forums** (`/campfire/forums` + `/campfire/forums/[id]`): categorized threads (Lore / Rules / Session Recaps / General) with replies, edit/delete, locked threads. Pinned threads float; rest sort by latest activity (trigger-maintained).
-- **War Stories** (`/campfire/war-stories`): session highlight feed. Title + body + optional campaign tag (bronze chip). **Attachments**: images render as 240-px thumbnails (click → full-size new tab); non-images render as `📎 download` pills. Bucket: `war-stories`, public read, author-write.
-- **Open Graph + Twitter Card metadata** on `/campfire`, `/campfire/lfg`, `/campfire/forums` so shared links render with title + description + Distemper logo on Discord/Reddit/X/FB.
-- **One-stop-shop hub** (`/campfire`): replaces the old card grid with tabs (Messages / LFG / Forums / War Stories / Homebrew-soon). Active tab tracked in `?tab=…`. Each tab embeds the route component directly — standalone routes still work for deep-links.
-
-### Misc
-- Side note: someone (you?) added auto-linkify to DM messages between sessions (commit `e541fa5`). I rebased on top of it.
-
----
-
-## Inventory state map (what already exists)
-
-**The tldr**: Inventory is FAR more built than the memory file suggested. It's a working feature with end-to-end Supabase wiring, an SRD catalog of 33 items + every weapon, custom items, encumbrance tracking, and basic loot transfer. The "next major feature" is closer to "polish + add the missing 20%" than "build from scratch."
-
-### What's wired and working
-
-| Feature | Where | Status |
-|---|---|---|
-| Inventory button on character sheet | `components/CharacterCard.tsx:349` | ✅ Triggers `<InventoryPanel>` modal |
-| InventoryPanel UI | `components/InventoryPanel.tsx` (276 lines) | ✅ Full modal with header, encumbrance bar, item list, catalog picker, custom-item form |
-| `EquipmentItem` interface + 33 SRD items | `lib/xse-schema.ts:256–298` | ✅ {name, rarity, enc, notes} |
-| `InventoryItem` with quantity + custom flag | `InventoryPanel.tsx:25–32` | ✅ {name, enc, rarity, notes, qty, custom} |
-| Combined catalog (gear + weapons) | `InventoryPanel.tsx:16–22` | ✅ Weapons normalized into EquipmentItem shape |
-| Catalog search/filter | `InventoryPanel.tsx:54, 116–119` | ✅ Filters name + notes |
-| Custom-item creation | `InventoryPanel.tsx:84–92` | ✅ Name, enc, notes; rarity hard-coded Common |
-| Encumbrance formula | `InventoryPanel.tsx:69`, `CharacterCard.tsx:727` | ⚠ Duplicated in two places (technical debt) |
-| Encumbrance display + OVERLOADED flag | `InventoryPanel.tsx:131–146` | ✅ Shows weapons / gear / limit breakdown |
-| Backpack +2 detection | `InventoryPanel.tsx:67–68` | ✅ Matches by name |
-| Loot transfer (1-at-a-time give) | `InventoryPanel.tsx:107–114` + `app/stories/[id]/table/page.tsx:6198–6209` | ✅ End-to-end Supabase write to receiver, decrement giver |
-| Realtime broadcast on transfer | `table/page.tsx:6208` | ✅ `inventory_transfer` channel event |
-| `campaign_npcs.inventory` jsonb column | `sql/npc-inventory.sql` | ✅ NPCs CAN hold inventory at the schema level |
-| Object loot (crate/barrel drops on destroy) | `table/page.tsx:3499+` | ✅ Auto-loot to attacker when object destroyed |
-| Loot log narrative | `table/page.tsx:296+` | ✅ "🎒 X looted Y from Z" rows |
-
----
-
-## Inventory gaps (the actual work)
-
-Things that DON'T exist or are thin. Roughly ordered by player-facing value.
-
-1. **NPC inventory UI** — `campaign_npcs.inventory` column exists but no GM-facing UI to populate it. Without this, "loot the dead NPC" can't work.
-2. **Loot-from-NPC flow** — currently you can loot destroyed objects but not slain hostiles. Distemper is a survival game; this is a glaring gap. Would mirror the object-destroy auto-loot pattern: when an NPC dies, surface their inventory to attacking PCs to distribute.
-3. **Quantity picker on Give** — currently transfers exactly 1 unit. "Give 5 ammo" requires clicking 5 times.
-4. **Notification on receive** — receiver gets a realtime broadcast but no notification or visible UI cue. Easy to miss.
-5. **Campaign-level custom item library** — custom items are per-character; can't reuse "Mongrels' Antitoxin" across the campaign's PCs. Would need a `campaign_items` table the GM authors and players pick from.
-6. **Item categories beyond rarity** — no "medical / food / tool / ammo" tags. Hampers filtering once a character has 20+ items.
-7. **Item charges / durability** — flashlights die, medkits run out. No tracking.
-8. **Two-way trade** — only one-way Give. No "I'll give X for Y" flow.
-9. **Item images** — text-only. Custom items could optionally carry an image (mirror war-stories attachments pattern).
-10. **Trade journal / give-receive log entries** — log only fires for object-loot, not for PC-to-PC give. Hard to audit "who has the medkit?"
-11. **GM-facing bulk drop** — "give all 4 PCs an extra clip" requires opening 4 sheets. Mentioned as low-priority in backlog.
-12. **Encumbrance formula deduplication** — copy-pasted between `InventoryPanel.tsx:69` and `CharacterCard.tsx:727`. Should live in `lib/xse-schema.ts` or `lib/inventory.ts`.
-13. **Death/Lasting Wound → Medical item interaction** — gameplay link from items to the wound system. Out of scope for v1 but worth noting.
-
----
-
-## Recommended plan for tomorrow
-
-### Step 0 — Verify (10 min, before any code)
-Test the existing inventory flow live, with the migrations from this session run. Open a character sheet → click Inventory → add items from catalog → create a custom item → give an item to another PC. Confirm encumbrance updates. **If anything is broken**, that's where to start. Otherwise:
-
-### Step 1 — Decide scope (chat with me; 5 min)
-Pick from the gaps list. My recommended wedge for v1:
-- **A. Loot-from-NPC** (biggest player-facing win, fits Distemper survival genre, NPC inventory schema already exists)
-- **B. Quantity picker on Give + Notification on receive** (small, high-polish)
-- **C. Encumbrance formula deduplication** (tech-debt; one shared `computeEncumbrance` helper)
-
-A combo of A + B is a good day's work and ships meaningful value. C is a 30-min cleanup we can fold in or skip.
-
-### Step 2 — Plan the chosen wedge in detail
-For Loot-from-NPC specifically:
-- **NPC inventory editor** — GM picks an NPC in `NpcRoster.tsx` → gets the same InventoryPanel scoped to that NPC (refactor InventoryPanel to take `holder: { kind: 'pc'|'npc', id, ... }` so it works for both).
-- **Loot trigger** — when an NPC's WP hits 0 and they're hostile, surface a "🎒 Loot" affordance to PCs in range. Modal lets them distribute the items (per-PC qty pickers). Empty inventory → no affordance.
-- **Realtime + log** — broadcast to all players, write a `loot` outcome row to `roll_log` so it shows up in the Logs tab.
-
-### Step 3 — Wedge B if there's time
-- **Quantity picker**: replace single "Give" button with "Give → [qty] → [target]" two-step.
-- **Notification on receive**: insert a `notifications` row (type `inventory_received`) when a transfer lands; deep-link to `/stories/<campaign>/table` (or wherever the receiver was).
-
-### Step 4 — Consider migrating off `character.data.inventory` jsonb
-Long-term, inventory items deserve their own table (`character_items` or `inventory_entries`) rather than living in the `data` blob. Benefits: searchable (e.g. "show me everyone holding a Medkit"), atomic per-item RLS, easier history. But this is a refactor that touches many files. **Don't do this on day one** unless the JSONB shape becomes a blocker.
-
----
-
-## Open design questions for tomorrow (decide before coding)
-
-1. **Hostile-only loot, or any defeated NPC?** Looting friendlies feels grim — limit to "hostile" disposition?
-2. **Auto-distribute on NPC kill, or open a modal for the killing PC to choose?** Object loot is auto. NPC loot may want a choice.
-3. **Range gate on loot?** Engaged or Close only? Or anyone in the scene?
-4. **GM custom items library scope** — campaign-only, or setting-shared (Chased / DZ / Mongrels)?
-5. **Trading with NPCs** (shopkeepers etc.) — out of scope for v1, but flag if you want it on the roadmap.
-
----
-
-## Other open items not on the inventory thread
-
-- **Sidebar dedupe** — "Looking for Group" + "Forums" appear both in the sidebar AND as Campfire tabs. Decide if sidebar links should redirect to `/campfire?tab=…`. ~5 min.
-- **Per-post OG previews** — shared LFG/Forum links currently preview with the *page-level* metadata, not the specific post. Needs server-rendering or wrapper layouts. ~1–2 hr.
-- **Dedicated 1200×630 OG image** — current og:image is the Distemper logo (likely letterboxed by scrapers). Purpose-built card would render better. Graphic asset.
-- **Homebrew tab** — backburnered per your call. Scope still TBD when you pick it up.
-- **King's Crossing Mall tactical scenes + handouts + reseed-campaign tool** — near-term items in `tasks/todo.md`.
-
----
-
-## File quick-reference for tomorrow
-
-| File | Why you'll touch it |
-|---|---|
-| `components/InventoryPanel.tsx` | Refactor to support NPC holder; quantity picker on Give |
-| `components/CharacterCard.tsx` | Encumbrance formula dedup target |
-| `components/NpcRoster.tsx` | Add Inventory button per NPC |
-| `app/stories/[id]/table/page.tsx:6198–6209` | Loot transfer parent — extend for qty + notifications + NPC-side |
-| `lib/xse-schema.ts` | EquipmentItem source; potential home for shared encumbrance helper |
-| `lib/weapons.ts` | Weapon catalog source for InventoryPanel |
-| `sql/npc-inventory.sql` | Already applied; reference for the column shape |
-
----
-
-When you start tomorrow, the fastest reorientation is to read this doc + run the pending migrations + smoke-test the existing inventory. Then ping me with which wedge (A / B / C / combination) and I'll plan it in detail.
+## Memory updates worth adding
+- "After user drops new assets into `C:\TheTapestry\public\`, copy them into the worktree's `public/` before committing — Vercel deploys from the worktree's git, not the main checkout." (new pattern)
+- "Range bands canonical: Engaged 5 / Close 30 / Medium 100 / Long 300 / Distant 1000 ft. Locked in `tasks/rules-extract-combat.md`. Stop second-guessing." (reinforce)
+- "Emoji glyphs ignore CSS `color` property. Use opacity + grayscale filter for dim/active states." (new lesson)
