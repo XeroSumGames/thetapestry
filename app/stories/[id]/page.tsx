@@ -240,6 +240,10 @@ export default function CampaignPage() {
     }
     setAmKicked(false)
     setRejoining(false)
+    // Instantly launch the game — match the Launch button behavior
+    // (new tab) so the player doesn't have to click Launch as a
+    // second step right after rejoining. Last minute fix #3.
+    window.open(`/stories/${id}/table`, '_blank', 'noopener,noreferrer')
   }
 
   async function handleClone() {
