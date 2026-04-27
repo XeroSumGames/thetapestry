@@ -103,7 +103,7 @@ export const RANGED_WEAPONS: Weapon[] = [
 // ── EXPLOSIVE WEAPONS (Table 18) ──
 
 export const EXPLOSIVE_WEAPONS: Weapon[] = [
-  { name: 'Grenade', category: 'explosive', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '2+2d6', rpPercent: 100, enc: 1, clip: 1, traits: ['Tracking', 'Blast Radius'] },
+  { name: 'Grenade', category: 'explosive', skill: 'Athletics', range: 'Medium', rarity: 'Uncommon', damage: '2+2d6', rpPercent: 100, enc: 1, clip: 1, traits: ['Tracking', 'Blast Radius'] },
   { name: 'Shiv-Grenade', category: 'explosive', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '0', rpPercent: 0, enc: 1, clip: 1, traits: ['Stun'] },
   { name: 'Flash-Bang Grenade', category: 'explosive', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '0', rpPercent: 0, enc: 1, clip: 1, traits: ['Stun'] },
   { name: 'Molotov', category: 'explosive', skill: 'Demolitions', range: 'Close', rarity: 'Rare', damage: '5+2d6', rpPercent: 100, enc: 2, clip: 1, traits: ['Blast Radius'] },
