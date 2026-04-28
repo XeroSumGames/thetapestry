@@ -5993,8 +5993,21 @@ export default function TablePage() {
                           {r.label.startsWith(r.character_name + ' — ') ? r.label.slice(r.character_name.length + 3) : r.label}
                           {r.target_name && <span style={{ color: '#EF9F27' }}> → {r.target_name}</span>}
                         </div>
+                        {/* Insight Die pre-spend callout. 3d6 rolls pack d2+d3
+                            into the die2 column, so any die2 > 6 means an
+                            Insight Die was burned for the keep-all 3d6 path.
+                            +3 CMod spends are not currently distinguishable
+                            from organic CMod stacks — needs an insight_used
+                            column on roll_log to surface them too. */}
+                        {r.die2 > 6 && (
+                          <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '3px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                            <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent — pre-rolled 3d6 (kept all three)</span>
+                          </div>
+                        )}
                         <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
-                          [{r.die1}+{r.die2}]
+                          {r.die2 > 6
+                            ? <>[{r.die1} + {r.die2} <span style={{ fontSize: '13px', color: '#7fc458' }}>(d2+d3)</span>]</>
+                            : <>[{r.die1}+{r.die2}]</>}
                           {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
                           {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
                           {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
