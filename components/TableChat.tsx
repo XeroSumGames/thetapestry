@@ -128,6 +128,20 @@ export function useChatPanel({ campaignId, userIdRef, setFeedTab, scrollFeedToBo
     }
   }, [campaignId, refetch, supabase])
 
+  // Re-pull chat history on hidden→visible. Chrome can pause the tab's
+  // websocket while backgrounded, so any chat_messages INSERT during
+  // that window is missed by the realtime sub. The realtime channel
+  // itself reconnects internally; this effect just patches the gap in
+  // history. Mirrors the same handler on the parent table page.
+  useEffect(() => {
+    if (!campaignId) return
+    function handleVisibility() {
+      if (!document.hidden) refetch()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [campaignId, refetch])
+
   return { messages, clear, refetch }
 }
 

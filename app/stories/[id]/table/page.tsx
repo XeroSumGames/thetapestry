@@ -1292,6 +1292,41 @@ export default function TablePage() {
     }
   }, [id])
 
+  // Tab-backgrounding refetch. Chrome throttles inactive tabs; websockets
+  // can pause without a clean close, so postgres_changes events stop
+  // arriving while the tab "looks" connected. On hidden→visible we
+  // re-pull the state the mount effect originally hydrated, so the
+  // moment the user returns the feed is in sync with the DB even if a
+  // few realtime events were dropped during the background window.
+  // Channel rebuild is intentionally NOT done here — supabase-js
+  // reconnects internally on socket health checks. If staleness
+  // persists for users after this, expand to a teardown+resubscribe.
+  useEffect(() => {
+    if (!id) return
+    function handleVisibility() {
+      if (document.hidden) return
+      void (async () => {
+        loadEntries(id)
+        loadRolls(id)
+        loadInitiative(id)
+        loadPlayerNpcCommunityMap(id)
+        const { data: cnpcs } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+        if (cnpcs) {
+          setCampaignNpcs(cnpcs)
+          setRosterNpcs(cnpcs.filter((n: any) => {
+            if (n.status !== 'active') return false
+            const wp = n.wp_current ?? n.wp_max ?? 10
+            return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+          }))
+          const charId = isGM ? null : myCharIdRef.current
+          if (isGM || charId) loadRevealedNpcs(charId, cnpcs)
+        }
+      })()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [id, isGM])
+
   // Roll requests broadcast from the /character-sheet popout window. The
   // popout doesn't own the roll modal / initiative gates / CMod stack —
   // it just posts {label, amod, smod, weapon} on a same-origin same-browser
