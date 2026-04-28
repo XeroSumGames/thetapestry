@@ -40,3 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .claude/worktrees/
+
+# Reference rulebooks — kept local only because the PDFs are 90MB+
+# and bloat the repo. Authoritative rules live here for pdftotext
+# lookups (per CLAUDE.md). Restore via `git cat-file -p <blob-hash>`
+# from a stash if missing — they were last preserved in stash@{0}'s
+# untracked-files commit (ecd7cb2 on 2026-04-27).
+docs/Rules/
