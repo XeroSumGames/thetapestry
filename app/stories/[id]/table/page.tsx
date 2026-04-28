@@ -9124,7 +9124,9 @@ export default function TablePage() {
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Perception Check</div>
                 <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Uses Perception modifier (RSN + ACU)</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {entries.map(e => (
+                  {/* Players only see their own PC(s); GMs can roll Perception
+                      for any PC (mirror First Impression pattern below). */}
+                  {entries.filter(e => isGM || e.userId === userId).map(e => (
                     <button key={e.character.id} onClick={() => triggerPerceptionCheck(e.character.name)}
                       style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>{e.character.name} (PER {(e.character.data?.rapid?.RSN ?? 0) + (e.character.data?.rapid?.ACU ?? 0)})</button>
                   ))}
@@ -9136,7 +9138,8 @@ export default function TablePage() {
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Gut Instinct</div>
                 <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Uses Perception + best of Psychology, Streetwise, Tactics</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {entries.map(e => (
+                  {/* Same player-self / GM-all filter as Perception + First Impression. */}
+                  {entries.filter(e => isGM || e.userId === userId).map(e => (
                     <button key={e.character.id} onClick={() => triggerGutInstinct(e.character.name)}
                       style={hdrBtn('#242424', '#d4cfc9', '#3a3a3a')}>{e.character.name}</button>
                   ))}
