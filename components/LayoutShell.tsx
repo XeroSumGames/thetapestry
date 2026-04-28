@@ -8,7 +8,7 @@ import Sidebar from './Sidebar'
 const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/stories', '/campaigns', '/characters', '/creating-a-character', '/characters/new', '/characters/quick', '/characters/random']
 
 // Pages that always hide the sidebar
-const NO_SIDEBAR_PAGES = ['/login', '/signup', '/firsttimers', '/welcome']
+const NO_SIDEBAR_PAGES = ['/login', '/signup', '/firsttimers']
 // Pages that use their own full-width layout (popouts + the table view).
 // CONVENTION: any new popout route should end in `-sheet` or `-popout`
 // (or live under `/popout/...`) so it's auto-included here without an edit.
