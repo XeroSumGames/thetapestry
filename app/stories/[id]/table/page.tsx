@@ -1354,6 +1354,26 @@ export default function TablePage() {
     }
   }, [id])
 
+  // Roll requests broadcast from the /character-sheet popout window. The
+  // popout doesn't own the roll modal / initiative gates / CMod stack —
+  // it just posts {label, amod, smod, weapon} on a same-origin same-browser
+  // BroadcastChannel and the table tab calls handleRollRequest as if the
+  // user had clicked the in-table card. We use a ref to avoid tearing down
+  // the channel on every parent re-render.
+  const rollRequestRef = useRef<typeof handleRollRequest | null>(null)
+  rollRequestRef.current = handleRollRequest
+  useEffect(() => {
+    if (!id) return
+    if (typeof window === 'undefined' || typeof BroadcastChannel === 'undefined') return
+    const ch = new BroadcastChannel(`roll-requests-${id}`)
+    ch.onmessage = (e: MessageEvent) => {
+      const { label, amod, smod, weapon } = (e.data ?? {}) as { label?: string; amod?: number; smod?: number; weapon?: any }
+      if (!label || typeof amod !== 'number' || typeof smod !== 'number') return
+      rollRequestRef.current?.(label, amod, smod, weapon)
+    }
+    return () => { ch.close() }
+  }, [id])
+
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
       if (e.key === 'Escape') {

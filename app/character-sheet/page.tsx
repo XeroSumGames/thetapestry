@@ -96,6 +96,19 @@ export default function CharacterSheetPage() {
         onStatUpdate={stateId ? async (_sid: string, field: string, value: number) => {
           await supabase.from('character_states').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', stateId)
         } : undefined}
+        onRoll={(campaignId && (isMySheet || isGM)) ? (label, amod, smod, weapon) => {
+          // Skills / attacks clicked in the popout broadcast to the parent
+          // table tab over BroadcastChannel — the table tab owns the roll
+          // modal + initiative gates + CMod stack, so reuse it. Same-browser
+          // same-origin only; if the user's table tab isn't open, the click
+          // is a no-op (UX gap to revisit if it bites).
+          const prefixed = (!isMySheet && isGM && character?.name && !label.startsWith(character.name))
+            ? `${character.name} — ${label}`
+            : label
+          const ch = new BroadcastChannel(`roll-requests-${campaignId}`)
+          ch.postMessage({ label: prefixed, amod, smod, weapon })
+          ch.close()
+        } : undefined}
       />
 
       {/* Session Notes */}
