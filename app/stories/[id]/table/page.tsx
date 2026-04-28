@@ -71,6 +71,12 @@ interface RollEntry {
   total: number
   outcome: string
   insight_awarded: boolean
+  // null on rows from before the 2026-04-28 schema bump; otherwise
+  // '3d6' (pre-rolled keep-all) or '+3cmod' (flat CMod). Drives the
+  // green "🎲 Insight Die spent" badge in the extended log card.
+  // Older 3d6 rows still get caught by the die2 > 6 fallback in the
+  // card; +3cmod rows from before this column simply can't be flagged.
+  insight_used: '3d6' | '+3cmod' | null
   created_at: string
   damage_json: DamageResult | null
 }
@@ -3515,7 +3521,7 @@ export default function TablePage() {
     setSocialCmod(null)
   }
 
-  async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false, target: string | null = null, damageData?: DamageResult) {
+  async function saveRollToLog(die1: number, die2: number, amod: number, smod: number, cmodVal: number, label: string, characterName: string, isReroll = false, target: string | null = null, damageData?: DamageResult, insightUsed: '3d6' | '+3cmod' | null = null) {
     const total = die1 + die2 + amod + smod + cmodVal
     const outcome = getOutcome(total, die1, die2)
     // Non-antagonist NPCs never get Insight Dice
@@ -3530,6 +3536,11 @@ export default function TablePage() {
       die1, die2, amod, smod, cmod: cmodVal, total, outcome, insight_awarded: insightAwarded,
       target_name: target || null,
       damage_json: damageData || null,
+      // Recorded so the extended log can call out +3 CMod spends
+      // (which are otherwise indistinguishable from organic CMod
+      // stacks) and 3d6 spends where d2+d3 ≤ 6 (the legacy heuristic
+      // misses ~17% of those).
+      insight_used: insightUsed,
     })
     logEvent('roll', { campaign_id: id, label, total, outcome, target, character: characterName })
 
@@ -4511,8 +4522,15 @@ export default function TablePage() {
     // standalone saveRollToLog write — otherwise the feed would show both
     // the raw Athletics check AND the sprint banner.
     const isTrimmedRoll = pendingRoll.label.includes('Sprint')
+    // Capture the Insight Die spend kind (if any) so the extended log
+    // card can render the right "🎲 Insight Die spent" banner reliably.
+    // preRollSpent is true only when the spend actually fired; preRollInsight
+    // is the user's pre-roll selection. Both must align.
+    const insightUsedValue: '3d6' | '+3cmod' | null = preRollSpent
+      ? (preRollInsight === '3d6' ? '3d6' : preRollInsight === '+3cmod' ? '+3cmod' : null)
+      : null
     if (!isTrimmedRoll) {
-      await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, damageResult)
+      await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, damageResult, insightUsedValue)
     }
     // Now that the attack row is in, drain any auto-loot log rows queued
     // during damage processing. Awaiting this serializes after the attack
@@ -6173,15 +6191,20 @@ export default function TablePage() {
                           {r.label.startsWith(r.character_name + ' — ') ? r.label.slice(r.character_name.length + 3) : r.label}
                           {r.target_name && <span style={{ color: '#EF9F27' }}> → {r.target_name}</span>}
                         </div>
-                        {/* Insight Die pre-spend callout. 3d6 rolls pack d2+d3
-                            into the die2 column, so any die2 > 6 means an
-                            Insight Die was burned for the keep-all 3d6 path.
-                            +3 CMod spends are not currently distinguishable
-                            from organic CMod stacks — needs an insight_used
-                            column on roll_log to surface them too. */}
-                        {r.die2 > 6 && (
+                        {/* Insight Die pre-spend callout — explicit when
+                            insight_used is recorded (post-2026-04-28
+                            schema bump), falls back to the die2 > 6
+                            heuristic for pre-bump rows so old 3d6 spends
+                            still get surfaced. +3 CMod spends from before
+                            the bump can't be detected and stay silent. */}
+                        {(r.insight_used === '3d6' || (!r.insight_used && r.die2 > 6)) && (
                           <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '3px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
                             <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent — pre-rolled 3d6 (kept all three)</span>
+                          </div>
+                        )}
+                        {r.insight_used === '+3cmod' && (
+                          <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '3px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                            <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent — +3 CMod</span>
                           </div>
                         )}
                         <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
