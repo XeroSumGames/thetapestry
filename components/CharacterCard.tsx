@@ -913,15 +913,23 @@ export default function CharacterCard({
                     autoFocus
                     style={{ display: 'block', width: '80px', margin: '6px auto 0', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '18px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', outline: 'none' }} />
                 </div>
-                <button onClick={() => {
-                  const cmodVal = parseInt(stressCheckCmod) || 0
-                  const amod = (rapid.RSN ?? 0) + (rapid.ACU ?? 0)
-                  const d1 = Math.floor(Math.random() * 6) + 1
-                  const d2 = Math.floor(Math.random() * 6) + 1
-                  const total = d1 + d2 + amod + cmodVal
-                  setStressCheckResult({ die1: d1, die2: d2, amod, cmod: cmodVal, total, success: total >= 7 })
-                }}
-                  style={{ width: '100%', padding: '10px', background: '#EF9F27', border: 'none', borderRadius: '3px', color: '#1a1a1a', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Roll Stress Check</button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => {
+                    setStressCheckPending(false)
+                    setStressCheckResult(null)
+                    setStressCheckCmod('0')
+                  }}
+                    style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={() => {
+                    const cmodVal = parseInt(stressCheckCmod) || 0
+                    const amod = (rapid.RSN ?? 0) + (rapid.ACU ?? 0)
+                    const d1 = Math.floor(Math.random() * 6) + 1
+                    const d2 = Math.floor(Math.random() * 6) + 1
+                    const total = d1 + d2 + amod + cmodVal
+                    setStressCheckResult({ die1: d1, die2: d2, amod, cmod: cmodVal, total, success: total >= 7 })
+                  }}
+                    style={{ flex: 2, padding: '10px', background: '#EF9F27', border: 'none', borderRadius: '3px', color: '#1a1a1a', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Roll Stress Check</button>
+                </div>
               </>
             ) : (
               <>
