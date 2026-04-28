@@ -162,7 +162,7 @@ export default function Sidebar() {
           "THE TAPESTRY" heading right above it reads as redundant. The
           user-header above already provides its own borderBottom, so no
           explicit {divider} is needed here. */}
-      <Link href="/welcome"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Welcome to the Tapestry</Link>
+      <Link href="/welcome"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>A Guide to the Tapestry</Link>
       <Link href="/map"         style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The World</Link>
       <Link href="/characters"  style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Survivors</Link>
       <Link href="/stories"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Stories</Link>
