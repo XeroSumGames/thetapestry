@@ -807,6 +807,13 @@ export default function TablePage() {
         wp_current: s.wp_current, wp_max: s.wp_max,
         rp_current: s.rp_current, rp_max: s.rp_max,
         stress: s.stress, insight_dice: s.insight_dice, morality: s.morality, cdp: s.cdp ?? 0,
+        // death_countdown / incap_rounds — without these the
+        // mortally-wounded banner reads "Stabilize within ? rounds"
+        // because every loadEntries call (which fires on turn_changed,
+        // pc_damaged broadcast, etc.) wipes the countdown back to
+        // undefined.
+        death_countdown: s.death_countdown ?? null,
+        incap_rounds: s.incap_rounds ?? null,
       },
     }))
 
