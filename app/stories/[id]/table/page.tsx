@@ -4953,7 +4953,7 @@ export default function TablePage() {
           // tactical map fill the full table-page width. State syncs
           // between popout and main window via BroadcastChannel —
           // see lib/scene-controls-bus.ts.
-          <button onClick={() => openPopout(`/scene-controls-popout?c=${id}`, `scene-controls-${id}`, { w: 200, h: 760 })}
+          <button onClick={() => openPopout(`/scene-controls-popout?c=${id}`, `scene-controls-${id}`, { w: 370, h: 740 })}
             className="hdr-btn"
             style={hdrBtn('#2a1a3e', '#c4a7f0', '#5a2e5a')}>
             Map Setup
