@@ -93,6 +93,7 @@ export default function CharacterSheetPage() {
         canEdit={isMySheet || isGM}
         showButtons={true}
         isMySheet={isMySheet}
+        isGM={isGM}
         onStatUpdate={stateId ? async (_sid: string, field: string, value: number) => {
           await supabase.from('character_states').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', stateId)
         } : undefined}

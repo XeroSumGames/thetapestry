@@ -260,6 +260,14 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
     const adverb = hit ? 'Successfully' : 'Unsuccessfully'
     return `${r.character_name} ${adverb} used Unarmed Combat on ${r.target_name}${outcomeTag}`
   }
+  // Stress Check — label "<name> — Stress Check" written by CharacterCard
+  // when an at-max stress prompt resolves. Hit (Success) reads "Calms
+  // Themselves"; miss (Failure) reads "fails to" and the Breaking Point
+  // flow takes over.
+  if (/^Stress Check\b/.test(suffix)) {
+    const adverb = hit ? 'Successfully' : 'Unsuccessfully'
+    return `${r.character_name} ${adverb} Calms Themselves${outcomeTag}`
+  }
   // Stabilize — label "<name> — Stabilize <target>". Adverb pattern
   // matches the Attack / Unarmed branches so hit/miss is legible from
   // the narrative alone — bordered card's left color cue is too subtle
@@ -3307,7 +3315,7 @@ export default function TablePage() {
       if (targetEntry) {
         await supabase.from('roll_log').insert({
           campaign_id: id, user_id: userId, character_name: 'System',
-          label: `😰 ${targetEntry.character.name} gains +1 Stress from being mortally wounded.`,
+          label: `😰 ${targetEntry.character.name} gains a Stress from being Mortally Wounded`,
           die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
         })
       }
@@ -3857,7 +3865,7 @@ export default function TablePage() {
           if (newWP === 0 && targetEntry.liveState.wp_current > 0) {
             update.death_countdown = Math.max(1, 4 + (targetEntry.character.data?.rapid?.PHY ?? 0))
             update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
-            stressReason = 'mortally wounded'
+            stressReason = 'Mortally Wounded'
             await supabase.from('roll_log').insert({
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
@@ -3891,12 +3899,12 @@ export default function TablePage() {
           if (newRP === 0 && targetEntry.liveState.rp_current > 0 && newWP > 0) {
             update.incap_rounds = Math.max(1, 4 - (targetEntry.character.data?.rapid?.PHY ?? 0))
             update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
-            stressReason = 'incapacitated'
+            stressReason = 'Incapacitated'
           }
           if (stressReason) {
             await supabase.from('roll_log').insert({
               campaign_id: id, user_id: userId, character_name: 'System',
-              label: `😰 ${targetEntry.character.name} gains +1 Stress from being ${stressReason}.`,
+              label: `😰 ${targetEntry.character.name} gains a Stress from being ${stressReason}`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
             })
           }
@@ -4193,12 +4201,12 @@ export default function TablePage() {
               if (nWP === 0 && curWP > 0) {
                 update.death_countdown = Math.max(1, 4 + (splashPC.character.data?.rapid?.PHY ?? 0))
                 update.stress = Math.min(5, curStress + 1)
-                splashStressReason = 'mortally wounded'
+                splashStressReason = 'Mortally Wounded'
               }
               if (nRP === 0 && curRP > 0 && nWP > 0) {
                 update.incap_rounds = Math.max(1, 4 - (splashPC.character.data?.rapid?.PHY ?? 0))
                 update.stress = Math.min(5, curStress + 1)
-                splashStressReason = 'incapacitated'
+                splashStressReason = 'Incapacitated'
               }
               await supabase.from('character_states').update(update).eq('id', splashPC.stateId)
               setEntries(prev => prev.map(e => e.stateId === splashPC.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
@@ -4206,7 +4214,7 @@ export default function TablePage() {
               if (splashStressReason) {
                 await supabase.from('roll_log').insert({
                   campaign_id: id, user_id: userId, character_name: 'System',
-                  label: `😰 ${splashName} gains +1 Stress from being ${splashStressReason}.`,
+                  label: `😰 ${splashName} gains a Stress from being ${splashStressReason}`,
                   die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
                 })
               }
@@ -4292,7 +4300,7 @@ export default function TablePage() {
               if (newWP === 0 && myEntry.liveState.wp_current > 0) {
                 await supabase.from('roll_log').insert({
                   campaign_id: id, user_id: userId, character_name: 'System',
-                  label: `😰 ${myEntry.character.name} gains +1 Stress from being mortally wounded.`,
+                  label: `😰 ${myEntry.character.name} gains a Stress from being Mortally Wounded`,
                   die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
                 })
               }
@@ -4338,7 +4346,7 @@ export default function TablePage() {
               if (newWP === 0 && myEntry.liveState.wp_current > 0) {
                 await supabase.from('roll_log').insert({
                   campaign_id: id, user_id: userId, character_name: 'System',
-                  label: `😰 ${myEntry.character.name} gains +1 Stress from being mortally wounded.`,
+                  label: `😰 ${myEntry.character.name} gains a Stress from being Mortally Wounded`,
                   die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
                 })
               }
@@ -4645,12 +4653,12 @@ export default function TablePage() {
         if (tNewWP === 0 && targetEntry.liveState.wp_current > 0) {
           update.death_countdown = Math.max(1, 4 + (targetEntry.character.data?.rapid?.PHY ?? 0))
           update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
-          rerollStressReason = 'mortally wounded'
+          rerollStressReason = 'Mortally Wounded'
         }
         if (tNewRP === 0 && targetEntry.liveState.rp_current > 0 && tNewWP > 0) {
           update.incap_rounds = Math.max(1, 4 - (targetEntry.character.data?.rapid?.PHY ?? 0))
           update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
-          rerollStressReason = 'incapacitated'
+          rerollStressReason = 'Incapacitated'
         }
         await supabase.from('character_states').update(update).eq('id', targetEntry.stateId)
         setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
@@ -4658,7 +4666,7 @@ export default function TablePage() {
         if (rerollStressReason) {
           await supabase.from('roll_log').insert({
             campaign_id: id, user_id: userId, character_name: 'System',
-            label: `😰 ${targetEntry.character.name} gains +1 Stress from being ${rerollStressReason}.`,
+            label: `😰 ${targetEntry.character.name} gains a Stress from being ${rerollStressReason}`,
             die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
           })
         }
@@ -6931,6 +6939,7 @@ export default function TablePage() {
                 canEdit={isGM || syncedSelectedEntry.userId === userId}
                 showButtons={true}
                 isMySheet={syncedSelectedEntry.userId === userId}
+                isGM={isGM}
                 onStatUpdate={handleStatUpdate}
                 onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod, weapon) => { handleRollRequest(label, amod, smod, weapon) } : undefined}
                 onClose={() => { setSelectedEntry(null); setSheetPos(null) }}
@@ -7503,6 +7512,7 @@ export default function TablePage() {
               canEdit={isGM || syncedSelectedEntry.userId === userId}
               showButtons={true}
               isMySheet={syncedSelectedEntry.userId === userId}
+              isGM={isGM}
               onStatUpdate={handleStatUpdate}
               onRoll={sessionStatus === 'active' && (syncedSelectedEntry.userId === userId || isGM) ? (label, amod, smod, weapon) => { setSelectedEntry(null); handleRollRequest(label, amod, smod, weapon) } : undefined}
               onWeaponChange={(slot, newWeapon) => {

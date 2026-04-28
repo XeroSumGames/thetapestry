@@ -84,6 +84,11 @@ interface Props {
   canEdit?: boolean
   showButtons?: boolean
   isMySheet?: boolean
+  // Drives GM-only affordances on this card — currently the Cancel
+  // button on the at-max Stress Check modal (players have to roll;
+  // GMs can dismiss the modal during testing or to course-correct
+  // mid-session).
+  isGM?: boolean
   onStatUpdate?: (stateId: string, field: string, value: number) => void
   onDelete?: (id: string) => void
   onDuplicate?: (c: any) => void
@@ -105,6 +110,7 @@ export default function CharacterCard({
   canEdit = true,
   showButtons = true,
   isMySheet = true,
+  isGM = false,
   onStatUpdate,
   onDelete,
   onDuplicate,
@@ -914,12 +920,14 @@ export default function CharacterCard({
                     style={{ display: 'block', width: '80px', margin: '6px auto 0', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '18px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', outline: 'none' }} />
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={() => {
-                    setStressCheckPending(false)
-                    setStressCheckResult(null)
-                    setStressCheckCmod('0')
-                  }}
-                    style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                  {isGM && (
+                    <button onClick={() => {
+                      setStressCheckPending(false)
+                      setStressCheckResult(null)
+                      setStressCheckCmod('0')
+                    }}
+                      style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                  )}
                   <button onClick={() => {
                     const cmodVal = parseInt(stressCheckCmod) || 0
                     const amod = (rapid.RSN ?? 0) + (rapid.ACU ?? 0)
@@ -928,7 +936,7 @@ export default function CharacterCard({
                     const total = d1 + d2 + amod + cmodVal
                     setStressCheckResult({ die1: d1, die2: d2, amod, cmod: cmodVal, total, success: total >= 7 })
                   }}
-                    style={{ flex: 2, padding: '10px', background: '#EF9F27', border: 'none', borderRadius: '3px', color: '#1a1a1a', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Roll Stress Check</button>
+                    style={{ flex: isGM ? 2 : 1, padding: '10px', background: '#EF9F27', border: 'none', borderRadius: '3px', color: '#1a1a1a', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Roll Stress Check</button>
                 </div>
               </>
             ) : (
@@ -942,10 +950,13 @@ export default function CharacterCard({
                 <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', color: stressCheckResult.success ? '#7fc458' : '#c0392b', marginBottom: '12px' }}>
                   {stressCheckResult.success ? 'Success — Held It Together' : 'Failure — Breaking Point'}
                 </div>
-                <button onClick={() => {
+                <button onClick={async () => {
                   if (!localState) return
+                  // Capture result BEFORE state resets so the log row reads
+                  // the correct dice + total even after we clear the state.
+                  const r = stressCheckResult
                   setStressCheckPending(false)
-                  if (stressCheckResult.success) {
+                  if (r.success) {
                     updateStat(localState.id, 'stress', 4)
                   } else {
                     updateStat(localState.id, 'stress', 5)
@@ -953,6 +964,29 @@ export default function CharacterCard({
                     setBreakingPointCmod('0')
                   }
                   setStressCheckResult(null)
+                  // Log the stress-check outcome into the campaign feed so
+                  // the GM (and other players) can see who held it together
+                  // and who broke. compactRollSummary picks the label up via
+                  // the "Calms Themselves" branch added in this commit.
+                  if (campaignIdProp) {
+                    try {
+                      const { data: { user } } = await supabase.auth.getUser()
+                      if (user) {
+                        await supabase.from('roll_log').insert({
+                          campaign_id: campaignIdProp,
+                          user_id: user.id,
+                          character_name: c.name,
+                          label: `${c.name} — Stress Check`,
+                          die1: r.die1, die2: r.die2,
+                          amod: r.amod, smod: 0, cmod: r.cmod,
+                          total: r.total,
+                          outcome: r.success ? 'Success' : 'Failure',
+                        })
+                      }
+                    } catch (e) {
+                      console.warn('[stress-check] roll_log insert failed:', e)
+                    }
+                  }
                 }}
                   style={{ width: '100%', padding: '10px', background: stressCheckResult.success ? '#1a2e10' : '#c0392b', border: `1px solid ${stressCheckResult.success ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {stressCheckResult.success ? 'Continue' : 'Roll on Breaking Point Table'}
