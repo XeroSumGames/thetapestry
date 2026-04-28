@@ -19,16 +19,26 @@ import {
   publishModuleVersion,
   bumpSemver,
   type ModuleForCampaign,
+  type ModuleSnapshot,
   type SnapshotCounts,
 } from '../lib/modules'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 export interface ModulePublishModalProps {
   supabase: SupabaseClient
-  campaignId: string
+  // null when publishing from an uploaded snapshot file (no source
+  // campaign in the DB) — see /modules/import. The source_campaign_id
+  // column on `modules` is nullable per spec §5.
+  campaignId: string | null
   campaignName: string
   campaignDescription?: string | null
   existingModule: ModuleForCampaign | null
+  // When set, the modal goes into snapshot-source mode: skip the live
+  // buildCampaignSnapshot preview, hide the include-toggles (snapshot
+  // is pre-filtered), and publish using this snapshot directly. Pair
+  // with `initialCounts` so the preview row reads correctly.
+  initialSnapshot?: ModuleSnapshot
+  initialCounts?: SnapshotCounts
   onClose: () => void
   onPublished: (result: { moduleId: string; versionId: string; version: string }) => void
 }
@@ -39,10 +49,17 @@ export default function ModulePublishModal({
   campaignName,
   campaignDescription,
   existingModule,
+  initialSnapshot,
+  initialCounts,
   onClose,
   onPublished,
 }: ModulePublishModalProps) {
   const isRepublish = !!existingModule
+  // Snapshot-source mode flag — the modal switches behavior in three
+  // places: preview useEffect (skipped), include-toggles UI (hidden),
+  // and the publish handler (uses initialSnapshot directly instead of
+  // calling buildCampaignSnapshot against the live campaign).
+  const isSnapshotSource = !!initialSnapshot
 
   const [name, setName] = useState(existingModule?.name ?? campaignName)
   const [tagline, setTagline] = useState(existingModule?.tagline ?? '')
@@ -58,14 +75,18 @@ export default function ModulePublishModal({
   const [includeScenes, setIncludeScenes] = useState(true)
   const [includeHandouts, setIncludeHandouts] = useState(true)
 
-  const [counts, setCounts] = useState<SnapshotCounts | null>(null)
+  const [counts, setCounts] = useState<SnapshotCounts | null>(initialCounts ?? null)
   const [previewing, setPreviewing] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string>('')
 
   // Preview counts refresh whenever the include toggles change so the
   // author sees a live count of what's about to travel in the module.
+  // In snapshot-source mode the snapshot is already filtered before it
+  // reaches the modal, so we skip the live preview entirely and just
+  // display the counts the caller passed in.
   useEffect(() => {
+    if (isSnapshotSource || !campaignId) return
     let cancelled = false
     ;(async () => {
       setPreviewing(true)
@@ -84,7 +105,7 @@ export default function ModulePublishModal({
       }
     })()
     return () => { cancelled = true }
-  }, [supabase, campaignId, includePins, includeNpcs, includeScenes, includeHandouts])
+  }, [supabase, campaignId, includePins, includeNpcs, includeScenes, includeHandouts, isSnapshotSource])
 
   const nextVersion = isRepublish && existingModule?.latest_version
     ? bumpSemver(existingModule.latest_version.version, bumpKind)
@@ -95,9 +116,23 @@ export default function ModulePublishModal({
     setSubmitting(true)
     setError('')
     try {
-      const { snapshot } = await buildCampaignSnapshot(supabase, campaignId, {
-        includePins, includeNpcs, includeScenes, includeHandouts,
-      })
+      // Two source modes:
+      //   • snapshot upload (initialSnapshot set) — use the pre-parsed
+      //     ModuleSnapshot directly; campaignId is null since there's
+      //     no source campaign in the DB.
+      //   • live campaign — read fresh from the DB at publish time so
+      //     any in-modal edits to the include-toggles take effect.
+      let snapshotToPublish: ModuleSnapshot
+      if (isSnapshotSource && initialSnapshot) {
+        snapshotToPublish = initialSnapshot
+      } else if (campaignId) {
+        const result = await buildCampaignSnapshot(supabase, campaignId, {
+          includePins, includeNpcs, includeScenes, includeHandouts,
+        })
+        snapshotToPublish = result.snapshot
+      } else {
+        throw new Error('No campaign and no snapshot — nothing to publish.')
+      }
       const result = await publishModuleVersion(supabase, {
         campaignId,
         moduleId: existingModule?.id,
@@ -108,7 +143,7 @@ export default function ModulePublishModal({
         visibility,
         version: nextVersion,
         changelog: changelog.trim() || null,
-        snapshot,
+        snapshot: snapshotToPublish,
       })
       onPublished({ ...result, version: nextVersion })
     } catch (e: any) {
@@ -158,7 +193,7 @@ export default function ModulePublishModal({
 
         <div style={header}>
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c4a7f0' }}>
-            📦 {isRepublish ? `Publish New Version — ${existingModule!.name}` : 'Publish as Module'}
+            📦 {isRepublish ? `Publish New Version — ${existingModule!.name}` : isSnapshotSource ? 'Publish from Snapshot' : 'Publish as Module'}
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#c4a7f0', fontSize: '22px', cursor: 'pointer' }}>×</button>
         </div>
@@ -203,29 +238,55 @@ export default function ModulePublishModal({
             </div>
           </div>
 
-          {/* Content picker */}
-          <div>
-            <label style={lbl}>Include in snapshot</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px 12px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Barlow, sans-serif' }}>
-                <input type="checkbox" checked={includePins} onChange={e => setIncludePins(e.target.checked)} />
-                📍 Pins{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Barlow Condensed, sans-serif' }}>{includePins ? counts.pins : 0}</span>}
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Barlow, sans-serif' }}>
-                <input type="checkbox" checked={includeNpcs} onChange={e => setIncludeNpcs(e.target.checked)} />
-                🧑 NPCs{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Barlow Condensed, sans-serif' }}>{includeNpcs ? counts.npcs : 0}</span>}
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Barlow, sans-serif' }}>
-                <input type="checkbox" checked={includeScenes} onChange={e => setIncludeScenes(e.target.checked)} />
-                🗺 Tactical scenes{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Barlow Condensed, sans-serif' }}>{includeScenes ? `${counts.scenes} / ${counts.tokens} tokens` : 0}</span>}
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Barlow, sans-serif' }}>
-                <input type="checkbox" checked={includeHandouts} onChange={e => setIncludeHandouts(e.target.checked)} />
-                📄 Handouts{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Barlow Condensed, sans-serif' }}>{includeHandouts ? counts.handouts : 0}</span>}
-              </label>
+          {/* Content section — live campaign shows include toggles
+              (so the author can exclude pins/scenes/etc.); snapshot
+              source shows a read-only summary since the file is already
+              filtered before it reaches the modal. */}
+          {isSnapshotSource ? (
+            <div>
+              <label style={lbl}>From snapshot file</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px 12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif' }}>
+                  📍 Pins<span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Barlow Condensed, sans-serif' }}>{counts?.pins ?? 0}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif' }}>
+                  🧑 NPCs<span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Barlow Condensed, sans-serif' }}>{counts?.npcs ?? 0}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif' }}>
+                  🗺 Tactical scenes<span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Barlow Condensed, sans-serif' }}>{counts ? `${counts.scenes} / ${counts.tokens} tokens` : '0'}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif' }}>
+                  📄 Handouts<span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Barlow Condensed, sans-serif' }}>{counts?.handouts ?? 0}</span>
+                </div>
+              </div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '6px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                Snapshot file pre-parsed; PC tokens and live state already filtered out.
+              </div>
             </div>
-            {previewing && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>Reading campaign…</div>}
-          </div>
+          ) : (
+            <div>
+              <label style={lbl}>Include in snapshot</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px 12px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Barlow, sans-serif' }}>
+                  <input type="checkbox" checked={includePins} onChange={e => setIncludePins(e.target.checked)} />
+                  📍 Pins{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Barlow Condensed, sans-serif' }}>{includePins ? counts.pins : 0}</span>}
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Barlow, sans-serif' }}>
+                  <input type="checkbox" checked={includeNpcs} onChange={e => setIncludeNpcs(e.target.checked)} />
+                  🧑 NPCs{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Barlow Condensed, sans-serif' }}>{includeNpcs ? counts.npcs : 0}</span>}
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Barlow, sans-serif' }}>
+                  <input type="checkbox" checked={includeScenes} onChange={e => setIncludeScenes(e.target.checked)} />
+                  🗺 Tactical scenes{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Barlow Condensed, sans-serif' }}>{includeScenes ? `${counts.scenes} / ${counts.tokens} tokens` : 0}</span>}
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Barlow, sans-serif' }}>
+                  <input type="checkbox" checked={includeHandouts} onChange={e => setIncludeHandouts(e.target.checked)} />
+                  📄 Handouts{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Barlow Condensed, sans-serif' }}>{includeHandouts ? counts.handouts : 0}</span>}
+                </label>
+              </div>
+              {previewing && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>Reading campaign…</div>}
+            </div>
+          )}
 
           {/* Semver bump (re-publish only) */}
           {isRepublish && existingModule?.latest_version && (

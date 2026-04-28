@@ -638,7 +638,10 @@ export async function buildCampaignSnapshot(
 //
 // Returns the module id + the freshly-inserted version id.
 export interface PublishParams {
-  campaignId: string
+  // Pass null for snapshot-imported modules where there's no source
+  // campaign in the DB (e.g. /modules/import uploads a JSON file).
+  // Spec §5: source_campaign_id is nullable on the modules row.
+  campaignId: string | null
   moduleId?: string          // omit on first publish; required on re-publish
   name: string
   tagline?: string | null
