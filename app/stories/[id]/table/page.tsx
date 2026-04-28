@@ -5754,7 +5754,10 @@ export default function TablePage() {
                   handleRollRequest(`${activeEntry.character_name} — Unarmed`, amod, smod, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
                 }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Unarmed</button>
-                {/* Stabilize — PC or NPC with mortal wounds (WP=0, not yet dead), within 20ft + engaged check */}
+                {/* Stabilize — one button per mortally-wounded combatant
+                    (WP=0, not yet dead) within 20ft of the active combatant.
+                    With multiple bleeding-out targets the GM gets a button
+                    per target instead of just the first one the find() hit. */}
                 {(() => {
                   const aTok = mapTokens.find(t => (activeEntry.character_id && t.character_id === activeEntry.character_id) || (activeEntry.npc_id && t.npc_id === activeEntry.npc_id))
                   const getDistFeet = (targetCharId?: string, targetNpcId?: string): number | null => {
@@ -5764,42 +5767,56 @@ export default function TablePage() {
                     const dist = Math.max(Math.abs(aTok.grid_x - tTok.grid_x), Math.abs(aTok.grid_y - tTok.grid_y))
                     return dist * mapCellFeet
                   }
-                  const woundedPC = entries.find(e => e.liveState && e.liveState.wp_current === 0 && ((e.liveState as any).death_countdown == null || (e.liveState as any).death_countdown > 0))
-                  const woundedNPC = campaignNpcs.find((n: any) => {
+                  type StabTarget = { kind: 'pc' | 'npc'; name: string; charId?: string; npcId?: string; distFeet: number | null }
+                  const targets: StabTarget[] = []
+                  for (const e of entries) {
+                    if (!e.liveState) continue
+                    const wp = e.liveState.wp_current
+                    const dc = (e.liveState as any).death_countdown
+                    if (wp === 0 && (dc == null || dc > 0)) {
+                      targets.push({ kind: 'pc', name: e.character.name, charId: e.character.id, distFeet: getDistFeet(e.character.id, undefined) })
+                    }
+                  }
+                  for (const n of campaignNpcs as any[]) {
                     const wp = n.wp_current ?? n.wp_max ?? 10
-                    return wp === 0 && (n.death_countdown == null || n.death_countdown > 0)
-                  })
-                  if (!woundedPC && !woundedNPC) return null
-                  const targetName = woundedPC ? woundedPC.character.name : woundedNPC!.name
-                  const distFeet = woundedPC ? getDistFeet(woundedPC.character.id, undefined) : getDistFeet(undefined, woundedNPC!.id)
-                  // Hide if beyond 20ft
-                  if (distFeet !== null && distFeet > 20) return null
-                  // Show engaged warning if not adjacent (> 5ft)
-                  const notEngaged = distFeet !== null && distFeet > 5
+                    if (wp === 0 && (n.death_countdown == null || n.death_countdown > 0)) {
+                      targets.push({ kind: 'npc', name: n.name, npcId: n.id, distFeet: getDistFeet(undefined, n.id) })
+                    }
+                  }
+                  // distFeet === null means "no map / no token" — preserve the
+                  // pre-multi behavior of allowing the click in that case.
+                  const inRange = targets.filter(t => t.distFeet === null || t.distFeet <= 20)
+                  if (inRange.length === 0) return null
                   return (
                     <>
-                      <button onClick={notEngaged ? () => alert(`${activeEntry.character_name} must be engaged (adjacent) to ${targetName} to stabilize them. Move closer first.`) : async () => {
-                        // Determine roller's Medicine stats — use active combatant's stats
-                        // (could be PC via charEntry, or NPC via campaignNpcs)
-                        let amod = 0, smod = 0
-                        if (charEntry) {
-                          const rapid = charEntry.character.data?.rapid ?? {}
-                          amod = rapid.RSN ?? 0
-                          smod = charEntry.character.data?.skills?.find((s: any) => s.skillName === 'Medicine')?.level ?? 0
-                        } else {
-                          const npcRoller = campaignNpcs.find((n: any) => n.name === activeEntry.character_name)
-                          if (npcRoller) {
-                            amod = npcRoller.reason ?? 0
-                            const npcSkills: any[] = Array.isArray(npcRoller.skills?.entries) ? npcRoller.skills.entries : []
-                            smod = npcSkills.find((s: any) => s.name === 'Medicine')?.level ?? 0
-                          }
-                        }
-                        // Open roll FIRST (before consumeAction changes the active combatant)
-                        handleRollRequest(`${activeEntry.character_name} — Stabilize ${targetName}`, amod, smod)
-                        actionPreConsumedRef.current = true
-                        await consumeAction(activeEntry.id)
-                      }}
-                        style={notEngaged ? actBtn('#2a2010', '#EF9F27', '#5a4a1b') : actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>🩸 Stabilize {targetName}{notEngaged ? ' (not engaged)' : ''}</button>
+                      {inRange.map(t => {
+                        const notEngaged = t.distFeet !== null && t.distFeet > 5
+                        return (
+                          <button key={`stab_${t.kind}_${t.charId ?? t.npcId}`}
+                            onClick={notEngaged ? () => alert(`${activeEntry.character_name} must be engaged (adjacent) to ${t.name} to stabilize them. Move closer first.`) : async () => {
+                              // Determine roller's Medicine stats — use active combatant's stats
+                              // (could be PC via charEntry, or NPC via campaignNpcs)
+                              let amod = 0, smod = 0
+                              if (charEntry) {
+                                const rapid = charEntry.character.data?.rapid ?? {}
+                                amod = rapid.RSN ?? 0
+                                smod = charEntry.character.data?.skills?.find((s: any) => s.skillName === 'Medicine')?.level ?? 0
+                              } else {
+                                const npcRoller = campaignNpcs.find((n: any) => n.name === activeEntry.character_name)
+                                if (npcRoller) {
+                                  amod = npcRoller.reason ?? 0
+                                  const npcSkills: any[] = Array.isArray(npcRoller.skills?.entries) ? npcRoller.skills.entries : []
+                                  smod = npcSkills.find((s: any) => s.name === 'Medicine')?.level ?? 0
+                                }
+                              }
+                              // Open roll FIRST (before consumeAction changes the active combatant)
+                              handleRollRequest(`${activeEntry.character_name} — Stabilize ${t.name}`, amod, smod)
+                              actionPreConsumedRef.current = true
+                              await consumeAction(activeEntry.id)
+                            }}
+                            style={notEngaged ? actBtn('#2a2010', '#EF9F27', '#5a4a1b') : actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>🩸 Stabilize {t.name}{notEngaged ? ' (not engaged)' : ''}</button>
+                        )
+                      })}
                     </>
                   )
                 })()}
