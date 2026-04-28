@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getWeaponByName } from '../lib/weapons'
 import { vividTokenBorder } from './NpcRoster'
+import { openPopout } from '../lib/popout'
+import { createSceneControlsBus, type SceneControlsBus } from '../lib/scene-controls-bus'
 
 // Feet per band — used when drawing the primary-weapon range circle for PC/NPC tokens
 const RANGE_BAND_FEET: Record<string, number> = {
@@ -1511,6 +1513,112 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     await loadTokens(scene.id)
   }
 
+  // Fit-to-Map and Fit-to-Screen are extracted as named functions so
+  // both the inline panel onClick AND the popped-out controls (via
+  // BroadcastChannel) can trigger them. They depend on bgImageRef +
+  // containerRef which only exist in this component, so the popout
+  // can't run them itself — it sends a 'fit_to_map' / 'fit_to_screen'
+  // command and we run it here.
+  async function fitToMap() {
+    if (!bgImageRef.current || !containerRef.current || !scene) return
+    const img = bgImageRef.current
+    const cw = containerRef.current.clientWidth
+    const ch = containerRef.current.clientHeight
+    const imgAspect = img.naturalWidth / img.naturalHeight
+    let drawW: number, drawH: number
+    if (imgAspect > cw / ch) { drawW = cw; drawH = cw / imgAspect }
+    else { drawH = ch; drawW = ch * imgAspect }
+    const localCellPx = Math.max(20, drawW / 30)
+    const newCols = Math.round(drawW / localCellPx)
+    const newRows = Math.round(drawH / localCellPx)
+    setScene(p => p ? { ...p, grid_cols: newCols, grid_rows: newRows } : p)
+    await supabase.from('tactical_scenes').update({ grid_cols: newCols, grid_rows: newRows }).eq('id', scene.id)
+  }
+
+  function fitToScreen() {
+    const container = containerRef.current
+    if (container && bgImageRef.current) {
+      const containerW = container.clientWidth
+      const img = bgImageRef.current
+      setImgScale(img.naturalWidth > 0 ? containerW / img.naturalWidth : 1)
+    } else {
+      setImgScale(1)
+    }
+    setZoom(1)
+    setPanX(0)
+    setPanY(0)
+    if (containerRef.current) { containerRef.current.scrollTop = 0; containerRef.current.scrollLeft = 0 }
+  }
+
+  // Scene-controls bus — keeps the popped-out controls window in sync.
+  // State broadcasts go out whenever local UI state changes; commands
+  // come in from the popout (Fit to Map, Fit to Screen, Place Tokens).
+  const sceneControlsBusRef = useRef<SceneControlsBus | null>(null)
+  // Suppress one outbound broadcast when applying an inbound state, to
+  // prevent infinite echo loops between popout and main window.
+  const sceneControlsSuppressRef = useRef(false)
+  // Keep the latest command handlers in a ref so the bus useEffect can
+  // call them without re-subscribing every render.
+  const sceneControlsHandlersRef = useRef({
+    fit_to_map: () => {},
+    fit_to_screen: () => {},
+    place_tokens: () => {},
+  })
+  sceneControlsHandlersRef.current = {
+    fit_to_map: () => { fitToMap() },
+    fit_to_screen: () => { fitToScreen() },
+    place_tokens: () => { autoPopulateTokens() },
+  }
+
+  useEffect(() => {
+    if (!isGM || !campaignId) return
+    const bus = createSceneControlsBus(campaignId)
+    if (!bus) return
+    sceneControlsBusRef.current = bus
+
+    const offState = bus.onState((key, value) => {
+      sceneControlsSuppressRef.current = true
+      try {
+        switch (key) {
+          case 'zoom':              setZoom(value); break
+          case 'cellPx':            setCellPx(value); break
+          case 'showGrid':          setShowGrid(value); break
+          case 'gridColor':         setGridColor(value); break
+          case 'gridOpacity':       setGridOpacity(value); break
+          case 'showRangeOverlay':  setShowRangeOverlay(value); break
+          case 'mapLocked':         setMapLocked(value); break
+        }
+      } finally {
+        setTimeout(() => { sceneControlsSuppressRef.current = false }, 0)
+      }
+    })
+
+    const offCmd = bus.onCommand(name => {
+      const fn = (sceneControlsHandlersRef.current as any)[name]
+      if (typeof fn === 'function') fn()
+    })
+
+    const offReq = bus.onRequestSnapshot(() => {
+      bus.postSnapshot({
+        zoom, cellPx, showGrid, gridColor, gridOpacity,
+        showRangeOverlay, mapLocked,
+      })
+    })
+
+    return () => { offState(); offCmd(); offReq(); bus.close(); sceneControlsBusRef.current = null }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isGM, campaignId])
+
+  // Outbound state broadcasts — fire when local state changes due to a
+  // user-driven setX in this window. Suppressed during inbound apply.
+  useEffect(() => { if (!sceneControlsSuppressRef.current) sceneControlsBusRef.current?.postState('zoom', zoom) }, [zoom])
+  useEffect(() => { if (!sceneControlsSuppressRef.current) sceneControlsBusRef.current?.postState('cellPx', cellPx) }, [cellPx])
+  useEffect(() => { if (!sceneControlsSuppressRef.current) sceneControlsBusRef.current?.postState('showGrid', showGrid) }, [showGrid])
+  useEffect(() => { if (!sceneControlsSuppressRef.current) sceneControlsBusRef.current?.postState('gridColor', gridColor) }, [gridColor])
+  useEffect(() => { if (!sceneControlsSuppressRef.current) sceneControlsBusRef.current?.postState('gridOpacity', gridOpacity) }, [gridOpacity])
+  useEffect(() => { if (!sceneControlsSuppressRef.current) sceneControlsBusRef.current?.postState('showRangeOverlay', showRangeOverlay) }, [showRangeOverlay])
+  useEffect(() => { if (!sceneControlsSuppressRef.current) sceneControlsBusRef.current?.postState('mapLocked', mapLocked) }, [mapLocked])
+
   async function toggleTokenVisibility(tokenId: string) {
     const tok = tokens.find(t => t.id === tokenId)
     if (!tok) return
@@ -1563,6 +1671,15 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       {/* GM Controls — left strip */}
       {isGM && (
         <div style={{ width: '130px', flexShrink: 0, background: '#0d0d0d', borderRight: '1px solid #2e2e2e', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden' }}>
+          {/* Popout — opens this same panel in a separate browser window
+              so the GM can park controls on a 2nd monitor and let the
+              map fill its screen. State syncs both ways via
+              BroadcastChannel (lib/scene-controls-bus.ts). */}
+          <button onClick={() => openPopout(`/scene-controls-popout?c=${campaignId}`, `scene-controls-${campaignId}`, { w: 200, h: 760 })}
+            title="Pop out controls into a separate window"
+            style={{ padding: '4px 8px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', cursor: 'pointer', width: '100%', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', marginBottom: '4px', fontWeight: 600 }}>
+            ↗ Popout
+          </button>
           <select value={scene.id} onChange={e => {
             if (e.target.value === '__new__') { setShowSetup(true); e.target.value = scene.id }
             else activateScene(e.target.value)
@@ -1616,21 +1733,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
                 style={{ flex: 1, accentColor: '#c0392b', width: '70px', minWidth: 0 }} />
               <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '22px', textAlign: 'right' }}>{Math.round(gridOpacity * 100)}%</span>
             </div>
-            <button onClick={async () => {
-              if (!bgImageRef.current || !containerRef.current) return
-              const img = bgImageRef.current
-              const cw = containerRef.current.clientWidth
-              const ch = containerRef.current.clientHeight
-              const imgAspect = img.naturalWidth / img.naturalHeight
-              let drawW: number, drawH: number
-              if (imgAspect > cw / ch) { drawW = cw; drawH = cw / imgAspect }
-              else { drawH = ch; drawW = ch * imgAspect }
-              const cellPx = Math.max(20, drawW / 30)
-              const newCols = Math.round(drawW / cellPx)
-              const newRows = Math.round(drawH / cellPx)
-              setScene(p => p ? { ...p, grid_cols: newCols, grid_rows: newRows } : p)
-              await supabase.from('tactical_scenes').update({ grid_cols: newCols, grid_rows: newRows }).eq('id', scene.id)
-            }}
+            <button onClick={fitToMap}
               style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', marginBottom: '4px' }}>
               Fit to Map
             </button>
@@ -1694,22 +1797,7 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
             </div>
           </div>
           <div style={{ flex: 1 }} />
-          <button onClick={() => {
-              // Image now draws at naturalWidth × imgScale. Compute imgScale so the
-              // image fills the container at zoom=1. GM saves via Lock Map → everyone inherits.
-              const container = containerRef.current
-              if (container && bgImageRef.current) {
-                const containerW = container.clientWidth
-                const img = bgImageRef.current
-                setImgScale(img.naturalWidth > 0 ? containerW / img.naturalWidth : 1)
-              } else {
-                setImgScale(1)
-              }
-              setZoom(1)
-              setPanX(0)
-              setPanY(0)
-              if (containerRef.current) { containerRef.current.scrollTop = 0; containerRef.current.scrollLeft = 0 }
-            }}
+          <button onClick={fitToScreen}
               style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
               Fit to Screen
           </button>
