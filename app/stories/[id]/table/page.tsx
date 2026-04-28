@@ -11,6 +11,7 @@ import ObjectCard from '../../../../components/ObjectCard'
 import VehicleCard, { Vehicle } from '../../../../components/VehicleCard'
 import NotificationBell from '../../../../components/NotificationBell'
 import MessagesBell from '../../../../components/MessagesBell'
+import { useChatPanel, ChatMessageRow, ChatMessageList, ChatComposer } from '../../../../components/TableChat'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
 const CampaignMap = dynamic(() => import('../../../../components/CampaignMap'), { ssr: false })
@@ -734,9 +735,18 @@ export default function TablePage() {
   const [assetsFolderState, setAssetsFolderState] = useState<Set<string>>(new Set())
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
   const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
-  const [chatMessages, setChatMessages] = useState<{ id: string; user_id: string; character_name: string; message: string; created_at: string; is_whisper?: boolean; recipient_user_id?: string | null }[]>([])
-  const [chatInput, setChatInput] = useState('')
-  const chatChannelRef = useRef<any>(null)
+  // Chat state (messages, channel, refetch, clear) lives in the
+  // useChatPanel hook in components/TableChat.tsx — this is just the
+  // call-site. We keep the hook here (not inside <TableChat>) so the
+  // parent can read `chat.messages` for the Both-tab merged feed and
+  // call `chat.clear()` from session start/end. See that file's
+  // header comment for the full split.
+  const chat = useChatPanel({
+    campaignId: id,
+    userIdRef,
+    setFeedTab,
+    scrollFeedToBottom: () => { rollFeedRef.current?.scrollTo(0, rollFeedRef.current.scrollHeight) },
+  })
   const [whisperTarget, setWhisperTarget] = useState<{ userId: string; characterName: string } | null>(null)
   const [viewingNpcs, setViewingNpcs] = useState<CampaignNpc[]>([])
   const [viewingObjects, setViewingObjects] = useState<{ tokenId: string; name: string; color: string; portraitUrl: string | null }[]>([])
@@ -864,140 +874,8 @@ export default function TablePage() {
     setTimeout(() => { rollFeedRef.current?.scrollTo(0, rollFeedRef.current.scrollHeight) }, 50)
   }
 
-  async function loadChat(campaignId: string) {
-    const uid = userIdRef.current
-    // Fetch everything for the campaign — simple query, no complex .or() syntax.
-    // RLS policy on chat_messages enforces whisper privacy server-side.
-    // We additionally filter client-side so a slow-propagating RLS change or
-    // permissive policy doesn't leak whispers into someone else's UI.
-    const { data, error } = await supabase
-      .from('chat_messages')
-      .select('*')
-      .eq('campaign_id', campaignId)
-      .order('created_at', { ascending: false })
-      .limit(100)
-    if (error) { console.warn('[loadChat] fetch error:', error.message); return }
-    const visible = (data ?? []).filter((m: any) => {
-      if (!m.is_whisper) return true
-      if (!uid) return false
-      return m.user_id === uid || m.recipient_user_id === uid
-    })
-    const next = visible.reverse()
-    // Auto-switch to Chat tab if a NEW whisper just landed addressed to me
-    setChatMessages(prev => {
-      const prevIds = new Set(prev.map(m => m.id))
-      const incomingWhisper = next.find((m: any) => !prevIds.has(m.id) && m.is_whisper && m.recipient_user_id === uid && m.user_id !== uid)
-      if (incomingWhisper && prev.length > 0) setFeedTab('chat')
-      return next
-    })
-    setTimeout(() => { rollFeedRef.current?.scrollTo(0, rollFeedRef.current.scrollHeight) }, 50)
-  }
-
-  async function sendChat() {
-    if (!chatInput.trim() || !userId) return
-    const myEntry = entries.find(e => e.userId === userId)
-    const characterName = myEntry?.character.name ?? (isGM ? 'Game Master' : 'Unknown')
-    // Slash-command parsing (playtest #34): `/whisper gm <msg>` and `/w gm <msg>`
-    // send a whisper to the GM. For players, the matcher walks the tail of the
-    // command from longest-prefix to shortest and tries each candidate as an
-    // exact, prefix, or substring match against character_name or username
-    // (case-insensitive). This means all of these hit the right player:
-    //   /w Percy hi                    (first name of "Percy Bent")
-    //   /w Percy Bent hi               (full character name)
-    //   /w marv hey                    (prefix of "Marvin")
-    //   /w tony hey                    (username, even if char name differs)
-    const trimmed = chatInput.trim()
-    let recipientUserId: string | null = whisperTarget?.userId ?? null
-    let isWhisper = !!whisperTarget
-    let messageBody = trimmed
-    // Dice roller — `/d <expr>` or `/dice <expr>`. Expression is
-    // NdM with optional +/- modifiers, e.g. `/d 1d6`, `/d 3d20+3+2-1`,
-    // `/d 1d100`. Modifiers are summed into a single net adjustment.
-    // Output replaces the chat message body with a formatted result
-    // line; the message goes through the normal chat send (respects
-    // current whisper target — set whisper to GM first if you want
-    // a secret roll). Honors a max of 100 dice and 1000 sides as a
-    // safety guard.
-    const diceCmd = trimmed.match(/^\/d(?:ice)?\s+(.+)$/i)
-    if (diceCmd) {
-      const expr = diceCmd[1].replace(/\s+/g, '')
-      const m = expr.match(/^(\d+)d(\d+)((?:[+\-]\d+)*)$/i)
-      if (!m) {
-        // Invalid expression — show inline error to help the player
-        // self-correct without spamming the public chat. Treat as
-        // a no-op send.
-        alert(`Bad dice expression: "${diceCmd[1]}"\n\nFormat: /d NdM[+/-K] — e.g. /d 1d6, /d 3d20+3+2-1, /d 1d100-2`)
-        return
-      }
-      const count = Math.min(100, Math.max(1, parseInt(m[1])))
-      const sides = Math.min(1000, Math.max(2, parseInt(m[2])))
-      let modifier = 0
-      const modPart = m[3] ?? ''
-      const modMatches = modPart.matchAll(/([+\-])(\d+)/g)
-      for (const mm of modMatches) {
-        modifier += (mm[1] === '+' ? 1 : -1) * parseInt(mm[2])
-      }
-      const rolls: number[] = []
-      for (let i = 0; i < count; i++) rolls.push(Math.floor(Math.random() * sides) + 1)
-      const sum = rolls.reduce((a, b) => a + b, 0)
-      const total = sum + modifier
-      const exprPretty = modifier === 0
-        ? `${count}d${sides}`
-        : `${count}d${sides}${modifier > 0 ? '+' : ''}${modifier}`
-      const modStr = modifier === 0 ? '' : modifier > 0 ? ` +${modifier}` : ` ${modifier}`
-      messageBody = `🎲 ${exprPretty} → [${rolls.join('+')}]${modStr} = ${total}`
-    }
-    const slashHead = trimmed.match(/^\/(?:w|whisper)\s+([\s\S]+)$/i)
-    if (slashHead) {
-      const rest = slashHead[1].trim()
-      const words = rest.split(/\s+/)
-      // Try longest-prefix-first so "Percy Bent" wins over "Percy" when both
-      // could match different characters.
-      let matched = false
-      for (let take = Math.min(words.length - 1, 5); take >= 1 && !matched; take--) {
-        const target = words.slice(0, take).join(' ')
-        const body = words.slice(take).join(' ')
-        if (!body) continue
-        if (/^gm$/i.test(target) && campaign?.gm_user_id) {
-          recipientUserId = campaign.gm_user_id
-          isWhisper = true
-          messageBody = body
-          matched = true
-          break
-        }
-        const t = target.toLowerCase()
-        const candidates = entries.filter(e => {
-          const name = (e.character.name ?? '').toLowerCase()
-          const user = (e.username ?? '').toLowerCase()
-          return name === t || user === t
-            || name.startsWith(t) || user.startsWith(t)
-            || name.includes(t) || user.includes(t)
-        })
-        // Prefer exact > prefix > substring when multiple candidates match.
-        const rank = (e: typeof entries[number]) => {
-          const name = (e.character.name ?? '').toLowerCase()
-          const user = (e.username ?? '').toLowerCase()
-          if (name === t || user === t) return 0
-          if (name.startsWith(t) || user.startsWith(t)) return 1
-          return 2
-        }
-        candidates.sort((a, b) => rank(a) - rank(b))
-        const hit = candidates[0]
-        if (hit?.userId) {
-          recipientUserId = hit.userId
-          isWhisper = true
-          messageBody = body
-          matched = true
-        }
-      }
-    }
-    if (!messageBody.trim()) return
-    await supabase.from('chat_messages').insert({
-      campaign_id: id, user_id: userId, character_name: characterName, message: messageBody,
-      is_whisper: isWhisper, recipient_user_id: recipientUserId,
-    })
-    setChatInput('')
-  }
+  // loadChat / sendChat moved to components/TableChat.tsx — accessed
+  // via `chat.refetch()` and the <ChatComposer>'s internal send.
 
   async function loadPlayerNpcCommunityMap(campaignId: string) {
     const { data } = await supabase
@@ -1106,7 +984,7 @@ export default function TablePage() {
         return
       }
       setUserId(user.id)
-      userIdRef.current = user.id  // Sync immediately so loadChat's initial call sees it
+      userIdRef.current = user.id  // Sync immediately so chat refetch sees the freshest viewer id
       const { data: myProfile } = await supabase.from('profiles').select('username, role').eq('id', user.id).single()
       setMyUsername(myProfile?.username ?? '')
       setIsThriver(myProfile?.role === 'Thriver')
@@ -1153,8 +1031,11 @@ export default function TablePage() {
           return
         }
       }
-      const [,,,, cnpcsResult, pubDataResult] = await Promise.all([
-        loadEntries(id), loadRolls(id), loadInitiative(id), loadChat(id),
+      // Chat is now self-loading inside useChatPanel — no longer in this
+      // Promise.all. The destructuring's leading skip-count drops by 1
+      // accordingly (3 skips for loadEntries/loadRolls/loadInitiative).
+      const [,,, cnpcsResult, pubDataResult] = await Promise.all([
+        loadEntries(id), loadRolls(id), loadInitiative(id),
         supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
         supabase.from('world_npcs').select('source_campaign_npc_id').not('source_campaign_npc_id', 'is', null),
         // Hydrate the "which NPCs already have a token in the active
@@ -1233,9 +1114,8 @@ export default function TablePage() {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'roll_log', filter: `campaign_id=eq.${id}` }, () => loadRolls(id))
         .subscribe()
 
-      chatChannelRef.current = supabase.channel(`chat_${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_messages', filter: `campaign_id=eq.${id}` }, () => loadChat(id))
-        .subscribe()
+      // Chat realtime channel now lives inside useChatPanel — no
+      // separate subscription needed here.
 
       initChannelRef.current = supabase.channel(`initiative_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
@@ -1261,9 +1141,9 @@ export default function TablePage() {
           // GM started/ended a session — clear local chat + roll state, then
           // refetch from DB so every client converges to the post-clear state.
           setRolls([])
-          setChatMessages([])
+          chat.clear()
           loadRolls(id)
-          loadChat(id)
+          chat.refetch()
         })
         .on('broadcast', { event: 'npc_damaged' }, (msg: any) => {
           // Another client dealt damage to an NPC — apply the patch locally
@@ -1389,7 +1269,7 @@ export default function TablePage() {
       if (membersChannelRef.current) supabase.removeChannel(membersChannelRef.current)
       if (npcsChannelRef.current) supabase.removeChannel(npcsChannelRef.current)
       if (rollChannelRef.current) supabase.removeChannel(rollChannelRef.current)
-      if (chatChannelRef.current) supabase.removeChannel(chatChannelRef.current)
+      // chat channel teardown is handled by useChatPanel's own cleanup.
       if (initChannelRef.current) supabase.removeChannel(initChannelRef.current)
       if (campaignChannelRef.current) supabase.removeChannel(campaignChannelRef.current)
       if (revealChannelRef.current) supabase.removeChannel(revealChannelRef.current)
@@ -2585,7 +2465,7 @@ export default function TablePage() {
     const newCount = sessionCount + 1
     const startedAt = new Date().toISOString()
     setRolls([])
-    setChatMessages([])
+    chat.clear()
     setSessionStatus('active')
     setSessionCount(newCount)
     logEvent('session_started', { campaign_id: id, session_number: newCount })
@@ -2632,7 +2512,7 @@ export default function TablePage() {
       initChannelRef.current?.send({ type: 'broadcast', event: 'combat_ended', payload: {} })
     }
     setRolls([])
-    setChatMessages([])
+    chat.clear()
     setSessionStatus('idle')
     // Force-clear every other client's chat + log state immediately.
     initChannelRef.current?.send({ type: 'broadcast', event: 'logs_cleared', payload: {} })
@@ -6191,33 +6071,18 @@ export default function TablePage() {
                 })())
               )
             )}
-            {/* Chat messages (Chat tab only) */}
+            {/* Chat messages (Chat tab only) — render delegated. */}
             {feedTab === 'chat' && (
-              chatMessages.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>No messages yet</div>
-              ) : (
-                chatMessages.map(m => {
-                  const isW = m.is_whisper
-                  const whisperLabel = isW ? (m.user_id === userId ? `Whisper to ${entries.find(e => e.userId === m.recipient_user_id)?.character.name ?? 'someone'}` : `Whisper from ${m.character_name}`) : null
-                  return (
-                    <div key={m.id} style={{ marginBottom: '6px', padding: '6px 8px', background: isW ? '#1a1a2a' : '#1a1a1a', border: `1px solid ${isW ? '#4a2a6a' : '#2e2e2e'}`, borderRadius: '3px', borderLeft: `3px solid ${isW ? '#8b2e8b' : '#7ab3d4'}` }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 700, color: isW ? '#d48bd4' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                          {isW ? whisperLabel : m.character_name}
-                        </span>
-                        <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(m.created_at)}</span>
-                      </div>
-                      <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{renderRichText(m.message)}</div>
-                    </div>
-                  )
-                })
-              )
+              <ChatMessageList messages={chat.messages} viewerUserId={userId} entries={entries} formatTime={formatTime} />
             )}
-            {/* Both tab — merged chronological feed */}
+            {/* Both tab — merged chronological feed. Roll branches stay
+                inline (huge JSX with lots of parent-scope helpers); chat
+                branch delegates to <ChatMessageRow> for dedup with the
+                Chat-tab path above. */}
             {feedTab === 'both' && (() => {
               const merged: { type: 'roll' | 'chat'; created_at: string; data: any }[] = [
                 ...rolls.map(r => ({ type: 'roll' as const, created_at: r.created_at, data: r })),
-                ...chatMessages.map(m => ({ type: 'chat' as const, created_at: m.created_at, data: m })),
+                ...chat.messages.map(m => ({ type: 'chat' as const, created_at: m.created_at, data: m })),
               ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
               if (merged.length === 0) return (
                 <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a' }}>
@@ -6227,18 +6092,9 @@ export default function TablePage() {
                   </div>
                 </div>
               )
-              return merged.map(item => item.type === 'chat' ? (() => {
-                const mW = item.data.is_whisper
-                const wLabel = mW ? (item.data.user_id === userId ? `Whisper to ${entries.find(e => e.userId === item.data.recipient_user_id)?.character.name ?? 'someone'}` : `Whisper from ${item.data.character_name}`) : null
-                return (
-                <div key={`chat-${item.data.id}`} style={{ marginBottom: '6px', padding: '6px 8px', background: mW ? '#1a1a2a' : '#1a1a1a', border: `1px solid ${mW ? '#4a2a6a' : '#2e2e2e'}`, borderRadius: '3px', borderLeft: `3px solid ${mW ? '#8b2e8b' : '#7ab3d4'}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: mW ? '#d48bd4' : '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{mW ? wLabel : item.data.character_name}</span>
-                    <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{renderRichText(item.data.message)}</div>
-                </div>)
-              })() : item.data.outcome === 'combat_start' && (item.data.damage_json as any)?.combatants ? (
+              return merged.map(item => item.type === 'chat' ? (
+                <ChatMessageRow key={`chat-${item.data.id}`} message={item.data} viewerUserId={userId} entries={entries} formatTime={formatTime} />
+              ) : item.data.outcome === 'combat_start' && (item.data.damage_json as any)?.combatants ? (
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Combat Started</span>
@@ -6419,27 +6275,20 @@ export default function TablePage() {
               })())
             })()}
           </div>
-          {/* Bottom: chat input + sheet button */}
+          {/* Bottom: chat composer (textarea + Send + whisper indicator).
+              Owns its own input state and the slash-command parsing
+              inside <ChatComposer> — see components/TableChat.tsx. */}
           <div style={{ borderTop: '1px solid #2e2e2e', flexShrink: 0 }}>
             {(feedTab === 'chat' || feedTab === 'both') && (
-              <div>
-                {whisperTarget && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', background: '#2a102a', borderBottom: '1px solid #8b2e8b' }}>
-                    <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Whispering to {whisperTarget.characterName}</span>
-                    <button onClick={() => setWhisperTarget(null)}
-                      style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#d48bd4', cursor: 'pointer', fontSize: '13px', padding: '0 4px', lineHeight: 1 }}>×</button>
-                  </div>
-                )}
-                <div style={{ display: 'flex', gap: '0', padding: '6px 8px', alignItems: 'stretch' }}>
-                  <textarea value={chatInput} onChange={e => setChatInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat() } }}
-                    placeholder={whisperTarget ? `Whisper to ${whisperTarget.characterName}...` : 'Type a message...'}
-                    rows={2}
-                    style={{ flex: 1, padding: '6px 8px', background: whisperTarget ? '#1a1a2a' : '#242424', border: `1px solid ${whisperTarget ? '#8b2e8b' : '#3a3a3a'}`, borderRight: 'none', borderRadius: '3px 0 0 3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', resize: 'none', lineHeight: '1.4' }} />
-                  <button onClick={sendChat}
-                    style={{ width: '24px', flexShrink: 0, background: whisperTarget ? '#2a102a' : '#1a2e10', border: `1px solid ${whisperTarget ? '#8b2e8b' : '#2d5a1b'}`, borderRadius: '0 3px 3px 0', color: whisperTarget ? '#d48bd4' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', writingMode: 'vertical-rl', letterSpacing: '.08em', padding: 0, transform: 'rotate(180deg)' }}>Send</button>
-                </div>
-              </div>
+              <ChatComposer
+                campaignId={id}
+                userId={userId}
+                isGM={isGM}
+                campaign={campaign}
+                entries={entries}
+                whisperTarget={whisperTarget}
+                setWhisperTarget={setWhisperTarget}
+              />
             )}
           </div>
         </div>
