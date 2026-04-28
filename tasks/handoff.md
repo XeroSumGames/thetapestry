@@ -50,6 +50,58 @@ The chat extraction was a code-organization win, not a bundle win.
 Composer is always visible (default `feedTab='both'`), so dynamic-loading
 chat wouldn't help. Don't waste time trying.
 
+## Other shipped today (parallel-session work, all on `main`)
+
+Not part of the load-times campaign — these are feature/polish commits
+the new agent should know exist:
+
+- `f9b59dc` — Insight Die spend tracking. New `roll_log.insight_used`
+  column ('3d6'/'+3cmod'/null). Extended log card surfaces both
+  banners. **Requires `sql/roll-log-insight-used.sql` to run.**
+- `03de984` — Bow/Crossbow ammo gate. Attack button disabled when
+  `ammoCurrent <= 0` on clip-tracked ranged weapons.
+- `32d03d1` — Module cover image upload (publish wizard) + `/modules`
+  Import button. **Requires `sql/module-covers-bucket.sql` to run.**
+- `9ee175d`, `2f6f9ac`, `03d8c1e` — scene-controls popout layout
+  iterations (final: 250×600, 2×2 stepper grid Cols/Rows | Cell ft/Cell px).
+- `a9b8a8c` — sidebar rename "Welcome to the Tapestry" → "A Guide to the Tapestry".
+- `58eeace` — inline 130-px GM scene-controls strip removed; replaced
+  by `Map Setup` header button on the table page that opens a popout.
+- `8277be2` — scene-controls popout itself + `lib/scene-controls-bus.ts`
+  for popout↔main BroadcastChannel sync.
+- `6625a07` — Phase C marketplace: `/modules` browse + `/modules/[id]`
+  detail + `/campaigns/new?module=<id>` pre-select.
+- `c51b0c0` — `/modules/import` for publishing from a campaign-snapshot
+  JSON. Closes the Arena migration loop. **Tested end-to-end and
+  confirmed working** on 2026-04-28.
+- `173956e`, `150df2b` — neutral disposition recolor: grey → goldenrod/
+  yellow palette across picker, roster, and map tokens.
+- `990cbce` — Perception/Gut/First Impression log lines read as
+  sentences ("Cree successfully uses Perception").
+- `078c95b` — Perception/Gut Instinct PC list filtered to player-self
+  (mirrors First Impression's existing filter).
+
+## Run-Me SQL (queued — confirm if applied in Supabase)
+
+```
+notepad C:\TheTapestry\sql\module-covers-bucket.sql
+notepad C:\TheTapestry\sql\roll-log-insight-used.sql
+```
+
+Both are idempotent. Without #1 the cover-image upload errors with
+"bucket not found". Without #2 inserts silently drop the new column
+and the +3cmod Insight Die banner stays invisible (the legacy
+`die2 > 6` heuristic still surfaces 3d6 spends).
+
+## Scheduled remote agent
+
+Routine `trig_01DgrfRt5ymUuU4fUf2jzq8N` fires **2026-04-30T16:00:00Z**
+(Thu 10am MT). Sweeps three combat-correctness items from the
+2026-04-27 playtest: Distract action decrement (silent RLS suspected),
+Stabilize action consume verification, post-Stabilize Cree-revival
+state. Don't touch those three manually unless something blocks
+playtest before Thursday — the agent has the diagnostic context.
+
 ## What's next on the roadmap
 
 See [tasks/loadtimes-roadmap.md](loadtimes-roadmap.md) for the
