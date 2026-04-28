@@ -208,7 +208,9 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
   //     name contains 'Launcher'):
   //       "X fired a <weapon> at <target>"
   //   - Firearm / melee with single-word action (Attack, Charge, Subdue):
-  //       "X used a <weapon> to <Action> <target>"
+  //       "X used a <weapon> to Successfully|Unsuccessfully <Action> <target>"
+  //       (the adverb makes the hit/miss legible from the narrative alone;
+  //        crit tag still appended for Wild Success / High Insight / Low Insight)
   //   - Multi-word action (Rapid Fire, Fire from Cover) — awkward to
   //     force into "to X Y" phrasing; falls back to the older neutral
   //     "X used <weapon> <Action> on <target>" form.
@@ -226,7 +228,8 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
         return `${r.character_name} ${verb} ${article} ${weapon} at ${r.target_name}`
       }
       if (/^(Attack|Charge|Subdue)$/.test(action)) {
-        return `${r.character_name} used ${article} ${weapon} to ${action} ${r.target_name}`
+        const adverb = hit ? 'Successfully' : 'Unsuccessfully'
+        return `${r.character_name} used ${article} ${weapon} to ${adverb} ${action} ${r.target_name}${outcomeTag}`
       }
       // Rapid Fire / Fire from Cover — fall back to neutral phrasing
       return `${r.character_name} used ${weapon} ${action} on ${r.target_name}`
