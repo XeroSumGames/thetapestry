@@ -5425,6 +5425,18 @@ export default function TablePage() {
             const w = weaponData ? getWeaponByName(weaponData.weaponName) : null
             const hasBurst = w ? getTraitValue(w.traits, 'Automatic Burst') !== null : false
             const isMelee = w?.category === 'melee'
+            // Ammo gate — block the Attack button on ranged weapons
+            // when ammoCurrent has hit 0. Bow/Crossbow/Compact Bow (and
+            // any other clip:1 weapon) effectively need a Reload action
+            // between every shot once they're empty. PCs track ammo on
+            // weaponPrimary.ammoCurrent; NPCs on skills.weapon.ammoCurrent.
+            // Legacy NPCs without ammoCurrent set get null → unlimited
+            // ammo (no gate) so we don't break older campaigns.
+            const ammoCurrent: number | null =
+              charEntry?.character.data?.weaponPrimary?.ammoCurrent ??
+              npcForWeapon?.skills?.weapon?.ammoCurrent ??
+              null
+            const outOfAmmo = !!w && !isMelee && !!w.clip && w.clip > 0 && ammoCurrent !== null && ammoCurrent <= 0
             const has2Actions = (activeEntry.actions_remaining ?? 0) >= 2
             const isGrappled = !!activeEntry.grappled_by
             const isGrappling = initiativeOrder.some(e => e.grappled_by === activeEntry.character_name)
@@ -5485,6 +5497,7 @@ export default function TablePage() {
                 {/* ── ATTACK: weapon attack, +1 CMod if same target as last attack ── */}
                 <button onClick={() => {
                   if (!w || !weaponData) { alert('No weapon readied.'); return }
+                  if (outOfAmmo) { alert(`${w.name} is empty. Reload via Ready Weapon before firing again.`); return }
                   const rapid = charEntry?.character.data?.rapid ?? {}
                   const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
                   const attrKey = isMelee ? 'PHY' : (w.skill === 'Ranged Combat' ? 'DEX' : 'ACU')
@@ -5524,9 +5537,10 @@ export default function TablePage() {
                   }
                   handleRollRequest(`${activeEntry.character_name} — Attack (${w.name})`, amod, smod, weaponCtx)
                 }}
-                  style={w ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}
-                  disabled={!w}>
-                  Attack{w ? ` (${w.name})` : ''}
+                  style={(w && !outOfAmmo) ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}
+                  disabled={!w || outOfAmmo}
+                  title={outOfAmmo ? `${w?.name ?? 'Weapon'} is empty — Reload via Ready Weapon` : undefined}>
+                  Attack{w ? ` (${w.name})` : ''}{outOfAmmo ? ' — empty, Reload' : ''}
                 </button>
 
                 {/* ── CHARGE: both actions, melee/unarmed attack (always available) ── */}
