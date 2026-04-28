@@ -251,11 +251,14 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
     return `${r.character_name} used ${action} on ${r.target_name}`
   }
   // Unarmed attack — label "<name> — Unarmed" (no Attack() wrapper,
-  // since Unarmed IS the action). Reads "used Unarmed Combat on X" per
-  // the log-trimming playtest spec — "Combat" adds verb weight so the
-  // line parses like a sentence instead of "used Unarmed on X".
+  // since Unarmed IS the action). Reads "Successfully used Unarmed
+  // Combat on X" per the log-trimming playtest spec — "Combat" adds
+  // verb weight so the line parses like a sentence instead of
+  // "used Unarmed on X". Adverb makes hit/miss legible from the
+  // narrative alone, matching the firearm/melee Attack branch above.
   if (/^Unarmed$/.test(suffix) && r.target_name) {
-    return `${r.character_name} used Unarmed Combat on ${r.target_name}`
+    const adverb = hit ? 'Successfully' : 'Unsuccessfully'
+    return `${r.character_name} ${adverb} used Unarmed Combat on ${r.target_name}${outcomeTag}`
   }
   // Stabilize — label "<name> — Stabilize <target>"
   const stabilizeMatch = suffix.match(/^Stabilize\s+(.+)$/)
