@@ -7,9 +7,13 @@
    - Standard left sidebar now shows on this page.
    - New layout: hero + section-header + card grid (destinations, survivor-creation paths, off-platform links).
 2. Messages bell (💬 in the sidebar header) now opens a **dropdown** like the notification bell.
-   - One row per **unread** conversation.
-   - Headline format: `Marv sent you a message at 08.43pm on 4/28/2026`.
-   - Per-row **OPEN** button + a **VIEW ALL** button in the header → both open `/messages` in a new tab.
+   - One row per recent conversation (up to 10), unread + read.
+   - Unread rows: red left border, dark `#111` background, **bold headline**, full opacity.
+   - Read rows: no border, transparent background, normal weight, dim opacity.
+   - Headline format (latest from someone else): `Marv sent you a message at 08.43pm on 4/28/2026`.
+   - Headline format (latest sent by me): `You sent Marv a message at 08.43pm on 4/28/2026`.
+   - Per-row **OPEN** button → opens `/messages?conv=<id>` in a new tab and selects that thread.
+   - Header **VIEW ALL** button → opens `/messages` in a new tab (no auto-select).
 
 ## How to verify
 
@@ -27,20 +31,25 @@
 11. **Firsttimers separation** — visit `/firsttimers` and confirm it still has NO sidebar (unchanged behavior — that page is still the new-user landing).
 
 ### B. Messages dropdown
-1. **No unread state** — when 💬 is dim/grey: click it → dropdown opens with header `MESSAGES`, body says `NO NEW MESSAGES`, and a `VIEW ALL` button in the top-right. Click `VIEW ALL` → `/messages` opens in a new tab.
-2. **With unread** — have someone send you a message (or send yourself one from a second account):
-   - Badge appears on the bell with a red `1` (or `9+`).
-   - Click the bell → dropdown opens.
-   - Each row shows: `<sender> sent you a message at HH.MMam/pm on M/D/YYYY` with a red left-border and an `OPEN` button.
+1. **No conversations** — brand-new account: click 💬 → dropdown shows `NO MESSAGES YET` and a `VIEW ALL` link in the header.
+2. **Account with read history but no unread** — bell is dim; click it → dropdown shows recent conversations as **read rows** (no red border, dimmer text, normal weight).
+3. **With unread** — have someone send you a message (or send yourself one from a second account):
+   - Badge appears on the bell with red `1` (or `9+`).
+   - Bell goes bright + colored.
+   - Click the bell → dropdown lists conversations newest-first.
+   - **Unread row** at top: red left border, dark background, **bolded** headline `<sender> sent you a message at HH.MMam/pm on M/D/YYYY`.
    - Time format: zero-padded hour, period (not colon), lowercase am/pm — e.g. `08.43pm` not `8:43 PM`.
-   - Click `OPEN` → `/messages` opens in a new tab; the dropdown closes.
-3. **Multiple unread** — with 2+ unread conversations, all appear in the dropdown sorted newest-first.
-4. **Clear unread** — open `/messages` and click into the unread conversation. Wait a beat, then return to the dropdown:
+4. **Latest message from me** — find a conv where you sent the last message. Headline reads `You sent <other> a message at HH.MMam/pm on M/D/YYYY` (rendered as a read row).
+5. **OPEN deep-link** — click the per-row `OPEN`:
+   - New tab opens at `/messages?conv=<id>`.
+   - The messages page lands with that conversation already selected (active in the right pane).
+6. **VIEW ALL** — click the `VIEW ALL` link in the dropdown header → new tab opens at `/messages` with the conversation list visible, no specific thread selected.
+7. **Clear unread** — open `/messages` and click into the unread conversation. Wait a beat (the realtime update on `conversation_participants.last_read_at` propagates), then return to the dropdown:
    - Bell goes dim again.
-   - Dropdown shows `NO NEW MESSAGES`.
-   - This is driven by the realtime update on `conversation_participants.last_read_at`.
-5. **Realtime arrival** — leave the dropdown open; have someone send you a message. The new row should appear without a refresh.
-6. **Outside-click closes** — open dropdown, click anywhere outside it → it closes.
+   - The previously-unread row drops the red border + bold and becomes a read row in place.
+8. **Realtime arrival** — leave the dropdown open; have someone send you a message. The new row should appear at the top without a manual refresh.
+9. **Multiple unread** — with 2+ unread conversations, all unread items render bolded with the red border, sorted newest-first.
+10. **Outside-click closes** — open dropdown, click anywhere outside it → it closes.
 
 ### C. Regression checks
 - `/dashboard`, `/map`, `/characters`, `/stories`, `/communities`, `/modules` — sidebar visible, nothing else changed.
@@ -50,5 +59,4 @@
 - Font-size guardrail `node scripts/check-font-sizes.mjs` — clean.
 
 ## Known follow-ups (not in this change)
-- The `OPEN` button currently opens the messages page; it does NOT auto-select the matching conversation. Once the messages page accepts a `?conv=<id>` query param we can deep-link.
 - The "Quick Reference" card on the guide is a placeholder — needs cheat-sheet content (CDP, WP, RP, Stress, Inspiration, etc.) per Xero's direction.

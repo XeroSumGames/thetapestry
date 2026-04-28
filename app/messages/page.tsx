@@ -62,6 +62,23 @@ export default function MessagesPage() {
       setMyId(user.id)
       await loadConversations(user.id)
 
+      // If ?conv=<conversationId> is in the URL, open that conversation
+      // directly. Used by the MessagesBell dropdown's per-row OPEN button
+      // so a click can deep-link straight into the right thread instead of
+      // dumping the user at the conversation list. We trust loadConversations'
+      // RLS-filtered list to gate access — only set activeConvId if the user
+      // is actually a participant in that conv.
+      const convId = searchParams.get('conv')
+      if (convId) {
+        const { data: myPart } = await supabase
+          .from('conversation_participants')
+          .select('conversation_id')
+          .eq('conversation_id', convId)
+          .eq('user_id', user.id)
+          .maybeSingle()
+        if (myPart) setActiveConvId(convId)
+      }
+
       // If ?dm=<userId> is in the URL, open or create that DM immediately.
       const dmUserId = searchParams.get('dm')
       if (dmUserId && dmUserId !== user.id) {
