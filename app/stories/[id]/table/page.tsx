@@ -201,6 +201,18 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
   if (r.outcome === 'action' && /^Move\b/.test(suffix)) {
     return `${r.character_name} Moves`
   }
+  // Social action banners — Distract / Cover Fire / Inspire. Label format
+  // is "<name> — <Action> → <target> (...)" written by applySocialAction.
+  // Compact view trims the parenthetical effect (lost 1 action / -2 CMod /
+  // +1 action) since it duplicates the bordered card's left color cue.
+  const socialMatch = suffix.match(/^(Distract|Cover Fire|Inspire)\s+→\s+(.+?)(?:\s*\(.+\))?$/)
+  if (r.outcome === 'action' && socialMatch) {
+    const action = socialMatch[1]
+    const target = socialMatch[2].trim()
+    if (action === 'Distract') return `${r.character_name} Distracts ${target}!`
+    if (action === 'Inspire') return `${r.character_name} Inspires ${target}!`
+    return `${r.character_name} lays down covering fire on ${target}!`
+  }
   // Attack-like rolls against a named target. Phrasing per playtest spec:
   //   - Explosive thrown (Grenade, Molotov, Shiv-/Flash-Bang):
   //       "X threw a <weapon> at <target>"
@@ -5522,7 +5534,24 @@ export default function TablePage() {
                 {socialTarget && (() => {
                   // Show all other combatants — GM/player picks the correct target.
                   // NPCs can be allies or enemies, so we can't filter by is_npc.
-                  const targets = initiativeOrder.filter(e => e.id !== activeEntry.id)
+                  // Filter out dead / mortally wounded combatants — they have
+                  // no actions to lose (Distract) and no attacks to interfere
+                  // with (Cover Fire / Inspire), so showing them is just
+                  // visual noise and can lead to wasted clicks.
+                  const targets = initiativeOrder.filter(e => {
+                    if (e.id === activeEntry.id) return false
+                    if (e.is_npc) {
+                      const npc = campaignNpcs.find((n: any) => n.id === e.npc_id)
+                      if (npc) {
+                        if (npc.status === 'dead') return false
+                        if (npc.wp_current != null && npc.wp_current <= 0) return false
+                      }
+                    } else {
+                      const pc = entries.find(en => en.character.id === e.character_id)
+                      if (pc?.liveState && pc.liveState.wp_current === 0) return false
+                    }
+                    return true
+                  })
                   return (
                     <div onClick={() => setSocialTarget(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', minWidth: '220px', maxWidth: '320px' }}>
@@ -5550,7 +5579,22 @@ export default function TablePage() {
 
                 {/* ── COORDINATE MODAL ── */}
                 {showCoordinateModal && (() => {
-                  const allTargets = initiativeOrder.filter(e => e.id !== activeEntry.id)
+                  // Same dead/mortal filter as the social-action picker —
+                  // coordinating against a corpse buys no one a CMod.
+                  const allTargets = initiativeOrder.filter(e => {
+                    if (e.id === activeEntry.id) return false
+                    if (e.is_npc) {
+                      const npc = campaignNpcs.find((n: any) => n.id === e.npc_id)
+                      if (npc) {
+                        if (npc.status === 'dead') return false
+                        if (npc.wp_current != null && npc.wp_current <= 0) return false
+                      }
+                    } else {
+                      const pc = entries.find(en => en.character.id === e.character_id)
+                      if (pc?.liveState && pc.liveState.wp_current === 0) return false
+                    }
+                    return true
+                  })
                   return (
                     <div onClick={() => setShowCoordinateModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
