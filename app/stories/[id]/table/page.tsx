@@ -297,12 +297,23 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
     // Fallback for any future grapple outcome we haven't handled.
     return `${r.character_name} attempts to grapple ${tgt}`
   }
-  // Special narrative checks — Perception, Gut Instinct, First Impression
+  // Special narrative checks — Perception, Gut Instinct, First Impression.
+  // Reads as a sentence rather than the mechanical "Name — Check" form,
+  // per playtest feedback ("Cree Hask successfully uses Perception"
+  // instead of "Cree Hask — Perception Check"). First Impression uses
+  // "make" because "uses First Impression" reads awkwardly.
   const narrativeMatch = suffix.match(/^(Perception Check|Gut Instinct|First Impression)/)
   if (narrativeMatch) {
     const check = narrativeMatch[1]
-    return hit ? `${r.character_name} — ${check}${outcomeTag}`
-               : `${r.character_name} — ${check} (failed)${outcomeTag}`
+    const verbs: Record<string, { hit: string; miss: string }> = {
+      'Perception Check': { hit: 'successfully uses Perception',     miss: 'fails to use Perception' },
+      'Gut Instinct':     { hit: 'successfully uses Gut Instinct',   miss: 'fails to use Gut Instinct' },
+      'First Impression': { hit: 'makes a strong First Impression',  miss: 'fails to make a First Impression' },
+    }
+    const v = verbs[check]
+    return v
+      ? `${r.character_name} ${hit ? v.hit : v.miss}${outcomeTag}`
+      : `${r.character_name} — ${check}${hit ? '' : ' (failed)'}${outcomeTag}`
   }
   // Recruitment outcome — label starts with "🤝" and we stash the full
   // structured metadata in damage_json (approach, community, apprentice
