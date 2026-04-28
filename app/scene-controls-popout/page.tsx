@@ -262,22 +262,18 @@ export default function SceneControlsPopoutPage() {
         <button onClick={() => busRef.current?.postCommand('fit_to_map')}
           style={{ ...btn, color: '#7ab3d4', marginBottom: '4px' }}>Fit to Map</button>
 
-        {/* 2×2 stepper grid — was 4 stacked rows; saves ~60-80px of
-            vertical space in the popout so the lower buttons (Fit to
-            Screen / Lock / Hide Ranges / Delete) sit higher. */}
+        {/* 2×2 stepper grid — was 4 stacked rows. Layout transposes
+            so Cols stacks above Rows in the left column and Cell (ft)
+            stacks above Cell (px) in the right column — pairs the
+            grid-dimension steppers and the cell-size steppers
+            visually. */}
         <div style={{ display: 'flex', gap: '4px' }}>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <Stepper label="Cols" value={scene.grid_cols} onChange={v => updateSceneField('grid_cols', Math.max(1, v))} />
-          </div>
-          <div style={{ flex: 1 }}>
             <Stepper label="Rows" value={scene.grid_rows} onChange={v => updateSceneField('grid_rows', Math.max(1, v))} />
           </div>
-        </div>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <Stepper label="Cell (ft)" value={scene.cell_feet ?? 3} onChange={v => updateSceneField('cell_feet', Math.max(1, v))} suffix="ft" />
-          </div>
-          <div style={{ flex: 1 }}>
             <Stepper label="Cell (px)" value={cellPx} onChange={v => setCellPx(Math.max(20, Math.min(200, v)))} suffix="px" step={5} />
           </div>
         </div>
