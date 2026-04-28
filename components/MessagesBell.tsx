@@ -169,6 +169,26 @@ export default function MessagesBell() {
     setOpen(false)
   }
 
+  // Bulk mark-as-read across every conversation that's currently
+  // showing as unread in the dropdown. Bumps each row's last_read_at
+  // to now(); the realtime sub on conversation_participants echoes
+  // back and reloadConversations would give the same result, but the
+  // optimistic local flip keeps the UI snappy.
+  async function markAllAsRead() {
+    const uid = userIdRef.current
+    if (!uid) return
+    const unreadConvIds = items.filter(i => i.is_unread).map(i => i.conversation_id)
+    if (unreadConvIds.length === 0) return
+    const now = new Date().toISOString()
+    const { error } = await supabase
+      .from('conversation_participants')
+      .update({ last_read_at: now })
+      .eq('user_id', uid)
+      .in('conversation_id', unreadConvIds)
+    if (error) { console.error('[MessagesBell] markAllAsRead error:', error.message); return }
+    setItems(prev => prev.map(i => unreadConvIds.includes(i.conversation_id) ? { ...i, is_unread: false } : i))
+  }
+
   const unreadCount = items.filter(i => i.is_unread).length
   const dim = unreadCount === 0
 
@@ -240,10 +260,18 @@ export default function MessagesBell() {
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #2e2e2e' }}>
             <span style={{ fontSize: '13px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>Messages</span>
-            <button onClick={() => openConversation(null)}
-              style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
-              View all
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {unreadCount > 0 && (
+                <button onClick={markAllAsRead}
+                  style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Mark all read
+                </button>
+              )}
+              <button onClick={() => openConversation(null)}
+                style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                View all
+              </button>
+            </div>
           </div>
 
           {/* List */}
