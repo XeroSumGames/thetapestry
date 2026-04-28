@@ -260,12 +260,15 @@ function compactRollSummary(r: { label: string; character_name: string; target_n
     const adverb = hit ? 'Successfully' : 'Unsuccessfully'
     return `${r.character_name} ${adverb} used Unarmed Combat on ${r.target_name}${outcomeTag}`
   }
-  // Stabilize — label "<name> — Stabilize <target>"
+  // Stabilize — label "<name> — Stabilize <target>". Adverb pattern
+  // matches the Attack / Unarmed branches so hit/miss is legible from
+  // the narrative alone — bordered card's left color cue is too subtle
+  // when rolls scroll fast.
   const stabilizeMatch = suffix.match(/^Stabilize\s+(.+)$/)
   if (stabilizeMatch) {
     const tgt = stabilizeMatch[1]
-    return hit ? `${r.character_name} stabilizes ${tgt}${outcomeTag}`
-               : `${r.character_name} fails to stabilize ${tgt}${outcomeTag}`
+    const adverb = hit ? 'Successfully' : 'Unsuccessfully'
+    return `${r.character_name} ${adverb} Stabilizes ${tgt}${outcomeTag}`
   }
   // Coordinate — "<name> — Coordinate (vs <target>)"
   const coordMatch = suffix.match(/^Coordinate\s*\(vs\s+([^)]+)\)/)
