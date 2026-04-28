@@ -78,10 +78,14 @@ const TOKEN_BORDER_OVERRIDES: Record<string, string> = {
   '#2d5a1b': '#4ade80', // friendly: forest green → vivid green
   '#c0392b': '#ef4444', // hostile: brand red → vivid red
   '#a17a14': '#facc15', // neutral: dim goldenrod → vivid yellow
-  // Legacy fallback — tokens placed before the yellow swap stored
-  // '#3a3a3a' as their color. Map them through to the new vivid yellow
-  // so old maps don't render as dim grey rings.
+  // Legacy fallbacks — tokens placed before the yellow swap stored
+  // either '#3a3a3a' (the dim picker color, via cell-throw / quick-add
+  // paths) or '#9ca3af' (the OLD vivid medium gray, via placeTokenOnMap
+  // which writes the *vivid* color straight into scene_tokens.color).
+  // Map both through to the new vivid yellow so old maps don't render
+  // as gray rings — no DB migration needed.
   '#3a3a3a': '#facc15',
+  '#9ca3af': '#facc15',
 }
 
 export function getNpcTokenBorderColor(npc: { disposition?: string | null; npc_type?: string | null }): string {
