@@ -2068,21 +2068,10 @@ export default function TablePage() {
       damage_json: { combatants } as any,
     })
     if (endLogErr) console.error('[endCombat] roll_log insert error:', endLogErr.message)
-    // Mortally Wounded PCs gain +1 Stress at end of combat
-    for (const e of entries) {
-      const wp = e.liveState.wp_current ?? e.liveState.wp_max ?? 10
-      const dc = (e.liveState as any).death_countdown
-      const isMortal = wp === 0 && (dc == null || dc > 0)
-      if (isMortal) {
-        const newStress = Math.min(5, (e.liveState.stress ?? 0) + 1)
-        await supabase.from('character_states').update({ stress: newStress, updated_at: new Date().toISOString() }).eq('id', e.stateId)
-        await supabase.from('roll_log').insert({
-          campaign_id: id, user_id: userId, character_name: 'System',
-          label: `😰 ${e.character.name} gains +1 Stress from being mortally wounded.`,
-          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
-        })
-      }
-    }
+    // Stress for mortal/incap is now applied on-entry to those states (see
+    // the damage paths in executeRoll + handleInsightSave). The old combat-end
+    // sweep was a workaround for the absence of on-entry stress; removing
+    // it avoids double-stressing anyone who entered mortal mid-combat.
     await supabase.from('initiative_order').delete().eq('campaign_id', id)
     setInitiativeOrder([])
     setCombatActive(false)
@@ -3261,12 +3250,22 @@ export default function TablePage() {
       }).eq('id', stateId)
       setEntries(prev => prev.map(e => e.stateId === stateId ? { ...e, liveState: { ...e.liveState, wp_current: 1, rp_current: 1, insight_dice: 0 } } : e))
     } else {
-      // Apply full damage — WP=0 with death countdown
+      // Apply full damage — WP=0 with death countdown + Stress pip on entry
+      // to mortal-wound (rule: any mortal/incap transition fills one pip).
       const deathCountdown = Math.max(1, 4 + phyAmod)
+      const targetEntry = entries.find(e => e.stateId === stateId)
+      const newStress = Math.min(5, (targetEntry?.liveState.stress ?? 0) + 1)
       await supabase.from('character_states').update({
-        wp_current: 0, death_countdown: deathCountdown, updated_at: new Date().toISOString(),
+        wp_current: 0, death_countdown: deathCountdown, stress: newStress, updated_at: new Date().toISOString(),
       }).eq('id', stateId)
-      setEntries(prev => prev.map(e => e.stateId === stateId ? { ...e, liveState: { ...e.liveState, wp_current: 0, death_countdown: deathCountdown } as any } : e))
+      setEntries(prev => prev.map(e => e.stateId === stateId ? { ...e, liveState: { ...e.liveState, wp_current: 0, death_countdown: deathCountdown, stress: newStress } as any } : e))
+      if (targetEntry) {
+        await supabase.from('roll_log').insert({
+          campaign_id: id, user_id: userId, character_name: 'System',
+          label: `😰 ${targetEntry.character.name} gains +1 Stress from being mortally wounded.`,
+          die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
+        })
+      }
     }
     setInsightSavePrompt(null)
     // Broadcast resolution so other clients close their modal and refresh
@@ -3805,8 +3804,15 @@ export default function TablePage() {
           initChannelRef.current?.send({ type: 'broadcast', event: 'pc_mortal_wound', payload: insightData })
         } else {
           const update: any = { wp_current: newWP, rp_current: newRP, updated_at: new Date().toISOString() }
+          // Stress on entry to mortal-wound or incap. Per playtest rule
+          // 2026-04-27 — entering either state automatically fills a Stress
+          // pip (capped at 5). Mortal preempts incap when both transitions
+          // would fire on the same hit, so only one pip per event.
+          let stressReason: string | null = null
           if (newWP === 0 && targetEntry.liveState.wp_current > 0) {
             update.death_countdown = Math.max(1, 4 + (targetEntry.character.data?.rapid?.PHY ?? 0))
+            update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
+            stressReason = 'mortally wounded'
             await supabase.from('roll_log').insert({
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
@@ -3839,6 +3845,15 @@ export default function TablePage() {
           // Set incapacitation when RP first hits 0
           if (newRP === 0 && targetEntry.liveState.rp_current > 0 && newWP > 0) {
             update.incap_rounds = Math.max(1, 4 - (targetEntry.character.data?.rapid?.PHY ?? 0))
+            update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
+            stressReason = 'incapacitated'
+          }
+          if (stressReason) {
+            await supabase.from('roll_log').insert({
+              campaign_id: id, user_id: userId, character_name: 'System',
+              label: `😰 ${targetEntry.character.name} gains +1 Stress from being ${stressReason}.`,
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
+            })
           }
           const { error: csErr, data: csData } = await supabase.from('character_states').update(update).eq('id', targetEntry.stateId).select()
           if (csErr) console.error('[damage] PC character_states update error:', csErr.message)
@@ -4125,14 +4140,31 @@ export default function TablePage() {
               const { data: freshState } = await supabase.from('character_states').select('*').eq('id', splashPC.stateId).single()
               const curWP = freshState?.wp_current ?? splashPC.liveState.wp_current
               const curRP = freshState?.rp_current ?? splashPC.liveState.rp_current
+              const curStress = freshState?.stress ?? splashPC.liveState.stress ?? 0
               const nWP = Math.max(0, curWP - splashWP)
               const nRP = Math.max(0, curRP - splashRP)
               const update: any = { wp_current: nWP, rp_current: nRP, updated_at: new Date().toISOString() }
-              if (nWP === 0 && curWP > 0) update.death_countdown = Math.max(1, 4 + (splashPC.character.data?.rapid?.PHY ?? 0))
-              if (nRP === 0 && curRP > 0 && nWP > 0) update.incap_rounds = Math.max(1, 4 - (splashPC.character.data?.rapid?.PHY ?? 0))
+              let splashStressReason: string | null = null
+              if (nWP === 0 && curWP > 0) {
+                update.death_countdown = Math.max(1, 4 + (splashPC.character.data?.rapid?.PHY ?? 0))
+                update.stress = Math.min(5, curStress + 1)
+                splashStressReason = 'mortally wounded'
+              }
+              if (nRP === 0 && curRP > 0 && nWP > 0) {
+                update.incap_rounds = Math.max(1, 4 - (splashPC.character.data?.rapid?.PHY ?? 0))
+                update.stress = Math.min(5, curStress + 1)
+                splashStressReason = 'incapacitated'
+              }
               await supabase.from('character_states').update(update).eq('id', splashPC.stateId)
               setEntries(prev => prev.map(e => e.stateId === splashPC.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
               initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: { stateId: splashPC.stateId, patch: update } })
+              if (splashStressReason) {
+                await supabase.from('roll_log').insert({
+                  campaign_id: id, user_id: userId, character_name: 'System',
+                  label: `😰 ${splashName} gains +1 Stress from being ${splashStressReason}.`,
+                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
+                })
+              }
               blastTargets.push(`${splashName} (${rangeBandLabel}): ${splashWP} WP, ${splashRP} RP`)
             } else if (splashNpc) {
               const curWP = splashNpc.wp_current ?? splashNpc.wp_max ?? 10
@@ -4206,7 +4238,19 @@ export default function TablePage() {
             newIdx = 4; upkeepResult = 'Item breaks immediately! 1 WP damage.'
             if (myEntry.liveState) {
               const newWP = Math.max(0, myEntry.liveState.wp_current - 1)
-              await supabase.from('character_states').update({ wp_current: newWP }).eq('id', myEntry.stateId)
+              const upkeepUpdate: any = { wp_current: newWP }
+              if (newWP === 0 && myEntry.liveState.wp_current > 0) {
+                upkeepUpdate.death_countdown = Math.max(1, 4 + (myEntry.character.data?.rapid?.PHY ?? 0))
+                upkeepUpdate.stress = Math.min(5, (myEntry.liveState.stress ?? 0) + 1)
+              }
+              await supabase.from('character_states').update(upkeepUpdate).eq('id', myEntry.stateId)
+              if (newWP === 0 && myEntry.liveState.wp_current > 0) {
+                await supabase.from('roll_log').insert({
+                  campaign_id: id, user_id: userId, character_name: 'System',
+                  label: `😰 ${myEntry.character.name} gains +1 Stress from being mortally wounded.`,
+                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
+                })
+              }
             }
           }
           else { upkeepResult = 'No change to condition' }
@@ -4240,7 +4284,19 @@ export default function TablePage() {
             newIdx = 4; unjamResult = 'Weapon breaks! 1 WP damage.'
             if (myEntry.liveState) {
               const newWP = Math.max(0, myEntry.liveState.wp_current - 1)
-              await supabase.from('character_states').update({ wp_current: newWP }).eq('id', myEntry.stateId)
+              const unjamUpdate: any = { wp_current: newWP }
+              if (newWP === 0 && myEntry.liveState.wp_current > 0) {
+                unjamUpdate.death_countdown = Math.max(1, 4 + (myEntry.character.data?.rapid?.PHY ?? 0))
+                unjamUpdate.stress = Math.min(5, (myEntry.liveState.stress ?? 0) + 1)
+              }
+              await supabase.from('character_states').update(unjamUpdate).eq('id', myEntry.stateId)
+              if (newWP === 0 && myEntry.liveState.wp_current > 0) {
+                await supabase.from('roll_log').insert({
+                  campaign_id: id, user_id: userId, character_name: 'System',
+                  label: `😰 ${myEntry.character.name} gains +1 Stress from being mortally wounded.`,
+                  die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
+                })
+              }
             }
           }
           else { unjamResult = 'No change' }
@@ -4540,15 +4596,27 @@ export default function TablePage() {
         const tNewWP = Math.max(0, targetEntry.liveState.wp_current - finalWP)
         const tNewRP = Math.max(0, targetEntry.liveState.rp_current - finalRP)
         const update: any = { wp_current: tNewWP, rp_current: tNewRP, updated_at: new Date().toISOString() }
+        let rerollStressReason: string | null = null
         if (tNewWP === 0 && targetEntry.liveState.wp_current > 0) {
           update.death_countdown = Math.max(1, 4 + (targetEntry.character.data?.rapid?.PHY ?? 0))
+          update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
+          rerollStressReason = 'mortally wounded'
         }
         if (tNewRP === 0 && targetEntry.liveState.rp_current > 0 && tNewWP > 0) {
           update.incap_rounds = Math.max(1, 4 - (targetEntry.character.data?.rapid?.PHY ?? 0))
+          update.stress = Math.min(5, (targetEntry.liveState.stress ?? 0) + 1)
+          rerollStressReason = 'incapacitated'
         }
         await supabase.from('character_states').update(update).eq('id', targetEntry.stateId)
         setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
         initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: { stateId: targetEntry.stateId, patch: update } })
+        if (rerollStressReason) {
+          await supabase.from('roll_log').insert({
+            campaign_id: id, user_id: userId, character_name: 'System',
+            label: `😰 ${targetEntry.character.name} gains +1 Stress from being ${rerollStressReason}.`,
+            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
+          })
+        }
       } else if (targetNpcObj) {
         const tNpcWP = targetNpcObj.wp_current ?? targetNpcObj.wp_max ?? 10
         const tNpcRP = targetNpcObj.rp_current ?? targetNpcObj.rp_max ?? 6
