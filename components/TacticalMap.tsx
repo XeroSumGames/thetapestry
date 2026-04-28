@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getWeaponByName } from '../lib/weapons'
 import { vividTokenBorder } from './NpcRoster'
-import { openPopout } from '../lib/popout'
 import { createSceneControlsBus, type SceneControlsBus } from '../lib/scene-controls-bus'
 
 // Feet per band — used when drawing the primary-weapon range circle for PC/NPC tokens
@@ -135,7 +134,6 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [setupCols, setSetupCols] = useState(20)
   const [setupRows, setSetupRows] = useState(15)
   const [setupHasGrid, setSetupHasGrid] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [zoom, setZoom] = useState(1)
   const [panX, setPanX] = useState(0)
   const [panY, setPanY] = useState(0)
@@ -1477,18 +1475,11 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     tacticalChannelRef.current?.send({ type: 'broadcast', event: 'scene_activated', payload: { sceneId } })
   }
 
-  async function uploadBackground(file: File) {
-    if (!scene) return
-    setUploading(true)
-    const path = `${campaignId}/${scene.id}/${file.name}`
-    const { error: uploadErr } = await supabase.storage.from('tactical-maps').upload(path, file, { upsert: true })
-    if (uploadErr) { console.error('[TacticalMap] upload error:', uploadErr.message); alert('Upload failed: ' + uploadErr.message); setUploading(false); return }
-    const { data: urlData } = supabase.storage.from('tactical-maps').getPublicUrl(path)
-    const { error: updateErr } = await supabase.from('tactical_scenes').update({ background_url: urlData.publicUrl }).eq('id', scene.id)
-    if (updateErr) { console.error('[TacticalMap] scene update error:', updateErr.message); alert('Failed to save map URL: ' + updateErr.message); setUploading(false); return }
-    setScene(prev => prev ? { ...prev, background_url: urlData.publicUrl } : prev)
-    setUploading(false)
-  }
+  // uploadBackground used to live here for the inline GM panel's
+  // Upload Map button. The panel moved to /scene-controls-popout
+  // which uploads on its own; the popout's write triggers our
+  // tactical_scenes realtime sub and the canvas re-fetches the new
+  // background_url. So this function was dead and got removed.
 
   async function autoPopulateTokens() {
     if (!scene) return
@@ -1668,184 +1659,12 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
 
   return (
     <div style={{ flex: 1, display: 'flex', background: '#111', overflow: 'hidden' }}>
-      {/* GM Controls — left strip */}
-      {isGM && (
-        <div style={{ width: '130px', flexShrink: 0, background: '#0d0d0d', borderRight: '1px solid #2e2e2e', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden' }}>
-          {/* Popout — opens this same panel in a separate browser window
-              so the GM can park controls on a 2nd monitor and let the
-              map fill its screen. State syncs both ways via
-              BroadcastChannel (lib/scene-controls-bus.ts). */}
-          <button onClick={() => openPopout(`/scene-controls-popout?c=${campaignId}`, `scene-controls-${campaignId}`, { w: 200, h: 760 })}
-            title="Pop out controls into a separate window"
-            style={{ padding: '4px 8px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', cursor: 'pointer', width: '100%', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', marginBottom: '4px', fontWeight: 600 }}>
-            ↗ Popout
-          </button>
-          <select value={scene.id} onChange={e => {
-            if (e.target.value === '__new__') { setShowSetup(true); e.target.value = scene.id }
-            else activateScene(e.target.value)
-          }}
-            style={{ padding: '4px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', width: '100%', height: '28px', boxSizing: 'border-box', textAlign: 'center', marginBottom: '4px' }}>
-            {scenes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            <option value="__new__">+ New Scene</option>
-          </select>
-          <div style={{ marginBottom: '4px' }}>
-            <div style={{ fontSize: '13px', color: '#fff', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px', textAlign: 'center' }}>Scene Name</div>
-            <input value={scene.name} onChange={async e => {
-              const newName = e.target.value
-              setScene(prev => prev ? { ...prev, name: newName } : prev)
-              await supabase.from('tactical_scenes').update({ name: newName }).eq('id', scene.id)
-            }}
-              style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', textAlign: 'center' }} />
-          </div>
-          <label style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '28px', boxSizing: 'border-box' }}>
-            {uploading ? '...' : 'Upload Map'}
-            <input type="file" accept="image/*" hidden onChange={e => { if (e.target.files?.[0]) uploadBackground(e.target.files[0]) }} />
-          </label>
-          <button onClick={autoPopulateTokens}
-            style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
-            Place Tokens
-          </button>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            <button onClick={() => setZoom(z => Math.max(0.25, z - 0.25))}
-              style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>−</button>
-            <span style={{ padding: '4px 6px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', minWidth: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{Math.round(zoom * 100)}%</span>
-            <button onClick={() => setZoom(z => Math.min(4, z + 0.25))}
-              style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>+</button>
-          </div>
-          {/* Grid controls */}
-          <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '6px', marginTop: '4px' }}>
-            <button onClick={() => setShowGrid(prev => !prev)}
-              style={{ padding: '4px 10px', background: showGrid ? '#1a2e10' : 'rgba(15,15,15,.85)', border: `1px solid ${showGrid ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: showGrid ? '#7fc458' : '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', marginBottom: '4px' }}>
-              Grid {showGrid ? 'ON' : 'OFF'}
-            </button>
-            <select value={gridColor} onChange={e => setGridColor(e.target.value)}
-              style={{ padding: '4px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', width: '100%', height: '28px', boxSizing: 'border-box', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px' }}>
-              <option value="white">White</option>
-              <option value="black">Black</option>
-              <option value="#888">Grey</option>
-              <option value="#c0392b">Red</option>
-              <option value="#3498db">Blue</option>
-              <option value="#f1c40f">Yellow</option>
-              <option value="#27ae60">Green</option>
-            </select>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: '4px' }}>
-              <input type="range" min="5" max="100" value={Math.round(gridOpacity * 100)} onChange={e => setGridOpacity(parseInt(e.target.value) / 100)}
-                style={{ flex: 1, accentColor: '#c0392b', width: '70px', minWidth: 0 }} />
-              <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '22px', textAlign: 'right' }}>{Math.round(gridOpacity * 100)}%</span>
-            </div>
-            <button onClick={fitToMap}
-              style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', marginBottom: '4px' }}>
-              Fit to Map
-            </button>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cols</div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-                  <button onClick={async () => { const v = Math.max(1, scene.grid_cols - 1); setScene(p => p ? { ...p, grid_cols: v } : p); await supabase.from('tactical_scenes').update({ grid_cols: v }).eq('id', scene.id) }}
-                    style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
-                  <span onDoubleClick={e => {
-                    const el = e.currentTarget
-                    const input = document.createElement('input')
-                    input.value = String(scene.grid_cols)
-                    input.style.cssText = 'width:30px;padding:0 2px;background:#242424;border:1px solid #3a3a3a;border-radius:2px;color:#f5f2ee;font-size:13px;font-family:Barlow Condensed,sans-serif;text-align:center;outline:none;'
-                    const save = async () => { const v = Math.max(1, parseInt(input.value) || 1); setScene(p => p ? { ...p, grid_cols: v } : p); await supabase.from('tactical_scenes').update({ grid_cols: v }).eq('id', scene.id); el.style.display = ''; input.remove() }
-                    input.onblur = save; input.onkeydown = (ev) => { if (ev.key === 'Enter') save() }
-                    el.style.display = 'none'; el.parentElement!.insertBefore(input, el); input.focus(); input.select()
-                  }} style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'center', cursor: 'pointer' }} title="Double-click to edit">{scene.grid_cols}</span>
-                  <button onClick={async () => { const v = scene.grid_cols + 1; setScene(p => p ? { ...p, grid_cols: v } : p); await supabase.from('tactical_scenes').update({ grid_cols: v }).eq('id', scene.id) }}
-                    style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>+</button>
-                </div>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Rows</div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-                  <button onClick={async () => { const v = Math.max(1, scene.grid_rows - 1); setScene(p => p ? { ...p, grid_rows: v } : p); await supabase.from('tactical_scenes').update({ grid_rows: v }).eq('id', scene.id) }}
-                    style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
-                  <span onDoubleClick={e => {
-                    const el = e.currentTarget
-                    const input = document.createElement('input')
-                    input.value = String(scene.grid_rows)
-                    input.style.cssText = 'width:30px;padding:0 2px;background:#242424;border:1px solid #3a3a3a;border-radius:2px;color:#f5f2ee;font-size:13px;font-family:Barlow Condensed,sans-serif;text-align:center;outline:none;'
-                    const save = async () => { const v = Math.max(1, parseInt(input.value) || 1); setScene(p => p ? { ...p, grid_rows: v } : p); await supabase.from('tactical_scenes').update({ grid_rows: v }).eq('id', scene.id); el.style.display = ''; input.remove() }
-                    input.onblur = save; input.onkeydown = (ev) => { if (ev.key === 'Enter') save() }
-                    el.style.display = 'none'; el.parentElement!.insertBefore(input, el); input.focus(); input.select()
-                  }} style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'center', cursor: 'pointer' }} title="Double-click to edit">{scene.grid_rows}</span>
-                  <button onClick={async () => { const v = scene.grid_rows + 1; setScene(p => p ? { ...p, grid_rows: v } : p); await supabase.from('tactical_scenes').update({ grid_rows: v }).eq('id', scene.id) }}
-                    style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>+</button>
-                </div>
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cell (ft)</div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-                <button onClick={async () => { const v = Math.max(1, (scene.cell_feet ?? 3) - 1); setScene(p => p ? { ...p, cell_feet: v } : p); await supabase.from('tactical_scenes').update({ cell_feet: v }).eq('id', scene.id) }}
-                  style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
-                <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'center' }}>{scene.cell_feet ?? 3}ft</span>
-                <button onClick={async () => { const v = (scene.cell_feet ?? 3) + 1; setScene(p => p ? { ...p, cell_feet: v } : p); await supabase.from('tactical_scenes').update({ cell_feet: v }).eq('id', scene.id) }}
-                  style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>+</button>
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', textAlign: 'center' }}>Cell (px)</div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-                <button onClick={() => setCellPx(p => Math.max(20, p - 5))}
-                  style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>−</button>
-                <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '30px', textAlign: 'center' }}>{cellPx}px</span>
-                <button onClick={() => setCellPx(p => Math.min(200, p + 5))}
-                  style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }}>+</button>
-              </div>
-            </div>
-          </div>
-          <div style={{ flex: 1 }} />
-          <button onClick={fitToScreen}
-              style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
-              Fit to Screen
-          </button>
-          <button onClick={async () => {
-            const newLocked = !mapLocked
-            setMapLocked(newLocked)
-            if (newLocked && scene) {
-              // Save all visual settings to DB so players get the same view
-              await supabase.from('tactical_scenes').update({
-                is_locked: true, cell_px: cellPx, img_scale: imgScale,
-              }).eq('id', scene.id)
-              setScene(prev => prev ? { ...prev, is_locked: true, cell_px: cellPx, img_scale: imgScale } : prev)
-            } else if (scene) {
-              await supabase.from('tactical_scenes').update({ is_locked: false }).eq('id', scene.id)
-              setScene(prev => prev ? { ...prev, is_locked: false } : prev)
-            }
-          }}
-            style={{ padding: '4px 10px', background: mapLocked ? '#2a1210' : 'rgba(15,15,15,.85)', border: `1px solid ${mapLocked ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: mapLocked ? '#f5a89a' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
-            {mapLocked ? 'Unlock Map' : 'Lock Map'}
-          </button>
-          <button onClick={() => setShowRangeOverlay(v => !v)}
-            style={{ padding: '4px 10px', background: showRangeOverlay ? '#1a2e10' : 'rgba(15,15,15,.85)', border: `1px solid ${showRangeOverlay ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: showRangeOverlay ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
-            {showRangeOverlay ? 'Hide Ranges' : 'Show Ranges'}
-          </button>
-          {scene.background_url && (
-            <button onClick={async () => {
-              if (!confirm('Delete the map image?')) return
-              await supabase.from('tactical_scenes').update({ background_url: null }).eq('id', scene.id)
-              setScene(prev => prev ? { ...prev, background_url: null } : prev)
-              bgImageRef.current = null
-            }}
-              style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
-              Delete Map
-            </button>
-          )}
-          <button onClick={async () => {
-            if (!confirm(`Delete scene "${scene.name}"? This cannot be undone.`)) return
-            await supabase.from('scene_tokens').delete().eq('scene_id', scene.id)
-            await supabase.from('tactical_scenes').delete().eq('id', scene.id)
-            setScene(null)
-            setTokens([])
-            await loadScenes()
-          }}
-            style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
-            Delete Scene
-          </button>
-        </div>
-      )}
+      {/* GM scene-controls used to live here as an inline 130-px left
+          strip. Moved to a separate browser window — opened via the
+          "Map Setup" header button on the table page (table/page.tsx).
+          State syncs over BroadcastChannel; see lib/scene-controls-bus.ts
+          and the bus handlers earlier in this file. The map canvas now
+          gets the full table-page width. */}
 
       {/* Map canvas area — scrollable when zoomed */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>

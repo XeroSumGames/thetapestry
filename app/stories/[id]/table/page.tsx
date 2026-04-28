@@ -4946,6 +4946,19 @@ export default function TablePage() {
             {tacticalShared ? 'Unshare Map' : 'Share Map'}
           </button>
         )}
+        {isGM && showTacticalMap && (
+          // Map Setup — replaces the old inline 130px scene-controls
+          // sidebar. Pops out the controls panel into its own browser
+          // window so the GM can park it on a 2nd monitor and let the
+          // tactical map fill the full table-page width. State syncs
+          // between popout and main window via BroadcastChannel —
+          // see lib/scene-controls-bus.ts.
+          <button onClick={() => openPopout(`/scene-controls-popout?c=${id}`, `scene-controls-${id}`, { w: 200, h: 760 })}
+            className="hdr-btn"
+            style={hdrBtn('#2a1a3e', '#c4a7f0', '#5a2e5a')}>
+            Map Setup
+          </button>
+        )}
         {isGM && sessionStatus === 'active' && !combatActive && (
           <button onClick={startCombat} disabled={startingCombat || entries.length === 0}
             className="hdr-btn"
