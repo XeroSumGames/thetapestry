@@ -65,9 +65,20 @@ export default function ModuleMarketplacePage() {
       <div style={{ marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', color: '#c4a7f0', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>
         Module System
       </div>
-      <h1 style={{ margin: '0 0 8px', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
-        Module Marketplace
-      </h1>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap', marginBottom: '8px' }}>
+        <h1 style={{ margin: 0, fontFamily: 'Barlow Condensed, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+          Module Marketplace
+        </h1>
+        {/* Inbound import path — once a GM has a campaign-snapshot
+            export, /modules/import publishes it as a module. Linked
+            from here so users who land on the marketplace directly
+            don't have to hunt for it in the sidebar. */}
+        <Link href="/modules/import" style={{ textDecoration: 'none' }}>
+          <button style={{ padding: '9px 16px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            📂 Import from snapshot
+          </button>
+        </Link>
+      </div>
       <p style={{ margin: '0 0 20px', fontSize: '15px', lineHeight: 1.6, color: '#cce0f5', maxWidth: '720px' }}>
         Adventures, sandboxes, and one-shots authored by GMs and shipped as one-click installs. Pick one when you create a campaign and your table seeds with NPCs, scenes, pins, and handouts already in place.
       </p>

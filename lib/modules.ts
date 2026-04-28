@@ -148,6 +148,7 @@ export interface ModuleForCampaign {
   tagline: string | null
   description: string | null
   parent_setting: string | null
+  cover_image_url: string | null
   visibility: 'private' | 'unlisted' | 'listed'
   latest_version_id: string | null
   archived_at: string | null
@@ -466,7 +467,7 @@ export async function getModuleForCampaign(
 
   const { data, error } = await supabase
     .from('modules')
-    .select('id, name, tagline, description, parent_setting, visibility, latest_version_id, archived_at')
+    .select('id, name, tagline, description, parent_setting, cover_image_url, visibility, latest_version_id, archived_at')
     .eq('source_campaign_id', campaignId)
     .eq('author_user_id', user.id)
     .maybeSingle()
@@ -647,6 +648,10 @@ export interface PublishParams {
   tagline?: string | null
   description?: string | null
   parentSetting?: string | null
+  // undefined = leave alone (re-publish without a new cover);
+  // null     = clear the existing cover;
+  // string   = set/replace.
+  coverImageUrl?: string | null
   visibility: 'private' | 'unlisted' | 'listed'
   version: string            // '1.0.0', '1.1.0', etc.
   changelog?: string | null
@@ -666,20 +671,18 @@ export async function publishModuleVersion(
     // First publish — create the module row. Listed modules enter
     // Thriver moderation as 'pending'; private / unlisted skip the
     // queue.
-    const { data, error } = await supabase
-      .from('modules')
-      .insert({
-        author_user_id: user.id,
-        source_campaign_id: params.campaignId,
-        name: params.name,
-        tagline: params.tagline ?? null,
-        description: params.description ?? null,
-        parent_setting: params.parentSetting ?? 'custom',
-        visibility: params.visibility,
-        moderation_status: params.visibility === 'listed' ? 'pending' : 'approved',
-      })
-      .select('id')
-      .single()
+    const insertRow: any = {
+      author_user_id: user.id,
+      source_campaign_id: params.campaignId,
+      name: params.name,
+      tagline: params.tagline ?? null,
+      description: params.description ?? null,
+      parent_setting: params.parentSetting ?? 'custom',
+      visibility: params.visibility,
+      moderation_status: params.visibility === 'listed' ? 'pending' : 'approved',
+    }
+    if (params.coverImageUrl !== undefined) insertRow.cover_image_url = params.coverImageUrl
+    const { data, error } = await supabase.from('modules').insert(insertRow).select('id').single()
     if (error || !data) throw new Error(`Create module failed: ${error?.message ?? 'unknown'}`)
     moduleId = data.id as string
   } else {
@@ -692,6 +695,7 @@ export async function publishModuleVersion(
       description: params.description ?? null,
       visibility: params.visibility,
     }
+    if (params.coverImageUrl !== undefined) update.cover_image_url = params.coverImageUrl
     if (params.visibility === 'listed') update.moderation_status = 'pending'
     const { error } = await supabase.from('modules').update(update).eq('id', moduleId)
     if (error) throw new Error(`Update module failed: ${error.message}`)

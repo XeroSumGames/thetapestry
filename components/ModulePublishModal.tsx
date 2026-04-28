@@ -23,6 +23,7 @@ import {
   type SnapshotCounts,
 } from '../lib/modules'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import ObjectImageCropper from './ObjectImageCropper'
 
 export interface ModulePublishModalProps {
   supabase: SupabaseClient
@@ -79,6 +80,20 @@ export default function ModulePublishModal({
   const [previewing, setPreviewing] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string>('')
+
+  // Cover image — pre-fill from the existing module on re-publish so
+  // a previously-uploaded cover persists across versions. State value:
+  //   string  — current cover URL (existing or freshly uploaded)
+  //   null    — explicitly cleared by the user (will save as null)
+  //   ''      — never set; treated as null on save
+  // The "dirty" flag tracks whether the user actually changed the
+  // cover this session, so re-publish without touching it doesn't
+  // overwrite cover_image_url with an unintended value.
+  const [coverUrl, setCoverUrl] = useState<string | null>(existingModule?.cover_image_url ?? null)
+  const [coverDirty, setCoverDirty] = useState(false)
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [coverUploading, setCoverUploading] = useState(false)
+  const [coverUploadError, setCoverUploadError] = useState<string | null>(null)
 
   // Preview counts refresh whenever the include toggles change so the
   // author sees a live count of what's about to travel in the module.
@@ -140,6 +155,10 @@ export default function ModulePublishModal({
         tagline: tagline.trim() || null,
         description: description.trim() || null,
         parentSetting: existingModule?.parent_setting ?? 'custom',
+        // Only include cover in the publish payload if the user
+        // actually changed it this session. Untouched on re-publish =
+        // leave the existing cover alone (undefined).
+        coverImageUrl: coverDirty ? (coverUrl || null) : undefined,
         visibility,
         version: nextVersion,
         changelog: changelog.trim() || null,
@@ -149,6 +168,35 @@ export default function ModulePublishModal({
     } catch (e: any) {
       setError(e?.message ?? 'Publish failed')
       setSubmitting(false)
+    }
+  }
+
+  // Cover image upload — same hardened cropper used for object
+  // tokens (15 s encode timeout, 30 s upload timeout, error surfacing,
+  // PNG-without-transparency falls back to JPEG, file input remounts
+  // after each upload to avoid Safari's stale-selection bug).
+  async function handleCoverCrop(blob: Blob, mimeType: string) {
+    setCoverUploadError(null)
+    setCoverUploading(true)
+    try {
+      const ext = mimeType === 'image/png' ? 'png' : 'jpg'
+      const path = `${(typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString()}.${ext}`
+      // 30s watchdog: supabase.storage.upload can hang indefinitely on
+      // network drops; same Promise.race pattern as CampaignObjects.
+      const uploadPromise = supabase.storage.from('module-covers').upload(path, blob, { contentType: mimeType })
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Upload timed out after 30s.')), 30000)
+      )
+      const { error: upErr } = await Promise.race([uploadPromise, timeoutPromise]) as { error: any }
+      if (upErr) throw new Error(upErr.message || 'Upload failed.')
+      const { data: urlData } = supabase.storage.from('module-covers').getPublicUrl(path)
+      setCoverUrl(urlData.publicUrl)
+      setCoverDirty(true)
+      setCoverFile(null)
+    } catch (e: any) {
+      setCoverUploadError(e?.message ?? 'Upload failed.')
+    } finally {
+      setCoverUploading(false)
     }
   }
 
@@ -216,6 +264,43 @@ export default function ModulePublishModal({
           <div>
             <label style={lbl}>Description <span style={{ color: '#cce0f5', fontWeight: 400 }}>(optional)</span></label>
             <textarea style={{ ...inp, minHeight: '70px', resize: 'vertical' }} value={description} onChange={e => setDescription(e.target.value)} placeholder="What this module is, who it's for, how many sessions it runs…" />
+          </div>
+
+          {/* Cover image — shown on /modules cards + the detail page hero. */}
+          <div>
+            <label style={lbl}>Cover image <span style={{ color: '#cce0f5', fontWeight: 400 }}>(optional)</span></label>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <div style={{
+                width: '120px', height: '70px', flexShrink: 0,
+                background: coverUrl ? `url(${coverUrl}) center/cover` : 'linear-gradient(135deg, #1a1a1a 0%, #2a1a3e 100%)',
+                border: `1px solid ${coverUrl ? '#5a2e5a' : '#3a3a3a'}`,
+                borderRadius: '3px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '24px', color: '#5a5550',
+              }}>
+                {!coverUrl && '📦'}
+              </div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ display: 'inline-block', padding: '6px 10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: coverUploading ? '#5a5550' : '#c4a7f0', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', cursor: coverUploading ? 'wait' : 'pointer' }}>
+                  {coverUploading ? 'Uploading…' : coverUrl ? 'Replace cover' : '+ Upload cover'}
+                  <input type="file" accept="image/*" hidden disabled={coverUploading} onChange={e => { const f = e.target.files?.[0]; if (f) setCoverFile(f); e.target.value = '' }} />
+                </label>
+                {coverUrl && !coverUploading && (
+                  <button onClick={() => { setCoverUrl(null); setCoverDirty(true) }}
+                    style={{ padding: '5px 10px', background: 'transparent', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    × Remove
+                  </button>
+                )}
+                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                  Shown on the marketplace card + module detail hero. Leave blank for a placeholder gradient.
+                </div>
+                {coverUploadError && (
+                  <div style={{ fontSize: '13px', color: '#f5a89a', padding: '6px 8px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px' }}>
+                    {coverUploadError}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Visibility */}
@@ -335,6 +420,21 @@ export default function ModulePublishModal({
         </div>
 
       </div>
+
+      {/* Cover crop modal — overlays on top of the publish wizard
+          while the user is cropping. Cropper does the encoding +
+          surfaces upload errors via uploadError. On confirm we get
+          the blob and mime type, run handleCoverCrop, and clear
+          coverFile so the cropper unmounts. */}
+      {coverFile && (
+        <ObjectImageCropper
+          file={coverFile}
+          onCancel={() => { setCoverFile(null); setCoverUploadError(null) }}
+          onCrop={(blob, _preview, mimeType) => handleCoverCrop(blob, mimeType)}
+          uploadError={coverUploadError}
+          onClearError={() => setCoverUploadError(null)}
+        />
+      )}
     </div>
   )
 }
