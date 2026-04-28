@@ -167,6 +167,7 @@ export default function Sidebar() {
       <Link href="/characters"  style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Survivors</Link>
       <Link href="/stories"     style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Stories</Link>
       <Link href="/communities" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Communities</Link>
+      <Link href="/modules"      style={linkStyle('#8b5cf6')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Modules</Link>
       <Link href="/campfire" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Campfire</Link>
 
       {divider}
@@ -192,6 +193,7 @@ export default function Sidebar() {
             Moderation Queue
             {pendingCount > 0 && <span style={{ background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 6px', borderRadius: '3px' }}>{pendingCount}</span>}
           </Link>
+          <Link href="/modules/import"               style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Publish Module from Snapshot</Link>
           <Link href="/tools/portrait-resizer"       style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Resize Portraits</Link>
           <Link href="/tools/rescale-tactical-scenes" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rescale Tactical Scenes</Link>
           <Link href="/logging"                       style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Logs</Link>

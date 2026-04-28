@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { logEvent } from '../../../lib/events'
 import { SETTING_PINS } from '../../../lib/setting-pins'
 import { SETTING_NPCS } from '../../../lib/setting-npcs'
@@ -34,11 +34,27 @@ export default function NewCampaignPage() {
   const [pickedModuleId, setPickedModuleId] = useState<string>('')
   const debounceRef = useRef<any>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
 
   useEffect(() => {
-    listAvailableModules(supabase).then(setModules).catch(() => setModules([]))
-    // supabase is stable across renders, deps array intentionally empty.
+    listAvailableModules(supabase).then(rows => {
+      setModules(rows)
+      // Pre-select if /modules/[id] linked us here with ?module=<id>.
+      // The marketplace's "Create campaign with this module" CTA uses
+      // this — clicking it lands on this page with the module already
+      // chosen so the user just types a name and hits create.
+      const wantedId = searchParams?.get('module')
+      if (wantedId) {
+        const match = rows.find(m => m.id === wantedId && m.latest_version_id)
+        if (match && match.latest_version_id) {
+          setPickedModuleId(match.id)
+          setPickedModuleVersionId(match.latest_version_id)
+          setSetting('')  // module + setting are mutually exclusive
+        }
+      }
+    }).catch(() => setModules([]))
+    // supabase / searchParams are stable across renders, deps array intentionally empty.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
