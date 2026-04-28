@@ -1784,9 +1784,14 @@ export default function TablePage() {
         if (ls.incap_rounds != null && ls.incap_rounds > 0) {
           updates.incap_rounds = ls.incap_rounds - 1
           if (ls.incap_rounds - 1 <= 0) {
-            // Regain consciousness: 1 RP, and 1 WP if was stabilized (WP=0)
+            // Regain consciousness: 1 RP, and 1 WP if was stabilized (WP=0).
+            // Guard: do NOT bump WP if a death_countdown is still ticking —
+            // that would silently un-mortal-wound a PC who happens to also
+            // be incapacitated, no stabilize roll required (Warren bug
+            // 2026-04-27).
             updates.rp_current = Math.max(1, ls.rp_current)
-            if (ls.wp_current === 0) updates.wp_current = 1
+            const dcActive = (ls as any).death_countdown != null && (ls as any).death_countdown > 0
+            if (ls.wp_current === 0 && !dcActive) updates.wp_current = 1
             updates.incap_rounds = null
           }
         }
@@ -1824,7 +1829,11 @@ export default function TablePage() {
           updates.incap_rounds = npc.incap_rounds - 1
           if (npc.incap_rounds - 1 <= 0) {
             updates.rp_current = Math.max(1, npc.rp_current ?? 0)
-            if ((npc.wp_current ?? 0) === 0) updates.wp_current = 1
+            // Guard against silently un-mortal-wounding an NPC whose
+            // death_countdown is still active — same Warren-bug fix as
+            // the PC branch above.
+            const npcDcActive = npc.death_countdown != null && npc.death_countdown > 0
+            if ((npc.wp_current ?? 0) === 0 && !npcDcActive) updates.wp_current = 1
             updates.incap_rounds = null
           }
         }
