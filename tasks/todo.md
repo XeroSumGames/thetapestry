@@ -1044,3 +1044,11 @@ Communities become first-class entities in the Distemperverse. Every published c
 ## Review section — filled in AFTER implementation
 
 *Not yet started.*
+
+---
+
+## 🎯 From 2026-04-28 chat (Welcome page + Messages bell session)
+
+- [ ] **`/firsttimers` auto-redirects to `/dashboard` for already-onboarded users — backburner.** When a returning user (with `profiles.onboarded = true`) hits `/firsttimers`, the page silently redirects to `/dashboard` ([app/firsttimers/page.tsx:30](app/firsttimers/page.tsx:30)). Xero noticed this and wants it parked — the page is meant to be visitable as a reference / re-onboarding surface, not a one-time gate. Likely fix: drop the auto-redirect and instead show a small banner "You've already seen this — back to your [Dashboard]" with a link, or make the redirect opt-in via `?firsttime=1`. Do NOT touch until Xero gives the go-ahead.
+- [ ] **Run `sql/messages-realtime-publication.sql` on prod database — apparently still pending.** Symptom Xero reported on 2026-04-28: chat in `/messages` doesn't refresh until the user reloads the page. The SQL was authored to fix exactly this (adds `public.messages` and `public.conversation_participants` to the `supabase_realtime` publication; sets REPLICA IDENTITY FULL on conversation_participants so the bell's `user_id=eq.<uid>` filter survives UPDATE payloads). Run it via Supabase dashboard → SQL Editor. Idempotent — safe to re-run if it was already applied.
+- [ ] **Welcome page → Quick Reference card content TBD.** [app/welcome/page.tsx](app/welcome/page.tsx) has a `Quick Reference` placeholder card. Needs cheat-sheet content per Xero's direction: CDP, WP/RP, Stress, Inspiration, links into the SRD/CRB. Wait for Xero to specify what to surface first, then wire it in.
