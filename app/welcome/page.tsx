@@ -64,10 +64,10 @@ export default function WelcomePage() {
           Reference &amp; Help
         </div>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '46px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1, marginBottom: '14px' }}>
-          A Guide to the Tapestry
+          A Guide to using the Tapestry
         </div>
         <div style={{ fontSize: '16px', color: '#cce0f5', maxWidth: '640px', margin: '0 auto', lineHeight: 1.7 }}>
-          Come back here whenever you need a refresher on what lives where. Each section below points to a part of the platform, with a short note on what it&apos;s for and how to get the most out of it.
+          This page provides a refresher on where to find what. Each section below points to a part of the platform, with a short note on what it&apos;s for and how to get the most out of it.
         </div>
         <div style={{ fontSize: '13px', color: '#8a8a8a', marginTop: '14px' }}>
           New here? Start with <Link href="/firsttimers" style={{ color: '#cce0f5', textDecoration: 'underline' }}>Welcome to the DistemperVerse</Link>.
@@ -77,42 +77,41 @@ export default function WelcomePage() {
 
       {/* Main destinations */}
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '0 1.5rem 2rem' }}>
-        <div style={sectionHeading}>The Tapestry</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px', marginBottom: '2.5rem' }}>
 
           <div style={card}>
             <div style={cardTitle}><span>🗺️</span>The World</div>
-            <div style={cardBody}>The interactive map of the post-flu world. Drop pins, file Rumors, and watch what other survivors are reporting. Substantiated Rumors shape the canon over time.</div>
+            <div style={cardBody}>This interactive map of the post-dog flu world allows you to drop pins for yourself or others, report rumors, and see what other survivors are reporting. Substantiated rumors shape the canon over time and are reflected here, on the world map.</div>
             <Link href="/map" style={cardLink}>Open Map</Link>
           </div>
 
           <div style={card}>
             <div style={cardTitle}><span>🧬</span>My Survivors</div>
-            <div style={cardBody}>Your roster of characters. Build new ones via Backstory Generation, the Quick Character Generator, or the Random Character path. Sheets, gear, and history all live here.</div>
+            <div style={cardBody}>Your roster of characters. Here you can create new ones via the Backstory Generation process that guides you through every step of your characters life before the pandemic, the Quick Character Generator for those that know the system and have a concept in mind, or pick a completely Random Character.</div>
             <Link href="/characters" style={cardLink}>My Survivors</Link>
           </div>
 
           <div style={card}>
             <div style={cardTitle}><span>📖</span>My Stories</div>
-            <div style={cardBody}>Campaigns and one-shots you&apos;re part of, as a player or GM. The story table, scenes, and session history all hang off of a Story.</div>
+            <div style={cardBody}>Whether it is as a player or GM, here is where you can find the various campaigns and one-shots you&apos;re part of. This is where you launch The Table, where stories are told.</div>
             <Link href="/stories" style={cardLink}>My Stories</Link>
           </div>
 
           <div style={card}>
             <div style={cardTitle}><span>🏘️</span>My Communities</div>
-            <div style={cardBody}>Communities are persistent groups of survivors who share a base, resources, and Morale. Recruit, lose, and grow them across sessions — XSE §08 Community drives the rules.</div>
+            <div style={cardBody}>Communities are persistent groups of survivors who share a base and resources. Recruit NPCs to your side as cohorts, conscripts, or converts as you grow across sessions, leaving an indelible mark on this persistent world.</div>
             <Link href="/communities" style={cardLink}>My Communities</Link>
           </div>
 
           <div style={card}>
             <div style={cardTitle}><span>📦</span>Modules</div>
-            <div style={cardBody}>Pre-built scenes, NPCs, items, and storylines you can subscribe to and import into your own campaigns. Authors snapshot their content; you pull versioned copies.</div>
+            <div style={cardBody}>Pre-built scenes, encounters, adventures and campaigns that include NPCs, items, and storylines that you can subscribe to and import to play with your own group. Authors snapshot their content; GMs pull versioned copies.</div>
             <Link href="/modules" style={cardLink}>Browse Modules</Link>
           </div>
 
           <div style={card}>
             <div style={cardTitle}><span>🔥</span>The Campfire</div>
-            <div style={cardBody}>The town notice board for the Tapestry — Looking-for-Group posts, Rumors from the world map, War Stories, and world events. <span style={{ color: '#8a8a8a' }}>(In progress.)</span></div>
+            <div style={cardBody}>The heart of the Tapestry, here players can find groups and GMs can find players. Built-in Looking-for-Group tools, Messaging, Forums, player-reported War Stories, and both rumors and confirmed world events. <span style={{ color: '#8a8a8a' }}>(In progress.)</span></div>
             <Link href="/campfire" style={cardLink}>Visit the Campfire</Link>
           </div>
 
@@ -128,12 +127,12 @@ export default function WelcomePage() {
           </div>
           <div style={card}>
             <div style={cardTitle}>Backstory Generation</div>
-            <div style={cardBody}>Spend CDP across the chapters of your survivor&apos;s life — the rich path. Best for first survivors.</div>
+            <div style={cardBody}>Recommended for first time survivors, the Background Generation process allows you to spend Character Development Points during the different stages of your survivor&apos;s life to craft a character that directly matches your vision.</div>
             <Link href="/characters/new" style={cardLink}>Start</Link>
           </div>
           <div style={card}>
             <div style={cardTitle}>Quick Character</div>
-            <div style={cardBody}>Skip the chapters. Spend a flat 20 CDP and customize directly. For experienced players.</div>
+            <div style={cardBody}>Recommended for experienced users, this option lets you spend 20 CDP on attributes and skills and directly customize your character.</div>
             <Link href="/characters/quick" style={cardLink}>Start</Link>
           </div>
           <div style={card}>
@@ -147,7 +146,7 @@ export default function WelcomePage() {
         <div style={sectionHeading}>Quick Reference</div>
         <div style={{ ...card, marginBottom: '2.5rem' }}>
           <div style={cardBody}>
-            Cheat sheets and rules excerpts will live here — common terms (CDP, WP, RP, Stress, Inspiration), house rules, and links into the SRD &amp; Distemper CRB. Tell me what you want surfaced first and I&apos;ll wire it in.
+            Cheat sheets and rules excerpts will live here — common terms (CDP, WP, RP, Stress, Inspiration), house rules, and links into the Distemper Core Rulebook and the Xero Sum Engine SRD. Tell me what you want surfaced first and I&apos;ll wire it in.
           </div>
         </div>
 
