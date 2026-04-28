@@ -187,6 +187,7 @@ export interface CampaignNpc {
   equipment: { name: string; damage?: number; roll?: string; notes?: string }[] | null
   inventory?: { name: string; qty: number; enc?: number; rarity?: string; notes?: string; custom?: boolean }[] | null
   folder: string | null
+  hidden_from_players?: boolean
 }
 
 interface Relationship {
@@ -768,6 +769,11 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     e.stopPropagation()
     if (!pcEntries || pcEntries.length === 0) return
     const isRevealed = revealedNpcIds.has(npcId)
+    // Hard visibility gate — keeps the new hidden_from_players flag in
+    // sync with the per-PC npc_relationships reveal rows. Without this
+    // the RLS would still hide the NPC from players even after they're
+    // "revealed" via npc_relationships.
+    await supabase.from('campaign_npcs').update({ hidden_from_players: isRevealed }).eq('id', npcId)
     for (const pc of pcEntries) {
       const { data: existing } = await supabase.from('npc_relationships').select('id').eq('npc_id', npcId).eq('character_id', pc.characterId).maybeSingle()
       if (existing) {

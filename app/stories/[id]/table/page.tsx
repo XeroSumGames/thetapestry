@@ -1224,15 +1224,23 @@ export default function TablePage() {
           // a full refetch since payload.new may be incomplete/absent.
           if (payload.eventType === 'UPDATE' && payload.new) {
             const row = payload.new
-            setCampaignNpcs(prev => prev.map(n => n.id === row.id ? { ...n, ...row } : n))
+            // Upsert (not just patch) — when hidden_from_players flips false,
+            // a player's RLS now exposes a row their local state never had,
+            // and the UPDATE event is the only signal it exists. Plain
+            // .map() would silently drop it.
+            setCampaignNpcs(prev => prev.some(n => n.id === row.id)
+              ? prev.map(n => n.id === row.id ? { ...n, ...row } : n)
+              : [...prev, row])
             setRosterNpcs(prev => {
               const alive = (n: any) => {
                 const wp = n.wp_current ?? n.wp_max ?? 10
                 return n.status === 'active' && !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
               }
-              const updated = prev.map(n => n.id === row.id ? { ...n, ...row } : n)
-              // Drop if the update just killed them.
-              return updated.filter(alive)
+              const merged = prev.some(n => n.id === row.id)
+                ? prev.map(n => n.id === row.id ? { ...n, ...row } : n)
+                : [...prev, row]
+              // Drop if the update killed them, or if the row is hidden.
+              return merged.filter(alive)
             })
             setViewingNpcs(prev => prev.map(n => n.id === row.id ? { ...n, ...row } as CampaignNpc : n))
             return
