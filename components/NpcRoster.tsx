@@ -38,7 +38,12 @@ const TYPE_COLORS: Record<string, { bg: string; border: string; color: string }>
 // Null/unset disposition falls back to neutral gray.
 const DISPOSITION_COLORS: Record<string, { border: string; bg: string; color: string }> = {
   friendly: { border: '#2d5a1b', bg: '#1a2e10', color: '#7fc458' },
-  neutral:  { border: '#3a3a3a', bg: '#2e2e2e', color: '#d4cfc9' },
+  // Was dark grey (#3a3a3a / #2e2e2e) — too indistinct against the dark
+  // roster background and on the tactical map. Switched to dim goldenrod
+  // border + dark amber bg + warm-yellow tag color so neutral reads as
+  // an actual signal instead of vanishing into UI chrome. Mirrors the
+  // brightness profile of friendly/hostile.
+  neutral:  { border: '#a17a14', bg: '#2a2010', color: '#fcd34d' },
   hostile:  { border: '#c0392b', bg: '#2a1210', color: '#f5a89a' },
 }
 // Single source-of-truth for NPC ring/border colors used by both the
@@ -72,7 +77,11 @@ export function getNpcRingColor(npc: { disposition?: string | null; npc_type?: s
 const TOKEN_BORDER_OVERRIDES: Record<string, string> = {
   '#2d5a1b': '#4ade80', // friendly: forest green → vivid green
   '#c0392b': '#ef4444', // hostile: brand red → vivid red
-  '#3a3a3a': '#9ca3af', // neutral: dark → medium gray
+  '#a17a14': '#facc15', // neutral: dim goldenrod → vivid yellow
+  // Legacy fallback — tokens placed before the yellow swap stored
+  // '#3a3a3a' as their color. Map them through to the new vivid yellow
+  // so old maps don't render as dim grey rings.
+  '#3a3a3a': '#facc15',
 }
 
 export function getNpcTokenBorderColor(npc: { disposition?: string | null; npc_type?: string | null }): string {
@@ -1038,7 +1047,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '0 2px' }}>
                         {([
                           ['friendly', '#2d5a1b', '#1a2e10'],
-                          ['neutral',  '#3a3a3a', '#2e2e2e'],
+                          ['neutral',  '#a17a14', '#2a2010'],
                           ['hostile',  '#c0392b', '#2a1210'],
                         ] as const).map(([val, border, bg]) => {
                           const picked = npc.disposition === val
@@ -1055,7 +1064,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                             popout, the realtime sub on campaign_npcs
                             isn't firing — run
                             sql/campaign-npcs-realtime-publication.sql. */}
-                        <span style={{ fontSize: '13px', color: npc.disposition === 'friendly' ? '#7fc458' : npc.disposition === 'hostile' ? '#f5a89a' : '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginLeft: '2px' }}>
+                        <span style={{ fontSize: '13px', color: npc.disposition === 'friendly' ? '#7fc458' : npc.disposition === 'hostile' ? '#f5a89a' : npc.disposition === 'neutral' ? '#fcd34d' : '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginLeft: '2px' }}>
                           {npc.disposition ?? '—'}
                         </span>
                       </span>
@@ -1355,13 +1364,13 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
                     )}
                   </div>
                   {/* Disposition picker — sets the ring color (friendly
-                      green / neutral gray / hostile red). Independent
+                      green / neutral yellow / hostile red). Independent
                       of portrait; can pick any disposition whether or
                       not there's an uploaded image. */}
                   <div style={{ display: 'flex', gap: '3px' }} title="Disposition — drives ring color">
                     {([
                       ['friendly', '#2d5a1b', '#1a2e10'],
-                      ['neutral',  '#3a3a3a', '#2e2e2e'],
+                      ['neutral',  '#a17a14', '#2a2010'],
                       ['hostile',  '#c0392b', '#2a1210'],
                     ] as const).map(([val, border, bg]) => {
                       const picked = form.disposition === val
