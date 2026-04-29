@@ -5094,7 +5094,6 @@ export default function TablePage() {
             const isMyTurn = !!(activeEntry.character_id && myChar && activeEntry.character_id === myChar.character.id)
             const canAct = isMyTurn || isGM
             if (!canAct) return null
-            console.warn('[CombatActions]', { isMyTurn, isGM, activeChar: activeEntry.character_name, myCharId: myChar?.character.id, activeCharId: activeEntry.character_id, userId })
 
             // Determine combatant's weapon for conditional buttons
             const charEntry = entries.find(e => e.character.name === activeEntry.character_name)
