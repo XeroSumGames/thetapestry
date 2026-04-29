@@ -706,7 +706,12 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   useEffect(() => {
     async function loadRevealed() {
       if (!isGM || !pcEntries || pcEntries.length === 0) return
-      const { data } = await supabase.from('npc_relationships').select('npc_id').eq('revealed', true)
+      // Filter to this campaign's NPCs — earlier code scanned the full
+      // npc_relationships table on every mount. For GMs with multiple
+      // campaigns this fanned out across all of them.
+      const npcIds = npcs.map((n: any) => n.id)
+      if (npcIds.length === 0) { setRevealedNpcIds(new Set()); return }
+      const { data } = await supabase.from('npc_relationships').select('npc_id').eq('revealed', true).in('npc_id', npcIds)
       if (data) setRevealedNpcIds(new Set(data.map((r: any) => r.npc_id)))
     }
     loadRevealed()

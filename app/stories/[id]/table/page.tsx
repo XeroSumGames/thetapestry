@@ -533,7 +533,23 @@ export default function TablePage() {
     if (charsErr) console.error('[loadEntries] characters query error:', charsErr.message)
     if (profilesErr) console.error('[loadEntries] profiles query error:', profilesErr.message)
 
-    const charMap = Object.fromEntries((chars ?? []).map((c: any) => {
+    // The strip-then-patch pattern below renders character cards without
+    // their (potentially large) photoDataUrl base64 first, then patches
+    // photos in via a second setEntries — keeps Time-To-Interactive snappy
+    // when the JSONB photo blob is heavy. We KEEP that pattern, but feed
+    // both passes from the SAME initial fetch (line 530 already pulls the
+    // full `data` column). Earlier code did a SECOND DB round-trip just to
+    // re-fetch photoDataUrl — wasteful, and a real cost during 4-browser
+    // simultaneous mounts where every redundant query stacks under
+    // network contention.
+    const charMap = Object.fromEntries((chars ?? []).map((c: any) => [c.id, c]))
+    const photoMap: Record<string, string | null> = {}
+    for (const c of chars ?? []) {
+      photoMap[c.id] = (c as any).data?.photoDataUrl ?? null
+    }
+    // Lean copy without photo for the first paint; full data with photo
+    // is preserved in `charMap` for the patch-in step below.
+    const charMapLean = Object.fromEntries((chars ?? []).map((c: any) => {
       const { photoDataUrl, ...dataWithoutPhoto } = c.data ?? {}
       return [c.id, { ...c, data: dataWithoutPhoto }]
     }))
@@ -547,7 +563,7 @@ export default function TablePage() {
       stateId: s.id,
       userId: s.user_id,
       username: profileMap[s.user_id] ?? 'Unknown',
-      character: charMap[s.character_id] ?? { id: s.character_id, name: 'Unknown', created_at: '', data: {} },
+      character: charMapLean[s.character_id] ?? { id: s.character_id, name: 'Unknown', created_at: '', data: {} },
       liveState: {
         id: s.id,
         wp_current: s.wp_current, wp_max: s.wp_max,
@@ -567,25 +583,19 @@ export default function TablePage() {
     setEntries(newEntries)
     setEntriesLoading(false)
 
-    const { data: photoRows } = await supabase
-      .from('characters')
-      .select('id, data->photoDataUrl')
-      .in('id', charIds)
-
-    if (!isLatest()) return
-    if (photoRows && photoRows.length > 0) {
-      const photoMap: Record<string, string> = {}
-      for (const row of photoRows as any[]) {
-        if (row.photoDataUrl) photoMap[row.id] = row.photoDataUrl
-      }
-      setEntries(prev => prev.map(e => ({
-        ...e,
-        character: {
-          ...e.character,
-          data: { ...e.character.data, photoDataUrl: photoMap[e.character.id] ?? null },
-        },
-      })))
-    }
+    // Patch photos in from the data we ALREADY downloaded — no second
+    // round-trip. setTimeout(0) yields to React so the lean cards paint
+    // before the photo blob hydrates the `character.data.photoDataUrl`
+    // field, preserving the original strip-then-patch UX intent.
+    setTimeout(() => {
+      if (!isLatest()) return
+      setEntries(prev => prev.map(e => {
+        const photo = photoMap[e.character.id]
+        return photo
+          ? { ...e, character: { ...e.character, data: { ...e.character.data, photoDataUrl: photo } } }
+          : e
+      }))
+    }, 0)
   }
 
   // loadChat / sendChat moved to components/TableChat.tsx — accessed
@@ -605,9 +615,16 @@ export default function TablePage() {
   }
 
   async function loadRevealedNpcs(characterId: string | null, cnpcs: any[]) {
+    // Filter to THIS campaign's NPCs — earlier code queried the full
+    // npc_relationships table without a campaign filter (RLS reduced
+    // the visible set, but the query still scanned all rows the user
+    // could see across every campaign they GM/play). For a GM with
+    // many campaigns this was a heavy fetch on every mount.
+    const cnpcIds = cnpcs.map(n => n.id)
+    if (cnpcIds.length === 0) { setRevealedNpcs([]); return }
     const query = characterId
-      ? supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('character_id', characterId).eq('revealed', true)
-      : supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('revealed', true)
+      ? supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('character_id', characterId).eq('revealed', true).in('npc_id', cnpcIds)
+      : supabase.from('npc_relationships').select('npc_id, relationship_cmod, reveal_level').eq('revealed', true).in('npc_id', cnpcIds)
     const { data: rels } = await query
     if (rels && rels.length > 0 && cnpcs.length > 0) {
       const seen = new Set<string>()
