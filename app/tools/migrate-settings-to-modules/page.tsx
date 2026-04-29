@@ -35,55 +35,60 @@ interface SettingDef {
   playerCountRecommended: number
 }
 
+// Module ordering matches Xero's published-marketplace ordering:
+// Empty (intro) → Chased → Mongrels → The Arena → The Basement.
+// Tagline = the public-facing one-liner the user authored. Description
+// extends the tagline with a content-shipped line so subscribers know
+// what they actually get on day one.
 const SETTINGS_TO_MIGRATE: SettingDef[] = [
   {
-    key: 'mongrels',
-    name: 'Minnie & The Magnificent Mongrels',
+    key: 'empty',
+    name: 'Empty',
     parentSetting: null,
-    tagline: 'Road-warrior bootleggers, one Winnebago, the open American wasteland.',
-    description: 'A flagship Distemper one-shot. Frankie\'s crew has just lost their compound to Kincaid. Load up the still, board Minnie, and run. Includes the Day One barn scene, the Minnie interior tactical map, and the full Mongrels NPC roster. Vehicles and handouts ship as a separate follow-up patch.',
-    contentTags: ['one-shot', 'road', 'combat-heavy'],
-    sessionEstimate: 2,
-    playerCountRecommended: 4,
+    tagline: 'The perfect introduction to Distemper, a group of survivors searching a gas station realize they might not be alone.',
+    description: 'The perfect introduction to Distemper, a group of survivors searching a gas station realize they might not be alone.\n\nIncludes the Stansfield\'s Gas Station tactical scene and a small NPC set. Outcome depends on stealth, timing, and whether anyone hits the door bell.',
+    contentTags: ['one-shot', 'intro', 'stealth'],
+    sessionEstimate: 1,
+    playerCountRecommended: 3,
   },
   {
     key: 'chased',
     name: 'Chased',
     parentSetting: null,
-    tagline: 'A small-town Delaware horror module — outrun the Connors, save Maddy.',
-    description: 'A tense rescue scenario set around the Connor Boys Farmhouse. Includes the farmhouse tactical scene, the Chased NPC roster (Robertsons, Ortizes, Connors, Pastor Nick, Eric, Macy, Mikey, Maddy, Troy & Mark), and the Chased pin set across rural Sussex County. Handouts (in-world broadcasts, ham-radio transcripts) ship as a separate follow-up patch.',
+    tagline: 'A group of survivors making their way through Redden State forest come face to face with horror in the post-apocalypse.',
+    description: 'A group of survivors making their way through Redden State forest come face to face with horror in the post-apocalypse.\n\nIncludes the Connor Boys Farmhouse tactical scene, the full Chased NPC roster (Robertsons, Ortizes, Connors, Pastor Nick, Eric, Macy, Mikey, Maddy, Troy & Mark), and the rural Sussex County pin set. In-world broadcasts and handouts ship in a v1.1.0 patch.',
     contentTags: ['one-shot', 'horror', 'rescue', 'rural'],
     sessionEstimate: 3,
     playerCountRecommended: 4,
   },
   {
-    key: 'empty',
-    name: 'Empty',
+    key: 'mongrels',
+    name: 'Minnie & The Magnificent Mongrels',
     parentSetting: null,
-    tagline: 'A two-character encounter at an abandoned Delaware gas station.',
-    description: 'A short tactical encounter built around Stansfield\'s Gas Station. Becky and Dylan are inside; the players have parked their truck out front. Outcome depends on stealth, timing, and whether anyone hits the door bell. Includes the gas station tactical scene and a small NPC set.',
-    contentTags: ['one-shot', 'short', 'stealth'],
-    sessionEstimate: 1,
-    playerCountRecommended: 3,
-  },
-  {
-    key: 'therock',
-    name: 'The Rock',
-    parentSetting: null,
-    tagline: 'A long-running prison campaign frame.',
-    description: 'A campaign starter set inside a converted island prison. Players negotiate factions, contraband, and the slow grinding politics of a world rebuilt behind walls. Ships with the starter NPC set; expand from there.',
-    contentTags: ['campaign-frame', 'faction', 'long-running'],
-    sessionEstimate: 8,
+    tagline: 'A road trip in a RV called Minnie across the broken back of America from Arizona to Montana as a group of misfits look for a new home.',
+    description: 'A road trip in a RV called Minnie across the broken back of America from Arizona to Montana as a group of misfits look for a new home.\n\nIncludes the Day One barn scene, the Minnie interior tactical map, and the full Mongrels NPC roster. Minnie as a drivable vehicle and the Mongrels handouts ship in a v1.1.0 patch.',
+    contentTags: ['one-shot', 'road', 'combat-heavy'],
+    sessionEstimate: 2,
     playerCountRecommended: 4,
   },
   {
     key: 'arena',
     name: 'The Arena',
     parentSetting: null,
-    tagline: 'A combat-heavy gladiatorial sandbox.',
-    description: 'A standalone arena campaign — Distemper-era blood sport in a converted stadium. Players fight up the bracket between sessions of training, gambling, and political maneuvering. Stripped-down content; build out from the seed and publish your own variant.',
+    tagline: "The Duke of Denver's private playground, the Ball Arena is now a deadly gladiatorial where many people enter but only one ever leaves.",
+    description: "The Duke of Denver's private playground, the Ball Arena is now a deadly gladiatorial where many people enter but only one ever leaves.\n\nMinimal v1.0.0 content — meant as a publishing seed for GMs to build their own arena variant on top. Expand the NPC roster, scenes, and pins to fit your bracket.",
     contentTags: ['sandbox', 'combat-heavy', 'standalone'],
     sessionEstimate: 6,
+    playerCountRecommended: 4,
+  },
+  {
+    key: 'basement',
+    name: 'The Basement',
+    parentSetting: null,
+    tagline: 'A fight club where players can practice combat and test out various weapons as they face off against NPCs in a bloodstained basement.',
+    description: 'A fight club where players can practice combat and test out various weapons as they face off against NPCs in a bloodstained basement.\n\nA training-room module — designed for new tables to learn the combat system, or established tables to test loadouts before a session. Minimal v1.0.0 content; bring your own NPCs and weapons.',
+    contentTags: ['training', 'combat-heavy', 'standalone'],
+    sessionEstimate: 1,
     playerCountRecommended: 4,
   },
 ]
@@ -206,16 +211,32 @@ export default function MigrateSettingsPage() {
     setRunning(def.key)
     setResults(prev => ({ ...prev, [def.key]: null }))
     try {
-      // Idempotency: skip if a module with this name already exists.
-      // Match by name (case-sensitive) — Thriver can manage
-      // duplicates manually if they ever crop up.
+      // Idempotency: if a module with this name already exists, UPDATE
+      // its metadata (tagline / description / content_tags / etc.) and
+      // leave the v1.0.0 snapshot untouched. Lets the Thriver iterate
+      // on copy without deleting + republishing. Match by name —
+      // duplicates would be a manual cleanup case.
       const { data: existing } = await supabase
         .from('modules')
         .select('id, name')
         .eq('name', def.name)
         .limit(1)
       if (existing && existing.length > 0) {
-        const result: MigrationResult = { setting: def.key, ok: true, skipped: `Module "${def.name}" already exists (id: ${existing[0].id}).` }
+        const { error: updErr } = await supabase
+          .from('modules')
+          .update({
+            tagline: def.tagline,
+            description: def.description,
+            content_tags: def.contentTags,
+            session_count_estimate: def.sessionEstimate,
+            player_count_recommended: def.playerCountRecommended,
+          })
+          .eq('id', existing[0].id)
+        if (updErr) {
+          setResults(prev => ({ ...prev, [def.key]: { setting: def.key, ok: false, error: `update metadata: ${updErr.message}` } }))
+          return
+        }
+        const result: MigrationResult = { setting: def.key, ok: true, skipped: `Updated metadata on existing module "${def.name}" (snapshot v1.0.0 untouched).` }
         setResults(prev => ({ ...prev, [def.key]: result }))
         return
       }
