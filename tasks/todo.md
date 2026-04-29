@@ -83,6 +83,13 @@
   + object filter + auto-select pre-selected target + log line trim.
   Commits `c04650c`, `9218f86`, `2e15258`, `dea681d`, `931de35`.
 
+## 🎯 From 2026-04-29 chat — roll-log clarity + modal unification + new-campaign bug
+
+- [ ] **Empty-adventure module clone fails on null pin name.** Creating a new Empty (Chased-content) campaign currently throws `Campaign created but module clone failed: pins: null value in column "name" of relation "campaign_pins" violates not-null constraint`. Lives in `cloneModuleIntoCampaign` in `lib/modules.ts` — one pin row in the Empty/Chased module snapshot is missing `name`. Likely either (a) clone mapper expects `title` while DB column is `name` (or vice versa), or (b) the Thriver migration tool that published the Empty setting captured one source pin with `name: null`. Fix shape: defensive coalesce on the mapper + audit the published Empty module's snapshot for the offending row. Repro: `/stories/new` → Empty setting → Save. Recovery in the meantime: delete the half-seeded campaign.
+- [ ] **Gut Instinct results presentation needs rework.** Tied to "how info is shared in roll logs" — current Gut Instinct rolls land in the standard roll modal + roll_log feed, but the *result framing* doesn't communicate what the player learned (or didn't) clearly. Needs design discussion: what's the canonical surface for "your gut says X" — narrative card in the feed? An overlay on the rolling PC's sheet? GM-only insight delivered via DM? This is about player comprehension, not mechanics — the formula (`Perception + Psychology/Streetwise/Tactics`) is fine.
+- [ ] **First Impression → straight to roll modal.** Today First Impression has a separate pre-roll picker (target NPC + skill). Xero wants clicking First Impression on a revealed NPC card to **skip the picker** and dump straight into the main Attack Roll modal pre-populated with `INF + Manipulation/Streetwise/Psychology` and the NPC pre-targeted. Save: ~3-4 clicks per use. Same "roll-log clarity" theme as Gut Instinct.
+- [ ] **Modal unification — Attack Roll modal is the gold standard.** Xero locked the canonical: every roll modal across the app should match the Attack Roll modal's shape (roll breakdown, target dropdown, CMod input, Insight Dice pre-roll + post-roll reroll). Modals to normalize: Stress Check, Breaking Point, Lasting Wound, Recruit, Stabilize, Distract, Coordinate, Group Check, Gut Instinct, First Impression. Likely needs a shared `<RollModal>` shell with slots for skill-specific bits (target type, outcome surface). High-value but invasive; scope as a multi-commit refactor before starting.
+
 ## 🎯 From 2026-04-27 Mongrels playtest (Xero's batch handoff)
 
 Xero captured the following items mid-/post-playtest. Bugs first, then UX, then content, then long-term map features. Each is self-contained so an agent can pick one up cold.
@@ -828,18 +835,19 @@ Every skill gets a Trait at Level 4, but the full list isn't written. Xero's rul
 
 ### Phase E — The Tapestry (Persistent World) 🚩 flagship differentiator
 Communities become first-class entities in the Distemperverse. Every published community from every table shares one world.
-- [ ] Day-one schema carries `published_at`, `world_visibility`, `world_community_id` on `communities` so Phase E is additive
-- [ ] `world_communities` mirror table (sanitized public row: name, description, homestead lat/lng, size band, status, faction label, thriver_approved)
-- [ ] Community "Publish to Distemperverse" toggle + Thriver moderation queue (reuse `map_pins` promotion pattern)
-- [ ] World map overlay — published communities render with size-banded icons, status colors, click-to-open public card
-- [ ] GM-to-GM contact handshake — "My campaign encounters Community X" notification + opt-in private-data reveal
-- [ ] Trade / alliance / feud links (narrative edges between two published communities, drawn as colored arcs)
-- [ ] Migration on dissolution — 3-failure collapse offers survivors to nearby published communities
-- [ ] Schism — large communities split; one stays, one founds a new Homestead
-- [ ] World Event CMod propagation — Distemper Timeline pins in a region apply CMods to all published communities in that region
-- [ ] Per-community Campfire feed (weekly outcomes, schisms, dissolutions, GM-curated updates)
-- [ ] Community subscription for players
-- [ ] Campaign-creation wizard "Start inside/around an existing published community"
+- [x] Day-one schema carries `published_at`, `world_visibility`, `world_community_id` on `communities` (`sql/communities-phase-a.sql`)
+- [x] `world_communities` mirror table (`sql/world-communities.sql`) — sanitized public row with size band, public status, faction label, moderation_status
+- [x] Community "Publish to Tapestry" toggle on `CampaignCommunity.tsx` (line 1972) + handlePublish at :883 + Thriver moderation queue at `app/moderate/page.tsx` (`sql/world-communities-moderation-notify.sql`)
+- [x] World map overlay — published communities render via `MapView.tsx` with size-banded icons (radius 20→40px on size band)
+- [x] GM-to-GM contact handshake — `community_encounters` table + 🤝-button on world-map community cards + notification metadata jsonb (`sql/community-encounters.sql`)
+- [x] Trade / alliance / feud links — `world_community_links` with two-way consent, color-coded polylines on world map (`sql/world-community-links.sql`)
+- [x] Migration on dissolution — `community-migrations` table + autocopy migration tooling lets survivors land in nearby published communities (`sql/community-migrations.sql` + `sql/community-migrations-autocopy.sql`); modal in `CampaignCommunity.tsx`
+- [x] Schism — large communities split; `handleSchism` in `CampaignCommunity.tsx` + `sql/community-members-add-schism-reason.sql` widens left_reason CHECK
+- [x] Leader permissions — non-GM PC leader can publish own community (`sql/world-communities-leader-permissions.sql`)
+- [ ] **World Event CMod propagation** — Distemper Timeline pins in a region apply temporary CMods to all published communities in that region. No code path yet; needs a regional bounding-box query + `morale_check` modifier slot wired to active world events.
+- [ ] **Per-community Campfire feed** — gated on Phase 4 (Campfire) shipping. Once Campfire exists, each `world_communities` row gets its own feed showing weekly Morale outcomes, recruitments, schisms, dissolutions.
+- [ ] **Community subscription for players** — no `community_subscriptions` table or follow UI. Lets players follow a published community across sessions; surfaces updates in their feed.
+- [ ] **Campaign-creation wizard "Start inside/around an existing published community"** — `/stories/new` currently picks Custom / Setting / Module; needs a fourth option that seeds the new campaign adjacent to a published community (autopopulates Homestead pin + invites the new GM into the encounter handshake).
 
 ### Out of scope (see spec §12)
 - Community-as-single-combat-entity (members still combat individually)
