@@ -417,7 +417,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
       if (!mapRef.current || mapInstanceRef.current) return
 
-      const map = L.map(mapRef.current, { center: [8.2316, 13.5352], zoom: 3, zoomControl: true, minZoom: 2 })
+      const map = L.map(mapRef.current, { center: [35.2456, 9.8438], zoom: 3, zoomControl: true, minZoom: 2 })
 
       tileLayerRef.current = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
