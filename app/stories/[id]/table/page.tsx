@@ -4194,11 +4194,17 @@ export default function TablePage() {
       }
     }
 
-    // Weapon jam/break on Low Insight
+    // Weapon jam/break on Low Insight. Persists a `jammed: true` flag
+    // on the weapon slot (in addition to degrading condition) so the
+    // Ready Weapon modal can offer Unjam/Repair regardless of whether
+    // the new condition is "Worn" or worse. Earlier the modal gated on
+    // condIdx >= 2 only, which meant a Pristine→Used degrade left the
+    // weapon "jammed in spirit" but ungrayedoutable for Unjam — playtest
+    // caught: Cree had a jam after a Low Insight roll on a Pristine
+    // weapon, condition went to Used, Unjam button stayed grey.
     let weaponJammed = false
     if (pendingRoll.weapon && pendingRoll.weapon.weaponName !== 'Unarmed' && outcome === 'Low Insight') {
       weaponJammed = true
-      // Degrade the weapon condition on the character's data
       if (myEntry) {
         const charData = myEntry.character.data ?? {}
         const slots = ['weaponPrimary', 'weaponSecondary'] as const
@@ -4207,9 +4213,15 @@ export default function TablePage() {
             const conditions = ['Pristine', 'Used', 'Worn', 'Damaged', 'Broken']
             const currentIdx = conditions.indexOf(charData[slot].condition ?? 'Used')
             const newCondition = conditions[Math.min(currentIdx + 1, conditions.length - 1)]
-            await supabase.from('characters').update({
-              data: { ...charData, [slot]: { ...charData[slot], condition: newCondition } }
-            }).eq('id', myEntry.character.id)
+            const nextSlotData = { ...charData[slot], condition: newCondition, jammed: true }
+            const newData = { ...charData, [slot]: nextSlotData }
+            await supabase.from('characters').update({ data: newData }).eq('id', myEntry.character.id)
+            // Local optimistic patch — without this the Ready Weapon
+            // modal that opens on the next round would still see the
+            // pre-Low-Insight slot data until the next loadEntries.
+            setEntries(prev => prev.map(e => e.character.id === myEntry.character.id
+              ? { ...e, character: { ...e.character, data: newData } }
+              : e))
             break
           }
         }
@@ -4297,10 +4309,24 @@ export default function TablePage() {
             }
           }
           else { unjamResult = 'No change' }
-          if (newIdx !== currentIdx) {
-            await supabase.from('characters').update({
-              data: { ...charData, [slot]: { ...charData[slot], condition: conditions[newIdx] } }
-            }).eq('id', myEntry.character.id)
+          // Clear the persistent jammed flag on any non-failure outcome
+          // (Wild Success / High Insight / Success / no-change paths
+          // that didn't break the weapon further). Failure / Dire / Low
+          // leave the jam in place — the weapon's still mechanically
+          // gunked up. condIdx update handled below; the jammed flag
+          // clears even when condIdx didn't change so a "Success — no
+          // change" still removes the JAMMED chip.
+          const clearJam = outcome === 'Wild Success' || outcome === 'High Insight' || outcome === 'Success'
+          if (newIdx !== currentIdx || (clearJam && charData[slot]?.jammed)) {
+            const updatedSlot: any = { ...charData[slot], condition: conditions[newIdx] }
+            if (clearJam) updatedSlot.jammed = false
+            const newData = { ...charData, [slot]: updatedSlot }
+            await supabase.from('characters').update({ data: newData }).eq('id', myEntry.character.id)
+            // Local optimistic patch — Ready Weapon modal that's still
+            // open on this screen sees the cleared jam immediately.
+            setEntries(prev => prev.map(e => e.character.id === myEntry.character.id
+              ? { ...e, character: { ...e.character, data: newData } }
+              : e))
           }
           break
         }
@@ -8489,7 +8515,12 @@ export default function TablePage() {
         const canReload = !!primaryW && !!primaryW.clip && primaryW.clip > 0 && (primary?.reloads ?? 0) > 0
         const conditions = ['Pristine', 'Used', 'Worn', 'Damaged', 'Broken']
         const condIdx = conditions.indexOf(primary?.condition ?? 'Used')
-        const canUnjam = condIdx >= 2 // Worn, Damaged, or Broken — allows unjam after single Low Insight degrade
+        const isJammed = !!primary?.jammed
+        // Allow Unjam when the weapon is Worn-or-worse (cumulative wear)
+        // OR when the persistent jammed flag is set (Low Insight just
+        // jammed it even if condition is still Used). Either condition
+        // surfaces the Unjam/Repair affordance.
+        const canUnjam = condIdx >= 2 || isJammed
 
         async function doSwitch() {
           if (!charEntry || !canSwitch) return
@@ -8686,6 +8717,7 @@ export default function TablePage() {
                 <div style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase' }}>{primary?.weaponName ?? 'None'}</div>
                 {primary && <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
                   Condition: <span style={{ color: condIdx <= 1 ? '#7fc458' : condIdx === 2 ? '#EF9F27' : '#f5a89a' }}>{primary.condition ?? 'Used'}</span>
+                  {isJammed && <span style={{ marginLeft: '6px', padding: '0 5px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>Jammed</span>}
                   {primaryW?.clip ? <> · Ammo: <span style={{ color: '#EF9F27' }}>{primary.ammoCurrent ?? 0}/{primaryW.clip}</span> · Reloads: <span style={{ color: '#7ab3d4' }}>{primary.reloads ?? 0}</span></> : null}
                 </div>}
                 {secondary?.weaponName && <>
@@ -8774,7 +8806,7 @@ export default function TablePage() {
                 </button>
                 <button onClick={canUnjam ? doUnjam : undefined} disabled={!canUnjam}
                   style={{ padding: '10px', background: canUnjam ? '#2a1210' : '#1a1a1a', border: `1px solid ${canUnjam ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', color: canUnjam ? '#f5a89a' : '#3a3a3a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: canUnjam ? 'pointer' : 'not-allowed', textAlign: 'left' }}>
-                  Unjam / Repair {!canUnjam && <span style={{ fontSize: '13px', opacity: 0.5 }}>— weapon not damaged</span>}
+                  Unjam / Repair {!canUnjam && <span style={{ fontSize: '13px', opacity: 0.5 }}>— not jammed or damaged</span>}
                 </button>
               </div>
 
