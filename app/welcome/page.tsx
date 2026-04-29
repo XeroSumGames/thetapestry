@@ -117,14 +117,18 @@ export default function WelcomePage() {
 
         </div>
 
-        {/* Survivor creation paths */}
+        {/* Survivor creation paths — Creating a Survivor sits alone on
+            its own row as the top-of-funnel guide; the three creation
+            paths (Backstory, Quick, Random) share the row below. */}
         <div style={sectionHeading}>Building a Survivor</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '2.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '14px', marginBottom: '14px' }}>
           <div style={card}>
             <div style={cardTitle}>Creating a Survivor</div>
             <div style={cardBody}>The full guide — how Character Development Points (CDP), chapters, and trait acquisition work.</div>
             <Link href="/creating-a-character" style={cardLink}>Read Guide</Link>
           </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '2.5rem' }}>
           <div style={card}>
             <div style={cardTitle}>Backstory Generation</div>
             <div style={cardBody}>Recommended for first time survivors, the Background Generation process allows you to spend Character Development Points during the different stages of your survivor&apos;s life to craft a character that directly matches your vision.</div>
@@ -151,8 +155,8 @@ export default function WelcomePage() {
         </div>
 
         {/* External links */}
-        <div style={sectionHeading}>Off-Platform</div>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '4rem' }}>
+        <div style={{ ...sectionHeading, textAlign: 'center' }}>Off-Platform</div>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '4rem' }}>
           <a href="https://www.distemperverse.com" target="_blank" rel="noreferrer" style={cardLink}>DistemperVerse.com 🔗</a>
           <a href="https://www.xerosumgames.com"   target="_blank" rel="noreferrer" style={cardLink}>XeroSumGames.com 🔗</a>
           <a href="https://www.xerosumstudio.com"  target="_blank" rel="noreferrer" style={cardLink}>XeroSumStudio.com 🔗</a>

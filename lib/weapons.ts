@@ -61,21 +61,21 @@ export function getTraitValue(traits: string[], traitName: string): number | nul
 // ── MELEE WEAPONS (Table 16) ──
 
 export const MELEE_WEAPONS: Weapon[] = [
-  { name: 'Bayonet / Bowie Knife', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '4+1d6', rpPercent: 100, enc: 1, traits: [] },
+  { name: 'Baseball Bat', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '4+1d6', rpPercent: 100, enc: 1, traits: [] },
   { name: 'Brass Knuckles', category: 'melee', skill: 'Unarmed Combat', range: 'Engaged', rarity: 'Uncommon', damage: '+1', rpPercent: 100, enc: 0, traits: [] },
-  { name: 'Bat / Stick', category: 'melee', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '1+1d3', rpPercent: 100, enc: 1, traits: ['Unwieldy (2)'] },
-  { name: 'Cleaver', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '5+1d6', rpPercent: 100, enc: 2, traits: ['Cumbersome (1)'] },
+  { name: 'Bullwhip', category: 'melee', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '1+1d3', rpPercent: 100, enc: 1, traits: ['Unwieldy (2)'] },
+  { name: 'Club', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '5+1d6', rpPercent: 100, enc: 2, traits: ['Cumbersome (1)'] },
   { name: 'Fire Axe', category: 'melee', skill: 'Melee Combat', range: 'Close', rarity: 'Uncommon', damage: '3+2d3', rpPercent: 50, enc: 1, traits: [] },
   { name: 'Hatchet', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '3+1d3', rpPercent: 50, enc: 1, traits: [] },
   { name: 'Hunting Knife', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '2+2d3', rpPercent: 50, enc: 1, traits: ['Unwieldy (1)'] },
   { name: 'Kitchen Knife', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '2+1d3', rpPercent: 50, enc: 1, traits: [] },
-  { name: 'Machete', category: 'melee', skill: 'Melee Combat', range: 'Close', rarity: 'Uncommon', damage: '3+2d3', rpPercent: 50, enc: 1, traits: ['Unwieldy (2)'] },
-  { name: 'Makeshift Cleaver', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '3+1d3', rpPercent: 100, enc: 1, traits: [] },
+  { name: 'Machete', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '3+2d3', rpPercent: 50, enc: 1, traits: ['Unwieldy (2)'] },
+  { name: 'Makeshift Club', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Common', damage: '3+1d3', rpPercent: 100, enc: 1, traits: [] },
   { name: 'Sledgehammer', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '3+3d3', rpPercent: 100, enc: 2, traits: ['Cumbersome (2)'] },
   { name: 'Spear', category: 'melee', skill: 'Melee Combat', range: 'Close', rarity: 'Uncommon', damage: '2+2d6', rpPercent: 50, enc: 1, traits: ['Cumbersome (2)'] },
   { name: 'Staff', category: 'melee', skill: 'Melee Combat', range: 'Close', rarity: 'Common', damage: '2+2d3', rpPercent: 100, enc: 1, traits: ['Unwieldy (1)'] },
   { name: 'Sword', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '3+3d3', rpPercent: 50, enc: 1, traits: [] },
-  { name: 'Katana', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Rare', damage: '4+3d3', rpPercent: 50, enc: 1, traits: ['Unwieldy 1'] },
+  { name: 'Katana', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Rare', damage: '4+3d3', rpPercent: 50, enc: 1, traits: ['Unwieldy (1)'] },
   { name: 'Tactical Baton', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '4+2d3', rpPercent: 100, enc: 1, traits: [] },
   { name: 'Cattle Prod', category: 'melee', skill: 'Melee Combat', range: 'Engaged', rarity: 'Uncommon', damage: '2', rpPercent: 400, enc: 1, traits: ['Stun'] },
   { name: 'Wood Axe', category: 'melee', skill: 'Melee Combat', range: 'Close', rarity: 'Uncommon', damage: '5+1d3', rpPercent: 50, enc: 1, traits: ['Cumbersome (1)'] },
@@ -85,17 +85,19 @@ export const MELEE_WEAPONS: Weapon[] = [
 
 export const RANGED_WEAPONS: Weapon[] = [
   { name: 'Assault Rifle', category: 'ranged', skill: 'Ranged Combat', range: 'Long', rarity: 'Uncommon', damage: '5+2d6', rpPercent: 50, enc: 2, ammo: 'Uncommon', clip: 30, traits: ['Automatic Burst (3)'] },
+  { name: 'Black Powder Rifle', category: 'ranged', skill: 'Ranged Combat', range: 'Long', rarity: 'Uncommon', damage: '5+1d6', rpPercent: 50, enc: 2, ammo: 'Uncommon', clip: 1, traits: [] },
   { name: 'Bolt-Action / Pump Rifle', category: 'ranged', skill: 'Ranged Combat', range: 'Long', rarity: 'Uncommon', damage: '5+1d6', rpPercent: 50, enc: 2, ammo: 'Uncommon', clip: 1, traits: [] },
   { name: 'Bow', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Common', damage: '4+1d6', rpPercent: 50, enc: 1, ammo: 'Common', clip: 1, traits: ['Tracking'] },
   { name: 'Carbine', category: 'ranged', skill: 'Ranged Combat', range: 'Long', rarity: 'Uncommon', damage: '5+1d6', rpPercent: 50, enc: 1, ammo: 'Uncommon', clip: 30, traits: ['Automatic Burst'] },
-  { name: 'Compact Bow', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Common', damage: '4+2d3', rpPercent: 50, enc: 2, ammo: 'Common', clip: 1, traits: ['Tracking'] },
+  { name: 'Compound Bow', category: 'ranged', skill: 'Ranged Combat', range: 'Long', rarity: 'Uncommon', damage: '4+2d3', rpPercent: 50, enc: 2, ammo: 'Common', clip: 1, traits: ['Tracking'] },
   { name: 'Crossbow', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Uncommon', damage: '4+1d6', rpPercent: 50, enc: 2, ammo: 'Uncommon', clip: 1, traits: ['Unwieldy (1)'] },
   { name: 'Heavy Pistol', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Common', damage: '3+2d3', rpPercent: 50, enc: 1, ammo: 'Uncommon', clip: 9, traits: [] },
   { name: 'Hunting Rifle', category: 'ranged', skill: 'Ranged Combat', range: 'Long', rarity: 'Common', damage: '5+1d6', rpPercent: 50, enc: 2, ammo: 'Uncommon', clip: 12, traits: [] },
   { name: 'Light Pistol', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Common', damage: '3+1d6', rpPercent: 50, enc: 1, ammo: 'Common', clip: 6, traits: [] },
   { name: 'Shotgun (Pump-Action)', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Common', damage: '5+2d6', rpPercent: 50, enc: 2, ammo: 'Common', clip: 5, traits: ['Close-Up'] },
   { name: 'Shotgun (Sawed-Off)', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Uncommon', damage: '2+3d6', rpPercent: 50, enc: 2, ammo: 'Common', clip: 2, traits: ['Close-Up'] },
-  { name: 'Slingshot', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Common', damage: '1+1d3', rpPercent: 100, enc: 0, ammo: 'Common', clip: 1, traits: ['Tracking'] },
+  { name: 'Slingshot', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Common', damage: '1+1d3', rpPercent: 100, enc: 0, ammo: 'Common', clip: 30, traits: ['Tracking'] },
+  { name: 'Tranquilizer Gun', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Rare', damage: '0', rpPercent: 100, enc: 1, ammo: 'Uncommon', clip: 1, traits: ['Stun'] },
   { name: "Sniper's Rifle", category: 'ranged', skill: 'Ranged Combat', range: 'Distant', rarity: 'Rare', damage: '2+3d6', rpPercent: 50, enc: 2, ammo: 'Uncommon', clip: 10, traits: [] },
   { name: 'Taser', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Uncommon', damage: '1', rpPercent: 400, enc: 1, ammo: 'Rare', clip: 1, traits: ['Stun'] },
 ]
@@ -104,6 +106,7 @@ export const RANGED_WEAPONS: Weapon[] = [
 
 export const EXPLOSIVE_WEAPONS: Weapon[] = [
   { name: 'Grenade', category: 'explosive', skill: 'Athletics', range: 'Medium', rarity: 'Uncommon', damage: '4+4d3', rpPercent: 100, enc: 1, clip: 1, traits: ['Tracking', 'Blast Radius'] },
+  { name: 'Mortar', category: 'explosive', skill: 'Demolitions', range: 'Distant', rarity: 'Rare', damage: '5+2d6', rpPercent: 100, enc: 2, ammo: 'Rare', clip: 1, traits: ['Blast Radius'] },
   { name: 'Shiv-Grenade', category: 'explosive', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '0', rpPercent: 0, enc: 1, clip: 1, traits: ['Stun'] },
   { name: 'Flash-Bang Grenade', category: 'explosive', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '0', rpPercent: 0, enc: 1, clip: 1, traits: ['Stun'] },
   { name: 'Molotov', category: 'explosive', skill: 'Demolitions', range: 'Close', rarity: 'Rare', damage: '5+2d6', rpPercent: 100, enc: 2, clip: 1, traits: ['Blast Radius'] },
