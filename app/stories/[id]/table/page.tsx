@@ -3866,7 +3866,6 @@ export default function TablePage() {
       // tactical map. Center is the target token by default, or the
       // cell the player clicked when it's a grenade throw-to-cell.
       if (hasBlast && mapTokens.length > 0 && (targetName || grenadeTargetCell || blastCenterOverride)) {
-        const active = initiativeOrder.find(ie => ie.is_active)
         // Resolve blast center. Order of precedence:
         //   1. Fumble override (Low Insight = thrower, Failure/Dire = scatter)
         //   2. Explicit cell-throw target (grenadeTargetCell)
@@ -3888,7 +3887,27 @@ export default function TablePage() {
         const targetTok = center ? { grid_x: center.gx, grid_y: center.gy } : null
         if (targetTok) {
           const ft = mapCellFeet || 3
+          // ── BATCHED BLAST APPLICATION ──
+          // Was: per-target sequential awaits — fresh-state SELECT + UPDATE
+          // + stress-log INSERT for each PC, plus per-NPC and per-object
+          // UPDATEs. With 4 PCs + 2 NPCs + 1 object in the blast that's
+          // ~12 stacked round-trips. At 150ms RTT under 4-browser network
+          // contention this routinely climbed to 30-60s of dead air; the
+          // dice modal would close LONG after the log row was already in
+          // the feed (playtest #14), and damage propagation lagged enough
+          // that other clients had to refresh to see updates (#11), and
+          // the initiative bar mid-flight saw partial liveState that
+          // briefly looked like combatants vanished (#12).
+          // Now: pre-fetch all PC fresh states in one bulk query, build
+          // per-target update arrays, fire one Promise.all wave for the
+          // table writes + a coalesced log insert + a single broadcast.
           const blastTargets: string[] = []
+          // Pass 1 — collect candidate tokens + compute splash damage per token
+          type BlastJob =
+            | { kind: 'pc'; tok: typeof mapTokens[number]; pc: NonNullable<ReturnType<typeof entries.find>>; splashWP: number; splashRP: number; rangeBand: string }
+            | { kind: 'npc'; tok: typeof mapTokens[number]; npc: any; splashWP: number; splashRP: number; rangeBand: string }
+            | { kind: 'obj'; tok: typeof mapTokens[number]; splashWP: number; rangeBand: string }
+          const jobs: BlastJob[] = []
           for (const tok of mapTokens) {
             // Include PC/NPC tokens AND destructible objects (wp_max != null)
             // per playtest #17 — grenades should hit barrels/crates in the
@@ -3921,72 +3940,126 @@ export default function TablePage() {
             // Per playtest 2026-04-27: drop the Medium 25% tier. Grenades
             // stay dangerous to throwers but stop killing bystanders 50ft+
             // away through walls. Engaged = full, Close = half, beyond
-            // Close = nothing. The Medium tier may come back later if
-            // larger explosives (RPG, mortar) need it.
+            // Close = nothing.
             if (feet > 30) continue
             const scale = feet <= 5 ? 1.0 : 0.5
             // Splash uses raw blast WP/RP — see CRB note where blastRawWP
             // is computed. Splash victims don't inherit primary's mitigation.
             const splashWP = Math.max(1, Math.floor(blastRawWP * scale))
             const splashRP = Math.max(0, Math.floor(blastRawRP * scale))
+            const rangeBand = feet <= 5 ? 'Engaged' : feet <= 30 ? 'Close' : 'Far'
             const splashPC = entries.find(e => e.character.id === tok.character_id)
+            if (splashPC?.liveState) { jobs.push({ kind: 'pc', tok, pc: splashPC, splashWP, splashRP, rangeBand }); continue }
             const splashNpc = campaignNpcs.find((n: any) => n.id === tok.npc_id)
-            const splashName = splashPC?.character.name ?? splashNpc?.name ?? tok.name
-            const rangeBandLabel = feet <= 5 ? 'Engaged' : feet <= 30 ? 'Close' : 'Far'
-            if (splashPC?.liveState) {
-              const { data: freshState } = await supabase.from('character_states').select('*').eq('id', splashPC.stateId).single()
-              const curWP = freshState?.wp_current ?? splashPC.liveState.wp_current
-              const curRP = freshState?.rp_current ?? splashPC.liveState.rp_current
-              const curStress = freshState?.stress ?? splashPC.liveState.stress ?? 0
-              const nWP = Math.max(0, curWP - splashWP)
-              const nRP = Math.max(0, curRP - splashRP)
-              const update: any = { wp_current: nWP, rp_current: nRP, updated_at: new Date().toISOString() }
+            if (splashNpc) { jobs.push({ kind: 'npc', tok, npc: splashNpc, splashWP, splashRP, rangeBand }); continue }
+            if (tok.token_type === 'object' && tok.wp_max != null) {
+              jobs.push({ kind: 'obj', tok, splashWP, rangeBand })
+            }
+          }
+
+          // Pass 2 — bulk-fetch fresh PC states (was: 1 SELECT per PC)
+          const pcStateIds = jobs.filter(j => j.kind === 'pc').map(j => (j as any).pc.stateId as string)
+          const stateById = new Map<string, any>()
+          if (pcStateIds.length > 0) {
+            const { data: freshStates } = await supabase.from('character_states').select('*').in('id', pcStateIds)
+            for (const s of freshStates ?? []) stateById.set(s.id, s)
+          }
+
+          // Pass 3 — build update operations + local patches + stress log rows
+          const tableUpdates: Promise<any>[] = []
+          const stressLogRows: any[] = []
+          const pcLocalPatches = new Map<string, any>()      // stateId → patch
+          const npcLocalPatches = new Map<string, any>()     // npcId → patch
+          const objLocalPatches = new Map<string, number>()  // tokenId → newWP
+          const nowIso = new Date().toISOString()
+
+          for (const job of jobs) {
+            if (job.kind === 'pc') {
+              const fresh = stateById.get(job.pc.stateId)
+              const curWP = fresh?.wp_current ?? job.pc.liveState.wp_current
+              const curRP = fresh?.rp_current ?? job.pc.liveState.rp_current
+              const curStress = fresh?.stress ?? job.pc.liveState.stress ?? 0
+              const nWP = Math.max(0, curWP - job.splashWP)
+              const nRP = Math.max(0, curRP - job.splashRP)
+              const update: any = { wp_current: nWP, rp_current: nRP, updated_at: nowIso }
               let splashStressReason: string | null = null
               if (nWP === 0 && curWP > 0) {
-                update.death_countdown = Math.max(1, 4 + (splashPC.character.data?.rapid?.PHY ?? 0))
+                update.death_countdown = Math.max(1, 4 + (job.pc.character.data?.rapid?.PHY ?? 0))
                 update.stress = Math.min(5, curStress + 1)
                 splashStressReason = 'Mortally Wounded'
               }
               if (nRP === 0 && curRP > 0 && nWP > 0) {
-                update.incap_rounds = Math.max(1, 4 - (splashPC.character.data?.rapid?.PHY ?? 0))
+                update.incap_rounds = Math.max(1, 4 - (job.pc.character.data?.rapid?.PHY ?? 0))
                 update.stress = Math.min(5, curStress + 1)
                 splashStressReason = 'Incapacitated'
               }
-              await supabase.from('character_states').update(update).eq('id', splashPC.stateId)
-              setEntries(prev => prev.map(e => e.stateId === splashPC.stateId ? { ...e, liveState: { ...e.liveState, ...update } } : e))
-              initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: { stateId: splashPC.stateId, patch: update } })
+              tableUpdates.push(supabase.from('character_states').update(update).eq('id', job.pc.stateId))
+              pcLocalPatches.set(job.pc.stateId, update)
               if (splashStressReason) {
-                await supabase.from('roll_log').insert({
+                stressLogRows.push({
                   campaign_id: id, user_id: userId, character_name: 'System',
-                  label: `😰 ${splashName} gains a Stress from being ${splashStressReason}`,
+                  label: `😰 ${job.pc.character.name} gains a Stress from being ${splashStressReason}`,
                   die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'stress',
                 })
               }
-              blastTargets.push(`${splashName} (${rangeBandLabel}): ${splashWP} WP, ${splashRP} RP`)
-            } else if (splashNpc) {
-              const curWP = splashNpc.wp_current ?? splashNpc.wp_max ?? 10
-              const curRP = splashNpc.rp_current ?? splashNpc.rp_max ?? 6
-              const nWP = Math.max(0, curWP - splashWP)
-              const nRP = Math.max(0, curRP - splashRP)
+              blastTargets.push(`${job.pc.character.name} (${job.rangeBand}): ${job.splashWP} WP, ${job.splashRP} RP`)
+            } else if (job.kind === 'npc') {
+              const curWP = job.npc.wp_current ?? job.npc.wp_max ?? 10
+              const curRP = job.npc.rp_current ?? job.npc.rp_max ?? 6
+              const nWP = Math.max(0, curWP - job.splashWP)
+              const nRP = Math.max(0, curRP - job.splashRP)
               const npcUpd: any = { wp_current: nWP, rp_current: nRP }
-              if (nWP === 0 && curWP > 0) npcUpd.death_countdown = Math.max(1, 4 + (splashNpc.physicality ?? 0))
-              if (nRP === 0 && curRP > 0 && nWP > 0) npcUpd.incap_rounds = Math.max(1, 4 - (splashNpc.physicality ?? 0))
-              await supabase.from('campaign_npcs').update(npcUpd).eq('id', splashNpc.id)
-              setCampaignNpcs(prev => prev.map(n => n.id === splashNpc.id ? { ...n, ...npcUpd } : n))
-              initChannelRef.current?.send({ type: 'broadcast', event: 'npc_damaged', payload: { npcId: splashNpc.id, patch: npcUpd } })
-              blastTargets.push(`${splashName} (${rangeBandLabel}): ${splashWP} WP, ${splashRP} RP`)
-            } else if (tok.token_type === 'object' && tok.wp_max != null) {
+              if (nWP === 0 && curWP > 0) npcUpd.death_countdown = Math.max(1, 4 + (job.npc.physicality ?? 0))
+              if (nRP === 0 && curRP > 0 && nWP > 0) npcUpd.incap_rounds = Math.max(1, 4 - (job.npc.physicality ?? 0))
+              tableUpdates.push(supabase.from('campaign_npcs').update(npcUpd).eq('id', job.npc.id))
+              npcLocalPatches.set(job.npc.id, npcUpd)
+              blastTargets.push(`${job.npc.name} (${job.rangeBand}): ${job.splashWP} WP, ${job.splashRP} RP`)
+            } else {
               // Object splash — barrels, crates, etc. get scaled WP damage
               // same as combatants. No RP (objects only track integrity).
               // Per playtest #17.
-              const curWP = tok.wp_current ?? tok.wp_max
-              const nWP = Math.max(0, curWP - splashWP)
-              await supabase.from('scene_tokens').update({ wp_current: nWP }).eq('id', tok.id).select('id')
-              setMapTokens(prev => prev.map(t => t.id === tok.id ? { ...t, wp_current: nWP } : t))
-              initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
-              blastTargets.push(`${tok.name} (${rangeBandLabel}): ${splashWP} WP`)
+              const curWP = job.tok.wp_current ?? job.tok.wp_max ?? 0
+              const nWP = Math.max(0, curWP - job.splashWP)
+              tableUpdates.push(supabase.from('scene_tokens').update({ wp_current: nWP }).eq('id', job.tok.id))
+              objLocalPatches.set(job.tok.id, nWP)
+              blastTargets.push(`${job.tok.name} (${job.rangeBand}): ${job.splashWP} WP`)
             }
           }
+
+          // Single parallel wave — table updates + coalesced stress log insert.
+          const stressLogInsert = stressLogRows.length > 0
+            ? supabase.from('roll_log').insert(stressLogRows)
+            : Promise.resolve(null)
+          await Promise.all([...tableUpdates, stressLogInsert])
+
+          // Apply local patches in one setState per slice (was: setState
+          // inside the loop, N re-renders).
+          if (pcLocalPatches.size > 0) {
+            setEntries(prev => prev.map(e => {
+              const patch = pcLocalPatches.get(e.stateId)
+              return patch ? { ...e, liveState: { ...e.liveState, ...patch } } : e
+            }))
+          }
+          if (npcLocalPatches.size > 0) {
+            setCampaignNpcs(prev => prev.map(n => npcLocalPatches.has(n.id) ? { ...n, ...npcLocalPatches.get(n.id) } : n))
+            setRosterNpcs(prev => prev.map(n => npcLocalPatches.has(n.id) ? { ...n, ...npcLocalPatches.get(n.id) } : n))
+          }
+          if (objLocalPatches.size > 0) {
+            setMapTokens(prev => prev.map(t => objLocalPatches.has(t.id) ? { ...t, wp_current: objLocalPatches.get(t.id)! } : t))
+          }
+
+          // Coalesced broadcasts — one event per affected table instead
+          // of one per affected token. Other clients re-fetch on receipt.
+          if (pcLocalPatches.size > 0) {
+            initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
+          }
+          if (npcLocalPatches.size > 0) {
+            initChannelRef.current?.send({ type: 'broadcast', event: 'npc_damaged', payload: {} })
+          }
+          if (objLocalPatches.size > 0) {
+            initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+          }
+
           if (blastTargets.length > 0) {
             traitNotes.push(`Blast hit: ${blastTargets.join(' | ')}`)
           }
@@ -5023,19 +5096,30 @@ export default function TablePage() {
             </div>
 
             {(() => {
-              // Filter out combatants who can't act: dead, mortally wounded (WP=0), incapacitated (RP=0)
+              // Filter out ONLY truly-dead combatants (status='dead' or
+              // a fully-elapsed death countdown). Mortally-wounded and
+              // incapacitated combatants stay visible in the bar with
+              // their 💀/🩸/💤 status icons — playtest #12 caught the
+              // old behavior where a grenade splash that incapacitated
+              // 2 of 4 PCs made them VANISH from the initiative bar
+              // entirely (the icons at lines ~5061-5077 only render
+              // for rows that survived the filter, so they never
+              // appeared). Skip-walk in nextTurn still passes them
+              // by — bar visibility and act-eligibility are separate
+              // concerns and conflating them was the bug.
               const alive = initiativeOrder.filter(entry => {
                 if (entry.is_npc && entry.npc_id) {
                   const npc = campaignNpcs.find((n: any) => n.id === entry.npc_id)
                   if (npc) {
+                    if (npc.status === 'dead') return false
                     const wp = npc.wp_current ?? npc.wp_max ?? 10
-                    const rp = npc.rp_current ?? npc.rp_max ?? 6
-                    if (wp === 0 || rp === 0 || npc.status === 'dead') return false
+                    if (wp === 0 && npc.death_countdown != null && npc.death_countdown <= 0) return false
                   }
                 } else {
                   const ce = entries.find(e => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
                   if (ce?.liveState) {
-                    if (ce.liveState.wp_current === 0 || ce.liveState.rp_current === 0) return false
+                    const ls = ce.liveState as any
+                    if (ls.wp_current === 0 && ls.death_countdown != null && ls.death_countdown <= 0) return false
                   }
                 }
                 return true
