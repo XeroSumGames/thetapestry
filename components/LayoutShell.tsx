@@ -55,8 +55,18 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   // who's logged in, so this was wasted work that made soft-nav feel slow.
   useEffect(() => {
     let cancelled = false
+    // Dedupe loadProfile across the initial checkSession() AND the
+    // onAuthStateChange SIGNED_IN handler. Supabase fires SIGNED_IN
+    // immediately on subscribe whenever a session is present, which
+    // duplicated the suspended-profile query on every page load.
+    // Combined with 5 simultaneous browser mounts during playtest,
+    // every duplicate became one extra concurrent query hitting the
+    // already-stretched Supabase pool.
+    let loadedForUserId: string | null = null
 
     async function loadProfile(userId: string) {
+      if (loadedForUserId === userId) return
+      loadedForUserId = userId
       const { data: profile } = await supabase
         .from('profiles')
         .select('suspended')
