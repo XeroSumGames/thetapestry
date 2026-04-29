@@ -634,26 +634,35 @@ export default function CharacterCard({
                           </select>
                         </span>
                       </div>
-                      {/* Upkeep Check button */}
-                      {canEdit && cond !== 'Pristine' && (
-                        <button onClick={() => {
-                          if (!onRoll) return
-                          // Upkeep uses Mechanic, Tinkerer, or the weapon's combat skill
-                          const upkeepSkills = ['Mechanic', 'Tinkerer', w.skill]
-                          const bestSkill = skills.reduce((best, s) => {
-                            if (upkeepSkills.includes(s.skillName) && s.level > (best?.level ?? -99)) return s
-                            return best
-                          }, null as any)
-                          const smod = bestSkill?.level ?? 0
-                          const skillName = bestSkill?.skillName ?? 'Mechanic'
-                          const skillDef = SKILLS.find(s => s.name === skillName)
-                          const attrKey = skillDef?.attribute ?? 'RSN'
-                          const amod = rapid[attrKey] ?? 0
-                          onRoll(`Upkeep — ${w.name}`, amod, smod)
-                        }}
-                          style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginBottom: '4px', alignSelf: 'flex-start' }}>
-                          Upkeep Check
-                        </button>
+                      {/* Upkeep Check + Unequip — weapon admin row */}
+                      {canEdit && (
+                        <div style={{ display: 'flex', gap: '6px', marginBottom: '4px' }}>
+                          {cond !== 'Pristine' && (
+                            <button onClick={() => {
+                              if (!onRoll) return
+                              // Upkeep uses Mechanic, Tinkerer, or the weapon's combat skill
+                              const upkeepSkills = ['Mechanic', 'Tinkerer', w.skill]
+                              const bestSkill = skills.reduce((best, s) => {
+                                if (upkeepSkills.includes(s.skillName) && s.level > (best?.level ?? -99)) return s
+                                return best
+                              }, null as any)
+                              const smod = bestSkill?.level ?? 0
+                              const skillName = bestSkill?.skillName ?? 'Mechanic'
+                              const skillDef = SKILLS.find(s => s.name === skillName)
+                              const attrKey = skillDef?.attribute ?? 'RSN'
+                              const amod = rapid[attrKey] ?? 0
+                              onRoll(`Upkeep — ${w.name}`, amod, smod)
+                            }}
+                              style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                              Upkeep Check
+                            </button>
+                          )}
+                          <button onClick={() => changeWeapon(slot, '')}
+                            title="Clear this weapon slot"
+                            style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            Unequip
+                          </button>
+                        </div>
                       )}
                       {/* Ammo pips + reload on one line */}
                       {w.clip && w.clip > 0 && (
