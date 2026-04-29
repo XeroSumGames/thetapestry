@@ -5886,12 +5886,12 @@ export default function TablePage() {
                     position: 'absolute',
                     left: pos?.x ?? 10 + i * 20,
                     top: pos?.y ?? 10 + i * 20,
-                    // Default 530×210 — Xero's spec for the in-combat /
+                    // Default 571×400 — Xero's spec for the in-combat /
                     // tactical-map double-click popup. Resize handle in
                     // the bottom-right still lets the GM grow either
                     // dimension; once dragged, the user-set size wins.
-                    width: size?.w ?? 530,
-                    height: size?.h ?? 210,
+                    width: size?.w ?? 571,
+                    height: size?.h ?? 400,
                     maxHeight: size?.h ? undefined : '80vh',
                     overflow: 'auto',
                     // Wrapper bg — without this, when NpcCard's natural
@@ -6235,7 +6235,7 @@ export default function TablePage() {
                 ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
                 : initiativeOrder
               const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
-              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}&gm=${isGM ? 1 : 0}`, `npc-${npc.id}`, { w: 600, h: 800 }) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} onPlaceFolderOnMap={(combatActive || showTacticalMap) ? (folderNpcs) => placeFolderOnMap(folderNpcs.map(n => ({ id: n.id, name: n.name, portrait_url: n.portrait_url, disposition: (n as any).disposition, npc_type: (n as any).npc_type }))) : undefined} onUnmapFolder={(combatActive || showTacticalMap) ? (folderNpcs) => unmapFolderFromMap(folderNpcs.map(n => ({ id: n.id }))) : undefined} onTacticalRefresh={async () => {
+              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}&gm=${isGM ? 1 : 0}`, `npc-${npc.id}`, { w: 571, h: 400 }) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} onPlaceFolderOnMap={(combatActive || showTacticalMap) ? (folderNpcs) => placeFolderOnMap(folderNpcs.map(n => ({ id: n.id, name: n.name, portrait_url: n.portrait_url, disposition: (n as any).disposition, npc_type: (n as any).npc_type }))) : undefined} onUnmapFolder={(combatActive || showTacticalMap) ? (folderNpcs) => unmapFolderFromMap(folderNpcs.map(n => ({ id: n.id }))) : undefined} onTacticalRefresh={async () => {
               // Final-pass refresh after the GM toggles SHOW/HIDE on a
               // folder. revealNpcsByIds in NpcRoster updates is_visible
               // on scene_tokens but doesn't broadcast — without this
