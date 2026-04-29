@@ -12,6 +12,7 @@ import VehicleCard, { Vehicle } from '../../../../components/VehicleCard'
 import NotificationBell from '../../../../components/NotificationBell'
 import MessagesBell from '../../../../components/MessagesBell'
 import { useChatPanel, ChatMessageRow, ChatMessageList, ChatComposer } from '../../../../components/TableChat'
+import { useRollsFeed } from '../../../../components/RollsFeed'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
 const CampaignMap = dynamic(() => import('../../../../components/CampaignMap'), { ssr: false })
@@ -171,13 +172,12 @@ export default function TablePage() {
   const id = params.id as string
   const router = useRouter()
   const supabase = createClient()
+  const rollsFeed = useRollsFeed({ campaignId: id })
   const channelRef = useRef<any>(null)
-  const rollChannelRef = useRef<any>(null)
   const initChannelRef = useRef<any>(null)
   const membersChannelRef = useRef<any>(null)
   const npcsChannelRef = useRef<any>(null)
   const npcFetchInFlightRef = useRef(false)  // Suppress realtime callback during manual NPC re-fetch
-  const rollFeedRef = useRef<HTMLDivElement>(null)
   const revealChannelRef = useRef<any>(null)
   const communityMembersChannelRef = useRef<any>(null)
   const myCharIdRef = useRef<string | null>(null)
@@ -247,8 +247,6 @@ export default function TablePage() {
   const [loading, setLoading] = useState(true)
   const [entriesLoading, setEntriesLoading] = useState(true)
   const [selectedEntry, setSelectedEntry] = useState<TableEntry | null>(null)
-  const [rolls, setRolls] = useState<RollEntry[]>([])
-  const [expandedRollIds, setExpandedRollIds] = useState<Set<string>>(new Set())
   const [pendingRoll, setPendingRoll] = useState<PendingRoll | null>(null)
   const actionPreConsumedRef = useRef(false)  // Set when Stabilize pre-consumes before the roll modal
   const actionCostRef = useRef(1)             // Action cost for the current roll (2 for Charge/Rapid Fire)
@@ -471,7 +469,7 @@ export default function TablePage() {
     campaignId: id,
     userIdRef,
     setFeedTab,
-    scrollFeedToBottom: () => { rollFeedRef.current?.scrollTo(0, rollFeedRef.current.scrollHeight) },
+    scrollFeedToBottom: () => { rollsFeed.rollFeedRef.current?.scrollTo(0, rollsFeed.rollFeedRef.current.scrollHeight) },
   })
   const [whisperTarget, setWhisperTarget] = useState<{ userId: string; characterName: string } | null>(null)
   const [viewingNpcs, setViewingNpcs] = useState<CampaignNpc[]>([])
@@ -587,17 +585,6 @@ export default function TablePage() {
         },
       })))
     }
-  }
-
-  async function loadRolls(campaignId: string) {
-    const { data } = await supabase
-      .from('roll_log')
-      .select('*')
-      .eq('campaign_id', campaignId)
-      .order('created_at', { ascending: false })
-      .limit(50)
-    setRolls((data ?? []).reverse())
-    setTimeout(() => { rollFeedRef.current?.scrollTo(0, rollFeedRef.current.scrollHeight) }, 50)
   }
 
   // loadChat / sendChat moved to components/TableChat.tsx — accessed
@@ -759,9 +746,9 @@ export default function TablePage() {
       }
       // Chat is now self-loading inside useChatPanel — no longer in this
       // Promise.all. The destructuring's leading skip-count drops by 1
-      // accordingly (3 skips for loadEntries/loadRolls/loadInitiative).
+      // accordingly (3 skips for loadEntries/rollsFeed.refetch/loadInitiative).
       const [,,, cnpcsResult, pubDataResult] = await Promise.all([
-        loadEntries(id), loadRolls(id), loadInitiative(id),
+        loadEntries(id), rollsFeed.refetch(), loadInitiative(id),
         supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
         supabase.from('world_npcs').select('source_campaign_npc_id').not('source_campaign_npc_id', 'is', null),
         // Hydrate the "which NPCs already have a token in the active
@@ -836,10 +823,6 @@ export default function TablePage() {
         })
         .subscribe()
 
-      rollChannelRef.current = supabase.channel(`rolls_${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'roll_log', filter: `campaign_id=eq.${id}` }, () => loadRolls(id))
-        .subscribe()
-
       // Chat realtime channel now lives inside useChatPanel — no
       // separate subscription needed here.
 
@@ -858,17 +841,17 @@ export default function TablePage() {
             window.location.href = `/stories/${id}`
           }
         })
-        .on('broadcast', { event: 'combat_started' }, () => { loadInitiative(id); loadRolls(id) })
+        .on('broadcast', { event: 'combat_started' }, () => { loadInitiative(id); rollsFeed.refetch() })
         .on('broadcast', { event: 'tactical_shared' }, (msg: any) => { setTacticalShared(msg.payload?.shared ?? false); setShowTacticalMap(msg.payload?.shared ?? false) })
         .on('broadcast', { event: 'tactical_unshared' }, () => { setTacticalShared(false); setShowTacticalMap(false) })
         .on('broadcast', { event: 'token_changed' }, () => { setTokenRefreshKey(k => k + 1) })
-        .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id); loadRolls(id) })
+        .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id); rollsFeed.refetch() })
         .on('broadcast', { event: 'logs_cleared' }, () => {
           // GM started/ended a session — clear local chat + roll state, then
           // refetch from DB so every client converges to the post-clear state.
-          setRolls([])
+          rollsFeed.clear()
           chat.clear()
-          loadRolls(id)
+          rollsFeed.refetch()
           chat.refetch()
         })
         .on('broadcast', { event: 'npc_damaged' }, (msg: any) => {
@@ -1002,7 +985,6 @@ export default function TablePage() {
       if (channelRef.current) supabase.removeChannel(channelRef.current)
       if (membersChannelRef.current) supabase.removeChannel(membersChannelRef.current)
       if (npcsChannelRef.current) supabase.removeChannel(npcsChannelRef.current)
-      if (rollChannelRef.current) supabase.removeChannel(rollChannelRef.current)
       // chat channel teardown is handled by useChatPanel's own cleanup.
       if (initChannelRef.current) supabase.removeChannel(initChannelRef.current)
       if (campaignChannelRef.current) supabase.removeChannel(campaignChannelRef.current)
@@ -1027,7 +1009,7 @@ export default function TablePage() {
       if (document.hidden) return
       void (async () => {
         loadEntries(id)
-        loadRolls(id)
+        rollsFeed.refetch()
         loadInitiative(id)
         loadPlayerNpcCommunityMap(id)
         const { data: cnpcs } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
@@ -1240,7 +1222,7 @@ export default function TablePage() {
           setTacticalShared(true); setShowTacticalMap(true)
           initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_shared', payload: { shared: true } })
         }
-        await loadRolls(id)
+        await rollsFeed.refetch()
         initChannelRef.current?.send({ type: 'broadcast', event: 'combat_started', payload: {} })
         return // Phase 2 happens in nextTurn when the drop action is consumed
       }
@@ -1296,7 +1278,7 @@ export default function TablePage() {
     // broadcast combat start so players also reload their state. We rely on
     // postgres_changes for the player log refresh; broadcast is the trigger
     // for loadInitiative on the player side.
-    await loadRolls(id)
+    await rollsFeed.refetch()
     initChannelRef.current?.send({ type: 'broadcast', event: 'combat_started', payload: {} })
   }
 
@@ -1350,7 +1332,7 @@ export default function TablePage() {
         damage_json: { initiative: sortedReroll } as any,
       })
 
-      await Promise.all([loadInitiative(id), loadRolls(id)])
+      await Promise.all([loadInitiative(id), rollsFeed.refetch()])
       initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       return
     }
@@ -1594,7 +1576,7 @@ export default function TablePage() {
           await supabase.from('initiative_order').update(activateUpdate(firstAlive)).eq('id', firstAlive.id)
         }
       }
-      await Promise.all([loadInitiative(id), loadEntries(id), loadRolls(id)])
+      await Promise.all([loadInitiative(id), loadEntries(id), rollsFeed.refetch()])
       initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       return
     }
@@ -1780,7 +1762,7 @@ export default function TablePage() {
     setViewingNpcs([])
     // Stay on tactical map after combat ends
     setShowTacticalMap(true)
-    await loadRolls(id)
+    await rollsFeed.refetch()
     await loadEntries(id)
     initChannelRef.current?.send({ type: 'broadcast', event: 'combat_ended', payload: {} })
   }
@@ -2219,7 +2201,7 @@ export default function TablePage() {
       label: `↓ ${current.character_name} deferred their turn to after ${next.character_name}`,
       die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'defer',
     })
-    await Promise.all([loadInitiative(id), loadRolls(id)])
+    await Promise.all([loadInitiative(id), rollsFeed.refetch()])
     // Always broadcast so other clients refresh whether or not the deferrer
     // was active — previously non-active defers silently stranded other
     // viewers on the old order.
@@ -2233,7 +2215,7 @@ export default function TablePage() {
     // UI updates instantly; DB writes fire in the background (mirrors endSession).
     const newCount = sessionCount + 1
     const startedAt = new Date().toISOString()
-    setRolls([])
+    rollsFeed.clear()
     chat.clear()
     setSessionStatus('active')
     setSessionCount(newCount)
@@ -2280,7 +2262,7 @@ export default function TablePage() {
       setCombatActive(false)
       initChannelRef.current?.send({ type: 'broadcast', event: 'combat_ended', payload: {} })
     }
-    setRolls([])
+    rollsFeed.clear()
     chat.clear()
     setSessionStatus('idle')
     // Force-clear every other client's chat + log state immediately.
@@ -2770,7 +2752,7 @@ export default function TablePage() {
     })
     setRecruitStep('result')
     // Reload feed so the new log row appears immediately.
-    await loadRolls(id)
+    await rollsFeed.refetch()
     // Broadcast so any open PlayerNpcCard for this NPC re-fetches its
     // recruit state chip without a page refresh. Success or failure,
     // either outcome changes what the chip should display.
@@ -2880,7 +2862,7 @@ export default function TablePage() {
       total, outcome,
       inserted, apprenticeApplied,
     })
-    await loadRolls(id)
+    await rollsFeed.refetch()
     // Broadcast — reroll can flip membership state (added or removed)
     // or just change the logged outcome; either way the chip needs a
     // refresh.
@@ -4252,7 +4234,7 @@ export default function TablePage() {
     // next attack (even with the same grenade) starts fresh and the
     // player has to pick a new cell.
     setGrenadeTargetCell(null)
-    await Promise.all([loadEntries(id), loadRolls(id)])
+    await Promise.all([loadEntries(id), rollsFeed.refetch()])
   }
 
   async function spendInsightDie(rerollDie: 'die1' | 'die2' | 'both') {
@@ -4366,7 +4348,7 @@ export default function TablePage() {
     else nextInsightUsed = rerollDie
     setRollResult({ ...rollResult, die1: newDie1, die2: newDie2, total, outcome, insightAwarded, insightUsed: nextInsightUsed, damage: rerollDamage ?? (rollResult as any).damage })
     setRolling(false)
-    await Promise.all([loadEntries(id), loadRolls(id)])
+    await Promise.all([loadEntries(id), rollsFeed.refetch()])
   }
 
   async function closeRollModal() {
@@ -5561,7 +5543,7 @@ export default function TablePage() {
               </button>
             ))}
           </div>
-          <div ref={rollFeedRef} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+          <div ref={rollsFeed.rollFeedRef} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
             {sessionStatus === 'idle' && (
               isGM ? (
                 <button onClick={startSession} disabled={sessionActing}
@@ -5576,7 +5558,7 @@ export default function TablePage() {
             )}
             {/* Roll entries (Logs tab only) */}
             {feedTab === 'rolls' && (
-              rolls.length === 0 ? (
+              rollsFeed.rolls.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a' }}>
                   <div style={{ fontSize: '24px', marginBottom: '8px' }}>{sessionStatus === 'idle' ? '⏸' : '🎲'}</div>
                   <div style={{ fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
@@ -5584,7 +5566,7 @@ export default function TablePage() {
                   </div>
                 </div>
               ) : (
-                rolls.map(r => r.outcome === 'combat_start' && (r.damage_json as any)?.combatants ? (
+                rollsFeed.rolls.map(r => r.outcome === 'combat_start' && (r.damage_json as any)?.combatants ? (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', borderLeft: '3px solid #c0392b' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>⚔️ Combat Started</span>
@@ -5622,7 +5604,7 @@ export default function TablePage() {
                   const isWinded = typeof windedFlag === 'boolean'
                     ? windedFlag
                     : (tr?.rollOutcome === 'Failure' || tr?.rollOutcome === 'Dire Failure')
-                  const isExpanded = expandedRollIds.has(r.id)
+                  const isExpanded = rollsFeed.expandedRollIds.has(r.id)
                   return (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a2010', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
@@ -5630,7 +5612,7 @@ export default function TablePage() {
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                         <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                         {tr && (
-                          <button onClick={() => setExpandedRollIds(prev => { const next = new Set(prev); isExpanded ? next.delete(r.id) : next.add(r.id); return next })}
+                          <button onClick={() => rollsFeed.toggleExpanded(r.id)}
                             title={isExpanded ? 'Hide details' : 'View roll'}
                             style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }}>
                             {isExpanded ? '▾' : '▸'}
@@ -5819,7 +5801,7 @@ export default function TablePage() {
                   )
                 })() : (() => {
                   const compact = compactRollSummary(r)
-                  const isExpanded = expandedRollIds.has(r.id)
+                  const isExpanded = rollsFeed.expandedRollIds.has(r.id)
                   const useCompact = compact && !isExpanded
                   return (
                   <div key={r.id} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: `3px solid ${outcomeColor(r.outcome)}` }}>
@@ -5828,7 +5810,7 @@ export default function TablePage() {
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                         <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                         {compact && (
-                          <button onClick={() => setExpandedRollIds(prev => { const next = new Set(prev); isExpanded ? next.delete(r.id) : next.add(r.id); return next })}
+                          <button onClick={() => rollsFeed.toggleExpanded(r.id)}
                             title={isExpanded ? 'Hide details' : 'View more'}
                             style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }}>
                             {isExpanded ? '▾' : '▸'}
@@ -5907,7 +5889,7 @@ export default function TablePage() {
                 Chat-tab path above. */}
             {feedTab === 'both' && (() => {
               const merged: { type: 'roll' | 'chat'; created_at: string; data: any }[] = [
-                ...rolls.map(r => ({ type: 'roll' as const, created_at: r.created_at, data: r })),
+                ...rollsFeed.rolls.map(r => ({ type: 'roll' as const, created_at: r.created_at, data: r })),
                 ...chat.messages.map(m => ({ type: 'chat' as const, created_at: m.created_at, data: m })),
               ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
               if (merged.length === 0) return (
@@ -5981,7 +5963,7 @@ export default function TablePage() {
                 const isWinded = typeof windedFlag === 'boolean'
                   ? windedFlag
                   : (tr?.rollOutcome === 'Failure' || tr?.rollOutcome === 'Dire Failure')
-                const isExpanded = expandedRollIds.has(item.data.id)
+                const isExpanded = rollsFeed.expandedRollIds.has(item.data.id)
                 return (
                 <div key={`roll-${item.data.id}`} style={{ marginBottom: '8px', padding: '8px 10px', background: '#1a2010', border: '1px solid #EF9F27', borderRadius: '3px', borderLeft: '3px solid #EF9F27' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
@@ -5989,7 +5971,7 @@ export default function TablePage() {
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                       <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(item.data.created_at)}</span>
                       {tr && (
-                        <button onClick={() => setExpandedRollIds(prev => { const next = new Set(prev); isExpanded ? next.delete(item.data.id) : next.add(item.data.id); return next })}
+                        <button onClick={() => rollsFeed.toggleExpanded(item.data.id)}
                           title={isExpanded ? 'Hide details' : 'View roll'}
                           style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }}>
                           {isExpanded ? '▾' : '▸'}
@@ -6041,7 +6023,7 @@ export default function TablePage() {
               ) : (() => {
                 const r = item.data
                 const compact = compactRollSummary(r)
-                const isExpanded = expandedRollIds.has(r.id)
+                const isExpanded = rollsFeed.expandedRollIds.has(r.id)
                 const useCompact = compact && !isExpanded
                 return (
                 <div key={`roll-${r.id}`} style={{ marginBottom: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', borderLeft: `3px solid ${outcomeColor(r.outcome)}` }}>
@@ -6050,7 +6032,7 @@ export default function TablePage() {
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                       <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTime(r.created_at)}</span>
                       {compact && (
-                        <button onClick={() => setExpandedRollIds(prev => { const next = new Set(prev); isExpanded ? next.delete(r.id) : next.add(r.id); return next })}
+                        <button onClick={() => rollsFeed.toggleExpanded(r.id)}
                           title={isExpanded ? 'Hide details' : 'View more'}
                           style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }}>
                           {isExpanded ? '▾' : '▸'}
@@ -6548,7 +6530,7 @@ export default function TablePage() {
                       die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
                     })
                     await loadEntries(id)
-                    await loadRolls(id)
+                    await rollsFeed.refetch()
                   }}
                   onMove={(() => {
                     // GM can always reposition. Players can only move an object
@@ -6950,7 +6932,7 @@ export default function TablePage() {
                         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
                       })
                       await loadEntries(id)
-                      await loadRolls(id)
+                      await rollsFeed.refetch()
                     }}
                     onDuplicate={async (source) => {
                       // Pull lootable too — the source object passed in only carries the
@@ -7758,7 +7740,7 @@ export default function TablePage() {
                 })
                 initChannelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: {} })
                 await loadEntries(id)
-                await loadRolls(id)
+                await rollsFeed.refetch()
                 setShowLootModal(false)
               }} disabled={lootItems.length === 0 || lootRecipients.size === 0}
                 style={{ flex: 2, padding: '10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: lootItems.length === 0 || lootRecipients.size === 0 ? 'not-allowed' : 'pointer', opacity: lootItems.length === 0 || lootRecipients.size === 0 ? 0.5 : 1 }}>
@@ -7822,7 +7804,7 @@ export default function TablePage() {
                 })
                 initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
                 await loadEntries(id)
-                await loadRolls(id)
+                await rollsFeed.refetch()
                 setShowCdpModal(false)
               }} disabled={cdpRecipients.size === 0}
                 style={{ flex: 2, padding: '10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: cdpRecipients.size === 0 ? 'not-allowed' : 'pointer', opacity: cdpRecipients.size === 0 ? 0.5 : 1 }}>
