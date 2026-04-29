@@ -3499,11 +3499,32 @@ export default function TablePage() {
       // Find target — could be PC (in entries), NPC (in initiativeOrder + rosterNpcs), a non-combat NPC on the map, or object token (mapTokens with WP)
       const targetInitEntry = initiativeOrder.find(e => e.character_name === targetName)
       const targetEntry = entries.find(e => e.character.name === targetName) ?? (targetInitEntry?.character_id ? entries.find(e => e.character.id === targetInitEntry.character_id) : undefined)
-      const targetNpc = !targetEntry
+      let targetNpc = !targetEntry
         ? (targetInitEntry?.is_npc
             ? (rosterNpcs.find(n => n.id === targetInitEntry.npc_id) ?? campaignNpcs.find((n: any) => n.id === targetInitEntry.npc_id))
             : (campaignNpcs.find((n: any) => n.name === targetName) ?? rosterNpcs.find(n => n.name === targetName)))
         : null
+      // RLS-hidden NPC fallback: a player attacking an NPC who hasn't been
+      // revealed to them gets `targetNpc === null` from the local-state
+      // lookup above, because campaign_npcs / rosterNpcs RLS hides
+      // unrevealed rows. Without this fallback the damage path falls
+      // through every if/else branch and silently no-ops (playtest:
+      // "Cruz Zwick used an Assault Rifle to Successfully Attack Frankie
+      // Gibblets" — but Frankie took no damage). Server fetch by id
+      // bypasses the local cache; if RLS still blocks at the DB level,
+      // we surface it loudly so the GM knows to reveal the NPC or check
+      // the policy.
+      if (!targetEntry && !targetNpc && targetInitEntry?.is_npc && targetInitEntry.npc_id) {
+        const { data: freshNpc, error: npcFetchErr } = await supabase
+          .from('campaign_npcs').select('*').eq('id', targetInitEntry.npc_id).maybeSingle()
+        if (npcFetchErr) console.warn('[damage] NPC fallback fetch error:', npcFetchErr.message)
+        if (freshNpc) {
+          targetNpc = freshNpc as any
+          console.warn('[damage] NPC resolved via server fallback (local cache missed — likely RLS):', freshNpc.name)
+        } else {
+          console.error('[damage] NPC fallback fetch returned null — RLS is blocking server access too. Reveal the NPC or fix the campaign_npcs RLS policy.')
+        }
+      }
       const targetObject = (!targetEntry && !targetNpc) ? mapTokens.find(t => t.token_type === 'object' && t.name === targetName && (t.wp_max ?? 0) > 0) : null
       const targetRapid = targetEntry?.character.data?.rapid ?? (targetNpc ? { PHY: targetNpc.physicality ?? 0, DEX: targetNpc.dexterity ?? 0 } : {})
       const targetDefBonus = targetInitEntry?.defense_bonus ?? 0
