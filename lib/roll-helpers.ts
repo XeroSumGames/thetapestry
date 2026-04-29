@@ -106,6 +106,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
       const article = /^[aeiouAEIOU]/.test(weapon.trim()) ? 'an' : 'a'
       if (w?.category === 'explosive') {
         const verb = /launcher/i.test(weapon) ? 'fired' : 'threw'
+        // Cell-only target: grenade was thrown at an empty cell, not a
+        // combatant. The synthetic target name "Cell (x,y)" reads ugly in
+        // the feed ("threw a Grenade at Cell (3,5)") — drop the "at ..."
+        // suffix entirely when the target is a cell.
+        if (/^Cell\s*\(/.test(r.target_name)) {
+          return `${r.character_name} ${verb} ${article} ${weapon}`
+        }
         return `${r.character_name} ${verb} ${article} ${weapon} at ${r.target_name}`
       }
       if (/^(Attack|Charge|Subdue)$/.test(action)) {
@@ -209,6 +216,20 @@ export function compactRollSummary(r: { label: string; character_name: string; t
     return v
       ? `${r.character_name} ${hit ? v.hit : v.miss}${outcomeTag}`
       : `${r.character_name} — ${check}${hit ? '' : ' (failed)'}${outcomeTag}`
+  }
+  // Stress log — label "😰 <name> gains a Stress from being <reason>"
+  // written by executeRoll's damage-application branches when a target
+  // hits Mortal Wound or is Incapacitated. Compact narrativizes the
+  // event ("Cree Hask is Incapacitated"); ▸ expand reveals the full
+  // emoji/Stress text.
+  if (r.outcome === 'stress') {
+    const stressMatch = r.label.match(/^😰\s+(.+?)\s+gains\s+a\s+Stress\s+from\s+being\s+(.+)$/)
+    if (stressMatch) {
+      const name = stressMatch[1]
+      const reason = stressMatch[2]
+      return `${name} is ${reason}`
+    }
+    return r.label.replace(/^😰\s*/, '')
   }
   // Recruitment outcome — label starts with "🤝" and we stash the full
   // structured metadata in damage_json (approach, community, apprentice

@@ -4431,11 +4431,15 @@ export default function TablePage() {
     const rerollLabelParts = rollResult.label.split(' — ')
     const characterName = rerollLabelParts.length > 1 ? rerollLabelParts[0] : (myEntry.character.name ?? 'Unknown')
 
-    const { total, outcome, insightAwarded } = await saveRollToLog(newDie1, newDie2, rollResult.amod, rollResult.smod, rollResult.cmod, rollResult.label, characterName, true, targetName || null)
-
-    if (insightAwarded) {
-      await supabase.from('character_states').update({ insight_dice: newInsight + 1, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
-    }
+    // Pre-compute outcome WITHOUT writing the log yet — the original code
+    // saved once now, then again at the bottom with damage_json populated,
+    // which produced two duplicate log rows for any successful reroll
+    // (visible doubling in the feed). We now compute outcome inline,
+    // run the damage pass, then call saveRollToLog ONCE with the damage
+    // data attached. saveRollToLog returns insightAwarded so we still
+    // bump insight_dice when applicable.
+    const total = newDie1 + newDie2 + rollResult.amod + rollResult.smod + rollResult.cmod
+    const outcome = getOutcome(total, newDie1, newDie2)
 
     // Calculate and apply damage if the reroll turned a failure into a hit
     let rerollDamage: DamageResult | undefined
@@ -4512,8 +4516,16 @@ export default function TablePage() {
         setMapTokens(prev => prev.map(t => t.id === targetObjectReroll.id ? { ...t, wp_current: newWP } : t))
       }
 
-      // Save damage to log
-      await saveRollToLog(newDie1, newDie2, rollResult.amod, rollResult.smod, rollResult.cmod, rollResult.label, characterName, true, targetName, rerollDamage)
+    }
+
+    // Single save for the reroll — carries damage_json when applicable.
+    // Was: two saves (one without damage at the top, one with damage here)
+    // produced duplicate roll_log rows on every successful reroll. The
+    // duplicated entries visibly doubled the feed; the second row often
+    // confused the prefix-strip in the expanded render too.
+    const { insightAwarded } = await saveRollToLog(newDie1, newDie2, rollResult.amod, rollResult.smod, rollResult.cmod, rollResult.label, characterName, true, targetName || null, rerollDamage)
+    if (insightAwarded) {
+      await supabase.from('character_states').update({ insight_dice: newInsight + 1, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
     }
 
     const prev = (rollResult as any).insightUsed as RollResult['insightUsed']
@@ -4843,11 +4855,16 @@ export default function TablePage() {
             {
               label: 'Sessions',
               hidden: sessionCount <= 0,
-              onClick: () => router.push(`/stories/${id}/sessions`),
+              // Header dropdowns navigate to other pages in a new tab so the
+              // GM doesn't lose the live table session. DASHBOARD + EXIT are
+              // intentionally left as same-tab in the header bar — Exit is
+              // an explicit "leave the table" affordance, Dashboard already
+              // uses target="_blank" on its anchor.
+              onClick: () => window.open(`/stories/${id}/sessions`, '_blank', 'noopener,noreferrer'),
             },
             {
               label: 'Stories',
-              onClick: () => router.push(`/stories/${id}`),
+              onClick: () => window.open(`/stories/${id}`, '_blank', 'noopener,noreferrer'),
             },
           ],
           hdrBtn('#1a1a2e', '#7ab3d4', '#2e2e5a'),
