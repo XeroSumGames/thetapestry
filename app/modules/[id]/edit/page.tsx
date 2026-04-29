@@ -33,6 +33,7 @@ interface ModuleRow {
   parent_setting: string | null
   visibility: string
   moderation_status: string
+  sort_order: number | null
 }
 
 const COVERS_BUCKET = 'module-covers'
@@ -52,6 +53,7 @@ export default function ModuleEditPage() {
   const [tagsInput, setTagsInput] = useState('')
   const [sessionEstimate, setSessionEstimate] = useState<string>('')
   const [playerCount, setPlayerCount] = useState<string>('')
+  const [sortOrder, setSortOrder] = useState<string>('')
   const [coverUrl, setCoverUrl] = useState<string>('')
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -69,7 +71,7 @@ export default function ModuleEditPage() {
 
       const [{ data: row, error }, { data: profile }] = await Promise.all([
         supabase.from('modules')
-          .select('id, author_user_id, name, tagline, description, cover_image_url, content_tags, session_count_estimate, player_count_recommended, parent_setting, visibility, moderation_status')
+          .select('id, author_user_id, name, tagline, description, cover_image_url, content_tags, session_count_estimate, player_count_recommended, parent_setting, visibility, moderation_status, sort_order')
           .eq('id', moduleId)
           .maybeSingle(),
         supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
@@ -98,6 +100,7 @@ export default function ModuleEditPage() {
       setTagsInput((m.content_tags ?? []).join(', '))
       setSessionEstimate(m.session_count_estimate != null ? String(m.session_count_estimate) : '')
       setPlayerCount(m.player_count_recommended != null ? String(m.player_count_recommended) : '')
+      setSortOrder(m.sort_order != null ? String(m.sort_order) : '')
       setCoverUrl(m.cover_image_url ?? '')
       setLoading(false)
     })()
@@ -201,6 +204,15 @@ export default function ModuleEditPage() {
       .filter(Boolean)
     const sessions = sessionEstimate.trim() === '' ? null : Math.max(0, parseInt(sessionEstimate, 10) || 0)
     const players = playerCount.trim() === '' ? null : Math.max(0, parseInt(playerCount, 10) || 0)
+    // sort_order: blank → null (sorts last on /modules); otherwise an
+    // integer where lower numbers rank earlier in the marketplace.
+    const sort = sortOrder.trim() === '' ? null : parseInt(sortOrder, 10)
+    const sortValid = sort === null || (!Number.isNaN(sort) && sort >= 0)
+    if (!sortValid) {
+      setStatus('Sort order must be a non-negative integer or blank.')
+      setSaving(false)
+      return
+    }
     const { error } = await supabase
       .from('modules')
       .update({
@@ -210,6 +222,7 @@ export default function ModuleEditPage() {
         content_tags: tags.length > 0 ? tags : null,
         session_count_estimate: sessions,
         player_count_recommended: players,
+        sort_order: sort,
       })
       .eq('id', mod.id)
     if (error) {
@@ -329,6 +342,13 @@ export default function ModuleEditPage() {
         <div style={{ flex: 1 }}>
           <label style={lbl}>Recommended Players</label>
           <input type="number" min={0} value={playerCount} onChange={e => setPlayerCount(e.target.value)} placeholder="e.g. 4" style={inp} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <label style={lbl}>Sort Order</label>
+          <input type="number" min={0} value={sortOrder} onChange={e => setSortOrder(e.target.value)} placeholder="blank = last" style={inp} />
+          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
+            Lower number ranks first on /modules. Blank sorts last.
+          </div>
         </div>
       </div>
 

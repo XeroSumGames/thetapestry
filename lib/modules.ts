@@ -110,6 +110,9 @@ export interface ModuleListing {
   author_user_id: string | null
   visibility: 'private' | 'unlisted' | 'listed'
   latest_version_id: string | null
+  // Curation column added in sql/modules-sort-order.sql. Lower number
+  // sorts first; NULL sorts LAST. Tiebreaker is created_at DESC.
+  sort_order: number | null
   latest_version?: {
     id: string
     version: string
@@ -178,9 +181,10 @@ export async function listAvailableModules(
   // fetch everything SELECT-able and let RLS do the heavy lifting.
   const { data, error } = await supabase
     .from('modules')
-    .select('id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, latest_version:module_versions!modules_latest_version_id_fkey(id, version, published_at)')
+    .select('id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, latest_version:module_versions!modules_latest_version_id_fkey(id, version, published_at)')
     .not('latest_version_id', 'is', null)
     .is('archived_at', null)
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -202,9 +206,10 @@ async function listAvailableModulesFallback(
 ): Promise<ModuleListing[]> {
   const { data: modules, error } = await supabase
     .from('modules')
-    .select('id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id')
+    .select('id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order')
     .not('latest_version_id', 'is', null)
     .is('archived_at', null)
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
   if (error || !modules) return []
   const versionIds = modules.map((m: any) => m.latest_version_id).filter(Boolean)
