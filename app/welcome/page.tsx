@@ -161,7 +161,7 @@ export default function WelcomePage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', justifyItems: 'center', alignItems: 'end', marginBottom: '4rem' }}>
           <a href="https://www.xerosumgames.com" target="_blank" rel="noreferrer"
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <img src="/XeroSumGamesLogoV13.png" alt="XeroSumGames" style={{ height: '80px', width: 'auto', objectFit: 'contain' }} />
+            <img src="/XeroSumGamesLogoV13.png" alt="XeroSumGames" style={{ height: '32px', width: 'auto', objectFit: 'contain' }} />
             <span style={cardLink}>XeroSumGames.com 🔗</span>
           </a>
           <a href="https://www.distemperverse.com" target="_blank" rel="noreferrer"
@@ -171,7 +171,7 @@ export default function WelcomePage() {
           </a>
           <a href="https://www.xerosumstudio.com" target="_blank" rel="noreferrer"
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <img src="/XeroSumStudioLogoV13.png" alt="XeroSumStudio" style={{ height: '80px', width: 'auto', objectFit: 'contain' }} />
+            <img src="/XeroSumStudioLogoV13.png" alt="XeroSumStudio" style={{ height: '32px', width: 'auto', objectFit: 'contain' }} />
             <span style={cardLink}>XeroSumStudio.com 🔗</span>
           </a>
         </div>
