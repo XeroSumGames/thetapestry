@@ -6,7 +6,11 @@ export const SETTINGS: Record<string, string> = {
   empty: 'Empty',
   therock: 'The Rock',
   arena: 'The Arena',
-  kings_crossing_mall: "King's Crossing Mall",
+  // Real-world Delaware location: Kings Crossroads is an unincorporated
+  // community in Sussex County. The DB value matches the geographic
+  // name; older rows used "kings_crossing_mall" and are migrated by
+  // sql/setting-rename-kings-crossroads.sql.
+  kings_crossroads_mall: 'Kings Crossroads Mall',
 }
 
 // All settings, in the shape the create forms want.
@@ -19,7 +23,7 @@ export const SETTING_OPTIONS = Object.entries(SETTINGS).map(([value, label]) => 
 // — Chased, Mongrels, Empty, The Rock, and The Arena are moving to
 // the Module marketplace instead, where Thrivers can publish them
 // (some free, some paid) and players can install them with one click.
-export const STORY_SETTING_VALUES = ['custom', 'district_zero', 'kings_crossing_mall'] as const
+export const STORY_SETTING_VALUES = ['custom', 'district_zero', 'kings_crossroads_mall'] as const
 export const STORY_SETTING_OPTIONS = STORY_SETTING_VALUES.map(v => ({ value: v, label: SETTINGS[v] }))
 
 // Legacy alias — the /campaigns/new flow is being retired but a few

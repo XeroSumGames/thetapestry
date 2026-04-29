@@ -1063,14 +1063,14 @@ export const MONGRELS_NPCS: NpcSeed[] = [
   },
 ]
 
-// King's Crossing Mall — pulled directly from `CHASED_NPCS` so the source of
+// Kings Crossroads Mall — pulled directly from `CHASED_NPCS` so the source of
 // truth stays in one place (Chased magazine pages 34-39 + Art Buchanan as
 // the overall mall leader). Maddy Bell and her boys Troy & Mark are
 // included on the assumption she survives Chased and joins the mall
 // community — Chased and the Mall setting are intertwined but separate, so
 // the survivors of one ought to populate the other. The Connors are still
 // excluded — they're Chased-only antagonists.
-const KINGS_CROSSING_MALL_NAMES = new Set([
+const KINGS_CROSSROADS_MALL_NAMES = new Set([
   'William Robertson', 'Caleb Robertson', 'Carol Robertson',
   'Bobby Robertson', 'Jemmy Robertson',
   'Paula Ortiz', 'Milton Ortiz', 'Nick Manson',
@@ -1078,13 +1078,13 @@ const KINGS_CROSSING_MALL_NAMES = new Set([
   'Art Buchanan',
   'Maddy Bell', 'Troy & Mark Bell',
 ])
-export const KINGS_CROSSING_MALL_NPCS: NpcSeed[] = CHASED_NPCS
-  .filter(n => KINGS_CROSSING_MALL_NAMES.has(n.name))
+export const KINGS_CROSSROADS_MALL_NPCS: NpcSeed[] = CHASED_NPCS
+  .filter(n => KINGS_CROSSROADS_MALL_NAMES.has(n.name))
 
 export const SETTING_NPCS: Record<string, NpcSeed[]> = {
   district_zero: DISTRICT_ZERO_NPCS,
   chased: CHASED_NPCS,
   empty: CHASED_NPCS,
   mongrels: MONGRELS_NPCS,
-  kings_crossing_mall: KINGS_CROSSING_MALL_NPCS,
+  kings_crossroads_mall: KINGS_CROSSROADS_MALL_NPCS,
 }
