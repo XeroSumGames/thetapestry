@@ -328,7 +328,7 @@ export default function CommunityDashboardPage() {
                       <div style={{ flex: 1, height: '14px', background: '#0d0d0d', border: '1px solid #2e2e2e', borderRadius: '3px', overflow: 'hidden', position: 'relative' }}>
                         <div style={{ width: `${Math.min(100, row.pct)}%`, height: '100%', background: row.min > 0 && !ok ? '#c0392b' : '#7fc458', transition: 'width 0.3s' }} />
                         {row.min > 0 && (
-                          <div style={{ position: 'absolute', left: `${row.min}%`, top: 0, bottom: 0, width: '2px', background: '#EF9F27' }} title={`SRD min ${row.min}%`} />
+                          <div style={{ position: 'absolute', left: `${row.min}%`, top: 0, bottom: 0, width: '2px', background: '#EF9F27' }} title={`min ${row.min}%`} />
                         )}
                       </div>
                       <span style={{ width: '90px', textAlign: 'right', color: ok ? '#7fc458' : row.min > 0 ? '#c0392b' : '#cce0f5', fontWeight: 700 }}>{row.count} ({row.pct}%)</span>

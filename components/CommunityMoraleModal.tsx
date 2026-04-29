@@ -779,7 +779,7 @@ export default function CommunityMoraleModal({
               <div style={rowFlex}>
                 <span style={label} title="Attribute Modifier — the roller's relevant Rapid Range Attribute. NPCs default to 0.">AMod</span>
                 <input type="number" value={fedAmod} onChange={e => setFedAmod(parseInt(e.target.value) || 0)} style={numInput} />
-                <span style={label} title="Skill Modifier — the roller's level in the skill used (Farming / Scavenging / Survival). NPC default 1 ('reasonable proficiency' per SRD §08).">SMod</span>
+                <span style={label} title="Skill Modifier — the roller's level in the skill used (Farming / Scavenging / Survival). NPC default 1 ('reasonable proficiency' per the rules).">SMod</span>
                 <input type="number" value={fedSmod} onChange={e => setFedSmod(parseInt(e.target.value) || 0)} style={numInput} />
                 <span style={label} title="Circumstance Modifier — any one-off GM adjustments to this specific roll (tool quality, weather, luck, etc.).">+ CMod</span>
                 <input type="number" value={fedCmod} onChange={e => setFedCmod(parseInt(e.target.value) || 0)} style={numInput} />
@@ -795,7 +795,7 @@ export default function CommunityMoraleModal({
               <div style={rowFlex}>
                 <span style={label} title="Attribute Modifier — the roller's relevant Rapid Range Attribute. NPCs default to 0.">AMod</span>
                 <input type="number" value={clothedAmod} onChange={e => setClothedAmod(parseInt(e.target.value) || 0)} style={numInput} />
-                <span style={label} title="Skill Modifier — the roller's level in the skill used (Mechanic / Tinkerer). NPC default 1 ('reasonable proficiency' per SRD §08).">SMod</span>
+                <span style={label} title="Skill Modifier — the roller's level in the skill used (Mechanic / Tinkerer). NPC default 1 ('reasonable proficiency' per the rules).">SMod</span>
                 <input type="number" value={clothedSmod} onChange={e => setClothedSmod(parseInt(e.target.value) || 0)} style={numInput} />
                 <span style={label} title="Circumstance Modifier — any one-off GM adjustments to this specific roll.">+ CMod</span>
                 <input type="number" value={clothedCmod} onChange={e => setClothedCmod(parseInt(e.target.value) || 0)} style={numInput} />
@@ -829,7 +829,7 @@ export default function CommunityMoraleModal({
                     slots so the form visually reads: "this week's resources
                     first, then lingering mood, then structural/mechanical
                     modifiers." User-requested order 2026-04-23. */}
-                <div style={slotRow} title="Carried over from last week's Morale outcome (SRD §08). High Insight +2, Wild Success +1, Success 0, Failure −1, Dire Failure −2, Low Insight −3. Starts at 0 if this is the first check. Override if last week's events don't match the stored value.">
+                <div style={slotRow} title="Carried over from last week's Morale outcome. High Insight +2, Wild Success +1, Success 0, Failure −1, Dire Failure −2, Low Insight −3. Starts at 0 if this is the first check. Override if last week's events don't match the stored value.">
                   <span style={{ ...label, flex: 1 }}>Mood Around The Campfire</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(moodFromPrior), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(moodFromPrior)}</span>
@@ -838,7 +838,7 @@ export default function CommunityMoraleModal({
                     style={numInput} />
                 </div>
                 {/* Enough Hands */}
-                <div style={slotRow} title="Mechanical (SRD §08 pp. 23–24). +1 when all three role groups are at or above their SRD minimums (Gatherers 33% of the NPC labor pool, Maintainers 20%, Safety 5%). Otherwise −1 per group that's short, capped at −3. Labor pool excludes PCs and 'Assigned' NPCs.">
+                <div style={slotRow} title="+1 when all three role groups are at or above their minimums (Gatherers 33% of the NPC labor pool, Maintainers 20%, Safety 5%). Otherwise −1 per group that's short, capped at −3. Labor pool excludes PCs and 'Assigned' NPCs.">
                   <span style={{ ...label, flex: 1 }}>Enough Hands</span>
                   <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(autoEnoughHands), fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoEnoughHands)}</span>
@@ -889,7 +889,7 @@ export default function CommunityMoraleModal({
                 </div>
               ) : !loading && (
                 <div style={{ marginTop: '10px', padding: '8px 12px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '3px', fontSize: '17px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                  No leader set on this community. Set one via the Leader dropdown on the community panel — SRD p.22: the check is made by the acknowledged leader. Rolling with 0/0 defaults for now.
+                  No leader set on this community. Set one via the Leader dropdown on the community panel — the check is made by the acknowledged leader. Rolling with 0/0 defaults for now.
                 </div>
               )}
 

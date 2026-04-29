@@ -1984,7 +1984,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   <div style={{ flex: 1, fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Role Coverage</div>
                   <button onClick={() => handleRebalance(c.id)}
                     style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
-                    title="Auto-sort NPCs by skill to hit SRD minimums">
+                    title="Auto-sort NPCs by skill to hit role minimums">
                     ⚖ Re-balance Roles
                   </button>
                 </div>
@@ -2521,7 +2521,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               </div>
               <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
-                  Assigned NPCs are off doing a PC-directed task and don't count toward the SRD labor minimums. Pick who's directing them and what they're doing.
+                  Assigned NPCs are off doing a PC-directed task and don't count toward the labor minimums. Pick who's directing them and what they're doing.
                 </div>
                 <div>
                   <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Directed by</div>
