@@ -65,6 +65,38 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   if (r.outcome === 'action' && /^Move\b/.test(suffix)) {
     return `${r.character_name} Moves`
   }
+  // Ready Weapon family — all come through as outcome='action' with a
+  // 0+0 dice payload that's pointless to show (no roll happened, just
+  // an action consumed). Compact narrativizes; the expand toggle is
+  // suppressed in the renderer for outcome='action' rows since there's
+  // nothing meaningful to expand to. Variants:
+  //   "Ready Weapon"                — generic ready (e.g. Tracking +N)
+  //   "Ready <weaponName>"          — equipping from inventory
+  //   "Ready <weaponName> (Secondary)" — equipping to secondary slot
+  //   "Switch to <weaponName>"      — primary↔secondary swap
+  //   "Reload <weaponName>"         — clip reload
+  //   "Unequip <weaponName>"        — slot → inventory
+  if (r.outcome === 'action') {
+    const readyMatch = suffix.match(/^Ready\s+(.+?)(?:\s+\(.+\))?$/)
+    if (readyMatch) {
+      const what = readyMatch[1].trim()
+      if (/^weapon$/i.test(what)) return `${r.character_name} readies a weapon`
+      return `${r.character_name} readies ${what}`
+    }
+    const switchMatch = suffix.match(/^Switch to\s+(.+?)(?:\s+\(.+\))?$/)
+    if (switchMatch) return `${r.character_name} switches to ${switchMatch[1].trim()}`
+    const reloadMatch = suffix.match(/^Reload\s+(.+?)(?:\s+\(.+\))?$/)
+    if (reloadMatch) return `${r.character_name} reloads ${reloadMatch[1].trim()}`
+    const unequipMatch = suffix.match(/^Unequip\s+(.+?)(?:\s+\(.+\))?$/)
+    if (unequipMatch) return `${r.character_name} unequips ${unequipMatch[1].trim()}`
+    // Defend / Take Cover / Reposition — also no-roll actions.
+    const defendMatch = suffix.match(/^Defend\b/)
+    if (defendMatch) return `${r.character_name} braces to Defend`
+    const takeCoverMatch = suffix.match(/^Take Cover\b/)
+    if (takeCoverMatch) return `${r.character_name} takes Cover`
+    const repositionMatch = suffix.match(/^Reposition\b/)
+    if (repositionMatch) return `${r.character_name} repositions`
+  }
   // Distract — roll-resolved as of 2026-04-29. Label format:
   // "<name> — Distract" (no target in label; target lives in r.target_name
   // via the dropdown selection). Compact reads as a hit/miss sentence.

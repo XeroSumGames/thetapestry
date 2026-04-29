@@ -516,19 +516,27 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
               <span style={{ background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 6px', borderRadius: '2px', textTransform: 'uppercase' }}>🎲 Insight Die spent — +3 CMod</span>
             </div>
           )}
-          <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
-            {!simple && r.die2 > 6
-              ? <>[{r.die1} + {r.die2} <span style={{ fontSize: '13px', color: '#7fc458' }}>(d2+d3)</span>]</>
-              : <>[{r.die1}+{r.die2}]</>}
-            {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
-            {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
-            {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
-            <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '15px', fontWeight: 700, color: outcomeColor(r.outcome), fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.outcome}</span>
-            {r.insight_awarded && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
-          </div>
+          {/* Hide the dice/mod breakdown for no-roll action rows (Ready
+              Weapon, Switch, Reload, Defend, Take Cover, Reposition,
+              Move, etc.). Those write outcome='action' with die1=die2=0,
+              so showing "[0+0] = 0  action" is just visual noise. */}
+          {r.outcome !== 'action' && (
+            <>
+              <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>
+                {!simple && r.die2 > 6
+                  ? <>[{r.die1} + {r.die2} <span style={{ fontSize: '13px', color: '#7fc458' }}>(d2+d3)</span>]</>
+                  : <>[{r.die1}+{r.die2}]</>}
+                {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+                {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+                {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+                <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: outcomeColor(r.outcome), fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{r.outcome}</span>
+                {r.insight_awarded && <span style={{ fontSize: '13px', color: '#7fc458', background: '#1a2e10', border: '1px solid #2d5a1b', padding: '1px 5px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>+1 Insight Die</span>}
+              </div>
+            </>
+          )}
           {r.damage_json && (
             <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: simple ? '13px' : '14px', fontFamily: 'Barlow Condensed, sans-serif', color: '#d4cfc9' }}>
               <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '13px' }}>Damage → {(r.damage_json as any).targetName}</span>
