@@ -960,7 +960,6 @@ export default function TablePage() {
       // rosterNpcs/campaignNpcs only refresh on combat-start or page reload.
       npcsChannelRef.current = supabase.channel(`campaign_npcs_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${id}` }, (payload: any) => {
-          console.warn('[campaign_npcs] pgchange', payload.eventType, payload.new?.id, payload.new?.wp_current, payload.new?.rp_current)
           // For UPDATEs, apply the row from the payload directly — no round trip,
           // no race with the in-flight-ref guard. INSERT/DELETE fall through to
           // a full refetch since payload.new may be incomplete/absent.
