@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
+import StoryToolsNav from '../../../../components/StoryToolsNav'
 
 interface Session {
   id: string
@@ -30,6 +31,7 @@ export default function SessionHistoryPage() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [campaignName, setCampaignName] = useState('')
+  const [inviteCode, setInviteCode] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [deactivating, setDeactivating] = useState<string | null>(null)
@@ -40,9 +42,10 @@ export default function SessionHistoryPage() {
       const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
 
-      const { data: camp } = await supabase.from('campaigns').select('name, gm_user_id').eq('id', id).single()
+      const { data: camp } = await supabase.from('campaigns').select('name, gm_user_id, invite_code').eq('id', id).single()
       if (!camp || camp.gm_user_id !== user.id) { router.push('/dashboard'); return }
       setCampaignName(camp.name)
+      setInviteCode(camp.invite_code ?? '')
 
       const { data: sessData } = await supabase
         .from('sessions')
@@ -127,18 +130,13 @@ export default function SessionHistoryPage() {
 
   return (
     <div style={{ padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+      <StoryToolsNav campaignId={id} isGM={true} inviteCode={inviteCode} />
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
-        <a href={`/stories/${id}/table`}
-          style={{ padding: '12px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-          Back to The Table
-        </a>
-        <div>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
-            {campaignName}
-          </div>
-          <div style={{ fontSize: '14px', color: '#cce0f5' }}>Session History — {sessions.length} session{sessions.length !== 1 ? 's' : ''}</div>
+      <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
+        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+          {campaignName}
         </div>
+        <div style={{ fontSize: '14px', color: '#cce0f5' }}>Session History — {sessions.length} session{sessions.length !== 1 ? 's' : ''}</div>
       </div>
 
       {sessions.length === 0 ? (

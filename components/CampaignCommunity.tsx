@@ -221,9 +221,15 @@ interface Props {
   // closing and reopening the modal wouldn't re-trigger the
   // auto-expand). Any value works — we just watch for a change.
   initialModeToken?: number
+  // Auto-expand a specific community by ID once the list loads.
+  // Used by /communities/[id] — the user clicked a single community
+  // from My Communities, so dropping them on a collapsed accordion
+  // is just one extra click for nothing. Wins over `initialMode`
+  // when both are set.
+  initialOpenId?: string
 }
 
-export default function CampaignCommunity({ campaignId, isGM, initialMode, initialModeToken }: Props) {
+export default function CampaignCommunity({ campaignId, isGM, initialMode, initialModeToken, initialOpenId }: Props) {
   const supabase = createClient()
 
   const [communities, setCommunities] = useState<Community[]>([])
@@ -360,7 +366,14 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // group'. We rely on initialModeToken to retrigger if the caller
   // wants the create form re-opened.
   useEffect(() => {
-    if (loading || !initialMode) return
+    if (loading) return
+    // initialOpenId wins — the page-level detail view passes a
+    // specific community ID, not just "expand the first".
+    if (initialOpenId && communities.some(c => c.id === initialOpenId) && !openId) {
+      setOpenId(initialOpenId)
+      return
+    }
+    if (!initialMode) return
     if (initialMode === 'status' && communities.length > 0 && !openId) {
       setOpenId(communities[0].id)
     }
@@ -368,7 +381,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       setShowCreate(true)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, initialMode, initialModeToken])
+  }, [loading, initialMode, initialModeToken, initialOpenId])
 
   // Phase D dashboard loader — fetches full Morale history (with
   // role_snapshot) + recruit attempts from roll_log for one community.

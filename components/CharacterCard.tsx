@@ -355,6 +355,17 @@ function CharacterCardImpl({
               {onPlaceOnMap && <button onClick={onPlaceOnMap} style={btn('#2a2010', '#EF9F27')}>Map</button>}
               <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={btn('#c0392b', '#f5a89a')}>Edit</button>
               <button onClick={() => setShowInventory(true)} style={btn('#2a2010', '#EF9F27')}>Inventory</button>
+              {/* Evolution placeholder — surfaces the upcoming
+                  Character Evolution / CDP Calculator (track CDP
+                  gain/spend, projected level-up cost). For now it
+                  scrolls to the existing Progression Log section
+                  on this card so the user can see what's already
+                  there. Purple to read as a "growth" surface and
+                  stay distinct from the green Apprentice button. */}
+              <button onClick={() => {
+                const el = document.getElementById(`progression-${c.id}`)
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }} style={btn('#2a1a3e', '#c4a7f0')}>Evolution</button>
               {/* Apprentice placeholder — unwired for now. Will surface
                   the PC's Apprentice NPC card when clicked once the
                   picker/display is built. Matches Inventory styling
@@ -750,7 +761,7 @@ function CharacterCardImpl({
           })()}
 
           {/* Progression Log — compact */}
-          <div style={{ marginTop: '8px', padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+          <div id={`progression-${c.id}`} style={{ marginTop: '8px', padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', scrollMarginTop: '12px' }}>
             <ProgressionLog
               characterId={c.id}
               log={c.data?.progression_log ?? []}

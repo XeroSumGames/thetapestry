@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
+import StoryToolsNav from '../../../../components/StoryToolsNav'
 
 // Phase D — Community Dashboard. Campaign-scoped full-screen GM view
 // into every Community in this campaign: Morale/Fed/Clothed history,
@@ -76,6 +77,7 @@ export default function CommunityDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [isGM, setIsGM] = useState(false)
   const [campaignName, setCampaignName] = useState('')
+  const [inviteCode, setInviteCode] = useState<string>('')
   const [communities, setCommunities] = useState<Community[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
@@ -90,7 +92,7 @@ export default function CommunityDashboardPage() {
       if (!campaignId) return
       const { user } = await getCachedAuth()
       const [camp, coms] = await Promise.all([
-        supabase.from('campaigns').select('name, gm_user_id').eq('id', campaignId).maybeSingle(),
+        supabase.from('campaigns').select('name, gm_user_id, invite_code').eq('id', campaignId).maybeSingle(),
         supabase.from('communities')
           .select('id, name, status, week_number, consecutive_failures, created_at, dissolved_at')
           .eq('campaign_id', campaignId)
@@ -99,6 +101,7 @@ export default function CommunityDashboardPage() {
       if (camp.data) {
         setCampaignName((camp.data as any).name)
         setIsGM(user?.id === (camp.data as any).gm_user_id)
+        setInviteCode((camp.data as any).invite_code ?? '')
       }
       const list = (coms.data ?? []) as Community[]
       setCommunities(list)
@@ -213,9 +216,7 @@ export default function CommunityDashboardPage() {
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.5rem 1.5rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
-      <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'baseline', gap: '10px' }}>
-        <Link href={`/stories/${campaignId}/table`} style={{ color: '#7ab3d4', fontSize: '13px', textDecoration: 'none', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>← {campaignName} table</Link>
-      </div>
+      <StoryToolsNav campaignId={campaignId} isGM={true} inviteCode={inviteCode} />
       <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Community Dashboard</div>
       <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '26px', color: '#EF9F27', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1.5rem', fontWeight: 700 }}>{campaignName}</div>
 

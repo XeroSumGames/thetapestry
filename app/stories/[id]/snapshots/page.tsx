@@ -15,11 +15,13 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import CampaignSnapshots from '../../../../components/CampaignSnapshots'
+import StoryToolsNav from '../../../../components/StoryToolsNav'
 
 interface CampaignRow {
   id: string
   name: string
   gm_user_id: string
+  invite_code: string
 }
 
 export default function StorySnapshotsPage() {
@@ -40,7 +42,7 @@ export default function StorySnapshotsPage() {
 
       const { data, error } = await supabase
         .from('campaigns')
-        .select('id, name, gm_user_id')
+        .select('id, name, gm_user_id, invite_code')
         .eq('id', id)
         .maybeSingle()
       if (cancelled) return
@@ -74,11 +76,7 @@ export default function StorySnapshotsPage() {
 
   return (
     <div style={{ maxWidth: '780px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#d4cfc9' }}>
-      <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
-        <Link href={`/stories/${id}`} style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
-          ← {campaign.name}
-        </Link>
-      </div>
+      <StoryToolsNav campaignId={id} isGM={true} inviteCode={campaign.invite_code} />
       <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>Snapshots</div>
         <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>

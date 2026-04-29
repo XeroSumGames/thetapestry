@@ -94,9 +94,12 @@ export default function CharactersPage() {
       {/* Gallery — portrait + name strip at the top of the page so the
           full roster is visible without scrolling through every sheet.
           Click a tile → smooth-scroll to that character's sheet below.
-          Hidden when there's 0 or 1 character (no benefit). */}
+          Hidden when there's 0 or 1 character (no benefit).
+          Layout: CSS grid with auto-fill + 1fr so tiles flex to fill
+          the row evenly — kills the dead block on the right that the
+          old fixed-88px flex-wrap was leaving behind. */}
       {characters.length > 1 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '1.5rem', padding: '12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(88px, 1fr))', gap: '10px', marginBottom: '1.5rem', padding: '12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
           {characters.map(c => (
             <button key={`gallery-${c.id}`}
               onClick={() => {
@@ -104,7 +107,7 @@ export default function CharactersPage() {
                 if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
               }}
               title={`Jump to ${c.name}`}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '6px', width: '88px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '6px', width: '100%', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif' }}>
               {c.data?.photoDataUrl ? (
                 <img src={c.data.photoDataUrl} alt={c.name} loading="lazy"
                   style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '3px', border: '1px solid #3a3a3a' }} />

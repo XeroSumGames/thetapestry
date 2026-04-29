@@ -5,6 +5,7 @@ import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
 import { SETTINGS } from '../../../../lib/settings'
+import StoryToolsNav from '../../../../components/StoryToolsNav'
 // Snapshot management used to live embedded on this Edit page; pulled
 // out into /stories/[id]/snapshots so save / restore / download / import
 // each get the breathing room they deserve. The Snapshot button on
@@ -37,6 +38,7 @@ export default function EditCampaignPage() {
   const [locationQuery, setLocationQuery] = useState('')
   const [locationSuggestions, setLocationSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null)
+  const [inviteCode, setInviteCode] = useState<string>('')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -52,6 +54,7 @@ export default function EditCampaignPage() {
       setDescription(camp.description ?? '')
       setMapStyle(camp.map_style ?? 'street')
       setSetting(camp.setting ?? 'custom')
+      setInviteCode(camp.invite_code ?? '')
       if (camp.map_center_lat != null && camp.map_center_lng != null) {
         setMapCenter({ lat: camp.map_center_lat, lng: camp.map_center_lng })
       }
@@ -83,6 +86,7 @@ export default function EditCampaignPage() {
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+      <StoryToolsNav campaignId={id} isGM={true} inviteCode={inviteCode} />
       <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '2rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px', borderBottom: '1px solid #c0392b', paddingBottom: '10px' }}>
         Edit Story
       </h1>

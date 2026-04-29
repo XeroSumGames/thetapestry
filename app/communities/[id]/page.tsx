@@ -58,7 +58,7 @@ export default function CommunityDetailPage() {
       {/* Reuse the per-campaign panel; its list will include this community and
           the GM can open/manage it inline. */}
       <div style={{ background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
-        <CampaignCommunity campaignId={campaignId} isGM={isGM} />
+        <CampaignCommunity campaignId={campaignId} isGM={isGM} initialOpenId={communityId} />
       </div>
     </div>
   )
