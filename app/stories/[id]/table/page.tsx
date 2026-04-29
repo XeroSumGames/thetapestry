@@ -1136,6 +1136,15 @@ export default function TablePage() {
   }
 
   async function confirmStartCombat() {
+    // Sanity check — no players present AND no NPCs selected = nothing
+    // to roll initiative for. Bail with a friendly alert instead of
+    // silently inserting zero combatants. (entries.length-zero guard
+    // moved here from the Start Combat button so a GM can solo-test
+    // with NPCs only — the per-button gate was blocking that intent.)
+    if (entries.length === 0 && selectedNpcIds.size === 0) {
+      alert('Pick at least one NPC to start combat (no players are present).')
+      return
+    }
     setStartingCombat(true)
     setShowNpcPicker(false)
 
@@ -4722,9 +4731,9 @@ export default function TablePage() {
           </button>
         )}
         {isGM && sessionStatus === 'active' && !combatActive && (
-          <button onClick={startCombat} disabled={startingCombat || entries.length === 0}
+          <button onClick={startCombat} disabled={startingCombat}
             className="hdr-btn"
-            style={{ ...hdrBtn('#7a1f16', '#f5a89a', '#c0392b'), opacity: startingCombat || entries.length === 0 ? 0.5 : 1, cursor: startingCombat || entries.length === 0 ? 'not-allowed' : 'pointer' }}>
+            style={{ ...hdrBtn('#7a1f16', '#f5a89a', '#c0392b'), opacity: startingCombat ? 0.5 : 1, cursor: startingCombat ? 'not-allowed' : 'pointer' }}>
             {startingCombat ? 'Rolling...' : '⚔️ Start Combat'}
           </button>
         )}
@@ -7164,8 +7173,9 @@ export default function TablePage() {
                           "I can see it right there but can't target it" reports
                           during playtest — GMs assumed they'd placed the object
                           wrong (or mis-configured wp_max) because there was no
-                          diagnostic. */}
-                      {(() => {
+                          diagnostic.
+                          Distract excluded — you can't distract a crate. */}
+                      {!pendingRoll.label.endsWith(' — Distract') && (() => {
                         const objs = mapTokens.filter(t => t.token_type === 'object')
                         if (objs.length > 0 && process.env.NODE_ENV !== 'production') {
                           console.warn('[target-dropdown] objects on map:', objs.map(o => ({
