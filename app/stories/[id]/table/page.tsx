@@ -5118,6 +5118,7 @@ export default function TablePage() {
                     // Player ending their own turn
                     await nextTurn()
                   }}
+                    title={isGM ? 'Remove from combat' : 'End turn'}
                     style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '13px', padding: '0 0 0 2px', lineHeight: 1 }}>×</button>
                 )}
               </div>
