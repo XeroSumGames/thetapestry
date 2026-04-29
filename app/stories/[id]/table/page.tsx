@@ -5884,6 +5884,16 @@ export default function TablePage() {
                 const entry = initiativeOrder.find(e => e.character_id === characterId)
                 if (entry) consumeAction(entry.id, undefined, 1)
               }}
+              onGMDragMove={({ characterId, npcId }) => {
+                // GM dragged the active combatant's token. Same 1-action
+                // cost as a player drag. The TacticalMap-side gate already
+                // confirmed this is the active combatant before firing.
+                const entry = initiativeOrder.find(e =>
+                  (characterId && e.character_id === characterId) ||
+                  (npcId && e.npc_id === npcId)
+                )
+                if (entry) consumeAction(entry.id, undefined, 1)
+              }}
               campaignNpcs={campaignNpcs}
               entries={entries}
               myCharacterId={myCharIdRef.current}

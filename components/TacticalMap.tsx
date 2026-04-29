@@ -91,6 +91,10 @@ interface Props {
   onTokensUpdate?: (tokens: { id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null }[], cellFeet: number) => void
   onTokenChanged?: () => void                               // Notify parent to broadcast token_changed so other clients re-fetch
   onPlayerDragMove?: (characterId: string) => void          // Player finished a valid drag-move; parent consumes 1 action
+  // GM dragged the *active* combatant's token. Parent consumes 1 action
+  // on whichever initiative row owns the token. GM drags of off-turn
+  // tokens stay free (cleanup / repositioning use case).
+  onGMDragMove?: (args: { characterId?: string; npcId?: string }) => void
   // Campaign vehicle data — used as a fallback for object tokens that
   // were placed without their wp_max/wp_current copied across (so the
   // selected-token panel still shows the correct stats by name match).
@@ -101,7 +105,7 @@ interface Props {
   onObjectMove?: (tokenId: string) => void
 }
 
-export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, throwMode, onThrowComplete, onThrowCancel, onTokensUpdate, onTokenChanged, onPlayerDragMove, vehicles, onObjectMove }: Props) {
+export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, throwMode, onThrowComplete, onThrowCancel, onTokensUpdate, onTokenChanged, onPlayerDragMove, onGMDragMove, vehicles, onObjectMove }: Props) {
   const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -1423,6 +1427,21 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       // the token animation on the map).
       if (isPlayerDrag && inCombat && tok && tok.character_id) {
         onPlayerDragMove?.(tok.character_id)
+      }
+      // GM drag of the active combatant's token — same 1-action cost as
+      // a player drag. Without this branch the GM could drag an active NPC
+      // (e.g. Frankie) across the map repeatedly with actions_remaining
+      // never decrementing, so the round wouldn't advance. GM drags of
+      // OFF-turn tokens stay free (existing cleanup / repositioning path).
+      else if (isGM && tok && (tok.character_id || tok.npc_id)) {
+        const activeEntry = initiativeOrder.find((ie: any) => ie.is_active)
+        const isActiveTok = !!activeEntry && (
+          (!!tok.character_id && activeEntry.character_id === tok.character_id) ||
+          (!!tok.npc_id && activeEntry.npc_id === tok.npc_id)
+        )
+        if (isActiveTok) {
+          onGMDragMove?.({ characterId: tok.character_id ?? undefined, npcId: tok.npc_id ?? undefined })
+        }
       }
     }
   }
