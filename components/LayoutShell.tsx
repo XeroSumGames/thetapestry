@@ -103,9 +103,15 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
           return
         }
         setIsAuthenticated(true)
-        await loadProfile(user.id)
-        if (cancelled) return
+        // DON'T await loadProfile — it's a non-critical "is this user
+        // suspended" check. Awaiting it gates the entire UI shell on a
+        // single Supabase query; if the pool is saturated (5-browser
+        // playtest) or the network is slow, the user sees a permanent
+        // "Loading" screen. The suspended flag is for showing a banner
+        // — it can hydrate after the shell renders. The shell itself
+        // only needs to know: is anyone authenticated?
         setChecked(true)
+        loadProfile(user.id).catch(() => {/* swallowed; non-critical */})
       } catch (e) {
         if (cancelled) return
         setIsAuthenticated(false)
