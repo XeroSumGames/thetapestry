@@ -70,7 +70,7 @@ export default function CampaignPage() {
   const [assignedCharName, setAssignedCharName] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
-  const [cloning, setCloning] = useState(false)
+  // (cloning state removed — Clone button retired Apr 2026)
   const [showPregens, setShowPregens] = useState(false)
   const [creatingPregen, setCreatingPregen] = useState(false)
   const [amKicked, setAmKicked] = useState(false)
@@ -248,25 +248,10 @@ export default function CampaignPage() {
     window.open(`/stories/${id}/table`, '_blank', 'noopener,noreferrer')
   }
 
-  async function handleClone() {
-    if (!campaign || !userId) return
-    setCloning(true)
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    const code = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
-    const { data, error } = await supabase.from('campaigns').insert({
-      name: `Copy of ${campaign.name}`,
-      description: campaign.description,
-      setting: campaign.setting,
-      gm_user_id: userId,
-      invite_code: code,
-      status: 'active',
-    }).select().single()
-    if (!error && data) {
-      await supabase.from('campaign_members').insert({ campaign_id: data.id, user_id: userId })
-      router.push(`/stories/${data.id}`)
-    }
-    setCloning(false)
-  }
+  // (handleClone removed — the in-app Clone button was retired in
+  // favor of the Module marketplace flow. To duplicate a campaign,
+  // publish it as a Module and subscribe to it from a fresh campaign,
+  // OR use Snapshot → Download to export a portable JSON.)
 
   async function handleExportKit() {
     if (!campaign || exporting) return
@@ -352,9 +337,7 @@ export default function CampaignPage() {
         <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
           <a href={`/stories/${id}/table`} target="_blank" rel="noreferrer" style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
           <Link href={`/stories/${id}/edit`} style={btn('#242424', '#f5f2ee', '#3a3a3a')}>Edit</Link>
-          <button onClick={handleClone} disabled={cloning} style={{ ...btn('#242424', '#d4cfc9', '#3a3a3a'), opacity: cloning ? 0.6 : 1 } as any}>
-            {cloning ? 'Cloning...' : 'Clone'}
-          </button>
+          <Link href={`/stories/${id}/snapshots`} style={btn('#2a2010', '#EF9F27', '#5a4a1b')}>Snapshot</Link>
           <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
             {copied ? 'Copied!' : 'Share'}
           </button>

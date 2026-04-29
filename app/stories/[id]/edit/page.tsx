@@ -5,7 +5,10 @@ import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
 import { SETTINGS } from '../../../../lib/settings'
-import CampaignSnapshots from '../../../../components/CampaignSnapshots'
+// Snapshot management used to live embedded on this Edit page; pulled
+// out into /stories/[id]/snapshots so save / restore / download / import
+// each get the breathing room they deserve. The Snapshot button on
+// the Story landing page links there.
 
 const MAP_STYLES = [
   ['satellite', 'Satellite'], ['topo', 'Topo'], ['street', 'Street'],
@@ -282,10 +285,8 @@ export default function EditCampaignPage() {
           </div>
         )}
 
-        {/* Snapshot & Restore — GM save-points for this campaign */}
-        <div style={{ marginTop: '2rem', padding: '1rem', background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
-          <CampaignSnapshots campaignId={id} isGM={true} />
-        </div>
+        {/* Snapshot & Restore moved to /stories/[id]/snapshots —
+            link there from the Snapshot button on the Story page. */}
       </div>
     </div>
   )
