@@ -1213,6 +1213,16 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
       return
     }
     const pos = getGridPos(e)
+    // Alt+left-click on ANY cell (empty or with a token) fires a ping.
+    // Bumped above the token-click branch per Xero — the previous
+    // "empty-cell only" gate meant you couldn't ping a specific NPC's
+    // location, which is the most common case.
+    if (pos && e.altKey) {
+      const color = isGM ? '#EF9F27' : '#7fc458'
+      setPing({ gx: pos.gx, gy: pos.gy, t: 0, color, count: 2 })
+      pingChannelRef.current?.send({ type: 'broadcast', event: 'gm_ping', payload: { gx: pos.gx, gy: pos.gy, color } })
+      return
+    }
     if (pos) {
       const tok = getTokenAt(pos.gx, pos.gy)
       if (tok) {
@@ -1273,16 +1283,6 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
           return
         }
       }
-    }
-    // Alt + left-click on an empty cell → ping. Replaces the prior
-    // press-and-hold (~600ms) and Alt+double-click gestures — both
-    // felt clunky per playtest. Modifier keeps it deliberate so an
-    // accidental click never fires a ping.
-    if (pos && e.altKey) {
-      const color = isGM ? '#EF9F27' : '#7fc458'
-      setPing({ gx: pos.gx, gy: pos.gy, t: 0, color, count: 2 })
-      pingChannelRef.current?.send({ type: 'broadcast', event: 'gm_ping', payload: { gx: pos.gx, gy: pos.gy, color } })
-      return
     }
     // No token or handle clicked — start panning (unless locked)
     setSelectedToken(null)

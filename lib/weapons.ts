@@ -110,13 +110,13 @@ export const EXPLOSIVE_WEAPONS: Weapon[] = [
   { name: 'Shiv-Grenade', category: 'explosive', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '0', rpPercent: 0, enc: 1, clip: 1, traits: ['Stun'] },
   { name: 'Flash-Bang Grenade', category: 'explosive', skill: 'Athletics', range: 'Close', rarity: 'Uncommon', damage: '0', rpPercent: 0, enc: 1, clip: 1, traits: ['Stun'] },
   { name: 'Molotov', category: 'explosive', skill: 'Demolitions', range: 'Close', rarity: 'Rare', damage: '5+2d6', rpPercent: 100, enc: 2, clip: 1, traits: ['Blast Radius'] },
-  { name: 'RPG Launcher', category: 'explosive', skill: 'Demolitions', range: 'Long', rarity: 'Rare', damage: '3+3d6', rpPercent: 100, enc: 2, clip: 1, traits: ['Blast Radius'] },
+  { name: 'Rocket Launcher', category: 'explosive', skill: 'Demolitions', range: 'Distant', rarity: 'Rare', damage: '3+3d6', rpPercent: 100, enc: 3, ammo: 'Uncommon', clip: 1, traits: ['Blast Radius'] },
 ]
 
 // ── HEAVY WEAPONS (Table 19 — partial) ──
 
 export const HEAVY_WEAPONS: Weapon[] = [
-  { name: 'Flamethrower', category: 'heavy', skill: 'Demolitions', range: 'Close', rarity: 'Rare', damage: '3+2d6', rpPercent: 50, enc: 2, clip: 30, traits: ['Burning (3)'] },
+  { name: 'Flame-Thrower', category: 'heavy', skill: 'Demolitions', range: 'Close', rarity: 'Rare', damage: '3+2d6', rpPercent: 50, enc: 2, ammo: 'Rare', clip: 30, traits: ['Burning (3)'] },
   { name: 'Mounted Turret / Gatling Gun', category: 'heavy', skill: 'Heavy Weapons', range: 'Long', rarity: 'Rare', damage: '5+2d6', rpPercent: 50, enc: 3, ammo: 'Uncommon', clip: 100, traits: ['Automatic Burst (5)', 'Cumbersome (2)'] },
   { name: 'M60 (Mounted)', category: 'heavy', skill: 'Heavy Weapons', range: 'Long', rarity: 'Rare', damage: '4+2d6', rpPercent: 50, enc: 3, ammo: 'Uncommon', clip: 100, traits: ['Automatic Burst (5)', 'Cumbersome (2)'] },
 ]

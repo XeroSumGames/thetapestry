@@ -41,7 +41,8 @@ These appear to be code-side custom additions:
 | Cattle Prod | Custom add (Melee, Engaged, Uncommon, 2, **400%**, 1, Stun). Xero confirmed 2026-04-28: 400% is correct — "get hit once or twice with that and you're out". Keeping. |
 | Shiv-Grenade | Custom add (Explosive, 0 dmg, 0% RP, Stun) — a homemade flashbang? |
 | Flash-Bang Grenade | Custom add — duplicates Shiv-Grenade behavior |
-| RPG Launcher | Custom add — not in CRB |
+| ~~RPG Launcher~~ | Renamed 2026-04-29 → **Rocket Launcher** (CRB canonical name). Stat changes applied per CRB: range Long → Distant, enc 2 → 3, ammo (none) → Uncommon. DB migration `sql/weapons-rocket-flame-rename.sql`. |
+| ~~Flamethrower~~ | Renamed 2026-04-29 → **Flame-Thrower** (CRB hyphenated form). Xero kept code values for rpPercent (50%, vs CRB 100%) and clip (30, vs CRB 1) — gameplay tradeoffs. ammo added: Rare. Same DB migration above. |
 
 ## Recommended path forward (decision needed from Xero)
 
