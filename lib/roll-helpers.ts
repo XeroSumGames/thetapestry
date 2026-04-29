@@ -65,15 +65,20 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   if (r.outcome === 'action' && /^Move\b/.test(suffix)) {
     return `${r.character_name} Moves`
   }
-  // Social action banners — Distract / Cover Fire / Inspire. Label format
-  // is "<name> — <Action> → <target> (...)" written by applySocialAction.
-  // Compact view trims the parenthetical effect (lost 1 action / -2 CMod /
-  // +1 action) since it duplicates the bordered card's left color cue.
-  const socialMatch = suffix.match(/^(Distract|Cover Fire|Inspire)\s+→\s+(.+?)(?:\s*\(.+\))?$/)
+  // Distract — roll-resolved as of 2026-04-29. Label format:
+  // "<name> — Distract" (no target in label; target lives in r.target_name
+  // via the dropdown selection). Compact reads as a hit/miss sentence.
+  if (/^Distract$/.test(suffix) && r.target_name) {
+    const adverb = hit ? 'Successfully' : 'Failed to'
+    return `${r.character_name} ${adverb} Distract${hit ? 's' : ''} ${r.target_name}${outcomeTag}`
+  }
+  // Social action banners — Cover Fire / Inspire. Label format
+  // "<name> — <Action> → <target> (...)" written by applySocialAction
+  // (auto-apply, no roll). Compact trims the parenthetical effect.
+  const socialMatch = suffix.match(/^(Cover Fire|Inspire)\s+→\s+(.+?)(?:\s*\(.+\))?$/)
   if (r.outcome === 'action' && socialMatch) {
     const action = socialMatch[1]
     const target = socialMatch[2].trim()
-    if (action === 'Distract') return `${r.character_name} Distracts ${target}!`
     if (action === 'Inspire') return `${r.character_name} Inspires ${target}!`
     return `${r.character_name} lays down covering fire on ${target}!`
   }

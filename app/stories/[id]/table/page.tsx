@@ -4264,7 +4264,15 @@ export default function TablePage() {
       ? (preRollInsight === '3d6' ? '3d6' : preRollInsight === '+3cmod' ? '+3cmod' : null)
       : null
     if (!isTrimmedRoll) {
-      await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, damageResult, insightUsedValue)
+      // Distract opens the modal with a target-less label and reads the
+      // dropdown's targetName at roll-time. Append " → <target>" before
+      // saving so the expanded log row reads "<X> — Distract → <Y>"
+      // instead of just "<X> — Distract" (the player wanted the full
+      // line in the expand view).
+      const savedLabel = pendingRoll.label.endsWith(' — Distract') && targetName
+        ? `${pendingRoll.label} → ${targetName}`
+        : pendingRoll.label
+      await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, savedLabel, characterName, false, targetName || null, damageResult, insightUsedValue)
     }
     // Now that the attack row is in, drain any auto-loot log rows queued
     // during damage processing. Awaiting this serializes after the attack
@@ -5345,14 +5353,13 @@ export default function TablePage() {
                       smod = Math.max(skLevel('Intimidation'), skLevel('Psychology*'), skLevel('Tactics*'))
                     }
                   }
-                  // Pre-consume the active's action so the attempt costs
-                  // them whether the roll succeeds or fails. Mirrors
-                  // Stabilize. Roll modal opens immediately; closeRollModal
-                  // reads targetName state to apply the action drop on
-                  // success.
+                  // Open the standard roll modal. Action is NOT pre-
+                  // consumed — closeRollModal handles the consume only
+                  // when the user actually clicks ROLL (didRoll=true).
+                  // Cancel = no roll fired = no action consumed, per
+                  // playtest 2026-04-29: opening Distract by mistake
+                  // shouldn't punish the player.
                   handleRollRequest(`${activeEntry.character_name} — Distract`, amod, smod)
-                  actionPreConsumedRef.current = true
-                  void consumeAction(activeEntry.id)
                 }} style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Distract</button>
                 {['Cover Fire', 'Inspire'].map(action => {
                   const isOpen = socialTarget?.action === action
