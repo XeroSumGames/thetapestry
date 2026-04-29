@@ -67,7 +67,7 @@ export default function WelcomePage() {
           A Guide to the Tapestry
         </div>
         <div style={{ fontSize: '16px', color: '#cce0f5', maxWidth: '640px', margin: '0 auto', lineHeight: 1.7 }}>
-          Come back here whenever you need a refresher on what lives where. Each section below points to a part of the platform, with a short note on what it&apos;s for and how to get the most out of it.
+          Come back here whenever you need a refresher on what lives where. There is a link to each section of the platform along with a note on what it&apos;s for and how to get the most out of it.
         </div>
         <div style={{ fontSize: '13px', color: '#8a8a8a', marginTop: '14px' }}>
           New here? Start with <Link href="/firsttimers" style={{ color: '#cce0f5', textDecoration: 'underline' }}>Welcome to the DistemperVerse</Link>.
