@@ -8205,7 +8205,21 @@ export default function TablePage() {
           return 'Dire Failure'
         }
 
-        function isSuccess(outcome: string) { return outcome === 'Success' || outcome === 'Wild Success' }
+        function isSuccess(outcome: string) { return outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight' }
+
+        // Outcome tier — opposed-check ordering. Higher tier wins; same
+        // tier ties. Per Xero's reading: Wild Success > Success and
+        // Dire Failure < Failure (so a Failure beats a Dire Failure
+        // in an opposed check). Critical-roll variants (High Insight /
+        // Low Insight from 6+6 / 1+1 pairs) share tier with their
+        // respective Wild Success / Dire Failure neighbours.
+        function outcomeTier(outcome: string): number {
+          if (outcome === 'Wild Success' || outcome === 'High Insight') return 4
+          if (outcome === 'Success') return 3
+          if (outcome === 'Failure') return 2
+          if (outcome === 'Dire Failure' || outcome === 'Low Insight') return 1
+          return 0
+        }
 
         async function executeGrapple(targetEntry: InitiativeEntry, insightMode: 'none' | '3d6' | '+3cmod' = 'none') {
           // Get defender mods
@@ -8267,9 +8281,15 @@ export default function TablePage() {
           const dTotal = dDie1 + dDie2 + dPhyMod + dSmod
           const dOutcome = getOutcome(dTotal)
 
-          // Determine result
-          const attackerWins = isSuccess(aOutcome) && !isSuccess(dOutcome)
-          const defenderWins = !isSuccess(aOutcome) && isSuccess(dOutcome)
+          // Determine result by outcome tier — higher tier wins, same
+          // tier ties (no clear victor). Replaces the older binary
+          // success/fail check that incorrectly tied "Wild Success vs
+          // Success" and "Failure vs Dire Failure" — Xero clarified
+          // those should resolve in favor of the stronger tier.
+          const aTier = outcomeTier(aOutcome)
+          const dTier = outcomeTier(dOutcome)
+          const attackerWins = aTier > dTier
+          const defenderWins = dTier > aTier
           const result = attackerWins ? 'grappled' as const : defenderWins ? 'failed' as const : 'no_victor' as const
 
           // Apply effects
