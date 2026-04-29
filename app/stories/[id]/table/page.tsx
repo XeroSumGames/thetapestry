@@ -4264,15 +4264,13 @@ export default function TablePage() {
       ? (preRollInsight === '3d6' ? '3d6' : preRollInsight === '+3cmod' ? '+3cmod' : null)
       : null
     if (!isTrimmedRoll) {
-      // Distract opens the modal with a target-less label and reads the
-      // dropdown's targetName at roll-time. Append " → <target>" before
-      // saving so the expanded log row reads "<X> — Distract → <Y>"
-      // instead of just "<X> — Distract" (the player wanted the full
-      // line in the expand view).
-      const savedLabel = pendingRoll.label.endsWith(' — Distract') && targetName
-        ? `${pendingRoll.label} → ${targetName}`
-        : pendingRoll.label
-      await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, savedLabel, characterName, false, targetName || null, damageResult, insightUsedValue)
+      // Label is saved verbatim. The expanded log render appends
+      // " → <target_name>" when target_name is set, so for Distract
+      // (label "<X> — Distract", target stored on r.target_name) the
+      // expanded line auto-formats as "Distract → <target>". Don't
+      // mutate the label here or the target gets duplicated:
+      // "Distract → <target> → <target>" (caught 2026-04-29).
+      await saveRollToLog(die1, die2, pendingRoll.amod, pendingRoll.smod, cmodVal, pendingRoll.label, characterName, false, targetName || null, damageResult, insightUsedValue)
     }
     // Now that the attack row is in, drain any auto-loot log rows queued
     // during damage processing. Awaiting this serializes after the attack
