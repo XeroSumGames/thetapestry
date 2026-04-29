@@ -1,118 +1,90 @@
-# Session Handoff — 2026-04-28 (C1 perf + Distract redesign + auth-lock recurrence)
+# Session Handoff — 2026-04-29 (UI Streamline + Modules curation + persistent GM nav)
 
 ## TL;DR
-- **Two big systemic fixes shipped:** (1) the chat-panel infinite refetch loop that was eating CPU and queuing every other action behind it (`2616f53`), and (2) a recurrence of the auth Web-Lock contention that made `LOG IN` do nothing (`8fb6f4a` + same commit). Both root-caused, both fixed.
-- **Distract was redesigned end-to-end** to use the unified ATTACK ROLL modal with a TARGET dropdown, plus CRB-correct rules: 30 ft Close-range gate, outcome scaling (Wild = both, Success = 1, Dire Failure = Inspired+1), object filtering, and trimmed log lines. Five commits, last is `c04650c`.
-- **C1 mount-fetch parallelization confirmed working** in playtest. Items 1–4 of the testing checklist passed. Items 5–11 still to verify but most are likely already fixed by the chat-loop kill.
-- **Worktree:** `C:\TheTapestry\.claude\worktrees\unruffled-margulis-cbb9ac` on `claude/unruffled-margulis-cbb9ac` tracking main. Branch is up to date with origin; nothing in-flight, working tree clean (only `.claude/settings.local.json` permission deltas, intentionally not committed).
+- **Multi-day session arc closed:** every item from the UI Streamline list (Enter→GM Tools, Snapshot to its own page, drop Clone, persistent button row, Edit-page snapshot panel removed) is shipped. Plus: Modules marketplace got an EDIT page + cover upload + sort_order curation, Survivors gallery balances correctly, Communities click-through auto-expands.
+- **Earlier in this session arc:** Distract redesign (5 commits), C2 InitiativeBar extraction, perf sweep (memo + useStableCallback), Grapple opposed-check tier fix, player-side Search Remains loot RPC, snapshot RESTORE auto-launch, weapon jam persistence, Kings Crossing → Kings Crossroads rename, setting consolidation (5 deprecated settings → published modules).
+- **Worktree:** `C:\TheTapestry\.claude\worktrees\beautiful-dijkstra-8da918` on `claude/beautiful-dijkstra-8da918` tracking main. Working tree clean (only `.claude/settings.local.json` permission deltas, intentionally not committed).
+- **`C:\TheTapestry`** is synced to `main` — the user's primary working dir matches what's live on Vercel.
 
 ## Pick up here
 
-The user was halfway through the C1 combat testing checklist when context filled up. Last user instruction before the handoff request was **"confirm, proceed to #5"** — items 5/6 (Sprint slowness) were almost certainly downstream of the chat-loop fix in `2616f53`, but they have not been retested yet.
+The user has no specific outstanding ask — they wrapped the session by saying "push, commit, update todo and everything else, then get me a handoff ready." So the next chat should open ready to either:
+
+1. **Pick up from the backlog** — top candidates flagged by Xero this week:
+   - Restore-to-Full-Health perf (n+1 fetch on the multi-target restore modal — batch into 3 concurrent table-scoped UPDATEs)
+   - "Streamline logging into missions" (player-side login → join → table is too many clicks; need to discuss before shipping)
+   - Hide-NPCs reveal UX streamlining (data layer works; reveal flow needs fewer clicks)
+   - Vehicles + Handouts in `cloneSnapshotIntoCampaign` v1.1.0 (parked when Xero pivoted to UI Streamline)
+   - Re-run `/tools/migrate-settings-to-modules` — the descriptions/order changed, existing module rows in DB are stale; tool has UPDATE-on-conflict but Xero hasn't re-clicked yet
+   - Apply `sql/modules-sort-order.sql` if not yet run (Xero hasn't confirmed)
+
+2. **Wait for playtest reports** — the next Mongrels session is what'll surface the next round of bugs. Items 5–11 of the C1 testing checklist still aren't formally retested (Sprint slowness, UNEQUIP button visibility, X button on Initiative bar, etc.) but most are likely already fixed by chat-loop kill / parallelization / auth-cache work.
 
 **Open the next chat with this question:**
-> "Did Sprint feel snappy on your last hard-refresh, or is it still 5+ seconds before the next combatant is active?"
+> "What's next — backlog item, or did the playtest surface new bugs?"
 
-If snappy → mark #5/#6 closed and move to #7.
-If still slow → instrument the Sprint code path at [app/stories/[id]/table/page.tsx:5970](app/stories/[id]/table/page.tsx:5970) (`consumeAction` with cost=2 → potential turn-advance → Athletics roll modal → outcome resolution chain). Likely culprit: serial awaits inside `consumeAction` or `tryEndTurn`.
-
-### C1 testing checklist — remaining items
-
-| # | Item | Status | Notes |
-|---|------|--------|-------|
-| 1 | Mount + initial fetch parallel | ✅ confirmed | "works" — Wave 1/Wave 2 ship |
-| 2 | Mount feels faster | ✅ confirmed | "it's slow, but it's working" |
-| 3 | Distract Close-range gate works | ✅ confirmed | retested after `9218f86` |
-| 4 | Object filter on Distract dropdown | ✅ confirmed | shipped in `c04650c` |
-| 5 | HUGO sprint slowness | ⏳ retest needed | likely fixed by `2616f53` chat-loop kill |
-| 6 | TUCKER sprint slowness | ⏳ retest needed | same as #5 |
-| 7 | UNEQUIP button missing? | ⏳ not investigated | "didn't we add an UNEQUIP button?" — find where it disappeared |
-| 8 | X button on Initiative bar | ⏳ not investigated | what does it do, is it intentional, label/tooltip needed? |
-| 9 | Cree two actions slow to advance turn | ⏳ retest needed | likely fixed by chat-loop kill |
-| 10 | Combat rolls slow generally | ⏳ retest needed | likely fixed by chat-loop kill |
-| 11 | Frankie moved multiple times w/o burning action | ⏳ not investigated | possible move bug — check `consumeAction` path for the move action specifically |
-
-### Deferred (not blocking C1)
-- **Hide NPCs on Start Combat** — Xero deferred earlier in session. Stays on `tasks/todo.md` with a UX-streamlining note (auto-reveal triggers + RLS gating already in place at the DB level).
-- **Full C2** (initiative bar extraction) — scheduled for "combat day". Current C1 work landed without needing it.
-
-## What shipped this session (newest first)
+## What shipped this session arc (newest first)
 
 ```
-c04650c fix(distract+combat): hide objects in Distract dropdown; let GM solo-start combat
-9218f86 feat(distract): Close-range gate + outcome scaling per CRB
-2e15258 fix(distract-log): don't double-append target to expanded label
-dea681d feat(distract): auto-select pre-selected target in the dropdown
-a6238cf docs(todo): log /modules Thriver-delete + clear test modules
-a99c87a docs(todo): log "Restore from snapshot should auto-launch" backlog item
-6ce2b23 fix(distract): cancel doesn't consume action + log trimming
-725cd43 feat(distract): unified modal — TARGET dropdown inside the roll panel
-2616f53 fix(chat-loop+auth-lock): unblock the hung table-page mount
-8fb6f4a fix(auth-lock): LayoutShell uses getCachedAuth instead of getUser
-c381f78 chore(auth-forms): add autocomplete attrs to login + signup inputs
-a1db35e chore(table): drop [campaign_npcs] pgchange console spam
-1710e6f docs(todo): log GM Tools → Restore to Full Health perf gap
-931de35 feat(distract): convert to standard ATTACK ROLL modal flow
-26a1683 fix(community): Dashboard menu opens in new tab
-7a7bfc9 docs(todo): add Character Evolution / CDP Calculator to backlog
-6596334 fix(combat-actions): kill the per-render console.warn spam
-fbd5a46 docs(c1): testplan for the mount-fetch parallelization
-b791661 fix+chore: alt-click works on tokens, gm-screen banner, weapon renames
-14ea99e feat(map): Alt+left-click to ping (replaces press-and-hold + Alt+dblclick)
-4254f70 docs(todo): close drag-to-bottom-left, NPC encumbrance, SRD sweep
-e6199bc fix(npc-encumbrance): tally equipped weapons toward NPC encumbrance
-84027d4 chore(copy): drop user-visible "SRD" jargon — replace with "the rules"
-cf175f8 fix(drag): notification/messages dropdowns become click-through during token drag
-96a66b2 perf(C1): collapse table-page mount fetch waterfall to two waves
+af15ca1 ui: persistent StoryToolsNav + Survivors gallery + community auto-expand
+d8eeb23 feat(modules): sort_order column for /modules curation + UI on Edit page
+84b831d ui(stories): rename Enter→GM Tools, Snapshot tab, drop Clone, drop new-tab
+8951b0f feat(modules): EDIT button + cover-image upload page; reorder /stories/new fields
+197491d feat(modules): reorder migration list + new descriptions + The Basement rename
+b310ccd feat(modules): Thriver migration tool to publish 5 deprecated settings
+b5f5602 fix(setting): rename King's Crossing → Kings Crossroads (Delaware geography)
+70fa32f ui(stories): trim setting list + remove "New Campaign" button
+743fa75 perf(render): React.memo on heavy children + useStableCallback for TacticalMap
+7930e3b perf(table): parallelize 5 sequential await pairs (loadEntries + rollsFeed)
+42291ba fix(jam): persist Low-Insight jam flag so Unjam stays available
+11ddf77 feat(loot): player-side "Search Remains" via SECURITY DEFINER RPC
+4ebd57f fix(grapple): opposed-check resolves by outcome tier, not binary success
+7c26a9d feat(snapshots): auto-launch table after admin-page restore
+7544bf8 feat(grapple): add Conditional Modifier input to the Grapple modal
+... (and 50+ earlier commits in this multi-day arc — see git log for the full picture)
 ```
 
-### Two systemic fixes worth understanding
+## Two systemic wins worth understanding (still in force)
 
-**Chat infinite refetch loop** (`2616f53`) — `useChatPanel` had `setFeedTab` and `scrollFeedToBottom` directly in the `refetch` callback's deps. Those identities changed every render, so `refetch` was re-created every render, and the `useEffect` that called `refetch()` re-fired endlessly. Network tab showed hundreds of `chat_messages` requests per second. This was the actual reason "Loading The Table…" hung indefinitely. Fix: stash both in refs, drop them from deps:
+**Auth Web-Lock contention** — `supabase.auth.getUser()` takes a Web Lock, and a backgrounded tab mid-mount holding it makes login spin forever. `lib/auth-cache.ts` provides `getCachedAuth()` (30 s TTL local snapshot from `getSession()`). The codemod migrated 44 files. Any new code calling `supabase.auth.getUser()` directly is a regression risk — use `getCachedAuth()`.
 
-```ts
-// components/TableChat.tsx
-const setFeedTabRef = useRef(setFeedTab)
-const scrollFeedToBottomRef = useRef(scrollFeedToBottom)
-setFeedTabRef.current = setFeedTab
-scrollFeedToBottomRef.current = scrollFeedToBottom
-// refetch deps now: [campaignId, supabase, userIdRef]
-```
+**Render-perf memo pattern** — `TacticalMap` is fully memoized (every callback consumed via `useStableCallback` to keep stable identity). Same memo wrap landed on `CharacterCard` and `NpcRoster`, but their parent's call sites (the table page) still pass inline `new Set(...)` and inline arrows on every render. Memo currently doesn't skip those two — fixing it is a follow-up: stabilize the call-site props in `app/stories/[id]/table/page.tsx`.
 
-**Auth Web-Lock recurrence** (`8fb6f4a` + `2616f53`) — `LayoutShell.tsx` and the table-page mount were both still calling `supabase.auth.getUser()`, which takes the gotrue Web Lock. With a backgrounded tab mid-mount holding the lock, the login-tab queued 5 s, then stole, but by then the original promise had aborted — to the user, "click LOG IN does nothing." Migrated both to `getCachedAuth()` (30 s TTL local snapshot from `getSession()`). Shipped earlier in `lib/auth-cache.ts`.
+## Critical files / locations (where the scar tissue is)
 
-### Distract redesign — what's correct now per CRB
-- **Unified modal.** Pick TARGET in the roll panel. Object tokens filtered out (people only).
-- **Range = 30 ft Close.** Targets outside Close range filtered from the dropdown.
-- **Outcome scaling.**
-  - Wild Success → both targets distracted (if available).
-  - Success → 1 target distracted.
-  - Failure → no effect, action consumed.
-  - Dire Failure → +1 Inspired on the target's controller.
-- **Cancel refunds the action.** Pre-consume removed; `closeRollModal`'s `didRoll` gate handles consume.
-- **Log line:** `"Emery Kendrick Successfully Distracts Morgan Brennan"` / `"Emery Kendrick Failed to Distract Morgan Brennan"`. Renderer assembles, label no longer mutated.
+- [app/stories/[id]/table/page.tsx](app/stories/[id]/table/page.tsx) — ~9300-line megafile. Most combat work happens here. C2 already extracted `InitiativeBar`; future C3 candidates: action-button strip, roll modal, GM Tools dropdown.
+- [components/StoryToolsNav.tsx](components/StoryToolsNav.tsx) — new shared nav. If you add a new GM sub-page, mount this at the top.
+- [components/CharacterCard.tsx](components/CharacterCard.tsx) — has the new Evolution button (purple, scrolls to Progression Log block on the same card).
+- [components/CampaignCommunity.tsx](components/CampaignCommunity.tsx) — `initialOpenId` prop now lets callers auto-expand a specific community.
+- [lib/modules.ts](lib/modules.ts) — sort order: `.order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false })`.
+- [app/modules/[id]/edit/page.tsx](app/modules/[id]/edit/page.tsx) — module editor (cover upload + name/tagline/description/sort_order). Author-or-Thriver gated.
+- [lib/auth-cache.ts](lib/auth-cache.ts) — 30 s TTL session cache. Use `getCachedAuth()` everywhere.
+- [lib/useStableCallback.ts](lib/useStableCallback.ts) — stable callback identity with fresh closures.
+- [lib/debug-log.ts](lib/debug-log.ts) — telemetry (errors + page-load timing). NO global fetch wrapper (was reverted as too invasive).
 
-## Backlog added this session (in `tasks/todo.md`)
+## SQL applied this session arc
 
-- **GM Tools → Restore to Full Health is slow** — multi-second pause; investigate if it's the same n+1 fetch pattern C1 fixed in mount.
-- **Restore from snapshot should auto-launch** the snapshotted scene, not dump the user back to a blank table.
-- **/modules Thriver-delete + clear test modules** — Thriver-only delete control on `/modules/[id]`; sweep current test modules out of the marketplace.
-- **Character Evolution / CDP Calculator** — major next feature after inventory; track CDP gain/spend/projected level-up cost over time.
+- `sql/setting-rename-kings-crossroads.sql` — applied (Xero confirmed)
+- `sql/loot-npc-item-rpc.sql` — applied
+- `sql/modules-sort-order.sql` — **NOT yet confirmed applied** (re-run to pin Empty=1, Chased=2, Minnie=3, Basement=4, Arena=5)
+- `sql/debug-log.sql` — applied
 
 ## Workflow rules (still in force)
 
-- `C:\TheTapestry` is permanently on `main`. After every push from the worktree, run `git -C C:/TheTapestry pull origin main` (memory rule covers this; it's a fast-forward).
+- `C:\TheTapestry` is permanently on `main`. After every push from the worktree, run `git -C C:/TheTapestry pull origin main` (memory rule covers this).
 - No long-lived feature branches. Ship same-session or use a flag.
-- Push first, fast-fail on the live Vercel deploy (the user is the only real-site user — that's fine).
+- Push first, fast-fail on the live Vercel deploy (Xero is the only real-site user).
+- Memory rules: keep using `getCachedAuth`, never sub-13px inline fontSize, header buttons via `hdrBtn()` helper.
 
-## Critical files touched (so the next chat knows where the scar tissue is)
+## Test plans written this session
 
-- [app/stories/[id]/table/page.tsx](app/stories/[id]/table/page.tsx) — ~9000-line scar-tissue megafile. Distract logic at `~5320` (action button) and `~4090` (closeRollModal Distract branch). Start Combat button at `~4720`. Roll modal target dropdown at `~6985-7200`. Mount Wave 1/Wave 2 at `~700-790`.
-- [components/TableChat.tsx](components/TableChat.tsx) — `useChatPanel` hook, with refs fix at top.
-- [components/LayoutShell.tsx](components/LayoutShell.tsx) — auth check now uses `getCachedAuth()`.
-- [lib/auth-cache.ts](lib/auth-cache.ts) — 30 s TTL session cache.
-- [lib/roll-helpers.ts](lib/roll-helpers.ts) — `compactRollSummary` updated for new Distract format (reads `r.target_name` directly).
-- [components/TacticalMap.tsx](components/TacticalMap.tsx) — Alt+left-click ping (works on tokens too).
-
-## SQL applied this session
-None pending. Earlier session had `campaign-npcs-hidden-from-players.sql`, `weapons-srd-rename.sql`, `weapons-rocket-flame-rename.sql`, `scene-tokens-resync-disposition-color.sql` — all confirmed applied by user ("sql all applied").
+Living in `C:\TheTapestry\tasks\` (and the worktree mirror):
+- `persistent-nav-survivors-communities-testplan.md` — today's commit
+- `modules-edit-cover-testplan.md`
+- `modules-sort-order-testplan.md`
+- `setting-migration-testplan.md`
+- `kings-crossroads-rename-testplan.md`
+- `gm-tools-streamline-testplan.md`
+- `loot-search-remains-testplan.md`
+- `grapple-opposed-tiers-testplan.md`
+- (older C1 / Distract testplans still valid)

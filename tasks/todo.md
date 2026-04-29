@@ -1,5 +1,88 @@
 # Tapestry — To Do & Backlog
 
+## ✅ Shipped 2026-04-29 (UI Streamline + Modules curation + portrait/community polish)
+
+- **Persistent GM nav across all sub-pages** — new `<StoryToolsNav>`
+  shared button row (Launch / GM Tools / Edit / Snapshot / Sessions /
+  Community / Share) mounted on `/stories/[id]/edit`, `/snapshots`,
+  `/sessions`, `/community`. Active page is highlighted via
+  `usePathname()`. Hub `/stories/[id]` keeps its richer button row
+  (GM Kit, Publish Module, Archive, Delete) since those carry heavy
+  modal state. Commit `af15ca1`.
+- **Survivors portrait gallery rebalanced** — `/characters` tile
+  container flipped from fixed-88px flex-wrap to CSS grid
+  `auto-fill 1fr` so tiles stretch to fill each row. Kills the dead
+  block on the right. Commit `af15ca1`.
+- **Character sheet — Evolution button** — purple button between
+  Inventory and Apprentice on every CharacterCard. For now it
+  smooth-scrolls to the existing Progression Log block on the same
+  card; will wire up to the real CDP Calculator when that ships.
+  Commit `af15ca1`.
+- **Auto-expand single community on /communities/[id]** — clicking a
+  community in My Communities now drops you into the expanded
+  accordion (Homestead / Leader / Roles / Members) instead of a
+  collapsed header. New `initialOpenId` prop on `CampaignCommunity`.
+  Commit `af15ca1`.
+- **/modules sort_order curation** — `modules` table gets `sort_order`
+  int column + index. Marketplace + Edit page query in `lib/modules.ts`
+  now sort by `sort_order ASC NULLS LAST, created_at DESC`. Edit page
+  exposes a numeric sort-order field. SQL: `sql/modules-sort-order.sql`
+  pins the 5 setting modules in Xero's order
+  (Empty=1, Chased=2, Minnie=3, Basement=4, Arena=5). Commit `d8eeb23`.
+- **/modules EDIT button + cover upload** — Thrivers and module authors
+  see EDIT alongside DELETE on each card. New page
+  `app/modules/[id]/edit/page.tsx` lets the author upload a cover image
+  to the `module-covers` Supabase Storage bucket and edit name /
+  tagline / description / content_tags. Commit `8951b0f`.
+- **MY STORIES streamline** — Enter renamed to **GM Tools**, dropped
+  `target="_blank"` so it opens in the same tab, removed the **Clone**
+  button entirely (publish-as-Module is the canonical clone path),
+  pulled Snapshot management out of the Edit page into its own
+  `/stories/[id]/snapshots`. Commits `84b831d`, this commit's prep work.
+- **Settings list trimmed to 3** on `/stories/new` —
+  Custom · District Zero · Kings Crossroads (Mall). The 5 deprecated
+  setting slugs (Empty / Chased / Minnie / Basement / Arena) live on as
+  published modules via the new Thriver migration tool
+  `/tools/migrate-settings-to-modules`. Commits `70fa32f`, `b310ccd`,
+  `197491d`.
+- **Kings Crossing → Kings Crossroads rename** — real Delaware location
+  is "Kings Crossroads" (Sussex County, near Greenwood). Full code
+  rename across `lib/settings.ts`, `lib/setting-npcs.ts`,
+  `lib/setting-pins.ts`, plus DB migration
+  `sql/setting-rename-kings-crossroads.sql` (applied). Commit `b5f5602`.
+
+## ✅ Shipped 2026-04-29 (combat correctness + perf + C2 extraction)
+- **Grapple opposed-check tiers** — opposed checks now resolve by
+  outcome tier ordering (Wild Success > Success, Failure > Dire
+  Failure) instead of binary success-vs-success = tie. Fix per Xero's
+  CRB read. Commit `4ebd57f`.
+- **Player-side loot — Search Remains** — `🎒 Search Remains` button on
+  `PlayerNpcCard` when displayStatus is dead/mortally wounded/uncon.
+  New SECURITY DEFINER RPC `loot_npc_item` does atomic transfer +
+  audit row in roll_log. SQL: `sql/loot-npc-item-rpc.sql`. Commit `11ddf77`.
+- **Weapon jam persists** — Low-Insight jam now sets a `jammed: true`
+  flag on the weapon slot so the Unjam (Ready Weapon) button stays
+  available across renders. Commit `42291ba`.
+- **Snapshot RESTORE auto-launches** — after a successful snapshot
+  restore, the page jumps to `/stories/[id]/table` so the GM doesn't
+  land on a blank screen. Commit `7c26a9d`.
+- **Render-perf sweep** — `React.memo` on `TacticalMap`,
+  `CharacterCard`, `NpcRoster` + new `useStableCallback` for the 11
+  inline TacticalMap callbacks lifted out of the table page. Caveat:
+  parent's call-site props for CharacterCard/NpcRoster still pass
+  inline objects on every render — memo will fully kick in once those
+  call sites are stabilized. Commit `743fa75`.
+- **Mount-fetch parallelization** — 5 sequential await pairs
+  (loadEntries, rollsFeed) collapsed into Promise.all. Commit `7930e3b`.
+- **C2 InitiativeBar extracted** — 406-line component pulled out of the
+  9300-line table page. Lives at `components/InitiativeBar.tsx`.
+- **Auth Web-Lock contention** — codemod across 44 files migrating
+  `supabase.auth.getUser()` → `getCachedAuth()`. Commit `67989ce`.
+- **Distract redesign** — unified ATTACK ROLL modal + 30 ft Close-range
+  gate + outcome scaling (Wild=both, Success=1, Dire Failure=Inspired+1)
+  + object filter + auto-select pre-selected target + log line trim.
+  Commits `c04650c`, `9218f86`, `2e15258`, `dea681d`, `931de35`.
+
 ## 🎯 From 2026-04-27 Mongrels playtest (Xero's batch handoff)
 
 Xero captured the following items mid-/post-playtest. Bugs first, then UX, then content, then long-term map features. Each is self-contained so an agent can pick one up cold.
@@ -32,7 +115,7 @@ Xero captured the following items mid-/post-playtest. Bugs first, then UX, then 
 
 ## 🎯 Next up (post-combat sprint)
 - [x] **NPC inventory — primary & secondary weapons should count toward encumbrance.** Shipped 2026-04-28 as `e6199bc` — NpcCard was passing empty strings to InventoryPanel for the weapon names; now pulls them off `npc.skills.weapon.weaponName` / `npc.skills.weapon2.weaponName`. InventoryPanel + computeEncumbrance were already correct, just being fed nulls.
-- [ ] **Player-side loot — Search Remains button on the NPC popout.** Today loot is GM-only: GM opens dead NPC's NpcCard Inventory and uses "Give to" to transfer items. Players have no affordance on PlayerNpcCard. User wants a loot button on every NPC popout (in practice gated to dead / mortally-wounded / unconscious NPCs). Shape: (1) `components/PlayerNpcCard.tsx` — add a "🎒 Search Remains" button when `displayStatus !== 'active'`; opens InventoryPanel in a new "loot mode" prop. (2) `components/InventoryPanel.tsx` — `mode='loot'` hides custom-item add + qty edit; "Give to" replaced with single "Take" button that transfers to the searching PC's character.data.inventory. (3) New Postgres RPC `loot_npc_item(npc_id, character_id, item_index, qty)` with SECURITY DEFINER — verifies NPC is in PC's campaign + status ∈ {dead, mortally wounded, unconscious}, decrements `campaign_npcs.inventory`, increments `characters.data.inventory`, all atomic. (4) Audit row in `roll_log` — "🎒 <Player> looted <Item> from <NPC>". Race-safe by virtue of RPC running in a single transaction. Mirror the existing `notify_inventory_received` SECURITY DEFINER pattern. (Parked 2026-04-27 mid-playtest; GM-mediated loot remains the workflow until this lands.)
+- [x] **Player-side loot — Search Remains button on the NPC popout.** Shipped 2026-04-29 as `11ddf77` — `PlayerNpcCard` shows "🎒 Search Remains" when `displayStatus !== 'active'`; new SECURITY DEFINER RPC `loot_npc_item` does atomic transfer + audit row in roll_log. SQL: `sql/loot-npc-item-rpc.sql`.
 - [ ] **Insight Die spend — track on roll_log for full extended-log fidelity.** Shipped 2026-04-27 a partial callout: extended log shows "🎲 Insight Die spent — pre-rolled 3d6 (kept all three)" when `die2 > 6` (the 3d6 path packs d2+d3 into die2; sum > 6 is unambiguous). Two gaps: (1) 3d6 rolls where d2+d3 ≤ 6 (~17% of cases) escape detection, (2) the `+3 CMod` Insight Die spend can't be distinguished from organic CMod at all. Long-term fix: add an `insight_used text` column to `roll_log` (NULL / '3d6' / '+3cmod'), populate from `executeRoll` (and reroll path), surface in the extended-log card. Migration is non-destructive (NULL default), code path needs to thread `insightUsed` arg through `saveRollToLog`. (Parked 2026-04-27 mid-playtest; ship the schema + reliable detection after the session.)
 - [x] **Stale realtime subscriptions — table tab needs manual refresh after backgrounding.** Shipped 2026-04-28 as `607342d` — visibilitychange listener on the table page + useChatPanel + useRollsFeed re-runs the load functions on hidden→visible. State refetch only in v1; channel rebuild deferred until/if state-only proves insufficient (supabase-js handles socket reconnection internally on health checks). Testplan: tasks/realtime-visibility-refetch-testplan.md. Also covered later by useRollsFeed extraction (B2.2) which carries the same handler.
 - [x] **SRD wording sweep — replace user-visible "SRD" with "the rules"** — shipped 2026-04-28 as `84027d4`. 8 user-visible hits swapped: CommunityMoraleModal leader-not-set banner + 4 tooltips, CampaignCommunity Assigned-NPCs hint + Re-balance Roles tooltip, stories/[id]/community quota-tick tooltip. gm-screen `XSE SRD v1.1` header left as a system-version banner pending Xero's call. Code comments referencing SRD as a source remain (authoring notes).
@@ -47,8 +130,8 @@ Xero captured the following items mid-/post-playtest. Bugs first, then UX, then 
 - [ ] **Tapestry-side `<t:UNIX:format>` renderer** — the Timestamps tool at `/campfire/timestamp` outputs Discord-style `<t:UNIX:format>` tokens that work natively on Discord. To make them auto-localize on Tapestry posts (LFG, Forums, War Stories, Messages, Notes), build a small content-renderer utility that detects the token pattern and replaces it with a `<time>` element formatted in the viewer's local timezone. Hook it into every surface that displays user-typed content. Format codes are `t / T / d / D / f / F / R` per Discord spec — replicate the same `Intl.DateTimeFormat` options used in the generator's preview column for consistency.
 - [ ] **Character Evolution / CDP Calculator** — post-creation character growth tool. Characters earn CDP (Character Development Points) over time (per-session awards, session arcs, milestones) and spend them to raise RAPID attributes, raise/acquire skills, take Traits, etc. Today the character creation funnel (`/characters/new` Backstory, `/characters/quick`, `/characters/random`) handles the CDP spend at character-creation time only; there's no surface for spending earned CDP afterward. Build a `/characters/[id]/evolve` (or modal on the character sheet) that: (1) shows the character's current CDP balance from `data.cdp` (already tracked), (2) lists buyable upgrades per the rules — attribute raises (cost = current value × multiplier), skill raises (cost = next-level cost), new trait picks (cost depends on tier), (3) previews the cost before commit, (4) applies the spend in one transaction (decrement `data.cdp`, write the changes, append a `roll_log` entry with `outcome='evolution'` so the table feed surfaces it). Reuse the wizard's CDP cost tables — they're already in `lib/xse-engine.ts` / wizard step components; extract into a shared helper if needed. Player-facing tool, GM doesn't need to approve (CDP is GM-awarded already, spend is the player's call). Audit log entry covers the GM oversight surface.
 - [ ] **GM Tools → Restore to Full Health is slow** — clicking RESTORE on the multi-target Restore modal (with 11+ targets selected — PCs + NPCs + Objects) takes "FOREVER" per Xero's 2026-04-29 playtest. The handler likely fires N sequential UPDATEs (one per target — character_states for PCs, campaign_npcs for NPCs, scene_tokens for Objects) and awaits each. With 11 targets that's 11 round-trips serialised. Fix shape: batch the UPDATEs by table — one UPDATE per table with `.in('id', ids)` for each kind, run all three concurrently via Promise.all. Same RLS guarantees, ~10× fewer round-trips. Probably lives in `app/stories/[id]/table/page.tsx` near the GM Tools restore handler — search for the Restore modal callback. Add a "Restoring…" disabled state + spinner on the button so the GM gets feedback during the await.
-- [ ] **Restore from snapshot should auto-launch into that snapshot** — when the GM clicks RESTORE on a campaign-snapshot row (the snapshot list, not the Restore-to-Full-Health Health flow above), today the snapshot is restored to the campaign and the user is left on whatever screen they were already on. Per Xero 2026-04-29: after a successful snapshot restore, the page should jump directly into the table view of the restored campaign (or the matching scene, if the snapshot captured a tactical scene), so the GM doesn't have to navigate manually to verify the restore landed. Likely lives near the snapshot restore handler in the campaign edit / GM Tools area — search for the RESTORE button on snapshot rows. Probably a `router.push` (or `window.location.href` if the restore needs a full reload to clear stale state) after the restore promise resolves.
-- [ ] **`/modules` Thriver-delete + clear test modules** — two-part. (a) Bulk-clear the 5 test modules currently visible on `/modules` (Fight Club, Arena Final Export, My Test, Jadfadfg, adfadf-2 — all CUSTOM, all from the development cycle). One-shot SQL: `DELETE FROM module_versions WHERE module_id IN (SELECT id FROM modules WHERE name IN (...))` then `DELETE FROM modules WHERE name IN (...)`. Or wire (b) up first and let Xero do the click-clear pass. (b) Add a Thriver-only DELETE button on each card on `/modules` (and probably also on `/modules/[id]`) that hard-deletes the module + all its versions + all subscriptions. Confirmation modal required ("This will permanently delete the module and all <N> versions. <M> campaigns currently subscribe — they'll lose update notifications but their cloned content stays. Continue?"). Reuses the existing `userRole === 'thriver'` gate from sidebar Tools.
+- [x] **Restore from snapshot auto-launches into that snapshot** — shipped 2026-04-29 as `7c26a9d` — `CampaignSnapshots.tsx` now `window.location.href`'s to `/stories/<id>/table` after a successful restore so the GM lands directly on the scene.
+- [x] **`/modules` Thriver-delete + clear test modules** — shipped 2026-04-29: Thriver-only DELETE chip on each `/modules` card (also gated to module author); confirmation modal in place. Test-module bulk-clear handled by Xero via the new chip.
 - [x] **Phase C Communities** — weekly Morale Check + Resource Checks (Fed/Clothed) shipped 2026-04-23. Activity Blocks + Lv4 skill auto-CMods deferred to Phase D.
 
 ## 🔒 Backburner — Thriver godmode UI sweep
