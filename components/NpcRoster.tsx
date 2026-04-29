@@ -297,6 +297,28 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   // Map of npc_id → { communityId, communityName } for recruited NPCs.
   const [communityMap, setCommunityMap] = useState<Record<string, { communityId: string; communityName: string }>>({})
 
+  // Fetch community memberships for a given list of NPCs. Extracted from
+  // loadNpcs so the initial-mount path can reuse parent's externalNpcs
+  // for the npc list while still needing this separate fetch.
+  async function loadCommunityMap(npcList: { id: string }[]) {
+    const npcIds = npcList.map(n => n.id)
+    if (npcIds.length === 0) {
+      setCommunityMap({})
+      return
+    }
+    const { data: members } = await supabase
+      .from('community_members')
+      .select('npc_id, community_id, communities(name)')
+      .in('npc_id', npcIds)
+      .is('left_at', null)
+      .not('npc_id', 'is', null)
+    const map: Record<string, { communityId: string; communityName: string }> = {}
+    ;(members ?? []).forEach((m: any) => {
+      if (m.npc_id) map[m.npc_id] = { communityId: m.community_id, communityName: m.communities?.name ?? 'Community' }
+    })
+    setCommunityMap(map)
+  }
+
   async function loadNpcs() {
     const { data } = await supabase
       .from('campaign_npcs')
@@ -349,7 +371,25 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   }
 
   useEffect(() => {
-    loadNpcs()
+    // Initial load — if the parent already populated externalNpcs (Wave
+    // 2 on the table page), reuse that instead of firing our own
+    // campaign_npcs query. Saves one round-trip per mount, which adds
+    // up under multi-browser playtest pressure. Community memberships
+    // still fetched separately (different table). Falls back to the
+    // own-fetch path when the prop isn't passed (component used outside
+    // the table page mount, or before parent's Wave 2 finishes).
+    if (externalNpcs && externalNpcs.length > 0) {
+      const sorted = [...externalNpcs].sort((a: any, b: any) => {
+        const aSort = a.sort_order ?? Number.MAX_SAFE_INTEGER
+        const bSort = b.sort_order ?? Number.MAX_SAFE_INTEGER
+        if (aSort !== bSort) return aSort - bSort
+        return (a.created_at || '').localeCompare(b.created_at || '')
+      })
+      setNpcs(sorted as CampaignNpc[])
+      loadCommunityMap(sorted)
+    } else {
+      loadNpcs()
+    }
 
     // Realtime subscription — refresh when any campaign_npcs row changes
     // (e.g. damage applied from table page updates WP/RP in DB).

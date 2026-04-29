@@ -928,14 +928,40 @@ export default function TablePage() {
           rollsFeed.refetch()
           chat.refetch()
         })
-        .on('broadcast', { event: 'npc_damaged' }, (msg: any) => {
-          // Another client dealt damage to an NPC — apply the patch locally
+        .on('broadcast', { event: 'npc_damaged' }, async (msg: any) => {
+          // Another client dealt damage to an NPC — apply the patch locally.
+          // Two payload shapes:
+          //   - { npcId, patch } — single-target attack (legacy, fast path)
+          //   - {} (empty)       — coalesced multi-target broadcast (e.g.
+          //                        grenade splash) where building per-target
+          //                        patches at the sender side adds bytes
+          //                        without value. In that case fall through
+          //                        to a full refetch so every recipient sees
+          //                        up-to-date NPC state. Mirrors the
+          //                        pc_damaged handler's always-refresh path.
           const { npcId, patch } = msg.payload ?? {}
           console.warn('[npc_damaged] RECV', { npcId, patch })
           if (npcId && patch) {
             setCampaignNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
             setRosterNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } : n))
             setViewingNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...patch } as CampaignNpc : n))
+          } else {
+            // Empty payload — refetch campaign_npcs so coalesced multi-
+            // target events (grenades, etc.) propagate to every client
+            // even though the sender didn't enumerate per-target patches.
+            const { data } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+            if (data) {
+              setCampaignNpcs(data)
+              setRosterNpcs(data.filter((n: any) => {
+                if (n.status !== 'active') return false
+                const wp = n.wp_current ?? n.wp_max ?? 10
+                return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+              }))
+              setViewingNpcs(prev => prev.map(vn => {
+                const fresh = data.find((f: any) => f.id === vn.id)
+                return fresh ? { ...fresh } as CampaignNpc : vn
+              }))
+            }
           }
         })
         .on('broadcast', { event: 'pc_damaged' }, (msg: any) => {
