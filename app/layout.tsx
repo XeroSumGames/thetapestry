@@ -107,7 +107,16 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
-        <link rel="preload" href="/fonts/Distemper.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
+        {/* Distemper.ttf preload removed 2026-04-28 — the font is only
+            used in the sidebar's "The Tapestry v0.5" branding, which
+            renders AFTER LayoutShell's auth check resolves. On cold
+            loads with slow auth (or after the welcome-page lock issue
+            from earlier today) the gap exceeded the browser's "used
+            within a few seconds" preload-warning window. The
+            @font-face rule in globals.css with font-display: swap
+            still fetches the font on demand when the sidebar mounts;
+            tradeoff is a brief FOUT on the branding text only on the
+            very first cold load. */}
       </head>
       <body style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0f0f0f', margin: 0, padding: 0, fontFamily: 'Barlow, sans-serif', fontSize: '15px' }}>
         <VisitLogger />
