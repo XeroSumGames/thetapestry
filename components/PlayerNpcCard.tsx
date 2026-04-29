@@ -3,6 +3,15 @@ import { useEffect, useState } from 'react'
 import { CampaignNpc, getNpcRingColor } from './NpcRoster'
 import { createClient } from '../lib/supabase-browser'
 
+interface LootItem {
+  name: string
+  qty: number
+  custom?: boolean
+  enc?: number
+  rarity?: string
+  notes?: string
+}
+
 // Player-facing NPC card — strictly read-only. GM-only data (RAPID stats,
 // skills, weapon breakdowns, equipment, HP pip dots, edit/publish/restore
 // actions) stays hidden. Players see portrait, name, category badge, and a
@@ -62,6 +71,17 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
   const [enlarged, setEnlarged] = useState(false)
   const [cmod, setCmod] = useState<number | null>(null)
   const [recruitState, setRecruitState] = useState<RecruitState>(null)
+
+  // ── Search Remains (player-side loot) ──
+  // Lazily-loaded NPC inventory — only fetched when the looter opens the
+  // panel. Modifies via the loot_npc_item SECURITY DEFINER RPC so the
+  // player doesn't need write access to campaign_npcs / other PCs'
+  // characters rows. Each Take click fires one RPC; loot is logged
+  // server-side to roll_log so the GM sees what was pulled off the body.
+  const [showLoot, setShowLoot] = useState(false)
+  const [lootItems, setLootItems] = useState<LootItem[] | null>(null)
+  const [lootError, setLootError] = useState<string | null>(null)
+  const [takingItem, setTakingItem] = useState<string | null>(null)
   // Bumped by the `tapestry:recruit-updated` window event so the
   // recruit-state effect below re-runs without a full page refresh.
   // The emit sites live in app/stories/[id]/table/page.tsx inside
@@ -164,6 +184,69 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
   const tc = TYPE_COLORS[npc.npc_type ?? ''] ?? TYPE_COLORS.goon
   const sc = STATUS_COLORS[displayStatus] ?? STATUS_COLORS.active
 
+  // Loot is allowed when the NPC is dead / mortally wounded /
+  // unconscious. Active NPCs keep their stuff. (RPC enforces this
+  // server-side too — the UI gate is just to hide the button when
+  // it'd error.)
+  const canLoot = displayStatus !== 'active' && !!viewingCharacterId
+
+  async function openLoot() {
+    setLootError(null)
+    setShowLoot(true)
+    setLootItems(null)
+    // Re-fetch the NPC's inventory fresh on each open so a player
+    // who took an item earlier in the session sees the latest list.
+    const { data, error } = await supabase
+      .from('campaign_npcs')
+      .select('inventory')
+      .eq('id', npc.id)
+      .maybeSingle()
+    if (error) {
+      setLootError(error.message)
+      setLootItems([])
+      return
+    }
+    const inv = (data as any)?.inventory
+    setLootItems(Array.isArray(inv) ? (inv as LootItem[]) : [])
+  }
+
+  async function takeItem(item: LootItem) {
+    if (!viewingCharacterId) {
+      setLootError('No character selected as the looter.')
+      return
+    }
+    const tag = `${item.name}:${item.custom ? 'c' : 'std'}`
+    setTakingItem(tag)
+    setLootError(null)
+    const { data, error } = await supabase.rpc('loot_npc_item', {
+      p_npc_id: npc.id,
+      p_character_id: viewingCharacterId,
+      p_item_name: item.name,
+      p_item_custom: !!item.custom,
+      p_qty: 1,
+    })
+    setTakingItem(null)
+    if (error) {
+      setLootError(error.message)
+      return
+    }
+    const result = data as { ok: boolean; error?: string; taken?: number } | null
+    if (!result?.ok) {
+      setLootError(result?.error ?? 'Loot failed (no result).')
+      return
+    }
+    // Optimistic local decrement so the panel reflects the take
+    // immediately. Re-opening will fetch fresh anyway.
+    setLootItems(prev => {
+      if (!prev) return prev
+      return prev
+        .map(i => i.name === item.name && !!i.custom === !!item.custom
+          ? { ...i, qty: i.qty - (result.taken ?? 1) }
+          : i)
+        .filter(i => i.qty > 0)
+    })
+  }
+
   return (
     <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '8px 10px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -240,6 +323,17 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                 )}
               </>
             )}
+            {/* Search Remains — lootable only when the NPC is
+                dead / mortally wounded / unconscious. Hidden when
+                the looter doesn't have a character ID set (e.g.
+                ghost / out-of-campaign viewer). */}
+            {canLoot && (
+              <button onClick={openLoot}
+                title={`Search ${npc.name} for items you can take.`}
+                style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}>
+                🎒 Search Remains
+              </button>
+            )}
             {/* First Impression CMod — shown when the viewing PC has
                 a recorded relationship with this NPC. +N green,
                 −N red, 0 = not yet met (suppressed). */}
@@ -262,6 +356,62 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
       {enlarged && npc.portrait_url && (
         <div onClick={() => setEnlarged(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}>
           <img src={npc.portrait_url} alt={npc.name} style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: '4px', border: '2px solid #c0392b' }} />
+        </div>
+      )}
+
+      {/* Loot panel overlay — opens on Search Remains click. Calls
+          the loot_npc_item SECURITY DEFINER RPC for each Take, which
+          atomically decrements the NPC's inventory + appends to the
+          looter's PC inventory + writes a roll_log audit row. */}
+      {showLoot && (
+        <div onClick={() => { setShowLoot(false); setLootError(null) }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ background: '#1a1a1a', border: '1px solid #c0392b', borderRadius: '4px', padding: '1.25rem', width: '380px', maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Search Remains</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '17px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>{npc.name}</div>
+            {lootError && (
+              <div style={{ marginBottom: '10px', padding: '8px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                {lootError}
+              </div>
+            )}
+            <div style={{ flex: 1, overflowY: 'auto', marginBottom: '12px' }}>
+              {lootItems == null ? (
+                <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem', fontFamily: 'Barlow Condensed, sans-serif' }}>Searching…</div>
+              ) : lootItems.length === 0 ? (
+                <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem', fontFamily: 'Barlow Condensed, sans-serif' }}>Nothing left to take.</div>
+              ) : (
+                lootItems.map((item, idx) => {
+                  const tag = `${item.name}:${item.custom ? 'c' : 'std'}`
+                  const taking = takingItem === tag
+                  return (
+                    <div key={`${tag}_${idx}`}
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '6px' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                          {item.name}{item.qty > 1 && <span style={{ color: '#7ab3d4', marginLeft: '4px' }}>×{item.qty}</span>}
+                        </div>
+                        {(item.rarity || item.notes) && (
+                          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '2px' }}>
+                            {item.rarity && <span style={{ marginRight: '6px' }}>{item.rarity}</span>}
+                            {item.notes}
+                          </div>
+                        )}
+                      </div>
+                      <button onClick={() => takeItem(item)} disabled={taking}
+                        style={{ padding: '4px 12px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: taking ? 'wait' : 'pointer', opacity: taking ? 0.5 : 1, fontWeight: 600 }}>
+                        {taking ? 'Taking…' : 'Take'}
+                      </button>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+            <button onClick={() => { setShowLoot(false); setLootError(null) }}
+              style={{ padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              Close
+            </button>
+          </div>
         </div>
       )}
     </div>
