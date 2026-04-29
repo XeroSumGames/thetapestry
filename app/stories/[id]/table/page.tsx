@@ -5360,6 +5360,29 @@ export default function TablePage() {
                   // playtest 2026-04-29: opening Distract by mistake
                   // shouldn't punish the player.
                   handleRollRequest(`${activeEntry.character_name} — Distract`, amod, smod)
+                  // Pre-fill the modal's Target dropdown with whatever
+                  // the GM had pre-selected on the map / initiative bar
+                  // — only if it's a valid combatant (not an object,
+                  // not the active themselves, not dead). Mirrors the
+                  // Attack-modal target prefill but for the no-weapon
+                  // path. Without this the dropdown opens empty even
+                  // when the GM clearly already picked who they wanted
+                  // to distract.
+                  if (selectedMapTargetName && selectedMapTargetName !== activeEntry.character_name) {
+                    const preselectEntry = initiativeOrder.find(e => e.character_name === selectedMapTargetName)
+                    if (preselectEntry) {
+                      // Reject dead/mortal so the dropdown options match
+                      const isDead = (() => {
+                        if (preselectEntry.is_npc) {
+                          const npc = campaignNpcs.find((n: any) => n.id === preselectEntry.npc_id)
+                          return npc && npc.wp_current != null && npc.wp_current <= 0
+                        }
+                        const pc = entries.find(en => en.character.id === preselectEntry.character_id)
+                        return pc?.liveState && pc.liveState.wp_current === 0
+                      })()
+                      if (!isDead) setTargetName(selectedMapTargetName)
+                    }
+                  }
                 }} style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Distract</button>
                 {['Cover Fire', 'Inspire'].map(action => {
                   const isOpen = socialTarget?.action === action
