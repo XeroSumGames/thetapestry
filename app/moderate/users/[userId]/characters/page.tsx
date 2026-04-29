@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '../../../../../lib/supabase-browser'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard from '../../../../../components/CharacterCard'
@@ -68,9 +69,9 @@ export default function UserCharactersPage() {
     <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
-        <a href="/moderate" style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', marginTop: '4px' }}>
+        <Link href="/moderate" style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', marginTop: '4px' }}>
           Back
-        </a>
+        </Link>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
             {username}&apos;s Characters

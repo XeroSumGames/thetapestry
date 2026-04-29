@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '../../../../lib/supabase-browser'
 import { renderRichText } from '../../../../lib/rich-text'
@@ -198,9 +199,9 @@ export default function ForumThreadPage() {
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Barlow, sans-serif' }}>
 
       {/* Back link */}
-      <a href="/campfire/forums" style={{ display: 'inline-block', fontSize: '13px', color: '#cce0f5', textDecoration: 'none', marginBottom: '1rem', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+      <Link href="/campfire/forums" style={{ display: 'inline-block', fontSize: '13px', color: '#cce0f5', textDecoration: 'none', marginBottom: '1rem', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
         ← Back to Forums
-      </a>
+      </Link>
 
       {/* Thread header / OP */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${accent}`, borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>

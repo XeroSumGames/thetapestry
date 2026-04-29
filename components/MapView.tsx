@@ -1,5 +1,6 @@
 ﻿'use client'
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '../lib/supabase-browser'
 import { logFirstEvent } from '../lib/events'
 import QuickAddModal from './QuickAddModal'
@@ -1135,7 +1136,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               Copy Position
             </button>
           )}
-          <a href="/dashboard" style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Dashboard</a>
+          <Link href="/dashboard" style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Dashboard</Link>
         </div>
       )}
 

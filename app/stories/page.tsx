@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { SETTINGS } from '../../lib/settings'
@@ -126,24 +127,24 @@ export default function CampaignsPage() {
           My Stories
         </div>
         <div style={{ flex: 1 }} />
-        <a href="/stories/new" style={{ padding: '7px 18px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <Link href="/stories/new" style={{ padding: '7px 18px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           New Story
-        </a>
-        <a href="/campaigns/new" style={{ padding: '7px 18px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        </Link>
+        <Link href="/campaigns/new" style={{ padding: '7px 18px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           New Campaign
-        </a>
+        </Link>
       </div>
 
       {gmCampaigns.length === 0 && playerCampaigns.length === 0 && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '3rem', textAlign: 'center' }}>
           <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '1rem' }}>No stories yet.</div>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-            <a href="/stories/new" style={{ padding: '9px 22px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            <Link href="/stories/new" style={{ padding: '9px 22px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
               Create a Story
-            </a>
-            <a href="/stories/join" style={{ padding: '9px 22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            </Link>
+            <Link href="/stories/join" style={{ padding: '9px 22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
               Join a Story
-            </a>
+            </Link>
           </div>
         </div>
       )}
@@ -212,9 +213,9 @@ export default function CampaignsPage() {
       )}
 
       <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #2e2e2e', display: 'flex', gap: '8px' }}>
-        <a href="/stories/join" style={{ padding: '9px 22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <Link href="/stories/join" style={{ padding: '9px 22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           Join a Story
-        </a>
+        </Link>
       </div>
 
     </div>

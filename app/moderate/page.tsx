@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
@@ -370,7 +371,7 @@ export default function ModerationPage() {
           Thriver Console
         </div>
         <div style={{ flex: 1 }} />
-        <a href="/map" style={navLink}>Map</a>
+        <Link href="/map" style={navLink}>Map</Link>
       </div>
 
       {/* Thriver-only gate. Non-Thrivers get a single compact banner
@@ -498,11 +499,11 @@ export default function ModerationPage() {
                     <button onClick={() => handleAction(p.id, 'approved')} disabled={acting === p.id} style={actionBtn('#2d5a1b', '#7fc458')}>Approve</button>
                   )}
                   <button onClick={() => handleDelete(p.id)} disabled={acting === p.id} style={actionBtn('#2e2e2e', '#cce0f5')}>Delete</button>
-                  <a href={`/map?flyTo=${p.lat},${p.lng}`}
+                  <Link href={`/map?flyTo=${p.lat},${p.lng}`}
                     style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', display: 'inline-block' }}
                     title="Open the in-app world map centered on this pin">
                     View on map
-                  </a>
+                  </Link>
                 </div>
               </div>
             ))}
@@ -568,9 +569,9 @@ export default function ModerationPage() {
                       Make Thriver
                     </button>
                   )}
-                  <a href={`/moderate/users/${u.id}/characters`} style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', textAlign: 'center' }}>
+                  <Link href={`/moderate/users/${u.id}/characters`} style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', textAlign: 'center' }}>
                     Characters
-                  </a>
+                  </Link>
                   <button onClick={() => handleSuspend(u.id, !u.suspended)} disabled={acting === u.id}
                     style={actionBtn(u.suspended ? '#2d5a1b' : '#5a3a00', u.suspended ? '#7fc458' : '#EF9F27')}>
                     {u.suspended ? 'Unsuspend' : 'Suspend'}
@@ -724,11 +725,11 @@ export default function ModerationPage() {
                     )}
                     <button onClick={() => handleCommunityDelete(wc.id)} disabled={acting === wc.id} style={actionBtn('#2e2e2e', '#cce0f5')}>Delete</button>
                     {hasCoords && (
-                      <a href={`/map?flyTo=${wc.homestead_lat},${wc.homestead_lng}`}
+                      <Link href={`/map?flyTo=${wc.homestead_lat},${wc.homestead_lng}`}
                         style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', display: 'inline-block' }}
                         title="Open the in-app world map centered on this community's Homestead">
                         View on map
-                      </a>
+                      </Link>
                     )}
                   </div>
                 </div>

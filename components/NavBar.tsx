@@ -4,6 +4,7 @@ import { createClient } from '../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { logEvent } from '../lib/events'
 import Image from 'next/image'
+import Link from 'next/link'
 export default function NavBar() {
   const [userRole, setUserRole] = useState<'survivor' | 'thriver' | null>(null)
   const router = useRouter()
@@ -44,9 +45,9 @@ export default function NavBar() {
         DistemperVerse v1.0
       </span>
       <div style={{ flex: 1 }} />
-      <a href="/dashboard" style={navLink}>Dashboard</a>
-      <a href="/characters" style={navLink}>Characters</a>
-      <a href="/map" style={navLink}>The World</a>
+      <Link href="/dashboard" style={navLink}>Dashboard</Link>
+      <Link href="/characters" style={navLink}>Characters</Link>
+      <Link href="/map" style={navLink}>The World</Link>
       <a href="#" style={navLink}>The Campfire</a>
       {userRole === 'thriver' && (
         <>

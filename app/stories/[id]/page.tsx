@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '../../../lib/supabase-browser'
 import { useRouter, useParams } from 'next/navigation'
 import { SETTINGS } from '../../../lib/settings'
@@ -349,7 +350,7 @@ export default function CampaignPage() {
       {isGM && (
         <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
           <a href={`/stories/${id}/table`} target="_blank" rel="noreferrer" style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
-          <a href={`/stories/${id}/edit`} style={btn('#242424', '#f5f2ee', '#3a3a3a')}>Edit</a>
+          <Link href={`/stories/${id}/edit`} style={btn('#242424', '#f5f2ee', '#3a3a3a')}>Edit</Link>
           <button onClick={handleClone} disabled={cloning} style={{ ...btn('#242424', '#d4cfc9', '#3a3a3a'), opacity: cloning ? 0.6 : 1 } as any}>
             {cloning ? 'Cloning...' : 'Clone'}
           </button>
@@ -555,9 +556,9 @@ export default function CampaignPage() {
 
       {/* Back button */}
       <div style={{ display: 'flex', gap: '8px' }}>
-        <a href="/stories" style={{ padding: '9px 22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <Link href="/stories" style={{ padding: '9px 22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           Back
-        </a>
+        </Link>
       </div>
 
       {/* Phase 5 Sprint 2 — Module publish wizard. Opened from the

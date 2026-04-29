@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
+import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
@@ -234,7 +235,7 @@ export default function LoggingPage() {
           Activity Log
         </div>
         <div style={{ flex: 1 }} />
-        <a href="/moderate" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Moderation</a>
+        <Link href="/moderate" style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Moderation</Link>
       </div>
 
       {/* Stat cards */}
@@ -254,14 +255,14 @@ export default function LoggingPage() {
 
       {/* Moderation queue */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem' }}>
-        <a href="/moderate" style={{ flex: 1, padding: '10px 14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Link href="/moderate" style={{ flex: 1, padding: '10px 14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Pending Pins</span>
           <span style={{ fontSize: '18px', fontWeight: 700, color: pendingPins > 0 ? '#EF9F27' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>{pendingPins}</span>
-        </a>
-        <a href="/moderate" style={{ flex: 1, padding: '10px 14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        </Link>
+        <Link href="/moderate" style={{ flex: 1, padding: '10px 14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Pending NPCs</span>
           <span style={{ fontSize: '18px', fontWeight: 700, color: pendingNpcs > 0 ? '#EF9F27' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>{pendingNpcs}</span>
-        </a>
+        </Link>
       </div>
 
       {/* Visitor Map */}

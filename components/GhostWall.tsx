@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 
 interface Props {
   show: boolean
@@ -18,12 +19,12 @@ export default function GhostWall({ show, onClose, message }: Props) {
           {message || "You are a ghost — you don't exist if you don't sign up."}
         </div>
         <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
-          <a href="/signup" style={{ display: 'block', padding: '10px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none', textAlign: 'center' }}>
+          <Link href="/signup" style={{ display: 'block', padding: '10px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none', textAlign: 'center' }}>
             Create Account
-          </a>
-          <a href="/login" style={{ display: 'block', padding: '10px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none', textAlign: 'center' }}>
+          </Link>
+          <Link href="/login" style={{ display: 'block', padding: '10px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none', textAlign: 'center' }}>
             Sign In
-          </a>
+          </Link>
           <button onClick={onClose} style={{ padding: '8px', background: 'none', border: 'none', color: '#666', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Go Back to Stalking
           </button>

@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '../../../lib/supabase-browser'
 import { useRouter, useParams } from 'next/navigation'
 import { logFirstEvent } from '../../../lib/events'
@@ -55,7 +56,7 @@ export default function JoinByCodePage() {
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: '20px', color: '#f5a89a', marginBottom: '8px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Invalid Code</div>
         <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '16px' }}>That invite code doesn't match any story.</div>
-        <a href="/stories/join" style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Try Again</a>
+        <Link href="/stories/join" style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Try Again</Link>
       </div>
     </div>
   )
