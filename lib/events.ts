@@ -1,4 +1,5 @@
 import { createClient } from './supabase-browser'
+import { getCachedAuth } from './auth-cache'
 
 const SESSION_KEY = 'tapestry_session_id'
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
@@ -38,8 +39,12 @@ export async function logVisit(page: string) {
   // logout and stays local to that browser profile.
   if (localStorage.getItem('tapestry_no_log') === '1') return
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    // Cached read — getCachedAuth() returns a 30s-fresh snapshot of the
+    // session + user from getSession(). Replaces the prior pair of
+    // getUser() + getSession() calls per nav (each acquired the auth
+    // Web Lock, getUser() also did a server round-trip). For visit
+    // logging we don't need the JWT-validate guarantee getUser provides.
+    const { user, session } = await getCachedAuth()
     // Auth-level opt-out — if the signed-in user is an owner account, skip
     // logging entirely so their visits never hit the table or the email hook.
     if (user?.email && OWNER_EMAILS.includes(user.email.toLowerCase())) return
@@ -56,7 +61,6 @@ export async function logVisit(page: string) {
     }
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
       // Fire-and-forget: don't await, the response doesn't matter to the caller.
       // Use keepalive so the request survives even if the page navigates away.
       fetch(`${SUPABASE_URL}/functions/v1/log-visit`, {
@@ -75,6 +79,7 @@ export async function logVisit(page: string) {
         }),
       }).catch(() => {})
     } catch {
+      const supabase = createClient()
       await supabase.from('visitor_logs').insert({
         session_id: getSessionId(),
         page,
@@ -90,9 +95,9 @@ export async function logVisit(page: string) {
 export async function logEvent(eventType: string, metadata?: object) {
   if (typeof window === 'undefined') return
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (!user) return
+    const supabase = createClient()
     await supabase.from('user_events').insert({
       user_id: user.id,
       event_type: eventType,
@@ -108,9 +113,9 @@ export async function logEvent(eventType: string, metadata?: object) {
 export async function trackGhostConversion() {
   if (typeof window === 'undefined') return
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (!user) return
+    const supabase = createClient()
 
     const sessionId = getSessionId()
 
@@ -145,9 +150,9 @@ export async function trackGhostConversion() {
 export async function logFirstEvent(eventType: string, metadata?: object) {
   if (typeof window === 'undefined') return
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (!user) return
+    const supabase = createClient()
     const { data: existing } = await supabase
       .from('user_events')
       .select('id')
