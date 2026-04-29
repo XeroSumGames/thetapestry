@@ -5886,12 +5886,12 @@ export default function TablePage() {
                     position: 'absolute',
                     left: pos?.x ?? 10 + i * 20,
                     top: pos?.y ?? 10 + i * 20,
-                    width: size?.w ?? 250,
-                    // Default: let height track natural content size (most
-                    // NPCs fit comfortably, Foes/Goons render shorter than
-                    // PCs). Once the user drags the resize handle in the
-                    // bottom-right we lock to their height.
-                    height: size?.h,
+                    // Default 530×210 — Xero's spec for the in-combat /
+                    // tactical-map double-click popup. Resize handle in
+                    // the bottom-right still lets the GM grow either
+                    // dimension; once dragged, the user-set size wins.
+                    width: size?.w ?? 530,
+                    height: size?.h ?? 210,
                     maxHeight: size?.h ? undefined : '80vh',
                     overflow: 'auto',
                     zIndex: 1100 + i,
