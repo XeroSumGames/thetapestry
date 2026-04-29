@@ -7,10 +7,12 @@ export const SETTINGS: Record<string, string> = {
   therock: 'The Rock',
   arena: 'The Arena',
   // Real-world Delaware location: Kings Crossroads is an unincorporated
-  // community in Sussex County. The DB value matches the geographic
-  // name; older rows used "kings_crossing_mall" and are migrated by
-  // sql/setting-rename-kings-crossroads.sql.
-  kings_crossroads_mall: 'Kings Crossroads Mall',
+  // community in Sussex County. The DB value `kings_crossroads_mall`
+  // refers to the mall scenario AT Kings Crossroads (older rows used
+  // "kings_crossing_mall" — see sql/setting-rename-kings-crossroads.sql).
+  // Label shows just the geographic name on the New Story picker; the
+  // mall is implicit (it's the only published setting at that location).
+  kings_crossroads_mall: 'Kings Crossroads',
 }
 
 // All settings, in the shape the create forms want.
