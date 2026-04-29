@@ -90,27 +90,56 @@ export default function CharactersPage() {
         </div>
       )}
 
+      {/* Gallery — portrait + name strip at the top of the page so the
+          full roster is visible without scrolling through every sheet.
+          Click a tile → smooth-scroll to that character's sheet below.
+          Hidden when there's 0 or 1 character (no benefit). */}
+      {characters.length > 1 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '1.5rem', padding: '12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
+          {characters.map(c => (
+            <button key={`gallery-${c.id}`}
+              onClick={() => {
+                const el = document.getElementById(`char-${c.id}`)
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }}
+              title={`Jump to ${c.name}`}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '6px', width: '88px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              {c.data?.photoDataUrl ? (
+                <img src={c.data.photoDataUrl} alt={c.name} loading="lazy"
+                  style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '3px', border: '1px solid #3a3a3a' }} />
+              ) : (
+                <div style={{ width: '64px', height: '64px', background: '#161616', border: '1px solid #3a3a3a', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5a5550', fontSize: '24px' }}>?</div>
+              )}
+              <div style={{ fontSize: '13px', color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.1, width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {c.name}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {characters.map(c => (
-          <CharacterCard
-  key={c.id}
-  character={c}
-  liveState={{
-    id: c.id,
-    wp_current: c.data?.secondary?.woundPoints ?? 10,
-    wp_max: c.data?.secondary?.woundPoints ?? 10,
-    rp_current: c.data?.secondary?.resiliencePoints ?? 6,
-    rp_max: c.data?.secondary?.resiliencePoints ?? 6,
-    stress: c.data?.stressLevel ?? 0,
-    insight_dice: c.data?.insightDice ?? 2,
-    morality: c.data?.secondary?.morality ?? 3,
-    cdp: c.data?.cdp ?? 0,
-  }}
-  showButtons={true}
-  isMySheet={true}
-  onDelete={handleDelete}
-  onDuplicate={handleDuplicate}
-/>
+          <div key={c.id} id={`char-${c.id}`} style={{ scrollMarginTop: '12px' }}>
+            <CharacterCard
+              character={c}
+              liveState={{
+                id: c.id,
+                wp_current: c.data?.secondary?.woundPoints ?? 10,
+                wp_max: c.data?.secondary?.woundPoints ?? 10,
+                rp_current: c.data?.secondary?.resiliencePoints ?? 6,
+                rp_max: c.data?.secondary?.resiliencePoints ?? 6,
+                stress: c.data?.stressLevel ?? 0,
+                insight_dice: c.data?.insightDice ?? 2,
+                morality: c.data?.secondary?.morality ?? 3,
+                cdp: c.data?.cdp ?? 0,
+              }}
+              showButtons={true}
+              isMySheet={true}
+              onDelete={handleDelete}
+              onDuplicate={handleDuplicate}
+            />
+          </div>
         ))}
       </div>
     </div>
