@@ -5093,6 +5093,30 @@ export default function TablePage() {
                   }}
                     style={{ background: 'none', border: 'none', color: '#7fc458', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Grant +1 action">+</button>
                 )}
+                {/* GM-only: skip this combatant for the rest of the round
+                    without removing them from initiative. Zeroes
+                    actions_remaining so the skip-walk in nextTurn passes
+                    over them; their slot rerolls fresh next round. Use case:
+                    NPC is incapacitated by a non-damage effect, GM wants
+                    them stunned-out for a round but back next round. */}
+                {isGM && (entry.actions_remaining ?? 0) > 0 && (
+                  <button onClick={async () => {
+                    await supabase.from('initiative_order').update({ actions_remaining: 0 }).eq('id', entry.id)
+                    if (entry.is_active) {
+                      // Active combatant: let nextTurn handle the advance —
+                      // it already skips actions_remaining<=0 entries and
+                      // fires "New Round" if this was the last unacted
+                      // combatant.
+                      await nextTurn()
+                    } else {
+                      // Non-active: just refresh local state so the bar
+                      // gates them out (`hasActed` greys them at line 4990).
+                      await loadInitiative(id)
+                      initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+                    }
+                  }}
+                    style={{ background: 'none', border: 'none', color: '#EF9F27', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Skip this round (burn remaining actions)">⊘</button>
+                )}
                 {/* × — GM always removes (active or not). Players only see
                     this on their own active turn and it ends the turn. */}
                 {(isGM || (entry.user_id === userId && entry.is_active)) && (
