@@ -11,6 +11,7 @@ import ObjectCard from '../../../../components/ObjectCard'
 import VehicleCard, { Vehicle } from '../../../../components/VehicleCard'
 import NotificationBell from '../../../../components/NotificationBell'
 import MessagesBell from '../../../../components/MessagesBell'
+import InitiativeBar from '../../../../components/InitiativeBar'
 import { useChatPanel, ChatMessageRow, ChatMessageList, ChatComposer } from '../../../../components/TableChat'
 import { useRollsFeed, RollEntry as RollEntryCard } from '../../../../components/RollsFeed'
 import { getCachedAuth } from '../../../../lib/auth-cache'
@@ -286,9 +287,10 @@ export default function TablePage() {
   const [initiativeOrder, setInitiativeOrder] = useState<InitiativeEntry[]>([])
   const [combatActive, setCombatActive] = useState(false)
   const [combatRound, setCombatRound] = useState(1)
-  const [showAddNPC, setShowAddNPC] = useState(false)
-  const [showAddPC, setShowAddPC] = useState(false)
-  const [npcName, setNpcName] = useState('')
+  // Note: the Add-PC / Add-NPC / npcName UI state used to live here; it
+  // moved into <InitiativeBar/> during the C2 extraction since nothing
+  // outside the bar reads them. addNPC / addPCToCombat below take their
+  // inputs as parameters instead.
   const [startingCombat, setStartingCombat] = useState(false)
   // Persist per-campaign so a refresh keeps players on the tactical view
   // they were watching. Default false on first visit; flipped true by the
@@ -1904,12 +1906,14 @@ export default function TablePage() {
     initChannelRef.current?.send({ type: 'broadcast', event: 'combat_ended', payload: {} })
   }
 
-  async function addNPC() {
-    if (!isGM || !npcName.trim()) return
+  async function addNPC(name: string) {
+    if (!isGM) return
+    const trimmed = name.trim()
+    if (!trimmed) return
     const roll = rollD6() + rollD6()
     await supabase.from('initiative_order').insert({
       campaign_id: id,
-      character_name: npcName.trim(),
+      character_name: trimmed,
       character_id: null,
       user_id: null,
       roll,
@@ -1917,8 +1921,6 @@ export default function TablePage() {
       is_npc: true,
       actions_remaining: 2,
     })
-    setNpcName('')
-    setShowAddNPC(false)
     await loadInitiative(id)
   }
 
@@ -1944,7 +1946,6 @@ export default function TablePage() {
       is_npc: false,
       actions_remaining: 2,
     })
-    setShowAddPC(false)
     await loadInitiative(id)
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
   }
@@ -2286,6 +2287,54 @@ export default function TablePage() {
     if (!isGM) return
     await supabase.from('initiative_order').delete().eq('id', entryId)
     await loadInitiative(id)
+  }
+
+  // ── InitiativeBar callbacks ──────────────────────────────────
+  // Parent owns DB writes; <InitiativeBar/> calls these by name.
+  // Identical behavior to the inline handlers that used to live in the
+  // bar's JSX before the C2 extraction.
+
+  async function handleGrantAction(entry: InitiativeEntry) {
+    const nextCount = Math.min(2, (entry.actions_remaining ?? 0) + 1)
+    await supabase.from('initiative_order').update({ actions_remaining: nextCount }).eq('id', entry.id)
+    await loadInitiative(id)
+    initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+  }
+
+  async function handleSkipTurn(entry: InitiativeEntry) {
+    await supabase.from('initiative_order').update({ actions_remaining: 0 }).eq('id', entry.id)
+    if (entry.is_active) {
+      // Active combatant: nextTurn handles the advance + the New-Round
+      // wrap-and-fire when this was the last unacted combatant.
+      await nextTurn()
+    } else {
+      // Non-active: refresh local state so the bar's hasActed gating
+      // greys them out.
+      await loadInitiative(id)
+      initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+    }
+  }
+
+  async function handleInitiativeBarRemove(entry: InitiativeEntry) {
+    if (!isGM) {
+      // Player ending their own active turn — × is gated to active+self
+      // in the bar component, so we can just advance.
+      await nextTurn()
+      return
+    }
+    if (entry.is_active) {
+      // Hand activity to the next combatant in roll-desc order WITHOUT
+      // calling nextTurn — that would wrap past end and fire "New
+      // Round" which isn't what GM wants when just removing someone.
+      const sorted = [...initiativeOrder].sort((a, b) => b.roll - a.roll || a.character_name.localeCompare(b.character_name))
+      const idx = sorted.findIndex(e => e.id === entry.id)
+      const successor = idx >= 0 ? sorted.slice(idx + 1).concat(sorted.slice(0, idx)).find(e => e.id !== entry.id) : null
+      if (successor) {
+        await supabase.from('initiative_order').update({ is_active: true }).eq('id', successor.id)
+      }
+    }
+    await removeFromInitiative(entry.id)
+    initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
   }
 
   async function deferInitiative(entryId: string) {
@@ -5125,318 +5174,20 @@ export default function TablePage() {
       {/* Initiative Tracker — shown when combat is active */}
       {combatActive && (
         <div style={{ borderBottom: '1px solid #2e2e2e', background: '#0d0d0d', padding: '8px 12px', flexShrink: 0, overflowX: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 'max-content' }}>
-            {/* Sticky left pane — "⚔️ Initiative" label + a "→ Current:
-                <active>" pill that stays pinned when the list scrolls, so
-                the GM can always see whose turn it is even if the active
-                combatant's entry has scrolled off-screen to the right. */}
-            <div style={{ position: 'sticky', left: 0, zIndex: 10, background: '#0d0d0d', display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '8px', borderRight: '1px solid #2e2e2e', marginRight: '4px', flexShrink: 0 }}>
-              <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                ⚔️ Initiative
-              </div>
-              {(() => {
-                const active = initiativeOrder.find(e => e.is_active)
-                if (!active) return null
-                const parts = active.character_name.trim().split(/\s+/)
-                const shortName = parts.length < 2 ? active.character_name : `${parts[0]} ${parts[parts.length - 1][0]}.`
-                // Check if the active combatant is dead / mortally wounded /
-                // incapacitated (they'll be filtered from the bar, so the GM
-                // loses their usual row-level advance button). Clicking the
-                // pill always advances — fastest escape hatch from a "stuck
-                // on a dead combatant" state. Non-GMs see a normal pill.
-                let stuck = false
-                if (active.is_npc && active.npc_id) {
-                  const npc = campaignNpcs.find((n: any) => n.id === active.npc_id)
-                  if (npc) {
-                    const wp = npc.wp_current ?? npc.wp_max ?? 10
-                    const rp = npc.rp_current ?? npc.rp_max ?? 6
-                    stuck = wp === 0 || rp === 0 || npc.status === 'dead'
-                  }
-                } else {
-                  const ce = entries.find(e => active.character_id ? e.character.id === active.character_id : e.character.name === active.character_name)
-                  if (ce?.liveState) stuck = ce.liveState.wp_current === 0 || ce.liveState.rp_current === 0
-                }
-                const clickable = isGM
-                const title = clickable
-                  ? (stuck ? `${active.character_name} can't act — click to advance past them` : `Click to advance past ${active.character_name}`)
-                  : `Current turn: ${active.character_name}`
-                return (
-                  <div
-                    onClick={clickable ? () => nextTurn() : undefined}
-                    title={title}
-                    style={{
-                      fontSize: '13px',
-                      padding: '2px 8px',
-                      background: stuck ? '#2a1210' : '#1a2e10',
-                      border: `1px solid ${stuck ? '#c0392b' : '#7fc458'}`,
-                      borderRadius: '3px',
-                      color: stuck ? '#f5a89a' : '#7fc458',
-                      fontFamily: 'Barlow Condensed, sans-serif',
-                      letterSpacing: '.06em',
-                      textTransform: 'uppercase',
-                      fontWeight: 700,
-                      whiteSpace: 'nowrap',
-                      cursor: clickable ? 'pointer' : 'default',
-                    }}>
-                    → {shortName}{stuck ? ' ⚠' : ''}
-                  </div>
-                )
-              })()}
-            </div>
-
-            {(() => {
-              // Filter out ONLY truly-dead combatants (status='dead' or
-              // a fully-elapsed death countdown). Mortally-wounded and
-              // incapacitated combatants stay visible in the bar with
-              // their 💀/🩸/💤 status icons — playtest #12 caught the
-              // old behavior where a grenade splash that incapacitated
-              // 2 of 4 PCs made them VANISH from the initiative bar
-              // entirely (the icons at lines ~5061-5077 only render
-              // for rows that survived the filter, so they never
-              // appeared). Skip-walk in nextTurn still passes them
-              // by — bar visibility and act-eligibility are separate
-              // concerns and conflating them was the bug.
-              const alive = initiativeOrder.filter(entry => {
-                if (entry.is_npc && entry.npc_id) {
-                  const npc = campaignNpcs.find((n: any) => n.id === entry.npc_id)
-                  if (npc) {
-                    if (npc.status === 'dead') return false
-                    const wp = npc.wp_current ?? npc.wp_max ?? 10
-                    if (wp === 0 && npc.death_countdown != null && npc.death_countdown <= 0) return false
-                  }
-                } else {
-                  const ce = entries.find(e => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
-                  if (ce?.liveState) {
-                    const ls = ce.liveState as any
-                    if (ls.wp_current === 0 && ls.death_countdown != null && ls.death_countdown <= 0) return false
-                  }
-                }
-                return true
-              })
-              // Fixed roll-descending order — active combatant keeps their
-              // slot and is identified by the green border. Previous rotation
-              // (active leftmost, rest wrapped) made it unclear why already-
-              // acted combatants could appear to the RIGHT of upcoming ones.
-              return alive
-            })().map((entry, idx) => {
-              // Green = active (has initiative), Yellow = waiting (hasn't gone yet), Red = already acted
-              const hasActed = !entry.is_active && entry.actions_remaining != null && entry.actions_remaining <= 0
-              const borderColor = entry.is_active ? '#7fc458' : hasActed ? '#c0392b' : '#EF9F27'
-              const bgColor = entry.is_active ? '#1a2e10' : hasActed ? '#1a1010' : '#1a1a1a'
-              return (
-              <div key={entry.id} style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '4px 10px',
-                background: bgColor,
-                border: `1px solid ${borderColor}`,
-                borderRadius: '3px',
-                flexShrink: 0,
-                position: 'relative',
-              }}>
-                {entry.is_npc && (
-                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                    {entry.portrait_url ? (
-                      <img src={entry.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{entry.character_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}</span>
-                    )}
-                  </div>
-                )}
-                <span title={entry.character_name} style={{ fontSize: '13px', fontWeight: entry.is_active ? 700 : 400, color: entry.is_active ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                  {(() => {
-                    // Compact name in the initiative bar — "Frankie G."
-                    // instead of "Frankie Gibblets" — to fit more combatants
-                    // on-screen without horizontal scroll. Single-word names
-                    // (common for NPC goons like "Goon 1") render unchanged.
-                    // Full name still visible on hover via the title attribute.
-                    const parts = entry.character_name.trim().split(/\s+/)
-                    if (parts.length < 2) return entry.character_name
-                    return `${parts[0]} ${parts[parts.length - 1][0]}.`
-                  })()}
-                </span>
-                {entry.is_npc && entry.npc_type && (
-                  <span style={{ fontSize: '13px', color: entry.npc_type === 'bystander' ? '#7fc458' : entry.npc_type === 'antagonist' ? '#d48bd4' : entry.npc_type === 'foe' ? '#f5a89a' : '#EF9F27', background: entry.npc_type === 'bystander' ? '#1a2e10' : entry.npc_type === 'antagonist' ? '#2a102a' : entry.npc_type === 'foe' ? '#2a1210' : '#2a2010', border: `1px solid ${entry.npc_type === 'bystander' ? '#2d5a1b' : entry.npc_type === 'antagonist' ? '#8b2e8b' : entry.npc_type === 'foe' ? '#c0392b' : '#5a4a1b'}`, padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>{entry.npc_type}</span>
-                )}
-                {entry.is_npc && !entry.npc_type && (
-                  <span style={{ fontSize: '13px', color: '#EF9F27', background: '#2a2010', border: '1px solid #EF9F27', padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>NPC</span>
-                )}
-                <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
-                <span style={{ fontSize: '13px', letterSpacing: '2px' }}>
-                  {Array.from({ length: 2 }).map((_, i) => {
-                    const remaining = entry.actions_remaining ?? 0
-                    const hasActions = i < remaining
-                    const color = hasActions ? '#7fc458' : '#3a3a3a'
-                    return <span key={i} style={{ color }}>●</span>
-                  })}
-                </span>
-                {/* Aim/social bonus badge — hidden for NPCs from non-GM viewers
-                    (playtest #20: don't expose NPC conditions to players). */}
-                {(entry.aim_bonus ?? 0) !== 0 && (isGM || !entry.is_npc) && (
-                  <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: entry.aim_bonus > 0 ? '#7fc458' : '#c0392b' }}>
-                    {entry.aim_bonus > 0 ? '+' : ''}{entry.aim_bonus}
-                  </span>
-                )}
-                {/* Status badges — PCs and NPCs */}
-                {(() => {
-                  if (entry.is_npc && entry.npc_id) {
-                    // Wound-state icons (💀 / 🩸 / 💤) are GM-only per playtest
-                    // #20 — players shouldn't see NPC WP/RP state or conditions.
-                    // Non-GM viewers get no status badge on NPC rows.
-                    if (!isGM) return null
-                    const npc = campaignNpcs.find((n: any) => n.id === entry.npc_id)
-                    if (!npc) return null
-                    const npcWP = npc.wp_current ?? npc.wp_max ?? 10
-                    const npcRP = npc.rp_current ?? npc.rp_max ?? 6
-                    const isDead = npcWP === 0 && npc.death_countdown != null && npc.death_countdown <= 0
-                    const isMortal = npcWP === 0 && !isDead
-                    const isUnconscious = npcRP === 0 && npcWP > 0
-                    return <>
-                      {isDead && <span style={{ fontSize: '13px' }} title="Dead">💀</span>}
-                      {isMortal && <span style={{ fontSize: '13px' }} title={`Death in ${npc.death_countdown ?? '?'} rounds`}>🩸</span>}
-                      {isUnconscious && <span style={{ fontSize: '13px' }} title="Unconscious">💤</span>}
-                    </>
-                  }
-                  const charEntry = entries.find(e => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
-                  if (!charEntry?.liveState) return null
-                  const ls = charEntry.liveState
-                  const isDead = ls.wp_current === 0 && (ls as any).death_countdown != null && (ls as any).death_countdown <= 0
-                  const isMortal = ls.wp_current === 0 && !isDead
-                  const isUnconscious = ls.rp_current === 0 && ls.wp_current > 0
-                  const isStressed = ls.stress >= 3
-                  return <>
-                    {isDead && <span style={{ fontSize: '13px' }} title="Dead">💀</span>}
-                    {isMortal && <span style={{ fontSize: '13px' }} title={`Death in ${(ls as any).death_countdown ?? '?'} rounds`}>🩸</span>}
-                    {isUnconscious && <span style={{ fontSize: '13px' }} title="Unconscious">💤</span>}
-                    {isStressed && !isDead && !isMortal && <span style={{ fontSize: '13px' }} title="Stressed">⚡</span>}
-                  </>
-                })()}
-                {/* Defer — GM can defer anyone, players can defer their own */}
-                {(isGM || entry.user_id === userId) && idx < initiativeOrder.length - 1 && (
-                  <button onClick={() => deferInitiative(entry.id)}
-                    style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Defer">↓</button>
-                )}
-                {/* GM-only: grant +1 action to this combatant (playtest #22).
-                    Caps at 2 (max action budget) so it can't stack endlessly. */}
-                {isGM && (entry.actions_remaining ?? 0) < 2 && (
-                  <button onClick={async () => {
-                    const nextCount = Math.min(2, (entry.actions_remaining ?? 0) + 1)
-                    await supabase.from('initiative_order').update({ actions_remaining: nextCount }).eq('id', entry.id)
-                    await loadInitiative(id)
-                    initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
-                  }}
-                    style={{ background: 'none', border: 'none', color: '#7fc458', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Grant +1 action">+</button>
-                )}
-                {/* GM-only: skip this combatant for the rest of the round
-                    without removing them from initiative. Zeroes
-                    actions_remaining so the skip-walk in nextTurn passes
-                    over them; their slot rerolls fresh next round. Use case:
-                    NPC is incapacitated by a non-damage effect, GM wants
-                    them stunned-out for a round but back next round. */}
-                {isGM && (entry.actions_remaining ?? 0) > 0 && (
-                  <button onClick={async () => {
-                    await supabase.from('initiative_order').update({ actions_remaining: 0 }).eq('id', entry.id)
-                    if (entry.is_active) {
-                      // Active combatant: let nextTurn handle the advance —
-                      // it already skips actions_remaining<=0 entries and
-                      // fires "New Round" if this was the last unacted
-                      // combatant.
-                      await nextTurn()
-                    } else {
-                      // Non-active: just refresh local state so the bar
-                      // gates them out (`hasActed` greys them at line 4990).
-                      await loadInitiative(id)
-                      initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
-                    }
-                  }}
-                    style={{ background: 'none', border: 'none', color: '#EF9F27', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Skip this round (burn remaining actions)">⊘</button>
-                )}
-                {/* × — GM always removes (active or not). Players only see
-                    this on their own active turn and it ends the turn. */}
-                {(isGM || (entry.user_id === userId && entry.is_active)) && (
-                  <button onClick={async () => {
-                    if (isGM) {
-                      // If removing the active combatant, hand activity to the
-                      // next combatant in the current round (sorted by roll
-                      // desc) WITHOUT calling nextTurn — that wraps past the
-                      // end and fires "New Round" which isn't what the GM
-                      // wants when they're just removing someone.
-                      if (entry.is_active) {
-                        const sorted = [...initiativeOrder].sort((a, b) => b.roll - a.roll || a.character_name.localeCompare(b.character_name))
-                        const idx = sorted.findIndex(e => e.id === entry.id)
-                        const successor = idx >= 0 ? sorted.slice(idx + 1).concat(sorted.slice(0, idx)).find(e => e.id !== entry.id) : null
-                        if (successor) {
-                          await supabase.from('initiative_order').update({ is_active: true }).eq('id', successor.id)
-                        }
-                      }
-                      await removeFromInitiative(entry.id)
-                      initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
-                      return
-                    }
-                    // Player ending their own turn
-                    await nextTurn()
-                  }}
-                    title={isGM ? 'Remove from combat' : 'End turn'}
-                    style={{ background: 'none', border: 'none', color: '#cce0f5', cursor: 'pointer', fontSize: '13px', padding: '0 0 0 2px', lineHeight: 1 }}>×</button>
-                )}
-              </div>
-            )})}
-
-            {isGM && (
-              <div style={{ display: 'flex', gap: '4px', flexShrink: 0, position: 'relative' }}>
-                {(() => {
-                  // PCs that are NOT already in the initiative (playtest #23 —
-                  // add a PC to combat mid-session, e.g. a player joins late).
-                  const inInitCharIds = new Set(initiativeOrder.filter(e => e.character_id).map(e => e.character_id))
-                  const addable = entries.filter(e => !inInitCharIds.has(e.character.id))
-                  if (addable.length === 0) return null
-                  return !showAddPC ? (
-                    <button onClick={() => setShowAddPC(true)}
-                      style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
-                      title="Add a player to initiative mid-combat">
-                      + PC
-                    </button>
-                  ) : (
-                    <div style={{ position: 'absolute', top: '32px', left: 0, zIndex: 100, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '6px', minWidth: '160px', boxShadow: '0 4px 12px rgba(0,0,0,0.6)' }}>
-                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Add PC to Combat</div>
-                      {addable.map(e => (
-                        <button key={e.character.id} onClick={() => addPCToCombat(e)}
-                          style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginBottom: '3px' }}>
-                          {e.character.name}
-                        </button>
-                      ))}
-                      <button onClick={() => setShowAddPC(false)}
-                        style={{ display: 'block', width: '100%', padding: '3px 8px', background: 'none', border: '1px solid #2e2e2e', borderRadius: '2px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', marginTop: '2px' }}>
-                        Cancel
-                      </button>
-                    </div>
-                  )
-                })()}
-                {!showAddNPC ? (
-                  <button onClick={() => setShowAddNPC(true)}
-                    style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    + NPC
-                  </button>
-                ) : (
-                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                    <input
-                      autoFocus
-                      value={npcName}
-                      onChange={e => setNpcName(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') addNPC(); if (e.key === 'Escape') { setShowAddNPC(false); setNpcName('') } }}
-                      placeholder="NPC name..."
-                      style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', width: '120px' }}
-                    />
-                    <button onClick={addNPC} style={{ padding: '4px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>Add</button>
-                    <button onClick={() => { setShowAddNPC(false); setNpcName('') }} style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>✕</button>
-                  </div>
-                )}
-                <button onClick={nextTurn}
-                  style={{ padding: '4px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  Next →
-                </button>
-              </div>
-            )}
-          </div>
+          <InitiativeBar
+            initiativeOrder={initiativeOrder}
+            entries={entries}
+            campaignNpcs={campaignNpcs}
+            userId={userId}
+            isGM={isGM}
+            onNextTurn={nextTurn}
+            onDefer={deferInitiative}
+            onRemove={handleInitiativeBarRemove}
+            onAddPCToCombat={addPCToCombat}
+            onAddNPC={addNPC}
+            onGrantAction={handleGrantAction}
+            onSkipTurn={handleSkipTurn}
+          />
           {/* Action buttons — shown for active combatant or GM */}
           {(() => {
             const activeEntry = initiativeOrder.find(e => e.is_active)
