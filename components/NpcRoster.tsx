@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { memo, useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { generateRandomNpc, ALL_SKILLS, SkillEntry } from '../lib/npc-generator'
@@ -264,7 +264,7 @@ const emptyForm = {
   folder: '' as string,
 }
 
-export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs, onPlaceOnMap, onRemoveFromMap, onPlaceFolderOnMap, onTacticalRefresh, onUnmapFolder, npcIdsOnMap, onNpcDeleted }: Props) {
+function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs, onPlaceOnMap, onRemoveFromMap, onPlaceFolderOnMap, onTacticalRefresh, onUnmapFolder, npcIdsOnMap, onNpcDeleted }: Props) {
   const supabase = createClient()
   const [npcs, setNpcs] = useState<CampaignNpc[]>([])
   const [loading, setLoading] = useState(true)
@@ -1864,3 +1864,9 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     </>
   )
 }
+
+// Memo so unrelated parent re-renders skip the roster. Default
+// shallow comparison; parent passes data props by reference (npcs,
+// pcEntries, externalNpcs) and stabilized callbacks via useStableCallback.
+const NpcRoster = memo(NpcRosterImpl)
+export default NpcRoster

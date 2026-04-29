@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getWeaponByName } from '../lib/weapons'
 import { vividTokenBorder } from './NpcRoster'
@@ -105,7 +105,7 @@ interface Props {
   onObjectMove?: (tokenId: string) => void
 }
 
-export default function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, throwMode, onThrowComplete, onThrowCancel, onTokensUpdate, onTokenChanged, onPlayerDragMove, onGMDragMove, vehicles, onObjectMove }: Props) {
+function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenSelect, tokenRefreshKey, campaignNpcs, entries, myCharacterId, moveMode, onMoveComplete, onMoveCancel, throwMode, onThrowComplete, onThrowCancel, onTokensUpdate, onTokenChanged, onPlayerDragMove, onGMDragMove, vehicles, onObjectMove }: Props) {
   const supabase = createClient()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -1863,3 +1863,13 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
     </div>
   )
 }
+
+// Wrap in memo so re-renders triggered by parent updates that don't
+// change ANY of TacticalMap's props (chat messages, modal toggles,
+// rolls feed updates) skip the entire canvas component. Default
+// shallow comparison is sufficient — the parent passes data props
+// by reference (initiativeOrder / entries / campaignNpcs / vehicles
+// / mapTokens) and stabilized callbacks via useStableCallback. When
+// any data ref changes (real combat update), props differ and the
+// component renders normally.
+export default memo(TacticalMap)

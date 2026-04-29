@@ -35,6 +35,7 @@ import { openPopout } from '../../../../lib/popout'
 import { renderRichText } from '../../../../lib/rich-text'
 import { rollDamage, calculateDamage } from '../../../../lib/damage'
 import { restoreCampaignSnapshot, type CampaignSnapshot } from '../../../../lib/campaign-snapshot'
+import { useStableCallback } from '../../../../lib/useStableCallback'
 import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/weapons'
 import { getOutcome, outcomeColor, compactRollSummary, formatTime } from '../../../../lib/roll-helpers'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
@@ -2342,6 +2343,224 @@ export default function TablePage() {
     await removeFromInitiative(entry.id)
     initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
   }
+
+  // ── TacticalMap callbacks — stable identity, fresh closures ──
+  // Each is wrapped in useStableCallback so the function reference
+  // never changes for the lifetime of this component. With the
+  // memo'd <TacticalMap/> child, this means re-renders triggered by
+  // unrelated parent state (chat updates, modal toggles, rolls
+  // feed updates, etc.) skip the entire canvas component. Data
+  // props (initiativeOrder, entries, campaignNpcs, vehicles) still
+  // trigger re-renders when their references change — that's
+  // correct behavior. Stale-closure risk is eliminated by the
+  // useStableCallback ref pattern (the wrapped fn always reads
+  // the latest closure).
+
+  const handleMapTokenChanged = useStableCallback(() => {
+    setTokenRefreshKey(k => k + 1)
+    initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+  })
+
+  const handleMapPlayerDragMove = useStableCallback((characterId: string) => {
+    // Player dragged their own PC within the Move-action limit.
+    // Consume 1 action via the owner's initiative row. No log
+    // label — the drag animation is self-evident.
+    const entry = initiativeOrder.find(e => e.character_id === characterId)
+    if (entry) consumeAction(entry.id, undefined, 1)
+  })
+
+  const handleMapGMDragMove = useStableCallback(({ characterId, npcId }: { characterId?: string; npcId?: string }) => {
+    // GM dragged the active combatant's token. Same 1-action
+    // cost as a player drag. The TacticalMap-side gate already
+    // confirmed this is the active combatant before firing.
+    const entry = initiativeOrder.find(e =>
+      (characterId && e.character_id === characterId) ||
+      (npcId && e.npc_id === npcId)
+    )
+    if (entry) consumeAction(entry.id, undefined, 1)
+  })
+
+  const handleMapObjectMove = useStableCallback((tokenId: string) => {
+    // Mirror the same speed × current_speed × 30ft logic the
+    // ObjectCard's onMove uses, so the in-map panel's Move
+    // button feels identical. Acceleration ramp also kicks
+    // in via onMoveComplete (which already handles the
+    // objectTokenId branch and bumps current_speed).
+    const tok = mapTokens.find(t => t.id === tokenId)
+    if (!tok) return
+    const matchingVehicle = vehicles.find(v => v.name === tok.name)
+    const maxSpeed = matchingVehicle?.speed ?? 1
+    const currentSpeed = Math.max(1, Math.min(maxSpeed, (tok as any).current_speed ?? 1))
+    const moveFeet = currentSpeed * 30
+    setMoveMode({ objectTokenId: tokenId, feet: moveFeet })
+  })
+
+  const handleMapTokenClick = useStableCallback((token: any) => {
+    // Double-click = opens a card AND selects the token as attack target,
+    // so hitting ATTACK right after peeking at a zombie pre-populates it.
+    setSelectedMapTargetName(token?.name ?? null)
+    if (token.npc_id) {
+      const npc = campaignNpcs.find((n: any) => n.id === token.npc_id)
+      if (npc) {
+        setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc as CampaignNpc])
+        setSelectedEntry(null)
+      }
+    } else if (token.character_id) {
+      const entry = entries.find(e => e.character.id === token.character_id)
+      if (entry) {
+        // Players can only open their OWN character sheet — seeing
+        // another PC's sheet leaks stats, inventory, and notes.
+        // GM keeps full access.
+        if (!isGM && entry.userId !== userId) return
+        if (selectedEntry?.stateId === entry.stateId) { setSelectedEntry(null); setSheetPos(null) }
+        else { setSelectedEntry(entry); setViewingNpcs([]); setSheetPos(null) }
+      }
+    } else if (token.token_type === 'object') {
+      setViewingObjects(prev =>
+        prev.some(o => o.tokenId === token.id)
+          ? prev.filter(o => o.tokenId !== token.id)
+          : [...prev, { tokenId: token.id, name: token.name, color: token.color, portraitUrl: token.portrait_url }]
+      )
+    }
+  })
+
+  const handleMapTokenSelect = useStableCallback((token: any) => {
+    setSelectedMapTargetName(token?.name ?? null)
+  })
+
+  const handleMapTokensUpdate = useStableCallback((toks: any[], cellFeet: number) => {
+    // Only update if positions actually changed to avoid re-render churn
+    setMapTokens(prev => {
+      const same = prev.length === toks.length && prev.every((p, i) => p.id === toks[i].id && p.grid_x === toks[i].grid_x && p.grid_y === toks[i].grid_y)
+      return same ? prev : toks
+    })
+    setMapCellFeet(cellFeet)
+  })
+
+  const handleMapMoveComplete = useStableCallback(async () => {
+    // Vehicle / object-token moves: the token physically moved
+    // via scene_tokens.grid_x/y, but no character/NPC consumed
+    // an action — vehicles aren't combatants. Bump the token's
+    // current_speed (acceleration ramp), capped at the parent
+    // vehicle's max Speed, so the next Move can cover more
+    // ground. Then bail before the action-consume logic.
+    if (moveMode?.objectTokenId) {
+      const objTokenId = moveMode.objectTokenId
+      setMoveMode(null)
+      const tok = mapTokens.find(t => t.id === objTokenId)
+      if (tok) {
+        const matchingVehicle = vehicles.find(v => v.name === tok.name)
+        const maxSpeed = matchingVehicle?.speed ?? 1
+        const cur = Math.max(1, (tok as any).current_speed ?? 1)
+        const next = Math.min(maxSpeed, cur + 1)
+        if (next !== cur) {
+          await supabase.from('scene_tokens').update({ current_speed: next }).eq('id', objTokenId)
+          setMapTokens(prev => prev.map(t => t.id === objTokenId ? { ...t, current_speed: next } as any : t))
+          initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+        }
+      }
+      return
+    }
+    // The mover is whoever moveMode references — NOT necessarily the
+    // current active combatant. Turn could auto-advance between Move
+    // click and target-cell click, leaving stale active state, in
+    // which case the visibly-moved token belongs to a former active.
+    const activeNow = initiativeOrder.find((e: any) => e.is_active)
+    const mover = (moveMode?.characterId
+      ? initiativeOrder.find((e: any) => e.character_id === moveMode.characterId)
+      : moveMode?.npcId
+        ? initiativeOrder.find((e: any) => e.npc_id === moveMode.npcId)
+        : null) ?? activeNow
+    console.warn('[move] onMoveComplete', {
+      moveMode,
+      activeName: activeNow?.character_name, activeId: activeNow?.id, activeActions: activeNow?.actions_remaining,
+      moverName: mover?.character_name, moverId: mover?.id, moverActions: mover?.actions_remaining,
+      matched: mover?.id === activeNow?.id,
+    })
+    const charge = pendingChargeRef.current
+    if (charge) {
+      if (mover && charge.activeId && charge.activeId !== mover.id) {
+        console.warn('[charge] active combatant changed — aborting charge')
+        pendingChargeRef.current = null
+        setMoveMode(null)
+        return
+      }
+      pendingChargeRef.current = null
+      setMoveMode(null)
+      actionCostRef.current = 2
+      handleRollRequest(charge.label, charge.amod, charge.smod, charge.weapon)
+    } else if (sprintPendingRef.current) {
+      // Sprint: token moved, NOW consume the 2 actions and fire the
+      // Athletics check. We consume here (not on button click) so that
+      // a failed cell click can't burn actions without movement.
+      sprintPendingRef.current = false
+      setMoveMode(null)
+      if (mover) {
+        // Flag before consume so closeRollModal knows not to
+        // double-consume when the Athletics roll finishes.
+        // Pass `undefined` for actionLabel: we don't want a
+        // generic "— Sprint" log entry to land BEFORE the
+        // Athletics roll resolves (playtest #4). The post-roll
+        // handler (line ~2780) writes a single combined entry
+        // with the final outcome: "sprinted successfully" or
+        // "sprinted but is now winded".
+        actionPreConsumedRef.current = true
+        // Flag BEFORE consumeAction so nextTurn's new-round
+        // branch (which runs synchronously inside consumeAction
+        // when Frankie's 2-action burn empties the round) can
+        // see it and hold the reroll back until the Athletics
+        // roll resolves. Otherwise the Initiative log beats the
+        // Sprint outcome to the feed.
+        sprintAthleticsPendingRef.current = true
+        await consumeAction(mover.id, undefined, 2)
+      }
+      const charEntry = mover ? entries.find(e => e.character.name === mover.character_name) : null
+      const npcAttacker = mover?.is_npc ? campaignNpcs.find((n: any) => n.name === mover.character_name) : null
+      const rapid = charEntry?.character.data?.rapid ?? {}
+      const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
+      const smod = npcAttacker
+        ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Athletics')?.level ?? 0 : 0)
+        : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Athletics')?.level ?? 0
+      // bypassTurnGate=true: consumeAction above advanced the turn.
+      // The Athletics roll fires for the former active combatant —
+      // bypass the active-combatant check that would otherwise block it.
+      handleRollRequest(`${mover?.character_name ?? 'Unknown'} — Sprint (Athletics)`, amod, smod, undefined, true)
+    } else {
+      // Only consume an action when the combatant we just moved is
+      // actually the active one. GM-initiated "move this NPC" for an
+      // off-turn combatant must not silently deduct from their next
+      // real turn's action budget.
+      if (mover && mover.is_active) consumeAction(mover.id, `${mover.character_name} — Move`)
+      setMoveMode(null)
+    }
+  })
+
+  const handleMapMoveCancel = useStableCallback(() => {
+    pendingChargeRef.current = null
+    sprintPendingRef.current = false
+    setMoveMode(null)
+  })
+
+  const handleMapThrowComplete = useStableCallback((gx: number, gy: number) => {
+    // Commit the cell target and open the roll modal. We keep
+    // throwMode cleared from here so a second click doesn't
+    // re-fire the handler; the modal now takes over.
+    if (!throwMode) return
+    const tm = throwMode
+    setGrenadeTargetCell({ gx, gy })
+    setThrowMode(null)
+    // Synthetic target name for the log / dropdown: "Cell
+    // (x,y)". executeRoll detects grenadeTargetCell and
+    // applies blast centered on the cell position instead
+    // of a token.
+    handleRollRequest(tm.label, tm.amod, tm.smod, tm.weapon)
+    // Pre-populate the modal target with the synthetic cell
+    // label so the UI shows "Target: Cell (x,y)" instead of
+    // the token dropdown.
+    setTargetName(`Cell (${gx},${gy})`)
+  })
+
+  const handleMapThrowCancel = useStableCallback(() => setThrowMode(null))
 
   async function deferInitiative(entryId: string) {
     const idx = initiativeOrder.findIndex(e => e.id === entryId)
@@ -5903,205 +6122,27 @@ export default function TablePage() {
               isGM={isGM}
               initiativeOrder={initiativeOrder}
               tokenRefreshKey={tokenRefreshKey}
-              onTokenChanged={() => { setTokenRefreshKey(k => k + 1); initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} }) }}
-              onPlayerDragMove={(characterId) => {
-                // Player dragged their own PC within the Move-action limit.
-                // Consume 1 action via the owner's initiative row. No log
-                // label — the drag animation is self-evident.
-                const entry = initiativeOrder.find(e => e.character_id === characterId)
-                if (entry) consumeAction(entry.id, undefined, 1)
-              }}
-              onGMDragMove={({ characterId, npcId }) => {
-                // GM dragged the active combatant's token. Same 1-action
-                // cost as a player drag. The TacticalMap-side gate already
-                // confirmed this is the active combatant before firing.
-                const entry = initiativeOrder.find(e =>
-                  (characterId && e.character_id === characterId) ||
-                  (npcId && e.npc_id === npcId)
-                )
-                if (entry) consumeAction(entry.id, undefined, 1)
-              }}
+              onTokenChanged={handleMapTokenChanged}
+              onPlayerDragMove={handleMapPlayerDragMove}
+              onGMDragMove={handleMapGMDragMove}
               campaignNpcs={campaignNpcs}
               entries={entries}
               myCharacterId={myCharIdRef.current}
               vehicles={vehicles}
-              onObjectMove={(tokenId: string) => {
-                // Mirror the same speed × current_speed × 30ft logic the
-                // ObjectCard's onMove uses, so the in-map panel's Move
-                // button feels identical. Acceleration ramp also kicks
-                // in via onMoveComplete (which already handles the
-                // objectTokenId branch and bumps current_speed).
-                const tok = mapTokens.find(t => t.id === tokenId)
-                if (!tok) return
-                const matchingVehicle = vehicles.find(v => v.name === tok.name)
-                const maxSpeed = matchingVehicle?.speed ?? 1
-                const currentSpeed = Math.max(1, Math.min(maxSpeed, (tok as any).current_speed ?? 1))
-                const moveFeet = currentSpeed * 30
-                setMoveMode({ objectTokenId: tokenId, feet: moveFeet })
-              }}
-              onTokenClick={(token: any) => {
-                // Double-click = opens a card AND selects the token as attack target,
-                // so hitting ATTACK right after peeking at a zombie pre-populates it.
-                setSelectedMapTargetName(token?.name ?? null)
-                if (token.npc_id) {
-                  const npc = campaignNpcs.find((n: any) => n.id === token.npc_id)
-                  if (npc) {
-                    setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc as CampaignNpc])
-                    setSelectedEntry(null)
-                  }
-                } else if (token.character_id) {
-                  const entry = entries.find(e => e.character.id === token.character_id)
-                  if (entry) {
-                    // Players can only open their OWN character sheet — seeing
-                    // another PC's sheet leaks stats, inventory, and notes.
-                    // GM keeps full access.
-                    if (!isGM && entry.userId !== userId) return
-                    if (selectedEntry?.stateId === entry.stateId) { setSelectedEntry(null); setSheetPos(null) }
-                    else { setSelectedEntry(entry); setViewingNpcs([]); setSheetPos(null) }
-                  }
-                } else if (token.token_type === 'object') {
-                  setViewingObjects(prev =>
-                    prev.some(o => o.tokenId === token.id)
-                      ? prev.filter(o => o.tokenId !== token.id)
-                      : [...prev, { tokenId: token.id, name: token.name, color: token.color, portraitUrl: token.portrait_url }]
-                  )
-                }
-              }}
-              onTokenSelect={(token: any) => {
-                setSelectedMapTargetName(token?.name ?? null)
-              }}
+              onObjectMove={handleMapObjectMove}
+              onTokenClick={handleMapTokenClick}
+              onTokenSelect={handleMapTokenSelect}
               moveMode={moveMode}
-              onTokensUpdate={(toks, cellFeet) => {
-                // Only update if positions actually changed to avoid re-render churn
-                setMapTokens(prev => {
-                  const same = prev.length === toks.length && prev.every((p, i) => p.id === toks[i].id && p.grid_x === toks[i].grid_x && p.grid_y === toks[i].grid_y)
-                  return same ? prev : toks
-                })
-                setMapCellFeet(cellFeet)
-              }}
-              onMoveComplete={async () => {
-                // Vehicle / object-token moves: the token physically moved
-                // via scene_tokens.grid_x/y, but no character/NPC consumed
-                // an action — vehicles aren't combatants. Bump the token's
-                // current_speed (acceleration ramp), capped at the parent
-                // vehicle's max Speed, so the next Move can cover more
-                // ground. Then bail before the action-consume logic.
-                if (moveMode?.objectTokenId) {
-                  const objTokenId = moveMode.objectTokenId
-                  setMoveMode(null)
-                  const tok = mapTokens.find(t => t.id === objTokenId)
-                  if (tok) {
-                    const matchingVehicle = vehicles.find(v => v.name === tok.name)
-                    const maxSpeed = matchingVehicle?.speed ?? 1
-                    const cur = Math.max(1, (tok as any).current_speed ?? 1)
-                    const next = Math.min(maxSpeed, cur + 1)
-                    if (next !== cur) {
-                      await supabase.from('scene_tokens').update({ current_speed: next }).eq('id', objTokenId)
-                      setMapTokens(prev => prev.map(t => t.id === objTokenId ? { ...t, current_speed: next } as any : t))
-                      initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
-                    }
-                  }
-                  return
-                }
-                // The mover is whoever moveMode references — NOT necessarily the
-                // current active combatant. Turn could auto-advance between Move
-                // click and target-cell click, leaving stale active state, in
-                // which case the visibly-moved token belongs to a former active.
-                const activeNow = initiativeOrder.find((e: any) => e.is_active)
-                const mover = (moveMode?.characterId
-                  ? initiativeOrder.find((e: any) => e.character_id === moveMode.characterId)
-                  : moveMode?.npcId
-                    ? initiativeOrder.find((e: any) => e.npc_id === moveMode.npcId)
-                    : null) ?? activeNow
-                console.warn('[move] onMoveComplete', {
-                  moveMode,
-                  activeName: activeNow?.character_name, activeId: activeNow?.id, activeActions: activeNow?.actions_remaining,
-                  moverName: mover?.character_name, moverId: mover?.id, moverActions: mover?.actions_remaining,
-                  matched: mover?.id === activeNow?.id,
-                })
-                const charge = pendingChargeRef.current
-                if (charge) {
-                  if (mover && charge.activeId && charge.activeId !== mover.id) {
-                    console.warn('[charge] active combatant changed — aborting charge')
-                    pendingChargeRef.current = null
-                    setMoveMode(null)
-                    return
-                  }
-                  pendingChargeRef.current = null
-                  setMoveMode(null)
-                  actionCostRef.current = 2
-                  handleRollRequest(charge.label, charge.amod, charge.smod, charge.weapon)
-                } else if (sprintPendingRef.current) {
-                  // Sprint: token moved, NOW consume the 2 actions and fire the
-                  // Athletics check. We consume here (not on button click) so that
-                  // a failed cell click can't burn actions without movement.
-                  sprintPendingRef.current = false
-                  setMoveMode(null)
-                  if (mover) {
-                    // Flag before consume so closeRollModal knows not to
-                    // double-consume when the Athletics roll finishes.
-                    // Pass `undefined` for actionLabel: we don't want a
-                    // generic "— Sprint" log entry to land BEFORE the
-                    // Athletics roll resolves (playtest #4). The post-roll
-                    // handler (line ~2780) writes a single combined entry
-                    // with the final outcome: "sprinted successfully" or
-                    // "sprinted but is now winded".
-                    actionPreConsumedRef.current = true
-                    // Flag BEFORE consumeAction so nextTurn's new-round
-                    // branch (which runs synchronously inside consumeAction
-                    // when Frankie's 2-action burn empties the round) can
-                    // see it and hold the reroll back until the Athletics
-                    // roll resolves. Otherwise the Initiative log beats the
-                    // Sprint outcome to the feed.
-                    sprintAthleticsPendingRef.current = true
-                    await consumeAction(mover.id, undefined, 2)
-                  }
-                  const charEntry = mover ? entries.find(e => e.character.name === mover.character_name) : null
-                  const npcAttacker = mover?.is_npc ? campaignNpcs.find((n: any) => n.name === mover.character_name) : null
-                  const rapid = charEntry?.character.data?.rapid ?? {}
-                  const amod = npcAttacker ? (npcAttacker.physicality ?? 0) : (rapid.PHY ?? 0)
-                  const smod = npcAttacker
-                    ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Athletics')?.level ?? 0 : 0)
-                    : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Athletics')?.level ?? 0
-                  // bypassTurnGate=true: consumeAction above advanced the turn.
-                  // The Athletics roll fires for the former active combatant —
-                  // bypass the active-combatant check that would otherwise block it.
-                  handleRollRequest(`${mover?.character_name ?? 'Unknown'} — Sprint (Athletics)`, amod, smod, undefined, true)
-                } else {
-                  // Only consume an action when the combatant we just moved is
-                  // actually the active one. GM-initiated "move this NPC" for an
-                  // off-turn combatant must not silently deduct from their next
-                  // real turn's action budget.
-                  if (mover && mover.is_active) consumeAction(mover.id, `${mover.character_name} — Move`)
-                  setMoveMode(null)
-                }
-              }}
-              onMoveCancel={() => { pendingChargeRef.current = null; sprintPendingRef.current = false; setMoveMode(null) }}
+              onTokensUpdate={handleMapTokensUpdate}
+              onMoveComplete={handleMapMoveComplete}
+              onMoveCancel={handleMapMoveCancel}
               throwMode={throwMode ? { attackerCharId: throwMode.attackerCharId, attackerNpcId: throwMode.attackerNpcId, rangeFeet: throwMode.rangeFeet, hasBlast: throwMode.hasBlast, friendlyCharacterIds: throwMode.friendlyCharacterIds } : null}
-              onThrowComplete={(gx, gy) => {
-                // Commit the cell target and open the roll modal. We keep
-                // throwMode cleared from here so a second click doesn't
-                // re-fire the handler; the modal now takes over.
-                if (!throwMode) return
-                const tm = throwMode
-                setGrenadeTargetCell({ gx, gy })
-                setThrowMode(null)
-                // Synthetic target name for the log / dropdown: "Cell
-                // (x,y)". executeRoll detects grenadeTargetCell and
-                // applies blast centered on the cell position instead
-                // of a token.
-                handleRollRequest(tm.label, tm.amod, tm.smod, tm.weapon)
-                // Pre-populate the modal target with the synthetic cell
-                // label so the UI shows "Target: Cell (x,y)" instead of
-                // the token dropdown.
-                setTargetName(`Cell (${gx},${gy})`)
-              }}
-              onThrowCancel={() => setThrowMode(null)}
+              onThrowComplete={handleMapThrowComplete}
+              onThrowCancel={handleMapThrowCancel}
             />
           ) : (
             <CampaignMap campaignId={id} isGM={isGM} setting={campaign?.setting} mapStyle={(campaign as any)?.map_style} mapCenterLat={(campaign as any)?.map_center_lat} mapCenterLng={(campaign as any)?.map_center_lng} revealedNpcIds={revealedNpcIds} focusPin={focusPin} onMapDoubleClick={(lat, lng) => openQuickAddPin(lat, lng)} />
           )}
-
           {/* NPC Card(s) — grid overlay when out of combat, draggable inline when in combat */}
           {viewingNpcs.length > 0 && !combatActive && !showTacticalMap && (
             <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '8px', background: 'rgba(26,26,26,0.95)', zIndex: 1100, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px', alignContent: 'start' }}>

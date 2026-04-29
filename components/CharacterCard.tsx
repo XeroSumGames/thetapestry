@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { memo, useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
@@ -105,7 +105,7 @@ interface Props {
   onWeaponChange?: (slot: 'weaponPrimary' | 'weaponSecondary', newWeapon: any) => void
 }
 
-export default function CharacterCard({
+function CharacterCardImpl({
   character: c,
   liveState,
   canEdit = true,
@@ -1056,6 +1056,13 @@ export default function CharacterCard({
     </div>
   )
 }
+
+// Memo so unrelated parent re-renders (chat updates, modal toggles,
+// rolls feed, etc.) skip the sheet. Default shallow comparison; the
+// parent passes data props by reference and stabilized callbacks via
+// useStableCallback.
+const CharacterCard = memo(CharacterCardImpl)
+export default CharacterCard
 
 function btn(borderColor: string, color: string): React.CSSProperties {
   return {
