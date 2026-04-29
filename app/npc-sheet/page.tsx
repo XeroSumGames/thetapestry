@@ -59,7 +59,7 @@ export default function NpcSheetPage() {
     if (typeof window === 'undefined') return
     if (!window.opener) return  // not actually a popout
     try {
-      window.resizeTo(isGM ? 571 : 140, isGM ? 257 : 140)
+      window.resizeTo(isGM ? 571 : 140, isGM ? 400 : 140)
     } catch { /* some browsers block resizeTo on already-shown windows; harmless */ }
   }, [loading, isGM])
 
