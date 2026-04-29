@@ -158,25 +158,31 @@ export default function WelcomePage() {
             logo on top, name+link below. Order: XeroSumGames →
             DistemperVerse → XeroSumStudio. */}
         <div style={{ ...sectionHeading, textAlign: 'center' }}>Off-Platform</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', justifyItems: 'center', alignItems: 'end', marginBottom: '4rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', justifyItems: 'center', alignItems: 'start', marginBottom: '4rem' }}>
+          {/* Each tile reserves a uniform 80px-tall logo slot so the three
+              logos centre on the same horizontal midline regardless of
+              their native dimensions (Distemper is square-ish at 80px,
+              XeroSum logos are landscape at 48px). Link buttons then
+              sit at the same Y across all three columns. */}
           <a href="https://www.xerosumgames.com" target="_blank" rel="noreferrer"
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            {/* Both XeroSum logos share the same fitted box (180×48,
-                contain) so they render visually equivalent regardless
-                of native aspect ratio differences. The Distemper
-                dog-sign keeps its larger square footprint as the brand
-                anchor. */}
-            <img src="/XeroSumGamesLogoV13.png" alt="XeroSumGames" style={{ width: '180px', height: '48px', objectFit: 'contain' }} />
+            <div style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src="/XeroSumGamesLogoV13.png" alt="XeroSumGames" style={{ width: '180px', height: '48px', objectFit: 'contain' }} />
+            </div>
             <span style={cardLink}>XeroSumGames.com 🔗</span>
           </a>
           <a href="https://www.distemperverse.com" target="_blank" rel="noreferrer"
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <img src="/distemper-dogsign-logo.png" alt="DistemperVerse" style={{ height: '80px', width: 'auto', objectFit: 'contain' }} />
+            <div style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src="/distemper-dogsign-logo.png" alt="DistemperVerse" style={{ height: '80px', width: 'auto', objectFit: 'contain' }} />
+            </div>
             <span style={cardLink}>DistemperVerse.com 🔗</span>
           </a>
           <a href="https://www.xerosumstudio.com" target="_blank" rel="noreferrer"
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <img src="/XeroSumStudioLogoV13.png" alt="XeroSumStudio" style={{ width: '180px', height: '48px', objectFit: 'contain' }} />
+            <div style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src="/XeroSumStudioLogoV13.png" alt="XeroSumStudio" style={{ width: '180px', height: '48px', objectFit: 'contain' }} />
+            </div>
             <span style={cardLink}>XeroSumStudio.com 🔗</span>
           </a>
         </div>
