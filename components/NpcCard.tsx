@@ -347,8 +347,13 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
       {showInventory && (
         <InventoryPanel
           inventory={inv}
-          weaponPrimaryName=""
-          weaponSecondaryName=""
+          // Pull equipped weapon names off the NPC's skills.weapon /
+          // skills.weapon2 jsonb so they're tallied into the
+          // Weapons encumbrance just like PC weapons are. Without
+          // this, the modal showed Weapons: 0 / Limit: 6+PHY even
+          // when both slots had weapons equipped.
+          weaponPrimaryName={(npc.skills as any)?.weapon?.weaponName ?? ''}
+          weaponSecondaryName={(npc.skills as any)?.weapon2?.weaponName ?? ''}
           phyMod={npc.physicality}
           canEdit={true}
           otherCharacters={pcCharacters ?? []}
