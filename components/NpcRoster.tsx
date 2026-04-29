@@ -473,6 +473,14 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     }
     if (editingId) {
       await supabase.from('campaign_npcs').update(row).eq('id', editingId)
+      // Same token-color sync as quickSetDisposition — the full Edit
+      // modal can change disposition or npc_type, and either flip
+      // changes the ring color callsite (placeFolderOnMap /
+      // placeTokenOnMap) computes for new placements. Without this,
+      // existing tokens keep their old color until the GM unmaps + re-
+      // places them.
+      const newColor = getNpcTokenBorderColor({ disposition: row.disposition, npc_type: row.npc_type })
+      await supabase.from('scene_tokens').update({ color: newColor }).eq('npc_id', editingId)
     } else {
       // Append new NPCs at the end of the existing sort order.
       const { data: maxRow } = await supabase.from('campaign_npcs').select('sort_order').eq('campaign_id', campaignId).order('sort_order', { ascending: false, nullsFirst: false }).limit(1).maybeSingle()
@@ -762,6 +770,14 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
   async function quickSetDisposition(npcId: string, value: 'friendly' | 'neutral' | 'hostile' | null) {
     const { error } = await supabase.from('campaign_npcs').update({ disposition: value }).eq('id', npcId)
     if (error) { alert('Error: ' + error.message); return }
+    // Keep any existing tactical-map tokens in sync — without this, a
+    // token placed when the NPC was Foe (red) keeps the red ring even
+    // after the GM flips disposition to Neutral. Computes the new ring
+    // color from the new disposition + existing npc_type fallback,
+    // mirroring the placeFolderOnMap / placeTokenOnMap logic.
+    const npc = npcs.find(n => n.id === npcId)
+    const newColor = getNpcTokenBorderColor({ disposition: value, npc_type: npc?.npc_type ?? null })
+    await supabase.from('scene_tokens').update({ color: newColor }).eq('npc_id', npcId)
     setNpcs(prev => prev.map(n => n.id === npcId ? ({ ...n, disposition: value } as any) : n))
   }
 
