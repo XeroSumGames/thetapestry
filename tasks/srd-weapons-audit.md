@@ -19,7 +19,7 @@ The current `lib/weapons.ts` contains **four name mismatches** where the stats m
 | Weapon | Field | Code | CRB |
 |---|---|---|---|
 | Machete | range | Close | **Engaged** |
-| Slingshot | clip | 1 | **30** (CRB lists 30 stones per clip — currently players must reload after every shot) |
+| ~~Slingshot~~ | ~~clip~~ | ~~1~~ | ~~30~~ (Xero confirmed 2026-04-28: clip 1 is correct in the engine — slingshot doesn't trigger the Reload-action gate even though CRB shows 30 stones, so leaving as-is) |
 | Compound Bow (formerly Compact Bow) | range | Medium | **Long** |
 | Compound Bow | rarity | Common | **Uncommon** |
 
@@ -38,7 +38,7 @@ These appear to be code-side custom additions:
 | Weapon | Likely source |
 |---|---|
 | Katana | Custom add (Melee, Engaged, Rare, 4+3d3, 50%, 1, Unwieldy 1). Note: trait string is `'Unwieldy 1'` without parens — should be `'Unwieldy (1)'` to match the parser at `getTraitValue`. Real bug. |
-| Cattle Prod | Custom add (Melee, Engaged, Uncommon, 2, **400%**, 1, Stun). The 400% RP looks unusual — probably intended to be 100% (a Stun weapon does no WP, RP doesn't typically multiply that high). Worth confirming. |
+| Cattle Prod | Custom add (Melee, Engaged, Uncommon, 2, **400%**, 1, Stun). Xero confirmed 2026-04-28: 400% is correct — "get hit once or twice with that and you're out". Keeping. |
 | Shiv-Grenade | Custom add (Explosive, 0 dmg, 0% RP, Stun) — a homemade flashbang? |
 | Flash-Bang Grenade | Custom add — duplicates Shiv-Grenade behavior |
 | RPG Launcher | Custom add — not in CRB |

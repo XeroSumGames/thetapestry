@@ -96,7 +96,7 @@ export const RANGED_WEAPONS: Weapon[] = [
   { name: 'Light Pistol', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Common', damage: '3+1d6', rpPercent: 50, enc: 1, ammo: 'Common', clip: 6, traits: [] },
   { name: 'Shotgun (Pump-Action)', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Common', damage: '5+2d6', rpPercent: 50, enc: 2, ammo: 'Common', clip: 5, traits: ['Close-Up'] },
   { name: 'Shotgun (Sawed-Off)', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Uncommon', damage: '2+3d6', rpPercent: 50, enc: 2, ammo: 'Common', clip: 2, traits: ['Close-Up'] },
-  { name: 'Slingshot', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Common', damage: '1+1d3', rpPercent: 100, enc: 0, ammo: 'Common', clip: 30, traits: ['Tracking'] },
+  { name: 'Slingshot', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Common', damage: '1+1d3', rpPercent: 100, enc: 0, ammo: 'Common', clip: 1, traits: ['Tracking'] },
   { name: 'Tranquilizer Gun', category: 'ranged', skill: 'Ranged Combat', range: 'Medium', rarity: 'Rare', damage: '0', rpPercent: 100, enc: 1, ammo: 'Uncommon', clip: 1, traits: ['Stun'] },
   { name: "Sniper's Rifle", category: 'ranged', skill: 'Ranged Combat', range: 'Distant', rarity: 'Rare', damage: '2+3d6', rpPercent: 50, enc: 2, ammo: 'Uncommon', clip: 10, traits: [] },
   { name: 'Taser', category: 'ranged', skill: 'Ranged Combat', range: 'Close', rarity: 'Uncommon', damage: '1', rpPercent: 400, enc: 1, ammo: 'Rare', clip: 1, traits: ['Stun'] },
