@@ -5464,6 +5464,14 @@ export default function TablePage() {
                 )}
                 {/* ── Normal combat actions (hidden when grappled/grappling) ── */}
                 {!isGrappled && !isGrappling && <>
+                {/* Buttons are in alphabetical order per Xero's request:
+                    Aim, Attack, Charge, Coordinate, Cover Fire, Defend,
+                    Distract, Fire from Cover, Grapple, Inspire, Move,
+                    Rapid Fire, Ready Weapon, Reposition, Sprint, Subdue,
+                    Take Cover, Unarmed. Modals (Social picker / Coordinate)
+                    live at the bottom — they're absolutely-positioned
+                    overlays so render order doesn't affect layout. */}
+
                 {/* ── AIM: +2 CMod, must Attack next or lost ── */}
                 <button onClick={() => handleAim(activeEntry.id)}
                   style={actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>
@@ -5548,13 +5556,24 @@ export default function TablePage() {
                 <button onClick={() => { clearAimIfActive(activeEntry.id); setShowCoordinateModal(true); setCoordinateSelection('') }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Coordinate</button>
 
-                {/* ── COVER FIRE, DISTRACT, INSPIRE ── */}
-                {/* Distract opens the standard roll modal directly — the
-                    modal already includes a Target dropdown when combat
-                    is active, so the prior 2-step picker → modal flow
+                {/* ── COVER FIRE — opens social-target picker (no roll, auto-applies) ── */}
+                <button onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(socialTarget?.action === 'Cover Fire' ? null : { action: 'Cover Fire' }) }}
+                  style={actBtn(socialTarget?.action === 'Cover Fire' ? '#1a2e10' : '#242424', socialTarget?.action === 'Cover Fire' ? '#7fc458' : '#d4cfc9', socialTarget?.action === 'Cover Fire' ? '#2d5a1b' : '#3a3a3a')}>Cover Fire</button>
+
+                {/* ── DEFEND: +2 defensive modifier for next incoming attack ── */}
+                <button onClick={async () => {
+                  clearAimIfActive(activeEntry.id)
+                  await supabase.from('initiative_order').update({ defense_bonus: (activeEntry.defense_bonus ?? 0) + 2 }).eq('id', activeEntry.id)
+                  await consumeAction(activeEntry.id, `${activeEntry.character_name} — Defend (+2 Defensive Modifier, next attack only)`)
+                }}
+                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Defend{(activeEntry.defense_bonus ?? 0) > 0 ? ` (+${activeEntry.defense_bonus})` : ''}</button>
+
+                {/* ── DISTRACT: opens the standard roll modal directly — the
+                    modal already includes a Target dropdown when combat is
+                    active, so the prior 2-step picker → modal flow
                     collapses into one. Cover Fire and Inspire still use
                     the picker because they don't fire a roll (they
-                    auto-apply effects). */}
+                    auto-apply effects). ── */}
                 <button onClick={() => {
                   clearAimIfActive(activeEntry.id)
                   // Compute Distract roll mods from the active combatant.
@@ -5632,122 +5651,6 @@ export default function TablePage() {
                   handleRollRequest(`${activeEntry.character_name} — Distract`, amod, smod)
                   if (preselect) setTargetName(preselect)
                 }} style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Distract</button>
-                {['Cover Fire', 'Inspire'].map(action => {
-                  const isOpen = socialTarget?.action === action
-                  return (
-                    <button key={action} onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(isOpen ? null : { action }) }}
-                      style={actBtn(isOpen ? '#1a2e10' : '#242424', isOpen ? '#7fc458' : '#d4cfc9', isOpen ? '#2d5a1b' : '#3a3a3a')}>{action}</button>
-                  )
-                })}
-                {socialTarget && (() => {
-                  // Show all other combatants — GM/player picks the correct target.
-                  // NPCs can be allies or enemies, so we can't filter by is_npc.
-                  // Filter out dead / mortally wounded combatants — they have
-                  // no actions to lose (Distract) and no attacks to interfere
-                  // with (Cover Fire / Inspire), so showing them is just
-                  // visual noise and can lead to wasted clicks.
-                  const targets = initiativeOrder.filter(e => {
-                    if (e.id === activeEntry.id) return false
-                    if (e.is_npc) {
-                      const npc = campaignNpcs.find((n: any) => n.id === e.npc_id)
-                      if (npc) {
-                        if (npc.status === 'dead') return false
-                        if (npc.wp_current != null && npc.wp_current <= 0) return false
-                      }
-                    } else {
-                      const pc = entries.find(en => en.character.id === e.character_id)
-                      if (pc?.liveState && pc.liveState.wp_current === 0) return false
-                    }
-                    return true
-                  })
-                  return (
-                    <div onClick={() => setSocialTarget(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', minWidth: '220px', maxWidth: '320px' }}>
-                        <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>{socialTarget.action} — Select Target</div>
-                        {targets.length === 0 ? (
-                          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', padding: '1rem 0', textAlign: 'center' }}>No valid targets</div>
-                        ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            {targets.map(t => (
-                              <button key={t.id} onClick={() => applySocialAction(socialTarget.action, t.id)}
-                                style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'left' }}
-                                onMouseEnter={e => (e.currentTarget.style.background = '#2a1210')}
-                                onMouseLeave={e => (e.currentTarget.style.background = '#242424')}>
-                                {t.character_name}{t.is_npc ? ' (NPC)' : ''}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        <button onClick={() => setSocialTarget(null)}
-                          style={{ marginTop: '10px', width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-                      </div>
-                    </div>
-                  )
-                })()}
-
-                {/* ── COORDINATE MODAL ── */}
-                {showCoordinateModal && (() => {
-                  // Same dead/mortal filter as the social-action picker —
-                  // coordinating against a corpse buys no one a CMod.
-                  const allTargets = initiativeOrder.filter(e => {
-                    if (e.id === activeEntry.id) return false
-                    if (e.is_npc) {
-                      const npc = campaignNpcs.find((n: any) => n.id === e.npc_id)
-                      if (npc) {
-                        if (npc.status === 'dead') return false
-                        if (npc.wp_current != null && npc.wp_current <= 0) return false
-                      }
-                    } else {
-                      const pc = entries.find(en => en.character.id === e.character_id)
-                      if (pc?.liveState && pc.liveState.wp_current === 0) return false
-                    }
-                    return true
-                  })
-                  return (
-                    <div onClick={() => setShowCoordinateModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
-                        <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Coordinate</div>
-                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5, marginBottom: '12px' }}>
-                          Select the enemy to coordinate against. On a successful Tactics* check, allies within Close range get +2 CMod when attacking that target.
-                        </div>
-                        <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Coordinate Against</div>
-                        <select value={coordinateSelection} onChange={e => setCoordinateSelection(e.target.value)}
-                          style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none', marginBottom: '12px' }}>
-                          <option value="">Select target...</option>
-                          {allTargets.map(t => (
-                            <option key={t.id} value={t.character_name}>{t.character_name}{t.is_npc ? ' (NPC)' : ''}</option>
-                          ))}
-                        </select>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button onClick={() => setShowCoordinateModal(false)}
-                            style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-                          <button disabled={!coordinateSelection} onClick={() => {
-                            // Find the target entry and trigger Tactics* roll
-                            const targetEntry = initiativeOrder.find(e => e.character_name === coordinateSelection)
-                            if (!targetEntry) return
-                            coordinateTargetRef.current = coordinateSelection
-                            const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
-                            const amod = npcAttacker ? (npcAttacker.reason ?? 0) : (charEntry?.character.data?.rapid?.RSN ?? 0)
-                            const smod = npcAttacker
-                              ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Tactics')?.level ?? 0 : 0)
-                              : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Tactics')?.level ?? 0
-                            handleRollRequest(`${activeEntry.character_name} — Coordinate (vs ${coordinateSelection})`, amod, smod)
-                            setShowCoordinateModal(false)
-                          }}
-                            style={{ flex: 2, padding: '8px', background: coordinateSelection ? '#c0392b' : '#242424', border: `1px solid ${coordinateSelection ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: coordinateSelection ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: coordinateSelection ? 'pointer' : 'not-allowed' }}>Roll Tactics*</button>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })()}
-
-                {/* ── DEFEND: +2 defensive modifier for next incoming attack ── */}
-                <button onClick={async () => {
-                  clearAimIfActive(activeEntry.id)
-                  await supabase.from('initiative_order').update({ defense_bonus: (activeEntry.defense_bonus ?? 0) + 2 }).eq('id', activeEntry.id)
-                  await consumeAction(activeEntry.id, `${activeEntry.character_name} — Defend (+2 Defensive Modifier, next attack only)`)
-                }}
-                  style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Defend{(activeEntry.defense_bonus ?? 0) > 0 ? ` (+${activeEntry.defense_bonus})` : ''}</button>
 
                 {/* ── FIRE FROM COVER: both actions, fire weapon + keep cover defense ── */}
                 {activeEntry.has_cover && w ? (
@@ -5766,9 +5669,13 @@ export default function TablePage() {
                     style={has2Actions ? actBtn('#7a1f16', '#f5a89a', '#c0392b') : disabledBtn('#7a1f16', '#f5a89a', '#c0392b')}>Fire from Cover</button>
                 ) : null}
 
-                {/* ── GRAPPLING: Opposed Unarmed Combat check ── */}
+                {/* ── GRAPPLE: Opposed Unarmed Combat check ── */}
                 <button onClick={() => { setGrappleResult(null); setShowGrappleModal(true) }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Grapple</button>
+
+                {/* ── INSPIRE — opens social-target picker (no roll, auto-applies) ── */}
+                <button onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(socialTarget?.action === 'Inspire' ? null : { action: 'Inspire' }) }}
+                  style={actBtn(socialTarget?.action === 'Inspire' ? '#1a2e10' : '#242424', socialTarget?.action === 'Inspire' ? '#7fc458' : '#d4cfc9', socialTarget?.action === 'Inspire' ? '#2d5a1b' : '#3a3a3a')}>Inspire</button>
 
                 {/* ── MOVE: highlight cells + click to move ── */}
                 {/* GM-selected-token override: if the GM has clicked a different   */}
@@ -5873,6 +5780,110 @@ export default function TablePage() {
                   handleRollRequest(`${activeEntry.character_name} — Unarmed`, amod, smod, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
                 }}
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Unarmed</button>
+
+                {/* ── Modals (overlay-positioned; render order doesn't matter for layout) ── */}
+                {socialTarget && (() => {
+                  // Show all other combatants — GM/player picks the correct target.
+                  // NPCs can be allies or enemies, so we can't filter by is_npc.
+                  // Filter out dead / mortally wounded combatants — they have
+                  // no actions to lose (Distract) and no attacks to interfere
+                  // with (Cover Fire / Inspire), so showing them is just
+                  // visual noise and can lead to wasted clicks.
+                  const targets = initiativeOrder.filter(e => {
+                    if (e.id === activeEntry.id) return false
+                    if (e.is_npc) {
+                      const npc = campaignNpcs.find((n: any) => n.id === e.npc_id)
+                      if (npc) {
+                        if (npc.status === 'dead') return false
+                        if (npc.wp_current != null && npc.wp_current <= 0) return false
+                      }
+                    } else {
+                      const pc = entries.find(en => en.character.id === e.character_id)
+                      if (pc?.liveState && pc.liveState.wp_current === 0) return false
+                    }
+                    return true
+                  })
+                  return (
+                    <div onClick={() => setSocialTarget(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', minWidth: '220px', maxWidth: '320px' }}>
+                        <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>{socialTarget.action} — Select Target</div>
+                        {targets.length === 0 ? (
+                          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', padding: '1rem 0', textAlign: 'center' }}>No valid targets</div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {targets.map(t => (
+                              <button key={t.id} onClick={() => applySocialAction(socialTarget.action, t.id)}
+                                style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'left' }}
+                                onMouseEnter={e => (e.currentTarget.style.background = '#2a1210')}
+                                onMouseLeave={e => (e.currentTarget.style.background = '#242424')}>
+                                {t.character_name}{t.is_npc ? ' (NPC)' : ''}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        <button onClick={() => setSocialTarget(null)}
+                          style={{ marginTop: '10px', width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* ── COORDINATE MODAL ── */}
+                {showCoordinateModal && (() => {
+                  // Same dead/mortal filter as the social-action picker —
+                  // coordinating against a corpse buys no one a CMod.
+                  const allTargets = initiativeOrder.filter(e => {
+                    if (e.id === activeEntry.id) return false
+                    if (e.is_npc) {
+                      const npc = campaignNpcs.find((n: any) => n.id === e.npc_id)
+                      if (npc) {
+                        if (npc.status === 'dead') return false
+                        if (npc.wp_current != null && npc.wp_current <= 0) return false
+                      }
+                    } else {
+                      const pc = entries.find(en => en.character.id === e.character_id)
+                      if (pc?.liveState && pc.liveState.wp_current === 0) return false
+                    }
+                    return true
+                  })
+                  return (
+                    <div onClick={() => setShowCoordinateModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
+                        <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Coordinate</div>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5, marginBottom: '12px' }}>
+                          Select the enemy to coordinate against. On a successful Tactics* check, allies within Close range get +2 CMod when attacking that target.
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Coordinate Against</div>
+                        <select value={coordinateSelection} onChange={e => setCoordinateSelection(e.target.value)}
+                          style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none', marginBottom: '12px' }}>
+                          <option value="">Select target...</option>
+                          {allTargets.map(t => (
+                            <option key={t.id} value={t.character_name}>{t.character_name}{t.is_npc ? ' (NPC)' : ''}</option>
+                          ))}
+                        </select>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => setShowCoordinateModal(false)}
+                            style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                          <button disabled={!coordinateSelection} onClick={() => {
+                            // Find the target entry and trigger Tactics* roll
+                            const targetEntry = initiativeOrder.find(e => e.character_name === coordinateSelection)
+                            if (!targetEntry) return
+                            coordinateTargetRef.current = coordinateSelection
+                            const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
+                            const amod = npcAttacker ? (npcAttacker.reason ?? 0) : (charEntry?.character.data?.rapid?.RSN ?? 0)
+                            const smod = npcAttacker
+                              ? (Array.isArray(npcAttacker.skills?.entries) ? npcAttacker.skills.entries.find((s: any) => s.name === 'Tactics')?.level ?? 0 : 0)
+                              : charEntry?.character.data?.skills?.find((s: any) => s.skillName === 'Tactics')?.level ?? 0
+                            handleRollRequest(`${activeEntry.character_name} — Coordinate (vs ${coordinateSelection})`, amod, smod)
+                            setShowCoordinateModal(false)
+                          }}
+                            style={{ flex: 2, padding: '8px', background: coordinateSelection ? '#c0392b' : '#242424', border: `1px solid ${coordinateSelection ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: coordinateSelection ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: coordinateSelection ? 'pointer' : 'not-allowed' }}>Roll Tactics*</button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()}
+
                 {/* Stabilize — one button per mortally-wounded combatant
                     (WP=0, not yet dead) within 20ft of the active combatant.
                     With multiple bleeding-out targets the GM gets a button
