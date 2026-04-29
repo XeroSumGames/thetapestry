@@ -125,6 +125,19 @@ export default function TacticalMap({ campaignId, isGM, initiativeOrder, onToken
   const [scenes, setScenes] = useState<Scene[]>([])
   const [tokens, setTokens] = useState<Token[]>([])
   const [dragging, setDragging] = useState<{ tokenId: string; offsetX: number; offsetY: number } | null>(null)
+
+  // Toggle a body-level class while a token drag is in progress so any
+  // fixed-position overlay (notification dropdown, messages dropdown,
+  // future popups pinned to viewport edges) can opt out of intercepting
+  // the drop via CSS — `body.dragging-token .drag-blocker { pointer-events: none }`.
+  // Per Xero's playtest report — bottom-left of the tactical map was
+  // unreachable because some overlay was catching the drop.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    if (dragging) document.body.classList.add('dragging-token')
+    else document.body.classList.remove('dragging-token')
+    return () => { document.body.classList.remove('dragging-token') }
+  }, [dragging])
   const dragPosRef = useRef<{ px: number; py: number } | null>(null) // pixel position of dragged token (canvas coords)
   const dragRAFRef = useRef<number | null>(null)                     // rAF handle for drag-move redraws (playtest #28)
   const [selectedToken, setSelectedToken] = useState<string | null>(null)

@@ -237,7 +237,7 @@ export default function MessagesBell() {
       </button>
 
       {open && (
-        <div style={{
+        <div className="drag-blocker" style={{
           // Pin to viewport so the dropdown escapes the sidebar's clip.
           // Anchored just below the icon, hard left so it doesn't run
           // off-screen on narrow windows. Matches NotificationBell.

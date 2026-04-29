@@ -15,6 +15,15 @@
   font-size: 16px;
 }
 
+/* While a tactical-map token is being dragged, any fixed-position overlay
+ * tagged .drag-blocker becomes click-through so the drop can land on the
+ * cell underneath it. Per Xero's playtest report — bottom-left of the map
+ * was unreachable because an open notification/messages dropdown was
+ * intercepting the drop. TacticalMap.tsx toggles body.dragging-token. */
+body.dragging-token .drag-blocker {
+  pointer-events: none;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }

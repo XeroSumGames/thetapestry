@@ -495,7 +495,7 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div style={{
+        <div className="drag-blocker" style={{
           position: 'fixed', top: (ref.current?.getBoundingClientRect().bottom ?? 40) + 4 + 'px', left: '10px',
           // Wider container + hard clip so long notification bodies
           // wrap cleanly instead of punching out the right edge.
