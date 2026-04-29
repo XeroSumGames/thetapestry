@@ -34,6 +34,9 @@ export default function ModuleMarketplacePage() {
   // so it's not even visible.
   const [isThriver, setIsThriver] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  // Identity for the EDIT-button gate. Thriver OR author can edit;
+  // RLS already allows both at the DB level (sql/modules-phase-a.sql:208).
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   useEffect(() => {
     listAvailableModules(supabase)
@@ -45,6 +48,7 @@ export default function ModuleMarketplacePage() {
     (async () => {
       const { user } = await getCachedAuth()
       if (!user) return
+      setCurrentUserId(user.id)
       const { data } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
       const role = (data?.role ?? '').toLowerCase()
       if (role === 'thriver') setIsThriver(true)
@@ -186,6 +190,7 @@ export default function ModuleMarketplacePage() {
               key={m.id}
               module={m}
               canDelete={isThriver}
+              canEdit={isThriver || (!!currentUserId && m.author_user_id === currentUserId)}
               deleting={deletingId === m.id}
               onDelete={() => handleDelete(m)}
             />
@@ -196,7 +201,7 @@ export default function ModuleMarketplacePage() {
   )
 }
 
-function ModuleCard({ module: m, canDelete, deleting, onDelete }: { module: ModuleListing; canDelete: boolean; deleting: boolean; onDelete: () => void }) {
+function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { module: ModuleListing; canDelete: boolean; canEdit: boolean; deleting: boolean; onDelete: () => void }) {
   const settingLabel = SETTING_LABELS[m.parent_setting ?? 'custom'] ?? m.parent_setting
   const version = m.latest_version?.version
   const publishedAt = m.latest_version?.published_at
@@ -220,31 +225,53 @@ function ModuleCard({ module: m, canDelete, deleting, onDelete }: { module: Modu
         onMouseEnter={e => { e.currentTarget.style.borderColor = '#5a2e5a' }}
         onMouseLeave={e => { e.currentTarget.style.borderColor = '#2e2e2e' }}
       >
-        {/* Thriver-only DELETE — top-right corner. preventDefault on the
-            click stops the wrapping <Link> from navigating; stopPropagation
-            keeps the delete confirm from also being treated as a card-open. */}
-        {canDelete && (
-          <button
-            disabled={deleting}
-            onClick={e => { e.preventDefault(); e.stopPropagation(); onDelete() }}
-            title="Thriver: delete module + all versions + subscriptions"
-            style={{
-              position: 'absolute', top: '6px', right: '6px', zIndex: 2,
-              padding: '3px 9px',
-              background: 'rgba(0, 0, 0, 0.7)',
-              border: '1px solid #c0392b',
-              borderRadius: '3px',
-              color: '#f5a89a',
-              fontSize: '13px',
-              fontFamily: 'Barlow Condensed, sans-serif',
-              letterSpacing: '.06em',
-              textTransform: 'uppercase',
-              cursor: deleting ? 'wait' : 'pointer',
-              opacity: deleting ? 0.5 : 1,
-            }}>
-            {deleting ? 'Deleting…' : 'Delete'}
-          </button>
-        )}
+        {/* Top-right action chips. preventDefault on each stops the
+            wrapping <Link> from navigating; stopPropagation keeps clicks
+            from being treated as a card-open. EDIT visible to author OR
+            Thriver (RLS gate matches at DB level), DELETE Thriver-only. */}
+        <div style={{ position: 'absolute', top: '6px', right: '6px', zIndex: 2, display: 'flex', gap: '6px' }}>
+          {canEdit && (
+            <Link
+              href={`/modules/${m.id}/edit`}
+              onClick={e => { e.stopPropagation() }}
+              title={canDelete ? 'Thriver: edit module metadata + cover image' : 'Edit your module'}
+              style={{
+                padding: '3px 9px',
+                background: 'rgba(0, 0, 0, 0.7)',
+                border: '1px solid #5a2e5a',
+                borderRadius: '3px',
+                color: '#c4a7f0',
+                fontSize: '13px',
+                fontFamily: 'Barlow Condensed, sans-serif',
+                letterSpacing: '.06em',
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+              }}>
+              Edit
+            </Link>
+          )}
+          {canDelete && (
+            <button
+              disabled={deleting}
+              onClick={e => { e.preventDefault(); e.stopPropagation(); onDelete() }}
+              title="Thriver: delete module + all versions + subscriptions"
+              style={{
+                padding: '3px 9px',
+                background: 'rgba(0, 0, 0, 0.7)',
+                border: '1px solid #c0392b',
+                borderRadius: '3px',
+                color: '#f5a89a',
+                fontSize: '13px',
+                fontFamily: 'Barlow Condensed, sans-serif',
+                letterSpacing: '.06em',
+                textTransform: 'uppercase',
+                cursor: deleting ? 'wait' : 'pointer',
+                opacity: deleting ? 0.5 : 1,
+              }}>
+              {deleting ? 'Deleting…' : 'Delete'}
+            </button>
+          )}
+        </div>
         {/* Cover image, or gradient placeholder */}
         <div style={{
           height: '140px',

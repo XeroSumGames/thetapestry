@@ -216,6 +216,11 @@ export default function NewCampaignPage() {
         </div>
 
         <div style={{ marginBottom: '16px' }}>
+          <label style={lbl}>Description <span style={{ color: '#cce0f5', fontWeight: 400 }}>(optional)</span></label>
+          <textarea style={{ ...inp, minHeight: '80px', resize: 'vertical' }} value={description} onChange={e => setDescription(e.target.value)} placeholder="A brief description of your story..." />
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
           <label style={lbl}>Setting</label>
           <div style={{ display: 'flex', gap: '6px' }}>
             {STORY_SETTING_OPTIONS.map(s => (
@@ -301,11 +306,6 @@ export default function NewCampaignPage() {
             )}
           </div>
         )}
-
-        <div style={{ marginBottom: '16px' }}>
-          <label style={lbl}>Description <span style={{ color: '#cce0f5', fontWeight: 400 }}>(optional)</span></label>
-          <textarea style={{ ...inp, minHeight: '80px', resize: 'vertical' }} value={description} onChange={e => setDescription(e.target.value)} placeholder="A brief description of your story..." />
-        </div>
 
         <div style={{ marginBottom: '20px' }}>
           <label style={lbl}>Default Map Style</label>
