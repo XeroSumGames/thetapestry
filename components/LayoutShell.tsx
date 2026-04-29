@@ -3,7 +3,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
-import { installDebugLog, setDebugContext } from '../lib/debug-log'
 import Sidebar from './Sidebar'
 
 // Pages that ghosts (unauthenticated users) can view
@@ -55,11 +54,6 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   // round-trip in front of every link click. Pathname changes don't change
   // who's logged in, so this was wasted work that made soft-nav feel slow.
   useEffect(() => {
-    // Install global telemetry once per page. dlog captures fetch 5xx /
-    // slow requests / unhandled errors / page-load timing into the
-    // public.debug_log table. Disable per-tab with localStorage.debug_log='0'.
-    installDebugLog()
-
     let cancelled = false
     // Dedupe loadProfile across the initial checkSession() AND the
     // onAuthStateChange SIGNED_IN handler. Supabase fires SIGNED_IN
@@ -109,7 +103,6 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
           return
         }
         setIsAuthenticated(true)
-        setDebugContext({ userId: user.id })
         // DON'T await loadProfile — it's a non-critical "is this user
         // suspended" check. Awaiting it gates the entire UI shell on a
         // single Supabase query; if the pool is saturated (5-browser
