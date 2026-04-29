@@ -88,9 +88,9 @@ export default function SignupPage() {
         </div>
 
         <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} style={inp} required />
-          <input placeholder="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} style={inp} required />
-          <input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} style={inp} required />
+          <input placeholder="Username" autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} style={inp} required />
+          <input placeholder="Email" type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} style={inp} required />
+          <input placeholder="Password" type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} style={inp} required />
 
           {error && (
             <div style={{ fontSize: '13px', color: '#f5a89a', padding: '8px 10px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px' }}>
