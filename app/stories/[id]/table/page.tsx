@@ -13,6 +13,7 @@ import NotificationBell from '../../../../components/NotificationBell'
 import MessagesBell from '../../../../components/MessagesBell'
 import { useChatPanel, ChatMessageRow, ChatMessageList, ChatComposer } from '../../../../components/TableChat'
 import { useRollsFeed, RollEntry as RollEntryCard } from '../../../../components/RollsFeed'
+import { getCachedAuth } from '../../../../lib/auth-cache'
 import { SETTINGS } from '../../../../lib/settings'
 import dynamic from 'next/dynamic'
 const CampaignMap = dynamic(() => import('../../../../components/CampaignMap'), { ssr: false })
@@ -690,11 +691,20 @@ export default function TablePage() {
       // auth + campaign load in parallel — neither depends on the
       // other, the prior sequential pair was paying ~one cold round-
       // trip per mount unnecessarily.
-      const [authResult, campResult] = await Promise.all([
-        supabase.auth.getUser(),
+      //
+      // 2026-04-29 — switched the auth read from supabase.auth.getUser()
+      // to getCachedAuth(). The former takes the gotrue-js Web Lock
+      // and round-trips GET /auth/v1/user; if any other tab is mid-
+      // mount and holding the lock, this whole Promise.all hangs
+      // (because Promise.all awaits ALL its inputs even if one is
+      // stuck). The "Loading The Table..." screen sat indefinitely.
+      // getCachedAuth() reads from getSession() which is a localStorage
+      // hit — no lock contention, no network call.
+      const [authSnapshot, campResult] = await Promise.all([
+        getCachedAuth(),
         supabase.from('campaigns').select('*').eq('id', id).single(),
       ])
-      const user = authResult.data.user
+      const user = authSnapshot.user
       const camp = campResult.data
       if (!user) {
         // Preserve the current path + query so a session-expired reload on

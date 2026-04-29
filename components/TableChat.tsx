@@ -80,6 +80,19 @@ export function useChatPanel({ campaignId, userIdRef, setFeedTab, scrollFeedToBo
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const channelRef = useRef<any>(null)
 
+  // Stash the parent-provided callbacks in refs so refetch can stay
+  // referentially stable across renders. Without this — if the parent
+  // passes inline arrow functions (which they will, by default) — every
+  // render recreates the callbacks, refetch's deps change, the
+  // useEffects below fire on every render, the realtime channel
+  // re-subscribes, and the postgres_changes events compound into a
+  // tight refetch loop. Caused a hung "Loading The Table..." mount in
+  // playtest 2026-04-29 because the loop was eating every cycle.
+  const setFeedTabRef = useRef(setFeedTab)
+  const scrollFeedToBottomRef = useRef(scrollFeedToBottom)
+  setFeedTabRef.current = setFeedTab
+  scrollFeedToBottomRef.current = scrollFeedToBottom
+
   const refetch = useCallback(async () => {
     const uid = userIdRef.current
     // Simple query; whisper privacy is RLS-enforced server-side.
@@ -105,11 +118,11 @@ export function useChatPanel({ campaignId, userIdRef, setFeedTab, scrollFeedToBo
       // the GM out of whatever tab they were on.
       const prevIds = new Set(prev.map(m => m.id))
       const incoming = next.find((m) => !prevIds.has(m.id) && m.is_whisper && m.recipient_user_id === uid && m.user_id !== uid)
-      if (incoming && prev.length > 0) setFeedTab('chat')
+      if (incoming && prev.length > 0) setFeedTabRef.current('chat')
       return next
     })
-    setTimeout(() => { scrollFeedToBottom() }, 50)
-  }, [campaignId, supabase, userIdRef, setFeedTab, scrollFeedToBottom])
+    setTimeout(() => { scrollFeedToBottomRef.current() }, 50)
+  }, [campaignId, supabase, userIdRef])
 
   const clear = useCallback(() => setMessages([]), [])
 
