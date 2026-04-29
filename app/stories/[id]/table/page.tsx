@@ -3009,10 +3009,32 @@ export default function TablePage() {
       await supabase.from('initiative_order').update({ aim_bonus: newBonus }).eq('id', targetEntryId)
       await consumeAction(activeEntry.id, `${activeEntry.character_name} — Cover Fire → ${targetEntry.character_name} (-2 CMod)`)
     } else if (action === 'Distract') {
-      // SRD: Intimidation/Psychology*/Tactics* check → target loses next Combat Action
-      const newActions = Math.max(0, (targetEntry.actions_remaining ?? 0) - 1)
-      await supabase.from('initiative_order').update({ actions_remaining: newActions }).eq('id', targetEntryId)
-      await consumeAction(activeEntry.id, `${activeEntry.character_name} — Distract → ${targetEntry.character_name} (lost 1 action)`)
+      // SRD: Intimidation/Psychology*/Tactics* check → target loses next
+      // Combat Action on success. Auto-apply replaced with a real roll
+      // 2026-04-29 so the modal matches the standard ATTACK ROLL shape +
+      // failures don't punish the target. Active combatant burns one
+      // action either way (the attempt cost) — pre-consumed via the
+      // actionPreConsumedRef gate, mirroring Stabilize.
+      let amod = 0, smod = 0
+      const distractCharEntry = entries.find(e => e.character.name === activeEntry.character_name)
+      if (distractCharEntry) {
+        amod = distractCharEntry.character.data?.rapid?.INF ?? 0
+        const sk: any[] = Array.isArray(distractCharEntry.character.data?.skills) ? distractCharEntry.character.data.skills : []
+        const skLevel = (n: string) => (sk.find((s: any) => s.skillName === n)?.level ?? 0)
+        smod = Math.max(skLevel('Intimidation'), skLevel('Psychology*'), skLevel('Tactics*'))
+      } else {
+        const npcRoller = campaignNpcs.find((n: any) => n.name === activeEntry.character_name)
+        if (npcRoller) {
+          amod = (npcRoller as any).influence ?? 0
+          const npcSkills: any[] = Array.isArray(npcRoller.skills?.entries) ? npcRoller.skills.entries : []
+          const skLevel = (n: string) => (npcSkills.find((s: any) => s.name === n)?.level ?? 0)
+          smod = Math.max(skLevel('Intimidation'), skLevel('Psychology*'), skLevel('Tactics*'))
+        }
+      }
+      // Open roll modal FIRST (before consumeAction changes the active combatant)
+      handleRollRequest(`${activeEntry.character_name} — Distract → ${targetEntry.character_name}`, amod, smod)
+      actionPreConsumedRef.current = true
+      await consumeAction(activeEntry.id)
     } else if (action === 'Inspire') {
       // SRD: Inspiration check → target gains +1 Combat Action. Once per round.
       if (targetEntry.inspired_this_round) {
@@ -4038,6 +4060,41 @@ export default function TablePage() {
       }
     }
 
+    // Distract result — target loses next Combat Action on success.
+    // Active's action consumption already happened via the
+    // actionPreConsumedRef gate before the roll fired (mirrors Stabilize).
+    // Failure means no effect on the target — the attempt cost the
+    // active their action and that's it.
+    let distractResult = ''
+    if (pendingRoll.label.includes(' — Distract → ')) {
+      const dtTargetName = pendingRoll.label.split(' — Distract → ')[1]
+      const dtTargetEntry = initiativeOrder.find(e => e.character_name === dtTargetName)
+      if (dtTargetEntry) {
+        if (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight') {
+          const newActions = Math.max(0, (dtTargetEntry.actions_remaining ?? 0) - 1)
+          // .select() echo so we can detect a silent RLS rejection — same
+          // pattern as consumeAction. Without this, an RLS gap on
+          // initiative_order silently drops the update and Distract
+          // looks like it did nothing (per Xero's playtest report).
+          const { data: distractRows, error: distractErr } = await supabase
+            .from('initiative_order')
+            .update({ actions_remaining: newActions })
+            .eq('id', dtTargetEntry.id)
+            .select('id, actions_remaining')
+          if (distractErr) console.error('[distract] update error:', distractErr.message)
+          else if (!distractRows || distractRows.length === 0) console.warn('[distract] SILENT RLS FAIL — target actions_remaining not updated. Run sql/initiative-order-rls-members-write.sql.')
+          else {
+            // Broadcast turn_changed so all clients refresh immediately
+            // even if the postgres_changes UPDATE is delayed.
+            initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
+            distractResult = `${dtTargetName} loses 1 action.`
+          }
+        } else {
+          distractResult = `${dtTargetName} shrugged off the distraction.`
+        }
+      }
+    }
+
     // Stabilize result — stop death countdown on success (PC or NPC)
     let stabilizeResult = ''
     if (pendingRoll.label.includes('Stabilize ')) {
@@ -4264,7 +4321,7 @@ export default function TablePage() {
     setRollResult({
       die1, die2, amod: pendingRoll.amod, smod: pendingRoll.smod, cmod: cmodVal,
       total, outcome, label: pendingRoll.label, insightAwarded, insightUsed: preRollSpent ? 'pre' : null,
-      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
+      damage: damageResult, weaponJammed, traitNotes: [...traitNotes, ...(upkeepResult ? [upkeepResult] : []), ...(unjamResult ? [unjamResult] : []), ...(stabilizeResult ? [stabilizeResult] : []), ...(distractResult ? [distractResult] : []), ...(sprintResult ? [sprintResult] : []), ...(coordinateResult ? [coordinateResult] : [])],
       diceRolled: insightDiceRolled,
     } as any)
 
