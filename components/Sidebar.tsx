@@ -141,17 +141,25 @@ export default function Sidebar() {
                 ({userRole === 'thriver' ? 'Thriver' : 'Survivor'})
               </span>
             </div>
-            {/* Line 2: icons — evenly spaced, centred */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-evenly' }}>
-              <MessagesBell />
-              <NotificationBell />
+            {/* Line 2: icons — equal-width slots so visual midpoints
+                line up regardless of each component's internal padding.
+                space-evenly + space-around both gave uneven gaps because
+                the three children have different intrinsic widths
+                (MessagesBell + NotificationBell wrap their buttons in
+                different padding; the Campfire emoji has none). Three
+                fixed-width centred cells fix it. */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}><MessagesBell /></div>
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}><NotificationBell /></div>
               {/* Campfire shortcut — emoji glyphs ignore CSS color, so
                   use opacity + grayscale to actually grey the icon out
                   while it's a placeholder ('coming soon' from the
                   user-header surface; the full /campfire page is still
                   reachable from the main nav below). Matches the
                   MessagesBell dim-when-idle treatment. */}
-              <span title="The Campfire — coming soon" style={{ fontSize: '16px', lineHeight: 1, display: 'flex', alignItems: 'center', cursor: 'default', opacity: 0.45, filter: 'grayscale(1)' }}>🔥</span>
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                <span title="The Campfire — coming soon" style={{ fontSize: '16px', lineHeight: 1, display: 'flex', alignItems: 'center', cursor: 'default', opacity: 0.45, filter: 'grayscale(1)' }}>🔥</span>
+              </div>
             </div>
           </>
         )}
