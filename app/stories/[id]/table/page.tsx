@@ -1907,8 +1907,8 @@ export default function TablePage() {
     setViewingNpcs([])
     // Stay on tactical map after combat ends
     setShowTacticalMap(true)
-    await rollsFeed.refetch()
-    await loadEntries(id)
+    // Parallel — independent fetches (different tables).
+    await Promise.all([rollsFeed.refetch(), loadEntries(id)])
     initChannelRef.current?.send({ type: 'broadcast', event: 'combat_ended', payload: {} })
   }
 
@@ -6339,8 +6339,7 @@ export default function TablePage() {
                       label: `🎒 ${characterName} looted ${item.name} from ${objectName}`,
                       die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
                     })
-                    await loadEntries(id)
-                    await rollsFeed.refetch()
+                    await Promise.all([loadEntries(id), rollsFeed.refetch()])
                   }}
                   onMove={(() => {
                     // GM can always reposition. Players can only move an object
@@ -6741,8 +6740,7 @@ export default function TablePage() {
                         label: `🎒 ${characterName} looted ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} from ${objectName}`,
                         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
                       })
-                      await loadEntries(id)
-                      await rollsFeed.refetch()
+                      await Promise.all([loadEntries(id), rollsFeed.refetch()])
                     }}
                     onDuplicate={async (source) => {
                       // Pull lootable too — the source object passed in only carries the
@@ -7572,8 +7570,7 @@ export default function TablePage() {
                   die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'loot',
                 })
                 initChannelRef.current?.send({ type: 'broadcast', event: 'inventory_transfer', payload: {} })
-                await loadEntries(id)
-                await rollsFeed.refetch()
+                await Promise.all([loadEntries(id), rollsFeed.refetch()])
                 setShowLootModal(false)
               }} disabled={lootItems.length === 0 || lootRecipients.size === 0}
                 style={{ flex: 2, padding: '10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: lootItems.length === 0 || lootRecipients.size === 0 ? 'not-allowed' : 'pointer', opacity: lootItems.length === 0 || lootRecipients.size === 0 ? 0.5 : 1 }}>
@@ -7636,8 +7633,7 @@ export default function TablePage() {
                   die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'cdp',
                 })
                 initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
-                await loadEntries(id)
-                await rollsFeed.refetch()
+                await Promise.all([loadEntries(id), rollsFeed.refetch()])
                 setShowCdpModal(false)
               }} disabled={cdpRecipients.size === 0}
                 style={{ flex: 2, padding: '10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: cdpRecipients.size === 0 ? 'not-allowed' : 'pointer', opacity: cdpRecipients.size === 0 ? 0.5 : 1 }}>
