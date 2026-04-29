@@ -4074,10 +4074,14 @@ export default function TablePage() {
     // actionPreConsumedRef gate before the roll fired (mirrors Stabilize).
     // Failure means no effect on the target — the attempt cost the
     // active their action and that's it.
+    //
+    // Target comes from the modal's targetName state (the Target
+    // dropdown the user picked) — not from the label, since the
+    // unified-modal flow opens with no target preselected.
     let distractResult = ''
-    if (pendingRoll.label.includes(' — Distract → ')) {
-      const dtTargetName = pendingRoll.label.split(' — Distract → ')[1]
-      const dtTargetEntry = initiativeOrder.find(e => e.character_name === dtTargetName)
+    if (pendingRoll.label.endsWith(' — Distract')) {
+      const dtTargetName = targetName
+      const dtTargetEntry = dtTargetName ? initiativeOrder.find(e => e.character_name === dtTargetName) : null
       if (dtTargetEntry) {
         if (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight') {
           const newActions = Math.max(0, (dtTargetEntry.actions_remaining ?? 0) - 1)
@@ -5315,7 +5319,42 @@ export default function TablePage() {
                   style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Coordinate</button>
 
                 {/* ── COVER FIRE, DISTRACT, INSPIRE ── */}
-                {['Cover Fire', 'Distract', 'Inspire'].map(action => {
+                {/* Distract opens the standard roll modal directly — the
+                    modal already includes a Target dropdown when combat
+                    is active, so the prior 2-step picker → modal flow
+                    collapses into one. Cover Fire and Inspire still use
+                    the picker because they don't fire a roll (they
+                    auto-apply effects). */}
+                <button onClick={() => {
+                  clearAimIfActive(activeEntry.id)
+                  // Compute Distract roll mods from the active combatant
+                  // (mirror applySocialAction's Distract branch).
+                  let amod = 0, smod = 0
+                  const distractCharEntry = entries.find(e => e.character.name === activeEntry.character_name)
+                  if (distractCharEntry) {
+                    amod = distractCharEntry.character.data?.rapid?.INF ?? 0
+                    const sk: any[] = Array.isArray(distractCharEntry.character.data?.skills) ? distractCharEntry.character.data.skills : []
+                    const skLevel = (n: string) => (sk.find((s: any) => s.skillName === n)?.level ?? 0)
+                    smod = Math.max(skLevel('Intimidation'), skLevel('Psychology*'), skLevel('Tactics*'))
+                  } else {
+                    const npcRoller = campaignNpcs.find((n: any) => n.name === activeEntry.character_name)
+                    if (npcRoller) {
+                      amod = (npcRoller as any).influence ?? 0
+                      const npcSkills: any[] = Array.isArray(npcRoller.skills?.entries) ? npcRoller.skills.entries : []
+                      const skLevel = (n: string) => (npcSkills.find((s: any) => s.name === n)?.level ?? 0)
+                      smod = Math.max(skLevel('Intimidation'), skLevel('Psychology*'), skLevel('Tactics*'))
+                    }
+                  }
+                  // Pre-consume the active's action so the attempt costs
+                  // them whether the roll succeeds or fails. Mirrors
+                  // Stabilize. Roll modal opens immediately; closeRollModal
+                  // reads targetName state to apply the action drop on
+                  // success.
+                  handleRollRequest(`${activeEntry.character_name} — Distract`, amod, smod)
+                  actionPreConsumedRef.current = true
+                  void consumeAction(activeEntry.id)
+                }} style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Distract</button>
+                {['Cover Fire', 'Inspire'].map(action => {
                   const isOpen = socialTarget?.action === action
                   return (
                     <button key={action} onClick={() => { clearAimIfActive(activeEntry.id); setSocialTarget(isOpen ? null : { action }) }}
