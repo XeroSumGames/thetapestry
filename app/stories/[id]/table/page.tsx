@@ -4069,26 +4069,32 @@ export default function TablePage() {
       }
     }
 
-    // Distract result — target loses next Combat Action on success.
-    // Active's action consumption already happened via the
-    // actionPreConsumedRef gate before the roll fired (mirrors Stabilize).
-    // Failure means no effect on the target — the attempt cost the
-    // active their action and that's it.
+    // Distract result — outcome scaling per CRB §06 Combat Actions:
+    //   Success                    → target loses 1 Combat Action
+    //   Wild Success / High Insight → target loses BOTH Combat Actions
+    //   Failure / Low Insight       → no effect (active still pays the
+    //                                 attempt's action cost)
+    //   Dire Failure                → target gains 1 action ("becomes
+    //                                 Inspired", per CRB)
     //
-    // Target comes from the modal's targetName state (the Target
-    // dropdown the user picked) — not from the label, since the
-    // unified-modal flow opens with no target preselected.
+    // Target comes from the modal's targetName state (dropdown selection),
+    // not from the label.
     let distractResult = ''
     if (pendingRoll.label.endsWith(' — Distract')) {
       const dtTargetName = targetName
       const dtTargetEntry = dtTargetName ? initiativeOrder.find(e => e.character_name === dtTargetName) : null
       if (dtTargetEntry) {
-        if (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight') {
-          const newActions = Math.max(0, (dtTargetEntry.actions_remaining ?? 0) - 1)
+        const cur = dtTargetEntry.actions_remaining ?? 0
+        let delta = 0
+        if (outcome === 'Wild Success' || outcome === 'High Insight') delta = -2
+        else if (outcome === 'Success') delta = -1
+        else if (outcome === 'Dire Failure') delta = 1
+        if (delta !== 0) {
+          const newActions = Math.max(0, cur + delta)
           // .select() echo so we can detect a silent RLS rejection — same
           // pattern as consumeAction. Without this, an RLS gap on
           // initiative_order silently drops the update and Distract
-          // looks like it did nothing (per Xero's playtest report).
+          // looks like it did nothing.
           const { data: distractRows, error: distractErr } = await supabase
             .from('initiative_order')
             .update({ actions_remaining: newActions })
@@ -4100,7 +4106,9 @@ export default function TablePage() {
             // Broadcast turn_changed so all clients refresh immediately
             // even if the postgres_changes UPDATE is delayed.
             initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
-            distractResult = `${dtTargetName} loses 1 action.`
+            if (delta === -2) distractResult = `${dtTargetName} loses BOTH actions this turn.`
+            else if (delta === -1) distractResult = `${dtTargetName} loses 1 action.`
+            else distractResult = `${dtTargetName} shrugs it off and gains an action — Inspired!`
           }
         } else {
           distractResult = `${dtTargetName} shrugged off the distraction.`
@@ -5333,54 +5341,80 @@ export default function TablePage() {
                     auto-apply effects). */}
                 <button onClick={() => {
                   clearAimIfActive(activeEntry.id)
-                  // Compute Distract roll mods from the active combatant
-                  // (mirror applySocialAction's Distract branch).
+                  // Compute Distract roll mods from the active combatant.
+                  // Per CRB: Intimidation / Inspiration / Tactics* /
+                  // Psychology* — take the highest level. ("Tactical*"
+                  // in the CRB is a typo per Xero; engine uses Tactics*.)
                   let amod = 0, smod = 0
                   const distractCharEntry = entries.find(e => e.character.name === activeEntry.character_name)
                   if (distractCharEntry) {
                     amod = distractCharEntry.character.data?.rapid?.INF ?? 0
                     const sk: any[] = Array.isArray(distractCharEntry.character.data?.skills) ? distractCharEntry.character.data.skills : []
                     const skLevel = (n: string) => (sk.find((s: any) => s.skillName === n)?.level ?? 0)
-                    smod = Math.max(skLevel('Intimidation'), skLevel('Psychology*'), skLevel('Tactics*'))
+                    smod = Math.max(skLevel('Intimidation'), skLevel('Inspiration'), skLevel('Psychology*'), skLevel('Tactics*'))
                   } else {
                     const npcRoller = campaignNpcs.find((n: any) => n.name === activeEntry.character_name)
                     if (npcRoller) {
                       amod = (npcRoller as any).influence ?? 0
                       const npcSkills: any[] = Array.isArray(npcRoller.skills?.entries) ? npcRoller.skills.entries : []
                       const skLevel = (n: string) => (npcSkills.find((s: any) => s.name === n)?.level ?? 0)
-                      smod = Math.max(skLevel('Intimidation'), skLevel('Psychology*'), skLevel('Tactics*'))
+                      smod = Math.max(skLevel('Intimidation'), skLevel('Inspiration'), skLevel('Psychology*'), skLevel('Tactics*'))
                     }
+                  }
+                  // Per CRB §06 Combat Actions: "Choose an enemy at Close
+                  // Range." Close = ≤30ft. Compute the active combatant's
+                  // map token, then enumerate combatants within 30ft and
+                  // alive. Pre-select the closest (or the GM's
+                  // selectedMapTargetName if it's in range).
+                  const aTok = mapTokens.find(t => (activeEntry.character_id && t.character_id === activeEntry.character_id) || (activeEntry.npc_id && t.npc_id === activeEntry.npc_id))
+                  const distInFeet = (entry: any): number | null => {
+                    if (!aTok) return null
+                    const tTok = mapTokens.find(t => {
+                      const pe = entries.find(e => e.character.id === entry.character_id)
+                      if (pe && t.character_id === pe.character.id) return true
+                      const npc = campaignNpcs.find((n: any) => n.id === entry.npc_id)
+                      if (npc && t.npc_id === npc.id) return true
+                      return false
+                    })
+                    if (!tTok) return null
+                    return Math.max(Math.abs(aTok.grid_x - tTok.grid_x), Math.abs(aTok.grid_y - tTok.grid_y)) * mapCellFeet
+                  }
+                  const isAliveTarget = (entry: any): boolean => {
+                    if (entry.id === activeEntry.id) return false
+                    if (entry.is_npc) {
+                      const npc = campaignNpcs.find((n: any) => n.id === entry.npc_id)
+                      return !(npc && npc.wp_current != null && npc.wp_current <= 0)
+                    }
+                    const pc = entries.find(en => en.character.id === entry.character_id)
+                    return !(pc?.liveState && pc.liveState.wp_current === 0)
+                  }
+                  // No tokens on the map at all → keep behaviour permissive
+                  // (no range filter), per the existing Stabilize / Charge
+                  // pattern of distInFeet === null falling through.
+                  const candidates = initiativeOrder
+                    .filter(isAliveTarget)
+                    .map(e => ({ entry: e, dist: distInFeet(e) }))
+                    .filter(x => x.dist === null || x.dist <= 30)
+                  if (candidates.length === 0) {
+                    alert('No valid Distract targets within Close range (30 ft).')
+                    return
+                  }
+                  // Pre-select: GM's map selection if it's in the
+                  // candidate list; otherwise the closest by distance.
+                  // Treat null distance (no map) as 0 for closest pick.
+                  let preselect: string | null = null
+                  if (selectedMapTargetName && candidates.some(c => c.entry.character_name === selectedMapTargetName)) {
+                    preselect = selectedMapTargetName
+                  } else {
+                    const closest = [...candidates].sort((a, b) => (a.dist ?? 0) - (b.dist ?? 0))[0]
+                    preselect = closest?.entry.character_name ?? null
                   }
                   // Open the standard roll modal. Action is NOT pre-
                   // consumed — closeRollModal handles the consume only
                   // when the user actually clicks ROLL (didRoll=true).
-                  // Cancel = no roll fired = no action consumed, per
-                  // playtest 2026-04-29: opening Distract by mistake
-                  // shouldn't punish the player.
+                  // Cancel = no roll fired = no action consumed.
                   handleRollRequest(`${activeEntry.character_name} — Distract`, amod, smod)
-                  // Pre-fill the modal's Target dropdown with whatever
-                  // the GM had pre-selected on the map / initiative bar
-                  // — only if it's a valid combatant (not an object,
-                  // not the active themselves, not dead). Mirrors the
-                  // Attack-modal target prefill but for the no-weapon
-                  // path. Without this the dropdown opens empty even
-                  // when the GM clearly already picked who they wanted
-                  // to distract.
-                  if (selectedMapTargetName && selectedMapTargetName !== activeEntry.character_name) {
-                    const preselectEntry = initiativeOrder.find(e => e.character_name === selectedMapTargetName)
-                    if (preselectEntry) {
-                      // Reject dead/mortal so the dropdown options match
-                      const isDead = (() => {
-                        if (preselectEntry.is_npc) {
-                          const npc = campaignNpcs.find((n: any) => n.id === preselectEntry.npc_id)
-                          return npc && npc.wp_current != null && npc.wp_current <= 0
-                        }
-                        const pc = entries.find(en => en.character.id === preselectEntry.character_id)
-                        return pc?.liveState && pc.liveState.wp_current === 0
-                      })()
-                      if (!isDead) setTargetName(selectedMapTargetName)
-                    }
-                  }
+                  if (preselect) setTargetName(preselect)
                 }} style={actBtn('#242424', '#d4cfc9', '#3a3a3a')}>Distract</button>
                 {['Cover Fire', 'Inspire'].map(action => {
                   const isOpen = socialTarget?.action === action
@@ -7035,6 +7069,28 @@ export default function TablePage() {
                             if (active) {
                               const autoRange = getAutoRangeBand(active.character_id || undefined, active.npc_id || undefined, entry.character_name)
                               if (autoRange && !isInRange(pendingRoll.weapon.weaponName, autoRange)) return false
+                            }
+                          }
+                          // Distract: only targets within 30 ft (Close range,
+                          // per CRB §06). The active themselves was already
+                          // excluded in the dead/alive checks above (it's the
+                          // active's own entry id), but double-check.
+                          if (pendingRoll.label.endsWith(' — Distract') && mapTokens.length > 0) {
+                            const active = initiativeOrder.find(ie => ie.is_active)
+                            if (active && entry.id === active.id) return false
+                            if (active) {
+                              const aTok = mapTokens.find(t => (active.character_id && t.character_id === active.character_id) || (active.npc_id && t.npc_id === active.npc_id))
+                              const tTok = mapTokens.find(t => {
+                                const pe = entries.find(e => e.character.name === entry.character_name)
+                                if (pe && t.character_id === pe.character.id) return true
+                                const npc = campaignNpcs.find((n: any) => n.name === entry.character_name)
+                                if (npc && t.npc_id === npc.id) return true
+                                return false
+                              })
+                              if (aTok && tTok) {
+                                const dist = Math.max(Math.abs(aTok.grid_x - tTok.grid_x), Math.abs(aTok.grid_y - tTok.grid_y))
+                                if (dist * mapCellFeet > 30) return false
+                              }
                             }
                           }
                           // Charge: only targets within 20ft (2 moves × 10ft)
