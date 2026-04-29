@@ -6,6 +6,7 @@ import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
 import InventoryPanel, { InventoryItem } from './InventoryPanel'
 import ProgressionLog, { LogEntry, createLogEntry } from './ProgressionLog'
+import { appendProgressionEntry } from '../lib/progression-log'
 import { openPopout } from '../lib/popout'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, CONDITIONS, Condition, ALL_WEAPONS, MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getTraitValue } from '../lib/weapons'
 import { computeEncumbrance } from '../lib/encumbrance'
@@ -450,7 +451,10 @@ function CharacterCardImpl({
                           if (total >= 9) {
                             alert(`Physicality Check: ${d1}+${d2}+${phyMod} = ${total} — Success! No lasting wound.`)
                           } else {
-                            setLastingWoundResult(rollOnTable(LASTING_WOUNDS_TABLE))
+                            const lw = rollOnTable(LASTING_WOUNDS_TABLE)
+                            setLastingWoundResult(lw)
+                            // Lasting Wounds are permanent — durable journey marker.
+                            void appendProgressionEntry(supabase, c.id, 'wound', `🩸 Lasting Wound: ${lw.result.name}.`)
                           }
                         }}
                           style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
@@ -1027,9 +1031,12 @@ function CharacterCardImpl({
             <button onClick={() => {
               if (!localState) return
               const bp = rollOnTable(BREAKING_POINT_TABLE)
-              setBreakingPointResult({ ...bp, durationHours: Math.floor(Math.random() * 6) + 1 })
+              const durationHours = Math.floor(Math.random() * 6) + 1
+              setBreakingPointResult({ ...bp, durationHours })
               setBreakingPointPending(false)
               updateStat(localState.id, 'stress', 0)
+              // Breaking Point — durable journey marker on the PC.
+              void appendProgressionEntry(supabase, c.id, 'stress', `⚡ Breaking Point: ${bp.result.name} (${durationHours}h).`)
             }}
               style={{ width: '100%', padding: '10px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Roll Breaking Point</button>
           </div>

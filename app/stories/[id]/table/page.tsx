@@ -36,6 +36,7 @@ import { renderRichText } from '../../../../lib/rich-text'
 import { rollDamage, calculateDamage } from '../../../../lib/damage'
 import { restoreCampaignSnapshot, type CampaignSnapshot } from '../../../../lib/campaign-snapshot'
 import { useStableCallback } from '../../../../lib/useStableCallback'
+import { appendProgressionEntry } from '../../../../lib/progression-log'
 import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/weapons'
 import { getOutcome, outcomeColor, compactRollSummary, formatTime } from '../../../../lib/roll-helpers'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
@@ -1582,6 +1583,7 @@ export default function TablePage() {
               label: `💀 ${e.character.name} has died.`,
               die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'death',
             })
+            if (e.character?.id) void appendProgressionLog(e.character.id, 'wound', '💀 Died.')
           }
         }
         // Incapacitation countdown
@@ -1759,22 +1761,12 @@ export default function TablePage() {
     }
   }
 
-  /** Append an entry to a character's progression_log jsonb. Read-modify-write
-   *  pattern — matches the existing CDP-award and mortal-wound callers. Races
-   *  between concurrent appends are rare (events are user-driven) and the
-   *  worst outcome is one missed entry. Fire-and-forget; errors log to console. */
-  async function appendProgressionLog(characterId: string, type: string, text: string) {
-    try {
-      const { data } = await supabase.from('characters').select('data').eq('id', characterId).single()
-      const base: any = data?.data ?? {}
-      const prev = Array.isArray(base.progression_log) ? base.progression_log : []
-      const entry = { date: new Date().toISOString(), type, text }
-      await supabase.from('characters').update({
-        data: { ...base, progression_log: [entry, ...prev] },
-      }).eq('id', characterId)
-    } catch (err: any) {
-      console.warn('[progression_log] append failed:', err?.message ?? err)
-    }
+  /** Thin wrapper around the shared lib/progression-log helper so the existing
+   *  call sites in this file don't need to thread `supabase` themselves. The
+   *  Progression Log is a permanent journey journal — only durable life events
+   *  belong (memory rule: feedback_progression_log_curation.md). */
+  async function appendProgressionLog(characterId: string, type: any, text: string) {
+    return appendProgressionEntry(supabase, characterId, type, text)
   }
 
   async function consumeAction(entryId: string, actionLabel?: string, cost = 1) {
@@ -2657,10 +2649,6 @@ export default function TablePage() {
     // Broadcast to every client so local chat/log state is force-cleared even
     // if a DELETE realtime event gets dropped or RLS blocks the write.
     initChannelRef.current?.send({ type: 'broadcast', event: 'logs_cleared', payload: {} })
-    // Progression log: session-start marker on every PC's log.
-    for (const e of entries) {
-      if (e.character?.id) void appendProgressionLog(e.character.id, 'session', `Session ${newCount} began`)
-    }
   }
 
   async function endSession() {
@@ -2686,10 +2674,6 @@ export default function TablePage() {
     setSessionFiles([])
     setSessionActing(false)
     logEvent('session_ended', { campaign_id: id, session_number: endedCount })
-    // Progression log: session-end marker on every PC's log.
-    for (const e of entries) {
-      if (e.character?.id) void appendProgressionLog(e.character.id, 'session', `Session ${endedCount} ended`)
-    }
 
     // Fire all DB work in the background — UI is already updated
     const now = new Date().toISOString()
@@ -3116,6 +3100,9 @@ export default function TablePage() {
         alert(`Failed to add member: ${memErr.message}`)
       } else {
         inserted = true
+        // Progression log entry on the recruiter PC.
+        const recruitedAs = applyApprentice ? 'an Apprentice' : `a ${recruitmentType.charAt(0).toUpperCase() + recruitmentType.slice(1)}`
+        if (rollerEntry.character?.id) void appendProgressionLog(rollerEntry.character.id, 'community', `🤝 Recruited ${npc.name} as ${recruitedAs} to ${finalCommunityName}.`)
       }
     }
 
@@ -3239,7 +3226,12 @@ export default function TablePage() {
         apprentice_of_character_id: null,
         joined_at: new Date().toISOString(),
       })
-      if (!memErr) inserted = true
+      if (!memErr) {
+        inserted = true
+        // Progression log on the rolling PC.
+        const recruitedAs = `a ${r.approach.charAt(0).toUpperCase() + r.approach.slice(1)}`
+        if (rollerEntry.character?.id) void appendProgressionLog(rollerEntry.character.id, 'community', `🤝 Recruited ${r.npcName} as ${recruitedAs} to ${r.communityName}.`)
+      }
     }
 
     // Patch the existing roll_log row.
@@ -3657,7 +3649,6 @@ export default function TablePage() {
       const newInsight = myEntry.liveState.insight_dice - 1
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
       preRollSpent = true
-      void appendProgressionLog(myEntry.character.id, 'insight', `Spent 1 Insight Die — rolled 3d6 (${d1}+${d2}+${d3}) on ${pendingRoll.label}`)
     } else if (preRollInsight === '+3cmod' && myEntry?.liveState && myEntry.liveState.insight_dice >= 1) {
       die1 = rollD6()
       die2 = rollD6()
@@ -3665,7 +3656,6 @@ export default function TablePage() {
       const newInsight = myEntry.liveState.insight_dice - 1
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
       preRollSpent = true
-      void appendProgressionLog(myEntry.character.id, 'insight', `Spent 1 Insight Die — +3 CMod on ${pendingRoll.label}`)
     } else {
       die1 = rollD6()
       die2 = rollD6()
@@ -3682,7 +3672,6 @@ export default function TablePage() {
       const currentInsight = preRollSpent ? myEntry.liveState.insight_dice - 1 : myEntry.liveState.insight_dice
       const newInsight = currentInsight + 1
       await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
-      void appendProgressionLog(myEntry.character.id, 'insight', `Gained 1 Insight Die from Moment of ${outcome === 'High Insight' ? 'High' : 'Low'} Insight`)
     }
 
     // Calculate and apply damage for successful weapon attacks
@@ -4613,6 +4602,8 @@ export default function TablePage() {
           await supabase.from('character_states').update({ death_countdown: null, incap_rounds: incapRounds, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId)
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, death_countdown: null, incap_rounds: incapRounds } as any } : e))
           stabilizeResult = `${stTargetName} stabilized! Incapacitated for ${incapRounds} round${incapRounds !== 1 ? 's' : ''}, then regains 1 WP + 1 RP.`
+          const medicName = pendingRoll.label.split(' — ')[0]
+          if (targetEntry.character?.id) void appendProgressionLog(targetEntry.character.id, 'wound', `🩸 Stabilized by ${medicName}.`)
         } else {
           stabilizeResult = `Failed to stabilize ${stTargetName}.`
         }
@@ -4836,6 +4827,15 @@ export default function TablePage() {
         if (myCharIdRef.current) {
           void loadRevealedNpcs(myCharIdRef.current, campaignNpcs)
         }
+        // Progression log: a meeting that left a mark on the PC.
+        const metNpc = campaignNpcs.find((n: any) => n.id === firstImpressionTarget.npcId)
+        const npcName = metNpc?.name ?? 'an NPC'
+        const vibe = cmodDelta >= 2 ? 'great first impression'
+          : cmodDelta === 1 ? 'good first impression'
+          : cmodDelta === 0 ? 'neutral first impression'
+          : cmodDelta === -1 ? 'rough start'
+          : 'bad blood'
+        void appendProgressionLog(firstImpressionTarget.characterId, 'relationship', `Met ${npcName} — ${vibe} (CMod ${cmodDelta >= 0 ? '+' : ''}${cmodDelta}).`)
       } catch (err) {
         console.error('[first-impression] relationship upsert failed:', err)
       }
@@ -4869,7 +4869,6 @@ export default function TablePage() {
 
     const newInsight = myEntry.liveState.insight_dice - cost
     await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', myEntry.stateId)
-    void appendProgressionLog(myEntry.character.id, 'insight', `Spent ${cost} Insight Die${cost > 1 ? 's' : ''} — reroll ${rerollDie === 'both' ? 'both dice' : rerollDie === 'die1' ? 'die 1' : 'die 2'}`)
 
     const newDie1 = rerollDie === 'die2' ? rollResult.die1 : rollD6()
     const newDie2 = rerollDie === 'die1' ? rollResult.die2 : rollD6()
@@ -8316,7 +8315,6 @@ export default function TablePage() {
             const newInsight = charEntry.liveState.insight_dice - 1
             await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', charEntry.stateId)
             setEntries(prev => prev.map(e => e.stateId === charEntry.stateId ? { ...e, liveState: { ...e.liveState, insight_dice: newInsight } } : e))
-            if (charEntry.character?.id) void appendProgressionLog(charEntry.character.id, 'insight', `Spent 1 Insight Die — rolled 3d6 on Grapple`)
             insightSpent = true
           } else if (insightMode === '+3cmod' && charEntry?.liveState && charEntry.liveState.insight_dice >= 1) {
             aDie1 = rollD6()
@@ -8325,7 +8323,6 @@ export default function TablePage() {
             const newInsight = charEntry.liveState.insight_dice - 1
             await supabase.from('character_states').update({ insight_dice: newInsight, updated_at: new Date().toISOString() }).eq('id', charEntry.stateId)
             setEntries(prev => prev.map(e => e.stateId === charEntry.stateId ? { ...e, liveState: { ...e.liveState, insight_dice: newInsight } } : e))
-            if (charEntry.character?.id) void appendProgressionLog(charEntry.character.id, 'insight', `Spent 1 Insight Die — +3 CMod on Grapple`)
             insightSpent = true
           } else {
             aDie1 = rollD6()
@@ -9305,6 +9302,8 @@ export default function TablePage() {
                           .eq('community_id', recruitResult.communityId)
                           .eq('npc_id', recruitNpcId)
                         setRecruitResult(r => r ? { ...r, apprenticeApplied: true } : r)
+                        // Apprentice bond — durable journey marker on the master PC.
+                        if (recruitRollerId) void appendProgressionLog(recruitRollerId, 'community', `⭐ Took ${recruitResult.npcName} as your Apprentice.`)
                         if (typeof window !== 'undefined') {
                           window.dispatchEvent(new CustomEvent('tapestry:recruit-updated', { detail: { npcId: recruitNpcId } }))
                         }

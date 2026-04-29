@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
+import { appendProgressionEntry } from '../lib/progression-log'
 import CommunityMoraleModal from './CommunityMoraleModal'
 
 // Phase A — Communities foundation. Lists communities for a campaign, lets
@@ -1086,6 +1087,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     const { error } = await supabase.from('communities').update(update).eq('id', communityId)
     if (error) { alert(`Leader change failed: ${error.message}`); return }
     setCommunities(prev => prev.map(c => c.id === communityId ? { ...c, ...update } : c))
+    // Progression log on a new PC leader (NPC leaders skipped — no log).
+    if (choice.kind === 'pc' && member.character_id) {
+      const comm = communities.find(c => c.id === communityId)
+      void appendProgressionEntry(supabase, member.character_id, 'community', `🏛️ Became leader of ${comm?.name ?? 'a community'}.`)
+    }
   }
 
   // ── Homestead pin setter ────────────────────────────────────────
@@ -1142,6 +1148,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         if (enrollErr) console.warn('[campaign-community] founder auto-enroll failed:', enrollErr.message)
         if (founderRow) {
           setMembers(prev => ({ ...prev, [newComm.id]: [founderRow as Member] }))
+          // Progression log: founding event + leader appointment in one entry.
+          void appendProgressionEntry(supabase, myCharacterId, 'community', `🏛️ Founded ${newComm.name} (leader).`)
         }
       }
     }
@@ -1159,6 +1167,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       .update({ status: 'active', joined_at: new Date().toISOString() })
       .eq('id', req.id)
     if (error) { alert(`Approve failed: ${error.message}`); return }
+    // Progression log on the joining PC.
+    if (req.character_id) {
+      const comm = communities.find(c => c.id === req.community_id)
+      void appendProgressionEntry(supabase, req.character_id, 'community', `🏛️ Joined ${comm?.name ?? 'a community'}.`)
+    }
     // Move from pending → active in local state.
     setPendingByCommunity(prev => {
       const n = { ...prev }
@@ -1205,6 +1218,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     if (error) { alert(`Add failed: ${error.message}`); return }
     if (data) {
       setMembers(prev => ({ ...prev, [communityId]: [...(prev[communityId] ?? []), data as Member] }))
+      // Progression log on a PC who was just added.
+      if (addKind === 'pc' && addSubjectId) {
+        const comm = communities.find(c => c.id === communityId)
+        void appendProgressionEntry(supabase, addSubjectId, 'community', `🏛️ Joined ${comm?.name ?? 'a community'}.`)
+      }
       setAddSubjectId('')
       setAddRole('unassigned')
       setAddType('member')
@@ -1225,6 +1243,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       .update({ left_at: new Date().toISOString(), left_reason: isSelf ? 'self' : 'manual' })
       .eq('id', m.id)
     if (error) { alert(`${isSelf ? 'Leave' : 'Remove'} failed: ${error.message}`); return }
+    // Progression log on the departing PC (NPCs don't have one).
+    if (m.character_id) {
+      const comm = communities.find(c => c.id === m.community_id)
+      void appendProgressionEntry(supabase, m.character_id, 'community', `🏛️ Left ${comm?.name ?? 'a community'}.`)
+    }
     // If the departing member was the acknowledged leader, auto-promote
     // per the step-down spec (next founder → longest-tenured remaining).
     // Optimistically update local members FIRST so pickAutoSuccessor

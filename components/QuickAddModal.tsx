@@ -16,6 +16,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { appendProgressionEntry } from '../lib/progression-log'
 
 export interface QuickAddModalProps {
   mode: 'campaign' | 'world'
@@ -210,6 +211,10 @@ export default function QuickAddModal({
         return
       }
       newPinId = data.id
+      // Progression log on the dropping PC.
+      if (myPcId) {
+        void appendProgressionEntry(supabase, myPcId, 'pin', `📍 Dropped a pin: "${pinName.trim()}" (${pinCategory}).`)
+      }
     } else {
       // World mode — map_pins. Share flag decides whether this goes
       // public (Thriver queue for Survivors, auto-approved for
@@ -336,6 +341,9 @@ export default function QuickAddModal({
         joined_at: new Date().toISOString(),
       })
       if (enrollErr) console.warn('[quick-add] creator auto-enroll failed:', enrollErr.message)
+      else {
+        void appendProgressionEntry(supabase, myPcId, 'community', `🏛️ Founded ${commName.trim()} (leader).`)
+      }
     }
     if (commAttachments.length > 0) {
       for (const file of commAttachments) {

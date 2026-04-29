@@ -5,7 +5,7 @@ import { renderRichText } from '../lib/rich-text'
 
 export interface LogEntry {
   date: string
-  type: 'cdp' | 'wound' | 'stress' | 'insight' | 'item' | 'kill' | 'session' | 'note' | 'skill' | 'attribute'
+  type: 'cdp' | 'wound' | 'stress' | 'insight' | 'item' | 'kill' | 'session' | 'note' | 'skill' | 'attribute' | 'community' | 'pin' | 'relationship'
   text: string
 }
 
@@ -20,6 +20,9 @@ const TYPE_COLORS: Record<string, string> = {
   note: '#d4cfc9',
   skill: '#7ab3d4',
   attribute: '#7ab3d4',
+  community: '#a87fc4',
+  pin: '#ddc070',
+  relationship: '#e8a87c',
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -33,6 +36,9 @@ const TYPE_LABELS: Record<string, string> = {
   note: 'Note',
   skill: 'Skill',
   attribute: 'Attribute',
+  community: 'Community',
+  pin: 'Pin',
+  relationship: 'Met',
 }
 
 interface Props {
