@@ -1495,7 +1495,19 @@ export default function TablePage() {
       return
     }
     if (everyoneSkipped) {
-      // Decrement death countdown + incapacitation + RP recovery
+      // ── New-round bookkeeping — batched ──
+      // Was: three nested for-await loops (PC state, NPC state, init reroll)
+      // each firing N sequential UPDATEs. With 6 combatants at 150ms RTT,
+      // that's ~2.7s of dead air at the round boundary. Now: build per-row
+      // update promises, run them all in a single Promise.all wave. The
+      // values differ per row so we can't .in() into a single SQL stmt,
+      // but parallelizing the network round-trips collapses ~3N RTTs to 1.
+      const pcUpdates: Promise<any>[] = []
+      const npcUpdates: Promise<any>[] = []
+      const npcLocalPatches: { id: string; updates: any }[] = []
+      const deathLogRows: any[] = []
+
+      // PC death countdown + incapacitation + RP recovery
       for (const e of entries) {
         if (!e.liveState) continue
         const ls = e.liveState as any
@@ -1504,7 +1516,7 @@ export default function TablePage() {
         if (ls.wp_current === 0 && ls.death_countdown != null && ls.death_countdown > 0) {
           updates.death_countdown = ls.death_countdown - 1
           if (ls.death_countdown - 1 <= 0) {
-            await supabase.from('roll_log').insert({
+            deathLogRows.push({
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
               label: `💀 ${e.character.name} has died.`,
@@ -1532,7 +1544,7 @@ export default function TablePage() {
           updates.rp_current = Math.min(e.liveState.rp_max, (updates.rp_current ?? ls.rp_current) + 1)
         }
         if (Object.keys(updates).length > 0) {
-          await supabase.from('character_states').update(updates).eq('id', e.stateId)
+          pcUpdates.push(supabase.from('character_states').update(updates).eq('id', e.stateId))
         }
       }
 
@@ -1548,7 +1560,7 @@ export default function TablePage() {
           // NPC dies when countdown expires — mark status and log
           if (npc.death_countdown - 1 <= 0) {
             updates.status = 'dead'
-            await supabase.from('roll_log').insert({
+            deathLogRows.push({
               campaign_id: id, user_id: userId,
               character_name: 'Death is in the air',
               label: `💀 ${npc.name} has died.`,
@@ -1577,14 +1589,14 @@ export default function TablePage() {
           updates.rp_current = Math.min(npcRPMax, (updates.rp_current ?? npcRP) + 1)
         }
         if (Object.keys(updates).length > 0) {
-          await supabase.from('campaign_npcs').update(updates).eq('id', npcId)
-          setCampaignNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...updates } : n))
-          setRosterNpcs(prev => prev.map(n => n.id === npcId ? { ...n, ...updates } : n))
+          npcUpdates.push(supabase.from('campaign_npcs').update(updates).eq('id', npcId))
+          npcLocalPatches.push({ id: npcId, updates })
         }
       }
 
       // Re-roll initiative for all combatants
       const rerollDetails: { name: string; d1: number; d2: number; acu: number; dex: number; drop: number; total: number; is_npc: boolean }[] = []
+      const initUpdates: Promise<any>[] = []
       for (const entry of order) {
         const charEntry = entries.find((e: any) => entry.character_id ? e.character.id === entry.character_id : e.character.name === entry.character_name)
         const rapid = charEntry?.character.data?.rapid ?? {}
@@ -1600,21 +1612,38 @@ export default function TablePage() {
         // winded combatants 1 action instead of 2) could read it. The flag
         // is cleared correctly inside `activateUpdate` when the combatant's
         // turn actually arrives.
-        await supabase.from('initiative_order').update({ roll: newRoll, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, inspired_this_round: false, coordinate_target: null, coordinate_bonus: 0, is_active: false }).eq('id', entry.id)
+        initUpdates.push(supabase.from('initiative_order').update({ roll: newRoll, actions_remaining: 2, aim_bonus: 0, aim_active: false, defense_bonus: 0, has_cover: false, inspired_this_round: false, coordinate_target: null, coordinate_bonus: 0, is_active: false }).eq('id', entry.id))
       }
 
-      setCombatRound(prev => prev + 1)
       // Log new round initiative
       const sortedReroll = [...rerollDetails].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name))
-      await supabase.from('roll_log').insert({
+      const newRoundLogInsert = supabase.from('roll_log').insert({
         campaign_id: id, user_id: userId, character_name: 'System', label: 'New Round — Initiative',
         die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'initiative',
         damage_json: { initiative: sortedReroll } as any,
       })
+      const deathLogInsert = deathLogRows.length > 0
+        ? supabase.from('roll_log').insert(deathLogRows)
+        : Promise.resolve(null)
 
-      // Re-sort and set first ALIVE combatant as active (PCs beat NPCs on ties)
-      const { data: rerolled } = await supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false }).order('character_name', { ascending: true })
-      const { data: freshNpcsForRound } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+      // Single parallel wave — three table updates + two log inserts.
+      await Promise.all([...pcUpdates, ...npcUpdates, ...initUpdates, newRoundLogInsert, deathLogInsert])
+
+      // Apply NPC local patches once (was: setState N times inside the loop).
+      if (npcLocalPatches.length > 0) {
+        const patchMap = new Map(npcLocalPatches.map(p => [p.id, p.updates]))
+        setCampaignNpcs(prev => prev.map(n => patchMap.has(n.id) ? { ...n, ...patchMap.get(n.id) } : n))
+        setRosterNpcs(prev => prev.map(n => patchMap.has(n.id) ? { ...n, ...patchMap.get(n.id) } : n))
+      }
+
+      setCombatRound(prev => prev + 1)
+
+      // Re-sort and set first ALIVE combatant as active (PCs beat NPCs on ties).
+      // Two parallel fetches — initiative_order + campaign_npcs (different tables).
+      const [{ data: rerolled }, { data: freshNpcsForRound }] = await Promise.all([
+        supabase.from('initiative_order').select('*').eq('campaign_id', id).order('roll', { ascending: false }).order('character_name', { ascending: true }),
+        supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
+      ])
       const freshNpcMap = new Map<string, any>((freshNpcsForRound ?? []).map((n: any) => [n.id, n]))
       if (rerolled && rerolled.length > 0) {
         rerolled.sort((a: any, b: any) => b.roll - a.roll || (a.is_npc ? 1 : 0) - (b.is_npc ? 1 : 0) || String(a.character_name).localeCompare(String(b.character_name)))
@@ -4219,45 +4248,59 @@ export default function TablePage() {
     if (coordinateTargetRef.current && pendingRoll.label.includes('Coordinate')) {
       const coordTarget = coordinateTargetRef.current
       if (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight') {
-        // Find allies within Close range (≤30ft) of the coordinator
+        // Find allies within Close range (≤30ft) of the coordinator.
+        // Pre-build token lookup map so the per-ally range check is O(1) instead
+        // of O(n) (was: mapTokens.find() inside the ally loop, agent flagged as
+        // O(n²) on large rosters).
         const activeInit = initiativeOrder.find(e => e.is_active)
-        const coordTok = mapTokens.find(t =>
-          (activeInit?.character_id && t.character_id === activeInit.character_id) ||
-          (activeInit?.npc_id && t.npc_id === activeInit.npc_id)
-        )
+        const tokenByOwner = new Map<string, typeof mapTokens[number]>()
+        for (const t of mapTokens) {
+          if (t.character_id) tokenByOwner.set(`c:${t.character_id}`, t)
+          if (t.npc_id) tokenByOwner.set(`n:${t.npc_id}`, t)
+        }
+        const coordTok = activeInit?.character_id
+          ? tokenByOwner.get(`c:${activeInit.character_id}`)
+          : activeInit?.npc_id ? tokenByOwner.get(`n:${activeInit.npc_id}`) : undefined
         const bonus = 2
-        let appliedTo: string[] = []
+        const appliedTo: string[] = []
+        const appliedAllyIds: string[] = []
         for (const ally of initiativeOrder) {
           if (ally.id === activeInit?.id) continue // skip self
           if (ally.character_name === coordTarget) continue // skip the target
           // Check range if tokens exist
           if (coordTok && mapTokens.length > 0) {
-            const allyTok = mapTokens.find(t =>
-              (ally.character_id && t.character_id === ally.character_id) ||
-              (ally.npc_id && t.npc_id === ally.npc_id)
-            )
+            const allyTok = ally.character_id
+              ? tokenByOwner.get(`c:${ally.character_id}`)
+              : ally.npc_id ? tokenByOwner.get(`n:${ally.npc_id}`) : undefined
             if (allyTok) {
               const dist = Math.max(Math.abs(coordTok.grid_x - allyTok.grid_x), Math.abs(coordTok.grid_y - allyTok.grid_y))
               const feet = dist * mapCellFeet
               if (feet > 30) continue // not within Close range
             }
           }
-          await supabase.from('initiative_order').update({ coordinate_target: coordTarget, coordinate_bonus: bonus }).eq('id', ally.id)
           appliedTo.push(ally.character_name)
+          appliedAllyIds.push(ally.id)
         }
-        if (appliedTo.length > 0) {
+        if (appliedAllyIds.length > 0) {
           coordinateResult = `${appliedTo.join(', ')} get${appliedTo.length === 1 ? 's' : ''} +${bonus} CMod when attacking ${coordTarget}${outcome === 'Wild Success' ? ' (carries +1 next round)' : ''}.`
+          // Single batch UPDATE — every applied ally gets the same
+          // (coordinate_target, coordinate_bonus) values, so .in() collapses
+          // N round-trips to 1. Log insert runs in parallel since it hits a
+          // different table.
           // Log trimming: one summary row instead of one row per ally
           // (used to write N rows for N allies, which cluttered the
           // feed). Names are joined into a single banner; the underlying
           // initiative_order.coordinate_bonus update is what actually
           // grants the CMod, so dropping the per-ally rows is purely
           // cosmetic.
-          await supabase.from('roll_log').insert({
-            campaign_id: id, user_id: userId, character_name: 'System',
-            label: `🎯 ${appliedTo.join(', ')} get${appliedTo.length === 1 ? 's' : ''} +${bonus} CMod when attacking ${coordTarget}`,
-            die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'coordinate',
-          })
+          await Promise.all([
+            supabase.from('initiative_order').update({ coordinate_target: coordTarget, coordinate_bonus: bonus }).in('id', appliedAllyIds),
+            supabase.from('roll_log').insert({
+              campaign_id: id, user_id: userId, character_name: 'System',
+              label: `🎯 ${appliedTo.join(', ')} get${appliedTo.length === 1 ? 's' : ''} +${bonus} CMod when attacking ${coordTarget}`,
+              die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: 'coordinate',
+            }),
+          ])
         } else {
           coordinateResult = 'No allies within Close range to receive the bonus.'
         }
@@ -7708,40 +7751,56 @@ export default function TablePage() {
               <button onClick={async () => {
                 if (restoreNpcIds.size === 0) return
                 const selected = Array.from(restoreNpcIds)
-                // Restore NPCs
-                for (const key of selected.filter(k => k.startsWith('npc:'))) {
-                  const npcId = key.slice(4)
-                  const npc = campaignNpcs.find((n: any) => n.id === npcId)
-                  const wpMax = npc?.wp_max ?? (10 + (npc?.physicality ?? 0) + (npc?.dexterity ?? 0))
-                  const rpMax = npc?.rp_max ?? (6 + (npc?.physicality ?? 0))
-                  await supabase.from('campaign_npcs').update({ wp_current: wpMax, rp_current: rpMax, status: 'active', death_countdown: null, incap_rounds: null }).eq('id', npcId)
-                }
-                // Restore PCs
-                for (const key of selected.filter(k => k.startsWith('pc:'))) {
-                  const stateId = key.slice(3)
-                  const entry = entries.find(e => e.stateId === stateId)
-                  if (entry) {
-                    await supabase.from('character_states').update({ wp_current: entry.liveState.wp_max, rp_current: entry.liveState.rp_max, death_countdown: null, incap_rounds: null, updated_at: new Date().toISOString() }).eq('id', stateId)
-                  }
-                }
+                const nowIso = new Date().toISOString()
+                // Build per-row UPDATEs — each row needs its own wp_max/rp_max
+                // (NPCs have stat-derived totals; PC entries carry their own;
+                // objects have per-token wp_max). Different values per row =
+                // can't .in() batch into a single SQL statement. But we CAN
+                // parallelize the round-trips: 11 sequential awaits at 150ms
+                // RTT = ~1.6s; one Promise.all wave = ~150ms. Three table
+                // groups also run in parallel since they hit different tables.
+                const npcUpdates = selected
+                  .filter(k => k.startsWith('npc:'))
+                  .map(key => {
+                    const npcId = key.slice(4)
+                    const npc = campaignNpcs.find((n: any) => n.id === npcId)
+                    const wpMax = npc?.wp_max ?? (10 + (npc?.physicality ?? 0) + (npc?.dexterity ?? 0))
+                    const rpMax = npc?.rp_max ?? (6 + (npc?.physicality ?? 0))
+                    return supabase.from('campaign_npcs').update({ wp_current: wpMax, rp_current: rpMax, status: 'active', death_countdown: null, incap_rounds: null }).eq('id', npcId)
+                  })
+                const pcUpdates = selected
+                  .filter(k => k.startsWith('pc:'))
+                  .map(key => {
+                    const stateId = key.slice(3)
+                    const entry = entries.find(e => e.stateId === stateId)
+                    if (!entry) return null
+                    return supabase.from('character_states').update({ wp_current: entry.liveState.wp_max, rp_current: entry.liveState.rp_max, death_countdown: null, incap_rounds: null, updated_at: nowIso }).eq('id', stateId)
+                  })
+                  .filter(Boolean) as ReturnType<typeof supabase.from>[]
                 // Restore map objects (crates, barrels, etc.) to full WP. Loot
                 // contents are NOT magically restored — if a player already
                 // looted the crate before you destroyed and restored it, the
                 // contents stay gone. Reset is just "this token is intact
                 // again" so it can be destroyed a second time.
-                for (const key of selected.filter(k => k.startsWith('obj:'))) {
-                  const tokenId = key.slice(4)
-                  // Prefer the fresh snapshot (works on any view); fall back to
-                  // mapTokens for older callers still relying on it.
-                  const snap = restoreObjects.find(t => t.id === tokenId)
-                  const fromMap = mapTokens.find(t => t.id === tokenId)
-                  const wpMax = snap?.wp_max ?? fromMap?.wp_max
-                  if (wpMax != null) {
-                    await supabase.from('scene_tokens').update({ wp_current: wpMax }).eq('id', tokenId)
-                  }
-                }
-                // Refresh all data
-                const { data: freshNpcs } = await supabase.from('campaign_npcs').select('*').eq('campaign_id', id)
+                const objUpdates = selected
+                  .filter(k => k.startsWith('obj:'))
+                  .map(key => {
+                    const tokenId = key.slice(4)
+                    // Prefer the fresh snapshot (works on any view); fall back to
+                    // mapTokens for older callers still relying on it.
+                    const snap = restoreObjects.find(t => t.id === tokenId)
+                    const fromMap = mapTokens.find(t => t.id === tokenId)
+                    const wpMax = snap?.wp_max ?? fromMap?.wp_max
+                    if (wpMax == null) return null
+                    return supabase.from('scene_tokens').update({ wp_current: wpMax }).eq('id', tokenId)
+                  })
+                  .filter(Boolean) as ReturnType<typeof supabase.from>[]
+                await Promise.all([...npcUpdates, ...pcUpdates, ...objUpdates])
+                // Refresh all data — fetch + loadEntries also parallelize (different tables, no shared rows)
+                const [{ data: freshNpcs }] = await Promise.all([
+                  supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
+                  loadEntries(id),
+                ])
                 if (freshNpcs) {
                   setCampaignNpcs(freshNpcs)
                   setRosterNpcs(freshNpcs.filter((n: any) => {
@@ -7754,7 +7813,6 @@ export default function TablePage() {
                     return fresh ? { ...fresh } as CampaignNpc : vn
                   }))
                 }
-                await loadEntries(id)
                 initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
                 // Optimistic local patch + refresh trigger for restored object tokens
                 const objKeys = selected.filter(k => k.startsWith('obj:'))
