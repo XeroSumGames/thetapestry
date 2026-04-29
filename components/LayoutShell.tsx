@@ -2,6 +2,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { getCachedAuth } from '../lib/auth-cache'
 import Sidebar from './Sidebar'
 
 // Pages that ghosts (unauthenticated users) can view
@@ -67,11 +68,26 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
     async function checkSession() {
       try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        // Use the shared auth cache (lib/auth-cache.ts) instead of
+        // supabase.auth.getUser(). Two reasons:
+        //   1. getUser() takes the auth Web Lock and round-trips to
+        //      /auth/v1/user. If a backgrounded tab is mid-mount and
+        //      holding the lock, the login-tab's check queues 5s, then
+        //      steals — and to the user the login click "does nothing"
+        //      because the original promise aborts. getCachedAuth()
+        //      uses getSession() which is a localStorage read; the lock
+        //      contention drops to near-zero.
+        //   2. The 30s TTL means within a tab's normal lifetime, the
+        //      check is effectively free. Auth-state changes
+        //      (SIGNED_IN/OUT/TOKEN_REFRESHED) invalidate the cache so
+        //      we never serve stale identity.
+        // Tradeoff: getSession is local-only, doesn't server-validate.
+        // For LayoutShell's "is anyone logged in" check that's fine —
+        // false positives (stale session that's actually expired) get
+        // caught by the next RLS-protected query returning empty/401.
+        const { user } = await getCachedAuth()
         if (cancelled) return
-        if (userError || !user) {
-          await supabase.auth.signOut()
-          if (cancelled) return
+        if (!user) {
           setIsAuthenticated(false)
           setChecked(true)
           return
@@ -81,7 +97,6 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
         if (cancelled) return
         setChecked(true)
       } catch (e) {
-        await supabase.auth.signOut()
         if (cancelled) return
         setIsAuthenticated(false)
         setChecked(true)
