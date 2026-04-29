@@ -10,6 +10,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
+import { getCachedAuth } from '../../lib/auth-cache'
 import { listAvailableModules, type ModuleListing } from '../../lib/modules'
 
 const SETTING_LABELS: Record<string, string> = {
@@ -27,12 +28,63 @@ export default function ModuleMarketplacePage() {
   const [loadError, setLoadError] = useState<string>('')
   const [search, setSearch] = useState('')
   const [settingFilter, setSettingFilter] = useState<string>('')
+  // Thriver-only DELETE on each module card. Resolved once on mount.
+  // RLS on `modules` already gates DELETE to author OR Thriver — UI
+  // surface here matches that, hiding the button for everyone else
+  // so it's not even visible.
+  const [isThriver, setIsThriver] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     listAvailableModules(supabase)
       .then(setModules)
       .catch((e: any) => { setLoadError(e?.message ?? 'Failed to load modules.'); setModules([]) })
   }, [supabase])
+
+  useEffect(() => {
+    (async () => {
+      const { user } = await getCachedAuth()
+      if (!user) return
+      const { data } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      const role = (data?.role ?? '').toLowerCase()
+      if (role === 'thriver') setIsThriver(true)
+    })()
+  }, [supabase])
+
+  async function handleDelete(m: ModuleListing) {
+    // Pre-fetch counts for an honest confirm. Don't block on errors —
+    // fall back to a generic confirm if either count fails.
+    const [{ count: versionCount }, { count: subCount }] = await Promise.all([
+      supabase.from('module_versions').select('*', { count: 'exact', head: true }).eq('module_id', m.id),
+      supabase.from('module_subscriptions').select('*', { count: 'exact', head: true }).eq('module_id', m.id),
+    ])
+    const v = versionCount ?? 0
+    const s = subCount ?? 0
+    const lines = [
+      `Permanently delete "${m.name}"?`,
+      '',
+      `This will hard-delete:`,
+      `  • the module`,
+      `  • ${v} version${v === 1 ? '' : 's'}`,
+      `  • ${s} subscription record${s === 1 ? '' : 's'}`,
+      '',
+      s > 0
+        ? `Subscribed campaigns lose update notifications, but their cloned content (NPCs / pins / scenes / handouts that came from this module) stays. They just stop getting "New version available" pings.`
+        : 'No campaigns currently subscribe.',
+      '',
+      'This cannot be undone.',
+    ]
+    if (!confirm(lines.join('\n'))) return
+    setDeletingId(m.id)
+    const { error } = await supabase.from('modules').delete().eq('id', m.id)
+    setDeletingId(null)
+    if (error) {
+      alert(`Delete failed: ${error.message}`)
+      return
+    }
+    // Optimistic local removal — don't refetch the whole list.
+    setModules(prev => prev ? prev.filter(x => x.id !== m.id) : prev)
+  }
 
   // Only show approved listings + the user's own modules. listAvailableModules
   // already filters to non-archived modules with at least one published version.
@@ -129,14 +181,22 @@ export default function ModuleMarketplacePage() {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
-          {filtered!.map(m => <ModuleCard key={m.id} module={m} />)}
+          {filtered!.map(m => (
+            <ModuleCard
+              key={m.id}
+              module={m}
+              canDelete={isThriver}
+              deleting={deletingId === m.id}
+              onDelete={() => handleDelete(m)}
+            />
+          ))}
         </div>
       )}
     </div>
   )
 }
 
-function ModuleCard({ module: m }: { module: ModuleListing }) {
+function ModuleCard({ module: m, canDelete, deleting, onDelete }: { module: ModuleListing; canDelete: boolean; deleting: boolean; onDelete: () => void }) {
   const settingLabel = SETTING_LABELS[m.parent_setting ?? 'custom'] ?? m.parent_setting
   const version = m.latest_version?.version
   const publishedAt = m.latest_version?.published_at
@@ -155,10 +215,36 @@ function ModuleCard({ module: m }: { module: ModuleListing }) {
           display: 'flex',
           flexDirection: 'column',
           transition: 'border-color 200ms, transform 200ms',
+          position: 'relative',
         }}
         onMouseEnter={e => { e.currentTarget.style.borderColor = '#5a2e5a' }}
         onMouseLeave={e => { e.currentTarget.style.borderColor = '#2e2e2e' }}
       >
+        {/* Thriver-only DELETE — top-right corner. preventDefault on the
+            click stops the wrapping <Link> from navigating; stopPropagation
+            keeps the delete confirm from also being treated as a card-open. */}
+        {canDelete && (
+          <button
+            disabled={deleting}
+            onClick={e => { e.preventDefault(); e.stopPropagation(); onDelete() }}
+            title="Thriver: delete module + all versions + subscriptions"
+            style={{
+              position: 'absolute', top: '6px', right: '6px', zIndex: 2,
+              padding: '3px 9px',
+              background: 'rgba(0, 0, 0, 0.7)',
+              border: '1px solid #c0392b',
+              borderRadius: '3px',
+              color: '#f5a89a',
+              fontSize: '13px',
+              fontFamily: 'Barlow Condensed, sans-serif',
+              letterSpacing: '.06em',
+              textTransform: 'uppercase',
+              cursor: deleting ? 'wait' : 'pointer',
+              opacity: deleting ? 0.5 : 1,
+            }}>
+            {deleting ? 'Deleting…' : 'Delete'}
+          </button>
+        )}
         {/* Cover image, or gradient placeholder */}
         <div style={{
           height: '140px',
