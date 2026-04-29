@@ -5894,6 +5894,13 @@ export default function TablePage() {
                     height: size?.h ?? 210,
                     maxHeight: size?.h ? undefined : '80vh',
                     overflow: 'auto',
+                    // Wrapper bg — without this, when NpcCard's natural
+                    // content height (~160px for a Foe) is shorter than
+                    // the forced popup height, the empty strip at the
+                    // bottom is transparent and shows the map terrain
+                    // through. Match the surrounding chrome color so the
+                    // gap reads as part of the card.
+                    background: '#161616',
                     zIndex: 1100 + i,
                     borderRadius: '4px',
                     boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
