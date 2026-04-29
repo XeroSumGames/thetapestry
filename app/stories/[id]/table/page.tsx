@@ -449,6 +449,12 @@ export default function TablePage() {
   // other attack flows get that option at the pre-roll modal.
   const [grappleTarget, setGrappleTarget] = useState<InitiativeEntry | null>(null)
   const [grappleInsight, setGrappleInsight] = useState<'none' | '3d6' | '+3cmod'>('none')
+  // Manual Conditional Modifier — same field the standard attack modal
+  // exposes. Stacks with the +3 CMod Insight option and any other
+  // mods (PHY / Unarmed). Defaults to '0', stays as a string in state
+  // so users can type "-2" or clear-and-retype without React stomping
+  // the input cursor.
+  const [grappleCmod, setGrappleCmod] = useState('0')
   const [grappleResult, setGrappleResult] = useState<{
     attackerName: string; defenderName: string
     aDie1: number; aDie2: number; aTotal: number; aOutcome: string
@@ -8248,7 +8254,12 @@ export default function TablePage() {
             aDie1 = rollD6()
             aDie2 = rollD6()
           }
-          const aTotal = aDie1 + aDie2 + aPhyMod + aUnarmed + aBonusCmod
+          // Stack the user-entered Conditional Modifier on top of any
+          // Insight-Die +3 bonus. Parse-fail or empty string both
+          // resolve to 0 — the input is text, so guard explicitly.
+          const manualCmod = parseInt(grappleCmod, 10) || 0
+          const totalCmod = aBonusCmod + manualCmod
+          const aTotal = aDie1 + aDie2 + aPhyMod + aUnarmed + totalCmod
           const aOutcome = getOutcome(aTotal)
 
           const dDie1 = rollD6()
@@ -8284,11 +8295,15 @@ export default function TablePage() {
             }
           }
 
-          // Log to roll_log
+          // Log to roll_log. cmod stores the COMBINED CMod (manual + Insight
+          // +3 bonus) so the expanded log breakdown sums correctly back to
+          // total. Splitting them across columns would require schema work
+          // we don't need yet — the label tells the user when an Insight
+          // Die was spent.
           await supabase.from('roll_log').insert({
             campaign_id: id, user_id: userId, character_name: active.character_name,
             label: `${active.character_name} — Grapple ${targetEntry.character_name}${insightSpent ? (insightMode === '3d6' ? ' (3d6 Insight)' : ' (+3 CMod Insight)') : ''}`,
-            die1: aDie1, die2: aDie2, amod: aPhyMod, smod: aUnarmed, cmod: aBonusCmod,
+            die1: aDie1, die2: aDie2, amod: aPhyMod, smod: aUnarmed, cmod: totalCmod,
             total: aTotal, outcome: result === 'grappled' ? 'Grappled!' : result === 'failed' ? 'Failed — 1 RP' : 'No clear victor',
           })
 
@@ -8305,7 +8320,7 @@ export default function TablePage() {
         }
 
         return (
-          <div onClick={() => { if (!grappleResult) { setShowGrappleModal(false); setGrappleTarget(null); setGrappleInsight('none') } }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={() => { if (!grappleResult) { setShowGrappleModal(false); setGrappleTarget(null); setGrappleInsight('none'); setGrappleCmod('0') } }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '400px' }}>
               <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Grapple — Opposed Check</div>
               <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>{active.character_name}</div>
@@ -8361,7 +8376,7 @@ export default function TablePage() {
                     </div>
                   )}
 
-                  <button onClick={() => { setShowGrappleModal(false); setGrappleResult(null); setGrappleTarget(null); setGrappleInsight('none') }}
+                  <button onClick={() => { setShowGrappleModal(false); setGrappleResult(null); setGrappleTarget(null); setGrappleInsight('none'); setGrappleCmod('0') }}
                     style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Close
                   </button>
@@ -8374,14 +8389,14 @@ export default function TablePage() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '1rem' }}>
                       {engagedTargets.map(target => (
-                        <button key={target.id} onClick={() => { setGrappleTarget(target); setGrappleInsight('none') }}
+                        <button key={target.id} onClick={() => { setGrappleTarget(target); setGrappleInsight('none'); setGrappleCmod('0') }}
                           style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: target.is_npc ? '#7fc458' : '#c0392b', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'left' }}>
                           {target.character_name}{target.is_npc ? ' (NPC)' : ''}
                         </button>
                       ))}
                     </div>
                   )}
-                  <button onClick={() => { setShowGrappleModal(false); setGrappleTarget(null); setGrappleInsight('none') }}
+                  <button onClick={() => { setShowGrappleModal(false); setGrappleTarget(null); setGrappleInsight('none'); setGrappleCmod('0') }}
                     style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Cancel
                   </button>
@@ -8392,6 +8407,16 @@ export default function TablePage() {
                   <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '6px' }}>Target</div>
                   <div style={{ padding: '8px 12px', marginBottom: '1rem', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', color: grappleTarget.is_npc ? '#7fc458' : '#c0392b' }}>
                     {grappleTarget.character_name}{grappleTarget.is_npc ? ' (NPC)' : ''}
+                  </div>
+                  {/* Conditional Modifier — manual numeric mod that stacks on
+                      top of PHY + Unarmed + Insight-Die bonus. Mirrors the
+                      input on the standard attack modal so GMs and players
+                      have a consistent place to add ad-hoc CMods (e.g. "+2
+                      for high ground", "-1 prone target"). */}
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Conditional Modifier</div>
+                    <input type="number" value={grappleCmod} onChange={e => setGrappleCmod(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') executeGrapple(grappleTarget!, grappleInsight) }}
+                      style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '16px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
                   </div>
                   {/* Insight Die — PC attackers only, must have at least 1 die. Same
                       two options as the main attack modal: 3d6 keep-all, or +3 CMod
@@ -8414,7 +8439,7 @@ export default function TablePage() {
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => { setGrappleTarget(null); setGrappleInsight('none') }}
+                    <button onClick={() => { setGrappleTarget(null); setGrappleInsight('none'); setGrappleCmod('0') }}
                       style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Back</button>
                     <button onClick={() => executeGrapple(grappleTarget, grappleInsight)}
                       style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
