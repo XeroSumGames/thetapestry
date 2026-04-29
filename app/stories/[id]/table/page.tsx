@@ -4688,7 +4688,7 @@ export default function TablePage() {
             // resource log, role distribution, recruitment stats.
             // Route: /stories/<id>/community. GM-only gated inside
             // the page itself (non-GMs see an access-denied block).
-            { label: 'Dashboard', onClick: () => router.push(`/stories/${id}/community`), hidden: !isGM },
+            { label: 'Dashboard', onClick: () => window.open(`/stories/${id}/community`, '_blank', 'noopener,noreferrer'), hidden: !isGM },
           ],
           hdrBtn('#1a2e10', '#7fc458', '#2d5a1b'),
         )}
