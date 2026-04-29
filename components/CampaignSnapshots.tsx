@@ -74,13 +74,22 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
     ]
     if (row.includes_character_states) lines.push('  • Restore character states (WP/RP/stress/insight).')
     else lines.push('  • Leave character states UNTOUCHED (this snapshot did not include them).')
-    lines.push('', 'This cannot be undone. Players at the table will see the reset.')
+    lines.push('', 'After restore: you\'ll be taken straight to the table to play the snapshotted state.', '', 'This cannot be undone. Players at the table will see the reset.')
     if (!confirm(lines.join('\n'))) return
     setRestoring(row.id)
     setStatus(null)
     const res = await restoreCampaignSnapshot(supabase, campaignId, row.snapshot)
-    setStatus(res.ok ? `✓ Restored "${row.name}"` : `Partial restore — errors:\n${res.errors.join('\n')}`)
+    setStatus(res.ok ? `✓ Restored "${row.name}" — launching table…` : `Partial restore — errors:\n${res.errors.join('\n')}`)
     setRestoring(null)
+    if (res.ok) {
+      // Auto-launch the table view so the GM lands in the freshly-
+      // restored campaign instead of stranded on the edit page.
+      // Hard-load (not router.push) so every state slice rehydrates
+      // from the restored DB — same approach the GM Tools → Reload
+      // shortcut uses on the table page itself. Tiny delay lets the
+      // ✓ status message render before navigation.
+      setTimeout(() => { window.location.href = `/stories/${campaignId}/table` }, 600)
+    }
   }
 
   async function handleDelete(row: SnapshotRow) {
