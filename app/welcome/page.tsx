@@ -154,12 +154,26 @@ export default function WelcomePage() {
           </div>
         </div>
 
-        {/* External links */}
+        {/* External links — three equal-width tiles, each centred:
+            logo on top, name+link below. Order: XeroSumGames →
+            DistemperVerse → XeroSumStudio. */}
         <div style={{ ...sectionHeading, textAlign: 'center' }}>Off-Platform</div>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '4rem' }}>
-          <a href="https://www.distemperverse.com" target="_blank" rel="noreferrer" style={cardLink}>DistemperVerse.com 🔗</a>
-          <a href="https://www.xerosumgames.com"   target="_blank" rel="noreferrer" style={cardLink}>XeroSumGames.com 🔗</a>
-          <a href="https://www.xerosumstudio.com"  target="_blank" rel="noreferrer" style={cardLink}>XeroSumStudio.com 🔗</a>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', justifyItems: 'center', alignItems: 'end', marginBottom: '4rem' }}>
+          <a href="https://www.xerosumgames.com" target="_blank" rel="noreferrer"
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+            <img src="/XeroSumGamesLogoV13.png" alt="XeroSumGames" style={{ height: '80px', width: 'auto', objectFit: 'contain' }} />
+            <span style={cardLink}>XeroSumGames.com 🔗</span>
+          </a>
+          <a href="https://www.distemperverse.com" target="_blank" rel="noreferrer"
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+            <img src="/distemper-dogsign-logo.png" alt="DistemperVerse" style={{ height: '80px', width: 'auto', objectFit: 'contain' }} />
+            <span style={cardLink}>DistemperVerse.com 🔗</span>
+          </a>
+          <a href="https://www.xerosumstudio.com" target="_blank" rel="noreferrer"
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+            <img src="/XeroSumStudioLogoV13.png" alt="XeroSumStudio" style={{ height: '80px', width: 'auto', objectFit: 'contain' }} />
+            <span style={cardLink}>XeroSumStudio.com 🔗</span>
+          </a>
         </div>
 
       </div>
