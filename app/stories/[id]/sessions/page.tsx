@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
 
 interface Session {
@@ -36,7 +37,7 @@ export default function SessionHistoryPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
 
       const { data: camp } = await supabase.from('campaigns').select('name, gm_user_id').eq('id', id).single()

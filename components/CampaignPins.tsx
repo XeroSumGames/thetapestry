@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { getCachedAuth } from '../lib/auth-cache'
 
 interface CampaignPin {
   id: string
@@ -150,7 +151,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
 
   async function promoteToWorld(pin: CampaignPin) {
     if (!confirm(`Add "${pin.name}" to the world map? This will be visible to everyone.`)) return
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (!user) return
     await supabase.from('map_pins').insert({
       user_id: user.id, lat: pin.lat, lng: pin.lng,

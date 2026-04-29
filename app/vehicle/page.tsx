@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
+import { getCachedAuth } from '../../lib/auth-cache'
 import { useSearchParams } from 'next/navigation'
 import VehicleCard, { Vehicle } from '../../components/VehicleCard'
 import { classifyRoll } from '../../lib/community-logic'
@@ -67,7 +68,7 @@ export default function VehiclePage() {
   useEffect(() => {
     async function load() {
       if (!campaignId || !vehicleId) { setLoading(false); return }
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { setLoading(false); return }
       setMyUserId(user.id)
       const { data: camp } = await supabase.from('campaigns').select('gm_user_id, vehicles').eq('id', campaignId).single()

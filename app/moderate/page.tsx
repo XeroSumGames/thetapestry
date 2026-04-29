@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
+import { getCachedAuth } from '../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 
 interface Pin {
@@ -103,7 +104,7 @@ export default function ModerationPage() {
 
   useEffect(() => {
     async function check() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
       // Cache role for the banner gate. Not a hard block — the page
       // still loads so the user can see the empty state alongside
@@ -141,7 +142,7 @@ export default function ModerationPage() {
 
   async function handleNpcAction(id: string, status: 'approved' | 'rejected') {
     setActing(id)
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     await supabase.from('world_npcs').update({ status, approved_by: user?.id ?? null, approved_at: new Date().toISOString() }).eq('id', id)
     setWorldNpcs(prev => prev.filter(n => n.id !== id))
     setActing(null)
@@ -191,7 +192,7 @@ export default function ModerationPage() {
 
   async function handleCommunityAction(id: string, status: 'approved' | 'rejected') {
     setActing(id)
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     const { error } = await supabase.from('world_communities').update({
       moderation_status: status,
       approved_by: user?.id ?? null,
@@ -235,7 +236,7 @@ export default function ModerationPage() {
 
   async function handleModuleAction(id: string, status: 'approved' | 'rejected') {
     setActing(id)
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     const mod = modules.find(m => m.id === id)
     const { error } = await supabase.from('modules').update({
       moderation_status: status,
@@ -318,7 +319,7 @@ export default function ModerationPage() {
     if (!confirm('Permanently delete this account? This cannot be undone.')) return
     setActing(id)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-user`, {
         method: 'POST',

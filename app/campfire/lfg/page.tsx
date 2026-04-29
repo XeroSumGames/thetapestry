@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../lib/auth-cache'
 import { renderRichText } from '../../../lib/rich-text'
 import { useRouter } from 'next/navigation'
 
@@ -73,7 +74,7 @@ export default function LfgPage() {
 
   useEffect(() => {
     async function init() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
       setMyId(user.id)
       // Fetch the user's GM'd campaigns once. Used by the 🎟 Invite picker;
@@ -219,7 +220,7 @@ export default function LfgPage() {
       .in('id', allUserIds)
     const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
 
-    const myCurrentId = (await supabase.auth.getUser()).data.user?.id ?? null
+    const myCurrentId = (await getCachedAuth()).user?.id ?? null
     const myInts = new Set<string>()
     const byPost: Record<string, { user_id: string; username: string }[]> = {}
     intRows.forEach(r => {

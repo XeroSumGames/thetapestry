@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
+import { getCachedAuth } from '../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 import CharacterCard from '../../components/CharacterCard'
 import { createTestCharacter } from '../../scripts/create-test-character'
@@ -21,7 +22,7 @@ export default function CharactersPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { setLoading(false); return }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       if (profile?.role?.toLowerCase() === 'thriver') setIsThriver(true)
@@ -44,7 +45,7 @@ export default function CharactersPage() {
   }
 
   async function handleDuplicate(c: CharacterRow) {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (!user) return
     await supabase.from('characters').insert({ user_id: user.id, name: `Copy of ${c.name}`, data: c.data })
     const { data } = await supabase

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
+import { getCachedAuth } from '../../lib/auth-cache'
 import Link from 'next/link'
 
 // My Communities — top-level index. Lists every community the current user
@@ -58,7 +59,7 @@ export default function CommunitiesIndexPage() {
   const [createError, setCreateError] = useState<string | null>(null)
 
   async function loadCommunities() {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (!user) { setLoading(false); return }
     setUserId(user.id)
     const { data: coms } = await supabase

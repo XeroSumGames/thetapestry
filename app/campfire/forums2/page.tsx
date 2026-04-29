@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 
 // /campfire/forums2 — Reddit/Lemmy-style mockup of the same forum data, for
@@ -76,7 +77,7 @@ export default function Forums2Page() {
 
   useEffect(() => {
     async function init() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
       setMyId(user.id)
       await loadThreads()

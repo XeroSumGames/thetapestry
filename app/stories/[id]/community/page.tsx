@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '../../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../../lib/auth-cache'
 
 // Phase D — Community Dashboard. Campaign-scoped full-screen GM view
 // into every Community in this campaign: Morale/Fed/Clothed history,
@@ -87,7 +88,7 @@ export default function CommunityDashboardPage() {
   useEffect(() => {
     async function load() {
       if (!campaignId) return
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       const [camp, coms] = await Promise.all([
         supabase.from('campaigns').select('name, gm_user_id').eq('id', campaignId).maybeSingle(),
         supabase.from('communities')

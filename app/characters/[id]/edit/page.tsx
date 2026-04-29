@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '../../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../../lib/auth-cache'
 import { createWizardState, WizardState, buildCharacter } from '../../../../lib/xse-engine'
 import { SKILLS } from '../../../../lib/xse-schema'
 import StepXero from '../../../../components/wizard/StepXero'
@@ -35,7 +36,7 @@ export default function EditCharacterPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
       const { data: row, error } = await supabase
         .from('characters')

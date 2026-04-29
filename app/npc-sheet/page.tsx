@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
+import { getCachedAuth } from '../../lib/auth-cache'
 import { useSearchParams } from 'next/navigation'
 import NpcCard from '../../components/NpcCard'
 import PlayerNpcCard from '../../components/PlayerNpcCard'
@@ -33,7 +34,7 @@ export default function NpcSheetPage() {
       const npcPromise = supabase.from('campaign_npcs').select('*').eq('id', npcId).maybeSingle()
       const rolePromise = (gmHint == null && campaignId)
         ? (async () => {
-            const { data: { user } } = await supabase.auth.getUser()
+            const { user } = await getCachedAuth()
             if (!user) return null
             const { data: camp } = await supabase.from('campaigns').select('gm_user_id').eq('id', campaignId).maybeSingle()
             return !!camp && camp.gm_user_id === user.id

@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { getCachedAuth } from '../lib/auth-cache'
 import { ALL_WEAPONS } from '../lib/weapons'
 import { EQUIPMENT } from '../lib/xse-schema'
 import ObjectImageCropper from './ObjectImageCropper'
@@ -152,7 +153,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
 
   // Save an uploaded image into the campaign's library so it can be reused
   async function saveToLibrary(imageUrl: string, name: string) {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (!user) return
     const { error } = await supabase.from('object_token_library').insert({
       campaign_id: campaignId,
@@ -193,7 +194,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       loadObjects()
     } else {
       // No scene — save as a library template with full metadata.
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (user) {
         await supabase.from('object_token_library').insert({
           campaign_id: campaignId,

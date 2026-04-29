@@ -13,6 +13,7 @@
 // seed pipeline in /app/campaigns/new uses).
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { getCachedAuth } from './auth-cache'
 
 // ── Shapes that a module snapshot carries ──────────────────────
 // These are loose on purpose: the publish wizard (Sprint 2) is the
@@ -169,7 +170,7 @@ export interface ModuleForCampaign {
 export async function listAvailableModules(
   supabase: SupabaseClient,
 ): Promise<ModuleListing[]> {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { user } = await getCachedAuth()
   if (!user) return []
 
   // RLS already restricts reads; we just need to include unlisted
@@ -431,7 +432,7 @@ export async function cloneModuleIntoCampaign(
 
   // 7. Notify the module author that someone started running their module.
   // Skip if the subscriber IS the author (self-clone during testing).
-  const { data: { user: subscriber } } = await supabase.auth.getUser()
+  const { user: subscriber } = await getCachedAuth()
   const { data: mod } = await supabase
     .from('modules')
     .select('author_user_id, name')
@@ -462,7 +463,7 @@ export async function getModuleForCampaign(
   supabase: SupabaseClient,
   campaignId: string,
 ): Promise<ModuleForCampaign | null> {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { user } = await getCachedAuth()
   if (!user) return null
 
   const { data, error } = await supabase
@@ -662,7 +663,7 @@ export async function publishModuleVersion(
   supabase: SupabaseClient,
   params: PublishParams,
 ): Promise<{ moduleId: string; versionId: string }> {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { user } = await getCachedAuth()
   if (!user) throw new Error('Not logged in')
 
   let moduleId = params.moduleId
@@ -1187,7 +1188,7 @@ export async function archiveModule(
   moduleId: string,
   hardDelete = false,
 ): Promise<{ archived?: true; deleted?: true; subscriberCount: number }> {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { user } = await getCachedAuth()
   if (!user) throw new Error('Not logged in')
 
   // Count active subscriptions (other than the author's own campaign).

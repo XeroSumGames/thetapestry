@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../lib/auth-cache'
 
 // One-time migration: tactical scenes were previously sized using
 // container.clientWidth (viewer-dependent). New system uses image.naturalWidth
@@ -31,7 +32,7 @@ export default function RescaleTacticalScenesPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { setLoading(false); return }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       setRole(profile?.role ?? null)

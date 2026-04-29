@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
+import { getCachedAuth } from '../lib/auth-cache'
 import { logEvent } from '../lib/events'
 import InventoryPanel, { InventoryItem } from './InventoryPanel'
 import ProgressionLog, { LogEntry, createLogEntry } from './ProgressionLog'
@@ -248,7 +249,7 @@ export default function CharacterCard({
     setDuplicating(true)
     logEvent('character_duplicated', { id: c.id, name: c.name })
     if (onDuplicate) { onDuplicate(c); setDuplicating(false); return }
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (user) await supabase.from('characters').insert({ user_id: user.id, name: `Copy of ${c.name}`, data: c.data })
     setDuplicating(false)
     router.refresh()
@@ -979,7 +980,7 @@ export default function CharacterCard({
                   // the "Calms Themselves" branch added in this commit.
                   if (campaignIdProp) {
                     try {
-                      const { data: { user } } = await supabase.auth.getUser()
+                      const { user } = await getCachedAuth()
                       if (user) {
                         await supabase.from('roll_log').insert({
                           campaign_id: campaignIdProp,

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createWizardState, WizardState, buildCharacter } from '../../../lib/xse-engine'
 import { createClient } from '../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { logFirstEvent } from '../../../lib/events'
 import GhostWall from '../../../components/GhostWall'
@@ -69,7 +70,7 @@ export default function NewCharacterPage() {
   const [showGhostWall, setShowGhostWall] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }: any) => setIsAuth(!!user))
+    getCachedAuth().then(({ user }) => setIsAuth(!!user))
   }, [])
 
   const step = state.currentStep
@@ -88,7 +89,7 @@ export default function NewCharacterPage() {
     setSaving(true)
     setSaveError('')
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (!user) { setSaveError('Not logged in.'); setSaving(false); return }
     const character = buildCharacter(state)
     const { error } = await supabase.from('characters').insert({

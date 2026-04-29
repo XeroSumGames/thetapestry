@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { getCachedAuth } from '../lib/auth-cache'
 import { captureCampaignSnapshot, restoreCampaignSnapshot, cloneSnapshotIntoCampaign, CampaignSnapshot } from '../lib/campaign-snapshot'
 
 interface SnapshotRow {
@@ -42,7 +43,7 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
     setStatus(null)
     try {
       const snap = await captureCampaignSnapshot(supabase, campaignId, { includesCharacterStates: includeStates })
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       const { error } = await supabase.from('campaign_snapshots').insert({
         campaign_id: campaignId,
         name: newName.trim(),

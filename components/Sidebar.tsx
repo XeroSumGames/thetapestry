@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { getCachedAuth } from '../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import NotificationBell from './NotificationBell'
@@ -54,7 +55,7 @@ export default function Sidebar() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { setLoaded(true); return }
       const { data: profile } = await supabase.from('profiles').select('username, role').eq('id', user.id).single()
       if (!profile) { setLoaded(true); return }

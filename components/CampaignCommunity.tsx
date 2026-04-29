@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { getCachedAuth } from '../lib/auth-cache'
 import CommunityMoraleModal from './CommunityMoraleModal'
 
 // Phase A — Communities foundation. Lists communities for a campaign, lets
@@ -597,7 +598,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       setPendingByCommunity({})
     }
     // Cache current auth user id so the UI can check leader_user_id.
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     setMyUserId(user?.id ?? null)
     // Look up this user's PC in the current campaign so the member list
     // can show a "Leave" affordance on their own row.
@@ -689,7 +690,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     const survivors = (dissolvedSurvivors[migrationCommunityId] ?? []).filter(m => migrationPickedIds.has(m.id) && m.npc_id)
     if (survivors.length === 0) return
     setMigrationSubmitting(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     // Resolve npc names for the snapshot so the notification shows
     // them even if the source NPC is later deleted.
     const npcById = new Map(npcs.map(n => [n.id, n.name]))
@@ -870,7 +871,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     const c = communities.find(x => x.id === publishingCommunityId)
     if (!c) return
     setPublishing(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     // Fetch Homestead coords if set. No homestead = null lat/lng,
     // which keeps the world row valid but leaves it off the map.
     let lat: number | null = null
@@ -1092,7 +1093,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   async function handleCreate() {
     if (!newName.trim()) return
     setCreating(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     const { data, error } = await supabase.from('communities').insert({
       campaign_id: campaignId,
       name: newName.trim(),

@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
+import { getCachedAuth } from '../../lib/auth-cache'
 import { renderRichText } from '../../lib/rich-text'
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -57,7 +58,7 @@ export default function MessagesPage() {
   // ── Load user + conversations ──────────────────────────────────
   useEffect(() => {
     async function init() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
       setMyId(user.id)
       await loadConversations(user.id)

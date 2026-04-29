@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../lib/auth-cache'
 
 // /campfire/war-stories — post memorable session moments, legendary rolls,
 // character beats. Cross-campaign feed: anyone signed in can read; authors
@@ -57,7 +58,7 @@ export default function WarStoriesPage() {
 
   useEffect(() => {
     async function init() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
       setMyId(user.id)
       // Campaigns the user is a member of (GM or player) — used as the

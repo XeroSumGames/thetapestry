@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { getCachedAuth } from '../lib/auth-cache'
 import { generateRandomNpc, ALL_SKILLS, SkillEntry } from '../lib/npc-generator'
 import { resizeImage } from '../lib/image-utils'
 import { MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getWeaponByName } from '../lib/weapons'
@@ -834,7 +835,7 @@ export default function NpcRoster({ campaignId, isGM, combatActive, initiativeNp
     setPublishing(true)
     const npc = npcs.find(n => n.id === editingId)
     if (!npc) { setPublishing(false); return }
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (!user) { setPublishing(false); return }
     await supabase.from('world_npcs').insert({
       source_campaign_npc_id: npc.id,

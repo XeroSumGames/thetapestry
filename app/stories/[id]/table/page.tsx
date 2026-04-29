@@ -2480,7 +2480,7 @@ export default function TablePage() {
   }, [campaignNpcs])
 
   async function handlePublishNpc(npc: CampaignNpc) {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (!user) return
     const { error } = await supabase.from('world_npcs').insert({
       source_campaign_npc_id: npc.id,

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '../../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../../lib/auth-cache'
 import { renderRichText } from '../../../../lib/rich-text'
 
 // /campfire/forums/[id] — thread detail. Original post + reply chain +
@@ -68,7 +69,7 @@ export default function ForumThreadPage() {
 
   useEffect(() => {
     async function init() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
       setMyId(user.id)
       await loadAll()

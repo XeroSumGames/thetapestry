@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../lib/auth-cache'
 import { logFirstEvent } from '../../../lib/events'
 import GhostWall from '../../../components/GhostWall'
 import {
@@ -48,7 +49,7 @@ export default function QuickCharacterPage() {
   const [isAuth, setIsAuth] = useState<boolean | null>(null)
   const [showGhostWall, setShowGhostWall] = useState(false)
 
-  useEffect(() => { supabase.auth.getUser().then(({ data: { user } }: any) => setIsAuth(!!user)) }, [])
+  useEffect(() => { getCachedAuth().then(({ user }) => setIsAuth(!!user)) }, [])
   function requireAuth() { if (isAuth === false) { setShowGhostWall(true); return true } return false }
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -137,7 +138,7 @@ export default function QuickCharacterPage() {
     setSaving(true)
     setSaveError('')
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (!user) { setSaveError('Not logged in.'); setSaving(false); return }
     const character = buildCharacter(state)
     character.creationMethod = 'backstory'

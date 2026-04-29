@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
 import CharacterCard from '../../../../../components/CharacterCard'
 
@@ -26,7 +27,7 @@ export default function UserCharactersPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
 
       const { data: myProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()

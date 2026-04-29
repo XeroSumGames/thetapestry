@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { getCachedAuth } from '../lib/auth-cache'
 
 interface ConvItem {
   conversation_id: string
@@ -118,7 +119,7 @@ export default function MessagesBell() {
 
   useEffect(() => {
     async function init() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) return
       userIdRef.current = user.id
       await loadConversations(user.id)

@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { getCachedAuth } from '../lib/auth-cache'
 import NoteAttachmentsView, { NoteAttachment } from './NoteAttachmentsView'
 import { openPopout } from '../lib/popout'
 import { renderRichText } from '../lib/rich-text'
@@ -35,7 +36,7 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
 
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (user) setUserId(user.id)
     })()
     load()

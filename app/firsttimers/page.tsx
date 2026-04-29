@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
+import { getCachedAuth } from '../../lib/auth-cache'
 import { trackGhostConversion } from '../../lib/events'
 
 export default function FirstTimersPage() {
@@ -13,7 +14,7 @@ export default function FirstTimersPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
       trackGhostConversion()
       const { data: profile, error: profileErr } = await supabase.from('profiles').select('username, onboarded').eq('id', user.id).single()
@@ -35,7 +36,7 @@ export default function FirstTimersPage() {
 
   async function handleGetStarted() {
     setMarking(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (user) await supabase.from('profiles').update({ onboarded: true }).eq('id', user.id)
     router.push('/dashboard')
   }

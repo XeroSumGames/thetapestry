@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 import { logFirstEvent } from '../../../lib/events'
 
@@ -15,7 +16,7 @@ export default function JoinCampaignPage() {
     if (!code.trim()) return
     setJoining(true)
     setError('')
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (!user) { setError('Not logged in.'); setJoining(false); return }
 
     const { data: campaign, error: findErr } = await supabase

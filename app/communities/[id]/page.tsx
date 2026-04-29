@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../lib/auth-cache'
 import CampaignCommunity from '../../../components/CampaignCommunity'
 
 // Detail page for one community. Loads the community row to find its
@@ -23,7 +24,7 @@ export default function CommunityDetailPage() {
   useEffect(() => {
     async function load() {
       if (!communityId) return
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       const { data: com } = await supabase.from('communities').select('campaign_id').eq('id', communityId).maybeSingle()
       if (!com) { setNotFound(true); setLoading(false); return }
       setCampaignId(com.campaign_id)

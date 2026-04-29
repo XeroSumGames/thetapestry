@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
+import { getCachedAuth } from '../../lib/auth-cache'
 import { useSearchParams } from 'next/navigation'
 import CharacterCard, { LiveState } from '../../components/CharacterCard'
 import ProgressionLog, { LogEntry } from '../../components/ProgressionLog'
@@ -23,7 +24,7 @@ export default function CharacterSheetPage() {
   useEffect(() => {
     async function load() {
       if (!characterId) { setLoading(false); return }
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { setLoading(false); return }
       setUserId(user.id)
 

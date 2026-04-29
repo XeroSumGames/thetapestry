@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../lib/supabase-browser'
+import { getCachedAuth } from '../lib/auth-cache'
 import { logFirstEvent } from '../lib/events'
 import QuickAddModal from './QuickAddModal'
 
@@ -254,7 +255,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     if (!linkFromId) { alert('Pick which of your published communities is proposing the link.'); return }
     if (linkFromId === linkTarget.worldCommunityId) { alert('A community cannot link to itself.'); return }
     setLinkSubmitting(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     // Sort the endpoint pair so the unique constraint can match
     // proposal-from-A → B and proposal-from-B → A as the same logical
     // link if you ever need to dedupe later. (Today the constraint
@@ -289,7 +290,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     if (!encounterTarget || encounterSubmitting) return
     if (!encounterCampaignId) { alert('Pick which of your campaigns is encountering this community.'); return }
     setEncounterSubmitting(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     const trimmedNarrative = encounterNarrative.trim()
     const { error } = await supabase.from('community_encounters').insert({
       world_community_id: encounterTarget.worldCommunityId,
@@ -379,7 +380,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
   useEffect(() => {
     async function init() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (user) {
         setUserId(user.id)
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()

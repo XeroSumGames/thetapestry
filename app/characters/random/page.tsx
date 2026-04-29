@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../lib/auth-cache'
 import { logFirstEvent } from '../../../lib/events'
 import {
   createWizardState, buildCharacter, roll2d6, roll1d3,
@@ -89,7 +90,7 @@ export default function RandomCharacterPage() {
   useEffect(() => {
     async function generate() {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) { setStatus('ready'); return }
 
       // Pick a random paradigm

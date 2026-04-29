@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 import { logEvent } from '../../../lib/events'
 import { SETTING_PINS } from '../../../lib/setting-pins'
@@ -43,7 +44,7 @@ export default function NewCampaignPage() {
     if (!name.trim()) return
     setSaving(true)
     setError('')
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (!user) { setError('Not logged in.'); setSaving(false); return }
     const invite_code = generateCode()
     const { data, error: err } = await supabase.from('campaigns').insert({

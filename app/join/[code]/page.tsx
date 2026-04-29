@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
 import { logFirstEvent } from '../../../lib/events'
 
@@ -23,7 +24,7 @@ export default function JoinByCodePage() {
       // bounced them to /login before they clicked, the target was lost and
       // they ended up on /dashboard after sign-in. Encoding the target with
       // encodeURIComponent keeps the slash-in-a-query-value safe across routers.
-      const { data: { user } } = await supabase.auth.getUser()
+      const { user } = await getCachedAuth()
       if (!user) {
         router.push(`/login?redirect=${encodeURIComponent(`/join/${code}`)}`)
         return
@@ -37,7 +38,7 @@ export default function JoinByCodePage() {
 
   async function handleJoin() {
     setJoining(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getCachedAuth()
     if (!user) { router.push(`/login?redirect=${encodeURIComponent(`/join/${code}`)}`); return }
     const { error } = await supabase.from('campaign_members').insert({ campaign_id: campaign.id, user_id: user.id })
     if (error && error.code !== '23505') { setStatus('error'); return }
