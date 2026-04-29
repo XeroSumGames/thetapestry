@@ -686,7 +686,16 @@ export default function TablePage() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
+      // ── Wave 1 ──────────────────────────────────────────────────
+      // auth + campaign load in parallel — neither depends on the
+      // other, the prior sequential pair was paying ~one cold round-
+      // trip per mount unnecessarily.
+      const [authResult, campResult] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.from('campaigns').select('*').eq('id', id).single(),
+      ])
+      const user = authResult.data.user
+      const camp = campResult.data
       if (!user) {
         // Preserve the current path + query so a session-expired reload on
         // the tactical map returns the player here after re-login instead
@@ -696,14 +705,10 @@ export default function TablePage() {
         router.push(`/login?redirect=${encodeURIComponent(fullPath)}`)
         return
       }
+      if (!camp) { router.push('/stories'); return }
+
       setUserId(user.id)
       userIdRef.current = user.id  // Sync immediately so chat refetch sees the freshest viewer id
-      const { data: myProfile } = await supabase.from('profiles').select('username, role').eq('id', user.id).single()
-      setMyUsername(myProfile?.username ?? '')
-      setIsThriver(myProfile?.role === 'Thriver')
-
-      const { data: camp } = await supabase.from('campaigns').select('*').eq('id', id).single()
-      if (!camp) { router.push('/stories'); return }
       setCampaign(camp)
       // Bump last_accessed_at so the My Stories list can sort by
       // most-recently-touched and surface "Last Run: <date>". Fire-and-
@@ -711,7 +716,8 @@ export default function TablePage() {
       supabase.from('campaigns').update({ last_accessed_at: new Date().toISOString() }).eq('id', id)
         .then(({ error }: any) => { if (error) console.warn('[table] last_accessed_at bump failed:', error.message) })
       setVehicles(camp.vehicles ?? [])
-      setIsGM(camp.gm_user_id === user.id)
+      const amGM = camp.gm_user_id === user.id
+      setIsGM(amGM)
       setSessionStatus(camp.session_status === 'active' ? 'active' : 'idle')
       setSessionCount(camp.session_count ?? 0)
       setLoading(false)
@@ -722,33 +728,43 @@ export default function TablePage() {
       if (camp.map_center_lat != null) setQaPinLat(String(camp.map_center_lat))
       if (camp.map_center_lng != null) setQaPinLng(String(camp.map_center_lng))
 
-      const [{ data: gmProfile }, { data: members }] = await Promise.all([
+      // ── Wave 2 ──────────────────────────────────────────────────
+      // Everything that only needs id, user, or camp.gm_user_id —
+      // fired together. Previously this was three sequential awaits:
+      //   profiles.select(user.id) → Promise.all(gmProfile, members) →
+      //   character_states kick check → Promise.all(loads + cnpcs +
+      //   world_npcs + refreshMapTokenIds) → loadPlayerNpcCommunityMap.
+      // Combining them into a single Promise.all collapses ~3 round-
+      // trips of waterfall into one. Trade-off: a kicked player still
+      // pays for the unused fetches before being redirected, but
+      // kick is a rare path — accepting that cost for the common-path
+      // win.
+      const kickCheckPromise = amGM
+        ? Promise.resolve({ data: null as { kicked: boolean | null } | null })
+        : supabase.from('character_states').select('kicked').eq('campaign_id', id).eq('user_id', user.id).maybeSingle()
+
+      const [
+        myProfileRes,
+        gmProfileRes,
+        membersRes,
+        _entriesResult,
+        _rollsResult,
+        _initResult,
+        cnpcsResult,
+        pubDataResult,
+        _mapTokenResult,
+        _commMapResult,
+        kickRes,
+      ] = await Promise.all([
+        supabase.from('profiles').select('username, role').eq('id', user.id).single(),
         supabase.from('profiles').select('id, username').eq('id', camp.gm_user_id).single(),
         supabase.from('campaign_members')
           .select('user_id, character_id, characters:character_id(id, name, data->rapid)')
           .eq('campaign_id', id)
           .not('character_id', 'is', null),
-      ])
-
-      setGmInfo({ userId: camp.gm_user_id, username: (gmProfile as any)?.username ?? 'GM' })
-
-      if (members && members.length > 0) await ensureCharacterStates(id, members as any[])
-      // Check if this player was kicked from the session
-      const amGM = camp.gm_user_id === user.id
-      if (!amGM) {
-        const { data: myState, error: kickCheckErr } = await supabase.from('character_states').select('kicked').eq('campaign_id', id).eq('user_id', user.id).maybeSingle()
-        console.warn('[kickCheck] myState:', myState, 'error:', kickCheckErr?.message ?? 'none')
-        if (myState?.kicked) {
-          alert('You have been removed from this session by the GM.')
-          window.location.href = `/stories/${id}`
-          return
-        }
-      }
-      // Chat is now self-loading inside useChatPanel — no longer in this
-      // Promise.all. The destructuring's leading skip-count drops by 1
-      // accordingly (3 skips for loadEntries/rollsFeed.refetch/loadInitiative).
-      const [,,, cnpcsResult, pubDataResult] = await Promise.all([
-        loadEntries(id), rollsFeed.refetch(), loadInitiative(id),
+        loadEntries(id),
+        rollsFeed.refetch(),
+        loadInitiative(id),
         supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
         supabase.from('world_npcs').select('source_campaign_npc_id').not('source_campaign_npc_id', 'is', null),
         // Hydrate the "which NPCs already have a token in the active
@@ -758,7 +774,34 @@ export default function TablePage() {
         // and the button stays "MAP" even when everything is already
         // placed from a prior session.
         refreshMapTokenIds(),
+        // Community-membership map for the player NPC list ("Community
+        // — <name>" buckets vs "Unfiled"). Independent of cnpcs.
+        loadPlayerNpcCommunityMap(id),
+        kickCheckPromise,
       ])
+
+      const myProfile = myProfileRes.data
+      const gmProfile = gmProfileRes.data
+      const members = membersRes.data
+      setMyUsername(myProfile?.username ?? '')
+      setIsThriver(myProfile?.role === 'Thriver')
+      setGmInfo({ userId: camp.gm_user_id, username: (gmProfile as any)?.username ?? 'GM' })
+
+      // Kick gate — handled after the parallel batch instead of mid-
+      // waterfall. Diagnostic log preserved for the silent-RLS pattern
+      // that bit us before.
+      if (!amGM) {
+        const myState = (kickRes as any).data
+        console.warn('[kickCheck] myState:', myState)
+        if (myState?.kicked) {
+          alert('You have been removed from this session by the GM.')
+          window.location.href = `/stories/${id}`
+          return
+        }
+      }
+
+      if (members && members.length > 0) await ensureCharacterStates(id, members as any[])
+
       const cnpcs = cnpcsResult.data ?? []
       setCampaignNpcs(cnpcs)
       setRosterNpcs(cnpcs.filter((n: any) => {
@@ -767,10 +810,6 @@ export default function TablePage() {
           return wp > 0
         }))
       if (pubDataResult.data) setPublishedNpcIds(new Set(pubDataResult.data.map((d: any) => d.source_campaign_npc_id!)))
-
-      // Load community membership map for all users so the player NPC list
-      // shows "Community — {name}" buckets instead of "Unfiled".
-      await loadPlayerNpcCommunityMap(id)
 
       // Load revealed NPCs — GM sees all, players see their own
       if (camp.gm_user_id === user.id) {
