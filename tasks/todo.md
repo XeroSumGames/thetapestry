@@ -630,7 +630,14 @@ When picking this back up:
 - [x] Clickable steps, portrait upload, concept display, photo resize, test character
 - [ ] CDP tracker boxes (partially fixed)
 - [ ] **Tooltips throughout character creation** — hover/tap explanations on skills, attributes (RAPID), and other game terms so new players understand what each thing does without leaving the page
-- [ ] **Clean up Weapons/Equipment page** — current layout is too messy; redesign for clarity (categories, search, fewer dense rows)
+- [ ] **Overhaul "What They Have" / Weapons + Equipment step** — current layout is unwieldy AND only includes Melee + Ranged. Missing Heavy Weapons, Demolitions, Explosives, and any future weapon categories. Redesign:
+  - Tabbed or filtered category picker covering ALL weapon families (Melee / Ranged / Heavy / Explosives / etc.)
+  - Search across the full weapon catalog
+  - Compact card / row layout — fewer dense fields per item, cleaner secondary stats
+  - Equipment side gets the same treatment (categorized, searchable)
+  - Stays compatible with Paradigm + Random flows that pre-seed weapons
+  - QoL captured 2026-04-30; not blocking anything but every character creator hits this surface
+- [ ] **Clean up Weapons/Equipment page** — superseded by the overhaul above; keep the entry until the overhaul ships then collapse
 - [ ] **Weapon dropdowns on Final Touch screen** — let players swap their seeded/picked weapons via a dropdown selector instead of being locked into the default loadout
 
 ### Ghost Mode
