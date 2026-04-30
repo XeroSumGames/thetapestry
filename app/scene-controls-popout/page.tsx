@@ -38,6 +38,9 @@ interface Scene {
   background_url: string | null
   is_locked: boolean
   campaign_id: string
+  show_grid: boolean | null
+  grid_color: string | null
+  grid_opacity: number | null
 }
 
 export default function SceneControlsPopoutPage() {
@@ -99,16 +102,19 @@ export default function SceneControlsPopoutPage() {
       setScenes(allScenes)
       const active = allScenes.find(s => (s as any).is_active) ?? allScenes[0] ?? null
       setScene(active)
-      // Hydrate cellPx from the active scene's stored value, but ONLY
-      // when the scene id actually changed. Suppress the persist
-      // effect so this read doesn't immediately echo back as a write.
+      // Hydrate render settings from the active scene's stored values,
+      // but ONLY when the scene id actually changed. Suppress the
+      // persist effects so this read doesn't immediately echo back as
+      // a stack of redundant writes. cell_px / show_grid / grid_color
+      // / grid_opacity all hydrate together in one suppress window.
       if (active && active.id !== lastSyncedSceneIdRef.current) {
         lastSyncedSceneIdRef.current = active.id
-        if (typeof active.cell_px === 'number' && active.cell_px > 0) {
-          suppressOutboundRef.current = true
-          setCellPx(active.cell_px)
-          setTimeout(() => { suppressOutboundRef.current = false }, 0)
-        }
+        suppressOutboundRef.current = true
+        if (typeof active.cell_px === 'number' && active.cell_px > 0) setCellPx(active.cell_px)
+        if (typeof active.show_grid === 'boolean') setShowGrid(active.show_grid)
+        if (typeof active.grid_color === 'string' && active.grid_color) setGridColor(active.grid_color)
+        if (typeof active.grid_opacity === 'number') setGridOpacity(active.grid_opacity)
+        setTimeout(() => { suppressOutboundRef.current = false }, 0)
       }
     }
     load()
@@ -238,6 +244,49 @@ export default function SceneControlsPopoutPage() {
     }, 400)
     return () => { if (cellPxPersistRef.current) clearTimeout(cellPxPersistRef.current) }
   }, [cellPx, scene?.id, supabase])
+
+  // showGrid / gridColor / gridOpacity persist mirrors. Same pattern
+  // as cellPx — debounced (400ms), suppress-aware so hydrating from
+  // DB doesn't fire a redundant write back. Toggling Grid ON/OFF or
+  // changing color is rare enough that one write per change is fine.
+  const showGridPersistRef = useRef<any>(null)
+  useEffect(() => {
+    if (suppressOutboundRef.current) return
+    if (!scene) return
+    if (showGridPersistRef.current) clearTimeout(showGridPersistRef.current)
+    const sceneId = scene.id
+    const value = showGrid
+    showGridPersistRef.current = setTimeout(() => {
+      supabase.from('tactical_scenes').update({ show_grid: value }).eq('id', sceneId)
+    }, 200)
+    return () => { if (showGridPersistRef.current) clearTimeout(showGridPersistRef.current) }
+  }, [showGrid, scene?.id, supabase])
+
+  const gridColorPersistRef = useRef<any>(null)
+  useEffect(() => {
+    if (suppressOutboundRef.current) return
+    if (!scene) return
+    if (gridColorPersistRef.current) clearTimeout(gridColorPersistRef.current)
+    const sceneId = scene.id
+    const value = gridColor
+    gridColorPersistRef.current = setTimeout(() => {
+      supabase.from('tactical_scenes').update({ grid_color: value }).eq('id', sceneId)
+    }, 200)
+    return () => { if (gridColorPersistRef.current) clearTimeout(gridColorPersistRef.current) }
+  }, [gridColor, scene?.id, supabase])
+
+  const gridOpacityPersistRef = useRef<any>(null)
+  useEffect(() => {
+    if (suppressOutboundRef.current) return
+    if (!scene) return
+    if (gridOpacityPersistRef.current) clearTimeout(gridOpacityPersistRef.current)
+    const sceneId = scene.id
+    const value = gridOpacity
+    gridOpacityPersistRef.current = setTimeout(() => {
+      supabase.from('tactical_scenes').update({ grid_opacity: value }).eq('id', sceneId)
+    }, 400)
+    return () => { if (gridOpacityPersistRef.current) clearTimeout(gridOpacityPersistRef.current) }
+  }, [gridOpacity, scene?.id, supabase])
 
   // Helpers — mirror TacticalMap's onClick handlers but operate directly
   // on supabase / local state. The main window will see DB updates via

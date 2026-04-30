@@ -59,6 +59,9 @@ interface Scene {
   is_active: boolean
   is_locked: boolean
   has_grid: boolean
+  show_grid?: boolean | null
+  grid_color?: string | null
+  grid_opacity?: number | null
 }
 
 interface Props {
@@ -204,6 +207,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         if (active.cell_px) setCellPx(active.cell_px)
         if (active.img_scale) setImgScale(active.img_scale)
         setMapLocked(active.is_locked ?? false)
+        // Grid render settings — persisted in tactical_scenes per
+        // sql/tactical-scenes-grid-persist.sql so a main-window
+        // refresh doesn't revert to the useState defaults.
+        if (typeof active.show_grid === 'boolean') setShowGrid(active.show_grid)
+        if (typeof active.grid_color === 'string' && active.grid_color) setGridColor(active.grid_color)
+        if (typeof active.grid_opacity === 'number') setGridOpacity(active.grid_opacity)
         lastSyncedSceneIdRef.current = active.id
       }
     } else if (data && data.length > 0 && isGM) {
@@ -216,6 +225,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         if (first.cell_px) setCellPx(first.cell_px)
         if (first.img_scale) setImgScale(first.img_scale)
         setMapLocked(first.is_locked ?? false)
+        if (typeof first.show_grid === 'boolean') setShowGrid(first.show_grid)
+        if (typeof first.grid_color === 'string' && first.grid_color) setGridColor(first.grid_color)
+        if (typeof first.grid_opacity === 'number') setGridOpacity(first.grid_opacity)
         lastSyncedSceneIdRef.current = first.id
       }
     } else if ((!data || data.length === 0) && isGM) {
