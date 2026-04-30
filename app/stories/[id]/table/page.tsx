@@ -488,6 +488,10 @@ export default function TablePage() {
   // Drives the "✨ Set Up Apprentice" button on NpcCard. setup_complete
   // flag distinguishes "needs wizard" from "already set up."
   const [apprenticeBondsByNpcId, setApprenticeBondsByNpcId] = useState<Record<string, ApprenticeBond>>({})
+  // Map of PC id → communities they belong to. Sourced from
+  // community_members; used to drive the "Deposit to community" option
+  // in the InventoryPanel give-modal.
+  const [pcCommunityMemberships, setPcCommunityMemberships] = useState<Record<string, { id: string; name: string }[]>>({})
   // Which Apprentice (if any) the wizard is currently editing. Single
   // wizard instance lifted to the page level so multiple open NpcCards
   // can share it without state collisions.
@@ -689,7 +693,7 @@ export default function TablePage() {
   async function loadPlayerNpcCommunityMap(campaignId: string) {
     const { data } = await supabase
       .from('community_members')
-      .select('id, npc_id, recruitment_type, apprentice_of_character_id, apprentice_meta, communities!inner(name, campaign_id)')
+      .select('id, character_id, npc_id, recruitment_type, apprentice_of_character_id, apprentice_meta, communities!inner(id, name, campaign_id)')
       .is('left_at', null)
       .eq('communities.campaign_id', campaignId)
     const map: Record<string, string> = {}
@@ -697,6 +701,9 @@ export default function TablePage() {
     // button on NpcCard. setup_complete=true means the wizard already
     // ran and the button hides.
     const bonds: Record<string, ApprenticeBond> = {}
+    // PC → list of communities they belong to. Drives the
+    // InventoryPanel's "Deposit to community" recipient list.
+    const pcComms: Record<string, { id: string; name: string }[]> = {}
     for (const row of (data ?? []) as any[]) {
       if (row.npc_id) map[row.npc_id] = row.communities?.name ?? '?'
       if (row.npc_id && row.recruitment_type === 'apprentice' && row.apprentice_meta && row.apprentice_of_character_id) {
@@ -706,9 +713,17 @@ export default function TablePage() {
           apprenticeMeta: row.apprentice_meta,
         }
       }
+      if (row.character_id && row.communities?.id) {
+        const list = pcComms[row.character_id] ?? []
+        if (!list.some(c => c.id === row.communities.id)) {
+          list.push({ id: row.communities.id, name: row.communities.name ?? '?' })
+        }
+        pcComms[row.character_id] = list
+      }
     }
     setPlayerNpcCommunityMap(map)
     setApprenticeBondsByNpcId(bonds)
+    setPcCommunityMemberships(pcComms)
   }
 
   async function loadRevealedNpcs(characterId: string | null, cnpcs: any[]) {
@@ -6662,6 +6677,36 @@ export default function TablePage() {
                   setRosterNpcs(prev => prev.map((n: any) => n.id === targetNpcId ? { ...n, inventory: newTargetInv } : n))
                   setViewingNpcs(prev => prev.map((n: any) => n.id === targetNpcId ? { ...n, inventory: newTargetInv } : n))
                   initChannelRef.current?.send({ type: 'broadcast', event: 'npc_inventory_changed', payload: { npcId: targetNpcId } })
+                }}
+                otherCommunities={(pcCommunityMemberships[syncedSelectedEntry.character.id] ?? [])}
+                onGiveItemToCommunity={async (item: InventoryItem, targetCommunityId: string, qty: number) => {
+                  // Deposit to community_stockpile_items. Stack-merge
+                  // by (name, custom): UPDATE qty if a row already
+                  // exists, else INSERT. The unique index on
+                  // (community_id, name, custom) catches the race.
+                  const { data: existing, error: readErr } = await supabase
+                    .from('community_stockpile_items')
+                    .select('id, qty')
+                    .eq('community_id', targetCommunityId)
+                    .eq('name', item.name)
+                    .eq('custom', item.custom)
+                    .maybeSingle()
+                  if (readErr) { alert(`Stockpile read failed: ${readErr.message}`); return }
+                  if (existing) {
+                    const newQty = ((existing as any).qty ?? 0) + qty
+                    const { error } = await supabase
+                      .from('community_stockpile_items')
+                      .update({ qty: newQty })
+                      .eq('id', (existing as any).id)
+                    if (error) { alert(`Deposit failed: ${error.message}`); return }
+                  } else {
+                    const { error } = await supabase.from('community_stockpile_items').insert({
+                      community_id: targetCommunityId,
+                      name: item.name, qty, enc: item.enc, rarity: item.rarity,
+                      notes: item.notes, custom: item.custom,
+                    })
+                    if (error) { alert(`Deposit failed: ${error.message}`); return }
+                  }
                 }}
                 onInventoryChange={(newInventory: InventoryItem[]) => {
                   // Patch our entries state so the new inventory persists when

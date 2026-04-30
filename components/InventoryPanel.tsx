@@ -53,6 +53,11 @@ interface Props {
   // different broadcast events.
   otherNpcs?: { id: string; name: string }[]
   onGiveToNpc?: (item: InventoryItem, targetNpcId: string, qty: number) => void
+  // Optional community recipients (shared stockpile deposits). Each
+  // entry is a community the giver belongs to; clicking deposits the
+  // item into community_stockpile_items.
+  otherCommunities?: { id: string; name: string }[]
+  onGiveToCommunity?: (item: InventoryItem, targetCommunityId: string, qty: number) => void
 }
 
 const RARITY_COLORS: Record<string, { color: string; bg: string; border: string }> = {
@@ -61,7 +66,7 @@ const RARITY_COLORS: Record<string, { color: string; bg: string; border: string 
   Rare: { color: '#EF9F27', bg: '#2a2010', border: '#5a4a1b' },
 }
 
-export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSecondaryName, phyMod, canEdit, onUpdate, onClose, otherCharacters, onGiveTo, otherNpcs, onGiveToNpc }: Props) {
+export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSecondaryName, phyMod, canEdit, onUpdate, onClose, otherCharacters, onGiveTo, otherNpcs, onGiveToNpc, otherCommunities, onGiveToCommunity }: Props) {
   const [search, setSearch] = useState('')
   const [showCatalog, setShowCatalog] = useState(false)
   const [showCustom, setShowCustom] = useState(false)
@@ -118,13 +123,15 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
     setGiveQty(isSingleUse ? 1 : item.qty)
   }
 
-  function confirmGive(target: { id: string; kind: 'pc' | 'npc' }) {
+  function confirmGive(target: { id: string; kind: 'pc' | 'npc' | 'community' }) {
     if (!givingItem) return
     if (target.kind === 'pc' && !onGiveTo) return
     if (target.kind === 'npc' && !onGiveToNpc) return
+    if (target.kind === 'community' && !onGiveToCommunity) return
     const qty = Math.max(1, Math.min(giveQty, givingItem.qty))
     if (target.kind === 'pc') onGiveTo!(givingItem, target.id, qty)
-    else onGiveToNpc!(givingItem, target.id, qty)
+    else if (target.kind === 'npc') onGiveToNpc!(givingItem, target.id, qty)
+    else onGiveToCommunity!(givingItem, target.id, qty)
     // Decrement sender by exactly the chosen qty (drop the row if all gone).
     const idx = inventory.findIndex(i => i === givingItem || (i.name === givingItem.name && i.custom === givingItem.custom))
     if (idx >= 0) {
@@ -238,6 +245,15 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
                   title="Give to non-player character"
                   style={{ padding: '4px 8px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                   🎭 {n.name}
+                </button>
+              ))}
+              {/* Community stockpile recipients — purple trim. Lists
+                  every community the giver is a member of. */}
+              {onGiveToCommunity && (otherCommunities ?? []).map(c => (
+                <button key={`community:${c.id}`} onClick={() => confirmGive({ id: c.id, kind: 'community' })}
+                  title="Deposit to community stockpile"
+                  style={{ padding: '4px 8px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  🏘 {c.name}
                 </button>
               ))}
               <button onClick={() => setGivingItem(null)}

@@ -4,6 +4,8 @@ import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { appendProgressionEntry } from '../lib/progression-log'
 import CommunityMoraleModal from './CommunityMoraleModal'
+import { type InventoryItem } from '../lib/inventory'
+import { EQUIPMENT } from '../lib/xse-schema'
 
 // Phase A — Communities foundation. Lists communities for a campaign, lets
 // the GM create one, drill into the member roster, add/remove members from
@@ -234,6 +236,19 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const supabase = createClient()
 
   const [communities, setCommunities] = useState<Community[]>([])
+  // Stockpile items, keyed by community_id. Loaded lazily on first
+  // expand of each community panel so we don't pull every campaign's
+  // worth of items up-front. Shape mirrors lib/inventory InventoryItem
+  // with an `id` (for row-level deletes) + community_id (for the FK).
+  interface StockpileRow extends InventoryItem { id: string; community_id: string }
+  const [stockpileByCommunity, setStockpileByCommunity] = useState<Record<string, StockpileRow[]>>({})
+  const [stockpileLoadedFor, setStockpileLoadedFor] = useState<Set<string>>(new Set())
+  // Add-form state for the GM add-custom-item flow.
+  const [addStockName, setAddStockName] = useState('')
+  const [addStockQty, setAddStockQty] = useState('1')
+  const [addStockEnc, setAddStockEnc] = useState('0')
+  const [addStockNotes, setAddStockNotes] = useState('')
+  const [addStockingForCommunity, setAddStockingForCommunity] = useState<string | null>(null)
   const [members, setMembers] = useState<Record<string, Member[]>>({})   // key = community_id, status='active'
   const [pendingByCommunity, setPendingByCommunity] = useState<Record<string, Member[]>>({})
   // Last-5 Morale outcomes per community, newest-first. Drives the
@@ -383,6 +398,84 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, initialMode, initialModeToken, initialOpenId])
+
+  // Stockpile lazy-load. Pulls community_stockpile_items for one
+  // community on first expand of its panel. Subsequent reloads are
+  // explicit via loadStockpile(communityId, true).
+  async function loadStockpile(communityId: string, force: boolean = false) {
+    if (!force && stockpileLoadedFor.has(communityId)) return
+    const { data, error } = await supabase
+      .from('community_stockpile_items')
+      .select('*')
+      .eq('community_id', communityId)
+      .order('name')
+    if (error) {
+      console.warn('[stockpile] load failed:', error.message)
+      return
+    }
+    setStockpileByCommunity(prev => ({ ...prev, [communityId]: (data ?? []) as StockpileRow[] }))
+    setStockpileLoadedFor(prev => new Set(prev).add(communityId))
+  }
+
+  // Add a custom item to the stockpile. Used by the GM curate form;
+  // stack-merges by (name, custom) at the DB level via the unique index,
+  // so a duplicate INSERT will fail and we fall back to UPDATE.
+  async function addStockpileItem(communityId: string, item: { name: string; qty: number; enc: number; notes: string; custom: boolean; rarity: string }) {
+    if (!item.name.trim()) return
+    const existing = (stockpileByCommunity[communityId] ?? []).find(r => r.name === item.name && r.custom === item.custom)
+    if (existing) {
+      const newQty = existing.qty + item.qty
+      const { error } = await supabase
+        .from('community_stockpile_items')
+        .update({ qty: newQty })
+        .eq('id', existing.id)
+      if (error) { alert(`Stockpile add failed: ${error.message}`); return }
+      setStockpileByCommunity(prev => ({
+        ...prev,
+        [communityId]: (prev[communityId] ?? []).map(r => r.id === existing.id ? { ...r, qty: newQty } : r),
+      }))
+    } else {
+      const { data, error } = await supabase
+        .from('community_stockpile_items')
+        .insert({
+          community_id: communityId,
+          name: item.name, qty: item.qty, enc: item.enc, rarity: item.rarity,
+          notes: item.notes, custom: item.custom,
+        })
+        .select()
+        .single()
+      if (error) { alert(`Stockpile add failed: ${error.message}`); return }
+      setStockpileByCommunity(prev => ({
+        ...prev,
+        [communityId]: [...(prev[communityId] ?? []), data as StockpileRow],
+      }))
+    }
+  }
+
+  // Decrement a stockpile item's qty by 1 (or delete if it'd hit 0).
+  async function removeStockpileItem(rowId: string, communityId: string) {
+    const row = (stockpileByCommunity[communityId] ?? []).find(r => r.id === rowId)
+    if (!row) return
+    if (row.qty > 1) {
+      const newQty = row.qty - 1
+      const { error } = await supabase
+        .from('community_stockpile_items')
+        .update({ qty: newQty })
+        .eq('id', rowId)
+      if (error) { alert(`Stockpile remove failed: ${error.message}`); return }
+      setStockpileByCommunity(prev => ({
+        ...prev,
+        [communityId]: (prev[communityId] ?? []).map(r => r.id === rowId ? { ...r, qty: newQty } : r),
+      }))
+    } else {
+      const { error } = await supabase.from('community_stockpile_items').delete().eq('id', rowId)
+      if (error) { alert(`Stockpile remove failed: ${error.message}`); return }
+      setStockpileByCommunity(prev => ({
+        ...prev,
+        [communityId]: (prev[communityId] ?? []).filter(r => r.id !== rowId),
+      }))
+    }
+  }
 
   // Phase D dashboard loader — fetches full Morale history (with
   // role_snapshot) + recruit attempts from roll_log for one community.
@@ -1501,7 +1594,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         return (
           <div key={c.id} style={{ background: '#1a1a1a', border: `1px solid ${isOpen ? '#7ab3d4' : '#2e2e2e'}`, borderRadius: '4px' }}>
             {/* Header */}
-            <div onClick={() => setOpenId(isOpen ? null : c.id)}
+            <div onClick={() => {
+              const opening = !isOpen
+              setOpenId(opening ? c.id : null)
+              if (opening) void loadStockpile(c.id)
+            }}
               style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -2048,6 +2145,94 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     )
                   })}
                 </div>
+
+                {/* Stockpile — shared community resource pool. Maintainers
+                    gather Supplies (Clothed Check) and PCs can deposit
+                    items into the stockpile from their own InventoryPanel.
+                    Members + GM can curate via the inline form below.
+                    Withdrawal-to-PC is a planned followup; for now the GM
+                    decrements an item and adds it to the receiving PC's
+                    sheet manually. */}
+                {(() => {
+                  const stockpile = stockpileByCommunity[c.id] ?? []
+                  const totalEnc = stockpile.reduce((s, r) => s + r.enc * r.qty, 0)
+                  const isAdding = addStockingForCommunity === c.id
+                  return (
+                    <div style={{ background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px', marginTop: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '15px' }}>📦</span>
+                        <span style={{ flex: 1, fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Stockpile</span>
+                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+                          {stockpile.length === 0 ? 'empty' : `${stockpile.length} items · ${totalEnc} enc`}
+                        </span>
+                        <button onClick={() => setAddStockingForCommunity(isAdding ? null : c.id)}
+                          style={{ padding: '2px 10px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                          {isAdding ? 'Cancel' : '+ Add'}
+                        </button>
+                      </div>
+                      {stockpile.length > 0 && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 12px' }}>
+                          {stockpile.map(item => (
+                            <div key={item.id} style={{ display: 'flex', alignItems: 'baseline', gap: '4px', padding: '3px 0', borderBottom: '1px solid #1a1a1a', fontSize: '14px' }}>
+                              <span style={{ color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
+                                {item.name}
+                                {item.qty > 1 && <span style={{ color: '#7ab3d4' }}> ×{item.qty}</span>}
+                              </span>
+                              {item.enc > 0 && (
+                                <span style={{ color: '#7ab3d4', fontSize: '13px' }} title={`${item.enc} enc per item`}>
+                                  [{item.enc * item.qty}]
+                                </span>
+                              )}
+                              {item.notes && <span style={{ color: '#5a5550', fontSize: '13px' }}>{item.notes}</span>}
+                              <button onClick={() => removeStockpileItem(item.id, c.id)}
+                                title={item.qty > 1 ? 'Decrement qty' : 'Remove item'}
+                                style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '13px', cursor: 'pointer', padding: '0 2px', flexShrink: 0 }}
+                                onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
+                                onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>×</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {isAdding && (
+                        <div style={{ marginTop: '8px', padding: '8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                          <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+                            <input value={addStockName} onChange={e => {
+                              setAddStockName(e.target.value)
+                              const match = EQUIPMENT.find(eq => eq.name.toLowerCase() === e.target.value.trim().toLowerCase())
+                              if (match) setAddStockEnc(String(match.enc))
+                            }} placeholder="Item name (catalog autofills enc)"
+                              autoFocus style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+                            <input value={addStockQty} onChange={e => setAddStockQty(e.target.value)} type="number" min="1" placeholder="Qty"
+                              style={{ width: '50px', padding: '5px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
+                            <input value={addStockEnc} onChange={e => setAddStockEnc(e.target.value)} type="number" min="0" placeholder="Enc"
+                              title="Encumbrance per item"
+                              style={{ width: '52px', padding: '5px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
+                          </div>
+                          <input value={addStockNotes} onChange={e => setAddStockNotes(e.target.value)} placeholder="Notes (optional)"
+                            style={{ width: '100%', padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', marginBottom: '6px' }} />
+                          <button onClick={async () => {
+                            if (!addStockName.trim()) return
+                            const trimmedName = addStockName.trim()
+                            const catalogHit = EQUIPMENT.find(eq => eq.name.toLowerCase() === trimmedName.toLowerCase())
+                            await addStockpileItem(c.id, {
+                              name: trimmedName,
+                              qty: Math.max(1, parseInt(addStockQty) || 1),
+                              enc: Math.max(0, parseInt(addStockEnc) || 0),
+                              notes: addStockNotes.trim() || (catalogHit?.notes ?? ''),
+                              custom: !catalogHit,
+                              rarity: catalogHit?.rarity ?? 'Common',
+                            })
+                            setAddStockName(''); setAddStockQty('1'); setAddStockEnc('0'); setAddStockNotes('')
+                            setAddStockingForCommunity(null)
+                          }} disabled={!addStockName.trim()}
+                            style={{ width: '100%', padding: '6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: addStockName.trim() ? 'pointer' : 'not-allowed', opacity: addStockName.trim() ? 1 : 0.5 }}>
+                            Add to Stockpile
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
 
                 {/* Row renderer shared between PCs and NPCs. The primary
                     label is the CHARACTER NAME (what used to say COHORT /

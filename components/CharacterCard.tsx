@@ -109,6 +109,11 @@ interface Props {
   // filter out hidden_from_players for non-GM viewers.
   otherNpcs?: { id: string; name: string }[]
   onGiveItemToNpc?: (item: InventoryItem, targetNpcId: string, qty: number) => void
+  // PC ↔ Community deposit — when both are passed, the give picker also
+  // lists communities the PC is a member of (purple-themed). Used for
+  // depositing items into the shared community stockpile.
+  otherCommunities?: { id: string; name: string }[]
+  onGiveItemToCommunity?: (item: InventoryItem, targetCommunityId: string, qty: number) => void
   onInventoryChange?: (newInventory: InventoryItem[]) => void
   onWeaponChange?: (slot: 'weaponPrimary' | 'weaponSecondary', newWeapon: any) => void
 }
@@ -133,6 +138,8 @@ function CharacterCardImpl({
   onGiveItem,
   otherNpcs,
   onGiveItemToNpc,
+  otherCommunities,
+  onGiveItemToCommunity,
   onInventoryChange,
   onWeaponChange,
 }: Props) {
@@ -864,6 +871,8 @@ function CharacterCardImpl({
           onGiveTo={onGiveItem}
           otherNpcs={otherNpcs}
           onGiveToNpc={onGiveItemToNpc}
+          otherCommunities={otherCommunities}
+          onGiveToCommunity={onGiveItemToCommunity}
         />
       )}
 
