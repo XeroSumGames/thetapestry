@@ -183,13 +183,34 @@ export async function listAvailableModules(
   // RLS already restricts reads; we just need to include unlisted
   // modules here when we add invite-link support later. For MVP we
   // fetch everything SELECT-able and let RLS do the heavy lifting.
-  const { data, error } = await supabase
+  // Try with the subscriber_count column first (added in
+  // sql/modules-subscriber-count.sql). If the migration hasn't been
+  // applied on this database yet, PostgREST 400s on the missing
+  // column — retry without it instead of falling all the way through
+  // to the empty-state path. The marketplace card just shows "📥 0"
+  // for every module until the migration runs + the trigger backfills.
+  const fullSelect = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count, latest_version:module_versions!modules_latest_version_id_fkey(id, version, published_at)'
+  const liteSelect = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, latest_version:module_versions!modules_latest_version_id_fkey(id, version, published_at)'
+  let { data, error } = await supabase
     .from('modules')
-    .select('id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count, latest_version:module_versions!modules_latest_version_id_fkey(id, version, published_at)')
+    .select(fullSelect)
     .not('latest_version_id', 'is', null)
     .is('archived_at', null)
     .order('sort_order', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
+
+  if (error && /subscriber_count/.test(error.message ?? '')) {
+    // Migration not applied yet — retry without the column.
+    const retry = await supabase
+      .from('modules')
+      .select(liteSelect)
+      .not('latest_version_id', 'is', null)
+      .is('archived_at', null)
+      .order('sort_order', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false })
+    data = retry.data as any
+    error = retry.error
+  }
 
   if (error) {
     // The FK-named join above may not match your schema's auto-named
@@ -208,13 +229,28 @@ export async function listAvailableModules(
 async function listAvailableModulesFallback(
   supabase: SupabaseClient,
 ): Promise<ModuleListing[]> {
-  const { data: modules, error } = await supabase
+  // Same migration-tolerant pattern as listAvailableModules: try with
+  // subscriber_count, retry without it if the column doesn't exist.
+  const fullCols = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count'
+  const liteCols = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order'
+  let { data: modules, error } = await supabase
     .from('modules')
-    .select('id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count')
+    .select(fullCols)
     .not('latest_version_id', 'is', null)
     .is('archived_at', null)
     .order('sort_order', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
+  if (error && /subscriber_count/.test(error.message ?? '')) {
+    const retry = await supabase
+      .from('modules')
+      .select(liteCols)
+      .not('latest_version_id', 'is', null)
+      .is('archived_at', null)
+      .order('sort_order', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false })
+    modules = retry.data as any
+    error = retry.error
+  }
   if (error || !modules) return []
   const versionIds = modules.map((m: any) => m.latest_version_id).filter(Boolean)
   if (versionIds.length === 0) {
