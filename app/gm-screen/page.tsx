@@ -1,16 +1,21 @@
 'use client'
 
+// Skip Next's static prerender entirely. /gm-screen mounts a Supabase
+// client (via the GmNotes panel) and reads useSearchParams() — both
+// patterns that have hit prerender-time failures on Vercel even with
+// the env wired correctly. The popout is always opened from a story
+// header, never crawled, so dynamic rendering is the right call.
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 
 // Client-only import — GmNotes pulls in @supabase/ssr's browser
-// client at module load, which throws during Next.js's prerender of
-// /gm-screen because env vars aren't injected on the static path.
-// Loading it via next/dynamic with ssr:false keeps the popout
-// statically renderable while still mounting the component when the
-// browser hydrates with a campaign id.
-const GmNotes = dynamic(() => import('../../components/GmNotes'), { ssr: false })
+// client at module load. Even with force-dynamic above, keeping this
+// out of the server bundle is cheap insurance and shrinks the SSR
+// payload for the path that doesn't need it.
+const GmNotes = dynamicImport(() => import('../../components/GmNotes'), { ssr: false })
 
 const OUTCOMES = [
   { roll: '1+1', label: 'Low Insight', color: '#c0392b', desc: 'Critical failure. +1 Insight Die. Weapon jam possible.' },
