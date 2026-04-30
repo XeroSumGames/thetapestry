@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { PIN_CATEGORIES, getCategoryEmoji, getCategoryLabel } from '../lib/pin-categories'
+import { openPopout } from '../lib/popout'
 
 interface CampaignPin {
   id: string
@@ -16,6 +17,10 @@ interface CampaignPin {
   created_at: string
   sort_order: number | null
   tactical_scene_id: string | null
+  // When set (currently 'comic'), the pin gets a 📖 Read button that
+  // opens /reader-popout. The pin's image attachments become the
+  // reader's pages, sorted natural-numerically.
+  reader_mode: string | null
 }
 
 interface TacticalScene {
@@ -56,6 +61,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
   const [editLat, setEditLat] = useState('')
   const [editLng, setEditLng] = useState('')
   const [editCategory, setEditCategory] = useState<string>('location')
+  const [editReaderMode, setEditReaderMode] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [pinImages, setPinImages] = useState<Record<string, string[]>>({})
   const [scenes, setScenes] = useState<TacticalScene[]>([])
@@ -127,6 +133,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
     setEditLat(String(pin.lat))
     setEditLng(String(pin.lng))
     setEditCategory(pin.category || 'location')
+    setEditReaderMode(pin.reader_mode ?? null)
     setEditSceneId(pin.tactical_scene_id ?? null)
     setEditSortOrder(pin.sort_order != null ? String(pin.sort_order) : '')
   }
@@ -142,6 +149,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
       notes: editNotes.trim() || null,
       lat, lng,
       category: editCategory,
+      reader_mode: editReaderMode,
       tactical_scene_id: editSceneId || null,
       sort_order: sortVal != null && !Number.isNaN(sortVal) ? sortVal : null,
     }
@@ -267,6 +275,17 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                       })}
                     </div>
                   </div>
+                  {/* Reader mode — when set, the pin gets a 📖 Read
+                      button that opens the comic-reader popout
+                      backed by this pin's image attachments. */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', padding: '4px 6px', background: editReaderMode === 'comic' ? '#0f1a2e' : 'transparent', border: `1px solid ${editReaderMode === 'comic' ? '#1a3a5c' : '#2e2e2e'}`, borderRadius: '3px', cursor: 'pointer' }}>
+                    <input type="checkbox"
+                      checked={editReaderMode === 'comic'}
+                      onChange={e => setEditReaderMode(e.target.checked ? 'comic' : null)} />
+                    <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em' }}>
+                      📖 Comic reader — pages = sorted image attachments
+                    </span>
+                  </label>
                   <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Latitude</div>
@@ -347,6 +366,12 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                           {pin.revealed ? 'Hide' : 'Show'}
                         </button>
                         <div style={{ display: 'flex', gap: '2px' }}>
+                          {pin.reader_mode === 'comic' && (
+                            <button
+                              onClick={() => openPopout(`/reader-popout?pin=${pin.id}`, `reader-${pin.id}`, { w: 980, h: 1100 })}
+                              title="Open comic reader"
+                              style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>📖</button>
+                          )}
                           <button onClick={() => startEdit(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>Edit</button>
                           {showTacticalMap && onPlaceOnTacticalMap ? (
                             <button onClick={() => onPlaceOnTacticalMap(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }} title="Add to tactical map">🗺️</button>

@@ -152,6 +152,23 @@ Xero captured the following items mid-/post-playtest. Bugs first, then UX, then 
 - [x] **`/modules` Thriver-delete + clear test modules** — shipped 2026-04-29: Thriver-only DELETE chip on each `/modules` card (also gated to module author); confirmation modal in place. Test-module bulk-clear handled by Xero via the new chip.
 - [x] **Phase C Communities** — weekly Morale Check + Resource Checks (Fed/Clothed) shipped 2026-04-23. Activity Blocks + Lv4 skill auto-CMods deferred to Phase D.
 
+## 🔒 Backburner — Campaign calendar
+**Status:** Multiple independent in-game time signals exist (`communities.week_number`, the new Advance Time / encumbrance tick, `map_pins.event_date` text, world event `cmod_active` toggle, `sessions.start/end` real-world). They work decoupled today; a unified calendar would let them interlock — time-tick advances real game clock → communities auto-week-tick → Morale becomes due → world events with end-dates auto-deactivate → ration consumption etc.
+
+**Why deferred:** none of the friction points actually bite yet. Manual Skip Week + manual world-event toggle + manual encumbrance tick all work in current play. Building a calendar to head off pain that hasn't materialized is premature. See `memory:project_campaign_calendar.md` for the full framing.
+
+**Revisit triggers** (any one of these flips it back to active):
+- [ ] Forgetting to Skip Week and a community sits frozen for 4+ sessions
+- [ ] World events that should've ended weeks ago still applying CMod in play
+- [ ] Wanting "X days passed" → automatic ration consumption / weather change / community drift
+- [ ] Encumbrance tick feels like it should auto-fire on time advancement instead of being a button
+
+When picking this back up:
+- [ ] DB: a `campaign_clock` table or jsonb on `campaigns` (start_date + ticks_per_day + current_tick).
+- [ ] Helper `lib/campaign-clock.ts` exposing `advance(campaignId, hours)` that fans out to every time-aware subsystem (encumbrance ticks, community Morale due-dates, world event activation, ration decay).
+- [ ] UI surface: probably a small clock widget in the table page header showing "Day N · Hour H" with a +/- stepper on it. GM-only.
+- [ ] Migrate the `Time` button from Inventory #1 to use the unified clock instead of its current standalone tick.
+
 ## 🔒 Backburner — Thriver godmode UI sweep
 **Status:** DB-level done, UI deferred. Xero's `profiles.role = 'Thriver'` + the policies in `sql/thriver-godmode-policies.sql` + `sql/campaign-pins-rls-thriver-bypass.sql` give superuser access at the database layer. The UI still hides admin affordances (add/edit/delete/scene-setup/session-control) behind `isGM` checks, so Thrivers can only see those buttons on campaigns they actually GM. Pilot (commit fd5db34) widened 3 components (NpcRoster / TacticalMap / CampaignCommunity) but was rolled back — user wants to hold until the whole surface is done in one pass.
 
