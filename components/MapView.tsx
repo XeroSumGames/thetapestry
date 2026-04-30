@@ -4,28 +4,8 @@ import Link from 'next/link'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { logFirstEvent } from '../lib/events'
+import { PIN_CATEGORIES, getCategoryEmoji as sharedGetCategoryEmoji } from '../lib/pin-categories'
 import QuickAddModal from './QuickAddModal'
-
-const PIN_CATEGORIES = [
-  { value: 'rumor',      label: 'Rumor',      emoji: '❓' },
-  { value: 'location',   label: 'Location',   emoji: '📍' },
-  { value: 'residence',  label: 'Residence',  emoji: '🏠' },
-  { value: 'business',   label: 'Business',   emoji: '🏪' },
-  { value: 'church',     label: 'Church',     emoji: '⛪' },
-  { value: 'government', label: 'Government', emoji: '🏛️' },
-  { value: 'airport',    label: 'Transport',  emoji: '✈️' },
-  { value: 'hospital',   label: 'Hospital',   emoji: '🏥' },
-  { value: 'military',   label: 'Military',   emoji: '⚔️' },
-  { value: 'person',     label: 'Person',     emoji: '👤' },
-  { value: 'danger',     label: 'Danger',     emoji: '☠️' },
-  { value: 'resource',   label: 'Resource',   emoji: '🎒' },
-  { value: 'medical',    label: 'Medical',    emoji: '🩸' },
-  { value: 'group',      label: 'Group',      emoji: '👥' },
-  { value: 'animals',    label: 'Animals',    emoji: '🐾' },
-  { value: 'community',  label: 'Community',  emoji: '🏘️' },
-  { value: 'world_event', label: 'Distemper Timeline', emoji: '🌍' },
-  { value: 'settlement', label: 'Settlement', emoji: '🏚️' },
-]
 
 type PinTier = 'landmark' | 'location' | 'event' | 'personal'
 
@@ -67,8 +47,10 @@ function pinInRegion(p: { lat: number; lng: number }, key: string): boolean {
   return p.lat >= r.latMin && p.lat <= r.latMax && p.lng >= r.lngMin && p.lng <= r.lngMax
 }
 
+// Local alias keeps existing callers working — implementation lives in
+// lib/pin-categories.ts so CampaignPins picks up the same source.
 function getCategoryEmoji(category: string): string {
-  return PIN_CATEGORIES.find(c => c.value === category)?.emoji ?? '📍'
+  return sharedGetCategoryEmoji(category)
 }
 
 interface Pin {

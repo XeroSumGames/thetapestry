@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
+import { PIN_CATEGORIES, getCategoryEmoji, getCategoryLabel } from '../lib/pin-categories'
 
 interface CampaignPin {
   id: string
@@ -43,6 +44,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
   const [editNotes, setEditNotes] = useState('')
   const [editLat, setEditLat] = useState('')
   const [editLng, setEditLng] = useState('')
+  const [editCategory, setEditCategory] = useState<string>('location')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [pinImages, setPinImages] = useState<Record<string, string[]>>({})
   const [scenes, setScenes] = useState<TacticalScene[]>([])
@@ -113,6 +115,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
     setEditNotes(pin.notes ?? '')
     setEditLat(String(pin.lat))
     setEditLng(String(pin.lng))
+    setEditCategory(pin.category || 'location')
     setEditSceneId(pin.tactical_scene_id ?? null)
     setEditSortOrder(pin.sort_order != null ? String(pin.sort_order) : '')
   }
@@ -127,6 +130,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
       name: editName.trim(),
       notes: editNotes.trim() || null,
       lat, lng,
+      category: editCategory,
       tactical_scene_id: editSceneId || null,
       sort_order: sortVal != null && !Number.isNaN(sortVal) ? sortVal : null,
     }
@@ -223,6 +227,35 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
                     style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', marginBottom: '4px' }} />
                   <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} placeholder="Notes..." rows={2}
                     style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical', marginBottom: '4px' }} />
+                  {/* Category picker — same icon set the world map uses
+                      (lib/pin-categories.ts). Click an icon to set the
+                      category; the selected one outlines red. */}
+                  <div style={{ marginBottom: '4px' }}>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>
+                      Category — {getCategoryLabel(editCategory)}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: '2px' }}>
+                      {PIN_CATEGORIES.map(c => {
+                        const picked = c.value === editCategory
+                        return (
+                          <button key={c.value} type="button" onClick={() => setEditCategory(c.value)}
+                            title={c.label}
+                            style={{
+                              padding: '4px 0',
+                              background: picked ? '#2a1210' : '#242424',
+                              border: `1px solid ${picked ? '#c0392b' : '#3a3a3a'}`,
+                              borderRadius: '3px',
+                              fontSize: '17px',
+                              cursor: 'pointer',
+                              lineHeight: 1,
+                              transition: 'background 120ms',
+                            }}>
+                            {c.emoji}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
                   <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Latitude</div>
@@ -280,6 +313,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
                     title={pin.tactical_scene_id ? 'Double-click to open tactical map' : 'Show on map'}
                   >
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span title={getCategoryLabel(pin.category)} style={{ fontSize: '15px', lineHeight: 1, flexShrink: 0 }}>{getCategoryEmoji(pin.category)}</span>
                       {pin.name}
                       {pin.tactical_scene_id && <span title="Has tactical map" style={{ fontSize: '13px', color: '#7ab3d4' }}>🗺️</span>}
                     </div>
