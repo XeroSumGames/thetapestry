@@ -334,7 +334,7 @@ export default function CampaignPage() {
 
       {/* Action buttons — GM */}
       {isGM && (
-        <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
           <a href={`/stories/${id}/table`} target="_blank" rel="noreferrer" style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
           <Link href={`/stories/${id}/edit`} style={btn('#242424', '#f5f2ee', '#3a3a3a')}>Edit</Link>
           <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
@@ -388,7 +388,7 @@ export default function CampaignPage() {
               You were removed from this session by the GM. You will not rejoin automatically — click <b>Rejoin Session</b> below when you are ready to return.
             </div>
           )}
-          <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
             {amKicked ? (
               <button onClick={handleRejoin} disabled={rejoining} style={{ ...btn('#1a2e10', '#7fc458', '#2d5a1b'), opacity: rejoining ? 0.6 : 1 } as any}>
                 {rejoining ? 'Rejoining…' : 'Rejoin Session'}
@@ -576,6 +576,10 @@ function btn(bg: string, color: string, border: string): React.CSSProperties {
     borderRadius: '3px', color, fontSize: '13px',
     fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer',
-    display: 'inline-block',
+    // inline-flex + center keeps icon glyphs (📦) baseline-aligned with the
+    // text label. whiteSpace + lineHeight stop multi-word labels (GM Kit,
+    // Publish Module) from wrapping to two lines and breaking row height.
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    whiteSpace: 'nowrap', lineHeight: 1,
   }
 }
