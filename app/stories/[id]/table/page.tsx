@@ -5428,7 +5428,7 @@ export default function TablePage() {
             },
             {
               label: 'GM Screen',
-              onClick: () => openPopout('/gm-screen', 'gm-screen', { w: 900, h: 700 }),
+              onClick: () => openPopout(`/gm-screen?c=${id}`, `gm-screen-${id}`, { w: 900, h: 700 }),
             },
           ],
           hdrBtn('#2a2010', '#EF9F27', '#5a4a1b'),

@@ -1,6 +1,16 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
+
+// Client-only import — GmNotes pulls in @supabase/ssr's browser
+// client at module load, which throws during Next.js's prerender of
+// /gm-screen because env vars aren't injected on the static path.
+// Loading it via next/dynamic with ssr:false keeps the popout
+// statically renderable while still mounting the component when the
+// browser hydrates with a campaign id.
+const GmNotes = dynamic(() => import('../../components/GmNotes'), { ssr: false })
 
 const OUTCOMES = [
   { roll: '1+1', label: 'Low Insight', color: '#c0392b', desc: 'Critical failure. +1 Insight Die. Weapon jam possible.' },
@@ -89,7 +99,7 @@ const SKILLS_MAP = [
   { skill: 'Weaponsmith', attr: 'DEX' },
 ]
 
-type BoxKey = 'outcomes' | 'combat-actions' | 'range-bands' | 'weapon-condition' | 'cmods' | 'healing' | 'skills-attrs'
+type BoxKey = 'outcomes' | 'combat-actions' | 'range-bands' | 'weapon-condition' | 'cmods' | 'healing' | 'skills-attrs' | 'gm-notes'
 
 interface BoxLayout { x: number; y: number; w: number; h: number }
 
@@ -101,6 +111,10 @@ const DEFAULT_LAYOUT: Record<BoxKey, BoxLayout> = {
   'cmods':            { x: 0,   y: 515, w: 430, h: 240 },
   'healing':          { x: 440, y: 470, w: 430, h: 200 },
   'skills-attrs':     { x: 440, y: 680, w: 430, h: 380 },
+  // GM Notes — only renders when /gm-screen?c=<campaignId>. Default
+  // position fills the col-1 dead space below CMods so the canvas
+  // height stays the same as before (driven by skills-attrs at 1060).
+  'gm-notes':         { x: 0,   y: 765, w: 430, h: 295 },
 }
 
 const STORAGE_LAYOUT = 'gmscreen.layout.v1'
@@ -110,6 +124,11 @@ const sectionHeading: React.CSSProperties = { fontSize: '15px', color: '#c0392b'
 const cellStyle: React.CSSProperties = { fontSize: '15px', fontFamily: 'Carlito, sans-serif', padding: '2px 6px', borderBottom: '1px solid #2e2e2e' }
 
 export default function GMScreen() {
+  const searchParams = useSearchParams()
+  // /gm-screen?c=<campaign-id> — present when launched from a story's
+  // header. Drives the GM Notes panel below; without it, that panel
+  // renders a placeholder ("open from a story").
+  const campaignId = searchParams?.get('c') ?? ''
   const [layout, setLayout] = useState<Record<BoxKey, BoxLayout>>(DEFAULT_LAYOUT)
   const [locked, setLocked] = useState<boolean>(true)
   const [hydrated, setHydrated] = useState(false)
@@ -377,6 +396,25 @@ export default function GMScreen() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* GM Notes — same component the chat-window panel uses. The
+            inner GmNotes element handles its own scroll, so we drop the
+            page-level bodyStyle padding and let it take the full panel
+            height. Only renders when ?c=<campaignId> was supplied. */}
+        <div ref={el => { boxRefs.current['gm-notes'] = el }} style={boxStyle('gm-notes')}>
+          <div onMouseDown={e => startDrag('gm-notes', e)} style={dragHandleStyle()}>
+            <div style={sectionHeading}>GM Notes</div>
+          </div>
+          <div style={{ overflow: 'auto', flex: 1, padding: '6px 10px 10px' }}>
+            {campaignId ? (
+              <GmNotes campaignId={campaignId} />
+            ) : (
+              <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5, padding: '8px 4px' }}>
+                Open the GM Screen from a story&rsquo;s header to load that story&rsquo;s notes here.
+              </div>
+            )}
           </div>
         </div>
 
