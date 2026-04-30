@@ -38,20 +38,39 @@ export default function ParadigmsPage() {
       </h1>
 
       <div style={{ marginTop: '12px', marginBottom: '20px', fontSize: '14px', color: '#cce0f5', lineHeight: 1.6, maxWidth: '780px' }}>
+        <h2 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#7ab3d4', margin: '0 0 8px' }}>
+          The journey starts
+        </h2>
         <p style={{ margin: '0 0 10px' }}>
-          A Paradigm is an archetype — a real-world role the SRD ships with as a complete RAPID + skill loadout.
-          Pick one and you skip the seven-step Backstory wizard; the system rolls a Motivation, Complication, and concept
-          for you, and seeds the character with the Paradigm&apos;s baseline.
+          Paradigms are familiar archetypes that require little customization before starting play. They are as well
+          suited to take into a longer campaign as they are for a one-off adventure, and can be very useful when you
+          just want jump in and get started playing. Whether you need to replace a dead character on the fly, are
+          joining a game at short notice, or have no defined concept in mind, Paradigms facilitate quick gameplay.
         </p>
         <p style={{ margin: '0 0 10px' }}>
-          You&apos;ll land on the <strong style={{ color: '#7ab3d4' }}>Final Review</strong> page where the RAPID Range Attributes
-          and Skills are already set. From there you can rebalance freely — within the standard creation caps
-          (no attribute or skill above <strong style={{ color: '#7fc458' }}>+3</strong> at character creation). When you click <strong>Finalize</strong>,
-          any last-minute changes carry over to your live character sheet.
+          Distemper comes with 16 easily recognizable Paradigms that let you skip the Backstory Generation process and
+          provides you with the attributes, skills, motivation, complication, and the equipment specifically designed
+          to fit a trope or a role that will be familiar to many players.
         </p>
-        <p style={{ margin: 0, color: '#5a5550', fontSize: '13px' }}>
-          Paradigms are templates, not cages — a Rural Sheriff who wants to dump points into Medicine and Inspiration
-          can. The archetype is just where the journey starts.
+        <p style={{ margin: '0 0 10px' }}>
+          The paradigms are: Antiques Dealer, Bar Owner, Biker, EMT, Farmer, Hot Rod Mechanic, Mercenary, Petty
+          Criminal, Preacher, Rural Sheriff, Small Town Mayor, School Teacher.
+        </p>
+        <p style={{ margin: '0 0 10px' }}>
+          On the <strong style={{ color: '#7ab3d4' }}>Final Review</strong> page you can rebalance RAPID Range Attributes
+          and your skills freely, although you must stick within the standard creation caps of no attribute or skill
+          above <strong style={{ color: '#7fc458' }}>+3</strong> at character creation. When you click <strong>Finalize</strong>,
+          any last-minute changes carry over to a live character sheet.
+        </p>
+        <p style={{ margin: '0 0 10px' }}>
+          As with all characters in Distemper, what makes them tick is usually far more interesting than their
+          statistics. Perhaps your School Teacher is actually a bewildered retiree who is trying to adjust to this
+          cruel and capricious world. Perhaps your Rural Sheriff is someone who just can&rsquo;t seem to shake his
+          inbuilt sense of justice, even in the face of so much loss and death. Perhaps your Small Town Mayor finds
+          himself leading a group of people across the country in hopes of a better life.
+        </p>
+        <p style={{ margin: 0, color: '#5a5550', fontSize: '13px', fontStyle: 'italic' }}>
+          Whatever the numbers say, it&apos;s always the story you are telling that is more interesting.
         </p>
       </div>
 
