@@ -6857,14 +6857,12 @@ export default function TablePage() {
                     setTokenRefreshKey(k => k + 1)
                   }}
                   onPlaceOnTacticalMap={async (pin) => {
-                    // Drop the pin onto the active scene as a marker
-                    // token (token_type='object' so it uses the existing
-                    // square-token render path; cyan color so it reads
-                    // distinct from regular orange objects). Name is
-                    // emoji-prefixed so the category icon shows up in
-                    // the on-token initials slot. Position is (1,1)
-                    // per the top-left spawn convention; the GM drags
-                    // it where it actually belongs after.
+                    // Drop the pin onto the active scene as a minimal
+                    // marker — token_type='pin' is rendered by
+                    // TacticalMap as just the emoji at the grid center,
+                    // no square background, no name label. Position is
+                    // (1,1) per the top-left spawn convention; the GM
+                    // drags it where it actually belongs after.
                     const { data: activeScene } = await supabase
                       .from('tactical_scenes')
                       .select('id')
@@ -6875,8 +6873,8 @@ export default function TablePage() {
                     const emoji = getCategoryEmoji(pin.category)
                     const { error } = await supabase.from('scene_tokens').insert({
                       scene_id: (activeScene as any).id,
-                      name: `${emoji} ${pin.name}`,
-                      token_type: 'object',
+                      name: emoji,
+                      token_type: 'pin',
                       grid_x: 1, grid_y: 1,
                       is_visible: true, color: '#7ab3d4',
                     })

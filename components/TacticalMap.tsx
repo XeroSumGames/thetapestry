@@ -776,6 +776,25 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const tokenScale = t.scale ?? 1.0
       const radius = cellSize * 0.4 * tokenScale
 
+      // Pin marker — minimal render, just the emoji at the grid center.
+      // No square background, no name label, no WP bar. token_type='pin'
+      // is reserved for these markers (set by the "Add to tactical map"
+      // button on campaign pins). Click hit detection still works
+      // because radius is set; the GM can drag it like any other token.
+      if (t.token_type === 'pin') {
+        if (selectedToken === t.id) {
+          ctx.shadowColor = '#c0392b'
+          ctx.shadowBlur = 12
+        }
+        const fontPx = Math.max(20, cellSize * 0.9 * tokenScale)
+        ctx.font = `${fontPx}px sans-serif`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(t.name || '📍', cx, cy)
+        ctx.shadowBlur = 0
+        return
+      }
+
       // Active combatant glow
       const isActive = activeEntry && (
         (t.character_id && activeEntry.character_id === t.character_id) ||
