@@ -198,6 +198,27 @@ export default function SceneControlsPopoutPage() {
   useEffect(() => { if (!suppressOutboundRef.current) busRef.current?.postState('showRangeOverlay', showRangeOverlay) }, [showRangeOverlay])
   useEffect(() => { if (!suppressOutboundRef.current) busRef.current?.postState('mapLocked', mapLocked) }, [mapLocked])
 
+  // Persist cellPx to tactical_scenes.cell_px so it survives reload.
+  // Without this the popout + TacticalMap stay in sync over the bus
+  // for the lifetime of the session, but when either window remounts
+  // they rehydrate from DB which is still the old value (default 35).
+  // Debounced because the stepper fires each click; we don't want a
+  // DB write per +/-. Skip writes triggered by inbound bus messages
+  // (suppressOutboundRef) so applying a remote update doesn't echo
+  // back as a redundant DB write.
+  const cellPxPersistRef = useRef<any>(null)
+  useEffect(() => {
+    if (suppressOutboundRef.current) return
+    if (!scene) return
+    if (cellPxPersistRef.current) clearTimeout(cellPxPersistRef.current)
+    const sceneId = scene.id
+    const value = cellPx
+    cellPxPersistRef.current = setTimeout(() => {
+      supabase.from('tactical_scenes').update({ cell_px: value }).eq('id', sceneId)
+    }, 400)
+    return () => { if (cellPxPersistRef.current) clearTimeout(cellPxPersistRef.current) }
+  }, [cellPx, scene?.id, supabase])
+
   // Helpers — mirror TacticalMap's onClick handlers but operate directly
   // on supabase / local state. The main window will see DB updates via
   // its existing tactical_scenes realtime sub.
