@@ -46,6 +46,7 @@ import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/
 import { getOutcome, outcomeColor, compactRollSummary, formatTime } from '../../../../lib/roll-helpers'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
 import { SKILLS, MOTIVATIONS, COMPLICATIONS } from '../../../../lib/xse-schema'
+import { rollThreeWords, rollApprenticeAge } from '../../../../lib/xse-engine'
 
 interface Campaign {
   id: string
@@ -9782,9 +9783,17 @@ export default function TablePage() {
                         const complicationRoll = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1)
                         const motivation = MOTIVATIONS[motivationRoll]
                         const complication = COMPLICATIONS[complicationRoll]
+                        // Apprentices "come with" age + three trait words per
+                        // SRD §08 p.21 — rolled here at recruit-time so the
+                        // values are inherent character before the wizard
+                        // opens. Editable on the Identity step but pre-filled.
+                        const age = rollApprenticeAge()
+                        const threeWords = rollThreeWords()
                         const apprenticeMeta = {
                           motivation, motivation_roll: motivationRoll,
                           complication, complication_roll: complicationRoll,
+                          age,
+                          three_words: threeWords,
                           setup_complete: false,
                         }
                         await supabase.from('community_members')
@@ -9803,7 +9812,7 @@ export default function TablePage() {
                         if (recruitRollerId) void appendProgressionLog(
                           recruitRollerId,
                           'community',
-                          `⭐ Took ${recruitResult.npcName} as your Apprentice — Motivation: ${motivation}, Complication: ${complication}.`,
+                          `⭐ Took ${recruitResult.npcName} (age ${age}, ${threeWords.join(' / ')}) as your Apprentice — Motivation: ${motivation}, Complication: ${complication}.`,
                         )
                         if (typeof window !== 'undefined') {
                           window.dispatchEvent(new CustomEvent('tapestry:recruit-updated', { detail: { npcId: recruitNpcId } }))

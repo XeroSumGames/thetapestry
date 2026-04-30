@@ -9,27 +9,29 @@
 //   - community_members.apprentice_of_character_id = <master PC id>
 //   - community_members.apprentice_meta = {
 //       motivation, motivation_roll, complication, complication_roll,
-//       setup_complete: false,
+//       age, three_words, setup_complete: false,
 //     }
 //   - The Apprentice IS an existing campaign_npcs row.
 //
 // What this wizard does (5 steps):
-//   1. Identity — name (default = NPC's current) + freeform background.
+//   1. Identity — name + age + three trait words + freeform background.
 //      Locked Motivation + Complication chips at the top so the player
 //      sees what they're working with — these are inherent character.
-//   2. Paradigm — pick from PARADIGMS via <ParadigmPicker>. The picked
-//      Paradigm seeds RAPID + skills with that Paradigm's baseline.
+//   2. Profession — pick from PROFESSIONS via <ProfessionPicker>. Each
+//      profession skill auto-seeds at +1 CDP (vocational -3 → -1,
+//      non-vocational 0 → 1). Profession does NOT seed RAPID.
 //   3. RAPID — spend 3 CDP across the 5 RAPID attributes. Each ▲ costs
-//      1 CDP, max +4. Cannot reduce below the Paradigm baseline.
-//   4. Skills — spend 5 CDP across all skills. 1 CDP per step
-//      (skillStepUp). Cannot reduce below Paradigm baseline.
+//      1 CDP, max +4. Baseline is 0 across the board.
+//   4. Skills — spend 5 CDP across all skills on top of the profession
+//      seeding. Per-skill cap = min(SKILL_MAX, master_PC.skill - 1)
+//      per SRD §08 p.21 ("can train up to your skill - 1").
 //   5. Confirm — summary card.
 //
 // Save flow:
 //   - UPDATE campaign_npcs SET name, reason, acumen, physicality,
 //     influence, dexterity, skills, notes (append).
 //   - UPDATE community_members SET apprentice_meta = {
-//       ...existing, paradigm, background,
+//       ...existing, profession, age, three_words, background,
 //       setup_complete: true, setup_at: now,
 //     }
 //   - Append a progression_log entry on the master PC.
@@ -38,11 +40,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { appendProgressionEntry } from '../lib/progression-log'
-import { PARADIGMS, type Paradigm, type AttributeName, SKILLS, type SkillValue } from '../lib/xse-schema'
-import { skillStepUp, skillStepDown } from '../lib/xse-engine'
-import ParadigmPicker from './ParadigmPicker'
+import { PROFESSIONS, type ProfessionDefinition, type AttributeName, SKILLS, type SkillValue } from '../lib/xse-schema'
+import { skillStepUp } from '../lib/xse-engine'
+import ProfessionPicker from './ProfessionPicker'
 
-type Step = 'identity' | 'paradigm' | 'rapid' | 'skills' | 'confirm'
+type Step = 'identity' | 'profession' | 'rapid' | 'skills' | 'confirm'
 
 const ATTR_ORDER: AttributeName[] = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 const ATTR_FULL: Record<AttributeName, string> = {
@@ -59,7 +61,10 @@ interface ApprenticeMeta {
   motivation_roll: number
   complication: string
   complication_roll: number
-  paradigm?: string
+  age?: number
+  three_words?: [string, string, string] | string[]
+  profession?: string
+  paradigm?: string  // legacy field — older Apprentices were Paradigm-based.
   background?: string
   setup_complete?: boolean
   setup_at?: string
@@ -71,10 +76,18 @@ interface Props {
   campaignNpcId: string             // the NPC (campaign_npcs.id) that IS the Apprentice
   npcCurrentName: string            // default seed for the name field
   masterCharacterId: string         // master PC's character id (for progression log)
-  apprenticeMeta: ApprenticeMeta    // pre-wizard meta (locked M/C)
+  apprenticeMeta: ApprenticeMeta    // pre-wizard meta (locked M/C, age, 3 words)
   // Lifecycle.
   onClose: () => void
   onSaved: () => void
+}
+
+// Map a profession-skill name (with optional trailing *) back to the
+// canonical SKILLS entry name (no asterisk) and a vocational flag.
+function normalizeProfessionSkill(skill: string): { name: string; vocational: boolean } {
+  const vocational = skill.endsWith('*')
+  const name = vocational ? skill.slice(0, -1) : skill
+  return { name, vocational }
 }
 
 export default function ApprenticeCreationWizard({
@@ -86,16 +99,19 @@ export default function ApprenticeCreationWizard({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Step 1: Identity.
+  // Step 1: Identity. Pre-fill from the recruit-time roll.
   const [name, setName] = useState(npcCurrentName)
+  const [age, setAge] = useState<number>(apprenticeMeta.age ?? 25)
+  const incomingWords = Array.isArray(apprenticeMeta.three_words) ? apprenticeMeta.three_words : []
+  const [threeWords, setThreeWords] = useState<[string, string, string]>([
+    incomingWords[0] ?? '', incomingWords[1] ?? '', incomingWords[2] ?? '',
+  ])
   const [background, setBackground] = useState('')
 
-  // Step 2: Paradigm.
-  const [paradigm, setParadigm] = useState<Paradigm | null>(null)
+  // Step 2: Profession.
+  const [profession, setProfession] = useState<ProfessionDefinition | null>(null)
 
-  // Step 3: RAPID — Paradigm baseline + delta tracker. The delta is only
-  // the CDP-spent increments above baseline; the saved value is
-  // baseline + delta. Cap each attribute at RAPID_MAX.
+  // Step 3: RAPID — Profession does NOT seed RAPID per spec. Baseline 0.
   const [rapidDelta, setRapidDelta] = useState<Record<AttributeName, number>>(
     { RSN: 0, ACU: 0, PHY: 0, INF: 0, DEX: 0 },
   )
@@ -103,34 +119,36 @@ export default function ApprenticeCreationWizard({
     () => ATTR_ORDER.reduce((sum, k) => sum + rapidDelta[k], 0),
     [rapidDelta],
   )
-  const finalRapid: Record<AttributeName, number> = useMemo(() => {
-    const base = paradigm?.rapid ?? { RSN: 0, ACU: 0, PHY: 0, INF: 0, DEX: 0 }
-    return {
-      RSN: base.RSN + rapidDelta.RSN,
-      ACU: base.ACU + rapidDelta.ACU,
-      PHY: base.PHY + rapidDelta.PHY,
-      INF: base.INF + rapidDelta.INF,
-      DEX: base.DEX + rapidDelta.DEX,
-    }
-  }, [paradigm, rapidDelta])
+  const finalRapid: Record<AttributeName, number> = useMemo(() => ({
+    RSN: rapidDelta.RSN, ACU: rapidDelta.ACU, PHY: rapidDelta.PHY,
+    INF: rapidDelta.INF, DEX: rapidDelta.DEX,
+  }), [rapidDelta])
 
-  // Step 4: Skills — Paradigm baseline + delta tracker. Delta is the
-  // count of CDP spent on each skill (each step costs 1 CDP via
-  // skillStepUp). Total of all deltas can't exceed SKILL_BUDGET.
-  // Vocational skills baseline at -3 (the schema default) unless the
-  // Paradigm includes them.
+  // Step 4: Skills — Profession seeds 1 CDP into each of its 5 skills.
+  // Player adds 5 more CDP via the stepper. Per-skill SRD cap kicks in
+  // on top of both. The delta tracks ONLY the player's additional CDP
+  // — the profession seeding is an implicit baseline.
   const [skillDelta, setSkillDelta] = useState<Record<string, number>>({})
   const skillSpent = useMemo(
     () => Object.values(skillDelta).reduce((sum, n) => sum + n, 0),
     [skillDelta],
   )
-  // Per-skill final value: baseline (Paradigm or schema default) +
-  // skillStepUp applied N times where N = skillDelta[name].
-  function getSkillBase(skillName: string): SkillValue {
-    if (paradigm) {
-      const fromParadigm = paradigm.skills.find(s => s.skillName === skillName)
-      if (fromParadigm) return fromParadigm.level
+
+  // The profession's skill seeding — 1 CDP applied to each of its 5
+  // skills, computed via skillStepUp from the schema default.
+  const professionSeed = useMemo<Record<string, SkillValue>>(() => {
+    const out: Record<string, SkillValue> = {}
+    if (!profession) return out
+    for (const raw of profession.skills) {
+      const { name, vocational } = normalizeProfessionSkill(raw)
+      const def = (vocational ? -3 : 0) as SkillValue
+      out[name] = skillStepUp(def, vocational)
     }
+    return out
+  }, [profession])
+
+  function getSkillBase(skillName: string): SkillValue {
+    if (skillName in professionSeed) return professionSeed[skillName]
     const def = SKILLS.find(s => s.name === skillName)
     return (def?.vocational ? -3 : 0) as SkillValue
   }
@@ -170,11 +188,6 @@ export default function ApprenticeCreationWizard({
     return () => { cancelled = true }
   }, [supabase, masterCharacterId])
 
-  // SRD per-skill training cap. Master PC skills default to 0 (or -3
-  // for vocational defaults) when the row is missing. Cap is the lower
-  // of SKILL_MAX and (PC skill − 1). When the result is negative, no
-  // CDP can be spent — the wizard treats the Paradigm baseline as
-  // intrinsic and the SRD cap as governing further training only.
   function getSkillCap(skillName: string): number {
     const def = SKILLS.find(s => s.name === skillName)
     const pcLevel = masterSkills[skillName] ?? (def?.vocational ? -3 : 0)
@@ -182,8 +195,8 @@ export default function ApprenticeCreationWizard({
   }
 
   // Step gating — Continue button enabled when the current step is "complete enough."
-  const canContinueFromIdentity = name.trim().length > 0
-  const canContinueFromParadigm = paradigm !== null
+  const canContinueFromIdentity = name.trim().length > 0 && age > 0 && threeWords.every(w => w.trim().length > 0)
+  const canContinueFromProfession = profession !== null
   const canContinueFromRapid = rapidSpent === RAPID_BUDGET
   const canContinueFromSkills = skillSpent === SKILL_BUDGET
 
@@ -198,7 +211,7 @@ export default function ApprenticeCreationWizard({
 
   // ── Save flow ────────────────────────────────────────────────────
   async function handleSave() {
-    if (!paradigm) return
+    if (!profession) return
     setSaving(true)
     setError(null)
     try {
@@ -212,17 +225,21 @@ export default function ApprenticeCreationWizard({
         return { name: s.name, level: final }
       }).filter(Boolean)
 
-      // Append motivation/complication/background as a structured note
-      // block under any existing notes. Future-Claude or the GM can
+      // Append motivation/complication/3 words/background as a structured
+      // note block under any existing notes. Future-Claude or the GM can
       // edit this freely; we only append, never overwrite.
       const motivationLine = `Motivation: ${apprenticeMeta.motivation} (rolled ${apprenticeMeta.motivation_roll})`
       const complicationLine = `Complication: ${apprenticeMeta.complication} (rolled ${apprenticeMeta.complication_roll})`
+      const wordsLine = `Three Words: ${threeWords.map(w => w.trim()).filter(Boolean).join(' / ')}`
+      const ageLine = `Age: ${age}`
       const backgroundBlock = background.trim()
         ? `Background: ${background.trim()}`
         : '(No background written.)'
       const apprenticeNoteBlock = [
         '── Apprentice ──',
-        `Paradigm: ${paradigm.name} (${paradigm.profession})`,
+        `Profession: ${profession.name}`,
+        ageLine,
+        wordsLine,
         motivationLine,
         complicationLine,
         backgroundBlock,
@@ -258,10 +275,12 @@ export default function ApprenticeCreationWizard({
       if (npcErr) throw new Error(`update npc: ${npcErr.message}`)
 
       // 3) UPDATE community_members.apprentice_meta — flip
-      //    setup_complete + persist Paradigm + background.
+      //    setup_complete + persist Profession + age + words + background.
       const newMeta: ApprenticeMeta = {
         ...apprenticeMeta,
-        paradigm: paradigm.name,
+        profession: profession.name,
+        age,
+        three_words: [threeWords[0].trim(), threeWords[1].trim(), threeWords[2].trim()] as [string, string, string],
         background: background.trim(),
         setup_complete: true,
         setup_at: new Date().toISOString(),
@@ -278,7 +297,7 @@ export default function ApprenticeCreationWizard({
         supabase,
         masterCharacterId,
         'community',
-        `⭐ Apprentice ${name.trim()} set up — ${paradigm.name} (${paradigm.profession}).`,
+        `⭐ Apprentice ${name.trim()} set up — ${profession.name} (age ${age}).`,
       )
 
       onSaved()
@@ -320,9 +339,9 @@ export default function ApprenticeCreationWizard({
 
         {/* Step pip strip */}
         <div style={{ display: 'flex', gap: '4px', padding: '8px 18px', borderBottom: '1px solid #2e2e2e' }}>
-          {(['identity', 'paradigm', 'rapid', 'skills', 'confirm'] as Step[]).map((s, i) => {
+          {(['identity', 'profession', 'rapid', 'skills', 'confirm'] as Step[]).map((s, i) => {
             const isCurrent = s === step
-            const ord = ['identity', 'paradigm', 'rapid', 'skills', 'confirm'].indexOf(step)
+            const ord = ['identity', 'profession', 'rapid', 'skills', 'confirm'].indexOf(step)
             const isPast = i < ord
             return (
               <div key={s}
@@ -354,25 +373,43 @@ export default function ApprenticeCreationWizard({
           {/* Step 1 — Identity */}
           {step === 'identity' && (
             <>
-              {/* Game-time framing note. The wizard runs once at the table
-                  but the SRD frames the whole ritual as taking 1 month of
-                  game time — Motivation/Complication, Paradigm, RAPID
-                  spend, skill training. GMs should advance the campaign
-                  clock to match before the Apprentice is fully integrated. */}
               <div style={{ padding: '8px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
                 <strong style={{ color: '#7ab3d4' }}>Game time:</strong> per SRD §08 p.21 the Apprentice ritual represents <strong>1 month</strong> of in-game time — the master PC training them in skills they have, while the Apprentice settles into the community. Advance your campaign clock accordingly.
               </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Name</label>
+                  <input value={name} onChange={e => setName(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ width: '110px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Age</label>
+                  <input type="number" min={1} max={120} value={age}
+                    onChange={e => setAge(Math.max(1, Math.min(120, parseInt(e.target.value, 10) || 1)))}
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', textAlign: 'center', fontWeight: 700 }} />
+                </div>
+              </div>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Name</label>
-                <input value={name} onChange={e => setName(e.target.value)}
-                  style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
+                <label style={{ display: 'block', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Three Words</label>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {[0, 1, 2].map(i => (
+                    <input key={i} value={threeWords[i]}
+                      onChange={e => {
+                        const next: [string, string, string] = [...threeWords] as [string, string, string]
+                        next[i] = e.target.value
+                        setThreeWords(next)
+                      }}
+                      placeholder={['First', 'Second', 'Third'][i]}
+                      style={{ flex: 1, padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
+                  ))}
+                </div>
                 <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
-                  Defaults to the NPC's current name. Edit if you want a fresh feel — the master PC may have given them a nickname.
+                  Three trait words that capture this Apprentice. Auto-rolled at recruit time; edit freely.
                 </div>
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Background — Fill In The Gaps</label>
-                <textarea value={background} onChange={e => setBackground(e.target.value)} rows={5}
+                <textarea value={background} onChange={e => setBackground(e.target.value)} rows={4}
                   placeholder="Where did they come from? How did they end up with the master PC? What's their unspoken hope?"
                   style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
                 <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
@@ -382,28 +419,28 @@ export default function ApprenticeCreationWizard({
             </>
           )}
 
-          {/* Step 2 — Paradigm */}
-          {step === 'paradigm' && (
+          {/* Step 2 — Profession */}
+          {step === 'profession' && (
             <>
               <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
-                Pick a setting-appropriate Paradigm. The Apprentice inherits its RAPID baseline + skill list; you'll tune from there with 3 CDP RAPID + 5 CDP skill spends.
+                Pick a setting-appropriate Profession. Each of its 5 skills auto-seeds at <strong style={{ color: '#7fc458' }}>+1 CDP</strong> — vocational skills go from -3 → -1, non-vocational from 0 → +1. You then spend 3 CDP on RAPID + 5 more on skills.
               </div>
-              <ParadigmPicker value={paradigm?.name ?? null} onChange={p => {
-                setParadigm(p)
-                // Reset CDP deltas if Paradigm changes — baselines moved
-                // so any previous spend is no longer valid.
-                setRapidDelta({ RSN: 0, ACU: 0, PHY: 0, INF: 0, DEX: 0 })
+              <ProfessionPicker value={profession?.name ?? null} onChange={p => {
+                setProfession(p)
+                // Reset skill deltas when profession changes — the
+                // baseline shifts so any previous spend is no longer
+                // valid against the new caps.
                 setSkillDelta({})
               }} />
             </>
           )}
 
           {/* Step 3 — RAPID spend */}
-          {step === 'rapid' && paradigm && (
+          {step === 'rapid' && profession && (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
-                  Spend <strong style={{ color: '#d48bd4' }}>3 CDP</strong> on RAPID. Each ▲ adds +1 (max +{RAPID_MAX}). Cannot reduce below the {paradigm.name} baseline.
+                  Spend <strong style={{ color: '#d48bd4' }}>3 CDP</strong> on RAPID. Each ▲ adds +1 (max +{RAPID_MAX}). Profession does not seed RAPID — start from 0.
                 </div>
                 <div style={{ fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: rapidSpent === RAPID_BUDGET ? '#7fc458' : '#EF9F27', fontWeight: 600 }}>
                   {RAPID_BUDGET - rapidSpent} CDP remaining
@@ -411,7 +448,6 @@ export default function ApprenticeCreationWizard({
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {ATTR_ORDER.map(k => {
-                  const base = paradigm.rapid[k]
                   const final = finalRapid[k]
                   const delta = rapidDelta[k]
                   const canInc = rapidSpent < RAPID_BUDGET && final < RAPID_MAX
@@ -419,7 +455,6 @@ export default function ApprenticeCreationWizard({
                   return (
                     <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px' }}>
                       <span style={{ width: '120px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{ATTR_FULL[k]}</span>
-                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>base {base >= 0 ? '+' : ''}{base}</span>
                       <span style={{ flex: 1 }} />
                       <button onClick={() => canDec && setRapidDelta(d => ({ ...d, [k]: d[k] - 1 }))} disabled={!canDec}
                         style={{ padding: '2px 8px', background: canDec ? '#1a1a1a' : '#0f0f0f', border: '1px solid #3a3a3a', borderRadius: '3px', color: canDec ? '#f5a89a' : '#3a3a3a', cursor: canDec ? 'pointer' : 'not-allowed', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>▼</button>
@@ -436,23 +471,18 @@ export default function ApprenticeCreationWizard({
           )}
 
           {/* Step 4 — Skills spend */}
-          {step === 'skills' && paradigm && (
+          {step === 'skills' && profession && (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
-                  Spend <strong style={{ color: '#d48bd4' }}>5 CDP</strong> on skills. Each ▲ steps the skill up by one tier (vocational -3 → 1 costs 1 CDP).
+                  Spend <strong style={{ color: '#d48bd4' }}>5 CDP</strong> on skills. Each ▲ steps the skill up by one tier on top of the {profession.name} baseline.
                 </div>
                 <div style={{ fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: skillSpent === SKILL_BUDGET ? '#7fc458' : '#EF9F27', fontWeight: 600 }}>
                   {SKILL_BUDGET - skillSpent} CDP remaining
                 </div>
               </div>
-              {/* SRD §08 p.21 — explainer for the per-skill training cap.
-                  The Apprentice can only be trained in a skill up to one
-                  rank below the master PC's level in that skill. Skills
-                  the PC doesn't have can't be trained at all. The
-                  Paradigm baseline still stands either way. */}
               <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', padding: '6px 10px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', lineHeight: 1.4 }}>
-                <strong style={{ color: '#7ab3d4' }}>SRD training cap:</strong> per the SRD §08 p.21 you can only train your Apprentice up to <strong>your skill − 1</strong> in any given skill. Skills you don&apos;t have can&apos;t be trained — the Paradigm baseline still stands. Loading master PC: {masterPcLoaded ? <span style={{ color: '#7fc458' }}>ready</span> : <span style={{ color: '#EF9F27' }}>fetching…</span>}.
+                <strong style={{ color: '#7ab3d4' }}>SRD training cap:</strong> per SRD §08 p.21 you can only train your Apprentice up to <strong>your skill − 1</strong> in any given skill. Skills you don&apos;t have can&apos;t be trained — the Profession baseline still stands. Loading master PC: {masterPcLoaded ? <span style={{ color: '#7fc458' }}>ready</span> : <span style={{ color: '#EF9F27' }}>fetching…</span>}.
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', maxHeight: '420px', overflowY: 'auto', padding: '4px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                 {SKILLS.map(s => {
@@ -462,13 +492,19 @@ export default function ApprenticeCreationWizard({
                   const def = s
                   const pcLevel = masterSkills[s.name] ?? (def.vocational ? -3 : 0)
                   const cap = getSkillCap(s.name)
-                  const trainable = cap >= (def.vocational ? -1 : 0)  // need at least one stepUp's worth of headroom
+                  const trainable = cap >= (def.vocational ? -1 : 0)
+                  const inProfession = s.name in professionSeed
                   const canInc = masterPcLoaded && skillSpent < SKILL_BUDGET && final < cap
                   const canDec = delta > 0
                   return (
                     <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', background: '#1a1a1a', borderRadius: '2px', opacity: trainable ? 1 : 0.55 }}>
-                      <span style={{ flex: 1, fontSize: '13px', color: final > base ? '#7fc458' : '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>{s.name}</span>
-                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', minWidth: '50px', textAlign: 'right' }} title="Paradigm baseline">base {base}</span>
+                      <span style={{ flex: 1, fontSize: '13px', color: final > base ? '#7fc458' : '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
+                        {s.name}{inProfession && <span style={{ marginLeft: '4px', color: '#d48bd4', fontSize: '13px' }}>★</span>}
+                      </span>
+                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', minWidth: '50px', textAlign: 'right' }}
+                        title={inProfession ? `${profession.name} seed: ${base}` : 'Not seeded by profession'}>
+                        base {base}
+                      </span>
                       <span style={{ fontSize: '13px', color: trainable ? '#7ab3d4' : '#5a5550', fontFamily: 'Carlito, sans-serif', minWidth: '60px', textAlign: 'right' }}
                         title={trainable
                           ? `Master PC has ${s.name} ${pcLevel}; cap = ${cap}`
@@ -493,12 +529,15 @@ export default function ApprenticeCreationWizard({
           )}
 
           {/* Step 5 — Confirm */}
-          {step === 'confirm' && paradigm && (
+          {step === 'confirm' && profession && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ padding: '10px 12px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                 <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Identity</div>
-                <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontWeight: 600 }}>{name}</div>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>{paradigm.name} ({paradigm.profession})</div>
+                <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontWeight: 600 }}>{name} <span style={{ color: '#5a5550', fontWeight: 400, fontSize: '13px' }}>· age {age}</span></div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>{profession.name}</div>
+                <div style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', marginTop: '4px', letterSpacing: '.04em' }}>
+                  {threeWords.map(w => w.trim()).filter(Boolean).join(' · ')}
+                </div>
                 {background.trim() && (
                   <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginTop: '6px', whiteSpace: 'pre-wrap' }}>{background.trim()}</div>
                 )}
@@ -541,8 +580,8 @@ export default function ApprenticeCreationWizard({
         <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <button onClick={() => {
             if (step === 'identity') onClose()
-            else if (step === 'paradigm') setStep('identity')
-            else if (step === 'rapid') setStep('paradigm')
+            else if (step === 'profession') setStep('identity')
+            else if (step === 'rapid') setStep('profession')
             else if (step === 'skills') setStep('rapid')
             else if (step === 'confirm') setStep('skills')
           }} disabled={saving}
@@ -552,14 +591,14 @@ export default function ApprenticeCreationWizard({
 
           {step !== 'confirm' && (
             <button onClick={() => {
-              if (step === 'identity' && canContinueFromIdentity) setStep('paradigm')
-              else if (step === 'paradigm' && canContinueFromParadigm) setStep('rapid')
+              if (step === 'identity' && canContinueFromIdentity) setStep('profession')
+              else if (step === 'profession' && canContinueFromProfession) setStep('rapid')
               else if (step === 'rapid' && canContinueFromRapid) setStep('skills')
               else if (step === 'skills' && canContinueFromSkills) setStep('confirm')
             }}
               disabled={
                 (step === 'identity' && !canContinueFromIdentity) ||
-                (step === 'paradigm' && !canContinueFromParadigm) ||
+                (step === 'profession' && !canContinueFromProfession) ||
                 (step === 'rapid' && !canContinueFromRapid) ||
                 (step === 'skills' && !canContinueFromSkills)
               }

@@ -142,6 +142,35 @@ export function rollMotivation(): string {
   return MOTIVATIONS[roll2d6()] ?? ''
 }
 
+// Trait words used for the "Three Words" character-defining tokens.
+// Same list /characters/random uses for random PCs; reused here so
+// Apprentice creation can roll three at recruit time without copying
+// the array.
+export const THREE_WORDS_LIST = [
+  'Adaptable', 'Adventurous', 'Affectionate', 'Altruistic', 'Ambitious', 'Argumentative', 'Articulate', 'Assertive', 'Authentic', 'Authoritative',
+  'Bold', 'Braggadocious', 'Calm', 'Candid', 'Charismatic', 'Clever', 'Collaborative', 'Combative', 'Compassionate', 'Confident',
+  'Conscientious', 'Contrarian', 'Courageous', 'Creative', 'Cultured', 'Cunning', 'Curious', 'Daring', 'Decisive', 'Deliberate',
+  'Determined', 'Dignified', 'Diligent', 'Diplomatic', 'Discreet', 'Eloquent', 'Empathetic', 'Energetic', 'Enterprising', 'Fair',
+  'Fervent', 'Fierce', 'Flexible', 'Focused', 'Forgiving', 'Generous', 'Genuine', 'Gregarious', 'Grounded', 'Honorable',
+  'Humble', 'Idealistic', 'Imaginative', 'Independent', 'Insightful', 'Intelligent', 'Intuitive', 'Inventive', 'Joyful', 'Just',
+  'Loyal', 'Mature', 'Meticulous', 'Observant', 'Original', 'Passionate', 'Patient', 'Perceptive', 'Persuasive', 'Philanthropic',
+  'Pragmatic', 'Precise', 'Principled', 'Prudent', 'Purposeful', 'Rational', 'Realistic', 'Reflective', 'Reliable', 'Resilient',
+  'Resourceful', 'Sensitive', 'Sincere', 'Sociable', 'Steadfast', 'Strategic', 'Tactful', 'Tenacious', 'Thoughtful', 'Tolerant',
+  'Trusting', 'Trustworthy', 'Understanding', 'Unique', 'Versatile', 'Vigilant', 'Visionary', 'Wise', 'Witty', 'Zealous',
+]
+
+export function rollThreeWords(): [string, string, string] {
+  const pick = () => THREE_WORDS_LIST[Math.floor(Math.random() * THREE_WORDS_LIST.length)]
+  return [pick(), pick(), pick()]
+}
+
+// Apprentice age — 18-59, mirroring the random-character generator.
+// Stored in apprentice_meta.age at recruit time; the wizard surfaces
+// it editable on Identity step.
+export function rollApprenticeAge(): number {
+  return 18 + Math.floor(Math.random() * 42)
+}
+
 export function buildCharacter(state: WizardState): XSECharacter {
   const char = createBlankCharacter()
 
