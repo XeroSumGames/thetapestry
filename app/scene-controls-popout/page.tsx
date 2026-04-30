@@ -34,6 +34,7 @@ interface Scene {
   grid_cols: number
   grid_rows: number
   cell_feet: number | null
+  cell_px: number | null
   background_url: string | null
   is_locked: boolean
   campaign_id: string
@@ -74,6 +75,14 @@ export default function SceneControlsPopoutPage() {
   // Suppress one round-trip when we apply an inbound state — otherwise
   // we'd echo the change right back out and start a feedback loop.
   const suppressOutboundRef = useRef(false)
+  // Tracks the last scene whose DB cell_px we hydrated into local
+  // state. Without this guard, every realtime tactical_scenes UPDATE
+  // (name change, lock toggle, our own debounced cell_px write) would
+  // re-run load() and clobber the user's in-flight cellPx adjustment
+  // with whatever's currently in the DB. Same pattern TacticalMap
+  // uses (lastSyncedSceneIdRef there too) to keep DB sync scoped to
+  // genuine scene-id changes.
+  const lastSyncedSceneIdRef = useRef<string | null>(null)
 
   // Initial load: scenes + active scene.
   useEffect(() => {
@@ -90,6 +99,17 @@ export default function SceneControlsPopoutPage() {
       setScenes(allScenes)
       const active = allScenes.find(s => (s as any).is_active) ?? allScenes[0] ?? null
       setScene(active)
+      // Hydrate cellPx from the active scene's stored value, but ONLY
+      // when the scene id actually changed. Suppress the persist
+      // effect so this read doesn't immediately echo back as a write.
+      if (active && active.id !== lastSyncedSceneIdRef.current) {
+        lastSyncedSceneIdRef.current = active.id
+        if (typeof active.cell_px === 'number' && active.cell_px > 0) {
+          suppressOutboundRef.current = true
+          setCellPx(active.cell_px)
+          setTimeout(() => { suppressOutboundRef.current = false }, 0)
+        }
+      }
     }
     load()
     // Live: any tactical_scenes change refreshes our copy so DB writes
