@@ -2,7 +2,7 @@
 
 **Source**: XSE SRD v1.1.06 (Distemper Release) + Distemper Core Rules v0.9.2. SRD-canonical where Core is vague.
 
-**Status (last verified 2026-04-29)**: ~85% implemented. Phases A–D fully shipped (campaign-local loop is live and playtested). Phase E (The Tapestry persistent world) is ~70% shipped — `world_communities` mirror table, Publish-to-Tapestry flow, Thriver moderation, world-map overlay, GM-to-GM encounter handshake, trade/alliance/feud links, migration on dissolution, and schism are all live. Four Phase E pieces remain open (World Event CMod propagation, per-community Campfire feed, player subscriptions, "start near existing community" wizard) plus the Lv4 Skill Trait auto-bonuses (locked behind the all-or-nothing Trait list).
+**Status (last verified 2026-04-30)**: ~92% implemented. Phases A–D fully shipped. Phase E ~85% shipped — World Event CMod propagation (#1) and player subscriptions (#3) shipped 2026-04-30, joining the prior wave (`world_communities` mirror, Publish-to-Tapestry, Thriver moderation, world-map overlay, encounter handshake, trade/alliance/feud links, migration on dissolution, schism). Two Phase E pieces remain open (per-community Campfire feed — gated on Phase 4 Campfire existing at all, and the "start near existing community" wizard tile on /stories/new) plus the Lv4 Skill Trait auto-bonuses (locked behind the all-or-nothing Trait list).
 
 **Strategic weight**: 🚩 **Flagship feature** — one of the biggest, most meaningful, and most differentiating elements of Distemper, and a primary pillar of The Tapestry. Every Community created in a campaign becomes a node in a **shared persistent world** where communities from different tables can meet, trade, war, ally, schism, and migrate. Communities are the bridge between a single GM's campaign and the Distemperverse at large.
 
@@ -340,9 +340,9 @@ Fed/Clothed sub-check outcomes mirror the Morale scale:
 - ✅ **Schism mechanic** — large community splits into two; one keeps the Homestead, the other founds a new one — `handleSchism` in `CampaignCommunity.tsx` + [`sql/community-members-add-schism-reason.sql`](../sql/community-members-add-schism-reason.sql).
 - ✅ Size band retaxonomy (Group / Small / Medium / Large / Huge / Nation State) — [`sql/world-communities-size-band-retaxonomy.sql`](../sql/world-communities-size-band-retaxonomy.sql).
 - ✅ Sanitized public face — internal roster / WP / secret properties never leave the campaign. Schema enforces this — `world_communities` carries no FK back into private tables.
-- ❌ **World Event CMod propagation** — Distemper Timeline pins in a region apply temporary CMods to Morale Checks for every published community in that region. Hook is missing — needs a regional bounding-box query at Morale Check time + a new modifier slot wired to active world events.
+- ✅ **World Event CMod propagation** (2026-04-30) — Distemper Timeline pins (`map_pins.category='world_event'`) carry `cmod_active`/`cmod_impact`/`cmod_radius_km`/`cmod_label` columns ([`sql/map-pins-world-event-cmod.sql`](../sql/map-pins-world-event-cmod.sql)). When active, every community whose Homestead falls inside the radius picks up the CMod automatically on its Weekly Morale Check via a haversine filter ([`lib/world-events.ts`](../lib/world-events.ts)). New "World Events" slot in [`components/CommunityMoraleModal.tsx`](../components/CommunityMoraleModal.tsx) renders one row per matching event with a per-event opt-out checkbox and distance readout, sums into `cmod_total`, snapshotted into `modifiers_json` with a full audit trail.
 - 🔒 **Campfire feed per community** — gated on Phase 4 (Campfire) shipping. Once Campfire exists, this is mostly a feed-adapter that pulls the published community's Morale outcomes, recruitments, schisms, dissolutions, and GM narrative updates.
-- ❌ **Community subscription for players** — no `community_subscriptions` table or follow UI. Lets players follow a published community across sessions; surfaces updates in their feed.
+- ✅ **Community subscription for players** (2026-04-30) — `community_subscriptions` table + RLS ([`sql/community-subscriptions.sql`](../sql/community-subscriptions.sql)). Follow / Unfollow toggle on world-map popups ([`components/MapView.tsx`](../components/MapView.tsx)) + Following section on [`/communities`](../app/communities/page.tsx). Denormalized subscriber count via trigger ([`sql/world-communities-subscriber-count.sql`](../sql/world-communities-subscriber-count.sql)) drives the ★ N chip on world-map popups + Following cards. Subscribers get notifications when their followed community's public face changes ([`sql/world-communities-subscriber-notify.sql`](../sql/world-communities-subscriber-notify.sql)). Weekly Morale Check finalize bumps `world_communities.last_public_update_at` and auto-recomputes `community_status` from the outcome (Thriving/Holding/Struggling/Dying/Dissolved) so subscribers see real activity, not just narrative tweaks.
 - ❌ **New-GM onboarding hook** — campaign-creation wizard at `/stories/new` offers "Start inside/around an existing published community" as an alternative to blank-slate. Currently the wizard has Custom / Setting / Module; this would be a fourth option that seeds the new campaign adjacent to a published community (autopopulates Homestead pin + invites the new GM into the encounter handshake).
 
 ## 12. Out of Scope (explicit non-goals)
@@ -354,19 +354,19 @@ Fed/Clothed sub-check outcomes mirror the Morale scale:
 
 ---
 
-## 13. What's left to ship (2026-04-29)
+## 13. What's left to ship (2026-04-30)
 
-Five real gaps + one parked-for-good-reason backburner.
+Three real gaps + one parked-for-good-reason backburner.
 
 | # | Item | Phase | Size | Notes |
 |---|---|---|---|---|
-| 1 | World Event CMod propagation | E | ~half-day | Regional bounding-box query + new Morale modifier slot. Self-contained. |
+| 1 | World Event CMod propagation | E | ~~~half-day~~ | ✅ Shipped 2026-04-30. |
 | 2 | Per-community Campfire feed | E | ~1 day after Campfire | Blocked on Phase 4 (Campfire) existing at all. Once it does, mostly a feed-adapter. |
-| 3 | Community subscription for players | E | ~1-2 days | New `community_subscriptions` table + Follow button on public card + Subscribed list on dashboard. |
+| 3 | Community subscription for players | E | ~~~1-2 days~~ | ✅ Shipped 2026-04-30 (basic Follow/Unfollow + Following section was 2026-04-22; subscriber count chip + subscriber notify trigger + auto-status from Morale outcome added 2026-04-30). |
 | 4 | "Start near existing community" wizard option | E | ~half-day | Fourth tile on `/stories/new` alongside Custom / Setting / Module. Seeds Homestead + opens encounter handshake. |
 | 5 | Apprentice creation flow §2a | B | ~1-2 days | Motivation/Complication tables + 3 CDP RAPID + Paradigm + 5 CDP skills + 1-month training. Pairs with the broader CDP Calculator backlog item. |
 | 🔒 | Lv4 Skill Traits (Inspiration "Beacon of Hope" + Psychology* "Insightful Counselor" + generic Lv4 sheet surface + auto-application hooks) | D | — | **Locked on the all-or-nothing Trait list landing.** Per project memory `project_lv4_traits.md`: Lv4 traits ship together or not at all. Until the full Trait list is authored, the GM stuffs Lv4 bonuses into the Morale "Additional" slot manually. |
 
-Total work to fully close the spec (excluding the locked Lv4 backburner and the Campfire-blocked item #2): **~4-5 working days.**
+Total work to fully close the spec (excluding the locked Lv4 backburner and the Campfire-blocked item #2): **~2-3 working days** (down from ~4-5 days as of 2026-04-29).
 
 The campaign-local loop is solid and playtested. The Tapestry layer is the only meaningful remaining surface, and the unbuilt pieces are the ones that hook deepest into adjacent unbuilt systems (Campfire, player engagement layer, new-GM onboarding) — not the Communities subsystem itself.

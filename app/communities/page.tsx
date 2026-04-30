@@ -12,6 +12,28 @@ import Link from 'next/link'
 // the user belongs to (as GM or member, since Phase B opened RLS writes to
 // all members per sql/communities-rls-open-to-members.sql).
 
+// Coarse "X ago" formatter for the Following card's "Updated" line.
+// Keep buckets wide — minute-level precision isn't worth the visual
+// noise, and the timestamp updates are weekly-ish anyway. Hover title
+// shows the exact ISO timestamp via the parent element.
+function formatRelativeTime(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime()
+  if (ms < 0) return 'just now'
+  const minutes = Math.floor(ms / 60000)
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days} day${days === 1 ? '' : 's'} ago`
+  const weeks = Math.floor(days / 7)
+  if (weeks < 5) return `${weeks} week${weeks === 1 ? '' : 's'} ago`
+  const months = Math.floor(days / 30)
+  if (months < 12) return `${months} month${months === 1 ? '' : 's'} ago`
+  const years = Math.floor(days / 365)
+  return `${years} year${years === 1 ? '' : 's'} ago`
+}
+
 interface CommunityRow {
   id: string
   campaign_id: string
@@ -51,6 +73,8 @@ interface FollowedCommunity {
   homesteadLat: number | null
   homesteadLng: number | null
   followedAt: string
+  subscriberCount: number          // total followers on the world face
+  lastPublicUpdateAt: string | null
 }
 
 export default function CommunitiesIndexPage() {
@@ -112,7 +136,7 @@ export default function CommunitiesIndexPage() {
     // user's own subscriptions automatically.
     const { data: subs } = await supabase
       .from('community_subscriptions')
-      .select('id, world_community_id, created_at, world_communities!inner(id, name, description, size_band, community_status, faction_label, homestead_lat, homestead_lng, moderation_status)')
+      .select('id, world_community_id, created_at, world_communities!inner(id, name, description, size_band, community_status, faction_label, homestead_lat, homestead_lng, moderation_status, subscriber_count, last_public_update_at)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
     const fol: FollowedCommunity[] = []
@@ -132,6 +156,8 @@ export default function CommunitiesIndexPage() {
         homesteadLat: wc.homestead_lat ?? null,
         homesteadLng: wc.homestead_lng ?? null,
         followedAt: r.created_at,
+        subscriberCount: wc.subscriber_count ?? 0,
+        lastPublicUpdateAt: wc.last_public_update_at ?? null,
       })
     }
     setFollowed(fol)
@@ -432,7 +458,15 @@ export default function CommunitiesIndexPage() {
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
                     <span style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#1a1a2e', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{f.sizeBand}</span>
                     {f.factionLabel && <span style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#2a2010', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{f.factionLabel}</span>}
+                    <span title="Followers on the Tapestry"
+                      style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#2a1a3e', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>★ {f.subscriberCount}</span>
                   </div>
+                  {f.lastPublicUpdateAt && (
+                    <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', marginBottom: '8px' }}
+                      title={new Date(f.lastPublicUpdateAt).toLocaleString()}>
+                      Updated {formatRelativeTime(f.lastPublicUpdateAt)}
+                    </div>
+                  )}
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <Link href={mapHref}
                       style={{ flex: 1, padding: '4px 8px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', textDecoration: 'none', textAlign: 'center' }}>

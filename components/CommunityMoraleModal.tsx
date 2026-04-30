@@ -591,6 +591,27 @@ export default function CommunityMoraleModal({
       ...(reallyDissolves ? { dissolved_at: now } : {}),
     }).eq('id', community.id)
 
+    // 4b) If this community is published to the Tapestry, bump its
+    //     world-facing public face. ALWAYS update last_public_update_at
+    //     so subscribers' Following cards show fresh activity. CHANGE
+    //     community_status when the Morale outcome tier maps to a
+    //     definite public-health shift — that's a public field change
+    //     so the subscriber-notify trigger fires for actual status
+    //     transitions (e.g. Thriving → Struggling) but not for noisy
+    //     same-tier outcomes. UPDATE is a no-op if no world_communities
+    //     row exists for this campaign-local community.
+    const worldStatus: 'Thriving' | 'Holding' | 'Struggling' | 'Dying' | 'Dissolved' | null =
+      reallyDissolves ? 'Dissolved'
+      : morale.outcome === 'High Insight' || morale.outcome === 'Wild Success' ? 'Thriving'
+      : morale.outcome === 'Failure' ? 'Struggling'
+      : morale.outcome === 'Dire Failure' || morale.outcome === 'Low Insight' ? 'Dying'
+      : null  // Success — leave existing status untouched
+    const worldUpdate: Record<string, unknown> = { last_public_update_at: now }
+    if (worldStatus) worldUpdate.community_status = worldStatus
+    await supabase.from('world_communities')
+      .update(worldUpdate)
+      .eq('source_community_id', community.id)
+
     // 5) Log rows for the session feed. Morale card is credited to the
     //    designated leader (per SRD p.22); Fed/Clothed stay credited to
     //    the community since SRD p.24 says those are assumed to be

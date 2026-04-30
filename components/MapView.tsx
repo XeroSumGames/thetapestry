@@ -646,7 +646,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     // hiddenFolders.
     const { data: wc } = await supabase
       .from('world_communities')
-      .select('id, name, description, homestead_lat, homestead_lng, size_band, faction_label, community_status, source_campaign_id, last_public_update_at')
+      .select('id, name, description, homestead_lat, homestead_lng, size_band, faction_label, community_status, source_campaign_id, last_public_update_at, subscriber_count')
       .eq('moderation_status', 'approved')
       .not('homestead_lat', 'is', null)
       .not('homestead_lng', 'is', null)
@@ -738,6 +738,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               <span style="font-size:10px;background:#1a1a2e;color:#7ab3d4;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em">${sizeBand}</span>
               <span style="font-size:10px;background:#1a2010;color:#7fc458;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em">${status}</span>
               ${row.faction_label ? `<span style="font-size:10px;background:#2a2010;color:#EF9F27;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em">${escapedFaction}</span>` : ''}
+              <span style="font-size:10px;background:#2a1a3e;color:#c4a7f0;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em" title="Followers — players tracking this community on the Tapestry">★ ${row.subscriber_count ?? 0}</span>
             </div>
             <div style="font-size:11px;color:#888;margin-bottom:8px">From <strong>${escapedCamp}</strong></div>
             ${row.last_public_update_at ? `<div style="font-size:10px;color:#aaa;margin-bottom:8px">Updated ${new Date(row.last_public_update_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>` : ''}
