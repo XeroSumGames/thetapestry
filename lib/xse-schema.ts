@@ -544,7 +544,7 @@ export const PARADIGMS: Paradigm[] = [
     equipment: ['Walkie-Talkies', 'First Aid Kit'],
   },
   {
-    name: 'Flea Market Trader', profession: 'Trader',
+    name: 'Antiques Dealer', profession: 'Trader',
     rapid: { RSN: 1, ACU: 2, PHY: 0, INF: 2, DEX: 0 },
     skills: [
       { skillName: 'Barter',          level: 3 },

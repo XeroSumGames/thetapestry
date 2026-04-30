@@ -113,7 +113,7 @@ export default function ModuleDetailPage() {
         <p style={{ margin: '0 0 16px', fontSize: '14px', color: '#cce0f5' }}>
           This module may be private, unlisted, or archived.
         </p>
-        <Link href="/modules" style={{ color: '#c4a7f0', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>← Back to marketplace</Link>
+        <Link href="/rumors" style={{ color: '#c4a7f0', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>← Back to marketplace</Link>
       </div>
     )
   }
@@ -138,7 +138,7 @@ export default function ModuleDetailPage() {
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '24px 20px', color: '#d4cfc9' }}>
 
       <div style={{ marginBottom: '14px' }}>
-        <Link href="/modules" style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <Link href="/rumors" style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
           ← Back to marketplace
         </Link>
       </div>

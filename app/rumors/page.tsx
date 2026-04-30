@@ -126,10 +126,10 @@ export default function ModuleMarketplacePage() {
           Module Marketplace
         </h1>
         {/* Inbound import path — once a GM has a campaign-snapshot
-            export, /modules/import publishes it as a module. Linked
+            export, /rumors/import publishes it as a module. Linked
             from here so users who land on the marketplace directly
             don't have to hunt for it in the sidebar. */}
-        <Link href="/modules/import" style={{ textDecoration: 'none' }}>
+        <Link href="/rumors/import" style={{ textDecoration: 'none' }}>
           <button style={{ padding: '9px 16px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             📂 Import from snapshot
           </button>
@@ -180,7 +180,7 @@ export default function ModuleMarketplacePage() {
           <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
             {search || settingFilter
               ? 'Clear the filters to see all available modules.'
-              : <>Be the first to publish — open any campaign\'s edit page and click <strong>Publish as Module</strong>, or upload an exported snapshot at <Link href="/modules/import" style={{ color: '#c4a7f0' }}>/modules/import</Link>.</>}
+              : <>Be the first to publish — open any campaign\'s edit page and click <strong>Publish as Module</strong>, or upload an exported snapshot at <Link href="/rumors/import" style={{ color: '#c4a7f0' }}>/rumors/import</Link>.</>}
           </div>
         </div>
       ) : (
@@ -207,7 +207,7 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
   const publishedAt = m.latest_version?.published_at
 
   return (
-    <Link href={`/modules/${m.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+    <Link href={`/rumors/${m.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
       <div
         style={{
           background: '#1a1a1a',
@@ -232,7 +232,7 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
         <div style={{ position: 'absolute', top: '6px', right: '6px', zIndex: 2, display: 'flex', gap: '6px' }}>
           {canEdit && (
             <Link
-              href={`/modules/${m.id}/edit`}
+              href={`/rumors/${m.id}/edit`}
               onClick={e => { e.stopPropagation() }}
               title={canDelete ? 'Thriver: edit module metadata + cover image' : 'Edit your module'}
               style={{

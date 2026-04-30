@@ -48,7 +48,7 @@ export default function ParadigmsPage() {
           joining a game at short notice, or have no defined concept in mind, Paradigms facilitate quick gameplay.
         </p>
         <p style={{ margin: '0 0 10px' }}>
-          Distemper comes with 16 easily recognizable Paradigms that let you skip the Backstory Generation process and
+          Distemper comes with 12 easily recognizable Paradigms that let you skip the Backstory Generation process and
           provides you with the attributes, skills, motivation, complication, and the equipment specifically designed
           to fit a trope or a role that will be familiar to many players.
         </p>

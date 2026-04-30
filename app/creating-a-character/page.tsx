@@ -51,7 +51,7 @@ export default function CreatingACharacterPage() {
               tag: 'Just Get Playing',
               tagColor: '#3a2800',
               tagText: '#EF9F27',
-              desc: 'The Tapestry generates a complete character for you using one of the 12 Distemper Paradigms — pre-built archetypes like Biker, EMT, Mercenary, or Flea Market Trader. You land in the Final Review to add your name and personal touches.',
+              desc: 'The Tapestry generates a complete character for you using one of the 12 Distemper Paradigms — pre-built archetypes like Biker, EMT, Mercenary, or Antiques Dealer. You land in the Final Review to add your name and personal touches.',
               bestFor: 'New players, one-shots, or anyone who wants to be surprised by who they are.',
               time: 'Under 2 minutes',
             },

@@ -241,7 +241,7 @@ export default function ModuleEditPage() {
       <div style={{ padding: '24px', maxWidth: '720px', margin: '0 auto', color: '#d4cfc9' }}>
         <div style={{ fontSize: '20px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }}>Access Denied</div>
         <div style={{ fontSize: '14px' }}>Only the module&apos;s author or a Thriver can edit it.</div>
-        <Link href="/modules" style={{ display: 'inline-block', marginTop: '16px', color: '#c4a7f0' }}>← Back to /modules</Link>
+        <Link href="/rumors" style={{ display: 'inline-block', marginTop: '16px', color: '#c4a7f0' }}>← Back to /rumors</Link>
       </div>
     )
   }
@@ -258,10 +258,10 @@ export default function ModuleEditPage() {
         <h1 style={{ margin: 0, fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Edit: {mod?.name}
         </h1>
-        <Link href="/modules" style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
-          ← /modules
+        <Link href="/rumors" style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+          ← /rumors
         </Link>
-        <Link href={`/modules/${moduleId}`} style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <Link href={`/rumors/${moduleId}`} style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           → Public page
         </Link>
       </div>
@@ -347,7 +347,7 @@ export default function ModuleEditPage() {
           <label style={lbl}>Sort Order</label>
           <input type="number" min={0} value={sortOrder} onChange={e => setSortOrder(e.target.value)} placeholder="blank = last" style={inp} />
           <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
-            Lower number ranks first on /modules. Blank sorts last.
+            Lower number ranks first on /rumors. Blank sorts last.
           </div>
         </div>
       </div>

@@ -112,7 +112,7 @@ export default function WelcomePage() {
           <div style={card}>
             <div style={cardTitle}><span>📦</span>Rumors</div>
             <div style={cardBody}>Pre-built scenes, encounters, adventures and campaigns that include NPCs, items, and storylines that you can subscribe to and import to play with your own group. Authors snapshot their content; GMs pull versioned copies.</div>
-            <Link href="/modules" style={cardLink}>Browse Modules</Link>
+            <Link href="/rumors" style={cardLink}>Browse Rumors</Link>
           </div>
 
         </div>

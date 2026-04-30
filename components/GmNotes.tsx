@@ -216,62 +216,60 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
           </div>
           {expanded.has(n.id) && (
             <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
-              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: '1.5', margin: '10px 0' }}>
+              {/* All actions sit at the TOP of the expanded note so the
+                  GM doesn't scroll past long content to reach Popout /
+                  Share / Attach / Delete during a session. Single
+                  4-button strip; previously a two-row split. */}
+              <div style={{ display: 'flex', gap: '6px', marginTop: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                <button onClick={() => openPopout(`/handout?id=${n.id}`, `handout-${n.id}`, { w: 800, h: 700 })}
+                  style={{ flex: 1, padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  Popout
+                </button>
+                <button onClick={async () => {
+                  const next = !n.shared
+                  // .select() returns the updated rows — a 0-length array means
+                  // RLS silently blocked the write (Supabase doesn't surface an error).
+                  const { data, error } = await supabase
+                    .from('campaign_notes')
+                    .update({ shared: next })
+                    .eq('id', n.id)
+                    .select('id')
+                  if (error) { alert(`Share failed: ${error.message}`); return }
+                  if (!data || data.length === 0) {
+                    alert('Share did not affect any rows — likely an RLS / permissions issue. Check console.')
+                    return
+                  }
+                  setNotes(prev => prev.map(x => x.id === n.id ? { ...x, shared: next } : x))
+                  // Broadcast to players — postgres_changes can drop the UPDATE
+                  // event on their client when a row transitions out of their
+                  // RLS-visible set (un-share), so we signal explicitly.
+                  supabase.channel(`gm_notes_share_${campaignId}`).send({
+                    type: 'broadcast', event: 'gm_notes_updated', payload: { id: n.id, shared: next },
+                  })
+                }}
+                  style={{ flex: 1, padding: '4px 10px', background: n.shared ? '#1a2e10' : 'transparent', border: `1px solid ${n.shared ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.shared ? '#7fc458' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  {n.shared ? '✓ Shared' : 'Share'}
+                </button>
+                <label style={{ ...chipBtn, flex: 1, textAlign: 'center' as const, display: 'inline-block', cursor: uploadingNoteId === n.id ? 'wait' : 'pointer', opacity: uploadingNoteId === n.id ? 0.6 : 1, whiteSpace: 'nowrap' }}>
+                  {uploadingNoteId === n.id ? 'Uploading...' : '+ Attach'}
+                  <input type="file" multiple disabled={uploadingNoteId === n.id} onChange={e => { handleAddAttachments(n, e.target.files); e.target.value = '' }} style={{ display: 'none' }} />
+                </label>
+                <button onClick={() => handleDelete(n)}
+                  style={{ flex: 1, padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  Delete
+                </button>
+              </div>
+
+              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: '1.5', margin: '0 0 10px' }}>
                 {renderRichText(n.content, { linkify: true })}
               </pre>
 
               {/* Attachments — large inline image previews + lightbox */}
               {n.attachments.length > 0 && (
-                <div style={{ marginBottom: '10px' }}>
+                <div style={{ marginBottom: '0' }}>
                   <NoteAttachmentsView attachments={n.attachments} onDelete={att => handleDeleteAttachment(n, att)} />
                 </div>
               )}
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {/* Row 1 — Share + Attach */}
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={async () => {
-                    const next = !n.shared
-                    // .select() returns the updated rows — a 0-length array means
-                    // RLS silently blocked the write (Supabase doesn't surface an error).
-                    const { data, error } = await supabase
-                      .from('campaign_notes')
-                      .update({ shared: next })
-                      .eq('id', n.id)
-                      .select('id')
-                    if (error) { alert(`Share failed: ${error.message}`); return }
-                    if (!data || data.length === 0) {
-                      alert('Share did not affect any rows — likely an RLS / permissions issue. Check console.')
-                      return
-                    }
-                    setNotes(prev => prev.map(x => x.id === n.id ? { ...x, shared: next } : x))
-                    // Broadcast to players — postgres_changes can drop the UPDATE
-                    // event on their client when a row transitions out of their
-                    // RLS-visible set (un-share), so we signal explicitly.
-                    supabase.channel(`gm_notes_share_${campaignId}`).send({
-                      type: 'broadcast', event: 'gm_notes_updated', payload: { id: n.id, shared: next },
-                    })
-                  }}
-                    style={{ flex: 1, padding: '4px 10px', background: n.shared ? '#1a2e10' : 'transparent', border: `1px solid ${n.shared ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.shared ? '#7fc458' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    {n.shared ? '✓ Shared' : 'Share'}
-                  </button>
-                  <label style={{ ...chipBtn, flex: 1, textAlign: 'center' as const, display: 'inline-block', cursor: uploadingNoteId === n.id ? 'wait' : 'pointer', opacity: uploadingNoteId === n.id ? 0.6 : 1 }}>
-                    {uploadingNoteId === n.id ? 'Uploading...' : '+ Attach'}
-                    <input type="file" multiple disabled={uploadingNoteId === n.id} onChange={e => { handleAddAttachments(n, e.target.files); e.target.value = '' }} style={{ display: 'none' }} />
-                  </label>
-                </div>
-                {/* Row 2 — Popout + Delete */}
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={() => openPopout(`/handout?id=${n.id}`, `handout-${n.id}`, { w: 800, h: 700 })}
-                    style={{ flex: 1, padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    Popout
-                  </button>
-                  <button onClick={() => handleDelete(n)}
-                    style={{ flex: 1, padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    Delete Note
-                  </button>
-                </div>
-              </div>
             </div>
           )}
         </div>

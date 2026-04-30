@@ -164,16 +164,19 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
               </div>
               {expanded.has(`shared-${n.id}`) && (
                 <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
+                  {/* Popout at the top so a player can pop a handout
+                      out of the chat panel for reference without
+                      scrolling past long content. */}
+                  <button onClick={() => openPopout(`/handout?id=${n.id}`, `handout-${n.id}`, { w: 800, h: 700 })}
+                    style={{ marginTop: '10px', padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Popout
+                  </button>
                   <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: '1.5', margin: '10px 0' }}>
                     {n.content}
                   </pre>
                   {n.attachments.length > 0 && (
                     <NoteAttachmentsView attachments={n.attachments} />
                   )}
-                  <button onClick={() => openPopout(`/handout?id=${n.id}`, `handout-${n.id}`, { w: 800, h: 700 })}
-                    style={{ marginTop: '6px', padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    Popout
-                  </button>
                 </div>
               )}
             </div>
@@ -199,19 +202,21 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
           </div>
           {expanded.has(n.id) && (
             <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
-              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: '1.5', margin: '10px 0' }}>
-                {renderRichText(n.content, { linkify: true })}
-              </pre>
-              <div style={{ display: 'flex', gap: '6px' }}>
+              {/* Actions at the TOP — player can submit / delete a
+                  note without scrolling past its body. */}
+              <div style={{ display: 'flex', gap: '6px', marginTop: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
                 <button onClick={() => toggleSubmit(n)}
-                  style={{ padding: '4px 10px', background: n.submitted_to_summary ? '#1a2e10' : 'transparent', border: `1px solid ${n.submitted_to_summary ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.submitted_to_summary ? '#7fc458' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '4px 10px', background: n.submitted_to_summary ? '#1a2e10' : 'transparent', border: `1px solid ${n.submitted_to_summary ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: n.submitted_to_summary ? '#7fc458' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                   {n.submitted_to_summary ? '✓ In Session Summary' : '+ Add to Session Summary'}
                 </button>
                 <button onClick={() => handleDelete(n)}
-                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                   Delete
                 </button>
               </div>
+              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: '1.5', margin: '0' }}>
+                {renderRichText(n.content, { linkify: true })}
+              </pre>
             </div>
           )}
         </div>
