@@ -299,8 +299,7 @@ export default function CommunitiesIndexPage() {
         </div>
       </div>
       <p style={{ color: '#cce0f5', fontSize: '14px', marginBottom: '1.5rem' }}>
-        Every group of survivors you&apos;re part of — yours and the ones you&apos;ve been recruited into.
-        Reach 13 members and a Group becomes a Community, with weekly Morale Checks.
+        Once a group reaches 13 members it becomes a Community, and here you can see the various communities you are a part of, both the ones you create and the ones you joined.
       </p>
 
       {rows.length === 0 && (
