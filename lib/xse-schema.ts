@@ -311,6 +311,15 @@ export interface Paradigm {
   profession: string;
   rapid: Record<AttributeName, AttributeValue>;
   skills: ParadigmSkillEntry[];
+  // Starter loadout — used by the Paradigm + Random character flows
+  // to seed weapons + equipment without a separate randomization
+  // pass. Optional so existing call sites (e.g. the Apprentice flow,
+  // which only reads RAPID + skills) keep working without these
+  // fields. Names must match RANGED_WEAPONS / MELEE_WEAPONS /
+  // EQUIPMENT entries exactly.
+  weaponPrimary?: string;
+  weaponSecondary?: string;
+  equipment?: [string, string];
 }
 
 export const PARADIGMS: Paradigm[] = [
@@ -330,6 +339,9 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Stealth',         level: 1 },
       { skillName: 'Tinkerer',        level: 1 },
     ],
+    weaponPrimary: 'Light Pistol',
+    weaponSecondary: 'Kitchen Knife',
+    equipment: ['Compass', 'Binoculars'],
   },
   {
     name: 'Biker', profession: 'Driver',
@@ -350,6 +362,9 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Tinkerer',        level: 1 },
       { skillName: 'Unarmed Combat',  level: 1 },
     ],
+    weaponPrimary: 'Heavy Pistol',
+    weaponSecondary: 'Tactical Baton',
+    equipment: ['Bicycle Repair Kit', 'Compass'],
   },
   {
     name: 'Bar Owner', profession: 'Entrepreneur',
@@ -369,6 +384,9 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Tinkerer',        level: 1 },
       { skillName: 'Unarmed Combat',  level: 1 },
     ],
+    weaponPrimary: 'Light Pistol',
+    weaponSecondary: 'Baseball Bat',
+    equipment: ['Basic Survival Kit', 'Walkie-Talkies'],
   },
   {
     name: 'Rural Sheriff', profession: 'Law Enforcement',
@@ -388,6 +406,9 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Stealth',         level: 1 },
       { skillName: 'Unarmed Combat',  level: 1 },
     ],
+    weaponPrimary: 'Hunting Rifle',
+    weaponSecondary: 'Tactical Baton',
+    equipment: ['Binoculars', 'First Aid Kit'],
   },
   {
     name: 'Hot Rod Mechanic', profession: 'Mechanic',
@@ -404,6 +425,9 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Specific Knowledge', level: 1 },
       { skillName: 'Tinkerer',        level: 2 },
     ],
+    weaponPrimary: 'Heavy Pistol',
+    weaponSecondary: 'Sledgehammer',
+    equipment: ["Workman's Toolkit", 'Weapons Toolkit'],
   },
   {
     name: 'EMT', profession: 'Medic',
@@ -422,6 +446,9 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Specific Knowledge', level: 1 },
       { skillName: 'Streetwise',      level: 1 },
     ],
+    weaponPrimary: 'Light Pistol',
+    weaponSecondary: 'Kitchen Knife',
+    equipment: ["Doctor's Bag", 'First Aid Kit'],
   },
   {
     name: 'Farmer', profession: 'Outdoorsman',
@@ -437,6 +464,9 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Ranged Combat',   level: 1 },
       { skillName: 'Tinkerer',        level: 1 },
     ],
+    weaponPrimary: 'Hunting Rifle',
+    weaponSecondary: 'Wood Axe',
+    equipment: ['Basic Survival Kit', 'Compass'],
   },
   {
     name: 'Petty Criminal', profession: 'Outlaw',
@@ -453,6 +483,9 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Survival',        level: 1 },
       { skillName: 'Unarmed Combat',  level: 1 },
     ],
+    weaponPrimary: 'Shotgun (Sawed-Off)',
+    weaponSecondary: 'Brass Knuckles',
+    equipment: ['Crowbar', 'Bolt Cutters'],
   },
   {
     name: 'Mercenary', profession: 'Military',
@@ -470,6 +503,9 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Unarmed Combat',  level: 1 },
       { skillName: 'Weaponsmith*',    level: 1 },
     ],
+    weaponPrimary: 'Carbine',
+    weaponSecondary: 'Hatchet',
+    equipment: ['Basic Survival Kit', 'Walkie-Talkies'],
   },
   {
     name: 'Preacher', profession: 'Performer',
@@ -486,6 +522,9 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Stealth',         level: 1 },
       { skillName: 'Tactics*',        level: 1 },
     ],
+    weaponPrimary: 'Light Pistol',
+    weaponSecondary: 'Staff',
+    equipment: ['Walkie-Talkies', 'First Aid Kit'],
   },
   {
     name: 'Small Town Mayor', profession: 'Politician',
@@ -500,6 +539,9 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Entertainment',   level: 1 },
       { skillName: 'Research',        level: 1 },
     ],
+    weaponPrimary: 'Heavy Pistol',
+    weaponSecondary: 'Baseball Bat',
+    equipment: ['Walkie-Talkies', 'First Aid Kit'],
   },
   {
     name: 'Flea Market Trader', profession: 'Trader',
@@ -517,6 +559,9 @@ export const PARADIGMS: Paradigm[] = [
       { skillName: 'Stealth',         level: 1 },
       { skillName: 'Survival',        level: 1 },
     ],
+    weaponPrimary: 'Crossbow',
+    weaponSecondary: 'Hatchet',
+    equipment: ['Backpack', 'Bolt Cutters'],
   },
 ];
 

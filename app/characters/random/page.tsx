@@ -139,20 +139,20 @@ export default function RandomCharacterPage() {
         motivation: rollMotivation(),
       }
 
-      // Random weapons
+      // Weapons + equipment — prefer the Paradigm's curated loadout
+      // (defined in lib/xse-schema.ts on each Paradigm). Fall back to
+      // a random non-Rare pick for any field a future Paradigm
+      // doesn't define, so the generator stays defensive.
       const meleeWeapons = MELEE_WEAPONS.filter(w => w.rarity !== 'Rare')
       const rangedWeapons = RANGED_WEAPONS.filter(w => w.rarity !== 'Rare')
-      const primaryWeapon = pick(rangedWeapons)
-      const secondaryWeapon = pick(meleeWeapons)
-      state.weaponPrimary = primaryWeapon.name
-      state.weaponSecondary = secondaryWeapon.name
+      state.weaponPrimary = paradigm.weaponPrimary ?? pick(rangedWeapons).name
+      state.weaponSecondary = paradigm.weaponSecondary ?? pick(meleeWeapons).name
       state.primaryAmmo = roll1d3()
       state.secondaryAmmo = 0
 
-      // Random equipment
       const commonEquip = EQUIPMENT.filter(e => e.rarity === 'Common')
-      state.equipment = pick(commonEquip).name
-      state.incidentalItem = pick(commonEquip).name
+      state.equipment = paradigm.equipment?.[0] ?? pick(commonEquip).name
+      state.incidentalItem = paradigm.equipment?.[1] ?? pick(commonEquip).name
 
       setStatus('Saving...')
 
