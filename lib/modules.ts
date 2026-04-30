@@ -262,43 +262,75 @@ export async function cloneModuleIntoCampaign(
   // 2. Pins first — NPCs and (in the future) pin-anchored content
   // reference them. We key the remap on _external_id when present,
   // falling back to name for older snapshots that didn't capture it.
+  // Lenient reader (per the file header comment): tolerate `title` as
+  // a legacy alias for `name` so snapshots written with the
+  // campaign-snapshot field convention still clone. Pins with no
+  // resolvable name skip the row + warn rather than crash the whole
+  // campaign clone.
   const pinMap: Record<string, string> = {}
   const pinNameMap: Record<string, string> = {}
   if (snapshot.pins && snapshot.pins.length > 0) {
-    const pinRows = snapshot.pins.map((p, i) => ({
-      campaign_id: campaignId,
-      name: p.name,
-      lat: p.lat,
-      lng: p.lng,
-      notes: p.notes ?? '',
-      category: p.category ?? 'location',
-      revealed: false,
-      sort_order: p.sort_order ?? i + 1,
-      source_module_id,
-      source_module_version_id,
-    }))
-    const { data: inserted, error: pErr } = await supabase
-      .from('campaign_pins')
-      .insert(pinRows)
-      .select('id, name')
-    if (pErr) throw new Error(`pins: ${pErr.message}`)
-    inserted?.forEach((row: any, i: number) => {
-      const src = snapshot.pins![i]
-      if (src._external_id) pinMap[src._external_id] = row.id
-      pinNameMap[row.name] = row.id
+    const pinRows: any[] = []
+    const pinSourceForRow: any[] = []  // parallel array — preserves source pin per inserted row for the remap pass
+    snapshot.pins.forEach((p: any, i: number) => {
+      const resolvedName = p.name ?? p.title
+      if (!resolvedName) {
+        console.warn('[cloneModuleIntoCampaign] pin row has no name/title — skipping:', p)
+        return
+      }
+      pinRows.push({
+        campaign_id: campaignId,
+        name: resolvedName,
+        lat: p.lat,
+        lng: p.lng,
+        notes: p.notes ?? '',
+        category: p.category ?? 'location',
+        revealed: false,
+        sort_order: p.sort_order ?? i + 1,
+        source_module_id,
+        source_module_version_id,
+      })
+      pinSourceForRow.push(p)
     })
-    counts.pins = inserted?.length ?? 0
+    if (pinRows.length > 0) {
+      const { data: inserted, error: pErr } = await supabase
+        .from('campaign_pins')
+        .insert(pinRows)
+        .select('id, name')
+      if (pErr) throw new Error(`pins: ${pErr.message}`)
+      inserted?.forEach((row: any, i: number) => {
+        const src = pinSourceForRow[i]
+        if (src._external_id) pinMap[src._external_id] = row.id
+        // Legacy snapshots used the pin's source DB id (from a campaign
+        // snapshot) at `id`. Map that too so NPC pin_name / pin_id
+        // references resolve either way.
+        if (src.id) pinMap[src.id] = row.id
+        pinNameMap[row.name] = row.id
+      })
+      counts.pins = inserted?.length ?? 0
+    }
   }
 
   // 3. NPCs — remap campaign_pin_id through pinMap / pinNameMap. Keep
   // WP/RP current at max on clone since a module-derived campaign is
   // fresh, no matter how worn the source campaign's NPCs got.
+  // Lenient: legacy snapshots stored the source pin id under
+  // `campaign_pin_id` (campaign-snapshot shape) — fall through to that
+  // before giving up. NPCs with no name skip + warn.
   const npcMap: Record<string, string> = {}
   if (snapshot.npcs && snapshot.npcs.length > 0) {
-    const npcRows = snapshot.npcs.map((n, i) => {
+    const filteredNpcs = (snapshot.npcs as any[]).filter((n: any) => {
+      if (!n.name) {
+        console.warn('[cloneModuleIntoCampaign] npc has no name — skipping:', n)
+        return false
+      }
+      return true
+    })
+    const npcRows = filteredNpcs.map((n: any, i: number) => {
       const pinId =
         (n._pin_external_id && pinMap[n._pin_external_id])
         ?? (n.pin_name && pinNameMap[n.pin_name])
+        ?? (n.campaign_pin_id && pinMap[n.campaign_pin_id])
         ?? null
       return {
         campaign_id: campaignId,
@@ -331,8 +363,10 @@ export async function cloneModuleIntoCampaign(
       .select('id')
     if (nErr) throw new Error(`npcs: ${nErr.message}`)
     inserted?.forEach((row: any, i: number) => {
-      const src = snapshot.npcs![i]
+      const src = filteredNpcs[i]
       if (src._external_id) npcMap[src._external_id] = row.id
+      // Legacy shape — campaign-snapshot stored source DB id at `id`.
+      if (src.id) npcMap[src.id] = row.id
     })
     counts.npcs = inserted?.length ?? 0
   }
@@ -341,9 +375,17 @@ export async function cloneModuleIntoCampaign(
   // we can keep the scene_id → tokens wiring straight. Token rows
   // remap npc_id through npcMap; tokens without a match are still
   // inserted (object tokens, PC tokens) with null npc_id.
+  // Lenient reader: tolerate the legacy campaign-snapshot wrapper
+  // shape `{ scene: {...}, tokens: [] }` alongside the canonical flat
+  // `ModuleSnapshotScene`. Scenes with no resolvable name skip + warn.
   if (snapshot.scenes && snapshot.scenes.length > 0) {
-    for (const scene of snapshot.scenes) {
-      const { tokens, _external_id: _unused, ...rest } = scene
+    for (const sceneRaw of snapshot.scenes as any[]) {
+      const flat = sceneRaw?.scene ? { ...sceneRaw.scene, tokens: sceneRaw.tokens } : sceneRaw
+      const { tokens, _external_id: _unused, ...rest } = flat
+      if (!rest.name) {
+        console.warn('[cloneModuleIntoCampaign] scene has no name — skipping:', sceneRaw)
+        continue
+      }
       const sceneRow = {
         campaign_id: campaignId,
         name: rest.name,
@@ -367,7 +409,7 @@ export async function cloneModuleIntoCampaign(
       counts.scenes += 1
 
       if (tokens && tokens.length > 0) {
-        const tokenRows = tokens.map((t) => ({
+        const tokenRows = (tokens as any[]).map((t: any) => ({
           scene_id: createdScene.id,
           name: t.name ?? null,
           token_type: t.token_type ?? 'object',

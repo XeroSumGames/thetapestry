@@ -23,6 +23,8 @@ import { getCachedAuth } from '../../../lib/auth-cache'
 import { SETTING_NPCS } from '../../../lib/setting-npcs'
 import { SETTING_PINS } from '../../../lib/setting-pins'
 import { SETTING_SCENES } from '../../../lib/setting-scenes'
+import { SETTING_HANDOUTS } from '../../../lib/setting-handouts'
+import type { ModuleSnapshot } from '../../../lib/modules'
 
 interface SettingDef {
   key: string
@@ -124,47 +126,49 @@ export default function MigrateSettingsPage() {
     return `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
   }
 
-  function buildSnapshot(setting: string) {
-    // Map each seed array to the row shape cloneSnapshotIntoCampaign expects.
-    // Field set is the union of campaign_npcs / campaign_pins /
-    // tactical_scenes columns the clone reads. id+campaign_id get
-    // rewritten on subscribe; we only need them present + unique.
+  function buildSnapshot(setting: string): ModuleSnapshot {
+    // Build a `ModuleSnapshot` (per lib/modules.ts) — the shape
+    // `cloneModuleIntoCampaign` reads when a subscriber clones a
+    // module version into a fresh campaign. The crucial column-name
+    // contract: pins use `name` (matches campaign_pins.name) and
+    // scenes are flat with tokens nested inside, NOT the
+    // campaign-snapshot wrapper shape.
+    //
+    // _external_id is just a unique key within this snapshot so the
+    // clone can remap NPC→pin links if any get authored later. For
+    // setting modules with no in-snapshot links between rows, the
+    // value is opaque.
     const npcSeeds = SETTING_NPCS[setting] ?? []
     const pinSeeds = SETTING_PINS[setting] ?? []
     const sceneSeeds = SETTING_SCENES[setting] ?? []
-    const placeholderCampaignId = newId()
+    const handoutSeeds = SETTING_HANDOUTS[setting] ?? []
 
     const npcs = npcSeeds.map((n: any, idx) => ({
-      id: newId(),
-      campaign_id: placeholderCampaignId,
+      _external_id: newId(),
       name: n.name,
-      npc_type: n.npc_type ?? 'goon',
-      portrait_url: n.portrait_url ?? null,
       reason: n.reason ?? 0,
       acumen: n.acumen ?? 0,
       physicality: n.physicality ?? 0,
       influence: n.influence ?? 0,
       dexterity: n.dexterity ?? 0,
       wp_max: n.wp_max ?? 10,
-      wp_current: n.wp_max ?? 10,
       rp_max: n.rp_max ?? 6,
-      rp_current: n.rp_max ?? 6,
-      morality: n.morality ?? 0,
-      stress: 0,
-      insight_dice: 0,
-      status: 'active',
       skills: n.skills ?? null,
-      inventory: n.inventory ?? [],
-      notes: n.notes ?? '',
-      hidden_from_players: false,
+      equipment: n.equipment ?? null,
+      notes: n.notes ?? null,
+      motivation: n.motivation ?? null,
+      portrait_url: n.portrait_url ?? null,
+      npc_type: n.npc_type ?? 'goon',
       sort_order: idx + 1,
-      folder: n.folder ?? null,
     }))
 
     const pins = pinSeeds.map((p: any, idx) => ({
-      id: newId(),
-      campaign_id: placeholderCampaignId,
-      title: p.title,
+      _external_id: newId(),
+      // SettingPin.title (in-code seed shape) → ModuleSnapshotPin.name
+      // (DB column name). This rename is the whole point of the fix —
+      // the prior version stored `title` here and crashed clone
+      // INSERTs against campaign_pins.name NOT NULL.
+      name: p.title,
       lat: p.lat,
       lng: p.lng,
       notes: p.notes ?? '',
@@ -172,39 +176,31 @@ export default function MigrateSettingsPage() {
       sort_order: idx + 1,
     }))
 
-    const scenes = sceneSeeds.map((s: any) => {
-      const sceneId = newId()
-      return {
-        scene: {
-          id: sceneId,
-          campaign_id: placeholderCampaignId,
-          name: s.name,
-          grid_cols: s.grid_cols,
-          grid_rows: s.grid_rows,
-          notes: s.notes ?? '',
-          is_active: false,
-          cell_feet: 3,
-          cell_px: 35,
-          has_grid: true,
-        },
-        // No tokens — seed scenes ship empty maps. The clone path's
-        // npcIdMap remap will only rewrite tokens that reference an
-        // npc_id in the snapshot's npcs[]; an empty array here is
-        // exactly right.
-        tokens: [] as any[],
-      }
-    })
+    const scenes = sceneSeeds.map((s: any) => ({
+      _external_id: newId(),
+      name: s.name,
+      grid_cols: s.grid_cols,
+      grid_rows: s.grid_rows,
+      // Setting scene seeds carry `image_url` for the background; the
+      // module snapshot's `background_url` column is the equivalent.
+      background_url: s.image_url ?? s.background_url ?? null,
+      cell_px: s.cell_px ?? 35,
+      cell_feet: s.cell_feet ?? 3,
+      has_grid: s.has_grid ?? true,
+      img_scale: s.img_scale ?? 1,
+      // No tokens — seed scenes ship empty maps. The clone path skips
+      // empty token arrays cleanly.
+      tokens: [],
+    }))
 
-    return {
-      version: 1 as const,
-      captured_at: new Date().toISOString(),
-      campaign_id: placeholderCampaignId,
-      includes_character_states: false,
-      npcs,
-      pins,
-      scenes,
-      notes: [] as any[],
-    }
+    const handouts = handoutSeeds.map((h: any) => ({
+      _external_id: newId(),
+      title: h.title,
+      content: h.content ?? '',
+      attachments: [],
+    }))
+
+    return { npcs, pins, scenes, handouts }
   }
 
   async function migrate(def: SettingDef) {
@@ -212,16 +208,19 @@ export default function MigrateSettingsPage() {
     setResults(prev => ({ ...prev, [def.key]: null }))
     try {
       // Idempotency: if a module with this name already exists, UPDATE
-      // its metadata (tagline / description / content_tags / etc.) and
-      // leave the v1.0.0 snapshot untouched. Lets the Thriver iterate
-      // on copy without deleting + republishing. Match by name —
-      // duplicates would be a manual cleanup case.
+      // metadata + REFRESH the existing version's snapshot to the
+      // current seed data + current ModuleSnapshot shape. Re-running
+      // the tool is the correct path to ship snapshot-shape fixes
+      // (previously it skipped the snapshot, which left broken
+      // snapshots stranded — the very bug that motivated the
+      // 2026-04-29 lenient-reader pass on cloneModuleIntoCampaign).
       const { data: existing } = await supabase
         .from('modules')
-        .select('id, name')
+        .select('id, name, latest_version_id')
         .eq('name', def.name)
         .limit(1)
       if (existing && existing.length > 0) {
+        const existingMod = existing[0] as { id: string; name: string; latest_version_id: string | null }
         const { error: updErr } = await supabase
           .from('modules')
           .update({
@@ -231,12 +230,36 @@ export default function MigrateSettingsPage() {
             session_count_estimate: def.sessionEstimate,
             player_count_recommended: def.playerCountRecommended,
           })
-          .eq('id', existing[0].id)
+          .eq('id', existingMod.id)
         if (updErr) {
           setResults(prev => ({ ...prev, [def.key]: { setting: def.key, ok: false, error: `update metadata: ${updErr.message}` } }))
           return
         }
-        const result: MigrationResult = { setting: def.key, ok: true, skipped: `Updated metadata on existing module "${def.name}" (snapshot v1.0.0 untouched).` }
+        // Refresh the snapshot too. Targets the latest_version_id
+        // pointer so we never accidentally rewrite an older version
+        // a subscriber pinned to. If the pointer's null (impossible
+        // for a published module but defensive), we skip the refresh.
+        const snapshot = buildSnapshot(def.key)
+        let refreshNote = 'metadata only'
+        if (existingMod.latest_version_id) {
+          const { error: snapErr } = await supabase
+            .from('module_versions')
+            .update({ snapshot })
+            .eq('id', existingMod.latest_version_id)
+          if (snapErr) {
+            setResults(prev => ({ ...prev, [def.key]: { setting: def.key, ok: false, error: `refresh snapshot: ${snapErr.message}` } }))
+            return
+          }
+          refreshNote = `metadata + snapshot (${snapshot.npcs?.length ?? 0} npcs, ${snapshot.pins?.length ?? 0} pins, ${snapshot.scenes?.length ?? 0} scenes, ${snapshot.handouts?.length ?? 0} handouts)`
+        }
+        const result: MigrationResult = {
+          setting: def.key,
+          ok: true,
+          moduleId: existingMod.id,
+          versionId: existingMod.latest_version_id ?? undefined,
+          skipped: `Refreshed existing module "${def.name}" — ${refreshNote}.`,
+          counts: { npcs: snapshot.npcs?.length ?? 0, pins: snapshot.pins?.length ?? 0, scenes: snapshot.scenes?.length ?? 0 },
+        }
         setResults(prev => ({ ...prev, [def.key]: result }))
         return
       }
@@ -310,7 +333,7 @@ export default function MigrateSettingsPage() {
         ok: true,
         moduleId: modRow.id,
         versionId: verRow.id,
-        counts: { npcs: snapshot.npcs.length, pins: snapshot.pins.length, scenes: snapshot.scenes.length },
+        counts: { npcs: snapshot.npcs?.length ?? 0, pins: snapshot.pins?.length ?? 0, scenes: snapshot.scenes?.length ?? 0 },
       }
       setResults(prev => ({ ...prev, [def.key]: result }))
     } catch (err: any) {
