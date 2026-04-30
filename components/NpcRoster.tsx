@@ -1250,6 +1250,31 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                       <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                       <span style={{ fontSize: '13px', color: '#7fc458', marginRight: '2px' }}>🏘</span>
                       <span style={{ flex: 1, fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>Community — {cname}</span>
+                      {cnpcs.length > 0 && onPlaceFolderOnMap && (() => {
+                        // MAP/UNMAP: bulk place tokens on the GM's
+                        // tactical map (or archive them off) WITHOUT
+                        // touching reveal-to-players state. Lets the GM
+                        // stage a community on the map and then SHOW
+                        // them as a separate beat.
+                        const cAllOnMap = cUnplaced.length === 0
+                        return (
+                          <button onClick={async e => {
+                            e.stopPropagation()
+                            if (cAllOnMap) {
+                              if (onUnmapFolder) await onUnmapFolder(cnpcs)
+                            } else {
+                              await onPlaceFolderOnMap(cUnplaced)
+                            }
+                            onTacticalRefresh?.()
+                          }}
+                            title={cAllOnMap
+                              ? `Unmap all ${cnpcs.length} NPCs (archive tokens; reveal state unchanged)`
+                              : `Place ${cUnplaced.length} unplaced NPC${cUnplaced.length === 1 ? '' : 's'} on the map (no reveal)`}
+                            style={{ padding: '1px 8px', background: cAllOnMap ? '#1a1a1a' : '#10202e', border: `1px solid ${cAllOnMap ? '#3a3a3a' : '#3a5a7a'}`, borderRadius: '2px', color: cAllOnMap ? '#cce0f5' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
+                            {cAllOnMap ? 'Unmap' : 'Map'}
+                          </button>
+                        )
+                      })()}
                       {cnpcs.length > 0 && (
                         <button onClick={async e => {
                           e.stopPropagation()
@@ -1334,7 +1359,30 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                         const unplaced = npcIdsOnMap
                           ? folderNpcs.filter(n => !npcIdsOnMap.has(n.id))
                           : folderNpcs
+                        const allOnMap = unplaced.length === 0
                         return (
+                          <>
+                          {/* MAP/UNMAP: bulk-place this folder's tokens
+                              on the tactical map without touching reveal
+                              state. Lets the GM stage tokens before a
+                              SHOW reveal. */}
+                          {onPlaceFolderOnMap && (
+                            <button onClick={async e => {
+                              e.stopPropagation()
+                              if (allOnMap) {
+                                if (onUnmapFolder) await onUnmapFolder(folderNpcs)
+                              } else {
+                                await onPlaceFolderOnMap(unplaced)
+                              }
+                              onTacticalRefresh?.()
+                            }}
+                              title={allOnMap
+                                ? `Unmap all ${folderNpcs.length} NPCs (archive tokens; reveal state unchanged)`
+                                : `Place ${unplaced.length} unplaced NPC${unplaced.length === 1 ? '' : 's'} on the map (no reveal)`}
+                              style={{ padding: '1px 8px', background: allOnMap ? '#1a1a1a' : '#10202e', border: `1px solid ${allOnMap ? '#3a3a3a' : '#3a5a7a'}`, borderRadius: '2px', color: allOnMap ? '#cce0f5' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
+                              {allOnMap ? 'Unmap' : 'Map'}
+                            </button>
+                          )}
                           <button onClick={async e => {
                             e.stopPropagation()
                             if (allRevealed) {
@@ -1365,6 +1413,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                             style={{ padding: '1px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
                             {label}
                           </button>
+                          </>
                         )
                       })()}
                       <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{folderNpcs.length}</span>
