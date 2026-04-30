@@ -3419,7 +3419,10 @@ export default function TablePage() {
     if (action === 'Cover Fire') {
       // SRD: Successful attack → -2 CMod to target's next action
       const newBonus = (targetEntry.aim_bonus ?? 0) - 2
-      await supabase.from('initiative_order').update({ aim_bonus: newBonus }).eq('id', targetEntryId)
+      const { data: cfRows, error: cfErr } = await supabase.from('initiative_order').update({ aim_bonus: newBonus }).eq('id', targetEntryId).select('id, aim_bonus')
+      if (cfErr) console.error('[applySocialAction] Cover Fire update error:', cfErr.message)
+      else if (!cfRows || cfRows.length === 0) console.warn('[applySocialAction] SILENT RLS FAIL — Cover Fire aim_bonus not updated. Run sql/initiative-order-rls-members-write.sql.')
+      else initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       await consumeAction(activeEntry.id, `${activeEntry.character_name} — Cover Fire → ${targetEntry.character_name} (-2 CMod)`)
     } else if (action === 'Distract') {
       // SRD: Intimidation/Psychology*/Tactics* check → target loses next
@@ -3455,7 +3458,10 @@ export default function TablePage() {
         return
       }
       const newActions = (targetEntry.actions_remaining ?? 0) + 1
-      await supabase.from('initiative_order').update({ actions_remaining: newActions, inspired_this_round: true }).eq('id', targetEntryId)
+      const { data: insRows, error: insErr } = await supabase.from('initiative_order').update({ actions_remaining: newActions, inspired_this_round: true }).eq('id', targetEntryId).select('id, actions_remaining')
+      if (insErr) console.error('[applySocialAction] Inspire update error:', insErr.message)
+      else if (!insRows || insRows.length === 0) console.warn('[applySocialAction] SILENT RLS FAIL — Inspire actions_remaining not updated. Run sql/initiative-order-rls-members-write.sql.')
+      else initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       await consumeAction(activeEntry.id, `${activeEntry.character_name} — Inspire → ${targetEntry.character_name} (+1 action)`)
     }
     setSocialTarget(null)
