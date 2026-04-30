@@ -337,7 +337,6 @@ export default function CampaignPage() {
         <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem' }}>
           <a href={`/stories/${id}/table`} target="_blank" rel="noreferrer" style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
           <Link href={`/stories/${id}/edit`} style={btn('#242424', '#f5f2ee', '#3a3a3a')}>Edit</Link>
-          <Link href={`/stories/${id}/snapshots`} style={btn('#2a2010', '#EF9F27', '#5a4a1b')}>Snapshot</Link>
           <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
             {copied ? 'Copied!' : 'Share'}
           </button>
@@ -345,6 +344,7 @@ export default function CampaignPage() {
             title="Download every pin, NPC, scene, token, handout (with images) as a portable .zip">
             {exporting ? 'Packaging…' : 'GM Kit'}
           </button>
+          <Link href={`/stories/${id}/snapshots`} style={btn('#2a2010', '#EF9F27', '#5a4a1b')}>Snapshot</Link>
           {(!existingModule || !existingModule.archived_at) && (
             <button onClick={() => setPublishOpen(true)}
               style={btn('#2a1a3e', '#c4a7f0', '#5a2e5a') as any}
