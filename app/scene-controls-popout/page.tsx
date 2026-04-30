@@ -48,6 +48,12 @@ export default function SceneControlsPopoutPage() {
   const [scenes, setScenes] = useState<Scene[]>([])
   const [error, setError] = useState<string>('')
   const [uploading, setUploading] = useState(false)
+  // In-app confirm state. Native confirm() in this popout truncates
+  // its message because Chromium sizes the dialog from the parent
+  // window width (~250px), so the prompt body ("Delete the map
+  // image?") gets clipped behind a "thetapestry.distemperver…" header.
+  // We render our own modal instead — no clipping, full control.
+  const [confirming, setConfirming] = useState<null | 'map' | 'scene'>(null)
   // GM's library of background images across all their campaigns —
   // surfaced as a dropdown so they can re-skin the current scene with
   // a map they've already uploaded somewhere else.
@@ -227,16 +233,14 @@ export default function SceneControlsPopoutPage() {
     setScene(prev => prev ? { ...prev, is_locked: newLocked } : prev)
   }
 
-  async function deleteMap() {
+  async function performDeleteMap() {
     if (!scene) return
-    if (!confirm('Delete the map image?')) return
     await supabase.from('tactical_scenes').update({ background_url: null }).eq('id', scene.id)
     setScene(prev => prev ? { ...prev, background_url: null } : prev)
   }
 
-  async function deleteScene() {
+  async function performDeleteScene() {
     if (!scene) return
-    if (!confirm(`Delete scene "${scene.name}"? This cannot be undone.`)) return
     await supabase.from('scene_tokens').delete().eq('scene_id', scene.id)
     await supabase.from('tactical_scenes').delete().eq('id', scene.id)
     setScene(null)
@@ -360,10 +364,39 @@ export default function SceneControlsPopoutPage() {
       </button>
 
       {scene.background_url && (
-        <button onClick={deleteMap} style={{ ...btn, border: '1px solid #c0392b', color: '#f5a89a' }}>Delete Map</button>
+        <button onClick={() => setConfirming('map')} style={{ ...btn, border: '1px solid #c0392b', color: '#f5a89a' }}>Delete Map</button>
       )}
 
-      <button onClick={deleteScene} style={{ ...btn, border: '1px solid #c0392b', color: '#f5a89a' }}>Delete Scene</button>
+      <button onClick={() => setConfirming('scene')} style={{ ...btn, border: '1px solid #c0392b', color: '#f5a89a' }}>Delete Scene</button>
+
+      {/* In-app confirmation overlay — replaces native confirm() which
+          gets clipped by the narrow popout window width. */}
+      {confirming && (
+        <div onClick={() => setConfirming(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 10 }}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ background: '#1a1a1a', border: '1px solid #c0392b', borderRadius: 4, padding: 14, width: '100%', maxWidth: 240, textAlign: 'center' }}>
+            <div style={{ color: '#f5f2ee', fontSize: 14, marginBottom: 10, fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
+              {confirming === 'map'
+                ? 'Delete the map image?'
+                : <>Delete scene <span style={{ color: '#f5a89a' }}>&ldquo;{scene.name}&rdquo;</span>? This cannot be undone.</>}
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={() => setConfirming(null)}
+                style={{ ...btn, flex: 1 }}>Cancel</button>
+              <button onClick={async () => {
+                const action = confirming
+                setConfirming(null)
+                if (action === 'map') await performDeleteMap()
+                else if (action === 'scene') await performDeleteScene()
+              }}
+                style={{ ...btn, flex: 1, background: '#c0392b', borderColor: '#c0392b', color: '#fff' }}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
