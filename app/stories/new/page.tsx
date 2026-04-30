@@ -17,6 +17,18 @@ function generateCode(): string {
   return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
 }
 
+interface PublishedCommunity {
+  id: string                   // world_communities.id
+  name: string
+  description: string | null
+  lat: number
+  lng: number
+  faction_label: string | null
+  size_band: string
+  community_status: string
+  source_campaign_id: string
+}
+
 export default function NewCampaignPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -31,12 +43,63 @@ export default function NewCampaignPage() {
   const [modules, setModules] = useState<ModuleListing[]>([])
   const [pickedModuleVersionId, setPickedModuleVersionId] = useState<string>('')
   const [pickedModuleId, setPickedModuleId] = useState<string>('')
+  // Phase E #C — published-community picker. Lets a new GM start
+  // their campaign adjacent to a community that already exists in
+  // the persistent world. Mutually exclusive with setting + module
+  // pickers. On create, seeds a Homestead pin at the community's
+  // coords and fires an encounter handshake to the source GM.
+  const [publishedCommunities, setPublishedCommunities] = useState<PublishedCommunity[]>([])
+  const [pickedCommunityId, setPickedCommunityId] = useState<string>('')
   const debounceRef = useRef<any>(null)
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
     listAvailableModules(supabase).then(setModules).catch(() => setModules([]))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Load every approved world_communities row with valid coords.
+  // The picker filters out the user's OWN communities (no point
+  // starting a campaign near yourself) — done client-side after
+  // resolving GM ids via campaigns.gm_user_id.
+  useEffect(() => {
+    (async () => {
+      const { user } = await getCachedAuth()
+      const { data: wc } = await supabase
+        .from('world_communities')
+        .select('id, name, homestead_lat, homestead_lng, faction_label, size_band, community_status, source_campaign_id, description')
+        .eq('moderation_status', 'approved')
+        .not('homestead_lat', 'is', null)
+        .not('homestead_lng', 'is', null)
+        .order('name')
+      const rows = (wc ?? []) as any[]
+      if (rows.length === 0) { setPublishedCommunities([]); return }
+      // Resolve source GM ids in one batch so we can hide self-owned
+      // communities. RLS on campaigns may hide rows from the viewer;
+      // we treat hidden = not mine = keep.
+      const campIds = [...new Set(rows.map(r => r.source_campaign_id))]
+      const { data: camps } = await supabase
+        .from('campaigns')
+        .select('id, gm_user_id')
+        .in('id', campIds)
+      const gmByCampaign = new Map<string, string>()
+      for (const c of (camps ?? []) as any[]) gmByCampaign.set(c.id, c.gm_user_id)
+      const filtered: PublishedCommunity[] = rows
+        .filter(r => !user || gmByCampaign.get(r.source_campaign_id) !== user.id)
+        .map(r => ({
+          id: r.id,
+          name: r.name,
+          description: r.description ?? null,
+          lat: r.homestead_lat,
+          lng: r.homestead_lng,
+          faction_label: r.faction_label ?? null,
+          size_band: r.size_band ?? 'Group',
+          community_status: r.community_status ?? 'Holding',
+          source_campaign_id: r.source_campaign_id,
+        }))
+      setPublishedCommunities(filtered)
+    })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -47,15 +110,24 @@ export default function NewCampaignPage() {
     const { user } = await getCachedAuth()
     if (!user) { setError('Not logged in.'); setSaving(false); return }
     const invite_code = generateCode()
+    // Resolve the picked community's coords so we can drop the new
+    // campaign's map center + Homestead pin on top of them. Picked
+    // before the campaign INSERT so a missing community fails fast.
+    const pickedCommunity = pickedCommunityId
+      ? publishedCommunities.find(c => c.id === pickedCommunityId) ?? null
+      : null
+    const seedCenterLat = pickedCommunity ? pickedCommunity.lat : customCenter?.lat ?? null
+    const seedCenterLng = pickedCommunity ? pickedCommunity.lng : customCenter?.lng ?? null
     const { data, error: err } = await supabase.from('campaigns').insert({
       name: name.trim(),
       description: description.trim(),
-      // Module-subscribed stories store 'custom' in the setting slot;
-      // the actual module link lives in module_subscriptions.
-      setting: pickedModuleVersionId ? 'custom' : (setting || 'custom'),
+      // Module-subscribed and community-anchored stories both store
+      // 'custom' in the setting slot — neither uses the SETTING_PINS
+      // pipeline.
+      setting: (pickedModuleVersionId || pickedCommunity) ? 'custom' : (setting || 'custom'),
       map_style: mapStyle,
-      map_center_lat: customCenter?.lat ?? null,
-      map_center_lng: customCenter?.lng ?? null,
+      map_center_lat: seedCenterLat,
+      map_center_lng: seedCenterLng,
       gm_user_id: user.id,
       invite_code,
       status: 'active',
@@ -80,6 +152,45 @@ export default function NewCampaignPage() {
         setSaving(false)
         return
       }
+    }
+
+    // Phase E #C — community-anchored start. Skip the SETTING_PINS
+    // pipeline; instead spawn a single Homestead pin at the picked
+    // community's coords and fire an encounter handshake to its
+    // source GM (the trigger on community_encounters handles the
+    // notification fan-out). We deliberately don't auto-create a
+    // local community for the new campaign — that's a decision for
+    // the new GM to make once they're in their story.
+    if (pickedCommunity) {
+      const homesteadInsert = await supabase
+        .from('campaign_pins')
+        .insert({
+          campaign_id: data.id,
+          name: `Near ${pickedCommunity.name}`,
+          lat: pickedCommunity.lat,
+          lng: pickedCommunity.lng,
+          notes: `Starting area for this campaign — adjacent to the published community "${pickedCommunity.name}". Reach out to that community's GM via the encounter notification they just received.`,
+          category: 'community',
+          revealed: false,
+          sort_order: 1,
+        })
+      if (homesteadInsert.error) {
+        setError(`Story created but Homestead pin failed: ${homesteadInsert.error.message}`)
+        setSaving(false)
+        return
+      }
+      // Encounter handshake. Trigger fires the notification to the
+      // source GM. Insert failure is non-fatal — the new GM can
+      // re-fire the handshake from the world map later.
+      await supabase.from('community_encounters').insert({
+        world_community_id: pickedCommunity.id,
+        encountering_campaign_id: data.id,
+        encountering_user_id: user.id,
+        narrative: `New campaign "${name.trim()}" is starting near "${pickedCommunity.name}".`,
+      })
+      logEvent('campaign_created', { id: data.id, name, anchored_to_world_community_id: pickedCommunity.id })
+      router.push(`/stories/${data.id}`)
+      return
     }
 
     // Collect seed errors and surface them in the UI instead of silently swallowing.
@@ -224,7 +335,7 @@ export default function NewCampaignPage() {
           <label style={lbl}>Setting</label>
           <div style={{ display: 'flex', gap: '6px' }}>
             {STORY_SETTING_OPTIONS.map(s => (
-              <button key={s.value} onClick={() => { setSetting(s.value); setPickedModuleVersionId(''); setPickedModuleId('') }}
+              <button key={s.value} onClick={() => { setSetting(s.value); setPickedModuleVersionId(''); setPickedModuleId(''); setPickedCommunityId('') }}
                 style={{ flex: 1, padding: '8px', border: `1px solid ${!pickedModuleVersionId && setting === s.value ? '#c0392b' : '#3a3a3a'}`, background: !pickedModuleVersionId && setting === s.value ? '#2a1210' : '#242424', borderRadius: '3px', color: !pickedModuleVersionId && setting === s.value ? '#f5a89a' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 {s.label}
               </button>
@@ -296,6 +407,7 @@ export default function NewCampaignPage() {
                       setPickedModuleVersionId(m.latest_version_id)
                       setPickedModuleId(m.id)
                       setSetting('')
+                      setPickedCommunityId('')
                     }
                   }}
                     style={{ padding: '8px 10px', border: `1px solid ${picked ? '#8b5cf6' : '#3a3a3a'}`, background: picked ? '#2a1a3e' : '#242424', borderRadius: '3px', color: picked ? '#c4a7f0' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textAlign: 'left' }}>
@@ -304,6 +416,56 @@ export default function NewCampaignPage() {
                       {m.latest_version && <span style={{ opacity: 0.7, marginLeft: '8px', fontSize: '13px' }}>v{m.latest_version.version}</span>}
                     </div>
                     {m.tagline && <div style={{ fontSize: '13px', opacity: 0.85, marginTop: '2px', fontFamily: 'Barlow, sans-serif', textTransform: 'none' }}>{m.tagline}</div>}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Phase E #C — anchor a new campaign next to a community
+            already living on the Tapestry. Picking one stamps the
+            campaign's map center on that community's coords, drops a
+            single Homestead pin nearby, and fires an encounter handshake
+            to the source GM. Mutually exclusive with the setting and
+            module pickers. Hidden when there are no published
+            communities to choose from (or only the user's own). */}
+        {publishedCommunities.length > 0 && (
+          <div style={{ marginBottom: '16px' }}>
+            <label style={lbl}>Or start near an existing community</label>
+            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', lineHeight: 1.4 }}>
+              Pick a published community already on the Tapestry. Your new story&apos;s map centers on their Homestead, and the source GM gets a handshake notification so the two tables can connect.
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {publishedCommunities.map(c => {
+                const picked = pickedCommunityId === c.id
+                const statusColor = c.community_status === 'Thriving' ? '#7fc458'
+                  : c.community_status === 'Holding' ? '#cce0f5'
+                  : c.community_status === 'Struggling' ? '#EF9F27'
+                  : c.community_status === 'Dying' ? '#f5a89a'
+                  : '#5a5550'
+                return (
+                  <button key={c.id} onClick={() => {
+                    if (picked) {
+                      setPickedCommunityId('')
+                    } else {
+                      setPickedCommunityId(c.id)
+                      setSetting('')
+                      setPickedModuleVersionId('')
+                      setPickedModuleId('')
+                    }
+                  }}
+                    style={{ padding: '8px 10px', border: `1px solid ${picked ? '#7ab3d4' : '#3a3a3a'}`, background: picked ? '#0f1a2e' : '#242424', borderRadius: '3px', color: picked ? '#cce0f5' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textAlign: 'left' }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 600, textTransform: 'uppercase' }}>🌐 {c.name}</span>
+                      <span style={{ fontSize: '13px', color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.06em' }}>{c.size_band}</span>
+                      <span style={{ fontSize: '13px', color: statusColor, textTransform: 'uppercase', letterSpacing: '.06em' }}>{c.community_status}</span>
+                      {c.faction_label && <span style={{ fontSize: '13px', color: '#EF9F27', textTransform: 'uppercase', letterSpacing: '.06em' }}>{c.faction_label}</span>}
+                    </div>
+                    {c.description && <div style={{ fontSize: '13px', opacity: 0.85, marginTop: '2px', fontFamily: 'Barlow, sans-serif', textTransform: 'none', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.description}</div>}
+                    <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '2px' }}>
+                      {c.lat.toFixed(3)}, {c.lng.toFixed(3)}
+                    </div>
                   </button>
                 )
               })}
