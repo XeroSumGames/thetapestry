@@ -7,6 +7,7 @@ import { logEvent } from '../lib/events'
 import InventoryPanel, { InventoryItem } from './InventoryPanel'
 import ProgressionLog, { LogEntry, createLogEntry } from './ProgressionLog'
 import { appendProgressionEntry } from '../lib/progression-log'
+import CharacterEvolution from './CharacterEvolution'
 import { openPopout } from '../lib/popout'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, CONDITIONS, Condition, ALL_WEAPONS, MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getTraitValue } from '../lib/weapons'
 import { computeEncumbrance } from '../lib/encumbrance'
@@ -141,6 +142,7 @@ function CharacterCardImpl({
   const [lastingWoundResult, setLastingWoundResult] = useState<{ roll: number; cmod: number; result: { name: string; effect: string } } | null>(null)
   const [showRestModal, setShowRestModal] = useState(false)
   const [showInventory, setShowInventory] = useState(false)
+  const [showEvolution, setShowEvolution] = useState(false)
   const [restHours, setRestHours] = useState(0)
   const [restDays, setRestDays] = useState(0)
   const [restWeeks, setRestWeeks] = useState(0)
@@ -356,17 +358,16 @@ function CharacterCardImpl({
               {onPlaceOnMap && <button onClick={onPlaceOnMap} style={btn('#2a2010', '#EF9F27')}>Map</button>}
               <button onClick={() => router.push(`/characters/${c.id}/edit`)} style={btn('#c0392b', '#f5a89a')}>Edit</button>
               <button onClick={() => setShowInventory(true)} style={btn('#2a2010', '#EF9F27')}>Inventory</button>
-              {/* Evolution placeholder — surfaces the upcoming
-                  Character Evolution / CDP Calculator (track CDP
-                  gain/spend, projected level-up cost). For now it
-                  scrolls to the existing Progression Log section
-                  on this card so the user can see what's already
-                  there. Purple to read as a "growth" surface and
-                  stay distinct from the green Apprentice button. */}
-              <button onClick={() => {
-                const el = document.getElementById(`progression-${c.id}`)
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              }} style={btn('#2a1a3e', '#c4a7f0')}>Evolution</button>
+              {/* Evolution — opens the Character Evolution / CDP
+                  Calculator (spend CDP on RAPID raises, skill raises
+                  + new-skill learns; SRD-canonical costs; Lv 4 needs
+                  a Fill-In-The-Gaps narrative). Disabled when there's
+                  no campaign-scoped state row to deduct CDP from
+                  (e.g. browsing your own character outside a session).
+                  Purple to read as a "growth" surface. */}
+              <button onClick={() => setShowEvolution(true)} disabled={!localState}
+                title={!localState ? 'Open Evolution from inside a campaign session — your CDP balance lives there.' : 'Spend CDP on RAPID + skill raises'}
+                style={{ ...btn('#2a1a3e', '#c4a7f0'), opacity: localState ? 1 : 0.5, cursor: localState ? 'pointer' : 'not-allowed' }}>Evolution</button>
               {/* Apprentice placeholder — unwired for now. Will surface
                   the PC's Apprentice NPC card when clicked once the
                   picker/display is built. Matches Inventory styling
@@ -1070,6 +1071,32 @@ function CharacterCardImpl({
             <button onClick={() => setLastingWoundResult(null)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Acknowledge</button>
           </div>
         </div>
+      )}
+
+      {/* Character Evolution / CDP Calculator — opens from the
+          purple Evolution button. Owns its own confirm overlay +
+          Lv 4 narrative input. Refreshes the parent's character row
+          after a successful spend so the new RAPID / skill values
+          reflect on this card without a manual close + reopen. */}
+      {showEvolution && localState && (
+        <CharacterEvolution
+          supabase={supabase}
+          characterId={c.id}
+          characterName={c.name}
+          characterData={c.data}
+          stateId={localState.id}
+          cdpBalance={localState.cdp ?? 0}
+          onClose={() => setShowEvolution(false)}
+          onSaved={() => {
+            // Force a parent refresh so the spend's effects show up.
+            // The parent already listens to character_states realtime
+            // for CDP changes; the `characters` row update needs an
+            // explicit nudge if the parent isn't subscribed there.
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('tapestry:character-evolved', { detail: { characterId: c.id } }))
+            }
+          }}
+        />
       )}
     </div>
   )
