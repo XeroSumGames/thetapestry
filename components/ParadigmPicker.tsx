@@ -14,7 +14,6 @@
 // any) and receives a callback when the user clicks a Pick button.
 // The component renders the canonical PARADIGMS array from xse-schema.
 
-import { useState } from 'react'
 import { PARADIGMS, type Paradigm, type AttributeName } from '../lib/xse-schema'
 
 const ATTR_ORDER: AttributeName[] = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
@@ -25,21 +24,14 @@ interface Props {
 }
 
 export default function ParadigmPicker({ value, onChange }: Props) {
-  // Which card is currently expanded inline to show the full skill list.
-  // Independent of `value` (selection) so the user can browse details
-  // without committing.
-  const [expandedName, setExpandedName] = useState<string | null>(null)
-
+  // Cards always show every skill — no expand/collapse, no "headline
+  // top-2" treatment. Players want to read the full loadout when
+  // picking, and the toggling cost more than it bought.
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px', alignItems: 'start' }}>
       {PARADIGMS.map(p => {
         const isSelected = value === p.name
-        const isExpanded = expandedName === p.name
-        // Top two skills by level — the "headline" skills players read
-        // first to figure out what kind of Paradigm this is.
         const sorted = [...p.skills].sort((a, b) => b.level - a.level)
-        const topTwo = sorted.slice(0, 2)
-        const restCount = sorted.length - topTwo.length
         return (
           <div key={p.name}
             style={{
@@ -89,42 +81,19 @@ export default function ParadigmPicker({ value, onChange }: Props) {
               })}
             </div>
 
-            {/* Top-2 skills — the "what kind of character is this" headline */}
-            <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
-              {topTwo.map(s => (
-                <span key={s.skillName} style={{
-                  padding: '2px 6px', background: '#1a2e10', border: '1px solid #2d5a1b',
-                  borderRadius: '2px', fontSize: '13px', color: '#7fc458',
-                  fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', fontWeight: 600,
-                }}>
-                  {s.skillName} {s.level}
-                </span>
+            {/* Full skill list, sorted by level descending. Lv 2+ skills
+                read in green/bold so the headline skills still pop
+                without forcing a separate top-N row. */}
+            <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              {sorted.map(s => (
+                <div key={s.skillName} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
+                  <span style={{ color: s.level >= 2 ? '#f5f2ee' : '#d4cfc9', fontWeight: s.level >= 2 ? 600 : 400 }}>{s.skillName}</span>
+                  <span style={{ color: s.level >= 2 ? '#7fc458' : '#7ab3d4', fontWeight: s.level >= 2 ? 700 : 400 }}>
+                    {s.level}
+                  </span>
+                </div>
               ))}
             </div>
-
-            {/* Expand toggle + full skill list */}
-            <button onClick={() => setExpandedName(isExpanded ? null : p.name)}
-              style={{
-                marginTop: '6px',
-                background: 'none', border: 'none',
-                color: '#5a5550', fontSize: '13px',
-                fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em',
-                cursor: 'pointer', padding: 0,
-              }}>
-              {isExpanded ? '▴ Hide skills' : `▾ +${restCount} more skills`}
-            </button>
-            {isExpanded && (
-              <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                {sorted.map(s => (
-                  <div key={s.skillName} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
-                    <span>{s.skillName}</span>
-                    <span style={{ color: s.level >= 2 ? '#7fc458' : '#7ab3d4', fontWeight: s.level >= 2 ? 600 : 400 }}>
-                      {s.level}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )
       })}
