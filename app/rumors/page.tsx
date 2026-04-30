@@ -22,12 +22,21 @@ const SETTING_LABELS: Record<string, string> = {
   empty: 'Empty',
 }
 
+type SortKey = 'featured' | 'newest' | 'subs' | 'az' | 'za'
+const SORT_LABELS: Record<SortKey, string> = {
+  featured: 'Featured',
+  newest: 'Newest',
+  subs: 'Most subscribed',
+  az: 'A–Z',
+  za: 'Z–A',
+}
+
 export default function ModuleMarketplacePage() {
   const supabase = createClient()
   const [modules, setModules] = useState<ModuleListing[] | null>(null)
   const [loadError, setLoadError] = useState<string>('')
   const [search, setSearch] = useState('')
-  const [settingFilter, setSettingFilter] = useState<string>('')
+  const [sortBy, setSortBy] = useState<SortKey>('featured')
   // Thriver-only DELETE on each module card. Resolved once on mount.
   // RLS on `modules` already gates DELETE to author OR Thriver — UI
   // surface here matches that, hiding the button for everyone else
@@ -91,12 +100,13 @@ export default function ModuleMarketplacePage() {
   }
 
   // Only show approved listings + the user's own modules. listAvailableModules
-  // already filters to non-archived modules with at least one published version.
+  // already filters to non-archived modules with at least one published version
+  // and returns them in Featured order (sort_order ASC, NULL last, tiebreak
+  // created_at DESC). Sort By controls re-ordering on top of that.
   const filtered = useMemo(() => {
     if (!modules) return null
     const q = search.trim().toLowerCase()
-    return modules.filter(m => {
-      if (settingFilter && (m.parent_setting ?? 'custom') !== settingFilter) return false
+    const matched = modules.filter(m => {
       if (!q) return true
       return (
         (m.name ?? '').toLowerCase().includes(q) ||
@@ -104,17 +114,19 @@ export default function ModuleMarketplacePage() {
         (m.description ?? '').toLowerCase().includes(q)
       )
     })
-  }, [modules, search, settingFilter])
-
-  // Distinct setting values present in the loaded module set, for the
-  // filter dropdown. Always include "All" + every option that has at
-  // least one module.
-  const availableSettings = useMemo(() => {
-    if (!modules) return []
-    const set = new Set<string>()
-    for (const m of modules) set.add(m.parent_setting ?? 'custom')
-    return Array.from(set).sort()
-  }, [modules])
+    if (sortBy === 'featured') return matched
+    const sorted = [...matched]
+    if (sortBy === 'newest') {
+      sorted.sort((a, b) => (b.latest_version?.published_at ?? '').localeCompare(a.latest_version?.published_at ?? ''))
+    } else if (sortBy === 'subs') {
+      sorted.sort((a, b) => (b.subscriber_count ?? 0) - (a.subscriber_count ?? 0))
+    } else if (sortBy === 'az') {
+      sorted.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+    } else if (sortBy === 'za') {
+      sorted.sort((a, b) => (b.name ?? '').localeCompare(a.name ?? ''))
+    }
+    return sorted
+  }, [modules, search, sortBy])
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 20px', color: '#d4cfc9' }}>
@@ -148,13 +160,13 @@ export default function ModuleMarketplacePage() {
           style={{ flex: '1 1 240px', padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }}
         />
         <select
-          value={settingFilter}
-          onChange={e => setSettingFilter(e.target.value)}
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value as SortKey)}
+          title="Sort modules"
           style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none', cursor: 'pointer' }}
         >
-          <option value="">All settings</option>
-          {availableSettings.map(s => (
-            <option key={s} value={s}>{SETTING_LABELS[s] ?? s}</option>
+          {(Object.keys(SORT_LABELS) as SortKey[]).map(k => (
+            <option key={k} value={k}>Sort: {SORT_LABELS[k]}</option>
           ))}
         </select>
         <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginLeft: 'auto' }}>
@@ -175,12 +187,12 @@ export default function ModuleMarketplacePage() {
       ) : filtered && filtered.length === 0 ? (
         <div style={{ padding: '40px 20px', textAlign: 'center', background: '#1a1a1a', border: '1px dashed #3a3a3a', borderRadius: '4px' }}>
           <div style={{ fontSize: '14px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
-            {search || settingFilter ? 'No modules match those filters' : 'No modules yet'}
+            {search ? 'No modules match that search' : 'No modules yet'}
           </div>
           <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
-            {search || settingFilter
-              ? 'Clear the filters to see all available modules.'
-              : <>Be the first to publish — open any campaign\'s edit page and click <strong>Publish as Module</strong>, or upload an exported snapshot at <Link href="/rumors/import" style={{ color: '#c4a7f0' }}>/rumors/import</Link>.</>}
+            {search
+              ? 'Clear the search to see all available modules.'
+              : <>Be the first to publish — open any campaign&apos;s edit page and click <strong>Publish as Module</strong>, or upload an exported snapshot at <Link href="/rumors/import" style={{ color: '#c4a7f0' }}>/rumors/import</Link>.</>}
           </div>
         </div>
       ) : (

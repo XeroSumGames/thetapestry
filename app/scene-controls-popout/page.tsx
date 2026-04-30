@@ -25,6 +25,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
+import { getCachedAuth } from '../../lib/auth-cache'
 import { createSceneControlsBus, type SceneControlsBus } from '../../lib/scene-controls-bus'
 
 interface Scene {
@@ -47,6 +48,10 @@ export default function SceneControlsPopoutPage() {
   const [scenes, setScenes] = useState<Scene[]>([])
   const [error, setError] = useState<string>('')
   const [uploading, setUploading] = useState(false)
+  // GM's library of background images across all their campaigns —
+  // surfaced as a dropdown so they can re-skin the current scene with
+  // a map they've already uploaded somewhere else.
+  const [reusableMaps, setReusableMaps] = useState<{ key: string; label: string; url: string }[]>([])
 
   // Local UI state — mirror the keys that TacticalMap holds. Defaults
   // get overwritten by the snapshot the main window posts back in
@@ -87,6 +92,45 @@ export default function SceneControlsPopoutPage() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tactical_scenes', filter: `campaign_id=eq.${campaignId}` }, () => load())
       .subscribe()
     return () => { cancelled = true; supabase.removeChannel(channel) }
+  }, [supabase, campaignId])
+
+  // Reuse-map library: any scene the GM has uploaded a background to,
+  // across ALL their campaigns. Lets them re-skin the current scene
+  // without re-uploading. De-duped by URL so a file used by N scenes
+  // appears once.
+  useEffect(() => {
+    if (!campaignId) return
+    let cancelled = false
+    ;(async () => {
+      const { user } = await getCachedAuth()
+      if (!user) return
+      const { data: gmCampaigns } = await supabase
+        .from('campaigns')
+        .select('id, name')
+        .eq('gm_user_id', user.id)
+      if (cancelled || !gmCampaigns || gmCampaigns.length === 0) return
+      const ids = (gmCampaigns as any[]).map(c => c.id)
+      const { data: gmScenes } = await supabase
+        .from('tactical_scenes')
+        .select('id, name, campaign_id, background_url')
+        .in('campaign_id', ids)
+        .not('background_url', 'is', null)
+      if (cancelled || !gmScenes) return
+      const campaignName = new Map((gmCampaigns as any[]).map(c => [c.id, c.name]))
+      const seen = new Set<string>()
+      const items: { key: string; label: string; url: string }[] = []
+      for (const s of gmScenes as any[]) {
+        const url = s.background_url as string
+        if (!url || seen.has(url)) continue
+        seen.add(url)
+        const cn = campaignName.get(s.campaign_id) ?? 'Untitled'
+        items.push({ key: s.id, url, label: `${cn} → ${s.name}` })
+      }
+      // Stable alpha sort so the list is predictable run-to-run.
+      items.sort((a, b) => a.label.localeCompare(b.label))
+      setReusableMaps(items)
+    })()
+    return () => { cancelled = true }
   }, [supabase, campaignId])
 
   // Bus setup — listen for state echoes + snapshots, request a snapshot
@@ -228,6 +272,27 @@ export default function SceneControlsPopoutPage() {
         {uploading ? '...' : 'Upload Map'}
         <input type="file" accept="image/*" hidden onChange={e => { if (e.target.files?.[0]) uploadBackground(e.target.files[0]) }} />
       </label>
+
+      {reusableMaps.length > 0 && (
+        // Reuse-from-library — pick a background_url from any of the
+        // GM's other scenes and stamp it onto the current one. The
+        // current scene's URL is excluded from the list.
+        <select
+          defaultValue=""
+          onChange={e => {
+            const url = e.target.value
+            if (!url) return
+            updateSceneField('background_url', url)
+            e.currentTarget.value = ''
+          }}
+          title="Reuse a map you've already uploaded to another story or scene"
+          style={{ ...btn, color: '#7ab3d4' }}>
+          <option value="">📂 Reuse map…</option>
+          {reusableMaps.filter(m => m.url !== scene.background_url).map(m => (
+            <option key={m.key} value={m.url}>{m.label}</option>
+          ))}
+        </select>
+      )}
 
       <button onClick={() => busRef.current?.postCommand('place_tokens')}
         style={{ ...btn, color: '#7fc458' }}>Place Tokens</button>

@@ -232,37 +232,9 @@ export default function NewCampaignPage() {
           </div>
         </div>
 
-        {/* Phase 5 Sprint 1 — Module picker. Appears below the Setting
-            row. Mutually exclusive with the setting buttons. */}
-        {modules.length > 0 && (
-          <div style={{ marginBottom: '16px' }}>
-            <label style={lbl}>Or start from a Module</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              {modules.map(m => {
-                const picked = pickedModuleVersionId === m.latest_version_id
-                return (
-                  <button key={m.id} onClick={() => {
-                    if (picked) {
-                      setPickedModuleVersionId(''); setPickedModuleId('')
-                    } else if (m.latest_version_id) {
-                      setPickedModuleVersionId(m.latest_version_id)
-                      setPickedModuleId(m.id)
-                      setSetting('')
-                    }
-                  }}
-                    style={{ padding: '8px 10px', border: `1px solid ${picked ? '#8b5cf6' : '#3a3a3a'}`, background: picked ? '#2a1a3e' : '#242424', borderRadius: '3px', color: picked ? '#c4a7f0' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textAlign: 'left' }}>
-                    <div style={{ fontWeight: 600, textTransform: 'uppercase' }}>
-                      📦 {m.name}
-                      {m.latest_version && <span style={{ opacity: 0.7, marginLeft: '8px', fontSize: '13px' }}>v{m.latest_version.version}</span>}
-                    </div>
-                    {m.tagline && <div style={{ fontSize: '13px', opacity: 0.85, marginTop: '2px', fontFamily: 'Barlow, sans-serif', textTransform: 'none' }}>{m.tagline}</div>}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
+        {/* Custom Setting → Starting Location (renders BEFORE the module
+            picker so a player choosing 'Custom' can pin the map without
+            having to scroll past the module list). */}
         {setting === 'custom' && !pickedModuleVersionId && (
           <div style={{ marginBottom: '16px', position: 'relative' }}>
             <label style={lbl}>Starting Location</label>
@@ -304,6 +276,38 @@ export default function NewCampaignPage() {
                 Map will center on {customCenter.lat.toFixed(4)}, {customCenter.lng.toFixed(4)}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Phase 5 Sprint 1 — Module picker. Mutually exclusive with the
+            setting buttons. Sits below Starting Location so Custom-setting
+            users land on the location field first. */}
+        {modules.length > 0 && (
+          <div style={{ marginBottom: '16px' }}>
+            <label style={lbl}>Or start from a Module</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {modules.map(m => {
+                const picked = pickedModuleVersionId === m.latest_version_id
+                return (
+                  <button key={m.id} onClick={() => {
+                    if (picked) {
+                      setPickedModuleVersionId(''); setPickedModuleId('')
+                    } else if (m.latest_version_id) {
+                      setPickedModuleVersionId(m.latest_version_id)
+                      setPickedModuleId(m.id)
+                      setSetting('')
+                    }
+                  }}
+                    style={{ padding: '8px 10px', border: `1px solid ${picked ? '#8b5cf6' : '#3a3a3a'}`, background: picked ? '#2a1a3e' : '#242424', borderRadius: '3px', color: picked ? '#c4a7f0' : '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textAlign: 'left' }}>
+                    <div style={{ fontWeight: 600, textTransform: 'uppercase' }}>
+                      📦 {m.name}
+                      {m.latest_version && <span style={{ opacity: 0.7, marginLeft: '8px', fontSize: '13px' }}>v{m.latest_version.version}</span>}
+                    </div>
+                    {m.tagline && <div style={{ fontSize: '13px', opacity: 0.85, marginTop: '2px', fontFamily: 'Barlow, sans-serif', textTransform: 'none' }}>{m.tagline}</div>}
+                  </button>
+                )
+              })}
+            </div>
           </div>
         )}
 

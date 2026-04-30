@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { createWizardState, WizardState, buildCharacter } from '../../../../lib/xse-engine'
@@ -23,12 +23,21 @@ const STEPS = [
 export default function EditCharacterPage() {
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const id = params.id as string
   const supabase = createClient()
 
+  // Honor ?step=N from callers like /characters/random?paradigm=…
+  // (which routes here at step=4 — Final Review — after seeding the
+  // Paradigm). Clamp to 0..4 so a bad URL can't crash the wizard.
+  const initialStep = (() => {
+    const raw = parseInt(searchParams.get('step') ?? '0', 10)
+    return Number.isFinite(raw) ? Math.max(0, Math.min(4, raw)) : 0
+  })()
+
   const [state, setState] = useState<WizardState | null>(null)
   const [characterName, setCharacterName] = useState('')
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState(initialStep)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState('')
