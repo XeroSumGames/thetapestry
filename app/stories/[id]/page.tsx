@@ -7,9 +7,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { SETTINGS } from '../../../lib/settings'
 import { SETTING_PREGENS, type PregenSeed } from '../../../lib/setting-npcs'
 import { buildCharacterFromPregen } from '../../../lib/xse-schema'
-import { exportGmKit } from '../../../lib/gm-kit'
-import { getModuleForCampaign, archiveModule, type ModuleForCampaign } from '../../../lib/modules'
-import ModulePublishModal from '../../../components/ModulePublishModal'
+import StoryActionBar from '../../../components/StoryActionBar'
 
 interface Campaign {
   id: string
@@ -75,23 +73,9 @@ export default function CampaignPage() {
   const [creatingPregen, setCreatingPregen] = useState(false)
   const [amKicked, setAmKicked] = useState(false)
   const [rejoining, setRejoining] = useState(false)
-  const [exporting, setExporting] = useState(false)
-  // Phase 5 Sprint 2 — Module publish state. `existingModule` is
-  // non-null when this campaign already has a published module; in
-  // that case the Publish button flips to "Publish New Version".
-  const [publishOpen, setPublishOpen] = useState(false)
-  const [existingModule, setExistingModule] = useState<ModuleForCampaign | null>(null)
-  // Phase 5 Sprint 3 — subscriber-side update awareness. Holds the
-  // first active subscription for this campaign whose current
-  // cloned version is behind the module's latest_version_id. Null
-  // when up-to-date or not subscribed to anything. Populated in the
-  // same load pass below.
-  const [moduleUpdate, setModuleUpdate] = useState<{
-    moduleId: string
-    moduleName: string
-    currentVersion: string
-    latestVersion: string
-  } | null>(null)
+  // Module publish + subscriber-update state moved to StoryActionBar
+  // alongside the action buttons that consume it. Hub keeps only the
+  // state it actually renders (members, kicked-rejoin, pregens).
 
   useEffect(() => {
     async function load() {
@@ -119,43 +103,9 @@ export default function CampaignPage() {
         setAssignedCharName((myMembership.characters as any)?.name ?? '')
       }
 
-      // Phase 5 Sprint 2 — only the GM cares about the publish state.
-      if (camp.gm_user_id === user.id) {
-        const mod = await getModuleForCampaign(supabase, id)
-        setExistingModule(mod)
-
-        // Phase 5 Sprint 3 — is there an active subscription whose
-        // cloned version is behind the source module's latest? If
-        // so, surface a "📦 Update available" button in the GM
-        // action row. Tapping it routes to the versions page.
-        const { data: subs } = await supabase
-          .from('module_subscriptions')
-          .select('module_id, current_version_id, module:modules(name, latest_version_id)')
-          .eq('campaign_id', id)
-          .eq('status', 'active')
-        for (const sub of (subs ?? []) as any[]) {
-          const modRow = Array.isArray(sub.module) ? sub.module[0] : sub.module
-          const latestId = modRow?.latest_version_id
-          if (latestId && latestId !== sub.current_version_id) {
-            // Load both version strings so the button can tell
-            // the user which bump they'd be applying.
-            const { data: vs } = await supabase
-              .from('module_versions')
-              .select('id, version')
-              .in('id', [sub.current_version_id, latestId].filter(Boolean))
-            const vMap = new Map<string, string>((vs ?? []).map((v: any) => [v.id, v.version]))
-            setModuleUpdate({
-              moduleId: sub.module_id,
-              moduleName: modRow?.name ?? 'Module',
-              currentVersion: vMap.get(sub.current_version_id) ?? '?',
-              latestVersion: vMap.get(latestId) ?? '?',
-            })
-            break  // only surface the first outdated module; a
-            // campaign that's subscribed to multiples can still get
-            // the bell notifications for each.
-          }
-        }
-      }
+      // Module publish + subscriber-update state moved to
+      // <StoryActionBar> — that component fetches its own module
+      // context. Hub no longer needs the duplicate query.
 
       // Check if this player was kicked from the current session
       if (camp.gm_user_id !== user.id) {
@@ -253,49 +203,10 @@ export default function CampaignPage() {
   // publish it as a Module and subscribe to it from a fresh campaign,
   // OR use Snapshot → Download to export a portable JSON.)
 
-  async function handleExportKit() {
-    if (!campaign || exporting) return
-    setExporting(true)
-    const result = await exportGmKit(supabase, id)
-    setExporting(false)
-    if (!result.ok) alert(`GM Kit export failed: ${result.error ?? 'unknown error'}`)
-  }
-
-  async function handleDelete() {
-    if (!confirm('Permanently delete this story? This cannot be undone.')) return
-    await supabase.from('campaigns').delete().eq('id', id)
-    router.push('/stories')
-  }
-
-  async function handleArchiveModule() {
-    if (!existingModule) return
-    const isListed = existingModule.visibility === 'listed'
-    const msg = isListed
-      ? `Archive "${existingModule.name}"? It will be hidden from the marketplace and no one new can subscribe. All subscriber campaigns keep their content. This cannot be undone from this page.`
-      : `Archive "${existingModule.name}"? It will no longer appear when others create campaigns. All subscriber content is untouched.`
-    if (!confirm(msg)) return
-
-    try {
-      // Check subscriber count first to decide if hard-delete is an option.
-      const { count } = await supabase
-        .from('module_subscriptions')
-        .select('id', { count: 'exact', head: true })
-        .eq('module_id', existingModule.id)
-        .eq('status', 'active')
-      const subCount = count ?? 0
-
-      let hardDelete = false
-      if (subCount === 0 && !isListed) {
-        hardDelete = confirm('No one has subscribed yet. Permanently delete the module entirely, or just archive it?\n\nOK = Delete permanently\nCancel = Archive (keeps version history)')
-      }
-
-      await archiveModule(supabase, existingModule.id, hardDelete)
-      setExistingModule(null)
-      alert(hardDelete ? '📦 Module deleted.' : '📦 Module archived. Subscribers have been notified.')
-    } catch (e: any) {
-      alert(`Archive failed: ${e?.message ?? 'unknown error'}`)
-    }
-  }
+  // GM Kit export / Delete / Archive Module handlers all moved into
+  // <StoryActionBar> alongside the buttons that trigger them. Hub
+  // keeps only `copyInviteLink` because the player branch and the
+  // invite-link panel below still call it directly.
 
   function copyInviteLink() {
     if (!campaign) return
@@ -332,52 +243,12 @@ export default function CampaignPage() {
         )}
       </div>
 
-      {/* Action buttons — GM */}
-      {isGM && (
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
-          <a href={`/stories/${id}/table`} target="_blank" rel="noreferrer" style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
-          <Link href={`/stories/${id}/edit`} style={btn('#242424', '#f5f2ee', '#3a3a3a')}>Edit</Link>
-          <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
-            {copied ? 'Copied!' : 'Share'}
-          </button>
-          <button onClick={handleExportKit} disabled={exporting} style={{ ...btn('#1a2e10', '#7fc458', '#2d5a1b'), opacity: exporting ? 0.6 : 1 } as any}
-            title="Download every pin, NPC, scene, token, handout (with images) as a portable .zip">
-            {exporting ? 'Packaging…' : 'GM Kit'}
-          </button>
-          <Link href={`/stories/${id}/snapshots`} style={btn('#2a2010', '#EF9F27', '#5a4a1b')}>Snapshot</Link>
-          {(!existingModule || !existingModule.archived_at) && (
-            <button onClick={() => setPublishOpen(true)}
-              style={btn('#2a1a3e', '#c4a7f0', '#5a2e5a') as any}
-              title={existingModule
-                ? `Publish a new version of "${existingModule.name}" (current v${existingModule.latest_version?.version ?? '1.0.0'})`
-                : 'Publish this campaign as a reusable module other GMs can subscribe to'}>
-              {existingModule ? `Module v${existingModule.latest_version?.version ?? '1.0.0'}` : 'Publish'}
-            </button>
-          )}
-          {existingModule?.archived_at && (
-            <span style={{ padding: '6px 12px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', lineHeight: 1 }}>
-              Archived
-            </span>
-          )}
-          {existingModule && !existingModule.archived_at && (
-            <button onClick={handleArchiveModule}
-              style={btn('#1a1a1a', '#5a5550', '#3a3a3a') as any}
-              title="Archive this module — removes it from the marketplace, notifies subscribers">
-              Archive Module
-            </button>
-          )}
-          {moduleUpdate && (
-            <a href={`/stories/${id}/modules/${moduleUpdate.moduleId}/versions`}
-              style={{ ...btn('#2a1a3e', '#c4a7f0', '#8b5cf6'), textDecoration: 'none', fontWeight: 700 } as any}
-              title={`"${moduleUpdate.moduleName}" has a newer version. You're on v${moduleUpdate.currentVersion}; latest is v${moduleUpdate.latestVersion}. Click to see what changed.`}>
-              📦 v{moduleUpdate.latestVersion} ↑
-            </a>
-          )}
-          <button onClick={handleDelete} style={btn('#7a1f16', '#f5a89a', '#7a1f16') as any}>
-            Delete
-          </button>
-        </div>
-      )}
+      {/* Canonical action bar — same 7 buttons everywhere they need
+          to live (hub + sub-pages). Self-contained: loads campaign +
+          module state internally and owns its own Publish/Delete
+          modals. Per the 2026-04-29 directive making this bar look
+          identical across every campaign sub-page. */}
+      {isGM && <StoryActionBar campaignId={id} />}
 
       {/* Action buttons — Player */}
       {!isGM && (
@@ -545,26 +416,8 @@ export default function CampaignPage() {
         </Link>
       </div>
 
-      {/* Phase 5 Sprint 2 — Module publish wizard. Opened from the
-          📦 button in the GM action row. After a successful publish,
-          refresh the existing-module state so the button re-labels
-          with the new version number. */}
-      {isGM && publishOpen && campaign && (
-        <ModulePublishModal
-          supabase={supabase}
-          campaignId={id}
-          campaignName={campaign.name}
-          campaignDescription={campaign.description}
-          existingModule={existingModule}
-          onClose={() => setPublishOpen(false)}
-          onPublished={async ({ version }) => {
-            setPublishOpen(false)
-            const refreshed = await getModuleForCampaign(supabase, id)
-            setExistingModule(refreshed)
-            alert(`📦 Published v${version}. Other GMs can now pick this module when creating a campaign.`)
-          }}
-        />
-      )}
+      {/* ModulePublishModal lives inside <StoryActionBar> now —
+          opening from the Publish button there. */}
 
     </div>
   )

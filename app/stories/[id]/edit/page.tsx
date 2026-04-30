@@ -5,7 +5,7 @@ import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
 import { SETTINGS } from '../../../../lib/settings'
-import StoryToolsNav from '../../../../components/StoryToolsNav'
+import StoryActionBar from '../../../../components/StoryActionBar'
 // Snapshot management used to live embedded on this Edit page; pulled
 // out into /stories/[id]/snapshots so save / restore / download / import
 // each get the breathing room they deserve. The Snapshot button on
@@ -86,7 +86,7 @@ export default function EditCampaignPage() {
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
-      <StoryToolsNav campaignId={id} isGM={true} inviteCode={inviteCode} />
+      <StoryActionBar campaignId={id} />
       <h1 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '2rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px', borderBottom: '1px solid #c0392b', paddingBottom: '10px' }}>
         Edit Story
       </h1>

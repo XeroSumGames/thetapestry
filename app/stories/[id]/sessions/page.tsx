@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
-import StoryToolsNav from '../../../../components/StoryToolsNav'
+import StoryActionBar from '../../../../components/StoryActionBar'
 
 interface Session {
   id: string
@@ -130,7 +130,7 @@ export default function SessionHistoryPage() {
 
   return (
     <div style={{ padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
-      <StoryToolsNav campaignId={id} isGM={true} inviteCode={inviteCode} />
+      <StoryActionBar campaignId={id} />
       {/* Header */}
       <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>

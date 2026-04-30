@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
-import StoryToolsNav from '../../../../components/StoryToolsNav'
+import StoryActionBar from '../../../../components/StoryActionBar'
 
 // Phase D — Community Dashboard. Campaign-scoped full-screen GM view
 // into every Community in this campaign: Morale/Fed/Clothed history,
@@ -216,7 +216,7 @@ export default function CommunityDashboardPage() {
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.5rem 1.5rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
-      <StoryToolsNav campaignId={campaignId} isGM={true} inviteCode={inviteCode} />
+      <StoryActionBar campaignId={campaignId} />
       <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Community Dashboard</div>
       <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '26px', color: '#EF9F27', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1.5rem', fontWeight: 700 }}>{campaignName}</div>
 
