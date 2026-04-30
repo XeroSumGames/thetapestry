@@ -30,6 +30,7 @@ const PlayerNotes = dynamic(() => import('../../../../components/PlayerNotes'), 
 const CampaignPins = dynamic(() => import('../../../../components/CampaignPins'), { ssr: false, loading: () => null })
 const CampaignObjects = dynamic(() => import('../../../../components/CampaignObjects'), { ssr: false, loading: () => null })
 import type { CampaignNpc } from '../../../../components/NpcRoster'
+import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
 import { renderRichText } from '../../../../lib/rich-text'
@@ -6846,12 +6847,43 @@ export default function TablePage() {
             })()}
             {gmTab === 'pins' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
-                <CampaignPins campaignId={id} isGM={isGM} isThriver={isThriver} onPinFocus={p => setFocusPin({ ...p })} onOpenScene={async (sceneId: string) => {
-                  await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', id)
-                  await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', sceneId)
-                  setShowTacticalMap(true)
-                  setTokenRefreshKey(k => k + 1)
-                }} />
+                <CampaignPins campaignId={id} isGM={isGM} isThriver={isThriver}
+                  showTacticalMap={showTacticalMap}
+                  onPinFocus={p => setFocusPin({ ...p })}
+                  onOpenScene={async (sceneId: string) => {
+                    await supabase.from('tactical_scenes').update({ is_active: false }).eq('campaign_id', id)
+                    await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', sceneId)
+                    setShowTacticalMap(true)
+                    setTokenRefreshKey(k => k + 1)
+                  }}
+                  onPlaceOnTacticalMap={async (pin) => {
+                    // Drop the pin onto the active scene as a marker
+                    // token (token_type='object' so it uses the existing
+                    // square-token render path; cyan color so it reads
+                    // distinct from regular orange objects). Name is
+                    // emoji-prefixed so the category icon shows up in
+                    // the on-token initials slot. Position is (1,1)
+                    // per the top-left spawn convention; the GM drags
+                    // it where it actually belongs after.
+                    const { data: activeScene } = await supabase
+                      .from('tactical_scenes')
+                      .select('id')
+                      .eq('campaign_id', id)
+                      .eq('is_active', true)
+                      .single()
+                    if (!activeScene) { alert('No active tactical scene — open one from Map Setup first.'); return }
+                    const emoji = getCategoryEmoji(pin.category)
+                    const { error } = await supabase.from('scene_tokens').insert({
+                      scene_id: (activeScene as any).id,
+                      name: `${emoji} ${pin.name}`,
+                      token_type: 'object',
+                      grid_x: 1, grid_y: 1,
+                      is_visible: true, color: '#7ab3d4',
+                    })
+                    if (error) { alert(`Add to tactical map failed: ${error.message}`); return }
+                    setTokenRefreshKey(k => k + 1)
+                    initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+                  }} />
               </div>
             )}
             {gmTab === 'assets' && (

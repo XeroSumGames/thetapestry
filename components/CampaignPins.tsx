@@ -27,11 +27,17 @@ interface Props {
   campaignId: string
   isGM: boolean
   isThriver?: boolean
+  // When true, the per-pin "🌍 add to world map" button flips to a
+  // "🗺️ add to tactical map" button and calls onPlaceOnTacticalMap
+  // instead — promoting to the world map isn't useful when the GM is
+  // staring at a tactical canvas.
+  showTacticalMap?: boolean
   onPinFocus?: (pin: { id: string; lat: number; lng: number }) => void
   onOpenScene?: (sceneId: string) => void
+  onPlaceOnTacticalMap?: (pin: CampaignPin) => Promise<void>
 }
 
-export default function CampaignPins({ campaignId, isGM, isThriver = false, onPinFocus, onOpenScene }: Props) {
+export default function CampaignPins({ campaignId, isGM, isThriver = false, showTacticalMap = false, onPinFocus, onOpenScene, onPlaceOnTacticalMap }: Props) {
   // "Can manage" = campaign GM OR app-level Thriver. Thrivers get
   // parity on pin edit/delete so they can relocate stray pins across
   // any campaign they don't GM (e.g. the "dis ho" cleanup scenario).
@@ -337,7 +343,11 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
                         </button>
                         <div style={{ display: 'flex', gap: '2px' }}>
                           <button onClick={() => startEdit(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>Edit</button>
-                          <button onClick={() => promoteToWorld(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }} title="Add to world map">🌍</button>
+                          {showTacticalMap && onPlaceOnTacticalMap ? (
+                            <button onClick={() => onPlaceOnTacticalMap(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }} title="Add to tactical map">🗺️</button>
+                          ) : (
+                            <button onClick={() => promoteToWorld(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }} title="Add to world map">🌍</button>
+                          )}
                           <button onClick={() => deletePin(pin.id)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #7a1f16', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>×</button>
                         </div>
                       </>
