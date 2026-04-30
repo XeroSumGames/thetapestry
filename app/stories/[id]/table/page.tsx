@@ -5936,10 +5936,15 @@ export default function TablePage() {
                   )
                 })()}
 
-                {/* Stabilize — one button per mortally-wounded combatant
-                    (WP=0, not yet dead) within 20ft of the active combatant.
-                    With multiple bleeding-out targets the GM gets a button
-                    per target instead of just the first one the find() hit. */}
+                {/* Stabilize — single 🩸 STABILIZE ▾ trigger that cascades
+                    children for every mortally-wounded combatant (WP=0,
+                    not yet dead) within 20ft of the active combatant.
+                    Was an inline button-per-target row that ate horizontal
+                    space; now folds into one menu the same way GM Tools /
+                    Checks / Community do up in the header. Engaged status
+                    flips a child's color (green = engaged, amber = needs to
+                    move closer); the action still happens or warns the GM
+                    on click per target. */}
                 {(() => {
                   const aTok = mapTokens.find(t => (activeEntry.character_id && t.character_id === activeEntry.character_id) || (activeEntry.npc_id && t.npc_id === activeEntry.npc_id))
                   const getDistFeet = (targetCharId?: string, targetNpcId?: string): number | null => {
@@ -5969,37 +5974,42 @@ export default function TablePage() {
                   // pre-multi behavior of allowing the click in that case.
                   const inRange = targets.filter(t => t.distFeet === null || t.distFeet <= 20)
                   if (inRange.length === 0) return null
-                  return (
-                    <>
-                      {inRange.map(t => {
-                        const notEngaged = t.distFeet !== null && t.distFeet > 5
-                        return (
-                          <button key={`stab_${t.kind}_${t.charId ?? t.npcId}`}
-                            onClick={notEngaged ? () => alert(`${activeEntry.character_name} must be engaged (adjacent) to ${t.name} to stabilize them. Move closer first.`) : async () => {
-                              // Determine roller's Medicine stats — use active combatant's stats
-                              // (could be PC via charEntry, or NPC via campaignNpcs)
-                              let amod = 0, smod = 0
-                              if (charEntry) {
-                                const rapid = charEntry.character.data?.rapid ?? {}
-                                amod = rapid.RSN ?? 0
-                                smod = charEntry.character.data?.skills?.find((s: any) => s.skillName === 'Medicine')?.level ?? 0
-                              } else {
-                                const npcRoller = campaignNpcs.find((n: any) => n.name === activeEntry.character_name)
-                                if (npcRoller) {
-                                  amod = npcRoller.reason ?? 0
-                                  const npcSkills: any[] = Array.isArray(npcRoller.skills?.entries) ? npcRoller.skills.entries : []
-                                  smod = npcSkills.find((s: any) => s.name === 'Medicine')?.level ?? 0
-                                }
-                              }
-                              // Open roll FIRST (before consumeAction changes the active combatant)
-                              handleRollRequest(`${activeEntry.character_name} — Stabilize ${t.name}`, amod, smod)
-                              actionPreConsumedRef.current = true
-                              await consumeAction(activeEntry.id)
-                            }}
-                            style={notEngaged ? actBtn('#2a2010', '#EF9F27', '#5a4a1b') : actBtn('#1a2e10', '#7fc458', '#2d5a1b')}>🩸 Stabilize {t.name}{notEngaged ? ' (not engaged)' : ''}</button>
-                        )
-                      })}
-                    </>
+                  // One callback shape, per target. Engaged = open the roll;
+                  // not engaged = warn the GM to move closer first. Same logic
+                  // as before, just plumbed through the cascade helper.
+                  const fireStabilize = (t: StabTarget) => async () => {
+                    let amod = 0, smod = 0
+                    if (charEntry) {
+                      const rapid = charEntry.character.data?.rapid ?? {}
+                      amod = rapid.RSN ?? 0
+                      smod = charEntry.character.data?.skills?.find((s: any) => s.skillName === 'Medicine')?.level ?? 0
+                    } else {
+                      const npcRoller = campaignNpcs.find((n: any) => n.name === activeEntry.character_name)
+                      if (npcRoller) {
+                        amod = npcRoller.reason ?? 0
+                        const npcSkills: any[] = Array.isArray(npcRoller.skills?.entries) ? npcRoller.skills.entries : []
+                        smod = npcSkills.find((s: any) => s.name === 'Medicine')?.level ?? 0
+                      }
+                    }
+                    handleRollRequest(`${activeEntry.character_name} — Stabilize ${t.name}`, amod, smod)
+                    actionPreConsumedRef.current = true
+                    await consumeAction(activeEntry.id)
+                  }
+                  const items = inRange.map(t => {
+                    const notEngaged = t.distFeet !== null && t.distFeet > 5
+                    return {
+                      label: `${t.name}${notEngaged ? ' (not engaged)' : ''}`,
+                      color: notEngaged ? '#EF9F27' : '#7fc458',
+                      onClick: notEngaged
+                        ? () => alert(`${activeEntry.character_name} must be engaged (adjacent) to ${t.name} to stabilize them. Move closer first.`)
+                        : fireStabilize(t),
+                    }
+                  })
+                  return renderHeaderMenu(
+                    'stabilize-action',
+                    '🩸 Stabilize',
+                    items,
+                    actBtn('#1a2e10', '#7fc458', '#2d5a1b'),
                   )
                 })()}
                 </>}
