@@ -911,6 +911,30 @@ Communities become first-class entities in the Distemperverse. Every published c
 - [ ] In-session GM toolkit — scene switcher, NPC roster, handouts panel, roll tables linked to dice roller
 - [ ] Third-party module import (Roll20 / Foundry → Tapestry module — stretch)
 
+### Phase F — GM Adventure Authoring Toolkit 🚩 (added 2026-04-30)
+
+The current authoring path is "run a campaign for months, then click Publish Module." That works for Xero personally but assumes the GM has already done the work in their head + populated the campaign before Publish exists as a button. New GMs need scaffolding that helps them go from blank-page idea → playable adventure WITHOUT a long live-campaign on-ramp first.
+
+**Vision:** opinionated, guided forms that walk the GM through the bones of an adventure (the "story arc" form), plus on-the-fly creation tools for everything an adventure needs (NPCs, maps, handouts, encounters, route tables). Output of the authoring tools feeds straight into the Module Publish flow — adventures authored with this toolkit ship as Modules end-to-end.
+
+- [ ] **Story Arc form** — guided 4-question creation surface:
+  - "What is this about?" (the premise — one-paragraph hook + thematic tags)
+  - "Where do they start?" (opening scene + starting pin/Homestead)
+  - "What happens along the way?" (3–5 beat outline; each beat carries an optional encounter / scene / handout reference)
+  - "Where do they end?" (resolution scenes — branching outcomes Wild / Success / Failure / Dire)
+  - Persists to a new `adventures` table or as a structured `metadata.adventure_arc` blob on the existing `campaigns` row. Same data exports into the published module's manifest so subscribers see the arc.
+- [ ] **NPC quick-build inline forms** — surface the existing generateRandomNpc + manual-edit flow as a popover from inside the Story Arc form ("add an NPC to this beat"). Pre-fills the NPC's role from the beat (antagonist for the climax, bystander for the opening, etc.). Pairs with the new GM Tools → Populate flow.
+- [ ] **Map quick-build** — drop a new tactical scene from inside a beat. Image upload + grid + cell_px + a "place opening tokens" affordance. Wires straight into `tactical_scenes`.
+- [ ] **Handout quick-build** — title + rich text + optional image; persists to `campaign_notes` with `share=true`. Surfaces as the player handout when its beat fires.
+- [ ] **Encounter quick-build** — pre-rolled stat block for a fight (initiative line-up, recommended weapons, terrain notes). Drops into a beat as "what happens here." Could mature into a roll-table + outcome-tier reference once Lv 4 traits land.
+- [ ] **Route tables** — for travel-arc adventures (Mongrels-style road trip), a list of leg-by-leg encounters with a roll-target each. Probably a new `route_legs` table linking to existing pins.
+- [ ] **Adventure preview** — a "play test mode" that runs the GM through the arc beat-by-beat in a dry-run UI, surfacing each linked NPC / scene / handout / encounter so they can audit the adventure before publishing.
+- [ ] **Publish Adventure** — terminal step on the Story Arc form. Bundles the arc + every linked asset into a Module snapshot via the existing `buildModuleSnapshot` path. Skips the "run a campaign first" friction.
+
+**Out of scope for v1:** branching narratives (the arc is linear with multiple endings), procedural adventure generation (every adventure is GM-authored), shared authoring (one GM owns the arc; collaborator support is a Phase 6/7 ask).
+
+**Why this is its own phase:** the existing Module System assumes you've already played the adventure in a real campaign before publishing. This toolkit is the missing front-end — it lets you AUTHOR an adventure without playing it first. Pairs naturally with Phase 5 Phase D monetization (paid module authors need authoring scaffolding to produce content at quality + speed).
+
 ### Legacy GM Kit v1 (for reference)
 - [ ] **GM Kit Export** — compile all assets for a campaign/adventure into a downloadable package: NPCs (with portraits + stats), map pins, tactical scenes + battle maps, handouts, object tokens, route tables, session notes. Include GM instructions/playbook. Export as PDF, ZIP, or shareable link. Could serve as the distribution format for published modules.
 - [~] **GM Kit v1 — export + seed-import loop (DIRECTION UNCERTAIN, paused 2026-04-19)** — Shipped end-to-end: green `GM Kit` button on `/stories/[id]` (`lib/gm-kit.ts`, jszip) downloads a `gm-kit-<slug>-<date>.zip` with manifest, pins/npcs/scenes/tokens/handouts JSON, and an `images/` folder pulled from Supabase. `/tools/import-gm-kit` reads any kit zip and upserts into `setting_seed_*` tables; `/stories/new` and `/campaigns/new` then seed new campaigns with backgrounds + portraits + handout attachments intact (`sql/setting-seeds-extend.sql`). Wired to The Arena story option (`arena` setting key in `lib/settings.ts`). **Why paused:** image URLs in seeds still point to the source campaign's bucket — delete that campaign and seed images 404. Scene `tokens.json` round-trips through the kit but neither the seed schema nor the create flow ingests it (objects placed on tactical maps don't carry to new campaigns). Not yet clear whether the right answer is (a) re-upload kit images to a "shared seed assets" bucket on import, (b) treat seeds as live-linked to the source campaign, (c) abandon the seed approach and lean on a real Module data structure (Phase 5 line 1). **How to apply:** revisit before promoting any setting beyond personal beta use.
