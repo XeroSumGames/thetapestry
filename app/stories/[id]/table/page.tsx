@@ -329,6 +329,21 @@ export default function TablePage() {
     if (typeof window === 'undefined') return
     localStorage.setItem(`tactical_map_view_${id}`, showTacticalMap ? '1' : '0')
   }, [showTacticalMap, id])
+
+  // Mode-aware sidebar tab default. Campaign map → Pins ("where are
+  // we"); Tactical/Combat → NPCs ("who's on the field"). The flip only
+  // intervenes when the current tab is the OTHER mode's default —
+  // explicit picks like Assets / Notes survive mode switches. Also
+  // runs on mount, so a session starting in tactical mode lands on
+  // NPCs rather than the Pins initial-state default.
+  useEffect(() => {
+    const inTactical = combatActive || showTacticalMap
+    setGmTab(prev => {
+      if (inTactical && prev === 'pins') return 'npcs'
+      if (!inTactical && prev === 'npcs') return 'pins'
+      return prev
+    })
+  }, [combatActive, showTacticalMap])
   const [tacticalShared, setTacticalShared] = useState(false)
   const [tokenRefreshKey, setTokenRefreshKey] = useState(0)
   const [moveMode, setMoveMode] = useState<{ characterId?: string; npcId?: string; objectTokenId?: string; feet: number } | null>(null)
@@ -511,7 +526,12 @@ export default function TablePage() {
   const [sessionCliffhanger, setSessionCliffhanger] = useState('')
   const [sessionFiles, setSessionFiles] = useState<File[]>([])
   const [sessionActing, setSessionActing] = useState(false)
-  const [gmTab, setGmTab] = useState<'pins' | 'npcs' | 'assets' | 'notes'>('npcs')
+  // Default tab follows mode: Campaign map → Pins ("where are we"),
+  // Tactical/Combat → NPCs ("who's on the field"). The auto-flip
+  // useEffect below only intervenes when the user is on the OTHER
+  // mode's default — explicit picks like Assets or Notes survive
+  // mode switches.
+  const [gmTab, setGmTab] = useState<'pins' | 'npcs' | 'assets' | 'notes'>('pins')
   const [assetsFolderState, setAssetsFolderState] = useState<Set<string>>(new Set())
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
   const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
