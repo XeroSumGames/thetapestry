@@ -103,6 +103,12 @@ interface Props {
   campaignId?: string
   otherCharacters?: { id: string; name: string }[]
   onGiveItem?: (item: InventoryItem, targetCharId: string, qty: number) => void
+  // PC ↔ NPC trade — when both are passed, the InventoryPanel's "Give"
+  // picker also lists NPCs as recipients (orange-themed, distinct from
+  // the blue PC chips). Parents pulling from `campaignNpcs` should
+  // filter out hidden_from_players for non-GM viewers.
+  otherNpcs?: { id: string; name: string }[]
+  onGiveItemToNpc?: (item: InventoryItem, targetNpcId: string, qty: number) => void
   onInventoryChange?: (newInventory: InventoryItem[]) => void
   onWeaponChange?: (slot: 'weaponPrimary' | 'weaponSecondary', newWeapon: any) => void
 }
@@ -125,6 +131,8 @@ function CharacterCardImpl({
   campaignId: campaignIdProp,
   otherCharacters,
   onGiveItem,
+  otherNpcs,
+  onGiveItemToNpc,
   onInventoryChange,
   onWeaponChange,
 }: Props) {
@@ -854,6 +862,8 @@ function CharacterCardImpl({
           onClose={() => setShowInventory(false)}
           otherCharacters={otherCharacters}
           onGiveTo={onGiveItem}
+          otherNpcs={otherNpcs}
+          onGiveToNpc={onGiveItemToNpc}
         />
       )}
 

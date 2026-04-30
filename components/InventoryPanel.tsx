@@ -43,6 +43,12 @@ interface Props {
   // Loot/trade
   otherCharacters?: { id: string; name: string }[]
   onGiveTo?: (item: InventoryItem, targetCharId: string, qty: number) => void
+  // Optional NPC recipients (community quartermasters, merchants, etc.).
+  // Routed to onGiveToNpc to keep the PC + NPC write paths separate at
+  // the parent — different tables (characters vs. campaign_npcs) and
+  // different broadcast events.
+  otherNpcs?: { id: string; name: string }[]
+  onGiveToNpc?: (item: InventoryItem, targetNpcId: string, qty: number) => void
 }
 
 const RARITY_COLORS: Record<string, { color: string; bg: string; border: string }> = {
@@ -51,7 +57,7 @@ const RARITY_COLORS: Record<string, { color: string; bg: string; border: string 
   Rare: { color: '#EF9F27', bg: '#2a2010', border: '#5a4a1b' },
 }
 
-export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSecondaryName, phyMod, canEdit, onUpdate, onClose, otherCharacters, onGiveTo }: Props) {
+export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSecondaryName, phyMod, canEdit, onUpdate, onClose, otherCharacters, onGiveTo, otherNpcs, onGiveToNpc }: Props) {
   const [search, setSearch] = useState('')
   const [showCatalog, setShowCatalog] = useState(false)
   const [showCustom, setShowCustom] = useState(false)
@@ -108,10 +114,13 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
     setGiveQty(isSingleUse ? 1 : item.qty)
   }
 
-  function confirmGive(targetCharId: string) {
-    if (!givingItem || !onGiveTo) return
+  function confirmGive(target: { id: string; kind: 'pc' | 'npc' }) {
+    if (!givingItem) return
+    if (target.kind === 'pc' && !onGiveTo) return
+    if (target.kind === 'npc' && !onGiveToNpc) return
     const qty = Math.max(1, Math.min(giveQty, givingItem.qty))
-    onGiveTo(givingItem, targetCharId, qty)
+    if (target.kind === 'pc') onGiveTo!(givingItem, target.id, qty)
+    else onGiveToNpc!(givingItem, target.id, qty)
     // Decrement sender by exactly the chosen qty (drop the row if all gone).
     const idx = inventory.findIndex(i => i === givingItem || (i.name === givingItem.name && i.custom === givingItem.custom))
     if (idx >= 0) {
@@ -211,10 +220,20 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
             )}
             <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', marginBottom: '4px' }}>To:</div>
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              {/* PC recipients — blue trim */}
               {(otherCharacters ?? []).map(ch => (
-                <button key={ch.id} onClick={() => confirmGive(ch.id)}
-                  style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  {ch.name}
+                <button key={`pc:${ch.id}`} onClick={() => confirmGive({ id: ch.id, kind: 'pc' })}
+                  title="Give to player character"
+                  style={{ padding: '4px 8px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  👤 {ch.name}
+                </button>
+              ))}
+              {/* NPC recipients — orange trim, distinct from PCs */}
+              {onGiveToNpc && (otherNpcs ?? []).map(n => (
+                <button key={`npc:${n.id}`} onClick={() => confirmGive({ id: n.id, kind: 'npc' })}
+                  title="Give to non-player character"
+                  style={{ padding: '4px 8px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  🎭 {n.name}
                 </button>
               ))}
               <button onClick={() => setGivingItem(null)}

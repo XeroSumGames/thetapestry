@@ -6637,6 +6637,31 @@ export default function TablePage() {
                     from_label: syncedSelectedEntry.character.name,
                   })
                 }}
+                otherNpcs={campaignNpcs
+                  .filter((n: any) => !(!isGM && n.hidden_from_players))
+                  .filter((n: any) => n.status !== 'dead')
+                  .map((n: any) => ({ id: n.id, name: n.name }))}
+                onGiveItemToNpc={async (item: InventoryItem, targetNpcId: string, qty: number) => {
+                  // Mirrors onGiveItem but writes to campaign_npcs.
+                  // Filters apply on the recipient list above so non-GM
+                  // players can't see hidden NPCs as targets.
+                  const targetNpc: any = campaignNpcs.find((n: any) => n.id === targetNpcId)
+                  if (!targetNpc) return
+                  const targetInv: InventoryItem[] = Array.isArray(targetNpc.inventory) ? targetNpc.inventory : []
+                  const existing = targetInv.find((i: InventoryItem) => i.name === item.name && (i.custom ?? false) === (item.custom ?? false))
+                  const newTargetInv = existing
+                    ? targetInv.map((i: InventoryItem) => i === existing ? { ...i, qty: (i.qty ?? 1) + qty } : i)
+                    : [...targetInv, { ...item, qty }]
+                  const { error } = await supabase.from('campaign_npcs').update({ inventory: newTargetInv }).eq('id', targetNpcId)
+                  if (error) { alert(`Give to NPC failed: ${error.message}`); return }
+                  // Local state patch + token-refresh broadcast so other
+                  // GMs / players see the NPC's new inventory without a
+                  // manual refresh.
+                  setCampaignNpcs(prev => prev.map((n: any) => n.id === targetNpcId ? { ...n, inventory: newTargetInv } : n))
+                  setRosterNpcs(prev => prev.map((n: any) => n.id === targetNpcId ? { ...n, inventory: newTargetInv } : n))
+                  setViewingNpcs(prev => prev.map((n: any) => n.id === targetNpcId ? { ...n, inventory: newTargetInv } : n))
+                  initChannelRef.current?.send({ type: 'broadcast', event: 'npc_inventory_changed', payload: { npcId: targetNpcId } })
+                }}
                 onInventoryChange={(newInventory: InventoryItem[]) => {
                   // Patch our entries state so the new inventory persists when
                   // the character sheet closes and reopens without a loadEntries.
