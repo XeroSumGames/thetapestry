@@ -37,7 +37,7 @@ export default function ParadigmsPage() {
         Paradigms
       </h1>
 
-      <div style={{ marginTop: '12px', marginBottom: '20px', fontSize: '14px', color: '#cce0f5', lineHeight: 1.6, maxWidth: '780px' }}>
+      <div style={{ marginTop: '12px', marginBottom: '20px', fontSize: '14px', color: '#cce0f5', lineHeight: 1.6 }}>
         <h2 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#7ab3d4', margin: '0 0 8px' }}>
           The journey starts
         </h2>
