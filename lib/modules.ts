@@ -113,6 +113,10 @@ export interface ModuleListing {
   // Curation column added in sql/modules-sort-order.sql. Lower number
   // sorts first; NULL sorts LAST. Tiebreaker is created_at DESC.
   sort_order: number | null
+  // Active subscription count — denormalized via the trigger in
+  // sql/modules-subscriber-count.sql. Surfaced as the "downloads"
+  // number on the marketplace card.
+  subscriber_count: number | null
   latest_version?: {
     id: string
     version: string
@@ -181,7 +185,7 @@ export async function listAvailableModules(
   // fetch everything SELECT-able and let RLS do the heavy lifting.
   const { data, error } = await supabase
     .from('modules')
-    .select('id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, latest_version:module_versions!modules_latest_version_id_fkey(id, version, published_at)')
+    .select('id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count, latest_version:module_versions!modules_latest_version_id_fkey(id, version, published_at)')
     .not('latest_version_id', 'is', null)
     .is('archived_at', null)
     .order('sort_order', { ascending: true, nullsFirst: false })
@@ -206,7 +210,7 @@ async function listAvailableModulesFallback(
 ): Promise<ModuleListing[]> {
   const { data: modules, error } = await supabase
     .from('modules')
-    .select('id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order')
+    .select('id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count')
     .not('latest_version_id', 'is', null)
     .is('archived_at', null)
     .order('sort_order', { ascending: true, nullsFirst: false })

@@ -82,29 +82,26 @@ export default function ParadigmPicker({ value, onChange }: Props) {
             </div>
 
             {/* Full skill list, sorted by level descending. Every
-                skill renders as a green chip — Lv 2+ chips read at
-                full saturation, Lv 1 chips at a slightly muted tone
-                so the headline skills still pop without dropping the
-                lower-level skills off into a separate visual style. */}
+                skill renders as the same green chip — full-saturation
+                green box, green text. No muted-tier treatment; the
+                level number inside each chip is the only visual
+                differentiator (e.g. "Entertainment 2" vs "Stealth 1"). */}
             <div style={{ marginTop: '8px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-              {sorted.map(s => {
-                const isHeadline = s.level >= 2
-                return (
-                  <span key={s.skillName} style={{
-                    padding: '2px 6px',
-                    background: isHeadline ? '#1a2e10' : '#152410',
-                    border: `1px solid ${isHeadline ? '#2d5a1b' : '#244018'}`,
-                    borderRadius: '2px',
-                    fontSize: '13px',
-                    color: isHeadline ? '#7fc458' : '#5a8a40',
-                    fontFamily: 'Carlito, sans-serif',
-                    letterSpacing: '.04em',
-                    fontWeight: isHeadline ? 600 : 400,
-                  }}>
-                    {s.skillName} {s.level}
-                  </span>
-                )
-              })}
+              {sorted.map(s => (
+                <span key={s.skillName} style={{
+                  padding: '2px 6px',
+                  background: '#1a2e10',
+                  border: '1px solid #2d5a1b',
+                  borderRadius: '2px',
+                  fontSize: '13px',
+                  color: '#7fc458',
+                  fontFamily: 'Carlito, sans-serif',
+                  letterSpacing: '.04em',
+                  fontWeight: 600,
+                }}>
+                  {s.skillName} {s.level}
+                </span>
+              ))}
             </div>
           </div>
         )

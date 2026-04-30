@@ -322,8 +322,23 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
                 🔒 Private
               </span>
             )}
+            {/* Subscriber count chip — shown on every card; reads
+                "0 downloads" for fresh modules so the chip is always
+                visible (helps players gauge popularity at a glance).
+                Maintained denormalized on modules.subscriber_count via
+                the trigger in sql/modules-subscriber-count.sql. */}
+            <span style={{
+              marginLeft: 'auto',
+              padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b',
+              borderRadius: '3px', fontSize: '13px', color: '#7fc458',
+              fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
+              display: 'inline-flex', alignItems: 'center', gap: '4px',
+            }}
+              title="Active subscriptions — campaigns currently using this module">
+              📥 {m.subscriber_count ?? 0}
+            </span>
             {publishedAt && (
-              <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+              <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
                 {new Date(publishedAt).toLocaleDateString()}
               </span>
             )}
