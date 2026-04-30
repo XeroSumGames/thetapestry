@@ -1078,7 +1078,7 @@ function CharacterCardImpl({
           Lv 4 narrative input. Refreshes the parent's character row
           after a successful spend so the new RAPID / skill values
           reflect on this card without a manual close + reopen. */}
-      {showEvolution && localState && (
+      {showEvolution && localState && campaignIdProp && (
         <CharacterEvolution
           supabase={supabase}
           characterId={c.id}
@@ -1086,6 +1086,7 @@ function CharacterCardImpl({
           characterData={c.data}
           stateId={localState.id}
           cdpBalance={localState.cdp ?? 0}
+          campaignId={campaignIdProp}
           onClose={() => setShowEvolution(false)}
           onSaved={() => {
             // Force a parent refresh so the spend's effects show up.

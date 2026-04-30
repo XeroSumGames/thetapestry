@@ -49,41 +49,112 @@ interface PendingSpend {
   narrative: string               // filled in by the user when needsNarrative
 }
 
+// The master PC's Apprentice, surfaced as a spend target alongside
+// the master PC themselves. Loaded on mount; null when the master PC
+// has no Apprentice (the toggle then doesn't render).
+interface ApprenticeTarget {
+  npcId: string                   // campaign_npcs.id
+  name: string
+  rapid: Record<AttributeName, number>
+  skillMap: Record<string, SkillValue>
+}
+
 interface Props {
   supabase: SupabaseClient
-  characterId: string
+  characterId: string             // master PC's character id
   characterName: string
   characterData: any              // characters.data jsonb
   stateId: string                 // character_states.id (per-campaign CDP row)
   cdpBalance: number              // current character_states.cdp
+  campaignId: string              // for the Apprentice lookup query
   onClose: () => void
   onSaved: () => void             // parent refreshes after a spend
 }
 
 export default function CharacterEvolution({
   supabase, characterId, characterName, characterData, stateId, cdpBalance,
-  onClose, onSaved,
+  campaignId, onClose, onSaved,
 }: Props) {
   const [pending, setPending] = useState<PendingSpend | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Spend target — defaults to the master PC. Flips to 'apprentice'
+  // when the toggle is clicked, which swaps the spend list to read
+  // the Apprentice's RAPID + skills + write back to campaign_npcs
+  // instead of characters.data. CDP still deducts from the master
+  // PC's character_states.cdp regardless of target (the master PC's
+  // earned CDP fuels both their own and the Apprentice's growth, per
+  // Distemper CRB §08 p.21 — "CDP the PC earns later can be spent on
+  // the Apprentice").
+  const [target, setTarget] = useState<'pc' | 'apprentice'>('pc')
+  const [apprentice, setApprentice] = useState<ApprenticeTarget | null>(null)
 
-  // Read current RAPID + skills off the characters.data jsonb. The
-  // character is the source of truth across all campaigns; CDP is
-  // per-campaign on character_states.
-  const rapid: Record<AttributeName, number> = useMemo(() => {
+  // Look up the master PC's Apprentice on mount. Single query: the
+  // community_members row tagged apprentice_of_character_id = master
+  // PC, joined to the campaign_npcs row that IS the Apprentice. Only
+  // looks within this campaign — Apprentice bonds are campaign-scoped
+  // via community membership.
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      const { data: bond } = await supabase
+        .from('community_members')
+        .select('npc_id, communities!inner(campaign_id)')
+        .eq('apprentice_of_character_id', characterId)
+        .eq('recruitment_type', 'apprentice')
+        .is('left_at', null)
+        .eq('communities.campaign_id', campaignId)
+        .maybeSingle()
+      if (cancelled || !bond || !(bond as any).npc_id) return
+      const npcId = (bond as any).npc_id as string
+      const { data: npc } = await supabase
+        .from('campaign_npcs')
+        .select('id, name, reason, acumen, physicality, influence, dexterity, skills')
+        .eq('id', npcId)
+        .maybeSingle()
+      if (cancelled || !npc) return
+      const skillEntries = Array.isArray((npc as any).skills?.entries) ? (npc as any).skills.entries : []
+      const sm: Record<string, SkillValue> = {}
+      for (const e of skillEntries) sm[e.name] = e.level as SkillValue
+      setApprentice({
+        npcId: (npc as any).id,
+        name: (npc as any).name ?? 'Apprentice',
+        rapid: {
+          RSN: (npc as any).reason ?? 0,
+          ACU: (npc as any).acumen ?? 0,
+          PHY: (npc as any).physicality ?? 0,
+          INF: (npc as any).influence ?? 0,
+          DEX: (npc as any).dexterity ?? 0,
+        },
+        skillMap: sm,
+      })
+    }
+    void load()
+    return () => { cancelled = true }
+  }, [characterId, campaignId, supabase])
+
+  // PC's RAPID + skills off characters.data — the master-PC source of
+  // truth. Same character row across all campaigns.
+  const pcRapid: Record<AttributeName, number> = useMemo(() => {
     const r = (characterData?.rapid ?? {}) as any
     return {
       RSN: r.RSN ?? 0, ACU: r.ACU ?? 0, PHY: r.PHY ?? 0, INF: r.INF ?? 0, DEX: r.DEX ?? 0,
     }
   }, [characterData])
 
-  const skillMap: Record<string, SkillValue> = useMemo(() => {
+  const pcSkillMap: Record<string, SkillValue> = useMemo(() => {
     const arr = (characterData?.skills ?? []) as SkillEntry[]
     const m: Record<string, SkillValue> = {}
     for (const e of arr) m[e.skillName] = e.level as SkillValue
     return m
   }, [characterData])
+
+  // The active spend target's stats — flips to the Apprentice when the
+  // toggle is set. Falls back to the PC's stats when no Apprentice is
+  // bound (the toggle doesn't render in that case anyway).
+  const rapid = target === 'apprentice' && apprentice ? apprentice.rapid : pcRapid
+  const skillMap = target === 'apprentice' && apprentice ? apprentice.skillMap : pcSkillMap
+  const targetName = target === 'apprentice' && apprentice ? apprentice.name : characterName
 
   function getSkillCurrent(name: string): SkillValue {
     if (skillMap[name] != null) return skillMap[name]
@@ -139,55 +210,100 @@ export default function CharacterEvolution({
     try {
       const newCdp = cdpBalance - pending.cost
       // 1) Deduct CDP from the per-campaign character_states row.
+      //    Master PC's CDP fuels both their own and the Apprentice's
+      //    growth, per Distemper CRB §08 p.21.
       const { error: stErr } = await supabase
         .from('character_states')
         .update({ cdp: newCdp, updated_at: new Date().toISOString() })
         .eq('id', stateId)
       if (stErr) throw new Error(`deduct CDP: ${stErr.message}`)
 
-      // 2) Update characters.data — cross-campaign. Read-modify-write
-      //    to avoid clobbering concurrent edits to other data fields.
-      const { data: charRow, error: readErr } = await supabase
-        .from('characters')
-        .select('data')
-        .eq('id', characterId)
-        .single()
-      if (readErr) throw new Error(`read character: ${readErr.message}`)
-      const base: any = charRow?.data ?? {}
-      let newData: any = base
-      if (pending.kind === 'rapid') {
-        newData = {
-          ...base,
-          rapid: { ...(base.rapid ?? {}), [pending.key]: pending.toLevel },
-        }
-      } else {
-        const arr: SkillEntry[] = Array.isArray(base.skills) ? [...base.skills] : []
-        const idx = arr.findIndex(e => e.skillName === pending.key)
-        if (idx >= 0) {
-          arr[idx] = { ...arr[idx], level: pending.toLevel as SkillValue }
+      // 2) Apply the raise. Forks by target — PC writes to
+      //    characters.data (cross-campaign source of truth); Apprentice
+      //    writes to campaign_npcs columns (the NPC IS the Apprentice).
+      if (target === 'apprentice') {
+        if (!apprentice) throw new Error('apprentice target lost — try reopening the modal')
+        // Read current row to merge skills.entries safely (don't blow
+        // away other slots like equipment / portrait_url / etc.).
+        const { data: npcRow, error: nReadErr } = await supabase
+          .from('campaign_npcs')
+          .select('skills')
+          .eq('id', apprentice.npcId)
+          .single()
+        if (nReadErr) throw new Error(`read apprentice: ${nReadErr.message}`)
+        const npcUpdate: any = {}
+        if (pending.kind === 'rapid') {
+          // Map AttributeName → campaign_npcs column.
+          const col = ({ RSN: 'reason', ACU: 'acumen', PHY: 'physicality', INF: 'influence', DEX: 'dexterity' } as Record<string, string>)[pending.key]
+          npcUpdate[col] = pending.toLevel
         } else {
-          arr.push({ skillName: pending.key, level: pending.toLevel as SkillValue })
+          const skillsBase: any = (npcRow as any)?.skills ?? {}
+          const entries = Array.isArray(skillsBase.entries) ? [...skillsBase.entries] : []
+          const idx = entries.findIndex((e: any) => e.name === pending.key)
+          if (idx >= 0) {
+            entries[idx] = { ...entries[idx], level: pending.toLevel }
+          } else {
+            entries.push({ name: pending.key, level: pending.toLevel })
+          }
+          npcUpdate.skills = { ...skillsBase, entries }
         }
-        newData = { ...base, skills: arr }
+        const { error: nUpdErr } = await supabase
+          .from('campaign_npcs')
+          .update(npcUpdate)
+          .eq('id', apprentice.npcId)
+        if (nUpdErr) throw new Error(`update apprentice: ${nUpdErr.message}`)
+      } else {
+        // PC path — read characters.data, mutate, write back.
+        const { data: charRow, error: readErr } = await supabase
+          .from('characters')
+          .select('data')
+          .eq('id', characterId)
+          .single()
+        if (readErr) throw new Error(`read character: ${readErr.message}`)
+        const base: any = charRow?.data ?? {}
+        let newData: any = base
+        if (pending.kind === 'rapid') {
+          newData = {
+            ...base,
+            rapid: { ...(base.rapid ?? {}), [pending.key]: pending.toLevel },
+          }
+        } else {
+          const arr: SkillEntry[] = Array.isArray(base.skills) ? [...base.skills] : []
+          const idx = arr.findIndex(e => e.skillName === pending.key)
+          if (idx >= 0) {
+            arr[idx] = { ...arr[idx], level: pending.toLevel as SkillValue }
+          } else {
+            arr.push({ skillName: pending.key, level: pending.toLevel as SkillValue })
+          }
+          newData = { ...base, skills: arr }
+        }
+        const { error: chErr } = await supabase
+          .from('characters')
+          .update({ data: newData })
+          .eq('id', characterId)
+        if (chErr) throw new Error(`update character: ${chErr.message}`)
       }
-      const { error: chErr } = await supabase
-        .from('characters')
-        .update({ data: newData })
-        .eq('id', characterId)
-      if (chErr) throw new Error(`update character: ${chErr.message}`)
 
       // 3) Append a progression-log entry — the curation pass left the
       //    'attribute' / 'skill' types declared but unwritten because
       //    nothing actually spent CDP via UI. The Calculator finally
       //    populates them.
+      //
+      //    Apprentice raises log to the MASTER PC's progression_log
+      //    (the master is the journey-keeper; the Apprentice is an NPC
+      //    without their own progression_log). The text prefixes the
+      //    Apprentice's name so the journal reads as "I trained <X>".
       const niceFromTo = pending.fromLevel < 1 && pending.kind === 'skill'
         ? `learned (Lv ${pending.toLevel})`
         : `Lv ${pending.fromLevel} → Lv ${pending.toLevel}`
+      const apprenticePrefix = target === 'apprentice' && apprentice
+        ? `Apprentice ${apprentice.name}: `
+        : ''
       const headline = pending.kind === 'rapid'
-        ? `📈 ${ATTR_FULL[pending.key as AttributeName]} ${niceFromTo} — ${pending.cost} CDP.`
+        ? `📈 ${apprenticePrefix}${ATTR_FULL[pending.key as AttributeName]} ${niceFromTo} — ${pending.cost} CDP.`
         : pending.fromLevel < 1
-          ? `📈 Learned ${pending.key} (Lv ${pending.toLevel}) — ${pending.cost} CDP.`
-          : `📈 ${pending.key} ${niceFromTo} — ${pending.cost} CDP.`
+          ? `📈 ${apprenticePrefix}Learned ${pending.key} (Lv ${pending.toLevel}) — ${pending.cost} CDP.`
+          : `📈 ${apprenticePrefix}${pending.key} ${niceFromTo} — ${pending.cost} CDP.`
       const narrative = pending.needsNarrative
         ? ` "${pending.narrative.trim()}"`
         : ''
@@ -234,7 +350,7 @@ export default function CharacterEvolution({
               ⭐ Character Evolution
             </div>
             <div style={{ fontSize: '17px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 700 }}>
-              {characterName}
+              {targetName}
             </div>
           </div>
           <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
@@ -249,8 +365,47 @@ export default function CharacterEvolution({
 
         {/* Body */}
         <div style={{ padding: '14px 18px', flex: 1, overflowY: 'auto' }}>
+          {/* Spend-target toggle — only renders when the master PC has
+              an Apprentice. Per Distemper CRB §08 p.21, "CDP the PC
+              earns later can be spent on the Apprentice." Both targets
+              draw from the same per-campaign CDP balance. */}
+          {apprentice && (
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '12px', padding: '4px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+              <button onClick={() => setTarget('pc')}
+                style={{
+                  flex: 1, padding: '6px 10px',
+                  background: target === 'pc' ? '#2a1a3e' : 'transparent',
+                  border: `1px solid ${target === 'pc' ? '#5a2e5a' : 'transparent'}`,
+                  borderRadius: '2px',
+                  color: target === 'pc' ? '#c4a7f0' : '#5a5550',
+                  fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+                  letterSpacing: '.06em', textTransform: 'uppercase',
+                  fontWeight: target === 'pc' ? 700 : 400,
+                  cursor: 'pointer', whiteSpace: 'nowrap', lineHeight: 1,
+                }}>
+                {characterName}
+              </button>
+              <button onClick={() => setTarget('apprentice')}
+                style={{
+                  flex: 1, padding: '6px 10px',
+                  background: target === 'apprentice' ? '#2a102a' : 'transparent',
+                  border: `1px solid ${target === 'apprentice' ? '#8b2e8b' : 'transparent'}`,
+                  borderRadius: '2px',
+                  color: target === 'apprentice' ? '#d48bd4' : '#5a5550',
+                  fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+                  letterSpacing: '.06em', textTransform: 'uppercase',
+                  fontWeight: target === 'apprentice' ? 700 : 400,
+                  cursor: 'pointer', whiteSpace: 'nowrap', lineHeight: 1,
+                }}>
+                ⭐ Apprentice {apprentice.name}
+              </button>
+            </div>
+          )}
           <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5, marginBottom: '14px' }}>
             One spend raises one stat by one level. Costs follow SRD §07 — RAPID raises cost 3× the new level; skill raises cost current+next; learning a new skill costs 1 CDP. Lv 4 (Human Peak / Life&apos;s Work) requires a Fill-In-The-Gaps narrative.
+            {target === 'apprentice' && apprentice && (
+              <> Spends here apply to <strong style={{ color: '#d48bd4' }}>{apprentice.name}</strong>; CDP still draws from {characterName}&apos;s balance.</>
+            )}
           </div>
 
           {/* RAPID block */}
