@@ -289,8 +289,8 @@ function CharacterCardImpl({
     return (
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-          <span style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>{label}</span>
-          <span style={{ fontSize: '13px', color, fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif' }}>{current} / {max}</span>
+          <span style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>{label}</span>
+          <span style={{ fontSize: '13px', color, fontWeight: 700, fontFamily: 'Carlito, sans-serif' }}>{current} / {max}</span>
         </div>
         <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
           {Array.from({ length: max }).map((_, i) => {
@@ -318,12 +318,12 @@ function CharacterCardImpl({
     if (!localState) return null
     return (
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>{label}</div>
+        <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>{label}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
           <button disabled={!canEdit || value <= 0}
             onClick={() => canEdit && value > 0 && localState && updateStat(localState.id, field, value - 1)}
             style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && value > 0 ? 'pointer' : 'not-allowed', opacity: canEdit && value > 0 ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0 }}>-</button>
-          <span style={{ fontSize: '16px', fontWeight: 700, color, fontFamily: 'Barlow Condensed, sans-serif', minWidth: '20px', textAlign: 'center' }}>{value}</span>
+          <span style={{ fontSize: '16px', fontWeight: 700, color, fontFamily: 'Carlito, sans-serif', minWidth: '20px', textAlign: 'center' }}>{value}</span>
           <button disabled={!canEdit || value >= max}
             onClick={() => canEdit && value < max && localState && updateStat(localState.id, field, value + 1)}
             style={{ width: '16px', height: '16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', cursor: canEdit && value < max ? 'pointer' : 'not-allowed', opacity: canEdit && value < max ? 1 : 0.3, fontSize: '13px', lineHeight: 1, padding: 0 }}>+</button>
@@ -347,7 +347,7 @@ function CharacterCardImpl({
             {c.data?.photoDataUrl && (
               <img src={c.data.photoDataUrl} alt={c.name} loading="lazy" style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '3px', border: '1px solid #3a3a3a', float: 'left', marginRight: '12px' }} />
             )}
-            <a href={`/characters/${c.id}`} style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', textDecoration: 'none', display: 'block' }}>
+            <a href={`/characters/${c.id}`} style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', textDecoration: 'none', display: 'block' }}>
               {c.name}
             </a>
           </div>
@@ -419,9 +419,9 @@ function CharacterCardImpl({
                 onMouseEnter={e => { if (clickable) { (e.currentTarget as HTMLElement).style.borderColor = '#7fc458'; (e.currentTarget as HTMLElement).style.background = v > 0 ? '#243e14' : '#2e2e2e' } }}
                 onMouseLeave={e => { if (clickable) { (e.currentTarget as HTMLElement).style.borderColor = v > 0 ? '#2d5a1b' : '#3a3a3a'; (e.currentTarget as HTMLElement).style.background = v > 0 ? '#1a2e10' : '#242424' } }}
               >
-                <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
-                <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: v > 0 ? '#7fc458' : '#d4cfc9' }}>{sgn(v)}</div>
-                {clickable && <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>ROLL</div>}
+                <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
+                <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: v > 0 ? '#7fc458' : '#d4cfc9' }}>{sgn(v)}</div>
+                {clickable && <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>ROLL</div>}
               </div>
             )
           })}
@@ -436,10 +436,10 @@ function CharacterCardImpl({
                 {localState.wp_current === 0 && (
                   <div style={{ marginTop: '4px' }}>
                     {localState.death_countdown != null && localState.death_countdown <= 0 ? (
-                      <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>💀 Dead</div>
+                      <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>💀 Dead</div>
                     ) : (
                       <>
-                        <div style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>
+                        <div style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Carlito, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>
                           🩸 Mortally Wounded{localState.death_countdown != null ? ` — Death in ${localState.death_countdown} round${localState.death_countdown !== 1 ? 's' : ''}` : ''}
                         </div>
                         <button onClick={() => {
@@ -457,7 +457,7 @@ function CharacterCardImpl({
                             void appendProgressionEntry(supabase, c.id, 'wound', `🩸 Lasting Wound: ${lw.result.name}.`)
                           }
                         }}
-                          style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                          style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                           Lasting Wound Check
                         </button>
                         {onRoll && (
@@ -466,7 +466,7 @@ function CharacterCardImpl({
                             const smod = skills.find(s => s.skillName === 'Medicine')?.level ?? 0
                             onRoll(`Stabilize ${c.name}`, amod, smod)
                           }}
-                            style={{ marginLeft: '6px', padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            style={{ marginLeft: '6px', padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                             Stabilize
                           </button>
                         )}
@@ -478,7 +478,7 @@ function CharacterCardImpl({
               <div style={{ flex: 1 }}>
                 <DotTracker label="Resilience Points" current={localState.rp_current} max={localState.rp_max} field="rp_current" color="#7ab3d4" />
                 {localState.rp_current === 0 && localState.wp_current > 0 && (
-                  <div style={{ marginTop: '4px', fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                  <div style={{ marginTop: '4px', fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>
                     💤 Incapacitated{localState.incap_rounds != null ? ` — ${localState.incap_rounds} round${localState.incap_rounds !== 1 ? 's' : ''} remaining` : ''}
                   </div>
                 )}
@@ -488,10 +488,10 @@ function CharacterCardImpl({
               {/* Stress bar with Breaking Point trigger */}
               <div style={{ textAlign: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '3px' }}>
-                  <span style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>Stress</span>
+                  <span style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>Stress</span>
                   {onRoll && (
                     <button onClick={() => { const sm = (rapid.RSN ?? 0) + (rapid.ACU ?? 0); onRoll('Stress Check', sm, 0) }}
-                      style={{ padding: '1px 6px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '2px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Check</button>
+                      style={{ padding: '1px 6px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '2px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Check</button>
                   )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
@@ -514,7 +514,7 @@ function CharacterCardImpl({
               </div>
               {/* Insight bar — 10 blocks */}
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>Insight</div>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>Insight</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
                   <button disabled={!canEdit || localState.insight_dice <= 0}
                     onClick={() => canEdit && localState.insight_dice > 0 && updateStat(localState.id, 'insight_dice', localState.insight_dice - 1)}
@@ -531,7 +531,7 @@ function CharacterCardImpl({
               </div>
               {/* CDP bar — 10 blocks */}
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>CDP</div>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>CDP</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
                   <button disabled={!canEdit || localState.cdp <= 0}
                     onClick={() => canEdit && localState.cdp > 0 && updateStat(localState.id, 'cdp', localState.cdp - 1)}
@@ -548,7 +548,7 @@ function CharacterCardImpl({
               </div>
               {/* Morality bar — 7 blocks */}
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px' }}>Morality</div>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '3px' }}>Morality</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
                   <button disabled={!canEdit || localState.morality <= 0}
                     onClick={() => canEdit && localState.morality > 0 && updateStat(localState.id, 'morality', localState.morality - 1)}
@@ -598,7 +598,7 @@ function CharacterCardImpl({
           <button onClick={onRoll ? () => {
             onRoll(`${c.name} — Unarmed Attack`, rapid.PHY ?? 0, skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0, { weaponName: 'Unarmed', damage: '1d3', rpPercent: 100, conditionCmod: 0 })
           } : undefined}
-            style={{ width: '100%', padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: onRoll ? 'pointer' : 'default', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+            style={{ width: '100%', padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: onRoll ? 'pointer' : 'default', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
             <span>👊 Unarmed Attack</span>
             <span style={{ color: '#7ab3d4', fontWeight: 400, letterSpacing: 0 }}>
               Damage: <span style={{ color: '#c0392b', fontWeight: 700 }}>1d3{((rapid.PHY ?? 0) + (skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0)) !== 0 ? `+${(rapid.PHY ?? 0) + (skills.find(s => s.skillName === 'Unarmed Combat')?.level ?? 0)}` : ''}</span> (PHY + Unarmed)
@@ -620,9 +620,9 @@ function CharacterCardImpl({
                 <div key={label} style={{ flex: 1, minWidth: '200px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px', display: 'flex', flexDirection: 'column' }}>
                   {/* Weapon selector — inline with label */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', flexShrink: 0 }}>{label}</span>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', flexShrink: 0 }}>{label}</span>
                     <select value={weapon.weaponName} onChange={e => changeWeapon(slot, e.target.value)} disabled={!canEdit}
-                      style={{ flex: 1, padding: '4px 6px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', cursor: canEdit ? 'pointer' : 'default' }}>
+                      style={{ flex: 1, padding: '4px 6px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none', cursor: canEdit ? 'pointer' : 'default' }}>
                       <option value="">— None —</option>
                       <optgroup label="Melee">{MELEE_WEAPONS.map(mw => <option key={mw.name} value={mw.name}>{mw.name}</option>)}</optgroup>
                       <optgroup label="Ranged">{RANGED_WEAPONS.map(rw => <option key={rw.name} value={rw.name}>{rw.name}</option>)}</optgroup>
@@ -633,19 +633,19 @@ function CharacterCardImpl({
                   {w && (
                     <>
                       {/* Line 1: Skill, WP Damage, RP */}
-                      <div style={{ display: 'flex', gap: '8px', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>
+                      <div style={{ display: 'flex', gap: '8px', fontSize: '15px', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>
                         <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>Skill:</span> {w.skill}</span>
                         <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>WP Damage:</span> <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span></span>
                         <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>RP:</span> <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span></span>
                       </div>
                       {/* Line 2: Range, Condition */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
                         <span style={{ color: '#d4cfc9' }}><span style={{ color: '#cce0f5' }}>Range:</span> {w.range}</span>
                         <div style={{ flex: 1 }} />
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                           <span style={{ color: '#cce0f5' }}>Condition:</span>
                           <select value={cond} onChange={e => setWeapon({ ...weapon, condition: e.target.value })} disabled={!canEdit}
-                            style={{ padding: '2px 4px', background: '#1a1a1a', border: `1px solid ${conditionColor(cond)}`, borderRadius: '3px', color: conditionColor(cond), fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', cursor: canEdit ? 'pointer' : 'default', width: '110px' }}>
+                            style={{ padding: '2px 4px', background: '#1a1a1a', border: `1px solid ${conditionColor(cond)}`, borderRadius: '3px', color: conditionColor(cond), fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none', cursor: canEdit ? 'pointer' : 'default', width: '110px' }}>
                             {CONDITIONS.map(co => <option key={co} value={co}>{co} ({CONDITION_CMOD[co] > 0 ? '+' : ''}{CONDITION_CMOD[co]})</option>)}
                           </select>
                         </span>
@@ -669,13 +669,13 @@ function CharacterCardImpl({
                               const amod = rapid[attrKey] ?? 0
                               onRoll(`Upkeep — ${w.name}`, amod, smod)
                             }}
-                              style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                              style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                               Upkeep Check
                             </button>
                           )}
                           <button onClick={() => changeWeapon(slot, '')}
                             title="Clear this weapon slot"
-                            style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                             Unequip
                           </button>
                         </div>
@@ -683,7 +683,7 @@ function CharacterCardImpl({
                       {/* Ammo pips + reload on one line */}
                       {w.clip && w.clip > 0 && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', flexShrink: 0 }}>Ammo</span>
+                          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', flexShrink: 0 }}>Ammo</span>
                           <div style={{ display: 'flex', gap: '1px', flexWrap: 'wrap' }}>
                             {Array.from({ length: w.clip }).map((_, i) => (
                               <div key={i}
@@ -691,14 +691,14 @@ function CharacterCardImpl({
                                 style={{ width: '8px', height: '12px', borderRadius: '1px', background: i < weapon.ammoCurrent ? '#EF9F27' : '#242424', border: `1px solid ${i < weapon.ammoCurrent ? '#EF9F27' : '#3a3a3a'}`, cursor: canEdit ? 'pointer' : 'default', transition: 'background 0.1s' }} />
                             ))}
                           </div>
-                          <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, flexShrink: 0 }}>{weapon.ammoCurrent}/{w.clip}</span>
+                          <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', fontWeight: 700, flexShrink: 0 }}>{weapon.ammoCurrent}/{w.clip}</span>
                           <button onClick={() => { if (!canEdit || weapon.reloads <= 0) return; setWeapon({ ...weapon, ammoCurrent: w.clip, reloads: weapon.reloads - 1 }) }}
                             disabled={!canEdit || weapon.reloads <= 0}
-                            style={{ padding: '2px 8px', background: weapon.reloads > 0 ? '#1a2e10' : '#2a1210', border: `1px solid ${weapon.reloads > 0 ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', color: weapon.reloads > 0 ? '#7fc458' : '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: canEdit && weapon.reloads > 0 ? 'pointer' : 'not-allowed', opacity: canEdit ? 1 : 0.5 }}>
+                            style={{ padding: '2px 8px', background: weapon.reloads > 0 ? '#1a2e10' : '#2a1210', border: `1px solid ${weapon.reloads > 0 ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', color: weapon.reloads > 0 ? '#7fc458' : '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: canEdit && weapon.reloads > 0 ? 'pointer' : 'not-allowed', opacity: canEdit ? 1 : 0.5 }}>
                             Reload
                           </button>
                           {/* Reload tracker — 5 pips */}
-                          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', flexShrink: 0 }}>Clips</span>
+                          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', flexShrink: 0 }}>Clips</span>
                           <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
                             <button disabled={!canEdit || weapon.reloads <= 0}
                               onClick={() => canEdit && weapon.reloads > 0 && setWeapon({ ...weapon, reloads: weapon.reloads - 1 })}
@@ -715,9 +715,9 @@ function CharacterCardImpl({
                       {/* Traits */}
                       {w.traits.length > 0 && (
                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px', alignItems: 'center' }}>
-                          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', flexShrink: 0 }}>Traits:</span>
+                          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', flexShrink: 0 }}>Traits:</span>
                           {w.traits.map(t => (
-                            <span key={t} style={{ fontSize: '13px', padding: '0 4px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>{t}</span>
+                            <span key={t} style={{ fontSize: '13px', padding: '0 4px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>{t}</span>
                           ))}
                         </div>
                       )}
@@ -739,7 +739,7 @@ function CharacterCardImpl({
                           if (unwieldy !== null) { const deficit = unwieldy - (rapid.DEX ?? 0); if (deficit > 0) { traitCmod -= deficit; traitLabel = traitLabel ? `${traitLabel}, Unwieldy -${deficit}` : `Unwieldy -${deficit}` } }
                           onRoll(`${c.name} — Attack (${w.name})`, amod, smod, { weaponName: w.name, damage: w.damage, rpPercent: w.rpPercent, conditionCmod: (condCmod !== -99 ? condCmod : 0) + traitCmod, traitCmod, traitLabel, traits: w.traits })
                         }}
-                          style={{ marginTop: '6px', width: '100%', padding: '6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: cond === 'Broken' ? 'not-allowed' : 'pointer', opacity: cond === 'Broken' ? 0.4 : 1 }}
+                          style={{ marginTop: '6px', width: '100%', padding: '6px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: cond === 'Broken' ? 'not-allowed' : 'pointer', opacity: cond === 'Broken' ? 0.4 : 1 }}
                           disabled={cond === 'Broken'}>
                           {cond === 'Broken' ? 'Weapon Broken' : `Attack with ${w.name}`}
                         </button>
@@ -756,7 +756,7 @@ function CharacterCardImpl({
             const { currentEnc, encLimit, overloaded } =
               computeEncumbrance(inv, weaponPrimary.weaponName, weaponSecondary.weaponName, rapid.PHY ?? 0)
             return (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
                 <span style={{ color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.06em' }}>Encumbrance:</span>
                 <span style={{ color: overloaded ? '#c0392b' : '#7fc458', fontWeight: 700 }}>{currentEnc}/{encLimit}</span>
                 {overloaded && <span style={{ color: '#c0392b', fontSize: '13px' }}>OVERLOADED</span>}
@@ -783,7 +783,7 @@ function CharacterCardImpl({
           {canEdit && localState && (
             <div style={{ display: 'flex', gap: '4px', marginTop: '8px', flexWrap: 'wrap' }}>
               <button onClick={() => setShowRestModal(true)}
-                style={{ padding: '3px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ padding: '3px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                 Rest
               </button>
               <button onClick={() => {
@@ -793,7 +793,7 @@ function CharacterCardImpl({
                   onStatUpdate?.(localState.id, 'stress', newStress)
                 }
               }}
-                style={{ padding: '3px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ padding: '3px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                 Reduce Stress
               </button>
               <button onClick={() => {
@@ -816,7 +816,7 @@ function CharacterCardImpl({
                   alert('Subsistence: 1 RP damage')
                 }
               }}
-                style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                 Env. Damage
               </button>
             </div>
@@ -859,23 +859,23 @@ function CharacterCardImpl({
       {showRestModal && localState && (
         <div onClick={() => setShowRestModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
-            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Rest & Heal</div>
+            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>Rest & Heal</div>
             <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1rem' }}>How much time has passed resting?</div>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Hours</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Hours</div>
                 <input type="number" min={0} value={restHours} onChange={e => setRestHours(parseInt(e.target.value) || 0)}
-                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
+                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Days</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Days</div>
                 <input type="number" min={0} value={restDays} onChange={e => setRestDays(parseInt(e.target.value) || 0)}
-                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
+                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Weeks</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Weeks</div>
                 <input type="number" min={0} value={restWeeks} onChange={e => setRestWeeks(parseInt(e.target.value) || 0)}
-                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
+                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
               </div>
             </div>
             {(() => {
@@ -893,7 +893,7 @@ function CharacterCardImpl({
             })()}
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setShowRestModal(false)}
-                style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               <button onClick={() => {
                 const totalHours = restHours + (restDays * 24) + (restWeeks * 168)
                 const totalDays = totalHours / 24
@@ -907,7 +907,7 @@ function CharacterCardImpl({
                 setShowRestModal(false)
                 setRestHours(0); setRestDays(0); setRestWeeks(0)
               }}
-                style={{ flex: 2, padding: '8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Apply Healing</button>
+                style={{ flex: 2, padding: '8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Apply Healing</button>
             </div>
           </div>
         </div>
@@ -924,14 +924,14 @@ function CharacterCardImpl({
       {stressCheckPending && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '2px solid #EF9F27', borderRadius: '4px', padding: '1.5rem', width: '360px', textAlign: 'center' }}>
-            <div style={{ fontSize: '13px', color: '#EF9F27', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Stress Check</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>Stress has reached maximum</div>
+            <div style={{ fontSize: '13px', color: '#EF9F27', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Stress Check</div>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>Stress has reached maximum</div>
             <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '4px' }}>Roll 2d6 + RSN ({rapid.RSN ?? 0 >= 0 ? '+' : ''}{rapid.RSN ?? 0}) + ACU ({rapid.ACU ?? 0 >= 0 ? '+' : ''}{rapid.ACU ?? 0})</div>
             <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '12px' }}>Success = drop to 4 stress. Failure = Breaking Point.</div>
             {!stressCheckResult ? (
               <>
                 <div style={{ marginBottom: '16px' }}>
-                  <label style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Conditional Modifier</label>
+                  <label style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Conditional Modifier</label>
                   <input type="number" value={stressCheckCmod} onChange={e => setStressCheckCmod(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') {
                       const cmodVal = parseInt(stressCheckCmod) || 0
@@ -942,7 +942,7 @@ function CharacterCardImpl({
                       setStressCheckResult({ die1: d1, die2: d2, amod, cmod: cmodVal, total, success: total >= 7 })
                     }}}
                     autoFocus
-                    style={{ display: 'block', width: '80px', margin: '6px auto 0', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '18px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', outline: 'none' }} />
+                    style={{ display: 'block', width: '80px', margin: '6px auto 0', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '18px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', outline: 'none' }} />
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   {isGM && (
@@ -951,7 +951,7 @@ function CharacterCardImpl({
                       setStressCheckResult(null)
                       setStressCheckCmod('0')
                     }}
-                      style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                      style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                   )}
                   <button onClick={() => {
                     const cmodVal = parseInt(stressCheckCmod) || 0
@@ -961,18 +961,18 @@ function CharacterCardImpl({
                     const total = d1 + d2 + amod + cmodVal
                     setStressCheckResult({ die1: d1, die2: d2, amod, cmod: cmodVal, total, success: total >= 7 })
                   }}
-                    style={{ flex: isGM ? 2 : 1, padding: '10px', background: '#EF9F27', border: 'none', borderRadius: '3px', color: '#1a1a1a', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Roll Stress Check</button>
+                    style={{ flex: isGM ? 2 : 1, padding: '10px', background: '#EF9F27', border: 'none', borderRadius: '3px', color: '#1a1a1a', fontSize: '14px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Roll Stress Check</button>
                 </div>
               </>
             ) : (
               <>
-                <div style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: '#f5f2ee', marginBottom: '4px' }}>
+                <div style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: '#f5f2ee', marginBottom: '4px' }}>
                   {stressCheckResult.die1} + {stressCheckResult.die2}
                   <span style={{ color: '#7ab3d4' }}> {stressCheckResult.amod >= 0 ? '+' : ''}{stressCheckResult.amod}</span>
                   {stressCheckResult.cmod !== 0 && <span style={{ color: '#EF9F27' }}> {stressCheckResult.cmod >= 0 ? '+' : ''}{stressCheckResult.cmod}</span>}
                   <span style={{ color: '#d4cfc9' }}> = {stressCheckResult.total}</span>
                 </div>
-                <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', color: stressCheckResult.success ? '#7fc458' : '#c0392b', marginBottom: '12px' }}>
+                <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', color: stressCheckResult.success ? '#7fc458' : '#c0392b', marginBottom: '12px' }}>
                   {stressCheckResult.success ? 'Success — Held It Together' : 'Failure — Breaking Point'}
                 </div>
                 <button onClick={async () => {
@@ -1013,7 +1013,7 @@ function CharacterCardImpl({
                     }
                   }
                 }}
-                  style={{ width: '100%', padding: '10px', background: stressCheckResult.success ? '#1a2e10' : '#c0392b', border: `1px solid ${stressCheckResult.success ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ width: '100%', padding: '10px', background: stressCheckResult.success ? '#1a2e10' : '#c0392b', border: `1px solid ${stressCheckResult.success ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   {stressCheckResult.success ? 'Continue' : 'Roll on Breaking Point Table'}
                 </button>
               </>
@@ -1026,8 +1026,8 @@ function CharacterCardImpl({
       {breakingPointPending && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '2px solid #c0392b', borderRadius: '4px', padding: '1.5rem', width: '360px', textAlign: 'center' }}>
-            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Breaking Point</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '16px' }}>You have broken</div>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Breaking Point</div>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '16px' }}>You have broken</div>
             <button onClick={() => {
               if (!localState) return
               const bp = rollOnTable(BREAKING_POINT_TABLE)
@@ -1038,7 +1038,7 @@ function CharacterCardImpl({
               // Breaking Point — durable journey marker on the PC.
               void appendProgressionEntry(supabase, c.id, 'stress', `⚡ Breaking Point: ${bp.result.name} (${durationHours}h).`)
             }}
-              style={{ width: '100%', padding: '10px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Roll Breaking Point</button>
+              style={{ width: '100%', padding: '10px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Roll Breaking Point</button>
           </div>
         </div>
       )}
@@ -1047,13 +1047,13 @@ function CharacterCardImpl({
       {breakingPointResult && (
         <div onClick={() => setBreakingPointResult(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '2px solid #c0392b', borderRadius: '4px', padding: '1.5rem', width: '360px', textAlign: 'center' }}>
-            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Breaking Point</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px' }}>{breakingPointResult.result.name}</div>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Breaking Point</div>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px' }}>{breakingPointResult.result.name}</div>
             <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '8px' }}>Rolled: {breakingPointResult.roll}{breakingPointResult.cmod !== 0 ? ` (${breakingPointResult.cmod > 0 ? '+' : ''}${breakingPointResult.cmod} CMod = ${Math.max(2, Math.min(12, breakingPointResult.roll + breakingPointResult.cmod))})` : ''}</div>
-            <div style={{ fontSize: '15px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '1.5rem', padding: '10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px' }}>{breakingPointResult.result.effect}</div>
+            <div style={{ fontSize: '15px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', marginBottom: '1.5rem', padding: '10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px' }}>{breakingPointResult.result.effect}</div>
             <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '4px' }}>Stress has been reset to 0.</div>
             <div style={{ fontSize: '13px', color: '#EF9F27', marginBottom: '1rem' }}>Duration: {breakingPointResult.durationHours} hour{breakingPointResult.durationHours !== 1 ? 's' : ''}</div>
-            <button onClick={() => setBreakingPointResult(null)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Acknowledge</button>
+            <button onClick={() => setBreakingPointResult(null)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Acknowledge</button>
           </div>
         </div>
       )}
@@ -1062,12 +1062,12 @@ function CharacterCardImpl({
       {lastingWoundResult && (
         <div onClick={() => setLastingWoundResult(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '2px solid #c0392b', borderRadius: '4px', padding: '1.5rem', width: '360px', textAlign: 'center' }}>
-            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Lasting Wound</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px' }}>{lastingWoundResult.result.name}</div>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Lasting Wound</div>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px' }}>{lastingWoundResult.result.name}</div>
             <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '8px' }}>Rolled: {lastingWoundResult.roll}</div>
-            <div style={{ fontSize: '15px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '1.5rem', padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px' }}>{lastingWoundResult.result.effect}</div>
+            <div style={{ fontSize: '15px', color: '#c0392b', fontFamily: 'Carlito, sans-serif', marginBottom: '1.5rem', padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px' }}>{lastingWoundResult.result.effect}</div>
             <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem' }}>This wound is permanent and cannot be healed.</div>
-            <button onClick={() => setLastingWoundResult(null)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Acknowledge</button>
+            <button onClick={() => setLastingWoundResult(null)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Acknowledge</button>
           </div>
         </div>
       )}
@@ -1087,7 +1087,7 @@ function btn(borderColor: string, color: string): React.CSSProperties {
     background: 'none', border: `1px solid ${borderColor}`,
     borderRadius: '3px', color, fontSize: '13px',
     padding: '4px 10px', cursor: 'pointer',
-    fontFamily: 'Barlow Condensed, sans-serif',
+    fontFamily: 'Carlito, sans-serif',
     letterSpacing: '.04em', textTransform: 'uppercase',
   }
 }

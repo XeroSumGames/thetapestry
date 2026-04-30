@@ -37,8 +37,8 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10002, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '700px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '1rem' }}>
-          <div style={{ fontFamily: '"Barlow Condensed", sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c0392b' }}>Portrait Bank</div>
-          <button onClick={onClose} style={{ background: 'transparent', border: '1px solid #3a3a3a', color: '#d4cfc9', padding: '4px 10px', fontSize: '13px', fontFamily: '"Barlow Condensed", sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px' }}>Close</button>
+          <div style={{ fontFamily: '"Carlito", sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c0392b' }}>Portrait Bank</div>
+          <button onClick={onClose} style={{ background: 'transparent', border: '1px solid #3a3a3a', color: '#d4cfc9', padding: '4px 10px', fontSize: '13px', fontFamily: '"Carlito", sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px' }}>Close</button>
         </div>
 
         {/* Filter tabs */}
@@ -53,7 +53,7 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
                   border: `1px solid ${active ? '#c0392b' : '#3a3a3a'}`,
                   borderRadius: '3px',
                   color: active ? '#f5a89a' : '#d4cfc9',
-                  fontSize: '13px', fontFamily: '"Barlow Condensed", sans-serif',
+                  fontSize: '13px', fontFamily: '"Carlito", sans-serif',
                   letterSpacing: '.08em', textTransform: 'uppercase',
                   cursor: 'pointer',
                 }}>
@@ -66,9 +66,9 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
         {/* Grid */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#5a5550', fontFamily: '"Barlow Condensed", sans-serif', textTransform: 'uppercase' }}>Loading...</div>
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#5a5550', fontFamily: '"Carlito", sans-serif', textTransform: 'uppercase' }}>Loading...</div>
           ) : portraits.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#5a5550', fontFamily: '"Barlow Condensed", sans-serif', fontSize: '13px' }}>
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#5a5550', fontFamily: '"Carlito", sans-serif', fontSize: '13px' }}>
               No portraits in the bank yet.<br />
               <span style={{ fontSize: '13px' }}>Thrivers can add portraits via the Resize Portraits tool.</span>
             </div>

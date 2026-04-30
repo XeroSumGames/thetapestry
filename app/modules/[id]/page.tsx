@@ -109,18 +109,18 @@ export default function ModuleDetailPage() {
     return (
       <div style={{ maxWidth: '720px', margin: '0 auto', padding: '60px 20px', textAlign: 'center', color: '#d4cfc9' }}>
         <div style={{ fontSize: '48px', marginBottom: '12px' }}>📦</div>
-        <h1 style={{ margin: '0 0 8px', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>Module not found</h1>
+        <h1 style={{ margin: '0 0 8px', fontFamily: 'Carlito, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>Module not found</h1>
         <p style={{ margin: '0 0 16px', fontSize: '14px', color: '#cce0f5' }}>
           This module may be private, unlisted, or archived.
         </p>
-        <Link href="/modules" style={{ color: '#c4a7f0', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>← Back to marketplace</Link>
+        <Link href="/modules" style={{ color: '#c4a7f0', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>← Back to marketplace</Link>
       </div>
     )
   }
 
   if (!mod) {
     return (
-      <div style={{ maxWidth: '720px', margin: '0 auto', padding: '60px 20px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+      <div style={{ maxWidth: '720px', margin: '0 auto', padding: '60px 20px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
         {error || 'Loading…'}
       </div>
     )
@@ -138,7 +138,7 @@ export default function ModuleDetailPage() {
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '24px 20px', color: '#d4cfc9' }}>
 
       <div style={{ marginBottom: '14px' }}>
-        <Link href="/modules" style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <Link href="/modules" style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
           ← Back to marketplace
         </Link>
       </div>
@@ -160,7 +160,7 @@ export default function ModuleDetailPage() {
 
       {/* Title row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '14px', marginBottom: '6px', flexWrap: 'wrap' }}>
-        <h1 style={{ margin: 0, fontFamily: 'Barlow Condensed, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+        <h1 style={{ margin: 0, fontFamily: 'Carlito, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           {mod.name}
         </h1>
         <button
@@ -173,7 +173,7 @@ export default function ModuleDetailPage() {
             borderRadius: '3px',
             color: isArchived || isPendingModeration ? '#5a5550' : '#c4a7f0',
             fontSize: '14px',
-            fontFamily: 'Barlow Condensed, sans-serif',
+            fontFamily: 'Carlito, sans-serif',
             letterSpacing: '.08em',
             textTransform: 'uppercase',
             fontWeight: 600,
@@ -188,27 +188,27 @@ export default function ModuleDetailPage() {
       {/* Tags row */}
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap' }}>
         {settingLabel && (
-          <span style={{ padding: '3px 10px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', fontSize: '13px', color: '#c4a7f0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+          <span style={{ padding: '3px 10px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
             {settingLabel}
           </span>
         )}
         {mod.visibility === 'listed' && (
-          <span style={{ padding: '3px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+          <span style={{ padding: '3px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
             🌐 Listed
           </span>
         )}
         {mod.visibility === 'unlisted' && (
-          <span style={{ padding: '3px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+          <span style={{ padding: '3px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
             🔗 Unlisted
           </span>
         )}
         {mod.visibility === 'private' && (
-          <span style={{ padding: '3px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+          <span style={{ padding: '3px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
             🔒 Private
           </span>
         )}
         {authorName && (
-          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
             by <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{authorName}</span>
           </span>
         )}
@@ -228,7 +228,7 @@ export default function ModuleDetailPage() {
 
       {mod.description && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '14px 16px', marginBottom: '20px' }}>
-          <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '8px' }}>
+          <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '8px' }}>
             About this module
           </div>
           <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap', fontFamily: 'Barlow, sans-serif' }}>
@@ -239,7 +239,7 @@ export default function ModuleDetailPage() {
 
       {/* Version history */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '14px 16px' }}>
-        <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '10px' }}>
+        <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '10px' }}>
           Version history
         </div>
         {versions === null ? (
@@ -256,10 +256,10 @@ export default function ModuleDetailPage() {
                 borderRadius: '3px',
               }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px' }}>
-                  <span style={{ fontSize: '15px', fontWeight: 700, color: i === 0 ? '#c4a7f0' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                  <span style={{ fontSize: '15px', fontWeight: 700, color: i === 0 ? '#c4a7f0' : '#d4cfc9', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                     v{v.version}{i === 0 && <span style={{ marginLeft: '8px', fontSize: '13px', color: '#7fc458', letterSpacing: '.06em', textTransform: 'uppercase' }}>← latest</span>}
                   </span>
-                  <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
                     {new Date(v.published_at).toLocaleDateString()} · {v.subscriber_count ?? 0} subscriber{v.subscriber_count === 1 ? '' : 's'}
                   </span>
                 </div>

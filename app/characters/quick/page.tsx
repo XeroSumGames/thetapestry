@@ -171,7 +171,7 @@ export default function QuickCharacterPage() {
 
       {/* Masthead */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Quick Character Creation
         </div>
         <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
@@ -182,7 +182,7 @@ export default function QuickCharacterPage() {
       {/* Progress */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginBottom: '1.25rem' }}>
         {QUICK_STEPS.map((s, i) => (
-          <button key={i} onClick={() => { if (requireAuth()) return; setStep(i); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={{ width: '28px', height: '28px', borderRadius: '50%', border: `1px solid ${i === step ? '#c0392b' : '#3a3a3a'}`, background: i < step ? '#c0392b' : i === step ? '#2a1210' : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 700, color: i < step ? '#fff' : i === step ? '#c0392b' : '#d4cfc9', flexShrink: 0, cursor: 'pointer', padding: 0 }}>
+          <button key={i} onClick={() => { if (requireAuth()) return; setStep(i); window.scrollTo({ top: 0, behavior: 'smooth' }) }} style={{ width: '28px', height: '28px', borderRadius: '50%', border: `1px solid ${i === step ? '#c0392b' : '#3a3a3a'}`, background: i < step ? '#c0392b' : i === step ? '#2a1210' : '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, color: i < step ? '#fff' : i === step ? '#c0392b' : '#d4cfc9', flexShrink: 0, cursor: 'pointer', padding: 0 }}>
             {i}
           </button>
         ))}
@@ -193,7 +193,7 @@ export default function QuickCharacterPage() {
         <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px' }}>
           Step {step} of 5
         </div>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '26px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '8px', color: '#f5f2ee' }}>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '26px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '8px', color: '#f5f2ee' }}>
           {QUICK_STEPS[step].title}
         </div>
       </div>
@@ -238,12 +238,12 @@ export default function QuickCharacterPage() {
                 const canDec = val > 0
                 return (
                   <div key={k} style={{ background: val > 0 ? '#2a1210' : '#242424', border: `1px solid ${val > 0 ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', padding: '8px 4px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                    <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
                     <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                       <button onClick={() => changeAttr(k, -1)} disabled={!canDec} style={skBtn(!canDec)}>-</button>
                       <div>
-                        <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee' }}>{val >= 0 ? `+${val}` : val}</div>
+                        <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Carlito, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee' }}>{val >= 0 ? `+${val}` : val}</div>
                         <div style={{ fontSize: '13px', color: val > 0 ? '#f5a89a' : '#d4cfc9', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
                       </div>
                       <button onClick={() => changeAttr(k, 1)} disabled={!canInc} style={skBtn(!canInc)}>+</button>
@@ -287,7 +287,7 @@ export default function QuickCharacterPage() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
                       <button onClick={() => changeSkill(sk.name, -1)} disabled={!canDec} style={skBtn(!canDec)}>-</button>
-                      <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Barlow Condensed, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>{disp}</span>
+                      <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Carlito, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>{disp}</span>
                       <button onClick={() => changeSkill(sk.name, 1)} disabled={!canInc} style={skBtn(!canInc)}>+</button>
                     </div>
                   </div>
@@ -330,13 +330,13 @@ export default function QuickCharacterPage() {
 }
 
 const sh: React.CSSProperties = {
-  fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 600, color: '#f5f2ee',
+  fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em', margin: '1.25rem 0 8px',
   borderBottom: '1px solid #2e2e2e', paddingBottom: '4px',
 }
 
 function navBtn(primary: boolean): React.CSSProperties {
-  return { padding: '9px 22px', borderRadius: '3px', fontSize: '13px', cursor: 'pointer', border: `1px solid ${primary ? '#c0392b' : '#3a3a3a'}`, background: primary ? '#c0392b' : '#242424', color: primary ? '#fff' : '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', transition: 'all .15s' }
+  return { padding: '9px 22px', borderRadius: '3px', fontSize: '13px', cursor: 'pointer', border: `1px solid ${primary ? '#c0392b' : '#3a3a3a'}`, background: primary ? '#c0392b' : '#242424', color: primary ? '#fff' : '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', transition: 'all .15s' }
 }
 
 function skBtn(disabled: boolean): React.CSSProperties {

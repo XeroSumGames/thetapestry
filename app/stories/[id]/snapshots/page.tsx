@@ -67,7 +67,7 @@ export default function StorySnapshotsPage() {
   if (accessDenied || !campaign) {
     return (
       <div style={{ padding: '24px', maxWidth: '560px', margin: '0 auto', color: '#d4cfc9' }}>
-        <div style={{ fontSize: '20px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }}>Access Denied</div>
+        <div style={{ fontSize: '20px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }}>Access Denied</div>
         <div style={{ fontSize: '14px' }}>Snapshots are GM-only.</div>
         <Link href={`/stories/${id}`} style={{ display: 'inline-block', marginTop: '16px', color: '#c4a7f0' }}>← Back to Story</Link>
       </div>
@@ -78,8 +78,8 @@ export default function StorySnapshotsPage() {
     <div style={{ maxWidth: '780px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#d4cfc9' }}>
       <StoryToolsNav campaignId={id} isGM={true} inviteCode={campaign.invite_code} />
       <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
-        <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>Snapshots</div>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+        <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>Snapshots</div>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           {campaign.name}
         </div>
       </div>

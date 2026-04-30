@@ -939,9 +939,9 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
   const rapidField = (label: string, key: keyof typeof form, short: string) => (
     <div style={{ flex: 1, minWidth: '60px' }}>
-      <div style={{ fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '3px', textAlign: 'center' }}>{short}</div>
+      <div style={{ fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '3px', textAlign: 'center' }}>{short}</div>
       <select value={form[key] as number} onChange={e => setForm(f => ({ ...f, [key]: parseInt(e.target.value) }))}
-        style={{ width: '100%', padding: '4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', appearance: 'none' }}>
+        style={{ width: '100%', padding: '4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', appearance: 'none' }}>
         {[-2, -1, 0, 1, 2, 3, 4].map(v => (
           <option key={v} value={v}>{v > 0 ? `+${v}` : v} {RAPID_LABELS[v]}</option>
         ))}
@@ -959,12 +959,12 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       )}
       {isGM && <div style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
         <button onClick={openAdd}
-          style={{ padding: '2px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          style={{ padding: '2px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
           + Add NPC
         </button>
         {combatActive && availableForCombat.length > 0 && (
           <button onClick={() => { setCombatPickerIds(new Set()); setShowCombatPicker(true) }}
-            style={{ padding: '2px 8px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '2px 8px', background: '#7a1f16', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
             + Combat
           </button>
         )}
@@ -976,14 +976,14 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               onClick={() => allRevealed ? hideAllNpcs() : revealAllNpcs()}
               disabled={noPlayers}
               title={noPlayers ? 'Add players to reveal NPCs to' : undefined}
-              style={{ padding: '2px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: noPlayers ? 'not-allowed' : 'pointer', opacity: noPlayers ? 0.5 : 1 }}>
+              style={{ padding: '2px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: noPlayers ? 'not-allowed' : 'pointer', opacity: noPlayers ? 0.5 : 1 }}>
               {allRevealed ? 'Hide All' : 'Show All'}
             </button>
           )
         })()}
         <div style={{ flex: 1 }} />
         <button onClick={openLibrary}
-          style={{ padding: '2px 8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          style={{ padding: '2px 8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
           Library
         </button>
       </div>}
@@ -998,7 +998,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               const active = npcTypeFilter === t
               return (
                 <button key={t} onClick={() => setNpcTypeFilter(active ? null : t)}
-                  style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', background: active ? tc.bg : 'transparent', border: `1px solid ${active ? tc.border : '#3a3a3a'}`, color: active ? tc.color : '#5a5550' }}>
+                  style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', background: active ? tc.bg : 'transparent', border: `1px solid ${active ? tc.border : '#3a3a3a'}`, color: active ? tc.color : '#5a5550' }}>
                   {t}
                 </button>
               )
@@ -1008,14 +1008,14 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               const sc = STATUS_COLORS[s]
               return (
                 <button key={s} onClick={() => setNpcStatusFilter(active ? null : s)}
-                  style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', background: active ? sc.bg : 'transparent', border: `1px solid ${active ? sc.border : '#3a3a3a'}`, color: active ? sc.color : '#5a5550' }}>
+                  style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', background: active ? sc.bg : 'transparent', border: `1px solid ${active ? sc.border : '#3a3a3a'}`, color: active ? sc.color : '#5a5550' }}>
                   {s}
                 </button>
               )
             })}
             {(npcSearch || npcTypeFilter || npcStatusFilter) && (
               <button onClick={() => { setNpcSearch(''); setNpcTypeFilter(null); setNpcStatusFilter(null) }}
-                style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', background: 'none', border: '1px solid #3a3a3a', color: '#f5a89a' }}>
+                style={{ padding: '1px 6px', borderRadius: '2px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', background: 'none', border: '1px solid #3a3a3a', color: '#f5a89a' }}>
                 Clear
               </button>
             )}
@@ -1027,7 +1027,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
             <div style={{ textAlign: 'center', padding: '1rem', color: '#cce0f5', fontSize: '13px' }}>Loading...</div>
           ) : npcs.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#3a3a3a' }}>
-              <div style={{ fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>No NPCs yet</div>
+              <div style={{ fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>No NPCs yet</div>
             </div>
           ) : (
             (() => {
@@ -1089,25 +1089,25 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                     >⠿</div>
                     <button onClick={e => { e.stopPropagation(); handleDelete(npc.id, npc.name) }}
                       title="Remove NPC"
-                      style={{ fontSize: '13px', padding: '0 3px', borderRadius: '2px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.2 }}>
+                      style={{ fontSize: '13px', padding: '0 3px', borderRadius: '2px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', lineHeight: 1.2 }}>
                       ×
                     </button>
                     <button onClick={e => { e.stopPropagation(); handleClone(npc) }}
                       title="Clone NPC"
-                      style={{ fontSize: '13px', padding: '0 3px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.4, textTransform: 'uppercase' }}>
+                      style={{ fontSize: '13px', padding: '0 3px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', lineHeight: 1.4, textTransform: 'uppercase' }}>
                       +
                     </button>
                     <button onClick={e => { e.stopPropagation(); openEdit(npc) }}
                       title="Edit NPC"
-                      style={{ fontSize: '13px', padding: '0 3px', borderRadius: '2px', background: '#242424', border: '1px solid #3a3a3a', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer', lineHeight: 1.4, textTransform: 'uppercase' }}>
+                      style={{ fontSize: '13px', padding: '0 3px', borderRadius: '2px', background: '#242424', border: '1px solid #3a3a3a', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', lineHeight: 1.4, textTransform: 'uppercase' }}>
                       ✎
                     </button>
                   </div>
                   {/* Center: name + badges */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', lineHeight: 1.2 }}>{npc.name}</div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', lineHeight: 1.2 }}>{npc.name}</div>
                     <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginTop: '3px', alignItems: 'center' }}>
-                      <span style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.status}</span>
+                      <span style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.status}</span>
                       {/* Inline disposition picker — three dots
                           (friendly / neutral / hostile). Click cycles
                           to that value; clicking the already-picked
@@ -1136,17 +1136,17 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                             popout, the realtime sub on campaign_npcs
                             isn't firing — run
                             sql/campaign-npcs-realtime-publication.sql. */}
-                        <span style={{ fontSize: '13px', color: npc.disposition === 'friendly' ? '#7fc458' : npc.disposition === 'hostile' ? '#f5a89a' : npc.disposition === 'neutral' ? '#fcd34d' : '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginLeft: '2px' }}>
+                        <span style={{ fontSize: '13px', color: npc.disposition === 'friendly' ? '#7fc458' : npc.disposition === 'hostile' ? '#f5a89a' : npc.disposition === 'neutral' ? '#fcd34d' : '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginLeft: '2px' }}>
                           {npc.disposition ?? '—'}
                         </span>
                       </span>
                       <button onClick={e => quickReveal(npc.id, e)}
-                        style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: revealedNpcIds.has(npc.id) ? '#2a1210' : '#1a2e10', border: `1px solid ${revealedNpcIds.has(npc.id) ? '#c0392b' : '#2d5a1b'}`, color: revealedNpcIds.has(npc.id) ? '#f5a89a' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: revealedNpcIds.has(npc.id) ? '#2a1210' : '#1a2e10', border: `1px solid ${revealedNpcIds.has(npc.id) ? '#c0392b' : '#2d5a1b'}`, color: revealedNpcIds.has(npc.id) ? '#f5a89a' : '#7fc458', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                         {revealedNpcIds.has(npc.id) ? 'Hide' : 'Show'}
                       </button>
                       {combatActive && !initiativeNpcIds?.has(npc.id) && !((npc.wp_current ?? npc.wp_max ?? 10) === 0 && npc.death_countdown != null && npc.death_countdown <= 0) && (
                         <button onClick={e => { e.stopPropagation(); onAddToCombat?.([npc]) }}
-                          style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: '#7a1f16', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                          style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: '#7a1f16', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                           Fight
                         </button>
                       )}
@@ -1154,17 +1154,17 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                         const isOnMap = npcIdsOnMap?.has(npc.id) ?? false
                         return (
                           <button onClick={e => { e.stopPropagation(); isOnMap && onRemoveFromMap ? onRemoveFromMap(npc) : onPlaceOnMap(npc) }}
-                            style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: isOnMap ? '#1a2e10' : '#2a2010', border: `1px solid ${isOnMap ? '#2d5a1b' : '#5a4a1b'}`, color: isOnMap ? '#7fc458' : '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: isOnMap ? '#1a2e10' : '#2a2010', border: `1px solid ${isOnMap ? '#2d5a1b' : '#5a4a1b'}`, color: isOnMap ? '#7fc458' : '#EF9F27', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                             Map
                           </button>
                         )
                       })()}
                       <button onClick={e => { e.stopPropagation(); openPopout(`/npc-sheet?c=${campaignId}&npc=${npc.id}&gm=${isGM ? 1 : 0}`, `npc-${npc.id}`, { w: 571, h: 400 }) }}
                         title="Pop this NPC out into its own window"
-                        style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: '#2a102a', border: '1px solid #8b2e8b', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: '#2a102a', border: '1px solid #8b2e8b', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                         Popout
                       </button>
-                      {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>Published</span>}
+                      {publishedNpcIds.has(npc.id) && <span style={{ fontSize: '13px', padding: '1px 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>Published</span>}
                     </div>
                   </div>
                   {/* Right: portrait — ring color comes from disposition
@@ -1186,7 +1186,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                         {npc.portrait_url ? (
                           <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
-                          <span style={{ fontSize: '15px', fontWeight: 700, color: ring.color, fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(npc.name)}</span>
+                          <span style={{ fontSize: '15px', fontWeight: 700, color: ring.color, fontFamily: 'Carlito, sans-serif' }}>{getInitials(npc.name)}</span>
                         )}
                       </div>
                     )
@@ -1249,7 +1249,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                       <span style={{ fontSize: '13px', color: '#7fc458', marginRight: '2px' }}>🏘</span>
-                      <span style={{ flex: 1, fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>Community — {cname}</span>
+                      <span style={{ flex: 1, fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>Community — {cname}</span>
                       {cnpcs.length > 0 && (
                         <button onClick={async e => {
                           e.stopPropagation()
@@ -1267,11 +1267,11 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                           title={cAllRevealed
                             ? `Hide all ${cnpcs.length} NPCs (vanish from every map; positions preserved)`
                             : `Place + reveal all ${cnpcs.length} NPCs (visible to GM + players)`}
-                          style={{ padding: '1px 8px', background: cAllRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${cAllRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: cAllRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
+                          style={{ padding: '1px 8px', background: cAllRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${cAllRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: cAllRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
                           {cLabel}
                         </button>
                       )}
-                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{cnpcs.length}</span>
+                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{cnpcs.length}</span>
                     </div>
                     {isOpen && cnpcs.map(renderNpcCard)}
                   </div>
@@ -1307,9 +1307,9 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                           onKeyDown={e => { if (e.key === 'Enter') renameFolder(folderName, renameValue); if (e.key === 'Escape') setRenamingFolder(null) }}
                           onClick={e => e.stopPropagation()}
                           autoFocus
-                          style={{ flex: 1, padding: '1px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', outline: 'none' }} />
+                          style={{ flex: 1, padding: '1px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none' }} />
                       ) : (
-                        <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{folderName}</span>
+                        <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{folderName}</span>
                       )}
                       {/* One-button folder toggle that does EVERYTHING.
                           SHOW: place any missing tokens (or un-archive
@@ -1362,12 +1362,12 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                             title={allRevealed
                               ? `Hide all ${folderNpcs.length} NPCs (vanish from every map; positions preserved)`
                               : `Place + reveal all ${folderNpcs.length} NPCs (visible to GM + players)`}
-                            style={{ padding: '1px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
+                            style={{ padding: '1px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#7a1f16' : '#2d5a1b'}`, borderRadius: '2px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1.3 }}>
                             {label}
                           </button>
                         )
                       })()}
-                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{folderNpcs.length}</span>
+                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{folderNpcs.length}</span>
                     </div>
                     {isOpen && folderNpcs.map(renderNpcCard)}
                   </div>
@@ -1382,10 +1382,10 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
         <div onClick={() => setShowForm(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '560px', maxWidth: '92vw', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <span style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>
                 {editingId ? 'Edit NPC' : 'Add NPC'}
               </span>
-              <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+              <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
                 {form.name || 'New NPC'}
               </span>
             </div>
@@ -1395,17 +1395,17 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               <div style={{ marginBottom: '8px' }}>
                 {!showGenerateTypePicker ? (
                   <button onClick={() => setShowGenerateTypePicker(true)} type="button"
-                    style={{ width: '100%', padding: '4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ width: '100%', padding: '4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     ⚄ Generate NPC
                   </button>
                 ) : (
                   <div>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Select NPC type to generate:</div>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '4px' }}>Select NPC type to generate:</div>
                     <div style={{ display: 'flex', gap: '4px' }}>
                       {['bystander', 'goon', 'foe', 'antagonist'].map(t => {
                         const tc = TYPE_COLORS[t]
                         return <button key={t} onClick={() => applyGenerated(t)} type="button"
-                          style={{ flex: 1, padding: '4px', background: tc?.bg, border: `1px solid ${tc?.border}`, borderRadius: '3px', color: tc?.color, fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                          style={{ flex: 1, padding: '4px', background: tc?.bg, border: `1px solid ${tc?.border}`, borderRadius: '3px', color: tc?.color, fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                           {t}
                         </button>
                       })}
@@ -1413,7 +1413,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                   </div>
                 )}
                 {generatedSummary && (
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', fontStyle: 'italic', marginTop: '4px' }}>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic', marginTop: '4px' }}>
                     {generatedSummary}
                   </div>
                 )}
@@ -1432,7 +1432,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                     {form.portrait_url ? (
                       <img src={form.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: ring.color, fontFamily: 'Barlow Condensed, sans-serif' }}>{form.name ? getInitials(form.name) : '?'}</span>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: ring.color, fontFamily: 'Carlito, sans-serif' }}>{form.name ? getInitials(form.name) : '?'}</span>
                     )}
                   </div>
                   {/* Disposition picker — sets the ring color (friendly
@@ -1454,22 +1454,22 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                       )
                     })}
                   </div>
-              <label style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>
+              <label style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>
                 {uploading ? '...' : 'Upload'}
                 <input type="file" accept="image/*" hidden onChange={e => { if (e.target.files?.[0]) handlePortraitUpload(e.target.files[0]) }} />
               </label>
               <button type="button" onClick={() => setShowPortraitPicker(true)}
-                style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>
+                style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>
                 Library
               </button>
               {form.portrait_url && (
                 <button onClick={() => setForm(f => ({ ...f, portrait_url: null }))}
-                  style={{ background: 'none', border: 'none', color: '#cce0f5', fontSize: '13px', cursor: 'pointer', fontFamily: 'Barlow Condensed, sans-serif', flexShrink: 0 }}>×</button>
+                  style={{ background: 'none', border: 'none', color: '#cce0f5', fontSize: '13px', cursor: 'pointer', fontFamily: 'Carlito, sans-serif', flexShrink: 0 }}>×</button>
               )}
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px', flexShrink: 0 }}>
                 {[['active', '#7fc458', '#1a2e10', '#2d5a1b'], ['dead', '#f5a89a', '#2a1210', '#c0392b'], ['unknown', '#7ab3d4', '#1a1a2e', '#2e2e5a']].map(([val, color, bg, border]) => (
                   <button key={val} type="button" onClick={() => setForm(f => ({ ...f, status: val }))}
-                    style={{ padding: '2px 6px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '2px', border: `1px solid ${form.status === val ? border : '#3a3a3a'}`, background: form.status === val ? bg : 'transparent', color: form.status === val ? color : '#3a3a3a' }}>
+                    style={{ padding: '2px 6px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '2px', border: `1px solid ${form.status === val ? border : '#3a3a3a'}`, background: form.status === val ? bg : 'transparent', color: form.status === val ? color : '#3a3a3a' }}>
                     {val}
                   </button>
                 ))}
@@ -1481,14 +1481,14 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
             {/* Name + Type on one row */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Name</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Name</div>
                 <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} autoFocus
                   style={{ width: '100%', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
               </div>
               <div style={{ width: '130px', flexShrink: 0 }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Type</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Type</div>
               <select value={form.npc_type} onChange={e => handleTypeChange(e.target.value)}
-                style={{ width: '100%', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
+                style={{ width: '100%', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
                 <option value="">No type</option>
                 <option value="bystander">Bystander</option>
                 <option value="goon">Goon</option>
@@ -1500,9 +1500,9 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
             {/* RAPID */}
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>RAPID</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>RAPID</div>
               {form.npc_type === 'antagonist' && (
-                <div style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px', padding: '6px 8px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px' }}>
+                <div style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', padding: '6px 8px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px' }}>
                   Choose one attribute to set to 3, two others to 2, and one to 1.
                 </div>
               )}
@@ -1517,16 +1517,16 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
             {/* Skills */}
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Skills</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Skills</div>
               {form.skillEntries.map((s, i) => (
                 <div key={i} style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
                   <select value={s.name} onChange={e => setForm(f => ({ ...f, skillEntries: f.skillEntries.map((sk, j) => j === i ? { ...sk, name: e.target.value } : sk) }))}
-                    style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                    style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                     <option value="">Select skill...</option>
                     {ALL_SKILLS.map(sk => <option key={sk} value={sk}>{sk}</option>)}
                   </select>
                   <select value={s.level} onChange={e => setForm(f => ({ ...f, skillEntries: f.skillEntries.map((sk, j) => j === i ? { ...sk, level: parseInt(e.target.value) } : sk) }))}
-                    style={{ width: '60px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', appearance: 'none' }}>
+                    style={{ width: '60px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', appearance: 'none' }}>
                     {[-3, -2, -1, 0, 1, 2, 3, 4].map(v => <option key={v} value={v}>{v > 0 ? `+${v}` : v}</option>)}
                   </select>
                   <button onClick={() => setForm(f => ({ ...f, skillEntries: f.skillEntries.filter((_, j) => j !== i) }))} type="button"
@@ -1534,11 +1534,11 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                 </div>
               ))}
               <button onClick={() => setForm(f => ({ ...f, skillEntries: [...f.skillEntries, { name: '', level: 1 }] }))} type="button"
-                style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginTop: '4px' }}>
+                style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginTop: '4px' }}>
                 + Add Skill
               </button>
               {form.npc_type && SKILL_HINTS[form.npc_type] && (
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '6px', fontStyle: 'italic' }}>
+                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginTop: '6px', fontStyle: 'italic' }}>
                   {SKILL_HINTS[form.npc_type]}
                 </div>
               )}
@@ -1547,17 +1547,17 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
             {/* Motivation & Complication */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Motivation</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Motivation</div>
                 <select value={form.motivation} onChange={e => setForm(f => ({ ...f, motivation: e.target.value }))}
-                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                   <option value="">None</option>
                   {MOTIVATIONS.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Complication</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Complication</div>
                 <select value={form.complication} onChange={e => setForm(f => ({ ...f, complication: e.target.value }))}
-                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                   <option value="">None</option>
                   {COMPLICATIONS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -1566,11 +1566,11 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
             {/* Three Words */}
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Three Words</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Three Words</div>
               <div style={{ display: 'flex', gap: '4px' }}>
                 {[0, 1, 2].map(i => (
                   <select key={i} value={form.threeWords[i] || ''} onChange={e => setForm(f => ({ ...f, threeWords: f.threeWords.map((w, j) => j === i ? e.target.value : w) }))}
-                    style={{ flex: 1, padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                    style={{ flex: 1, padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                     <option value="">-</option>
                     {PERSONALITY_WORDS.map(w => <option key={w} value={w}>{w}</option>)}
                   </select>
@@ -1580,14 +1580,14 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
             {/* Weapon */}
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Weapon</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Weapon</div>
               <select value={(form as any).weapon?.weaponName ?? ''} onChange={e => {
                 const weaponName = e.target.value
                 if (!weaponName) { setForm(f => ({ ...f, weapon: null } as any)); return }
                 const w = getWeaponByName(weaponName)
                 setForm(f => ({ ...f, weapon: { weaponName, condition: 'Used', ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? 2 : 0 } } as any))
               }}
-                style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                 <option value="">— None —</option>
                 <optgroup label="Melee">{MELEE_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
                 <optgroup label="Ranged">{RANGED_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
@@ -1597,7 +1597,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               {(form as any).weapon?.weaponName && (() => {
                 const w = getWeaponByName((form as any).weapon.weaponName)
                 return w ? (
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
                     {w.skill} · {w.range} · DMG <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span> · RP <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span>
                   </div>
                 ) : null
@@ -1607,14 +1607,14 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
             {/* Secondary Weapon (Foe/Antagonist only) */}
             {(form.npc_type === 'foe' || form.npc_type === 'antagonist') && (
               <div style={{ marginBottom: '8px' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Secondary Weapon</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Secondary Weapon</div>
                 <select value={(form as any).weapon2?.weaponName ?? ''} onChange={e => {
                   const weaponName = e.target.value
                   if (!weaponName) { setForm(f => ({ ...f, weapon2: null } as any)); return }
                   const w = getWeaponByName(weaponName)
                   setForm(f => ({ ...f, weapon2: { weaponName, condition: 'Used', ammoCurrent: w?.clip ?? 0, ammoMax: w?.clip ?? 0, reloads: w?.ammo ? 2 : 0 } } as any))
                 }}
-                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                  style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                   <option value="">— None —</option>
                   <optgroup label="Melee">{MELEE_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
                   <optgroup label="Ranged">{RANGED_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}</optgroup>
@@ -1624,7 +1624,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                 {(form as any).weapon2?.weaponName && (() => {
                   const w = getWeaponByName((form as any).weapon2.weaponName)
                   return w ? (
-                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
+                    <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
                       {w.skill} · {w.range} · DMG <span style={{ color: '#c0392b', fontWeight: 700 }}>{w.damage}</span> · RP <span style={{ color: '#7ab3d4' }}>{w.rpPercent}%</span>
                     </div>
                   ) : null
@@ -1634,10 +1634,10 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
             {/* Folder */}
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>Folder</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Folder</div>
               <div style={{ display: 'flex', gap: '4px' }}>
                 <select value={form.folder} onChange={e => setForm(f => ({ ...f, folder: e.target.value }))}
-                  style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
+                  style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
                   <option value="">Uncategorized</option>
                   {[...new Set(npcs.map(n => n.folder).filter(Boolean))].map(f => (
                     <option key={f} value={f!}>{f}</option>
@@ -1651,7 +1651,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
             {/* Notes */}
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '2px' }}>GM Notes <span style={{ color: '#cce0f5', opacity: 0.6 }}>(private)</span></div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>GM Notes <span style={{ color: '#cce0f5', opacity: 0.6 }}>(private)</span></div>
               <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                 placeholder="Private notes — never shown to players"
                 rows={3}
@@ -1661,15 +1661,15 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
             {/* Relationships (edit only) */}
             {editingId && pcEntries && pcEntries.length > 0 && (
               <div style={{ marginBottom: '1rem' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Relationships — First Impressions</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Relationships — First Impressions</div>
                 {pcEntries.map(pc => {
                   const rel = relationships.find(r => r.character_id === pc.characterId)
                   const cmod = rel?.relationship_cmod ?? 0
                   return (
                     <div key={pc.characterId} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: '80px' }}>{pc.characterName}</span>
+                      <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: '80px' }}>{pc.characterName}</span>
                       <select value={cmod} onChange={e => handleRelationshipChange(pc.characterId, parseInt(e.target.value))}
-                        style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: cmod > 0 ? '#7fc458' : cmod < 0 ? '#f5a89a' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                        style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: cmod > 0 ? '#7fc458' : cmod < 0 ? '#f5a89a' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                         {FIRST_IMPRESSIONS.map(fi => (
                           <option key={fi.value} value={fi.value}>{fi.value > 0 ? `+${fi.value}` : fi.value} — {fi.label}</option>
                         ))}
@@ -1685,15 +1685,15 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               <div style={{ marginBottom: '1rem' }}>
                 {!showReveal ? (
                   <button onClick={openReveal}
-                    style={{ width: '100%', padding: '8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ width: '100%', padding: '8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Reveal to Players
                   </button>
                 ) : (
                   <div style={{ padding: '10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                    <div style={{ fontSize: '13px', color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Reveal to Players</div>
+                    <div style={{ fontSize: '13px', color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>Reveal to Players</div>
                     <div style={{ marginBottom: '8px' }}>
                       {pcEntries.map(pc => (
-                        <label key={pc.characterId} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', cursor: 'pointer', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        <label key={pc.characterId} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', cursor: 'pointer', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
                           <input type="checkbox" checked={revealIds.has(pc.characterId)} onChange={() => {
                             setRevealIds(prev => { const n = new Set(prev); if (n.has(pc.characterId)) n.delete(pc.characterId); else n.add(pc.characterId); return n })
                           }} style={{ accentColor: '#7ab3d4' }} />
@@ -1701,20 +1701,20 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                         </label>
                       ))}
                     </div>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>What to reveal:</div>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>What to reveal:</div>
                     <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>
                         <input type="radio" checked={revealLevel === 'name_portrait'} onChange={() => setRevealLevel('name_portrait')} style={{ accentColor: '#7ab3d4' }} />
                         Name + Portrait
                       </label>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>
                         <input type="radio" checked={revealLevel === 'name_portrait_role'} onChange={() => setRevealLevel('name_portrait_role')} style={{ accentColor: '#7ab3d4' }} />
                         Name + Portrait + Role
                       </label>
                     </div>
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <button onClick={() => setShowReveal(false)} style={{ flex: 1, padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-                      <button onClick={handleRevealSave} style={{ flex: 1, padding: '6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Save Reveal</button>
+                      <button onClick={() => setShowReveal(false)} style={{ flex: 1, padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                      <button onClick={handleRevealSave} style={{ flex: 1, padding: '6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Save Reveal</button>
                     </div>
                   </div>
                 )}
@@ -1726,25 +1726,25 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               <div style={{ marginBottom: '1rem' }}>
                 {!showPublish ? (
                   <button onClick={() => setShowPublish(true)}
-                    style={{ width: '100%', padding: '8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ width: '100%', padding: '8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Publish to World Library
                   </button>
                 ) : (
                   <div style={{ padding: '10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                    <div style={{ fontSize: '13px', color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Publish to World</div>
+                    <div style={{ fontSize: '13px', color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>Publish to World</div>
                     <textarea value={publishDesc} onChange={e => setPublishDesc(e.target.value)}
                       placeholder="Public description — what other GMs will see"
                       rows={2}
                       style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', marginBottom: '6px' }} />
                     <select value={publishSetting} onChange={e => setPublishSetting(e.target.value)}
-                      style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none', marginBottom: '8px' }}>
+                      style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', appearance: 'none', marginBottom: '8px' }}>
                       <option value="custom">Custom Setting</option>
                       <option value="district_zero">District Zero</option>
                       <option value="chased">Chased</option>
                     </select>
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <button onClick={() => setShowPublish(false)} style={{ flex: 1, padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-                      <button onClick={handlePublish} disabled={publishing} style={{ flex: 1, padding: '6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: publishing ? 'not-allowed' : 'pointer', opacity: publishing ? 0.5 : 1 }}>
+                      <button onClick={() => setShowPublish(false)} style={{ flex: 1, padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                      <button onClick={handlePublish} disabled={publishing} style={{ flex: 1, padding: '6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: publishing ? 'not-allowed' : 'pointer', opacity: publishing ? 0.5 : 1 }}>
                         {publishing ? 'Publishing...' : 'Submit for Review'}
                       </button>
                     </div>
@@ -1753,16 +1753,16 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               </div>
             )}
             {editingId && publishedNpcIds.has(editingId) && (
-              <div style={{ marginBottom: '1rem', padding: '6px 10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: 'center' }}>
+              <div style={{ marginBottom: '1rem', padding: '6px 10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: 'center' }}>
                 Submitted to World Library
               </div>
             )}
 
             {/* Status */}
             <div style={{ marginBottom: '1.25rem' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Status</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Status</div>
               <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
-                style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
+                style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
                 <option value="active">Active</option>
                 <option value="dead">Dead</option>
                 <option value="unknown">Unknown</option>
@@ -1771,13 +1771,13 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => setShowForm(false)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setShowForm(false)} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               {editingId && (
                 <button onClick={() => { handleDelete(editingId, form.name); setShowForm(false) }}
-                  style={{ padding: '10px 14px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Delete</button>
+                  style={{ padding: '10px 14px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Delete</button>
               )}
               <button onClick={handleSave} disabled={saving || !form.name.trim()}
-                style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving || !form.name.trim() ? 0.6 : 1 }}>
+                style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving || !form.name.trim() ? 0.6 : 1 }}>
                 {saving ? 'Saving...' : editingId ? 'Save' : 'Add NPC'}
               </button>
             </div>
@@ -1789,8 +1789,8 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       {showCombatPicker && (
         <div onClick={() => setShowCombatPicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '360px', maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Add to Combat</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>Select NPCs</div>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Add to Combat</div>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>Select NPCs</div>
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
               {availableForCombat.map(npc => (
                 <label key={npc.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: combatPickerIds.has(npc.id) ? '#2a1210' : '#1a1a1a', border: `1px solid ${combatPickerIds.has(npc.id) ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer' }}>
@@ -1803,16 +1803,16 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                     })
                   }} style={{ accentColor: '#c0392b' }} />
                   <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                    {npc.portrait_url ? <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{getInitials(npc.name)}</span>}
+                    {npc.portrait_url ? <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Carlito, sans-serif' }}>{getInitials(npc.name)}</span>}
                   </div>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</span>
                 </label>
               ))}
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => setShowCombatPicker(false)} style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setShowCombatPicker(false)} style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               <button onClick={handleAddToCombat} disabled={combatPickerIds.size === 0}
-                style={{ flex: 2, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: combatPickerIds.size === 0 ? 'not-allowed' : 'pointer', opacity: combatPickerIds.size === 0 ? 0.5 : 1 }}>
+                style={{ flex: 2, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: combatPickerIds.size === 0 ? 'not-allowed' : 'pointer', opacity: combatPickerIds.size === 0 ? 0.5 : 1 }}>
                 Add {combatPickerIds.size > 0 ? `(${combatPickerIds.size})` : ''}
               </button>
             </div>
@@ -1824,29 +1824,29 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       {showLibrary && (
         <div onClick={() => setShowLibrary(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '500px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>World NPC Library</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>Browse &amp; Import</div>
+            <div style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>World NPC Library</div>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>Browse &amp; Import</div>
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
               {libraryLoading ? (
                 <div style={{ textAlign: 'center', padding: '2rem', color: '#cce0f5', fontSize: '13px' }}>Loading...</div>
               ) : libraryNpcs.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif' }}>No approved NPCs in the library yet.</div>
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>No approved NPCs in the library yet.</div>
               ) : (
                 libraryNpcs.map((npc: any) => (
                   <div key={npc.id} style={{ padding: '10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '6px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
                       <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#2a1210', border: '1px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                        {npc.portrait_url ? <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>}
+                        {npc.portrait_url ? <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Carlito, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
                         <div style={{ display: 'flex', gap: '4px', marginTop: '2px' }}>
-                          {npc.npc_type && <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
-                          {npc.setting && <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.setting === 'district_zero' ? 'District Zero' : npc.setting === 'chased' ? 'Chased' : 'Custom'}</span>}
+                          {npc.npc_type && <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
+                          {npc.setting && <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{npc.setting === 'district_zero' ? 'District Zero' : npc.setting === 'chased' ? 'Chased' : 'Custom'}</span>}
                         </div>
                       </div>
                       <button onClick={() => handleImport(npc)} disabled={importing === npc.id}
-                        style={{ padding: '4px 10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: importing === npc.id ? 'not-allowed' : 'pointer', opacity: importing === npc.id ? 0.5 : 1, flexShrink: 0 }}>
+                        style={{ padding: '4px 10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: importing === npc.id ? 'not-allowed' : 'pointer', opacity: importing === npc.id ? 0.5 : 1, flexShrink: 0 }}>
                         {importing === npc.id ? '...' : 'Import'}
                       </button>
                     </div>
@@ -1857,7 +1857,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                 ))
               )}
             </div>
-            <button onClick={() => setShowLibrary(false)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Close</button>
+            <button onClick={() => setShowLibrary(false)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Close</button>
           </div>
         </div>
       )}

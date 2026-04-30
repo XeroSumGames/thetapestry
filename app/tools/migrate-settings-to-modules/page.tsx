@@ -355,7 +355,7 @@ export default function MigrateSettingsPage() {
   if (!isThriver) {
     return (
       <div style={{ padding: '24px', maxWidth: '720px', margin: '0 auto', color: '#d4cfc9' }}>
-        <div style={{ fontSize: '20px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }}>Access Denied</div>
+        <div style={{ fontSize: '20px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }}>Access Denied</div>
         <div style={{ fontSize: '14px' }}>Thriver-only tool. Contact xerosumgames@gmail.com if you think this is wrong.</div>
       </div>
     )
@@ -363,10 +363,10 @@ export default function MigrateSettingsPage() {
 
   return (
     <div style={{ padding: '24px 20px', maxWidth: '900px', margin: '0 auto', color: '#d4cfc9' }}>
-      <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
+      <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
         Thriver Tool
       </div>
-      <h1 style={{ margin: 0, fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+      <h1 style={{ margin: 0, fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
         Migrate Settings to Modules
       </h1>
       <p style={{ marginTop: '8px', fontSize: '14px', lineHeight: 1.5 }}>
@@ -381,10 +381,10 @@ export default function MigrateSettingsPage() {
 
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '20px', marginBottom: '16px' }}>
         <button onClick={migrateAll} disabled={!!running}
-          style={{ padding: '9px 22px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, cursor: running ? 'wait' : 'pointer', opacity: running ? 0.5 : 1 }}>
+          style={{ padding: '9px 22px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, cursor: running ? 'wait' : 'pointer', opacity: running ? 0.5 : 1 }}>
           {running ? `Migrating ${running}…` : 'Migrate All'}
         </button>
-        <a href="/modules" style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <a href="/modules" style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           → /modules
         </a>
       </div>
@@ -396,16 +396,16 @@ export default function MigrateSettingsPage() {
             <div key={def.key} style={{ padding: '14px 16px', background: '#1a1a1a', border: `1px solid ${r?.ok === false ? '#c0392b' : r?.ok ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{def.name}</div>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{def.name}</div>
                   <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>{def.tagline}</div>
                 </div>
                 <button onClick={() => migrate(def)} disabled={!!running}
-                  style={{ padding: '6px 14px', background: r?.ok ? '#1a2e10' : '#2a1a3e', border: `1px solid ${r?.ok ? '#2d5a1b' : '#5a2e5a'}`, borderRadius: '3px', color: r?.ok ? '#7fc458' : '#c4a7f0', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: running === def.key ? 'wait' : 'pointer', opacity: running === def.key ? 0.5 : 1, fontWeight: 600 }}>
+                  style={{ padding: '6px 14px', background: r?.ok ? '#1a2e10' : '#2a1a3e', border: `1px solid ${r?.ok ? '#2d5a1b' : '#5a2e5a'}`, borderRadius: '3px', color: r?.ok ? '#7fc458' : '#c4a7f0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: running === def.key ? 'wait' : 'pointer', opacity: running === def.key ? 0.5 : 1, fontWeight: 600 }}>
                   {running === def.key ? 'Migrating…' : r?.ok ? 'Done' : 'Migrate'}
                 </button>
               </div>
               {r && (
-                <div style={{ marginTop: '8px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: r.ok ? '#7fc458' : '#f5a89a' }}>
+                <div style={{ marginTop: '8px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: r.ok ? '#7fc458' : '#f5a89a' }}>
                   {r.skipped && <>↩ {r.skipped}</>}
                   {r.ok && !r.skipped && r.counts && <>✓ Published — {r.counts.npcs} NPCs, {r.counts.pins} pins, {r.counts.scenes} scenes (module {r.moduleId?.slice(0, 8)}…)</>}
                   {!r.ok && <>✗ {r.error}</>}

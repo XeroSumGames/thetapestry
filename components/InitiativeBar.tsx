@@ -178,7 +178,7 @@ function InitiativeBarImpl({
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 'max-content' }}>
         {/* Sticky left pane — "⚔️ Initiative" label + active pill */}
         <div style={{ position: 'sticky', left: 0, zIndex: 10, background: '#0d0d0d', display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '8px', borderRight: '1px solid #2e2e2e', marginRight: '4px', flexShrink: 0 }}>
-          <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>
             ⚔️ Initiative
           </div>
           {active && (
@@ -196,7 +196,7 @@ function InitiativeBarImpl({
                 border: `1px solid ${pillStuck ? '#c0392b' : '#7fc458'}`,
                 borderRadius: '3px',
                 color: pillStuck ? '#f5a89a' : '#7fc458',
-                fontFamily: 'Barlow Condensed, sans-serif',
+                fontFamily: 'Carlito, sans-serif',
                 letterSpacing: '.06em',
                 textTransform: 'uppercase',
                 fontWeight: 700,
@@ -277,20 +277,20 @@ function InitiativeBarImpl({
                   {entry.portrait_url ? (
                     <img src={entry.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{entry.character_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Carlito, sans-serif' }}>{entry.character_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}</span>
                   )}
                 </div>
               )}
-              <span title={entry.character_name} style={{ fontSize: '13px', fontWeight: entry.is_active ? 700 : 400, color: entry.is_active ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+              <span title={entry.character_name} style={{ fontSize: '13px', fontWeight: entry.is_active ? 700 : 400, color: entry.is_active ? '#f5f2ee' : '#d4cfc9', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                 {compactName(entry.character_name)}
               </span>
               {entry.is_npc && entry.npc_type && (
-                <span style={{ fontSize: '13px', color: typeColor.fg, background: typeColor.bg, border: `1px solid ${typeColor.border}`, padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>{entry.npc_type}</span>
+                <span style={{ fontSize: '13px', color: typeColor.fg, background: typeColor.bg, border: `1px solid ${typeColor.border}`, padding: '0 4px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif' }}>{entry.npc_type}</span>
               )}
               {entry.is_npc && !entry.npc_type && (
-                <span style={{ fontSize: '13px', color: '#EF9F27', background: '#2a2010', border: '1px solid #EF9F27', padding: '0 4px', borderRadius: '2px', fontFamily: 'Barlow Condensed, sans-serif' }}>NPC</span>
+                <span style={{ fontSize: '13px', color: '#EF9F27', background: '#2a2010', border: '1px solid #EF9F27', padding: '0 4px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif' }}>NPC</span>
               )}
-              <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
+              <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', fontWeight: 700 }}>{entry.roll}</span>
               <span style={{ fontSize: '13px', letterSpacing: '2px' }}>
                 {Array.from({ length: 2 }).map((_, i) => {
                   const remaining = entry.actions_remaining ?? 0
@@ -300,7 +300,7 @@ function InitiativeBarImpl({
               </span>
               {/* Aim/social bonus badge — hidden for NPCs from non-GM viewers */}
               {(entry.aim_bonus ?? 0) !== 0 && (isGM || !entry.is_npc) && (
-                <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: entry.aim_bonus > 0 ? '#7fc458' : '#c0392b' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: entry.aim_bonus > 0 ? '#7fc458' : '#c0392b' }}>
                   {entry.aim_bonus > 0 ? '+' : ''}{entry.aim_bonus}
                 </span>
               )}
@@ -308,17 +308,17 @@ function InitiativeBarImpl({
               {/* Defer — GM can defer anyone, players can defer their own */}
               {(isGM || entry.user_id === userId) && idx < initiativeOrder.length - 1 && (
                 <button onClick={() => onDefer(entry.id)}
-                  style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Defer">↓</button>
+                  style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }} title="Defer">↓</button>
               )}
               {/* Grant +1 action — GM only, capped at 2 */}
               {isGM && (entry.actions_remaining ?? 0) < 2 && (
                 <button onClick={() => onGrantAction(entry)}
-                  style={{ background: 'none', border: 'none', color: '#7fc458', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Grant +1 action">+</button>
+                  style={{ background: 'none', border: 'none', color: '#7fc458', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }} title="Grant +1 action">+</button>
               )}
               {/* Skip ⊘ — GM only, zeroes actions for the round */}
               {isGM && (entry.actions_remaining ?? 0) > 0 && (
                 <button onClick={() => onSkipTurn(entry)}
-                  style={{ background: 'none', border: 'none', color: '#EF9F27', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif' }} title="Skip this round (burn remaining actions)">⊘</button>
+                  style={{ background: 'none', border: 'none', color: '#EF9F27', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1, fontFamily: 'Carlito, sans-serif' }} title="Skip this round (burn remaining actions)">⊘</button>
               )}
               {/* × — GM removes; player ends own active turn */}
               {(isGM || (entry.user_id === userId && entry.is_active)) && (
@@ -336,21 +336,21 @@ function InitiativeBarImpl({
             {addablePCs.length > 0 && (
               !showAddPC ? (
                 <button onClick={() => setShowAddPC(true)}
-                  style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+                  style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
                   title="Add a player to initiative mid-combat">
                   + PC
                 </button>
               ) : (
                 <div style={{ position: 'absolute', top: '32px', left: 0, zIndex: 100, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '6px', minWidth: '160px', boxShadow: '0 4px 12px rgba(0,0,0,0.6)' }}>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Add PC to Combat</div>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Add PC to Combat</div>
                   {addablePCs.map(e => (
                     <button key={e.character.id} onClick={() => { onAddPCToCombat(e); setShowAddPC(false) }}
-                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginBottom: '3px' }}>
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginBottom: '3px' }}>
                       {e.character.name}
                     </button>
                   ))}
                   <button onClick={() => setShowAddPC(false)}
-                    style={{ display: 'block', width: '100%', padding: '3px 8px', background: 'none', border: '1px solid #2e2e2e', borderRadius: '2px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', marginTop: '2px' }}>
+                    style={{ display: 'block', width: '100%', padding: '3px 8px', background: 'none', border: '1px solid #2e2e2e', borderRadius: '2px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', marginTop: '2px' }}>
                     Cancel
                   </button>
                 </div>
@@ -358,7 +358,7 @@ function InitiativeBarImpl({
             )}
             {!showAddNPC ? (
               <button onClick={() => setShowAddNPC(true)}
-                style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 + NPC
               </button>
             ) : (
@@ -387,13 +387,13 @@ function InitiativeBarImpl({
                   setNpcName('')
                   setShowAddNPC(false)
                 }}
-                  style={{ padding: '4px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>Add</button>
+                  style={{ padding: '4px 8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>Add</button>
                 <button onClick={() => { setShowAddNPC(false); setNpcName('') }}
-                  style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>✕</button>
+                  style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>✕</button>
               </div>
             )}
             <button onClick={() => onNextTurn()}
-              style={{ padding: '4px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ padding: '4px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Next →
             </button>
           </div>

@@ -42,9 +42,9 @@ export default function StepSeven({ state }: Props) {
               border: `1px solid ${val > 0 ? '#c0392b' : '#3a3a3a'}`,
               borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
             }}>
-              <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+              <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
               <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '5px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
-              <div style={{ fontSize: '17px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee', margin: '4px 0' }}>
+              <div style={{ fontSize: '17px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee', margin: '4px 0' }}>
                 {sgn(val)}
               </div>
               <div style={{ fontSize: '13px', color: val > 0 ? '#f5a89a' : '#d4cfc9' }}>{ATTRIBUTE_LABELS[val]}</div>
@@ -64,7 +64,7 @@ export default function StepSeven({ state }: Props) {
             <div style={{ fontSize: '9.5px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '1px' }}>
               {label}
             </div>
-            <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: hi ? '#f5a89a' : '#f5f2ee' }}>
+            <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: hi ? '#f5a89a' : '#f5f2ee' }}>
               {typeof value === 'number' && value <= 3 && label !== 'Morality' && label !== 'Wound Points' && label !== 'Resilience Points' && label !== 'Encumbrance' ? sgn(value) : value}
             </div>
           </div>
@@ -80,7 +80,7 @@ export default function StepSeven({ state }: Props) {
 }
 
 const sh: React.CSSProperties = {
-  fontFamily: 'Barlow Condensed, sans-serif',
+  fontFamily: 'Carlito, sans-serif',
   fontSize: '13px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em',
   margin: '1.25rem 0 8px', borderBottom: '1px solid #2e2e2e',

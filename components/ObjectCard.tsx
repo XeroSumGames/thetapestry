@@ -170,16 +170,16 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
         ) : (
           <div style={{ width: '36px', height: '36px', borderRadius: '4px', background: color || '#3a3a3a', border: '1px solid #2e2e2e' }} />
         )}
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', flex: 1 }}>{name}</div>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', flex: 1 }}>{name}</div>
         {onMove && (
           <button onClick={onMove}
             title="Move this token on the tactical map"
-            style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Move
           </button>
         )}
         <button onClick={onClose}
-          style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
           Close
         </button>
       </div>
@@ -187,7 +187,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
       {/* WP bar */}
       {wpM > 0 && (
         <div style={{ marginBottom: '8px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '3px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '3px' }}>
             <span>WP</span>
             <span>{wpC} / {wpM}</span>
           </div>
@@ -204,7 +204,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
           a token you can't move makes no sense. */}
       {onMove && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', width: '36px' }}>Rot</span>
+          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', width: '36px' }}>Rot</span>
           <input type="range" min={0} max={360} step={5} value={rotation}
             onChange={e => {
               // Drag-time: update local label + push a live patch to
@@ -247,17 +247,17 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
               }
             }}
             style={{ flex: 1, accentColor: '#EF9F27', cursor: 'pointer' }} />
-          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', width: '36px', textAlign: 'right' }}>{rotation.toFixed(0)}°</span>
+          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', width: '36px', textAlign: 'right' }}>{rotation.toFixed(0)}°</span>
         </div>
       )}
 
       {/* Properties */}
       {!loading && visibleProps.length > 0 && (
         <div style={{ marginBottom: isGM && contents.length > 0 ? '8px' : 0 }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Properties</div>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Properties</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {visibleProps.map((p, i) => (
-              <div key={i} style={{ display: 'flex', gap: '6px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <div key={i} style={{ display: 'flex', gap: '6px', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
                 <span style={{ color: '#cce0f5', minWidth: '80px' }}>{p.key}:</span>
                 <span style={{ color: '#f5f2ee' }}>{p.value}</span>
                 {isGM && !p.revealed && (
@@ -273,14 +273,14 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
       {(isGM || canPlayerLoot) && !loading && contents.length > 0 && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', flex: 1 }}>
+            <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', flex: 1 }}>
               {isGM ? (destroyed ? 'Contents (Destroyed)' : lootable ? 'Contents (Unlocked)' : 'Contents (Locked)') : 'Loot'}
             </span>
             {isGM && !destroyed && (
               <button
                 onClick={toggleLootable}
                 disabled={togglingLock}
-                style={{ padding: '2px 8px', background: lootable ? '#1a2e10' : '#242424', border: `1px solid ${lootable ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: lootable ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: togglingLock ? 'wait' : 'pointer' }}
+                style={{ padding: '2px 8px', background: lootable ? '#1a2e10' : '#242424', border: `1px solid ${lootable ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: lootable ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: togglingLock ? 'wait' : 'pointer' }}
                 title={lootable ? 'Click to lock — players can no longer loot' : 'Click to unlock — players can loot without destroying'}
               >
                 {togglingLock ? '…' : lootable ? '🔓 Unlocked' : '🔒 Locked'}
@@ -293,7 +293,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
               const selectedChar = givePick[k] ?? ''
               const canGive = isGM && !!entries && entries.length > 0
               return (
-                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#f5f2ee' }}>
+                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>
                   <span style={{ flex: 1 }}>
                     {c.type === 'weapon' ? '🔫' : '🎒'} {c.name}{c.quantity > 1 ? ` ×${c.quantity}` : ''}
                   </span>
@@ -302,7 +302,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
                       <select
                         value={selectedChar}
                         onChange={e => setGivePick(prev => ({ ...prev, [k]: e.target.value }))}
-                        style={{ padding: '2px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', maxWidth: '120px' }}
+                        style={{ padding: '2px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none', maxWidth: '120px' }}
                       >
                         <option value="">Give to...</option>
                         {entries!.map(en => (
@@ -312,7 +312,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
                       <button
                         disabled={!selectedChar || giving === k}
                         onClick={() => giveOne(c)}
-                        style={{ padding: '2px 8px', background: selectedChar ? '#1a2e10' : '#242424', border: `1px solid ${selectedChar ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: selectedChar ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: selectedChar ? 'pointer' : 'not-allowed' }}
+                        style={{ padding: '2px 8px', background: selectedChar ? '#1a2e10' : '#242424', border: `1px solid ${selectedChar ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: selectedChar ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: selectedChar ? 'pointer' : 'not-allowed' }}
                       >
                         {giving === k ? '…' : 'Give'}
                       </button>
@@ -322,7 +322,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
                     <button
                       disabled={giving === k}
                       onClick={() => takeOne(c)}
-                      style={{ padding: '2px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: giving === k ? 'wait' : 'pointer' }}
+                      style={{ padding: '2px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: giving === k ? 'wait' : 'pointer' }}
                     >
                       {giving === k ? '…' : 'Take'}
                     </button>
@@ -335,7 +335,7 @@ export default function ObjectCard({ tokenId, name, wpCurrent, wpMax, color, por
       )}
 
       {!loading && visibleProps.length === 0 && (!isGM || contents.length === 0) && wpM === 0 && (
-        <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Barlow Condensed, sans-serif', fontStyle: 'italic' }}>No details.</div>
+        <div style={{ fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic' }}>No details.</div>
       )}
     </div>
   )

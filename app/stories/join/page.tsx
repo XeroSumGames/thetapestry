@@ -55,7 +55,7 @@ export default function JoinCampaignPage() {
     <div style={{ maxWidth: '420px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
 
       <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Join a Story
         </div>
       </div>
@@ -68,7 +68,7 @@ export default function JoinCampaignPage() {
         <div style={{ marginBottom: '16px' }}>
           <label style={lbl}>Invite Code</label>
           <input
-            style={{ width: '100%', padding: '12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '22px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.2em', textTransform: 'uppercase', boxSizing: 'border-box', textAlign: 'center' }}
+            style={{ width: '100%', padding: '12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '22px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.2em', textTransform: 'uppercase', boxSizing: 'border-box', textAlign: 'center' }}
             value={code}
             onChange={e => setCode(e.target.value.toUpperCase())}
             placeholder="XXXXXX"
@@ -84,11 +84,11 @@ export default function JoinCampaignPage() {
 
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={handleJoin} disabled={joining || code.trim().length < 6}
-            style={{ flex: 1, padding: '10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: joining || code.trim().length < 6 ? 0.6 : 1 }}>
+            style={{ flex: 1, padding: '10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: joining || code.trim().length < 6 ? 0.6 : 1 }}>
             {joining ? 'Joining...' : 'Join Story'}
           </button>
           <button onClick={() => router.back()}
-            style={{ padding: '10px 20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '10px 20px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Cancel
           </button>
         </div>
@@ -100,5 +100,5 @@ export default function JoinCampaignPage() {
 const lbl: React.CSSProperties = {
   display: 'block', fontSize: '13px', fontWeight: 600,
   color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em',
-  marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif',
+  marginBottom: '6px', fontFamily: 'Carlito, sans-serif',
 }

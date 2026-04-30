@@ -180,13 +180,13 @@ export default function ForumThreadPage() {
     const isMe = authorId === myId
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
-        <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>
+        <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>
           {authorNames[authorId] ?? 'Unknown'}
         </span>
         <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTimestamp(ts)}</span>
         {!isMe && (
           <a href={`/messages?dm=${authorId}`}
-            style={{ marginLeft: 'auto', padding: '2px 10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            style={{ marginLeft: 'auto', padding: '2px 10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
             💬 Message
           </a>
         )}
@@ -200,7 +200,7 @@ export default function ForumThreadPage() {
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Barlow, sans-serif' }}>
 
       {/* Back link */}
-      <Link href="/campfire/forums" style={{ display: 'inline-block', fontSize: '13px', color: '#cce0f5', textDecoration: 'none', marginBottom: '1rem', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+      <Link href="/campfire/forums" style={{ display: 'inline-block', fontSize: '13px', color: '#cce0f5', textDecoration: 'none', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
         ← Back to Forums
       </Link>
 
@@ -211,7 +211,7 @@ export default function ForumThreadPage() {
             <div style={{ marginBottom: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {(Object.keys(CATEGORY_LABEL) as Category[]).map(c => (
                 <button key={c} onClick={() => setThreadDraft(d => ({ ...d, category: c }))}
-                  style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${threadDraft.category === c ? CATEGORY_ACCENT[c] : '#3a3a3a'}`, background: threadDraft.category === c ? '#242424' : '#1a1a1a', color: threadDraft.category === c ? CATEGORY_ACCENT[c] : '#d4cfc9' }}>
+                  style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${threadDraft.category === c ? CATEGORY_ACCENT[c] : '#3a3a3a'}`, background: threadDraft.category === c ? '#242424' : '#1a1a1a', color: threadDraft.category === c ? CATEGORY_ACCENT[c] : '#d4cfc9' }}>
                   {CATEGORY_LABEL[c]}
                 </button>
               ))}
@@ -220,11 +220,11 @@ export default function ForumThreadPage() {
             <textarea style={{ ...inp, minHeight: '160px', resize: 'vertical', marginBottom: '8px' }} value={threadDraft.body} onChange={e => setThreadDraft(d => ({ ...d, body: e.target.value }))} />
             <div style={{ display: 'flex', gap: '6px' }}>
               <button onClick={saveThreadEdit} disabled={!threadDraft.title.trim() || !threadDraft.body.trim()}
-                style={{ padding: '7px 16px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ padding: '7px 16px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 Save
               </button>
               <button onClick={() => setEditingThread(false)}
-                style={{ padding: '7px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ padding: '7px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 Cancel
               </button>
             </div>
@@ -232,13 +232,13 @@ export default function ForumThreadPage() {
         ) : (
           <>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
-              {thread.pinned && <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>📌 Pinned</span>}
-              <span style={{ fontSize: '13px', color: accent, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700 }}>
+              {thread.pinned && <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>📌 Pinned</span>}
+              <span style={{ fontSize: '13px', color: accent, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700 }}>
                 {CATEGORY_LABEL[thread.category]}
               </span>
-              {thread.locked && <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🔒 Locked</span>}
+              {thread.locked && <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🔒 Locked</span>}
             </div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '24px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '10px' }}>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '24px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '10px' }}>
               {thread.title}
             </div>
             {renderAuthorRow(thread.author_user_id, thread.created_at)}
@@ -248,11 +248,11 @@ export default function ForumThreadPage() {
             {isMyThread && (
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button onClick={startEditThread}
-                  style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Edit
                 </button>
                 <button onClick={deleteThread}
-                  style={{ padding: '5px 12px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ padding: '5px 12px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Delete
                 </button>
               </div>
@@ -262,7 +262,7 @@ export default function ForumThreadPage() {
       </div>
 
       {/* Replies */}
-      <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', color: '#cce0f5', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+      <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', color: '#cce0f5', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
         {replies.length} repl{replies.length === 1 ? 'y' : 'ies'}
       </div>
 
@@ -278,11 +278,11 @@ export default function ForumThreadPage() {
                   <textarea style={{ ...inp, minHeight: '100px', resize: 'vertical', marginBottom: '8px' }} value={replyDraft} onChange={e => setReplyDraft(e.target.value)} />
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button onClick={saveReplyEdit} disabled={!replyDraft.trim()}
-                      style={{ padding: '5px 12px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ padding: '5px 12px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       Save
                     </button>
                     <button onClick={() => { setEditingReplyId(null); setReplyDraft('') }}
-                      style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       Cancel
                     </button>
                   </div>
@@ -295,11 +295,11 @@ export default function ForumThreadPage() {
                   {isMine && (
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <button onClick={() => startEditReply(r)}
-                        style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                         Edit
                       </button>
                       <button onClick={() => deleteReply(r.id)}
-                        style={{ padding: '4px 10px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        style={{ padding: '4px 10px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                         Delete
                       </button>
                     </div>
@@ -318,12 +318,12 @@ export default function ForumThreadPage() {
         </div>
       ) : (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #7ab3d4', borderRadius: '4px', padding: '12px 14px' }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 600, color: '#7ab3d4', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 600, color: '#7ab3d4', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
             Reply
           </div>
           <textarea style={{ ...inp, minHeight: '110px', resize: 'vertical', marginBottom: '8px' }} value={newReply} onChange={e => setNewReply(e.target.value)} placeholder="Write a reply..." />
           <button onClick={postReply} disabled={!newReply.trim() || posting}
-            style={{ padding: '8px 18px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: posting ? 'wait' : 'pointer', opacity: !newReply.trim() ? 0.5 : 1 }}>
+            style={{ padding: '8px 18px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: posting ? 'wait' : 'pointer', opacity: !newReply.trim() ? 0.5 : 1 }}>
             {posting ? 'Posting...' : 'Post Reply'}
           </button>
         </div>

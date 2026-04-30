@@ -115,7 +115,7 @@ export default function CharacterSheetPage() {
 
       {/* Session Notes */}
       <div style={{ marginTop: '16px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px' }}>
-        <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Session Notes</div>
+        <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Session Notes</div>
         <textarea value={notes} onChange={e => setNotes(e.target.value)}
           placeholder="Keep track of what's happening..."
           rows={6}
@@ -126,7 +126,7 @@ export default function CharacterSheetPage() {
           await supabase.from('characters').update({ data: { ...character.data, session_notes: notes } }).eq('id', character.id)
           setNotesSaving(false)
         }} disabled={notesSaving}
-          style={{ marginTop: '6px', padding: '6px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: notesSaving ? 'not-allowed' : 'pointer', opacity: notesSaving ? 0.5 : 1 }}>
+          style={{ marginTop: '6px', padding: '6px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: notesSaving ? 'not-allowed' : 'pointer', opacity: notesSaving ? 0.5 : 1 }}>
           {notesSaving ? 'Saving...' : 'Save Notes'}
         </button>
       </div>

@@ -37,7 +37,7 @@ function actionBtn(borderColor: string, color: string): React.CSSProperties {
     padding: '5px 10px', background: 'none',
     border: `1px solid ${borderColor}`, borderRadius: '3px',
     color, fontSize: '13px', cursor: 'pointer',
-    fontFamily: 'Barlow Condensed, sans-serif',
+    fontFamily: 'Carlito, sans-serif',
     letterSpacing: '.04em', textTransform: 'uppercase',
     whiteSpace: 'nowrap',
   }
@@ -47,7 +47,7 @@ const navLink: React.CSSProperties = {
   padding: '5px 12px', background: '#242424',
   border: '1px solid #3a3a3a', borderRadius: '3px',
   color: '#f5f2ee', fontSize: '13px',
-  fontFamily: 'Barlow Condensed, sans-serif',
+  fontFamily: 'Carlito, sans-serif',
   letterSpacing: '.06em', textTransform: 'uppercase',
   textDecoration: 'none',
 }
@@ -365,7 +365,7 @@ export default function ModerationPage() {
 
       {/* Masthead */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Moderation
         </div>
         <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase' }}>
@@ -381,7 +381,7 @@ export default function ModerationPage() {
           flips so we don't flash the banner during the profile
           fetch. */}
       {roleChecked && !isThriver && (
-        <div style={{ padding: '14px 18px', background: '#2a1210', border: '1px solid #c0392b', borderLeft: '3px solid #c0392b', borderRadius: '4px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700 }}>
+        <div style={{ padding: '14px 18px', background: '#2a1210', border: '1px solid #c0392b', borderLeft: '3px solid #c0392b', borderRadius: '4px', color: '#f5a89a', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700 }}>
           ⚠ Thriver-only page
         </div>
       )}
@@ -410,7 +410,7 @@ export default function ModerationPage() {
               background: isActive ? '#2a1210' : (hasPending ? '#0f1a0f' : '#242424'),
               color,
               borderRadius: '3px', cursor: 'pointer',
-              fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
+              fontSize: '13px', fontFamily: 'Carlito, sans-serif',
               letterSpacing: '.06em', textTransform: 'uppercase',
               display: 'flex', alignItems: 'center', gap: '6px',
             }}>
@@ -436,7 +436,7 @@ export default function ModerationPage() {
                 background: filter === f ? '#2a1210' : '#242424',
                 color: filter === f ? '#f5a89a' : '#d4cfc9',
                 borderRadius: '3px', cursor: 'pointer',
-                fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
+                fontSize: '13px', fontFamily: 'Carlito, sans-serif',
                 letterSpacing: '.06em', textTransform: 'uppercase',
               }}>
                 {f}
@@ -457,7 +457,7 @@ export default function ModerationPage() {
               <div key={p.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #EF9F27', borderRadius: '4px', padding: '1rem 1.25rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
                   <div>
-                    <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                    <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                       {p.title}
                     </div>
                     <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>
@@ -519,7 +519,7 @@ export default function ModerationPage() {
             <span>{users.length} registered user{users.length !== 1 ? 's' : ''}</span>
             {users.length > 0 && (
               <a href={`mailto:?bcc=${users.map(u => u.email).filter(Boolean).join(',')}`}
-                style={{ padding: '3px 10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer' }}>
+                style={{ padding: '3px 10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer' }}>
                 Email All Users
               </a>
             )}
@@ -536,7 +536,7 @@ export default function ModerationPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
                 <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
-                  <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {u.username}
                     {u.email && <span style={{ color: '#cce0f5', fontWeight: 400, marginLeft: '6px', fontSize: '14px' }}>({u.email})</span>}
                   </div>
@@ -547,12 +547,12 @@ export default function ModerationPage() {
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap', justifyContent: 'flex-end', flexShrink: 0 }}>
                   {u.suspended && (
-                    <span style={{ fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px', background: '#2a1a00', color: '#EF9F27', border: '1px solid #EF9F27' }}>
+                    <span style={{ fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px', background: '#2a1a00', color: '#EF9F27', border: '1px solid #EF9F27' }}>
                       Suspended
                     </span>
                   )}
                   <span style={{
-                    fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
+                    fontSize: '13px', fontFamily: 'Carlito, sans-serif',
                     letterSpacing: '.08em', textTransform: 'uppercase',
                     padding: '3px 8px', borderRadius: '2px',
                     background: u.role?.toLowerCase() === 'thriver' ? '#2a1210' : '#1a1a2e',
@@ -598,23 +598,23 @@ export default function ModerationPage() {
               <div key={npc.id} style={{ padding: '12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                   <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#2a1210', border: '2px solid #c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                    {npc.portrait_url ? <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>}
+                    {npc.portrait_url ? <img src={npc.portrait_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '13px', fontWeight: 700, color: '#c0392b', fontFamily: 'Carlito, sans-serif' }}>{npc.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{npc.name}</div>
                     <div style={{ fontSize: '13px', color: '#cce0f5' }}>
                       by {(npc.profiles as any)?.username ?? 'Unknown'} &middot; {formatDate(npc.created_at)}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-                    {npc.npc_type && <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
-                    {npc.setting && <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{npc.setting === 'district_zero' ? 'District Zero' : npc.setting === 'chased' ? 'Chased' : 'Custom'}</span>}
+                    {npc.npc_type && <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
+                    {npc.setting && <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{npc.setting === 'district_zero' ? 'District Zero' : npc.setting === 'chased' ? 'Chased' : 'Custom'}</span>}
                   </div>
                 </div>
                 {npc.public_description && (
                   <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '8px', lineHeight: 1.5 }}>{npc.public_description}</div>
                 )}
-                <div style={{ display: 'flex', gap: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', gap: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>
                   {['RSN', 'ACU', 'PHY', 'INF', 'DEX'].map((attr, i) => {
                     const vals = [npc.reason, npc.acumen, npc.physicality, npc.influence, npc.dexterity]
                     return <span key={attr}>{attr} {vals[i] > 0 ? `+${vals[i]}` : vals[i]}</span>
@@ -643,7 +643,7 @@ export default function ModerationPage() {
                 background: filter === f ? '#2a1210' : '#242424',
                 color: filter === f ? '#f5a89a' : '#d4cfc9',
                 borderRadius: '3px', cursor: 'pointer',
-                fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif',
+                fontSize: '13px', fontFamily: 'Carlito, sans-serif',
                 letterSpacing: '.06em', textTransform: 'uppercase',
               }}>
                 {f}
@@ -670,7 +670,7 @@ export default function ModerationPage() {
                 <div key={wc.id} style={{ padding: '14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${filter === 'approved' ? '#7fc458' : filter === 'rejected' ? '#c0392b' : '#d48bd4'}`, borderRadius: '4px' }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '19px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                      <div style={{ fontSize: '19px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                         🌐 {wc.name}
                       </div>
                       <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>
@@ -678,10 +678,10 @@ export default function ModerationPage() {
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{wc.size_band}</span>
-                      <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: '#1a2010', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{wc.community_status}</span>
+                      <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: '#1a1a2e', border: '1px solid #2e2e5a', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{wc.size_band}</span>
+                      <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: '#1a2010', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{wc.community_status}</span>
                       {wc.faction_label && (
-                        <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{wc.faction_label}</span>
+                        <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{wc.faction_label}</span>
                       )}
                     </div>
                   </div>
@@ -692,7 +692,7 @@ export default function ModerationPage() {
                     </div>
                   )}
 
-                  <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px', fontFamily: 'Barlow Condensed, sans-serif', display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px', fontFamily: 'Carlito, sans-serif', display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
                     <span>
                       <span style={{ color: '#5a5550', letterSpacing: '.06em', textTransform: 'uppercase' }}>Homestead:</span>{' '}
                       {hasCoords
@@ -749,7 +749,7 @@ export default function ModerationPage() {
                 padding: '7px 16px', border: `1px solid ${filter === f ? '#c0392b' : '#3a3a3a'}`,
                 background: filter === f ? '#2a1210' : '#242424', color: filter === f ? '#f5a89a' : '#d4cfc9',
                 borderRadius: '3px', cursor: 'pointer', fontSize: '13px',
-                fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
+                fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
               }}>{f}</button>
             ))}
           </div>
@@ -766,7 +766,7 @@ export default function ModerationPage() {
               <div key={m.id} style={{ padding: '14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${filter === 'approved' ? '#7fc458' : filter === 'rejected' ? '#c0392b' : '#8b5cf6'}`, borderRadius: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '19px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                    <div style={{ fontSize: '19px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                       📦 {m.name}
                     </div>
                     <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px' }}>

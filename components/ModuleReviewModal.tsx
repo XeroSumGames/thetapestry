@@ -222,7 +222,7 @@ export default function ModuleReviewModal({
   }
   const sectionLabel: React.CSSProperties = {
     fontSize: '13px', fontWeight: 700, letterSpacing: '.08em',
-    textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif',
+    textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif',
     color: '#c4a7f0', marginBottom: '6px',
   }
   const changeRow: React.CSSProperties = {
@@ -253,7 +253,7 @@ export default function ModuleReviewModal({
           <label key={`${bucket}-${xid}`} style={{ ...changeRow, cursor: 'pointer' }}>
             <input type="checkbox" checked={checked}
               onChange={() => toggleCheck(section, bucket, xid)} />
-            <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', width: '72px', flexShrink: 0 }}>
+            <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', width: '72px', flexShrink: 0 }}>
               {sectionName}
             </span>
             <span style={{ fontSize: '14px', color: '#f5f2ee', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -261,7 +261,7 @@ export default function ModuleReviewModal({
             </span>
             {locallyEdited && (
               <span title="You've locally edited this row — skip by default to keep your changes"
-                style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', flexShrink: 0 }}>
+                style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', flexShrink: 0 }}>
                 ⚠ Customized
               </span>
             )}
@@ -275,7 +275,7 @@ export default function ModuleReviewModal({
       <div style={panel} onClick={e => e.stopPropagation()}>
 
         <div style={header}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c4a7f0' }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c4a7f0' }}>
             📦 Review Update — {moduleName}
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#c4a7f0', fontSize: '22px', cursor: 'pointer' }}>×</button>
@@ -288,7 +288,7 @@ export default function ModuleReviewModal({
             The author just published <strong style={{ color: '#c4a7f0' }}>v{newVersionLabel}</strong>.
             Pick which changes to pull in. The default skips anything you've locally customized.
           </div>
-          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
             Diff summary: <span style={{ color: '#c4a7f0' }}>{summary}</span>
           </div>
 
@@ -349,16 +349,16 @@ export default function ModuleReviewModal({
         </div>
 
         <div style={footer}>
-          <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
+          <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
             → Applying to v{newVersionLabel}
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={onClose} disabled={applying}
-              style={{ padding: '8px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: applying ? 'not-allowed' : 'pointer' }}>
+              style={{ padding: '8px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: applying ? 'not-allowed' : 'pointer' }}>
               Cancel
             </button>
             <button onClick={handleApply} disabled={applying || !flagsLoaded}
-              style={{ padding: '8px 18px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: applying || !flagsLoaded ? 'not-allowed' : 'pointer', opacity: applying || !flagsLoaded ? 0.4 : 1, fontWeight: 600 }}>
+              style={{ padding: '8px 18px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: applying || !flagsLoaded ? 'not-allowed' : 'pointer', opacity: applying || !flagsLoaded ? 0.4 : 1, fontWeight: 600 }}>
               {applying ? 'Applying…' : `Apply Selected → v${newVersionLabel}`}
             </button>
           </div>

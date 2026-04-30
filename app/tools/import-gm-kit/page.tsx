@@ -143,13 +143,13 @@ export default function ImportGmKitPage() {
   const lbl: React.CSSProperties = {
     display: 'block', fontSize: '13px', fontWeight: 600,
     color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em',
-    marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif',
+    marginBottom: '6px', fontFamily: 'Carlito, sans-serif',
   }
 
   return (
     <div style={{ maxWidth: '640px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
       <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Import GM Kit → Setting Seed
         </div>
         <div style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '6px', lineHeight: 1.5 }}>
@@ -191,7 +191,7 @@ export default function ImportGmKitPage() {
 
         {result && (
           <div style={{ background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', padding: '12px' }}>
-            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '8px' }}>Imported</div>
+            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>Imported</div>
             <div style={{ fontSize: '13px', color: '#f5f2ee', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
               <div>Pins: <b>{result.counts.pins}</b>{result.errors.pins && <span style={{ color: '#c0392b' }}> (error: {result.errors.pins})</span>}</div>
               <div>NPCs: <b>{result.counts.npcs}</b>{result.errors.npcs && <span style={{ color: '#c0392b' }}> (error: {result.errors.npcs})</span>}</div>
@@ -202,7 +202,7 @@ export default function ImportGmKitPage() {
         )}
 
         <button onClick={handleImport} disabled={!file || !settingKey.trim() || running}
-          style={{ padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: !file || !settingKey.trim() || running ? 0.6 : 1 }}>
+          style={{ padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: !file || !settingKey.trim() || running ? 0.6 : 1 }}>
           {running ? 'Importing…' : 'Import to Seed'}
         </button>
       </div>

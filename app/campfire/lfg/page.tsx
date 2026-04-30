@@ -336,13 +336,13 @@ export default function LfgPage() {
   }
   const lbl: React.CSSProperties = {
     display: 'block', fontSize: '13px', color: '#cce0f5',
-    fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
+    fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', marginBottom: '4px',
   }
   const shareItemStyle: React.CSSProperties = {
     display: 'block', width: '100%', padding: '7px 12px', background: 'none',
     border: 'none', color: '#d4cfc9', fontSize: '13px',
-    fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
+    fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', cursor: 'pointer', textAlign: 'left',
   }
 
@@ -352,7 +352,7 @@ export default function LfgPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
         <div>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>
             Looking for Group
           </div>
           <div style={{ fontSize: '14px', color: '#5a8a40', lineHeight: 1.6 }}>
@@ -361,7 +361,7 @@ export default function LfgPage() {
         </div>
         {!composing && (
           <button onClick={startCompose}
-            style={{ padding: '9px 16px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '9px 16px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             + New Post
           </button>
         )}
@@ -370,7 +370,7 @@ export default function LfgPage() {
       {/* Composer */}
       {composing && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #7ab3d4', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1.25rem' }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 600, color: '#7ab3d4', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '12px' }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 600, color: '#7ab3d4', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '12px' }}>
             {editingId ? 'Edit Post' : 'New Post'}
           </div>
           <div style={{ marginBottom: '10px' }}>
@@ -378,7 +378,7 @@ export default function LfgPage() {
             <div style={{ display: 'flex', gap: '6px' }}>
               {(['gm_seeking_players', 'player_seeking_game'] as Kind[]).map(k => (
                 <button key={k} onClick={() => setDraft(d => ({ ...d, kind: k }))}
-                  style={{ flex: 1, padding: '6px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${draft.kind === k ? KIND_ACCENT[k] : '#3a3a3a'}`, background: draft.kind === k ? '#242424' : '#1a1a1a', color: draft.kind === k ? KIND_ACCENT[k] : '#d4cfc9' }}>
+                  style={{ flex: 1, padding: '6px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${draft.kind === k ? KIND_ACCENT[k] : '#3a3a3a'}`, background: draft.kind === k ? '#242424' : '#1a1a1a', color: draft.kind === k ? KIND_ACCENT[k] : '#d4cfc9' }}>
                   {KIND_LABEL[k]}
                 </button>
               ))}
@@ -408,11 +408,11 @@ export default function LfgPage() {
           </div>
           <div style={{ display: 'flex', gap: '6px' }}>
             <button onClick={handleSave} disabled={!draft.title.trim() || !draft.body.trim() || saving}
-              style={{ flex: 1, padding: '9px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: saving ? 'wait' : 'pointer', opacity: (!draft.title.trim() || !draft.body.trim()) ? 0.5 : 1 }}>
+              style={{ flex: 1, padding: '9px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: saving ? 'wait' : 'pointer', opacity: (!draft.title.trim() || !draft.body.trim()) ? 0.5 : 1 }}>
               {saving ? 'Saving...' : (editingId ? 'Save Changes' : 'Post')}
             </button>
             <button onClick={cancelCompose}
-              style={{ padding: '9px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ padding: '9px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Cancel
             </button>
           </div>
@@ -427,7 +427,7 @@ export default function LfgPage() {
           ['player_seeking_game', 'Players', KIND_ACCENT.player_seeking_game],
         ] as [Filter, string, string][]).map(([val, label, accent]) => (
           <button key={val} onClick={() => setFilter(val)}
-            style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${filter === val ? accent : '#3a3a3a'}`, background: filter === val ? '#242424' : '#1a1a1a', color: filter === val ? accent : '#d4cfc9' }}>
+            style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${filter === val ? accent : '#3a3a3a'}`, background: filter === val ? '#242424' : '#1a1a1a', color: filter === val ? accent : '#d4cfc9' }}>
             {label}
           </button>
         ))}
@@ -448,7 +448,7 @@ export default function LfgPage() {
             return (
               <div key={p.id} id={`lfg-${p.id}`} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${accent}`, borderRadius: '4px', padding: '1rem 1.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
-                  <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', color: accent, letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700 }}>
+                  <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: accent, letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700 }}>
                     {KIND_LABEL[p.kind]}
                   </span>
                   <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
@@ -456,7 +456,7 @@ export default function LfgPage() {
                   <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
                   <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTimestamp(p.updated_at)}</span>
                 </div>
-                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '8px' }}>
                   {p.title}
                 </div>
                 <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.55, whiteSpace: 'pre-wrap', marginBottom: '10px' }}>
@@ -465,12 +465,12 @@ export default function LfgPage() {
                 {(p.setting || p.schedule) && (
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
                     {p.setting && (
-                      <span style={{ padding: '2px 8px', background: '#0f2035', border: '1px solid #2e4a6b', borderRadius: '3px', fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                      <span style={{ padding: '2px 8px', background: '#0f2035', border: '1px solid #2e4a6b', borderRadius: '3px', fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                         {p.setting}
                       </span>
                     )}
                     {p.schedule && (
-                      <span style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                      <span style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                         {p.schedule}
                       </span>
                     )}
@@ -486,7 +486,7 @@ export default function LfgPage() {
                     const pending = interestPending.has(p.id)
                     return (
                       <button onClick={() => toggleInterest(p.id)} disabled={pending}
-                        style={{ padding: '6px 14px', background: interested ? '#1a2e10' : '#1a3a5c', border: `1px solid ${interested ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: interested ? '#7fc458' : '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: pending ? 'wait' : 'pointer', opacity: pending ? 0.6 : 1 }}>
+                        style={{ padding: '6px 14px', background: interested ? '#1a2e10' : '#1a3a5c', border: `1px solid ${interested ? '#2d5a1b' : '#7ab3d4'}`, borderRadius: '3px', color: interested ? '#7fc458' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: pending ? 'wait' : 'pointer', opacity: pending ? 0.6 : 1 }}>
                         {interested ? '✓ Interested' : "I'm Interested"}
                       </button>
                     )
@@ -494,11 +494,11 @@ export default function LfgPage() {
                   {isMine && (
                     <>
                       <button onClick={() => startEdit(p)}
-                        style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                         Edit
                       </button>
                       <button onClick={() => handleDelete(p.id)}
-                        style={{ padding: '6px 14px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        style={{ padding: '6px 14px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                         Delete
                       </button>
                     </>
@@ -508,7 +508,7 @@ export default function LfgPage() {
                       via the document-level mousedown handler above. */}
                   <div data-share-root style={{ position: 'relative' }}>
                     <button onClick={() => setShareOpenId(prev => prev === p.id ? null : p.id)}
-                      style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       🔗 Share
                     </button>
                     {shareOpenId === p.id && (
@@ -538,7 +538,7 @@ export default function LfgPage() {
                     where DMs originate from now (the asymmetric flow). */}
                 {isMine && interestsByPost[p.id] && interestsByPost[p.id].length > 0 && (
                   <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px dashed #2e2e2e' }}>
-                    <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                    <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
                       Interested ({interestsByPost[p.id].length})
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -548,12 +548,12 @@ export default function LfgPage() {
                         const justSent = inviteSentFor.has(inviteKey)
                         return (
                           <div key={u.user_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                            <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                            <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                               {u.username}
                             </span>
                             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                               <a href={`/messages?dm=${u.user_id}`}
-                                style={{ padding: '3px 10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+                                style={{ padding: '3px 10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
                                 💬 Message
                               </a>
                               {/* Invite picker. Hidden if the GM has no
@@ -563,17 +563,17 @@ export default function LfgPage() {
                               {myCampaigns.length > 0 && (
                                 <div data-invite-root style={{ position: 'relative' }}>
                                   <button onClick={() => setInvitingFor(prev => prev === inviteKey ? null : inviteKey)} disabled={justSent}
-                                    style={{ padding: '3px 10px', background: justSent ? '#1a2e10' : '#242424', border: `1px solid ${justSent ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: justSent ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: justSent ? 'default' : 'pointer' }}>
+                                    style={{ padding: '3px 10px', background: justSent ? '#1a2e10' : '#242424', border: `1px solid ${justSent ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: justSent ? '#7fc458' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: justSent ? 'default' : 'pointer' }}>
                                     {justSent ? '✓ Invite Sent' : '🎟 Invite'}
                                   </button>
                                   {pickerOpen && (
                                     <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, zIndex: 10, minWidth: '220px', maxHeight: '240px', overflowY: 'auto', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', boxShadow: '0 4px 12px rgba(0,0,0,.5)', padding: '4px', display: 'flex', flexDirection: 'column' }}>
-                                      <div style={{ padding: '6px 10px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+                                      <div style={{ padding: '6px 10px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
                                         Invite to…
                                       </div>
                                       {myCampaigns.map(c => (
                                         <button key={c.id} onClick={() => sendInvite(u.user_id, p.id, c)}
-                                          style={{ display: 'block', width: '100%', padding: '7px 12px', background: 'none', border: 'none', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'left' }}>
+                                          style={{ display: 'block', width: '100%', padding: '7px 12px', background: 'none', border: 'none', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'left' }}>
                                           {c.name}
                                         </button>
                                       ))}

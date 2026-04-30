@@ -145,7 +145,7 @@ export default function ForumsIndexPage() {
   }
   const lbl: React.CSSProperties = {
     display: 'block', fontSize: '13px', color: '#cce0f5',
-    fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
+    fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', marginBottom: '4px',
   }
 
@@ -155,7 +155,7 @@ export default function ForumsIndexPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', gap: '1rem' }}>
         <div>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>
             Forums
           </div>
           <div style={{ fontSize: '14px', color: '#5a8a40', lineHeight: 1.6 }}>
@@ -164,7 +164,7 @@ export default function ForumsIndexPage() {
         </div>
         {!composing && (
           <button onClick={startCompose}
-            style={{ padding: '9px 16px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            style={{ padding: '9px 16px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             + New Thread
           </button>
         )}
@@ -173,7 +173,7 @@ export default function ForumsIndexPage() {
       {/* Composer */}
       {composing && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #7ab3d4', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1.25rem' }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 600, color: '#7ab3d4', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '12px' }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 600, color: '#7ab3d4', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '12px' }}>
             New Thread
           </div>
           <div style={{ marginBottom: '10px' }}>
@@ -181,7 +181,7 @@ export default function ForumsIndexPage() {
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {(Object.keys(CATEGORY_LABEL) as Category[]).map(c => (
                 <button key={c} onClick={() => setDraft(d => ({ ...d, category: c }))}
-                  style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${draft.category === c ? CATEGORY_ACCENT[c] : '#3a3a3a'}`, background: draft.category === c ? '#242424' : '#1a1a1a', color: draft.category === c ? CATEGORY_ACCENT[c] : '#d4cfc9' }}>
+                  style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${draft.category === c ? CATEGORY_ACCENT[c] : '#3a3a3a'}`, background: draft.category === c ? '#242424' : '#1a1a1a', color: draft.category === c ? CATEGORY_ACCENT[c] : '#d4cfc9' }}>
                   {CATEGORY_LABEL[c]}
                 </button>
               ))}
@@ -197,11 +197,11 @@ export default function ForumsIndexPage() {
           </div>
           <div style={{ display: 'flex', gap: '6px' }}>
             <button onClick={handleCreate} disabled={!draft.title.trim() || !draft.body.trim() || saving}
-              style={{ flex: 1, padding: '9px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: saving ? 'wait' : 'pointer', opacity: (!draft.title.trim() || !draft.body.trim()) ? 0.5 : 1 }}>
+              style={{ flex: 1, padding: '9px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: saving ? 'wait' : 'pointer', opacity: (!draft.title.trim() || !draft.body.trim()) ? 0.5 : 1 }}>
               {saving ? 'Posting...' : 'Post Thread'}
             </button>
             <button onClick={() => setComposing(false)}
-              style={{ padding: '9px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ padding: '9px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Cancel
             </button>
           </div>
@@ -264,7 +264,7 @@ export default function ForumsIndexPage() {
                   width: '40px', height: '40px', borderRadius: '50%',
                   background: `linear-gradient(135deg, ${tint}, ${tint}aa)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700,
+                  fontFamily: 'Carlito, sans-serif', fontWeight: 700,
                   fontSize: '17px', color: '#0f0f0f',
                   border: '1px solid #2e2e2e',
                 }}>
@@ -282,7 +282,7 @@ export default function ForumsIndexPage() {
                       color: accent,
                       border: `1px solid ${accent}55`,
                       borderRadius: '999px',
-                      fontFamily: 'Barlow Condensed, sans-serif',
+                      fontFamily: 'Carlito, sans-serif',
                       fontSize: '13px',
                       fontWeight: 700,
                       letterSpacing: '.08em',
@@ -290,12 +290,12 @@ export default function ForumsIndexPage() {
                     }}>
                       {CATEGORY_LABEL[t.category]}
                     </span>
-                    {t.pinned && <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>📌 Pinned</span>}
-                    {t.locked && <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🔒 Locked</span>}
+                    {t.pinned && <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>📌 Pinned</span>}
+                    {t.locked && <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🔒 Locked</span>}
                     <span style={{ fontSize: '13px', color: '#cce0f5' }}>· {t.author_username}</span>
                   </div>
                   <div style={{
-                    fontFamily: 'Barlow Condensed, sans-serif',
+                    fontFamily: 'Carlito, sans-serif',
                     fontSize: '17px',
                     fontWeight: 700,
                     color: '#f5f2ee',
@@ -321,7 +321,7 @@ export default function ForumsIndexPage() {
                 {/* Right: replies + relative time, stacked */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', minWidth: '70px' }}>
                   <div style={{
-                    fontFamily: 'Barlow Condensed, sans-serif',
+                    fontFamily: 'Carlito, sans-serif',
                     fontSize: '20px',
                     fontWeight: 700,
                     color: t.reply_count > 0 ? '#f5f2ee' : '#5a5550',
@@ -331,7 +331,7 @@ export default function ForumsIndexPage() {
                     {t.reply_count}
                   </div>
                   <div style={{
-                    fontFamily: 'Barlow Condensed, sans-serif',
+                    fontFamily: 'Carlito, sans-serif',
                     fontSize: '13px',
                     color: '#cce0f5',
                     letterSpacing: '.06em',
@@ -361,7 +361,7 @@ function FilterChip({ label, count, accent, active, onClick }: {
         display: 'inline-flex', alignItems: 'center', gap: '6px',
         padding: '6px 12px',
         fontSize: '13px',
-        fontFamily: 'Barlow Condensed, sans-serif',
+        fontFamily: 'Carlito, sans-serif',
         letterSpacing: '.06em',
         textTransform: 'uppercase',
         cursor: 'pointer',

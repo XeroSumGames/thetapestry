@@ -100,7 +100,7 @@ export default function RescaleTacticalScenesPage() {
 
   return (
     <div style={{ fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
-      <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', letterSpacing: '.06em', textTransform: 'uppercase', color: '#c0392b', marginBottom: '0.25rem' }}>Rescale Tactical Scenes</h1>
+      <h1 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', letterSpacing: '.06em', textTransform: 'uppercase', color: '#c0392b', marginBottom: '0.25rem' }}>Rescale Tactical Scenes</h1>
       <p style={{ color: '#cce0f5', fontSize: '14px', marginBottom: '1rem' }}>
         One-time migration: convert legacy <code>img_scale</code> values (container-based) to the new natural-dimensions baseline.
         Assumes old GM viewport ≈ {OLD_REFERENCE_W}px. You can still fine-tune afterwards via Fit to Screen / Lock Map on each scene.
@@ -108,7 +108,7 @@ export default function RescaleTacticalScenesPage() {
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
         <button onClick={rescaleAll} disabled={busy || readyCount === 0}
-          style={{ padding: '8px 16px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: busy ? 'wait' : 'pointer', opacity: busy || readyCount === 0 ? 0.5 : 1 }}>
+          style={{ padding: '8px 16px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: busy ? 'wait' : 'pointer', opacity: busy || readyCount === 0 ? 0.5 : 1 }}>
           {busy ? 'Rescaling…' : `Rescale All (${readyCount})`}
         </button>
         <div style={{ padding: '8px 12px', color: '#7fc458', fontSize: '13px' }}>
@@ -143,7 +143,7 @@ export default function RescaleTacticalScenesPage() {
               <td style={{ padding: '6px 8px' }}>
                 {r.status === 'ready' && (
                   <button onClick={() => rescaleOne(r)}
-                    style={{ padding: '3px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ padding: '3px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Rescale
                   </button>
                 )}

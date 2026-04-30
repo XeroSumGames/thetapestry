@@ -223,7 +223,7 @@ export default function MessagesBell() {
             background: '#c0392b',
             color: '#fff',
             fontSize: '13px',
-            fontFamily: 'Barlow Condensed, sans-serif',
+            fontFamily: 'Carlito, sans-serif',
             fontWeight: 700,
             borderRadius: '8px',
             padding: '0 4px',
@@ -259,16 +259,16 @@ export default function MessagesBell() {
         }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #2e2e2e' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>Messages</span>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>Messages</span>
             <div style={{ display: 'flex', gap: '8px' }}>
               {unreadCount > 0 && (
                 <button onClick={markAllAsRead}
-                  style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Mark all read
                 </button>
               )}
               <button onClick={() => openConversation(null)}
-                style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 View all
               </button>
             </div>
@@ -276,7 +276,7 @@ export default function MessagesBell() {
 
           {/* List */}
           {items.length === 0 ? (
-            <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+            <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
               No messages yet
             </div>
           ) : (
@@ -340,7 +340,7 @@ export default function MessagesBell() {
                       borderRadius: '3px',
                       color: '#cce0f5',
                       fontSize: '13px',
-                      fontFamily: 'Barlow Condensed, sans-serif',
+                      fontFamily: 'Carlito, sans-serif',
                       letterSpacing: '.06em',
                       textTransform: 'uppercase',
                       cursor: 'pointer',

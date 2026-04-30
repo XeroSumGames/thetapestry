@@ -239,7 +239,7 @@ export default function ModuleEditPage() {
   if (accessDenied) {
     return (
       <div style={{ padding: '24px', maxWidth: '720px', margin: '0 auto', color: '#d4cfc9' }}>
-        <div style={{ fontSize: '20px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }}>Access Denied</div>
+        <div style={{ fontSize: '20px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }}>Access Denied</div>
         <div style={{ fontSize: '14px' }}>Only the module&apos;s author or a Thriver can edit it.</div>
         <Link href="/modules" style={{ display: 'inline-block', marginTop: '16px', color: '#c4a7f0' }}>← Back to /modules</Link>
       </div>
@@ -247,27 +247,27 @@ export default function ModuleEditPage() {
   }
 
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }
-  const lbl: React.CSSProperties = { display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Barlow Condensed, sans-serif' }
+  const lbl: React.CSSProperties = { display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif' }
 
   return (
     <div style={{ padding: '24px 20px', maxWidth: '760px', margin: '0 auto', color: '#d4cfc9' }}>
-      <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
+      <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
         Module Editor
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        <h1 style={{ margin: 0, fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+        <h1 style={{ margin: 0, fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Edit: {mod?.name}
         </h1>
-        <Link href="/modules" style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <Link href="/modules" style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           ← /modules
         </Link>
-        <Link href={`/modules/${moduleId}`} style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+        <Link href={`/modules/${moduleId}`} style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
           → Public page
         </Link>
       </div>
 
       {status && (
-        <div style={{ marginBottom: '16px', padding: '8px 12px', background: status.startsWith('✓') ? '#1a2e10' : '#2a1210', border: `1px solid ${status.startsWith('✓') ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', fontSize: '13px', color: status.startsWith('✓') ? '#7fc458' : '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif' }}>
+        <div style={{ marginBottom: '16px', padding: '8px 12px', background: status.startsWith('✓') ? '#1a2e10' : '#2a1210', border: `1px solid ${status.startsWith('✓') ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', fontSize: '13px', color: status.startsWith('✓') ? '#7fc458' : '#f5a89a', fontFamily: 'Carlito, sans-serif' }}>
           {status}
         </div>
       )}
@@ -300,12 +300,12 @@ export default function ModuleEditPage() {
               }} />
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               <button onClick={() => fileRef.current?.click()} disabled={uploading}
-                style={{ padding: '6px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: uploading ? 'wait' : 'pointer', opacity: uploading ? 0.5 : 1, fontWeight: 600 }}>
+                style={{ padding: '6px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: uploading ? 'wait' : 'pointer', opacity: uploading ? 0.5 : 1, fontWeight: 600 }}>
                 {uploading ? 'Uploading…' : coverUrl ? 'Replace Cover' : 'Upload Cover'}
               </button>
               {coverUrl && (
                 <button onClick={handleRemoveCover} disabled={uploading}
-                  style={{ padding: '6px 14px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: uploading ? 'wait' : 'pointer', opacity: uploading ? 0.5 : 1 }}>
+                  style={{ padding: '6px 14px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: uploading ? 'wait' : 'pointer', opacity: uploading ? 0.5 : 1 }}>
                   Remove
                 </button>
               )}
@@ -330,7 +330,7 @@ export default function ModuleEditPage() {
       <div style={{ marginBottom: '14px' }}>
         <label style={lbl}>Content Tags</label>
         <input value={tagsInput} onChange={e => setTagsInput(e.target.value)} placeholder="comma, separated, tags" style={inp} />
-        <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
+        <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
           Examples: one-shot, horror, road, combat-heavy, sandbox.
         </div>
       </div>
@@ -346,14 +346,14 @@ export default function ModuleEditPage() {
         <div style={{ flex: 1 }}>
           <label style={lbl}>Sort Order</label>
           <input type="number" min={0} value={sortOrder} onChange={e => setSortOrder(e.target.value)} placeholder="blank = last" style={inp} />
-          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
+          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
             Lower number ranks first on /modules. Blank sorts last.
           </div>
         </div>
       </div>
 
       <button onClick={handleSave} disabled={saving}
-        style={{ marginTop: '8px', padding: '9px 22px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.5 : 1 }}>
+        style={{ marginTop: '8px', padding: '9px 22px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.5 : 1 }}>
         {saving ? 'Saving…' : 'Save Changes'}
       </button>
     </div>

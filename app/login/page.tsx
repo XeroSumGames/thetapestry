@@ -51,7 +51,7 @@ export default function LoginPage() {
 
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <img src="/distemper-dogsign-logo.png" alt="Distemper" style={{ width: '100px', height: '100px', objectFit: 'contain', marginBottom: '1.5rem' }} />
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
             The Tapestry
           </div>
           <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '4px' }}>
@@ -70,7 +70,7 @@ export default function LoginPage() {
           )}
 
           <button type="submit"
-            style={{ marginTop: '4px', padding: '10px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ marginTop: '4px', padding: '10px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Log In
           </button>
         </form>

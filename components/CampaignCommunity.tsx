@@ -1405,7 +1405,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const chipBtn: React.CSSProperties = {
     padding: '4px 10px', background: 'transparent', border: '1px solid #7ab3d4',
     borderRadius: '3px', color: '#7ab3d4', fontSize: '14px',
-    fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
+    fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', cursor: 'pointer',
   }
   const inp: React.CSSProperties = {
@@ -1427,22 +1427,22 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       {showCreate && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div>
-            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Name</div>
+            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Name</div>
             <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. The Mongrels" style={inp} />
           </div>
           <div>
-            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Description</div>
+            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Description</div>
             <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} rows={2} style={{ ...inp, resize: 'vertical' }} />
           </div>
           <div>
-            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Homestead pin (optional)</div>
+            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Homestead pin (optional)</div>
             <select value={newHomestead} onChange={e => setNewHomestead(e.target.value)} style={{ ...inp, appearance: 'none' }}>
               <option value="">— None —</option>
               {pins.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
           <button onClick={handleCreate} disabled={creating || !newName.trim()}
-            style={{ padding: '6px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', opacity: creating || !newName.trim() ? 0.5 : 1 }}>
+            style={{ padding: '6px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', opacity: creating || !newName.trim() ? 0.5 : 1 }}>
             {creating ? 'Creating…' : 'Create'}
           </button>
         </div>
@@ -1450,7 +1450,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
 
       {/* Community list */}
       {communities.length === 0 && !showCreate && (
-        <div style={{ textAlign: 'center', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', padding: '2rem 1rem' }}>
+        <div style={{ textAlign: 'center', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', padding: '2rem 1rem' }}>
           No communities yet
         </div>
       )}
@@ -1505,8 +1505,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
-                  <span style={{ fontSize: '14px', padding: '1px 6px', borderRadius: '2px', background: c.status === 'dissolved' ? '#2a1210' : isCommunity ? '#1a2e10' : '#2a2010', color: c.status === 'dissolved' ? '#f5a89a' : isCommunity ? '#7fc458' : '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                  <span style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                  <span style={{ fontSize: '14px', padding: '1px 6px', borderRadius: '2px', background: c.status === 'dissolved' ? '#2a1210' : isCommunity ? '#1a2e10' : '#2a2010', color: c.status === 'dissolved' ? '#f5a89a' : isCommunity ? '#7fc458' : '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                     {c.status === 'dissolved' ? 'Dissolved' : isCommunity ? 'Community' : 'Group'}
                   </span>
                   {/* Phase E — public visibility chip. Reads from the
@@ -1534,13 +1534,13 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       : 'Rejected by a Thriver. Edit public info and re-submit via the 🌐 strip below.'
                     return (
                       <span title={title}
-                        style={{ fontSize: '14px', padding: '1px 6px', borderRadius: '2px', background: bg, color, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
+                        style={{ fontSize: '14px', padding: '1px 6px', borderRadius: '2px', background: bg, color, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
                         {label}
                       </span>
                     )
                   })()}
                 </div>
-                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
                   {total} member{total === 1 ? '' : 's'}
                   {founderName && <> · <span style={{ color: '#EF9F27' }}>Founder:</span> <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{founderName}</span></>}
                   {!isCommunity && total > 0 && ` · ${13 - total} more for Community`}
@@ -1602,22 +1602,22 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     <div style={{ padding: '10px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {recent.length > 0 && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '14px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Recent Morale</span>
+                          <span style={{ fontSize: '14px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Recent Morale</span>
                           <div style={{ display: 'flex', gap: '4px' }}>
                             {[...recent].reverse().map((m, i) => (
                               <span key={i} title={`Week ${m.week_number} — ${m.outcome.replace(/_/g, ' ')}`}
-                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '3px', background: outcomeChipColor(m.outcome) + '22', border: `1px solid ${outcomeChipColor(m.outcome)}`, color: outcomeChipColor(m.outcome), fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: '15px' }}>
+                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '3px', background: outcomeChipColor(m.outcome) + '22', border: `1px solid ${outcomeChipColor(m.outcome)}`, color: outcomeChipColor(m.outcome), fontFamily: 'Carlito, sans-serif', fontWeight: 700, fontSize: '15px' }}>
                                 {outcomeChipLetter(m.outcome)}
                               </span>
                             ))}
                           </div>
-                          <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>oldest → newest</span>
+                          <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>oldest → newest</span>
                           {/* Phase D dashboard toggle — GM-only. Lazy-loads
                               full morale history + recruit attempts on
                               first open. */}
                           {isGM && (
                             <button onClick={() => toggleDashboard(c.id, c.name)}
-                              style={{ marginLeft: 'auto', padding: '2px 10px', background: dashboardOpen.has(c.id) ? '#1a2e10' : 'transparent', border: `1px solid ${dashboardOpen.has(c.id) ? '#2d5a1b' : '#1a3a5c'}`, borderRadius: '3px', color: dashboardOpen.has(c.id) ? '#7fc458' : '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                              style={{ marginLeft: 'auto', padding: '2px 10px', background: dashboardOpen.has(c.id) ? '#1a2e10' : 'transparent', border: `1px solid ${dashboardOpen.has(c.id) ? '#2d5a1b' : '#1a3a5c'}`, borderRadius: '3px', color: dashboardOpen.has(c.id) ? '#7fc458' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                               {dashboardOpen.has(c.id) ? '▼ Hide Dashboard' : '▶ Dashboard'}
                             </button>
                           )}
@@ -1630,22 +1630,22 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         const recruits = dashboardRecruits[c.id]
                         const isLoading = dashboardLoading.has(c.id)
                         if (isLoading || !moraleHist || !recruits) {
-                          return <div style={{ padding: '8px 0', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>Loading dashboard…</div>
+                          return <div style={{ padding: '8px 0', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>Loading dashboard…</div>
                         }
                         // Module 1: full morale timeline (chip per week,
                         // tooltip carries member-count delta).
                         const fullTimeline = (
                           <div>
-                            <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>Full Morale Timeline ({moraleHist.length} {moraleHist.length === 1 ? 'check' : 'checks'})</div>
+                            <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>Full Morale Timeline ({moraleHist.length} {moraleHist.length === 1 ? 'check' : 'checks'})</div>
                             {moraleHist.length === 0 ? (
-                              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>No morale checks yet.</div>
+                              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>No morale checks yet.</div>
                             ) : (
                               <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
                                 {moraleHist.map((m, i) => {
                                   const delta = m.members_after - m.members_before
                                   return (
                                     <span key={i} title={`Week ${m.week_number} — ${m.outcome.replace(/_/g, ' ')} · members ${m.members_before} → ${m.members_after}${delta !== 0 ? ` (${delta > 0 ? '+' : ''}${delta})` : ''}`}
-                                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '3px', background: outcomeChipColor(m.outcome) + '22', border: `1px solid ${outcomeChipColor(m.outcome)}`, color: outcomeChipColor(m.outcome), fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: '14px' }}>
+                                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '3px', background: outcomeChipColor(m.outcome) + '22', border: `1px solid ${outcomeChipColor(m.outcome)}`, color: outcomeChipColor(m.outcome), fontFamily: 'Carlito, sans-serif', fontWeight: 700, fontSize: '14px' }}>
                                       {outcomeChipLetter(m.outcome)}
                                     </span>
                                   )
@@ -1663,9 +1663,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                           rs ? rs.gatherer + rs.maintainer + rs.safety + rs.unassigned : 0
                         const roleChart = (
                           <div>
-                            <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>Role Coverage Over Time</div>
+                            <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>Role Coverage Over Time</div>
                             {moraleHist.length === 0 ? (
-                              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>No data yet.</div>
+                              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>No data yet.</div>
                             ) : (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                 {moraleHist.map((m, i) => {
@@ -1673,7 +1673,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                                   const total = totalForRow(rs)
                                   if (!rs || total === 0) {
                                     return (
-                                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#5a5550' }}>
+                                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: '#5a5550' }}>
                                         <span style={{ width: '40px', textAlign: 'right', letterSpacing: '.04em' }}>W{m.week_number}</span>
                                         <div style={{ flex: 1, height: '12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '2px' }} />
                                         <span style={{ width: '60px', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '.04em' }}>no data</span>
@@ -1681,7 +1681,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                                     )
                                   }
                                   return (
-                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#cce0f5' }}>
+                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: '#cce0f5' }}>
                                       <span style={{ width: '40px', textAlign: 'right', letterSpacing: '.04em' }}>W{m.week_number}</span>
                                       <div style={{ flex: 1, height: '12px', display: 'flex', borderRadius: '2px', overflow: 'hidden', border: '1px solid #2e2e2e' }}
                                         title={`Gatherers ${rs.gatherer} · Maintainers ${rs.maintainer} · Safety ${rs.safety} · Unassigned ${rs.unassigned}`}>
@@ -1694,7 +1694,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                                     </div>
                                   )
                                 })}
-                                <div style={{ display: 'flex', gap: '10px', marginTop: '4px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', color: '#cce0f5', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                                <div style={{ display: 'flex', gap: '10px', marginTop: '4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: '#cce0f5', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                                   <span><span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#7fc458', marginRight: '4px', verticalAlign: 'middle' }} />Gatherer</span>
                                   <span><span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#7ab3d4', marginRight: '4px', verticalAlign: 'middle' }} />Maintainer</span>
                                   <span><span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#EF9F27', marginRight: '4px', verticalAlign: 'middle' }} />Safety</span>
@@ -1718,11 +1718,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         }
                         const recruitStats = (
                           <div>
-                            <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>Recruitment Success Rate</div>
+                            <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>Recruitment Success Rate</div>
                             {totalAttempts === 0 ? (
-                              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>No recruit attempts logged yet.</div>
+                              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>No recruit attempts logged yet.</div>
                             ) : (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', color: '#cce0f5' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '14px', fontFamily: 'Carlito, sans-serif', color: '#cce0f5' }}>
                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '4px' }}>
                                   <span style={{ color: '#f5f2ee', fontWeight: 700 }}>Overall</span>
                                   <span style={{ color: '#7fc458', fontWeight: 700 }}>{totalSucc}/{totalAttempts}</span>
@@ -1748,7 +1748,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         )
                       })()}
                       {viewerIsMember && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', color: '#cce0f5' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '14px', fontFamily: 'Carlito, sans-serif', color: '#cce0f5' }}>
                           <span style={{ color: '#7ab3d4', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>You</span>
                           <span>
                             <span style={{ color: '#5a5550', letterSpacing: '.04em', textTransform: 'uppercase' }}>Role:</span>{' '}
@@ -1784,7 +1784,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   if (!isGM) {
                     return (
                       <div style={{ padding: '8px 12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>📍 Homestead</span>
+                        <span style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>📍 Homestead</span>
                         <span style={{ fontSize: '14px', color: homesteadPin ? '#f5f2ee' : '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
                           {homesteadPin ? homesteadPin.name : 'unlocated'}
                         </span>
@@ -1793,11 +1793,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   }
                   return (
                     <div style={{ padding: '8px 12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>📍 Homestead</span>
+                      <span style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>📍 Homestead</span>
                       <select
                         value={c.homestead_pin_id ?? ''}
                         onChange={e => handleSetHomestead(c.id, e.target.value || null)}
-                        style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none' }}>
+                        style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none' }}>
                         <option value="">— unlocated —</option>
                         {pins.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
@@ -1806,7 +1806,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       {homesteadPin && homesteadPin.lat != null && homesteadPin.lng != null && (
                         <a href={`/map?flyTo=${homesteadPin.lat},${homesteadPin.lng}`}
                           title="Open the in-app world map centered on this Homestead"
-                          style={{ padding: '4px 8px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', textDecoration: 'none' }}>
+                          style={{ padding: '4px 8px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', textDecoration: 'none' }}>
                           View
                         </a>
                       )}
@@ -1832,7 +1832,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   return (
                     <div style={{ padding: '10px 12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Leader</span>
+                        <span style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Leader</span>
                         <select
                           value={leaderMember?.id ?? ''}
                           onChange={e => {
@@ -1841,7 +1841,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                             if (!mem) return
                             handleSetLeader(c.id, { kind: mem.npc_id ? 'npc' : 'pc', memberId: mem.id })
                           }}
-                          style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none' }}>
+                          style={{ flex: 1, padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none' }}>
                           <option value="">— pick a leader —</option>
                           {mems.map(m => (
                             <option key={m.id} value={m.id}>{memberLabel(m)}{m.npc_id ? ' (NPC)' : ' (PC)'}</option>
@@ -1850,7 +1850,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         {canStepDown && (
                           <button onClick={() => { setStepDownCommunityId(stepDownOpen ? null : c.id); setSuccessorChoice('auto') }}
                             title={iAmLeader && !isGM ? 'Step down as leader of this community' : 'Force the current leader to step down'}
-                            style={{ padding: '6px 10px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                            style={{ padding: '6px 10px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                             {stepDownOpen ? 'Cancel' : 'Step Down'}
                           </button>
                         )}
@@ -1861,7 +1861,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                             <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{leaderMember ? memberLabel(leaderMember) : 'The leader'}</span> is stepping down. Pick a successor:
                           </div>
                           <select value={successorChoice} onChange={e => setSuccessorChoice(e.target.value)}
-                            style={{ padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none' }}>
+                            style={{ padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', appearance: 'none' }}>
                             <option value="auto">Auto-pick{autoSuccessorMember ? ` — ${memberLabel(autoSuccessorMember)}${autoSuccessorMember.npc_id ? ' (NPC)' : ' (PC)'}` : ' — none available'}</option>
                             <option value="">— Leave leaderless (−1 Clear Voice on next Morale) —</option>
                             {mems.filter(m => m.id !== leaderMember?.id).map(m => (
@@ -1870,11 +1870,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                           </select>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                             <button onClick={() => { setStepDownCommunityId(null); setSuccessorChoice('auto') }}
-                              style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                              style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                               Cancel
                             </button>
                             <button onClick={() => handleStepDown(c.id, successorChoice)}
-                              style={{ padding: '6px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                              style={{ padding: '6px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                               Confirm Step Down
                             </button>
                           </div>
@@ -1902,21 +1902,21 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 {(isGM || (!!myUserId && c.leader_user_id === myUserId)) && isCommunity && c.status !== 'dissolved' && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px' }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '14px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
+                      <div style={{ fontSize: '14px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
                         📊 Weekly Check
                       </div>
-                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
                         Week {c.week_number + 1} · {c.consecutive_failures}/3 consecutive failures
                         {c.consecutive_failures === 2 && <span style={{ color: '#f5a89a', fontWeight: 600 }}> · one more failure dissolves the community</span>}
                       </div>
                     </div>
                     <button onClick={() => handleSkipWeek(c)}
                       title="Advance the community's week counter without rolling. Use for off-screen time — Morale / resource consequences only apply on an actual Weekly Check."
-                      style={{ padding: '8px 14px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ padding: '8px 14px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       Skip Week
                     </button>
                     <button onClick={() => setMoraleCommunityId(c.id)}
-                      style={{ padding: '8px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                      style={{ padding: '8px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                       Run Weekly Check
                     </button>
                   </div>
@@ -1946,10 +1946,10 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   return (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: isPublished ? '#1a102a' : '#1a1a1a', border: `1px solid ${isPublished ? '#5a2e5a' : '#2e2e2e'}`, borderRadius: '3px', flexWrap: 'wrap' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '14px', color: isPublished ? '#d48bd4' : '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
+                        <div style={{ fontSize: '14px', color: isPublished ? '#d48bd4' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
                           🌐 The Tapestry
                         </div>
-                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
                           {isPublished
                             ? <>Published as <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{world!.size_band}</span> · <span style={{ color: modColor, fontWeight: 700 }}>{modChip}</span>{world!.faction_label ? <> · <span style={{ color: '#EF9F27' }}>{world!.faction_label}</span></> : null}</>
                             : 'Publish this community to the Tapestry to make it visible across other campaigns.'}
@@ -1958,17 +1958,17 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       {isPublished ? (
                         <>
                           <button onClick={() => openPublishModal(c.id)}
-                            style={{ padding: '8px 14px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            style={{ padding: '8px 14px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                             Update Public Info
                           </button>
                           <button onClick={() => handleUnpublish(c.id)}
-                            style={{ padding: '8px 14px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            style={{ padding: '8px 14px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                             Unpublish
                           </button>
                         </>
                       ) : (
                         <button onClick={() => openPublishModal(c.id)}
-                          style={{ padding: '8px 14px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                          style={{ padding: '8px 14px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                           🌐 Publish to Tapestry
                         </button>
                       )}
@@ -1986,24 +1986,24 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   if (pending.length === 0 || (!iLead && !isGM)) return null
                   return (
                     <div style={{ padding: '12px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '4px' }}>
-                      <div style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>
+                      <div style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>
                         ⏳ Pending Requests ({pending.length})
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         {pending.map(req => (
                           <div key={req.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                            <span style={{ flex: 1, fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                            <span style={{ flex: 1, fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                               {memberLabel(req)}
                             </span>
-                            <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                            <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                               {RECRUITMENT_LABEL[req.recruitment_type]}
                             </span>
                             <button onClick={() => handleApproveRequest(req)}
-                              style={{ padding: '4px 12px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                              style={{ padding: '4px 12px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                               Approve
                             </button>
                             <button onClick={() => handleRejectRequest(req)}
-                              style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                              style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#c0392b', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                               Reject
                             </button>
                           </div>
@@ -2018,9 +2018,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     assigned labor. The "Re-balance" button triggers
                     the quota-aware allocator manually. */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ flex: 1, fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Role Coverage</div>
+                  <div style={{ flex: 1, fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Role Coverage</div>
                   <button onClick={() => handleRebalance(c.id)}
-                    style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+                    style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
                     title="Auto-sort NPCs by skill to hit role minimums">
                     ⚖ Re-balance Roles
                   </button>
@@ -2033,7 +2033,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     const count = laborPool.filter(m => m.role === r).length
                     const ok = pct >= min && pct <= max
                     return (
-                      <div key={r} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      <div key={r} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontFamily: 'Carlito, sans-serif' }}>
                         <span style={{ width: '110px', color: '#cce0f5', letterSpacing: '.04em', textTransform: 'uppercase' }}>{ROLE_LABEL[r]}</span>
                         <div style={{ flex: 1, height: '12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', overflow: 'hidden' }}>
                           <div style={{ width: `${Math.min(100, pct)}%`, height: '100%', background: ok ? '#7fc458' : '#c0392b', transition: 'width 0.2s' }} />
@@ -2084,11 +2084,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     return (
                       <div key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '6px 8px', background: '#111', border: `1px solid ${accent}`, borderRadius: '2px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ flex: 1, minWidth: 0, fontSize: '15px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <span style={{ flex: 1, minWidth: 0, fontSize: '15px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {displayName || (m.npc_id ? '(NPC)' : '(PC)')}
                           </span>
                           <select value={m.role} onChange={e => handleChangeRole(m, e.target.value as Role)}
-                            style={{ width: '110px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                            style={{ width: '110px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                             {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
                           </select>
                           {m.character_id && pcUserMap[m.character_id] && pcUserMap[m.character_id] !== myUserId && (
@@ -2102,7 +2102,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                               style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '16px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>×</button>
                           ) : isMyPc ? (
                             <button onClick={() => handleRemoveMember(m, { self: true })} title="Leave this community"
-                              style={{ background: 'none', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '1px 6px', lineHeight: 1, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>Leave</button>
+                              style={{ background: 'none', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '1px 6px', lineHeight: 1, fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>Leave</button>
                           ) : null}
                         </div>
                         {/* Task row. Shows for Apprentices (permanent
@@ -2113,7 +2113,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                             "+ Assign task" affordance. */}
                         {hasTaskSurface && (editingTask ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '2px' }}>
-                            <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Task</span>
+                            <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Task</span>
                             <input autoFocus value={taskDraft}
                               placeholder="e.g. Scout the warehouse, deliver the message to Maren"
                               onChange={e => setTaskDraft(e.target.value)}
@@ -2123,22 +2123,22 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                               }}
                               style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #5a2e5a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
                             <button onClick={() => handleSaveTask(m)}
-                              style={{ padding: '4px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>Save</button>
+                              style={{ padding: '4px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>Save</button>
                             <button onClick={handleCancelEditTask}
                               style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '15px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>×</button>
                           </div>
                         ) : taskText ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '2px' }}>
-                            <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Task</span>
+                            <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Task</span>
                             <span style={{ flex: 1, fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', fontStyle: 'italic' }}>{taskText}</span>
                             {isGM && (
                               <button onClick={() => handleStartEditTask(m)} title="Edit task"
-                                style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', cursor: 'pointer', padding: '0 4px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✎ edit</button>
+                                style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', cursor: 'pointer', padding: '0 4px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✎ edit</button>
                             )}
                           </div>
                         ) : isGM ? (
                           <button onClick={() => handleStartEditTask(m)}
-                            style={{ alignSelf: 'flex-start', padding: '2px 8px', background: 'transparent', border: '1px dashed #5a2e5a', borderRadius: '2px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            style={{ alignSelf: 'flex-start', padding: '2px 8px', background: 'transparent', border: '1px dashed #5a2e5a', borderRadius: '2px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                             + Assign task
                           </button>
                         ) : null)}
@@ -2151,7 +2151,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       {/* PC block — between the role bars and NPC roster */}
                       {pcMems.length > 0 && (
                         <div>
-                          <div style={{ fontSize: '14px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Player Characters ({pcMems.length})</div>
+                          <div style={{ fontSize: '14px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Player Characters ({pcMems.length})</div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                             {pcMems.map(m => renderRow(m, '#2e2e4a'))}
                           </div>
@@ -2170,7 +2170,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         const rowAccent = r === 'assigned' ? '#5a2e5a' : '#2e2e2e'
                         return (
                           <div key={r}>
-                            <div style={{ fontSize: '14px', color: headerColor, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>{ROLE_LABEL[r]} ({list.length})</div>
+                            <div style={{ fontSize: '14px', color: headerColor, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>{ROLE_LABEL[r]} ({list.length})</div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                               {list.map(m => renderRow(m, rowAccent))}
                             </div>
@@ -2184,10 +2184,10 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 {/* Add member */}
                 {(availableNpcs.length > 0 || availableChars.length > 0) && (
                   <div style={{ padding: '14px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
-                    <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '10px', fontWeight: 600 }}>Add Member</div>
+                    <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '10px', fontWeight: 600 }}>Add Member</div>
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                       <select value={addKind} onChange={e => { setAddKind(e.target.value as 'npc' | 'pc'); setAddSubjectId('') }}
-                        style={{ padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                        style={{ padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                         <option value="npc">NPC</option>
                         <option value="pc">PC</option>
                       </select>
@@ -2199,16 +2199,16 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     </div>
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                       <select value={addRole} onChange={e => setAddRole(e.target.value as Role)}
-                        style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                        style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                         {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
                       </select>
                       <select value={addType} onChange={e => setAddType(e.target.value as RecruitmentType)}
-                        style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                        style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                         {(Object.keys(RECRUITMENT_LABEL) as RecruitmentType[]).map(rt => <option key={rt} value={rt}>{RECRUITMENT_LABEL[rt]}</option>)}
                       </select>
                     </div>
                     <button onClick={() => handleAddMember(c.id)} disabled={!addSubjectId}
-                      style={{ padding: '8px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: addSubjectId ? 'pointer' : 'not-allowed', opacity: addSubjectId ? 1 : 0.5, fontWeight: 600 }}>
+                      style={{ padding: '8px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: addSubjectId ? 'pointer' : 'not-allowed', opacity: addSubjectId ? 1 : 0.5, fontWeight: 600 }}>
                       + Add
                     </button>
                   </div>
@@ -2224,7 +2224,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   const survivors = (dissolvedSurvivors[c.id] ?? []).filter(m => m.npc_id)
                   return (
                     <div style={{ padding: '10px 12px', background: '#1a102a', border: '1px solid #5a2e5a', borderRadius: '3px' }}>
-                      <div style={{ fontSize: '14px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>
+                      <div style={{ fontSize: '14px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>
                         📤 Survivor Migration
                       </div>
                       <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5, marginBottom: '8px' }}>
@@ -2234,12 +2234,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       </div>
                       {survivors.length > 0 && migrationTargets.length > 0 && (
                         <button onClick={() => openMigrationModal(c)}
-                          style={{ padding: '6px 14px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                          style={{ padding: '6px 14px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                           📤 Offer Survivors
                         </button>
                       )}
                       {survivors.length > 0 && migrationTargets.length === 0 && (
-                        <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                        <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                           No published communities exist yet to offer them to.
                         </div>
                       )}
@@ -2257,14 +2257,14 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 {isGM && c.status !== 'dissolved' && total >= 14 && (
                   <button onClick={() => openSchismModal(c)}
                     title="Split this community into two — pick which members leave with the breakaway."
-                    style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #d48bd4', borderRadius: '2px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
+                    style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #d48bd4', borderRadius: '2px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
                     ⛓ Schism
                   </button>
                 )}
 
                 {/* Danger zone */}
                 <button onClick={() => handleDeleteCommunity(c)}
-                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '2px', color: '#c0392b', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
+                  style={{ padding: '4px 10px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '2px', color: '#c0392b', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
                   Delete Community
                 </button>
               </div>
@@ -2290,10 +2290,10 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '640px', maxWidth: '100%', maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                     📤 Offer Survivors — {original.name}
                   </div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                     Send the dispossessed to a new home
                   </div>
                 </div>
@@ -2305,7 +2305,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   Each picked survivor becomes a migration request to the chosen community. The receiving GM accepts (the survivor narratively joins them) or declines (the survivor's fate stays open). Picking 5 survivors sends 5 separate requests so the receiver can pick and choose.
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Target community</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Target community</div>
                   <select value={migrationTargetId} onChange={e => setMigrationTargetId(e.target.value)}
                     style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
                     <option value="">— pick a community —</option>
@@ -2315,7 +2315,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   </select>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
                     Survivors to offer ({migrationPickedIds.size} / {survivors.length})
                   </div>
                   <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px' }}>
@@ -2324,15 +2324,15 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       return (
                         <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px', cursor: 'pointer', borderRadius: '2px', background: checked ? '#2a102a' : 'transparent' }}>
                           <input type="checkbox" checked={checked} onChange={() => toggleMigrationMember(m.id)} />
-                          <span style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>{memberLabel(m)}</span>
-                          <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginLeft: 'auto' }}>{ROLE_LABEL[m.role]}</span>
+                          <span style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>{memberLabel(m)}</span>
+                          <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginLeft: 'auto' }}>{ROLE_LABEL[m.role]}</span>
                         </label>
                       )
                     })}
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Narrative (optional)</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Narrative (optional)</div>
                   <textarea value={migrationNarrative}
                     placeholder="e.g. They survived the raid that broke us. They carry our last stockpile of antibiotics — please honor what's left of us."
                     onChange={e => setMigrationNarrative(e.target.value)}
@@ -2342,11 +2342,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               </div>
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <button onClick={closeMigrationModal} disabled={migrationSubmitting}
-                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: migrationSubmitting ? 'not-allowed' : 'pointer', opacity: migrationSubmitting ? 0.4 : 1 }}>
+                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: migrationSubmitting ? 'not-allowed' : 'pointer', opacity: migrationSubmitting ? 0.4 : 1 }}>
                   Cancel
                 </button>
                 <button onClick={handleMigration} disabled={migrationSubmitting || !migrationTargetId || migrationPickedIds.size === 0}
-                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (migrationSubmitting || !migrationTargetId || migrationPickedIds.size === 0) ? 'not-allowed' : 'pointer', opacity: (migrationSubmitting || !migrationTargetId || migrationPickedIds.size === 0) ? 0.4 : 1, fontWeight: 600 }}>
+                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (migrationSubmitting || !migrationTargetId || migrationPickedIds.size === 0) ? 'not-allowed' : 'pointer', opacity: (migrationSubmitting || !migrationTargetId || migrationPickedIds.size === 0) ? 0.4 : 1, fontWeight: 600 }}>
                   {migrationSubmitting ? 'Sending…' : '📤 Send Offers'}
                 </button>
               </div>
@@ -2375,10 +2375,10 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '640px', maxWidth: '100%', maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                     ⛓ Schism — {original.name}
                   </div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                     Split into two communities
                   </div>
                 </div>
@@ -2390,13 +2390,13 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   Pick the breakaway faction's members. They leave with reason "schism" and join a new community in this campaign. The original keeps everyone else and its history (Morale roll log, week counter, consecutive failures).
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Breakaway name</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Breakaway name</div>
                   <input value={schismName}
                     onChange={e => setSchismName(e.target.value)}
                     style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Description (optional)</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Description (optional)</div>
                   <textarea value={schismDescription}
                     placeholder="Why did they leave? What do they believe?"
                     onChange={e => setSchismDescription(e.target.value)}
@@ -2404,7 +2404,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Breakaway Homestead pin (optional)</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Breakaway Homestead pin (optional)</div>
                   <select value={schismHomesteadPinId} onChange={e => setSchismHomesteadPinId(e.target.value)}
                     style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
                     <option value="">— None (set later) —</option>
@@ -2412,7 +2412,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   </select>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
                     Members joining the breakaway ({schismPickedIds.size} / {mems.length})
                   </div>
                   <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px' }}>
@@ -2421,15 +2421,15 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       return (
                         <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px', cursor: 'pointer', borderRadius: '2px', background: checked ? '#2a102a' : 'transparent' }}>
                           <input type="checkbox" checked={checked} onChange={() => toggleSchismMember(m.id)} />
-                          <span style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>{memberLabel(m)}</span>
-                          <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginLeft: 'auto' }}>{m.npc_id ? 'NPC' : 'PC'} · {ROLE_LABEL[m.role]}</span>
+                          <span style={{ fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>{memberLabel(m)}</span>
+                          <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginLeft: 'auto' }}>{m.npc_id ? 'NPC' : 'PC'} · {ROLE_LABEL[m.role]}</span>
                         </label>
                       )
                     })}
                   </div>
                 </div>
                 <div style={{ padding: '10px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                     <span style={{ color: '#5a5550', textTransform: 'uppercase' }}>After split:</span>{' '}
                     <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{original.name}</span> {remaining} ({remainingIsCommunity ? 'Community' : 'Group'}){' · '}
                     <span style={{ color: '#d48bd4', fontWeight: 700 }}>{schismName.trim() || 'Breakaway'}</span> {picked} ({breakawayIsCommunity ? 'Community' : 'Group'})
@@ -2438,11 +2438,11 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               </div>
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <button onClick={closeSchismModal} disabled={schismSubmitting}
-                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: schismSubmitting ? 'not-allowed' : 'pointer', opacity: schismSubmitting ? 0.4 : 1 }}>
+                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: schismSubmitting ? 'not-allowed' : 'pointer', opacity: schismSubmitting ? 0.4 : 1 }}>
                   Cancel
                 </button>
                 <button onClick={handleSchism} disabled={schismSubmitting || schismPickedIds.size === 0 || !schismName.trim()}
-                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (schismSubmitting || schismPickedIds.size === 0 || !schismName.trim()) ? 'not-allowed' : 'pointer', opacity: (schismSubmitting || schismPickedIds.size === 0 || !schismName.trim()) ? 0.4 : 1, fontWeight: 600 }}>
+                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (schismSubmitting || schismPickedIds.size === 0 || !schismName.trim()) ? 'not-allowed' : 'pointer', opacity: (schismSubmitting || schismPickedIds.size === 0 || !schismName.trim()) ? 0.4 : 1, fontWeight: 600 }}>
                   {schismSubmitting ? 'Splitting…' : '⛓ Confirm Schism'}
                 </button>
               </div>
@@ -2472,10 +2472,10 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '580px', maxWidth: '100%', maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                     🌐 {world ? 'Update' : 'Publish'} — {c.name}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                     {world ? 'Refresh the Tapestry-facing card' : 'Share this community across the Tapestry'}
                   </div>
                 </div>
@@ -2488,12 +2488,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 </div>
 
                 <div style={{ padding: '12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Preview</div>
-                  <div style={{ fontSize: '19px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 700 }}>{c.name}</div>
+                  <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Preview</div>
+                  <div style={{ fontSize: '19px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 700 }}>{c.name}</div>
                   {c.description && (
                     <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>{c.description}</div>
                   )}
-                  <div style={{ display: 'flex', gap: '14px', fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                  <div style={{ display: 'flex', gap: '14px', fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                     <span><span style={{ color: '#5a5550', textTransform: 'uppercase' }}>Size:</span> <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{sizeBand}</span> <span style={{ color: '#5a5550' }}>({total} members)</span></span>
                     <span><span style={{ color: '#5a5550', textTransform: 'uppercase' }}>Status:</span> <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{publicStatus}</span></span>
                     <span><span style={{ color: '#5a5550', textTransform: 'uppercase' }}>Homestead:</span> <span style={{ color: homesteadPin ? '#7fc458' : '#EF9F27', fontWeight: 700 }}>{homesteadPin ? homesteadPin.name : 'none set — will publish unlocated'}</span></span>
@@ -2501,23 +2501,23 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 </div>
 
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Faction / flavor label (optional)</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Faction / flavor label (optional)</div>
                   <input value={publishFactionLabel}
                     placeholder="e.g. Reformed Church, Mercantile, Mongrels, Scholars"
                     onChange={e => setPublishFactionLabel(e.target.value)}
                     style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
-                  <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '4px' }}>
+                  <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
                     Short label shown on the world map alongside the community's public card. Leave blank for none.
                   </div>
                 </div>
               </div>
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <button onClick={closePublishModal} disabled={publishing}
-                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: publishing ? 'not-allowed' : 'pointer', opacity: publishing ? 0.4 : 1 }}>
+                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: publishing ? 'not-allowed' : 'pointer', opacity: publishing ? 0.4 : 1 }}>
                   Cancel
                 </button>
                 <button onClick={handlePublish} disabled={publishing}
-                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: publishing ? 'not-allowed' : 'pointer', opacity: publishing ? 0.4 : 1, fontWeight: 600 }}>
+                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: publishing ? 'not-allowed' : 'pointer', opacity: publishing ? 0.4 : 1, fontWeight: 600 }}>
                   {publishing ? 'Publishing…' : world ? 'Update Public Info' : '🌐 Publish'}
                 </button>
               </div>
@@ -2550,7 +2550,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
             <div onClick={e => e.stopPropagation()}
               style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', width: '520px', maxWidth: '100%', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                   Assign {memberLabel(m)}
                 </div>
                 <button onClick={handleCancelAssignment}
@@ -2561,7 +2561,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   Assigned NPCs are off doing a PC-directed task and don't count toward the labor minimums. Pick who's directing them and what they're doing.
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Directed by</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Directed by</div>
                   <select value={assignmentPcDraft}
                     onChange={e => setAssignmentPcDraft(e.target.value)}
                     style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
@@ -2573,7 +2573,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   </select>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Task</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Task</div>
                   <input autoFocus value={assignmentTaskDraft}
                     placeholder="e.g. Scouting the Belvedere's warehouse"
                     onChange={e => setAssignmentTaskDraft(e.target.value)}
@@ -2586,10 +2586,10 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               </div>
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <button onClick={handleCancelAssignment}
-                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                 <button onClick={handleSaveAssignment}
                   disabled={!assignmentPcDraft}
-                  style={{ padding: '8px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: assignmentPcDraft ? 'pointer' : 'not-allowed', opacity: assignmentPcDraft ? 1 : 0.4, fontWeight: 600 }}>
+                  style={{ padding: '8px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: assignmentPcDraft ? 'pointer' : 'not-allowed', opacity: assignmentPcDraft ? 1 : 0.4, fontWeight: 600 }}>
                   Assign
                 </button>
               </div>

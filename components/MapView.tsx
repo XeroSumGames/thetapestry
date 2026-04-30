@@ -531,7 +531,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         const count = cluster.getChildCount()
         const size = count < 10 ? 32 : count < 50 ? 40 : 48
         return leaflet.divIcon({
-          html: `<div style="width:${size}px;height:${size}px;background:#1a1a1a;border:2px solid #c0392b;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f5f2ee;font-family:'Barlow Condensed',sans-serif;font-size:${size < 40 ? 13 : 15}px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.5);">${count}</div>`,
+          html: `<div style="width:${size}px;height:${size}px;background:#1a1a1a;border:2px solid #c0392b;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f5f2ee;font-family:'Carlito',sans-serif;font-size:${size < 40 ? 13 : 15}px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.5);">${count}</div>`,
           className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2],
         })
       },
@@ -638,7 +638,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         // with a thin dark outline + subtle glow. No emoji — the
         // shape itself reads as "settled place".
         const icon = leaflet.divIcon({
-          html: `<div style="width:${sizePx}px;height:${sizePx}px;background:${dotColor};border:2px solid #1a1a1a;border-radius:50%;box-shadow:0 0 8px rgba(212,139,212,0.6);display:flex;align-items:center;justify-content:center;color:#1a1a1a;font-family:'Barlow Condensed',sans-serif;font-size:${Math.max(11, sizePx / 2.5)}px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;" title="${(row.name || '').replace(/"/g, '&quot;')} — ${sizeBand}"></div>`,
+          html: `<div style="width:${sizePx}px;height:${sizePx}px;background:${dotColor};border:2px solid #1a1a1a;border-radius:50%;box-shadow:0 0 8px rgba(212,139,212,0.6);display:flex;align-items:center;justify-content:center;color:#1a1a1a;font-family:'Carlito',sans-serif;font-size:${Math.max(11, sizePx / 2.5)}px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;" title="${(row.name || '').replace(/"/g, '&quot;')} — ${sizeBand}"></div>`,
           className: '',
           iconSize: [sizePx, sizePx],
           iconAnchor: [sizePx / 2, sizePx / 2],
@@ -686,8 +686,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             <div style="font-size:11px;color:#888;margin-bottom:8px">From <strong>${escapedCamp}</strong></div>
             ${row.last_public_update_at ? `<div style="font-size:10px;color:#aaa;margin-bottom:8px">Updated ${new Date(row.last_public_update_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>` : ''}
             ${currentUserId ? `
-              <button data-tapestry-encounter="1" data-world-community-id="${row.id}" data-source-campaign-id="${row.source_campaign_id}" data-name="${escapedName.replace(/"/g, '&quot;')}" style="width:100%;padding:6px 10px;background:#2a102a;border:1px solid #5a2e5a;border-radius:3px;color:#d48bd4;font-size:13px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-weight:600;margin-bottom:4px">🤝 My PCs encountered this</button>
-              <button data-tapestry-link="1" data-world-community-id="${row.id}" data-name="${escapedName.replace(/"/g, '&quot;')}" style="width:100%;padding:6px 10px;background:transparent;border:1px solid #5a2e5a;border-radius:3px;color:#d48bd4;font-size:13px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">🔗 Propose link</button>
+              <button data-tapestry-encounter="1" data-world-community-id="${row.id}" data-source-campaign-id="${row.source_campaign_id}" data-name="${escapedName.replace(/"/g, '&quot;')}" style="width:100%;padding:6px 10px;background:#2a102a;border:1px solid #5a2e5a;border-radius:3px;color:#d48bd4;font-size:13px;font-family:'Carlito',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-weight:600;margin-bottom:4px">🤝 My PCs encountered this</button>
+              <button data-tapestry-link="1" data-world-community-id="${row.id}" data-name="${escapedName.replace(/"/g, '&quot;')}" style="width:100%;padding:6px 10px;background:transparent;border:1px solid #5a2e5a;border-radius:3px;color:#d48bd4;font-size:13px;font-family:'Carlito',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">🔗 Propose link</button>
             ` : ''}
           </div>
         `
@@ -1007,7 +1007,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             <div onClick={e => e.stopPropagation()}
               style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '520px', maxWidth: '100%', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                   🔗 Propose Link — {linkTarget.name}
                 </div>
                 <button onClick={() => !linkSubmitting && setLinkTarget(null)}
@@ -1018,14 +1018,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   Both GMs must agree before this link goes live on the world map. The other community's GM will get a notification with your one-line context — they accept or decline.
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>From your community</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>From your community</div>
                   <select value={linkFromId} onChange={e => setLinkFromId(e.target.value)}
                     style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
                     {eligible.map(wc => <option key={wc.id} value={wc.id}>{wc.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Link type</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Link type</div>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     {([
                       { v: 'trade' as const, label: '💱 Trade', color: '#7fc458', desc: 'Goods + supplies flow' },
@@ -1033,7 +1033,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                       { v: 'feud' as const, label: '⚔️ Feud', color: '#c0392b', desc: 'Standing hostility' },
                     ]).map(opt => (
                       <button key={opt.v} onClick={() => setLinkType(opt.v)}
-                        style={{ flex: 1, padding: '10px 8px', background: linkType === opt.v ? `${opt.color}22` : '#242424', border: `1px solid ${linkType === opt.v ? opt.color : '#3a3a3a'}`, borderRadius: '3px', color: linkType === opt.v ? opt.color : '#cce0f5', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: linkType === opt.v ? 700 : 400, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                        style={{ flex: 1, padding: '10px 8px', background: linkType === opt.v ? `${opt.color}22` : '#242424', border: `1px solid ${linkType === opt.v ? opt.color : '#3a3a3a'}`, borderRadius: '3px', color: linkType === opt.v ? opt.color : '#cce0f5', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: linkType === opt.v ? 700 : 400, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                         <span>{opt.label}</span>
                         <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', textTransform: 'none', letterSpacing: 0 }}>{opt.desc}</span>
                       </button>
@@ -1041,7 +1041,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Narrative (optional)</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Narrative (optional)</div>
                   <textarea value={linkNarrative}
                     placeholder="e.g. Weekly trade caravans run between us — clean water for medicine."
                     onChange={e => setLinkNarrative(e.target.value)}
@@ -1051,9 +1051,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               </div>
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <button onClick={() => setLinkTarget(null)} disabled={linkSubmitting}
-                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: linkSubmitting ? 'not-allowed' : 'pointer', opacity: linkSubmitting ? 0.4 : 1 }}>Cancel</button>
+                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: linkSubmitting ? 'not-allowed' : 'pointer', opacity: linkSubmitting ? 0.4 : 1 }}>Cancel</button>
                 <button onClick={submitLink} disabled={linkSubmitting || !linkFromId}
-                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (linkSubmitting || !linkFromId) ? 'not-allowed' : 'pointer', opacity: (linkSubmitting || !linkFromId) ? 0.4 : 1, fontWeight: 600 }}>
+                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (linkSubmitting || !linkFromId) ? 'not-allowed' : 'pointer', opacity: (linkSubmitting || !linkFromId) ? 0.4 : 1, fontWeight: 600 }}>
                   {linkSubmitting ? 'Sending…' : '🔗 Send Proposal'}
                 </button>
               </div>
@@ -1077,7 +1077,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             <div onClick={e => e.stopPropagation()}
               style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '520px', maxWidth: '100%', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                   🤝 Encounter — {encounterTarget.name}
                 </div>
                 <button onClick={() => !encounterSubmitting && setEncounterTarget(null)}
@@ -1088,14 +1088,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   Flag that your PCs ran into <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{encounterTarget.name}</span> in your campaign. The source GM gets a notification with your one-line narrative; they can accept (canon on both tables) or decline (didn't fit theirs).
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Encountering campaign</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Encountering campaign</div>
                   <select value={encounterCampaignId} onChange={e => setEncounterCampaignId(e.target.value)}
                     style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
                     {eligible.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>What happened (optional)</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>What happened (optional)</div>
                   <textarea value={encounterNarrative}
                     placeholder="e.g. We traded medical supplies for ammunition while sheltering from a Distemper surge."
                     onChange={e => setEncounterNarrative(e.target.value)}
@@ -1105,9 +1105,9 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               </div>
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <button onClick={() => setEncounterTarget(null)} disabled={encounterSubmitting}
-                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: encounterSubmitting ? 'not-allowed' : 'pointer', opacity: encounterSubmitting ? 0.4 : 1 }}>Cancel</button>
+                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: encounterSubmitting ? 'not-allowed' : 'pointer', opacity: encounterSubmitting ? 0.4 : 1 }}>Cancel</button>
                 <button onClick={submitEncounter} disabled={encounterSubmitting || !encounterCampaignId}
-                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (encounterSubmitting || !encounterCampaignId) ? 'not-allowed' : 'pointer', opacity: (encounterSubmitting || !encounterCampaignId) ? 0.4 : 1, fontWeight: 600 }}>
+                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (encounterSubmitting || !encounterCampaignId) ? 'not-allowed' : 'pointer', opacity: (encounterSubmitting || !encounterCampaignId) ? 0.4 : 1, fontWeight: 600 }}>
                   {encounterSubmitting ? 'Sending…' : '🤝 Send Encounter'}
                 </button>
               </div>
@@ -1118,10 +1118,10 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
       {!embedded && showHeader && (
         <div style={{ flexShrink: 0, zIndex: 1000, background: '#0f0f0f', borderBottom: '1px solid #c0392b', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>The Tapestry</div>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>The Tapestry</div>
           <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.08em', textTransform: 'uppercase' }}>World Map</div>
           <div style={{ flex: 1 }} />
-          <button onClick={() => setSidebarOpen(p => !p)} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          <button onClick={() => setSidebarOpen(p => !p)} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             {sidebarOpen ? 'Hide Pins' : 'Show Pins'}
           </button>
           {userRole === 'thriver' && (
@@ -1133,11 +1133,11 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               const text = `center: [${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}], zoom: ${z}`
               navigator.clipboard.writeText(text)
               alert(`Copied: ${text}`)
-            }} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            }} style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Copy Position
             </button>
           )}
-          <Link href="/dashboard" style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Dashboard</Link>
+          <Link href="/dashboard" style={{ padding: '6px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Dashboard</Link>
         </div>
       )}
 
@@ -1154,8 +1154,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   style={{ padding: '2px 6px', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '14px', cursor: 'pointer', lineHeight: 1, marginRight: '4px' }}
                   onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
                   onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>✕</button>
-                <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Pins</span>
-                <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>{displayedPins.length} total</span>
+                <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Pins</span>
+                <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{displayedPins.length} total</span>
               </div>
               <input value={pinSearch} onChange={e => setPinSearch(e.target.value)} placeholder="Search pins..."
                 style={{ width: '100%', padding: '5px 8px', marginBottom: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
@@ -1171,7 +1171,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
               <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e' }}>
                 {(['public', 'mine', 'campaign'] as const).map(tab => (
                   <button key={tab} onClick={() => setSidebarTab(tab)}
-                    style={{ flex: 1, padding: '6px', background: sidebarTab === tab ? '#242424' : 'transparent', border: 'none', borderBottom: sidebarTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: sidebarTab === tab ? '#f5f2ee' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ flex: 1, padding: '6px', background: sidebarTab === tab ? '#242424' : 'transparent', border: 'none', borderBottom: sidebarTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: sidebarTab === tab ? '#f5f2ee' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     {tab === 'public' ? 'Public' : tab === 'mine' ? 'My Pins' : 'Campaign'}
                   </button>
                 ))}
@@ -1192,7 +1192,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                     }
                     return Object.entries(byCampaign).map(([name, cPins]) => (
                       <div key={name}>
-                        <div style={{ padding: '6px 10px', borderBottom: '1px solid #2e2e2e', fontSize: '13px', color: '#c0392b', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 700 }}>
+                        <div style={{ padding: '6px 10px', borderBottom: '1px solid #2e2e2e', fontSize: '13px', color: '#c0392b', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 700 }}>
                           {name}
                         </div>
                         {cPins.map(p => (
@@ -1274,8 +1274,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{wcFolderOpen ? '▼' : '▶'}</span>
                       <span style={{ fontSize: '14px' }}>🌐</span>
-                      <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1, fontWeight: 600 }}>Player Communities</span>
-                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginRight: '4px' }}>{wcFiltered.length}</span>
+                      <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1, fontWeight: 600 }}>Player Communities</span>
+                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginRight: '4px' }}>{wcFiltered.length}</span>
                       <span onClick={e => {
                         e.stopPropagation()
                         setHiddenFolders(prev => {
@@ -1310,7 +1310,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                 const marker = markersRef.current[`world_community:${wc.id}`]
                                 if (marker) setTimeout(() => marker.openPopup(), 1300)
                               }}
-                              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px 6px 30px', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif' }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px 6px 30px', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}
                               onMouseEnter={e => (e.currentTarget.style.background = '#1a1a2e')}
                               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                               title={`${wc.name} · ${wc.size_band} · ${wc.community_status}${wc.faction_label ? ' · ' + wc.faction_label : ''} · From ${wc.campaign_name}`}>
@@ -1346,8 +1346,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                         <span style={{ fontSize: '13px', color: '#5a5550', width: '12px', textAlign: 'center' }}>{isOpen ? '▼' : '▶'}</span>
                         <span style={{ fontSize: '14px' }}>{cat.emoji}</span>
-                        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>{cat.label}</span>
-                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', marginRight: '4px' }}>{folderPins.length}</span>
+                        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>{cat.label}</span>
+                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginRight: '4px' }}>{folderPins.length}</span>
                         <span onClick={e => {
                           e.stopPropagation()
                           setHiddenFolders(prev => {
@@ -1394,7 +1394,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                 {isExpanded && (
                                   <div style={{ marginTop: '4px' }}>
                                     {p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, marginBottom: '6px' }}>{p.notes}</div>}
-                                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>
+                                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
                                       {p.category === 'world_event'
                                         ? (p.event_date ? <span style={{ color: '#EF9F27' }}>{p.event_date}</span> : '')
                                         : <>{usernames[p.user_id] ? `By ${usernames[p.user_id]}` : ''}</>
@@ -1421,12 +1421,12 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                       <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
                                         {userRole === 'thriver' && (
                                           <button onClick={e => { e.stopPropagation(); handleTogglePublic(p) }}
-                                            style={{ background: 'none', border: 'none', color: p.status === 'approved' ? '#7fc458' : '#cce0f5', cursor: 'pointer', fontSize: '13px', padding: '0', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                                            style={{ background: 'none', border: 'none', color: p.status === 'approved' ? '#7fc458' : '#cce0f5', cursor: 'pointer', fontSize: '13px', padding: '0', fontFamily: 'Carlito, sans-serif' }}>
                                             {p.status === 'approved' ? 'Public' : 'Private'}
                                           </button>
                                         )}
                                         <button onClick={e => { e.stopPropagation(); startEdit(p) }}
-                                          style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '13px', padding: '0', fontFamily: 'Barlow Condensed, sans-serif' }}>Edit</button>
+                                          style={{ background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '13px', padding: '0', fontFamily: 'Carlito, sans-serif' }}>Edit</button>
                                         <button onClick={e => { e.stopPropagation(); if (confirm('Delete this pin?')) handleDeletePin(p.id) }}
                                           style={{ background: 'none', border: 'none', color: '#f5a89a', cursor: 'pointer', fontSize: '13px', padding: '0' }}>×</button>
                                       </div>
@@ -1460,7 +1460,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             <form onSubmit={handleSearch} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
               {(!embedded || showSidebarProp) && !sidebarOpen && (
                 <button type="button" onClick={() => setSidebarOpen(true)}
-                  style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  style={{ padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                   Pins ☰
                 </button>
               )}
@@ -1497,11 +1497,11 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   </div>
                 )}
               </div>
-              <button type="submit" disabled={searching} style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: searching ? '#cce0f5' : '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching ? 'not-allowed' : 'pointer' }}>{searching ? '...' : 'Go'}</button>
+              <button type="submit" disabled={searching} style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: searching ? '#cce0f5' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching ? 'not-allowed' : 'pointer' }}>{searching ? '...' : 'Go'}</button>
             </form>
             {[['satellite', 'Satellite'], ['topo', 'Topo'], ['street', 'Street'], ['voyager', 'Voyager'], ['humanitarian', 'Humanitarian'], ['positron', 'Positron'], ['dark', 'Dark']].map(([layer, label]) => (
               <button key={layer} onClick={() => switchLayer(layer)}
-                style={{ padding: '3px 0', width: '100px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#d4cfc9' }}>
+                style={{ padding: '3px 0', width: '100px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#d4cfc9' }}>
                 {label}
               </button>
             ))}
@@ -1514,7 +1514,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
         {editingPin && (
   <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 1001, background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #7ab3d4', borderRadius: '4px', padding: '1rem', width: '300px', resize: 'both', overflow: 'auto', minWidth: '260px', maxWidth: '600px' }}>
-    <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 600, color: '#7ab3d4', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '10px' }}>Edit Pin</div>
+    <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 600, color: '#7ab3d4', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '10px' }}>Edit Pin</div>
     <div style={{ marginBottom: '8px' }}>
       <label style={lbl}>Title</label>
       <input style={inp} value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))} />
@@ -1529,7 +1529,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         {editForm.categories.map(cat => {
           const catInfo = PIN_CATEGORIES.find(c => c.value === cat)
           return (
-            <span key={cat} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', background: '#0f2035', border: '1px solid #7ab3d4', borderRadius: '3px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+            <span key={cat} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', background: '#0f2035', border: '1px solid #7ab3d4', borderRadius: '3px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>
               {catInfo?.emoji ?? '📍'} {catInfo?.label ?? cat}
               {editForm.categories.length > 1 && (
                 <button onClick={() => setEditForm(p => ({ ...p, categories: p.categories.filter(c => c !== cat) }))}
@@ -1545,7 +1545,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         }
         e.target.value = ''
       }}
-        style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+        style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
         <option value="">+ Add category...</option>
         {PIN_CATEGORIES.filter(c => !editForm.categories.includes(c.value)).map(c => (
           <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>
@@ -1624,7 +1624,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             <button key={val} onClick={() => {
               supabase.from('map_pins').update({ pin_type: val }).eq('id', editingPin.id)
             }}
-              style={{ flex: 1, padding: '4px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${editingPin.pin_type === val ? '#c0392b' : '#3a3a3a'}`, background: editingPin.pin_type === val ? '#2a1210' : '#242424', color: editingPin.pin_type === val ? '#f5a89a' : '#d4cfc9' }}>
+              style={{ flex: 1, padding: '4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${editingPin.pin_type === val ? '#c0392b' : '#3a3a3a'}`, background: editingPin.pin_type === val ? '#2a1210' : '#242424', color: editingPin.pin_type === val ? '#f5a89a' : '#d4cfc9' }}>
               {label}
             </button>
           ))}
@@ -1665,15 +1665,15 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     </div>
     <div style={{ display: 'flex', gap: '6px' }}>
       <button onClick={handleSaveEdit} disabled={!editForm.title.trim() || editUploading}
-        style={{ flex: 1, padding: '8px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', cursor: editUploading ? 'wait' : 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', opacity: editUploading ? 0.6 : 1 }}>
+        style={{ flex: 1, padding: '8px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', cursor: editUploading ? 'wait' : 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', opacity: editUploading ? 0.6 : 1 }}>
         {editUploading ? 'Saving...' : 'Save'}
       </button>
       <button onClick={() => { handleDeletePin(editingPin.id); setEditingPin(null) }}
-        style={{ padding: '8px 12px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+        style={{ padding: '8px 12px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
         Delete
       </button>
       <button onClick={() => setEditingPin(null)}
-        style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+        style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
         Cancel
       </button>
     </div>

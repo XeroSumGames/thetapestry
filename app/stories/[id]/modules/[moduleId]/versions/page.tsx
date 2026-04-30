@@ -104,12 +104,12 @@ export default function ModuleVersionsPage() {
 
       {/* Masthead */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #8b5cf6', paddingBottom: '12px', marginBottom: '1.5rem' }}>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c4a7f0' }}>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c4a7f0' }}>
           📦 {moduleName || 'Module'} — Version History
         </div>
         <div style={{ flex: 1 }} />
         <button onClick={() => router.back()}
-          style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
           Back
         </button>
       </div>
@@ -124,7 +124,7 @@ export default function ModuleVersionsPage() {
           <div style={{ padding: '10px 14px', marginBottom: '1.25rem', background: '#2a1a3e', border: '1px solid #5a2e5a', borderLeft: '3px solid #8b5cf6', borderRadius: '4px', fontFamily: 'Barlow, sans-serif' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c4a7f0', marginBottom: '4px' }}>
+                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c4a7f0', marginBottom: '4px' }}>
                   This campaign is subscribed
                 </div>
                 <div style={{ fontSize: '14px', color: '#cce0f5', lineHeight: 1.5 }}>
@@ -135,7 +135,7 @@ export default function ModuleVersionsPage() {
               </div>
               {isBehind && (
                 <button onClick={() => setReviewOpen(true)} disabled={acting}
-                  style={{ padding: '7px 14px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: acting ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: acting ? 0.4 : 1 }}>
+                  style={{ padding: '7px 14px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: acting ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: acting ? 0.4 : 1 }}>
                   📦 Review v{latestVersion.version}
                 </button>
               )}
@@ -147,7 +147,7 @@ export default function ModuleVersionsPage() {
                   catch (e: any) { alert(`Fork failed: ${e?.message ?? e}`) }
                   setActing(false)
                 }} disabled={acting}
-                  style={{ padding: '7px 14px', background: 'transparent', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: acting ? 'not-allowed' : 'pointer' }}>
+                  style={{ padding: '7px 14px', background: 'transparent', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: acting ? 'not-allowed' : 'pointer' }}>
                   ⑂ Fork
                 </button>
               )}
@@ -158,7 +158,7 @@ export default function ModuleVersionsPage() {
                   catch (e: any) { alert(`Reactivate failed: ${e?.message ?? e}`) }
                   setActing(false)
                 }} disabled={acting}
-                  style={{ padding: '7px 14px', background: 'transparent', border: '1px solid #7fc458', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: acting ? 'not-allowed' : 'pointer' }}>
+                  style={{ padding: '7px 14px', background: 'transparent', border: '1px solid #7fc458', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: acting ? 'not-allowed' : 'pointer' }}>
                   ↻ Re-activate
                 </button>
               )}
@@ -170,7 +170,7 @@ export default function ModuleVersionsPage() {
                   catch (e: any) { alert(`Unsubscribe failed: ${e?.message ?? e}`) }
                   setActing(false)
                 }} disabled={acting}
-                  style={{ padding: '7px 14px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: acting ? 'not-allowed' : 'pointer' }}>
+                  style={{ padding: '7px 14px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: acting ? 'not-allowed' : 'pointer' }}>
                   ✕ Unsubscribe
                 </button>
               )}
@@ -199,20 +199,20 @@ export default function ModuleVersionsPage() {
               borderRadius: '4px', padding: '14px 18px',
             }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }}>
-                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', color: isCurrent ? '#c4a7f0' : '#f5f2ee' }}>
+                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', color: isCurrent ? '#c4a7f0' : '#f5f2ee' }}>
                   v{v.version}
                 </div>
                 {isCurrent && (
-                  <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: '#2a1a3e', border: '1px solid #5a2e5a', color: '#c4a7f0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
+                  <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: '#2a1a3e', border: '1px solid #5a2e5a', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
                     Your clone
                   </span>
                 )}
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                   {formatDate(v.published_at)}
                 </div>
                 <div style={{ flex: 1 }} />
                 {v.subscriber_count > 0 && (
-                  <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Carlito, sans-serif' }}>
                     {v.subscriber_count} subscriber{v.subscriber_count === 1 ? '' : 's'}
                   </span>
                 )}
@@ -222,7 +222,7 @@ export default function ModuleVersionsPage() {
                   {v.changelog}
                 </div>
               )}
-              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                 <span style={{ color: '#5a5550', textTransform: 'uppercase' }}>Changes vs prior:</span>{' '}
                 <span style={{ color: '#f5f2ee' }}>{summary}</span>
               </div>

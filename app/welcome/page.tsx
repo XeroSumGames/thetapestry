@@ -17,7 +17,7 @@ export default function WelcomePage() {
     gap: '10px',
   }
   const cardTitle: React.CSSProperties = {
-    fontFamily: 'Barlow Condensed, sans-serif',
+    fontFamily: 'Carlito, sans-serif',
     fontSize: '20px',
     fontWeight: 700,
     letterSpacing: '.06em',
@@ -34,7 +34,7 @@ export default function WelcomePage() {
     flex: 1,
   }
   const cardLink: React.CSSProperties = {
-    fontFamily: 'Barlow Condensed, sans-serif',
+    fontFamily: 'Carlito, sans-serif',
     fontSize: '13px',
     letterSpacing: '.1em',
     textTransform: 'uppercase',
@@ -47,7 +47,7 @@ export default function WelcomePage() {
     background: '#242424',
   }
   const sectionHeading: React.CSSProperties = {
-    fontFamily: 'Barlow Condensed, sans-serif',
+    fontFamily: 'Carlito, sans-serif',
     fontSize: '13px',
     letterSpacing: '.2em',
     textTransform: 'uppercase',
@@ -60,10 +60,10 @@ export default function WelcomePage() {
 
       {/* Hero */}
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '3.5rem 1.5rem 2rem', textAlign: 'center' }}>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', letterSpacing: '.2em', textTransform: 'uppercase', color: '#c0392b', marginBottom: '10px' }}>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', letterSpacing: '.2em', textTransform: 'uppercase', color: '#c0392b', marginBottom: '10px' }}>
           Reference &amp; Help
         </div>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '46px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1, marginBottom: '14px' }}>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '46px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1, marginBottom: '14px' }}>
           A Guide to the Tapestry
         </div>
         <div style={{ fontSize: '16px', color: '#cce0f5', maxWidth: '640px', margin: '0 auto', lineHeight: 1.7 }}>

@@ -142,7 +142,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         const count = cluster.getChildCount()
         const size = count < 10 ? 32 : count < 50 ? 40 : 48
         return leaflet.divIcon({
-          html: `<div style="width:${size}px;height:${size}px;background:#1a1a1a;border:2px solid #c0392b;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f5f2ee;font-family:'Barlow Condensed',sans-serif;font-size:${size < 40 ? 13 : 15}px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.5);">${count}</div>`,
+          html: `<div style="width:${size}px;height:${size}px;background:#1a1a1a;border:2px solid #c0392b;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f5f2ee;font-family:'Carlito',sans-serif;font-size:${size < 40 ? 13 : 15}px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.5);">${count}</div>`,
           className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2],
         })
       },
@@ -161,7 +161,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
            ${npcsHere.map(n => `<div style="font-size:15px;color:#d4cfc9;${n.status === 'dead' ? 'text-decoration:line-through;opacity:.6;' : ''}">${escapeHtml(n.name)}</div>`).join('')}
          </div>`
       const popupHtml =
-        `<div style="font-family:Barlow Condensed,sans-serif;min-width:180px;">` +
+        `<div style="font-family:Carlito,sans-serif;min-width:180px;">` +
           `<strong style="text-transform:uppercase;letter-spacing:.04em;">${escapeHtml(pin.name)}</strong>` +
           `${pin.notes ? `<br/><span style="color:#666;">${escapeHtml(pin.notes)}</span>` : ''}` +
           `${!pin.revealed && isGM ? '<br/><em style="color:#c0392b;">Hidden from players</em>' : ''}` +
@@ -319,7 +319,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '4px' }}>
           {isGM && (
             <button type="button" onClick={() => { setPlacing(p => !p); setNewPin(null); setAttachments([]) }}
-              style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${placing ? '#2d5a1b' : '#3a3a3a'}`, background: placing ? '#1a2e10' : 'rgba(15,15,15,.85)', color: placing ? '#7fc458' : '#d4cfc9' }}>
+              style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${placing ? '#2d5a1b' : '#3a3a3a'}`, background: placing ? '#1a2e10' : 'rgba(15,15,15,.85)', color: placing ? '#7fc458' : '#d4cfc9' }}>
               {placing ? '✕ Cancel' : '+ Pin'}
             </button>
           )}
@@ -355,13 +355,13 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
             )}
           </div>
           <button type="submit" disabled={searching}
-            style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
             {searching ? '...' : 'Go'}
           </button>
         </form>
         {[['satellite', 'Satellite'], ['topo', 'Topo'], ['street', 'Street'], ['voyager', 'Voyager'], ['humanitarian', 'Humanitarian'], ['positron', 'Positron'], ['dark', 'Dark']].map(([layer, label]) => (
           <button key={layer} onClick={() => switchLayer(layer)}
-            style={{ padding: '3px 0', width: '100px', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#d4cfc9' }}>
+            style={{ padding: '3px 0', width: '100px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textAlign: 'center', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${mapLayer === layer ? '#c0392b' : '#3a3a3a'}`, background: mapLayer === layer ? '#2a1210' : 'rgba(15,15,15,.85)', color: mapLayer === layer ? '#f5a89a' : '#d4cfc9' }}>
             {label}
           </button>
         ))}
@@ -369,7 +369,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
       {/* Placing mode banner */}
       {placing && !newPin && (
-        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(26,46,16,0.95)', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(26,46,16,0.95)', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' }}>
           Click on the map to place a pin
         </div>
       )}
@@ -378,7 +378,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       {newPin && (
         <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '12px', background: 'rgba(26,26,26,0.95)', border: '1px solid #3a3a3a', borderRadius: '4px', width: '300px' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '8px', gap: '8px' }}>
-            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif' }}>New Pin</div>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>New Pin</div>
             <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'monospace' }}>{newPin.lat.toFixed(4)}, {newPin.lng.toFixed(4)}</div>
           </div>
           <input value={pinForm.name} onChange={e => setPinForm(f => ({ ...f, name: e.target.value }))}
@@ -405,11 +405,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           </label>
           <div style={{ display: 'flex', gap: '4px' }}>
             <button onClick={() => { setNewPin(null); setAttachments([]) }}
-              style={{ flex: 1, padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ flex: 1, padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
               Cancel
             </button>
             <button onClick={savePin} disabled={!pinForm.name.trim() || saving}
-              style={{ flex: 1, padding: '6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: pinForm.name.trim() ? 'pointer' : 'not-allowed', opacity: pinForm.name.trim() ? 1 : 0.5 }}>
+              style={{ flex: 1, padding: '6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: pinForm.name.trim() ? 'pointer' : 'not-allowed', opacity: pinForm.name.trim() ? 1 : 0.5 }}>
               {saving ? '...' : 'Save Pin'}
             </button>
           </div>

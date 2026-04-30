@@ -113,7 +113,7 @@ export default function NewCharacterPage() {
 
       {/* Masthead */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Distemper Character Generator
         </div>
         <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.1em', textTransform: 'uppercase', flex: 1, textAlign: 'right' }}>
@@ -130,7 +130,7 @@ export default function NewCharacterPage() {
               border: `1px solid ${i === step ? '#c0392b' : '#3a3a3a'}`,
               background: i < step ? '#c0392b' : i === step ? '#2a1210' : '#1a1a1a',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'Barlow Condensed, sans-serif',
+              fontFamily: 'Carlito, sans-serif',
               fontSize: '13px', fontWeight: 700,
               color: i < step ? '#fff' : i === step ? '#c0392b' : '#d4cfc9',
               transition: 'all .2s', flexShrink: 0, cursor: 'pointer', padding: 0,
@@ -145,7 +145,7 @@ export default function NewCharacterPage() {
         <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px' }}>
           Step {step} of 9
         </div>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '26px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '10px', color: '#f5f2ee' }}>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '26px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '10px', color: '#f5f2ee' }}>
           {STEPS[step].title}
         </div>
         <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#d4cfc9', lineHeight: 1.8, fontStyle: 'italic' }}>
@@ -153,7 +153,7 @@ export default function NewCharacterPage() {
         </p>
         {STEP_INSTRUCTIONS[step] && (
           <div style={{ background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', padding: '10px 14px' }}>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '6px', color: '#7fc458' }}>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '6px', color: '#7fc458' }}>
               Instructions
             </div>
             {STEP_INSTRUCTIONS[step]!.split('|').map((line, i) => (
@@ -225,7 +225,7 @@ function navBtn(primary: boolean): React.CSSProperties {
     border: `1px solid ${primary ? '#c0392b' : '#3a3a3a'}`,
     background: primary ? '#c0392b' : '#242424',
     color: primary ? '#fff' : '#f5f2ee',
-    fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
+    fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
     transition: 'all .15s',
   }
 }

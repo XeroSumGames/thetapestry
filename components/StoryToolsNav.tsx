@@ -87,7 +87,7 @@ function btn(bg: string, color: string, border: string, active: boolean): React.
     borderRadius: '3px',
     color,
     fontSize: '13px',
-    fontFamily: 'Barlow Condensed, sans-serif',
+    fontFamily: 'Carlito, sans-serif',
     letterSpacing: '.06em',
     textTransform: 'uppercase',
     textDecoration: 'none',

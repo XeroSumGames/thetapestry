@@ -139,7 +139,7 @@ export default function TimestampPage() {
   }
   const lbl: React.CSSProperties = {
     display: 'block', fontSize: '13px', color: '#cce0f5',
-    fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
+    fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', marginBottom: '4px',
   }
   const tableCell: React.CSSProperties = {
@@ -152,7 +152,7 @@ export default function TimestampPage() {
 
       {/* Header */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>
           Timestamps
         </div>
         <div style={{ fontSize: '14px', color: '#5a8a40', lineHeight: 1.6 }}>
@@ -184,9 +184,9 @@ export default function TimestampPage() {
       {/* Output table */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', padding: '10px 12px', background: '#0f0f0f', borderBottom: '1px solid #2e2e2e' }}>
-          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Format</div>
-          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Token</div>
-          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Your local preview</div>
+          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Format</div>
+          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Token</div>
+          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Your local preview</div>
         </div>
         {FORMATS.map(f => {
           const token = `<t:${unix}:${f.code}>`
@@ -194,7 +194,7 @@ export default function TimestampPage() {
           const flashing = copiedFlash === f.code
           return (
             <div key={f.code} style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', alignItems: 'center' }}>
-              <div style={{ ...tableCell, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', color: '#d4cfc9' }}>
+              <div style={{ ...tableCell, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', color: '#d4cfc9' }}>
                 {f.label}
               </div>
               <div style={tableCell}>
@@ -210,7 +210,7 @@ export default function TimestampPage() {
         })}
         {/* Raw unix row, useful for systems that take the integer directly */}
         <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', alignItems: 'center' }}>
-          <div style={{ ...tableCell, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', color: '#d4cfc9' }}>
+          <div style={{ ...tableCell, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', color: '#d4cfc9' }}>
             Unix seconds
           </div>
           <div style={tableCell}>

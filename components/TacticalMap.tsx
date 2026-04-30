@@ -539,7 +539,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }
     // Column labels (A, B, C...)
     ctx.fillStyle = gridColor
-    ctx.font = `${Math.max(8, cellW * 0.3)}px Barlow Condensed`
+    ctx.font = `${Math.max(8, cellW * 0.3)}px Carlito`
     ctx.textAlign = 'center'
     for (let x = 0; x < s.grid_cols; x++) {
       ctx.fillText(String.fromCharCode(65 + (x % 26)), offsetX + x * cellW + cellW / 2, offsetY - 4)
@@ -708,7 +708,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.globalAlpha = 1
           ctx.lineWidth = 2
           ctx.stroke()
-          ctx.font = `bold 12px Barlow Condensed`
+          ctx.font = `bold 12px Carlito`
           ctx.fillStyle = c.stroke
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
@@ -890,7 +890,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 1.5
           ctx.stroke()
           ctx.fillStyle = '#f5f2ee'
-          ctx.font = `bold ${Math.max(10, radius * 0.8)}px Barlow Condensed`
+          ctx.font = `bold ${Math.max(10, radius * 0.8)}px Carlito`
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
           const initials = t.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
@@ -943,7 +943,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
       // Name below — objects get up to 2 lines, characters get first word only
       const fontSize = Math.max(14, cellSize * 0.34)
-      ctx.font = `bold ${fontSize}px Barlow Condensed`
+      ctx.font = `bold ${fontSize}px Carlito`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       const isObj = t.token_type === 'object'
@@ -1023,7 +1023,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.lineWidth = 1
           ctx.stroke()
           ctx.fillStyle = '#f5f2ee'
-          ctx.font = `bold ${Math.max(8, badgeR * 1.2)}px Barlow Condensed`
+          ctx.font = `bold ${Math.max(8, badgeR * 1.2)}px Carlito`
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
           ctx.fillText(String(initIdx + 1), bx, by)
@@ -1641,17 +1641,17 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         {showSetup && (
           <div onClick={() => setShowSetup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
-              <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '1rem' }}>New Scene</div>
+              <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem' }}>New Scene</div>
               <div style={{ marginBottom: '1rem' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Name</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Name</div>
                 <input value={setupName} onChange={e => setSetupName(e.target.value)}
                   style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button onClick={() => setShowSetup(false)}
-                  style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                  style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                 <button onClick={createScene}
-                  style={{ flex: 2, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Create</button>
+                  style={{ flex: 2, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Create</button>
               </div>
             </div>
           </div>
@@ -1661,7 +1661,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   if (!scene) {
-    return <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#111', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', position: 'relative', zIndex: 1200 }}>Waiting for GM to set up a scene...</div>
+    return <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#111', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', position: 'relative', zIndex: 1200 }}>Waiting for GM to set up a scene...</div>
   }
 
   return (
@@ -1677,11 +1677,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         {/* Zoom control — top right */}
         <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>0%</span>
+          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>0%</span>
           <input type="range" min={25} max={100} step={5} value={Math.round(zoom * 100)}
             onChange={e => setZoom(Number(e.target.value) / 100)}
             style={{ width: '60px', accentColor: '#7ab3d4', cursor: 'pointer' }} />
-          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif' }}>100%</span>
+          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>100%</span>
         </div>
         <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'auto', contain: 'layout paint', overscrollBehavior: 'contain' }}>
         <canvas ref={canvasRef}
@@ -1722,10 +1722,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         return (
           <div style={{ position: 'absolute', bottom: '8px', left: '8px', zIndex: 10, background: 'rgba(15,15,15,.9)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 12px', minWidth: '150px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{tok.name}</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{tok.name}</div>
               <button onClick={() => setSelectedToken(null)} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '14px', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>✕</button>
             </div>
-            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>{tok.token_type} · {String.fromCharCode(65 + tok.grid_x)}{tok.grid_y + 1}</div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{tok.token_type} · {String.fromCharCode(65 + tok.grid_x)}{tok.grid_y + 1}</div>
             {/* WP bar — object tokens only. Falls back to the matching
                 vehicle's wp_max/wp_current when the token itself was
                 placed without those stats copied across. Same fallback
@@ -1739,7 +1739,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
               const barColor = pct > 0.66 ? '#7fc458' : pct > 0.33 ? '#EF9F27' : '#c0392b'
               return (
                 <div style={{ marginTop: '4px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '2px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '2px' }}>
                     <span>WP</span>
                     <span>{wpCurrent ?? wpMax} / {wpMax}</span>
                   </div>
@@ -1757,25 +1757,25 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
               <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
                 {canRotate && tok.token_type === 'object' && onObjectMove && (
                   <button onClick={() => { onObjectMove(tok.id); setSelectedToken(null) }}
-                    style={{ padding: '2px 6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ padding: '2px 6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Move
                   </button>
                 )}
                 {isGM && (
                   <button onClick={() => toggleTokenVisibility(tok.id)}
-                    style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: tok.is_visible ? '#7fc458' : '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: tok.is_visible ? '#7fc458' : '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                     {tok.is_visible ? 'Hide' : 'Reveal'}
                   </button>
                 )}
                 {isGM && (
                   <button onClick={() => { removeToken(tok.id); setSelectedToken(null) }}
-                    style={{ padding: '2px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ padding: '2px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Remove
                   </button>
                 )}
                 {isGM && tok.token_type === 'object' && onTokenClick && (
                   <button onClick={() => { onTokenClick(tok); setSelectedToken(null) }}
-                    style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Edit
                   </button>
                 )}
@@ -1785,7 +1785,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
               <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {isGM && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', width: '30px' }}>Size</span>
+                  <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', width: '30px' }}>Size</span>
                   <input type="range" min={0.3} max={10} step={0.1} value={tok.scale ?? 1}
                     onChange={async e => {
                       const v = parseFloat(e.target.value)
@@ -1793,12 +1793,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                       await supabase.from('scene_tokens').update({ scale: v }).eq('id', tok.id)
                     }}
                     style={{ flex: 1, accentColor: '#7ab3d4', cursor: 'pointer' }} />
-                  <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', width: '28px', textAlign: 'right' }}>{((tok.scale ?? 1) * 100).toFixed(0)}%</span>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', width: '28px', textAlign: 'right' }}>{((tok.scale ?? 1) * 100).toFixed(0)}%</span>
                 </div>
                 )}
                 {canRotate && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', width: '30px' }}>Rot</span>
+                  <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', width: '30px' }}>Rot</span>
                   <input type="range" min={0} max={360} step={5} value={tok.rotation ?? 0}
                     onChange={async e => {
                       const v = parseFloat(e.target.value)
@@ -1806,7 +1806,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                       await supabase.from('scene_tokens').update({ rotation: v }).eq('id', tok.id)
                     }}
                     style={{ flex: 1, accentColor: '#EF9F27', cursor: 'pointer' }} />
-                  <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', width: '28px', textAlign: 'right' }}>{(tok.rotation ?? 0).toFixed(0)}°</span>
+                  <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', width: '28px', textAlign: 'right' }}>{(tok.rotation ?? 0).toFixed(0)}°</span>
                 </div>
                 )}
                 {/* Multi-cell footprint controls — objects only, GM only.
@@ -1814,7 +1814,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                     sized via the scale slider). */}
                 {isGM && tok.token_type === 'object' && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', width: '30px' }}>Cells</span>
+                    <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', width: '30px' }}>Cells</span>
                     <input type="number" min={1} max={20} step={1} value={tok.grid_w ?? 1}
                       title="Width in cells"
                       onChange={async e => {
@@ -1822,8 +1822,8 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                         setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, grid_w: v } : t))
                         await supabase.from('scene_tokens').update({ grid_w: v }).eq('id', tok.id)
                       }}
-                      style={{ width: '46px', padding: '2px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center' }} />
-                    <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>×</span>
+                      style={{ width: '46px', padding: '2px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center' }} />
+                    <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>×</span>
                     <input type="number" min={1} max={20} step={1} value={tok.grid_h ?? 1}
                       title="Height in cells"
                       onChange={async e => {
@@ -1831,7 +1831,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                         setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, grid_h: v } : t))
                         await supabase.from('scene_tokens').update({ grid_h: v }).eq('id', tok.id)
                       }}
-                      style={{ width: '46px', padding: '2px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center' }} />
+                      style={{ width: '46px', padding: '2px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center' }} />
                   </div>
                 )}
               </div>
@@ -1844,17 +1844,17 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       {showSetup && (
         <div onClick={() => setShowSetup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
-            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '1rem' }}>New Scene</div>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem' }}>New Scene</div>
             <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Name</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Name</div>
               <input value={setupName} onChange={e => setSetupName(e.target.value)}
                 style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setShowSetup(false)}
-                style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
               <button onClick={createScene}
-                style={{ flex: 2, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Create</button>
+                style={{ flex: 2, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Create</button>
             </div>
           </div>
         </div>

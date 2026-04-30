@@ -42,7 +42,7 @@ export default function FirstTimersPage() {
   }
 
   const sectionTitle: React.CSSProperties = {
-    fontFamily: 'Barlow Condensed, sans-serif',
+    fontFamily: 'Carlito, sans-serif',
     fontSize: '20px', fontWeight: 700, letterSpacing: '.06em',
     textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px',
   }
@@ -68,13 +68,13 @@ export default function FirstTimersPage() {
       {/* Hero */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem 1rem 2rem', textAlign: 'center' }}>
         <img src="/distemper-dogsign-logo.png" alt="Distemper" style={{ width: '220px', height: '220px', objectFit: 'contain', marginBottom: '2rem' }} />
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', letterSpacing: '.2em', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }}>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', letterSpacing: '.2em', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }}>
           Welcome to
         </div>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '52px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1, marginBottom: '8px' }}>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '52px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1, marginBottom: '8px' }}>
           The Tapestry
         </div>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', letterSpacing: '.15em', textTransform: 'uppercase', color: '#cce0f5', marginBottom: '1.5rem' }}>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', letterSpacing: '.15em', textTransform: 'uppercase', color: '#cce0f5', marginBottom: '1.5rem' }}>
           DistemperVerse v1.0
         </div>
         {username && (
@@ -150,15 +150,15 @@ export default function FirstTimersPage() {
         {/* Links */}
         <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '2rem', marginBottom: '2rem', display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
           <a href="https://www.distemperverse.com" target="_blank" rel="noreferrer"
-            style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
             DistemperVerse.com 🔗
           </a>
           <a href="https://www.xerosumgames.com" target="_blank" rel="noreferrer"
-            style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
             XeroSumGames.com 🔗
           </a>
           <a href="https://www.xerosumstudio.com" target="_blank" rel="noreferrer"
-            style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            style={{ padding: '8px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
             XeroSumStudio.com 🔗
           </a>
         </div>
@@ -166,7 +166,7 @@ export default function FirstTimersPage() {
         {/* CTA */}
         <div style={{ textAlign: 'center', paddingBottom: '4rem' }}>
           <button onClick={handleGetStarted} disabled={marking}
-            style={{ padding: '14px 48px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '16px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', opacity: marking ? 0.6 : 1 }}>
+            style={{ padding: '14px 48px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '16px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', opacity: marking ? 0.6 : 1 }}>
             {marking ? 'Loading...' : 'Welcome to the DistemperVerse'}
           </button>
         </div>

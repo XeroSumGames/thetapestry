@@ -87,21 +87,21 @@ export default function Sidebar() {
 
   const linkStyle = (accent: string) => ({
     display: 'block' as const, padding: '10px 14px', color: '#f5f2ee',
-    textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif',
+    textDecoration: 'none', fontSize: '15px', fontFamily: 'Carlito, sans-serif',
     letterSpacing: '.04em', textTransform: 'uppercase' as const,
     borderLeft: `3px solid ${accent}`, marginBottom: '2px',
   })
 
   const soonStyle = {
     display: 'block' as const, padding: '10px 14px', color: '#cce0f5',
-    textDecoration: 'none', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif',
+    textDecoration: 'none', fontSize: '15px', fontFamily: 'Carlito, sans-serif',
     letterSpacing: '.04em', textTransform: 'uppercase' as const,
     borderLeft: '3px solid transparent', marginBottom: '2px',
   }
 
   const sectionHeading = {
     padding: '10px 14px 6px', fontSize: '15px', color: '#f5f2ee',
-    fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em',
+    fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em',
     textTransform: 'uppercase' as const, fontWeight: 700,
   }
 
@@ -123,14 +123,14 @@ export default function Sidebar() {
           <div style={{ fontFamily: 'Distemper, sans-serif', fontSize: '18px', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1 }}>The Tapestry <span style={{ fontSize: '13px', color: '#f5f2ee' }}>v0.5</span></div>
         </Link>
         {onlineCount > 0 && (
-          <div style={{ fontSize: '14px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: '4px' }}>
+          <div style={{ fontSize: '14px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: '4px' }}>
             Survivors present: {onlineCount}
           </div>
         )}
       </div>
 
       {/* User header */}
-      <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid #2e2e2e', fontFamily: 'Barlow Condensed, sans-serif' }}>
+      <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid #2e2e2e', fontFamily: 'Carlito, sans-serif' }}>
         {isGuest ? (
           <span style={{ color: '#7fc458', fontSize: '14px', letterSpacing: '.12em', textTransform: 'uppercase' }}>Ghost <span style={{ fontSize: '13px' }}>— You Don&apos;t Exist</span></span>
         ) : (
@@ -227,16 +227,16 @@ export default function Sidebar() {
       <div style={{ padding: '8px 14px', borderTop: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {isGuest ? (
           <>
-            <Link href="/signup" style={{ display: 'block', width: '100%', padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}>
+            <Link href="/signup" style={{ display: 'block', width: '100%', padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}>
               Create Account
             </Link>
-            <Link href="/login" style={{ display: 'block', width: '100%', padding: '8px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}>
+            <Link href="/login" style={{ display: 'block', width: '100%', padding: '8px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}>
               Sign In
             </Link>
           </>
         ) : (
           <button onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
-            style={{ width: '100%', padding: '8px', background: 'none', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ width: '100%', padding: '8px', background: 'none', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Log Out
           </button>
         )}

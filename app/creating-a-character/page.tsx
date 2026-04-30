@@ -7,10 +7,10 @@ export default function CreatingACharacterPage() {
 
         {/* Hero */}
         <div style={{ marginBottom: '3rem' }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', letterSpacing: '.2em', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', letterSpacing: '.2em', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }}>
             Character Creation
           </div>
-          <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '48px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1, margin: '0 0 16px' }}>
+          <h1 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '48px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1, margin: '0 0 16px' }}>
             Building Your Survivor
           </h1>
           <p style={{ fontSize: '17px', color: '#f5f2ee', lineHeight: 1.8, margin: 0 }}>
@@ -20,7 +20,7 @@ export default function CreatingACharacterPage() {
 
         {/* Three methods */}
         <div style={{ marginBottom: '4rem' }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#2d5a1b', marginBottom: '1rem' }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#2d5a1b', marginBottom: '1rem' }}>
             Three Ways to Build
           </div>
 
@@ -58,13 +58,13 @@ export default function CreatingACharacterPage() {
           ].map(({ href, label, tag, tagColor, tagText, desc, bestFor, time }) => (
             <div key={label} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', padding: '1.25rem', marginBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>{label}</div>
-                <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: tagColor, color: tagText, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{tag}</span>
+                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee' }}>{label}</div>
+                <span style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '2px', background: tagColor, color: tagText, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{tag}</span>
                 <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#cce0f5' }}>{time}</span>
               </div>
               <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.7, margin: '0 0 8px' }}>{desc}</p>
               <p style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, margin: '0 0 14px' }}><span style={{ color: '#cce0f5' }}>Best for:</span> {bestFor}</p>
-              <a href={href} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '8px 20px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
+              <a href={href} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '8px 20px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
                 {label} →
               </a>
             </div>
@@ -76,14 +76,14 @@ export default function CreatingACharacterPage() {
 
         {/* Backstory system explained */}
         <div style={{ marginBottom: '3rem' }}>
-          <h2 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', margin: '0 0 16px' }}>
+          <h2 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', margin: '0 0 16px' }}>
             The Backstory System
           </h2>
           <p style={{ fontSize: '16px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '1.5rem' }}>
             Distemper uses the Xero Sum Engine backstory generation system, which builds your character through the chapters of their life rather than allocating stats on a blank sheet. You\'re not picking numbers — you\'re making decisions about who this person was before everything fell apart.
           </p>
 
-          <h3 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#c0392b', margin: '2rem 0 8px' }}>
+          <h3 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#c0392b', margin: '2rem 0 8px' }}>
             Character Development Points (CDP)
           </h3>
           <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '1rem' }}>
@@ -93,7 +93,7 @@ export default function CreatingACharacterPage() {
             Over the full backstory, you spend a total of 20 CDP: 5 on attributes and 15 on skills.
           </p>
 
-          <h3 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#c0392b', margin: '2rem 0 8px' }}>
+          <h3 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#c0392b', margin: '2rem 0 8px' }}>
             RAPID Range Attributes
           </h3>
           <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '1rem' }}>
@@ -103,7 +103,7 @@ export default function CreatingACharacterPage() {
             Attributes feed directly into secondary stats like Wound Points, Initiative, and Perception, and add their modifier to every dice check using that attribute.
           </p>
 
-          <h3 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#c0392b', margin: '2rem 0 8px' }}>
+          <h3 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#c0392b', margin: '2rem 0 8px' }}>
             Skills
           </h3>
           <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '1rem' }}>
@@ -113,7 +113,7 @@ export default function CreatingACharacterPage() {
             Skills cap at +3 (Professional) during creation. +4 (Life\'s Work) is only achievable through play.
           </p>
 
-          <h3 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#c0392b', margin: '2rem 0 8px' }}>
+          <h3 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#c0392b', margin: '2rem 0 8px' }}>
             The Nine Steps
           </h3>
           <p style={{ fontSize: '15px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '1.25rem' }}>
@@ -133,9 +133,9 @@ export default function CreatingACharacterPage() {
               { step: 'Step Nine', title: 'Final Review', desc: 'Review, adjust, and save.' },
             ].map(({ step, title, desc }) => (
               <div key={step} style={{ display: 'flex', gap: '12px', padding: '10px 14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 700, color: '#c0392b', textTransform: 'uppercase', letterSpacing: '.06em', minWidth: '80px', paddingTop: '2px' }}>{step}</div>
+                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, color: '#c0392b', textTransform: 'uppercase', letterSpacing: '.06em', minWidth: '80px', paddingTop: '2px' }}>{step}</div>
                 <div>
-                  <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '15px', fontWeight: 700, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '2px' }}>{title}</div>
+                  <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '15px', fontWeight: 700, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '2px' }}>{title}</div>
                   <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6 }}>{desc}</div>
                 </div>
               </div>
@@ -145,7 +145,7 @@ export default function CreatingACharacterPage() {
 
         {/* XSE Dice System */}
         <div style={{ marginBottom: '3rem' }}>
-          <h2 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', margin: '0 0 16px' }}>
+          <h2 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', margin: '0 0 16px' }}>
             How the Dice Work
           </h2>
           <p style={{ fontSize: '16px', color: '#f5f2ee', lineHeight: 1.8, marginBottom: '1.5rem' }}>
@@ -162,8 +162,8 @@ export default function CreatingACharacterPage() {
             ].map(({ range, label, desc, color }) => (
               <div key={range} style={{ background: '#1a1a1a', border: `1px solid ${color}`, borderRadius: '3px', padding: '10px 12px' }}>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '4px' }}>
-                  <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, color: '#f5f2ee' }}>{range}</span>
-                  <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', fontWeight: 700, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.04em' }}>{label}</span>
+                  <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, color: '#f5f2ee' }}>{range}</span>
+                  <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.04em' }}>{label}</span>
                 </div>
                 <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6 }}>{desc}</div>
               </div>
@@ -179,13 +179,13 @@ export default function CreatingACharacterPage() {
 
         {/* CTA */}
         <div style={{ borderTop: '1px solid #2e2e2e', paddingTop: '2rem', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <a href='/characters/new' target="_blank" rel="noopener noreferrer" style={{ padding: '12px 28px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
+          <a href='/characters/new' target="_blank" rel="noopener noreferrer" style={{ padding: '12px 28px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '15px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
             Start Backstory Generation
           </a>
-          <a href='/characters/quick' target="_blank" rel="noopener noreferrer" style={{ padding: '12px 28px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
+          <a href='/characters/quick' target="_blank" rel="noopener noreferrer" style={{ padding: '12px 28px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
             Quick Character
           </a>
-          <a href='/characters/random' target="_blank" rel="noopener noreferrer" style={{ padding: '12px 28px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
+          <a href='/characters/random' target="_blank" rel="noopener noreferrer" style={{ padding: '12px 28px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
             Random Character
           </a>
         </div>

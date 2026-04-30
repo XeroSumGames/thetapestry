@@ -214,14 +214,14 @@ export default function SceneControlsPopoutPage() {
     <div style={{ background: '#0d0d0d', height: '100vh', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'auto', boxSizing: 'border-box' }}>
 
       <select value={scene.id} onChange={e => activateScene(e.target.value)}
-        style={{ padding: '4px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', width: '100%', height: '28px', boxSizing: 'border-box', textAlign: 'center', marginBottom: '4px' }}>
+        style={{ padding: '4px 8px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', width: '100%', height: '28px', boxSizing: 'border-box', textAlign: 'center', marginBottom: '4px' }}>
         {scenes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
       </select>
 
       <div style={{ marginBottom: '4px' }}>
         <div style={lbl}>Scene Name</div>
         <input value={scene.name} onChange={e => updateSceneField('name', e.target.value)}
-          style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', textAlign: 'center' }} />
+          style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', textAlign: 'center' }} />
       </div>
 
       <label style={{ ...btn, cursor: 'pointer' }}>
@@ -257,7 +257,7 @@ export default function SceneControlsPopoutPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: '4px' }}>
           <input type="range" min="5" max="100" value={Math.round(gridOpacity * 100)} onChange={e => setGridOpacity(parseInt(e.target.value) / 100)}
             style={{ flex: 1, accentColor: '#c0392b', minWidth: 0 }} />
-          <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '34px', textAlign: 'right' }}>{Math.round(gridOpacity * 100)}%</span>
+          <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', minWidth: '34px', textAlign: 'right' }}>{Math.round(gridOpacity * 100)}%</span>
         </div>
         <button onClick={() => busRef.current?.postCommand('fit_to_map')}
           style={{ ...btn, color: '#7ab3d4', marginBottom: '4px' }}>Fit to Map</button>
@@ -313,15 +313,15 @@ function Stepper({ label, value, onChange, suffix, step = 1 }: {
       <div style={lbl}>{label}</div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
         <button onClick={() => onChange(value - step)} style={stepBtn}>−</button>
-        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', minWidth: '30px', textAlign: 'center' }}>{value}{suffix}</span>
+        <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', minWidth: '30px', textAlign: 'center' }}>{value}{suffix}</span>
         <button onClick={() => onChange(value + step)} style={stepBtn}>+</button>
       </div>
     </div>
   )
 }
 
-const lbl: React.CSSProperties = { fontSize: '13px', color: '#fff', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px', textAlign: 'center' }
-const btn: React.CSSProperties = { padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }
-const btnSmall: React.CSSProperties = { padding: '4px 6px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
+const lbl: React.CSSProperties = { fontSize: '13px', color: '#fff', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px', textAlign: 'center' }
+const btn: React.CSSProperties = { padding: '4px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', textAlign: 'center', width: '100%', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }
+const btnSmall: React.CSSProperties = { padding: '4px 6px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
 const stepBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#d4cfc9', cursor: 'pointer', fontSize: '14px', padding: 0 }
-const fullPage: React.CSSProperties = { background: '#0d0d0d', color: '#cce0f5', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', padding: '20px', textAlign: 'center' }
+const fullPage: React.CSSProperties = { background: '#0d0d0d', color: '#cce0f5', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Carlito, sans-serif', fontSize: '14px', padding: '20px', textAlign: 'center' }

@@ -75,7 +75,7 @@ export default function CampfirePage() {
           area below scrolls (or fills, for Messages) on its own. */}
       <div style={{ padding: '1.25rem 1.5rem 0', borderBottom: '1px solid #2e2e2e' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee' }}>
             The Campfire
           </div>
           <div style={{ fontSize: '13px', color: '#5a8a40', lineHeight: 1.5 }}>
@@ -97,7 +97,7 @@ export default function CampfirePage() {
                   border: 'none',
                   borderBottom: `2px solid ${selected ? t.accent : 'transparent'}`,
                   color: selected ? t.accent : (t.soon ? '#3a3a3a' : '#d4cfc9'),
-                  fontFamily: 'Barlow Condensed, sans-serif',
+                  fontFamily: 'Carlito, sans-serif',
                   fontSize: '14px',
                   fontWeight: selected ? 700 : 500,
                   letterSpacing: '.08em',
@@ -129,7 +129,7 @@ export default function CampfirePage() {
         {activeTab === 'timestamps' && <TimestampPage />}
         {activeTab === 'homebrew' && (
           <div style={{ maxWidth: '600px', margin: '4rem auto', padding: '2rem 1.5rem', textAlign: 'center', background: '#1a1a1a', border: `1px solid ${active.accent}`, borderRadius: '4px', opacity: 0.7 }}>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: active.accent, marginBottom: '8px' }}>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: active.accent, marginBottom: '8px' }}>
               {active.label}
             </div>
             <div style={{ fontSize: '14px', color: '#5a8a40', lineHeight: 1.6 }}>

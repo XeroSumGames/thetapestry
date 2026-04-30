@@ -81,7 +81,7 @@ export default function StepSix({ state, onChange }: Props) {
 }
 
 const sh: React.CSSProperties = {
-  fontFamily: 'Barlow Condensed, sans-serif',
+  fontFamily: 'Carlito, sans-serif',
   fontSize: '13px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em',
   margin: '1.25rem 0 8px', borderBottom: '1px solid #2e2e2e',
@@ -91,6 +91,6 @@ const sh: React.CSSProperties = {
 const nbtn: React.CSSProperties = {
   padding: '9px 22px', borderRadius: '3px', fontSize: '13px', cursor: 'pointer',
   border: '1px solid #3a3a3a', background: '#242424', color: '#f5f2ee',
-  fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
+  fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
   transition: 'all .15s',
 }

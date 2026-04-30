@@ -200,9 +200,9 @@ export default function CommunityDashboardPage() {
     return out
   }, [members])
 
-  if (loading) return <div style={{ padding: '2rem', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>Loading…</div>
+  if (loading) return <div style={{ padding: '2rem', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>Loading…</div>
   if (!isGM) return (
-    <div style={{ padding: '2rem', color: '#cce0f5', maxWidth: '600px', margin: '0 auto', fontFamily: 'Barlow Condensed, sans-serif' }}>
+    <div style={{ padding: '2rem', color: '#cce0f5', maxWidth: '600px', margin: '0 auto', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ fontSize: '18px', color: '#c0392b', textTransform: 'uppercase', letterSpacing: '.06em' }}>GM Only</div>
       <div style={{ marginTop: '8px', fontSize: '15px' }}>The Community Dashboard is restricted to the campaign's GM. Players see the read-only summary on the Community panel instead.</div>
       <Link href={`/stories/${campaignId}`} style={{ display: 'inline-block', marginTop: '1rem', color: '#7ab3d4', fontSize: '15px' }}>← Back to campaign</Link>
@@ -211,14 +211,14 @@ export default function CommunityDashboardPage() {
 
   // Shared styles
   const cardBox: React.CSSProperties = { background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '16px' }
-  const h2: React.CSSProperties = { fontSize: '15px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '10px' }
-  const label: React.CSSProperties = { fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }
+  const h2: React.CSSProperties = { fontSize: '15px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '10px' }
+  const label: React.CSSProperties = { fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.5rem 1.5rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
       <StoryToolsNav campaignId={campaignId} isGM={true} inviteCode={inviteCode} />
-      <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Community Dashboard</div>
-      <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '26px', color: '#EF9F27', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1.5rem', fontWeight: 700 }}>{campaignName}</div>
+      <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Community Dashboard</div>
+      <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '26px', color: '#EF9F27', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1.5rem', fontWeight: 700 }}>{campaignName}</div>
 
       {communities.length === 0 ? (
         <div style={{ ...cardBox, textAlign: 'center', color: '#cce0f5', fontSize: '15px' }}>
@@ -231,7 +231,7 @@ export default function CommunityDashboardPage() {
             <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', flexWrap: 'wrap' }}>
               {communities.map(c => (
                 <button key={c.id} onClick={() => setSelectedId(c.id)}
-                  style={{ padding: '8px 14px', background: selectedId === c.id ? '#1a2e10' : 'transparent', border: `1px solid ${selectedId === c.id ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: selectedId === c.id ? '#7fc458' : '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: selectedId === c.id ? 700 : 400 }}>
+                  style={{ padding: '8px 14px', background: selectedId === c.id ? '#1a2e10' : 'transparent', border: `1px solid ${selectedId === c.id ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: selectedId === c.id ? '#7fc458' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: selectedId === c.id ? 700 : 400 }}>
                   {c.name}{c.status === 'dissolved' ? ' ✗' : ''}
                 </button>
               ))}
@@ -242,8 +242,8 @@ export default function CommunityDashboardPage() {
           {selected && (
             <div style={{ ...cardBox, marginBottom: '1rem', display: 'flex', alignItems: 'baseline', gap: '18px', flexWrap: 'wrap' }}>
               <div>
-                <div style={{ fontSize: '22px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 700 }}>{selected.name}</div>
-                <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: '22px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 700 }}>{selected.name}</div>
+                <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                   {selected.status} · Week {selected.week_number} · {selected.consecutive_failures}/3 failures · {members.length} members
                 </div>
               </div>
@@ -256,7 +256,7 @@ export default function CommunityDashboardPage() {
             {morale.length === 0 ? (
               <div style={{ fontSize: '15px', color: '#cce0f5' }}>No weekly checks rolled yet.</div>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px', fontFamily: 'Carlito, sans-serif' }}>
                 <thead>
                   <tr>
                     <th style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #2e2e2e', color: '#5a5550', fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>Week</th>
@@ -299,10 +299,10 @@ export default function CommunityDashboardPage() {
                   const color = outcomeColor(r.outcome)
                   return (
                     <div key={i} style={{ padding: '6px 8px', background: '#1a1a1a', border: `1px solid ${color}33`, borderLeft: `3px solid ${color}`, borderRadius: '3px' }}>
-                      <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                      <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                         {r.kind === 'fed' ? '🌾 Fed' : '🔧 Clothed'} · Wk {r.week_number}
                       </div>
-                      <div style={{ fontSize: '15px', color, fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{prettyOutcome(r.outcome)}</div>
+                      <div style={{ fontSize: '15px', color, fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{prettyOutcome(r.outcome)}</div>
                     </div>
                   )
                 })}
@@ -325,7 +325,7 @@ export default function CommunityDashboardPage() {
                 ].map(row => {
                   const ok = row.pct >= row.min
                   return (
-                    <div key={row.name} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '15px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                    <div key={row.name} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '15px', fontFamily: 'Carlito, sans-serif' }}>
                       <span style={{ width: '120px', color: '#cce0f5', letterSpacing: '.04em', textTransform: 'uppercase' }}>{row.name}</span>
                       <div style={{ flex: 1, height: '14px', background: '#0d0d0d', border: '1px solid #2e2e2e', borderRadius: '3px', overflow: 'hidden', position: 'relative' }}>
                         <div style={{ width: `${Math.min(100, row.pct)}%`, height: '100%', background: row.min > 0 && !ok ? '#c0392b' : '#7fc458', transition: 'width 0.3s' }} />
@@ -351,10 +351,10 @@ export default function CommunityDashboardPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
                 <div style={{ padding: '10px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px' }}>
                   <div style={{ ...label, marginBottom: '4px' }}>Overall</div>
-                  <div style={{ fontSize: '17px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>
+                  <div style={{ fontSize: '17px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontWeight: 700 }}>
                     {recruitStats.totalSuccess}/{recruitStats.total} ({recruitStats.successRate}%)
                   </div>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
                     {recruitStats.apprenticeSuccesses} became Apprentices
                   </div>
                 </div>
@@ -365,10 +365,10 @@ export default function CommunityDashboardPage() {
                   return (
                     <div key={ap} style={{ padding: '10px 12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                       <div style={{ ...label, marginBottom: '4px', textTransform: 'capitalize' }}>{ap}</div>
-                      <div style={{ fontSize: '17px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>
+                      <div style={{ fontSize: '17px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontWeight: 700 }}>
                         {s.success}/{t} ({rate}%)
                       </div>
-                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
                         {s.success} success · {s.fail} fail
                       </div>
                     </div>
@@ -385,7 +385,7 @@ export default function CommunityDashboardPage() {
               {Object.entries(memberBreakdown).map(([type, count]) => (
                 <div key={type} style={{ padding: '10px 12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', textAlign: 'center' }}>
                   <div style={{ ...label, marginBottom: '4px', textTransform: 'capitalize' }}>{type}</div>
-                  <div style={{ fontSize: '19px', color: count > 0 ? '#f5f2ee' : '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700 }}>{count}</div>
+                  <div style={{ fontSize: '19px', color: count > 0 ? '#f5f2ee' : '#5a5550', fontFamily: 'Carlito, sans-serif', fontWeight: 700 }}>{count}</div>
                 </div>
               ))}
             </div>

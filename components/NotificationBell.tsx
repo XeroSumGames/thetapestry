@@ -485,7 +485,7 @@ export default function NotificationBell() {
           <span style={{
             position: 'absolute', top: '-2px', right: '0',
             background: '#c0392b', color: '#fff', fontSize: '13px',
-            fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700,
+            fontFamily: 'Carlito, sans-serif', fontWeight: 700,
             minWidth: '16px', height: '16px', borderRadius: '8px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '0 4px',
@@ -508,17 +508,17 @@ export default function NotificationBell() {
         }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #2e2e2e' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Barlow Condensed, sans-serif' }}>Notifications</span>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>Notifications</span>
             <div style={{ display: 'flex', gap: '8px' }}>
               {unreadCount > 0 && (
                 <button onClick={markAllAsRead}
-                  style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Mark all read
                 </button>
               )}
               {notifications.length > 0 && (
                 <button onClick={deleteAll}
-                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Delete all
                 </button>
               )}
@@ -527,7 +527,7 @@ export default function NotificationBell() {
 
           {/* List */}
           {notifications.length === 0 ? (
-            <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+            <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
               No notifications yet
             </div>
           ) : (
@@ -549,7 +549,7 @@ export default function NotificationBell() {
                 onMouseLeave={e => (e.currentTarget.style.background = n.read ? 'transparent' : '#111')}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px', gap: '8px' }}>
-                  <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: 0, flex: 1, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{n.title}</span>
+                  <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: 0, flex: 1, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{n.title}</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexShrink: 0, marginLeft: '8px' }}>
                     <span style={{ fontSize: '13px', color: '#cce0f5' }}>{timeAgo(n.created_at)}</span>
                     <button onClick={(e) => { e.stopPropagation(); deleteNotification(n.id) }}
@@ -590,7 +590,7 @@ export default function NotificationBell() {
                           ? handleLinkAction(n, true)
                           : handleMigrationAction(n, true)}
                       disabled={actingId === n.id}
-                      style={{ padding: '4px 12px', background: '#1a2010', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: actingId === n.id ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: actingId === n.id ? 0.4 : 1 }}>
+                      style={{ padding: '4px 12px', background: '#1a2010', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: actingId === n.id ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: actingId === n.id ? 0.4 : 1 }}>
                       ✓ Accept
                     </button>
                     <button
@@ -600,13 +600,13 @@ export default function NotificationBell() {
                           ? handleLinkAction(n, false)
                           : handleMigrationAction(n, false)}
                       disabled={actingId === n.id}
-                      style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: actingId === n.id ? 'not-allowed' : 'pointer', opacity: actingId === n.id ? 0.4 : 1 }}>
+                      style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: actingId === n.id ? 'not-allowed' : 'pointer', opacity: actingId === n.id ? 0.4 : 1 }}>
                       ✗ Decline
                     </button>
                   </div>
                 )}
                 {actionedIds.has(n.id) && (n.type === 'community_encounter' || n.type === 'community_link_proposal' || n.type === 'community_migration') && (
-                  <div style={{ marginTop: '6px', fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✓ Responded</div>
+                  <div style={{ marginTop: '6px', fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✓ Responded</div>
                 )}
               </div>
             ))

@@ -99,7 +99,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
         const gained = Object.entries(d.skillDeltas ?? {}).filter(([, v]) => (v ?? 0) > 0).map(([n]) => n)
         return (
           <div key={idx} style={{ background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px 12px', marginBottom: '8px' }}>
-            <div style={{ fontSize: '9.5px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '5px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+            <div style={{ fontSize: '9.5px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '5px', fontFamily: 'Carlito, sans-serif' }}>
               Step {num}: {title}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', padding: '2px 0', borderBottom: '1px solid #2e2e2e' }}>
@@ -145,12 +145,12 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
                   borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
                   transition: 'all .15s',
                 }}>
-                  <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                  <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
                   <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                     <button onClick={() => pickAttr(k)} disabled={!canDec} style={attrBtn(!canDec)}>-</button>
                     <div>
-                      <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Barlow Condensed, sans-serif', color: isSelected ? '#f5a89a' : val > 0 ? '#f5f2ee' : '#d4cfc9' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'Carlito, sans-serif', color: isSelected ? '#f5a89a' : val > 0 ? '#f5f2ee' : '#d4cfc9' }}>
                         {val >= 0 ? `+${val}` : val}
                       </div>
                       <div style={{ fontSize: '13px', color: isSelected ? '#f5a89a' : '#d4cfc9', marginTop: '2px' }}>{ATTRIBUTE_LABELS[val]}</div>
@@ -212,7 +212,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
                 <button onClick={() => changeSkill(sk.name, -1)} disabled={!canDec} style={skBtn(!canDec)}>-</button>
-                <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Barlow Condensed, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '22px', textAlign: 'center', fontFamily: 'Carlito, sans-serif', color: cumVal < 0 ? '#f5a89a' : '#f5f2ee' }}>
                   {disp}
                 </span>
                 <button onClick={() => changeSkill(sk.name, 1)} disabled={!canInc} style={skBtn(!canInc)}>+</button>
@@ -235,7 +235,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
 }
 
 const sh: React.CSSProperties = {
-  fontFamily: 'Barlow Condensed, sans-serif',
+  fontFamily: 'Carlito, sans-serif',
   fontSize: '13px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em',
   margin: '1.25rem 0 8px', borderBottom: '1px solid #2e2e2e',

@@ -259,7 +259,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
               {npc.portrait_url ? (
                 <img src={npc.portrait_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <span style={{ fontSize: '14px', fontWeight: 700, color: ring.color, fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: ring.color, fontFamily: 'Carlito, sans-serif' }}>
                   {npc.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}
                 </span>
               )}
@@ -267,12 +267,12 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
           )
         })()}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '17px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.name}</div>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '17px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{npc.name}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '3px', flexWrap: 'wrap' }}>
             {npc.npc_type && (
-              <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.npc_type}</span>
+              <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{npc.npc_type}</span>
             )}
-            <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{displayStatus}</span>
+            <span style={{ fontSize: '13px', padding: '1px 5px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>{displayStatus}</span>
             {/* Recruit state — right of the status badge. Branches
                 between chip (active member) / chip + button (left or
                 failed) / button (no history). Dead/mortal NPCs get
@@ -282,7 +282,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                 {recruitState?.kind === 'active' && (
                   <span
                     title={`${npc.name} is a ${recruitState.role} in ${recruitState.communityName}.`}
-                    style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', fontWeight: 600 }}>
+                    style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', fontWeight: 600 }}>
                     💚 {recruitState.role}{recruitState.communityName ? ` · ${recruitState.communityName}` : ''}
                   </span>
                 )}
@@ -290,11 +290,11 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                   <>
                     <span
                       title={`${npc.name} was in ${recruitState.communityName} but left${recruitState.leftReason ? ` (${recruitState.leftReason})` : ''}.`}
-                      style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', fontWeight: 600 }}>
+                      style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#2a2010', border: '1px solid #5a4a1b', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', fontWeight: 600 }}>
                       ↩ Left{recruitState.communityName ? ` · ${recruitState.communityName}` : ''}
                     </span>
                     <button onClick={onRecruit}
-                      style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}
+                      style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}
                       title="Re-recruit — the NPC left their prior community and can be recruited again.">
                       🤝 Recruit
                     </button>
@@ -304,11 +304,11 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                   <>
                     <span
                       title={`Last recruitment attempt: ${recruitState.outcome}.`}
-                      style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', fontWeight: 600 }}>
+                      style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', fontWeight: 600 }}>
                       ✗ Failed · {recruitState.outcome}
                     </span>
                     <button onClick={onRecruit}
-                      style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}
+                      style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}
                       title="Try again — a failed recruit doesn't lock the NPC out.">
                       🤝 Retry
                     </button>
@@ -316,7 +316,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                 )}
                 {recruitState === null && onRecruit && (
                   <button onClick={onRecruit}
-                    style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}
+                    style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}
                     title="Open the Recruit modal with this NPC as the target">
                     🤝 Recruit
                   </button>
@@ -330,7 +330,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
             {canLoot && (
               <button onClick={openLoot}
                 title={`Search ${npc.name} for items you can take.`}
-                style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}>
+                style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#2a1210', border: '1px solid #c0392b', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}>
                 🎒 Search Remains
               </button>
             )}
@@ -344,13 +344,13 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                   background: cmod > 0 ? '#1a2e10' : '#2a1210',
                   border: `1px solid ${cmod > 0 ? '#2d5a1b' : '#c0392b'}`,
                   color: cmod > 0 ? '#7fc458' : '#f5a89a',
-                  fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                  fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>
                 1st {cmod > 0 ? `+${cmod}` : cmod}
               </span>
             )}
           </div>
         </div>
-        <button onClick={onClose} style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', flexShrink: 0 }}>Close</button>
+        <button onClick={onClose} style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', flexShrink: 0 }}>Close</button>
       </div>
 
       {enlarged && npc.portrait_url && (
@@ -368,18 +368,18 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()}
             style={{ background: '#1a1a1a', border: '1px solid #c0392b', borderRadius: '4px', padding: '1.25rem', width: '380px', maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Search Remains</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '17px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>{npc.name}</div>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Search Remains</div>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '17px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>{npc.name}</div>
             {lootError && (
-              <div style={{ marginBottom: '10px', padding: '8px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <div style={{ marginBottom: '10px', padding: '8px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
                 {lootError}
               </div>
             )}
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '12px' }}>
               {lootItems == null ? (
-                <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem', fontFamily: 'Barlow Condensed, sans-serif' }}>Searching…</div>
+                <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem', fontFamily: 'Carlito, sans-serif' }}>Searching…</div>
               ) : lootItems.length === 0 ? (
-                <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem', fontFamily: 'Barlow Condensed, sans-serif' }}>Nothing left to take.</div>
+                <div style={{ color: '#cce0f5', fontSize: '13px', textAlign: 'center', padding: '1rem', fontFamily: 'Carlito, sans-serif' }}>Nothing left to take.</div>
               ) : (
                 lootItems.map((item, idx) => {
                   const tag = `${item.name}:${item.custom ? 'c' : 'std'}`
@@ -388,18 +388,18 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                     <div key={`${tag}_${idx}`}
                       style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '6px' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                        <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                           {item.name}{item.qty > 1 && <span style={{ color: '#7ab3d4', marginLeft: '4px' }}>×{item.qty}</span>}
                         </div>
                         {(item.rarity || item.notes) && (
-                          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '2px' }}>
+                          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginTop: '2px' }}>
                             {item.rarity && <span style={{ marginRight: '6px' }}>{item.rarity}</span>}
                             {item.notes}
                           </div>
                         )}
                       </div>
                       <button onClick={() => takeItem(item)} disabled={taking}
-                        style={{ padding: '4px 12px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: taking ? 'wait' : 'pointer', opacity: taking ? 0.5 : 1, fontWeight: 600 }}>
+                        style={{ padding: '4px 12px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: taking ? 'wait' : 'pointer', opacity: taking ? 0.5 : 1, fontWeight: 600 }}>
                         {taking ? 'Taking…' : 'Take'}
                       </button>
                     </div>
@@ -408,7 +408,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
               )}
             </div>
             <button onClick={() => { setShowLoot(false); setLootError(null) }}
-              style={{ padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Close
             </button>
           </div>

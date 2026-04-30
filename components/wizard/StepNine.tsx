@@ -51,10 +51,10 @@ export default function StepNine({ state, onChange }: Props) {
               <img src={state.photoDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '20px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <div style={{ fontSize: '20px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>
                   {state.name ? state.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?'}
                 </div>
-                <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', marginTop: '2px' }}>Upload</div>
+                <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', marginTop: '2px' }}>Upload</div>
               </div>
             )}
             <input type="file" accept="image/*" hidden onChange={async e => {
@@ -65,7 +65,7 @@ export default function StepNine({ state, onChange }: Props) {
             }} />
           </label>
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1 }}>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1 }}>
               {state.name || 'Unnamed Character'}
             </div>
             <div style={{ fontSize: '14px', color: '#d4cfc9', marginTop: '4px' }}>
@@ -139,9 +139,9 @@ export default function StepNine({ state, onChange }: Props) {
                 border: `1px solid ${val > 0 ? '#c0392b' : '#3a3a3a'}`,
                 borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
               }}>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
                 <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
-                <div style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee', margin: '3px 0' }}>
+                <div style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee', margin: '3px 0' }}>
                   {sgn(val)}
                 </div>
                 <div style={{ fontSize: '13px', color: val > 0 ? '#f5a89a' : '#d4cfc9' }}>{ATTRIBUTE_LABELS[val]}</div>
@@ -165,7 +165,7 @@ export default function StepNine({ state, onChange }: Props) {
           ].map(({ label, value, hi }) => (
             <div key={label} style={{ background: '#242424', border: `1px solid ${hi ? '#7a1f16' : '#2e2e2e'}`, borderRadius: '3px', padding: '8px 10px' }}>
               <div style={{ fontSize: '9.5px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '1px' }}>{label}</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: hi ? '#f5a89a' : '#f5f2ee' }}>{value}</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: hi ? '#f5a89a' : '#f5f2ee' }}>{value}</div>
             </div>
           ))}
         </div>
@@ -261,7 +261,7 @@ const section: React.CSSProperties = {
 }
 
 const sectionTitle: React.CSSProperties = {
-  fontFamily: 'Barlow Condensed, sans-serif',
+  fontFamily: 'Carlito, sans-serif',
   fontSize: '13px', fontWeight: 700, color: '#c0392b',
   textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px',
 }

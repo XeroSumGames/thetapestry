@@ -41,7 +41,7 @@ export default function CommunityDetailPage() {
   if (loading) return <div style={{ padding: '2rem', color: '#cce0f5' }}>Loading…</div>
   if (notFound) return (
     <div style={{ padding: '2rem', color: '#cce0f5', maxWidth: '600px', margin: '0 auto' }}>
-      <div style={{ fontSize: '18px', fontFamily: 'Barlow Condensed, sans-serif', color: '#c0392b', textTransform: 'uppercase', letterSpacing: '.06em' }}>Community not found</div>
+      <div style={{ fontSize: '18px', fontFamily: 'Carlito, sans-serif', color: '#c0392b', textTransform: 'uppercase', letterSpacing: '.06em' }}>Community not found</div>
       <div style={{ marginTop: '8px' }}>It may have been deleted, or you may not have access.</div>
       <Link href="/communities" style={{ display: 'inline-block', marginTop: '1rem', color: '#7ab3d4' }}>← My Communities</Link>
     </div>
@@ -51,10 +51,10 @@ export default function CommunityDetailPage() {
   return (
     <div style={{ maxWidth: '1040px', margin: '0 auto', padding: '1.5rem 1.5rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
       <div style={{ marginBottom: '1rem' }}>
-        <Link href="/communities" style={{ color: '#7ab3d4', fontSize: '13px', textDecoration: 'none', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>← My Communities</Link>
+        <Link href="/communities" style={{ color: '#7ab3d4', fontSize: '13px', textDecoration: 'none', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>← My Communities</Link>
       </div>
-      <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Campaign</div>
-      <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', color: '#EF9F27', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1rem' }}>{campaignName}</div>
+      <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Campaign</div>
+      <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', color: '#EF9F27', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1rem' }}>{campaignName}</div>
       {/* Reuse the per-campaign panel; its list will include this community and
           the GM can open/manage it inline. */}
       <div style={{ background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px' }}>

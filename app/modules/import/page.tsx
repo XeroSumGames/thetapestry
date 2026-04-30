@@ -84,10 +84,10 @@ export default function ImportSnapshotPage() {
   return (
     <div style={{ maxWidth: '760px', margin: '0 auto', padding: '24px 20px', color: '#d4cfc9' }}>
 
-      <div style={{ marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', color: '#c4a7f0', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>
+      <div style={{ marginBottom: '6px', fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#c4a7f0', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>
         Module System
       </div>
-      <h1 style={{ margin: '0 0 8px', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+      <h1 style={{ margin: '0 0 8px', fontFamily: 'Carlito, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
         Publish from Snapshot
       </h1>
       <p style={{ margin: '0 0 24px', fontSize: '15px', lineHeight: 1.6, color: '#cce0f5', maxWidth: '620px' }}>
@@ -95,11 +95,11 @@ export default function ImportSnapshotPage() {
       </p>
 
       <label style={{ display: 'block', padding: '20px', background: parsed ? '#1a2e10' : '#1a1a1a', border: `2px dashed ${parsed ? '#2d5a1b' : '#5a2e5a'}`, borderRadius: '4px', textAlign: 'center', cursor: 'pointer', marginBottom: '12px', transition: 'background 200ms' }}>
-        <div style={{ fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', color: parsed ? '#7fc458' : '#c4a7f0', fontWeight: 600 }}>
+        <div style={{ fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', color: parsed ? '#7fc458' : '#c4a7f0', fontWeight: 600 }}>
           {parsing ? 'Reading…' : parsed ? `✓ ${parsed.fileName}` : '📂 Pick a .tapestry-snapshot.json file'}
         </div>
         {parsed && (
-          <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '8px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '8px', fontFamily: 'Carlito, sans-serif' }}>
             {parsed.counts.npcs} NPCs · {parsed.counts.pins} pins · {parsed.counts.scenes} scenes ({parsed.counts.tokens} tokens) · {parsed.counts.handouts} handouts
             {parsed.capturedAt && <> · captured {new Date(parsed.capturedAt).toLocaleString()}</>}
           </div>
@@ -115,18 +115,18 @@ export default function ImportSnapshotPage() {
 
       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
         <button onClick={() => router.push('/dashboard')}
-          style={{ padding: '9px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          style={{ padding: '9px 16px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
           ← Back to dashboard
         </button>
         <button onClick={() => parsed && setShowModal(true)} disabled={!parsed}
-          style={{ padding: '9px 18px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: parsed ? 'pointer' : 'not-allowed', opacity: parsed ? 1 : 0.4, fontWeight: 600 }}>
+          style={{ padding: '9px 18px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: parsed ? 'pointer' : 'not-allowed', opacity: parsed ? 1 : 0.4, fontWeight: 600 }}>
           📦 Continue to publish wizard
         </button>
       </div>
 
       {published && (
         <div style={{ marginTop: '16px', padding: '14px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '4px' }}>
-          <div style={{ fontSize: '14px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px' }}>
+          <div style={{ fontSize: '14px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px' }}>
             ✓ Module published — v{published.version}
           </div>
           <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '10px' }}>
@@ -134,15 +134,15 @@ export default function ImportSnapshotPage() {
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={() => { setPublished(null); setParsed(null) }}
-              style={{ padding: '7px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ padding: '7px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               📂 Import another snapshot
             </button>
             <button onClick={() => router.push('/dashboard')}
-              style={{ padding: '7px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ padding: '7px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               ← Back to dashboard
             </button>
           </div>
-          <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+          <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '10px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
             module id: <code style={{ color: '#cce0f5' }}>{published.moduleId}</code>
           </div>
         </div>

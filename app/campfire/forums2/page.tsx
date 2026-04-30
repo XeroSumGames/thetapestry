@@ -154,7 +154,7 @@ export default function Forums2Page() {
       {/* Header */}
       <div style={{ marginBottom: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee' }}>
             Forums
           </div>
           <span style={{
@@ -163,7 +163,7 @@ export default function Forums2Page() {
             color: '#7ab3d4',
             border: '1px solid #7ab3d4',
             borderRadius: '999px',
-            fontFamily: 'Barlow Condensed, sans-serif',
+            fontFamily: 'Carlito, sans-serif',
             fontSize: '13px',
             fontWeight: 700,
             letterSpacing: '.08em',
@@ -199,7 +199,7 @@ export default function Forums2Page() {
                 color: sort === s ? '#7ab3d4' : '#d4cfc9',
                 border: 'none',
                 borderLeft: i === 0 ? 'none' : '1px solid #3a3a3a',
-                fontFamily: 'Barlow Condensed, sans-serif',
+                fontFamily: 'Carlito, sans-serif',
                 fontSize: '13px',
                 fontWeight: 700,
                 letterSpacing: '.08em',
@@ -273,7 +273,7 @@ export default function Forums2Page() {
                     }}
                   >▲</button>
                   <div style={{
-                    fontFamily: 'Barlow Condensed, sans-serif',
+                    fontFamily: 'Carlito, sans-serif',
                     fontSize: '14px',
                     fontWeight: 700,
                     color: v === 1 ? '#7fc458' : v === -1 ? '#f5a89a' : '#f5f2ee',
@@ -310,7 +310,7 @@ export default function Forums2Page() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap', fontSize: '13px' }}>
                     <span style={{
                       color: accent,
-                      fontFamily: 'Barlow Condensed, sans-serif',
+                      fontFamily: 'Carlito, sans-serif',
                       fontWeight: 700,
                       letterSpacing: '.06em',
                       textTransform: 'uppercase',
@@ -322,13 +322,13 @@ export default function Forums2Page() {
                     <span style={{ color: '#cce0f5', fontWeight: 600 }}>u/{t.author_username}</span>
                     <span style={{ color: '#5a5550' }}>·</span>
                     <span style={{ color: '#7a7570' }}>{formatRelative(t.created_at)}</span>
-                    {t.pinned && <span style={{ marginLeft: '4px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>📌 Pinned</span>}
-                    {t.locked && <span style={{ marginLeft: '4px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🔒 Locked</span>}
+                    {t.pinned && <span style={{ marginLeft: '4px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>📌 Pinned</span>}
+                    {t.locked && <span style={{ marginLeft: '4px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🔒 Locked</span>}
                   </div>
 
                   {/* Title */}
                   <div style={{
-                    fontFamily: 'Barlow Condensed, sans-serif',
+                    fontFamily: 'Carlito, sans-serif',
                     fontSize: '20px',
                     fontWeight: 700,
                     color: '#f5f2ee',
@@ -363,7 +363,7 @@ export default function Forums2Page() {
                       borderRadius: '4px',
                       fontSize: '13px',
                       color: '#cce0f5',
-                      fontFamily: 'Barlow Condensed, sans-serif',
+                      fontFamily: 'Carlito, sans-serif',
                       letterSpacing: '.06em',
                       textTransform: 'uppercase',
                       fontWeight: 600,
@@ -373,7 +373,7 @@ export default function Forums2Page() {
                     <span style={{
                       fontSize: '13px',
                       color: '#7a7570',
-                      fontFamily: 'Barlow Condensed, sans-serif',
+                      fontFamily: 'Carlito, sans-serif',
                       letterSpacing: '.06em',
                       textTransform: 'uppercase',
                     }}>
@@ -398,7 +398,7 @@ function FilterChip({ label, accent, active, onClick }: {
       style={{
         padding: '4px 10px',
         fontSize: '13px',
-        fontFamily: 'Barlow Condensed, sans-serif',
+        fontFamily: 'Carlito, sans-serif',
         letterSpacing: '.06em',
         textTransform: 'uppercase',
         cursor: 'pointer',

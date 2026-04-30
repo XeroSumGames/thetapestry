@@ -178,8 +178,8 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
   return (
     <div onClick={onCancel} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 10003, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', maxWidth: '500px' }}>
-        <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '6px' }}>Crop Image</div>
-        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>Drag the box to move, drag the corner to resize. Crop to any shape — wide trucks, tall walls, square crates.</div>
+        <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Crop Image</div>
+        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>Drag the box to move, drag the corner to resize. Crop to any shape — wide trucks, tall walls, square crates.</div>
 
         {srcUrl && imgSize && box ? (
           <div
@@ -210,18 +210,18 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
         )}
 
         {(localError || uploadError) && (
-          <div style={{ marginBottom: '8px', padding: '6px 10px', background: '#2a1010', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <div style={{ marginBottom: '8px', padding: '6px 10px', background: '#2a1010', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
             {localError || uploadError}
           </div>
         )}
 
         <div style={{ display: 'flex', gap: '6px' }}>
           <button onClick={handleConfirm} disabled={!box || processing || !decodedImgRef.current}
-            style={{ flex: 1, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: processing ? 'wait' : 'pointer', opacity: processing ? 0.6 : 1 }}>
+            style={{ flex: 1, padding: '8px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: processing ? 'wait' : 'pointer', opacity: processing ? 0.6 : 1 }}>
             {processing ? 'Processing…' : 'Crop & Upload'}
           </button>
           <button onClick={onCancel}
-            style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ flex: 1, padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Cancel
           </button>
         </div>

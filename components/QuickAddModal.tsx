@@ -379,29 +379,29 @@ export default function QuickAddModal({
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
       <div onClick={e => e.stopPropagation()}
         style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: hideCommunity ? '440px' : '760px', maxHeight: '88vh', overflowY: 'auto' }}>
-        <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Quick Add</div>
-        <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>{title}</div>
+        <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Quick Add</div>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>{title}</div>
         <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1.25rem', fontFamily: 'Barlow, sans-serif' }}>{subtitle}</div>
 
         <div style={{ display: 'grid', gridTemplateColumns: hideCommunity ? '1fr' : '1fr 1fr', gap: '16px' }}>
           {/* ── Drop a Pin ───────────────────────────────────── */}
           <div style={{ padding: '14px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '4px' }}>
-            <div style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>📍 Drop a Pin</div>
+            <div style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>📍 Drop a Pin</div>
 
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Title</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Title</div>
               <input value={pinName} onChange={e => setPinName(e.target.value)} placeholder="e.g. Abandoned hospital"
                 style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
             </div>
 
             <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Lat</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Lat</div>
                 <input value={pinLat} onChange={e => setPinLat(e.target.value)} placeholder="40.4406"
                   style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Lng</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Lng</div>
                 <input value={pinLng} onChange={e => setPinLng(e.target.value)} placeholder="-79.9959"
                   style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
               </div>
@@ -411,14 +411,14 @@ export default function QuickAddModal({
                 when the player picks a result. Sits between the
                 Lat/Lng row and Category per user spec. */}
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Address Search (optional)</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Address Search (optional)</div>
               <form onSubmit={e => { e.preventDefault(); handleAddressSearch() }}
                 style={{ display: 'flex', gap: '6px' }}>
                 <input value={addrQuery} onChange={e => setAddrQuery(e.target.value)}
                   placeholder="e.g. Broken Arrow, OK"
                   style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
                 <button type="submit" disabled={!addrQuery.trim() || addrSearching}
-                  style={{ padding: '7px 14px', background: addrQuery.trim() ? '#1a1a2e' : '#111', border: `1px solid ${addrQuery.trim() ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: addrQuery.trim() ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: addrQuery.trim() && !addrSearching ? 'pointer' : 'not-allowed' }}>
+                  style={{ padding: '7px 14px', background: addrQuery.trim() ? '#1a1a2e' : '#111', border: `1px solid ${addrQuery.trim() ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: addrQuery.trim() ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: addrQuery.trim() && !addrSearching ? 'pointer' : 'not-allowed' }}>
                   {addrSearching ? '…' : 'Go'}
                 </button>
               </form>
@@ -437,21 +437,21 @@ export default function QuickAddModal({
             </div>
 
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Category</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Category</div>
               <select value={pinCategory} onChange={e => setPinCategory(e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                 {categories.map(c => <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>)}
               </select>
             </div>
 
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Notes (optional)</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Notes (optional)</div>
               <textarea value={pinNotes} onChange={e => setPinNotes(e.target.value)} rows={2}
                 style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
             </div>
 
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Attachments (optional)</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Attachments (optional)</div>
               <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: pinAttachments.length > 0 ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
                 {pinAttachments.length > 0 ? `${pinAttachments.length} file${pinAttachments.length > 1 ? 's' : ''} selected` : 'Click to attach files'}
                 <input type="file" multiple onChange={e => { if (e.target.files) setPinAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />
@@ -470,7 +470,7 @@ export default function QuickAddModal({
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '10px', padding: '8px 10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', cursor: 'pointer' }}>
                 <input type="checkbox" checked={worldShare} onChange={e => setWorldShare(e.target.checked)} style={{ marginTop: '2px' }} />
                 <span style={{ flex: 1 }}>
-                  <span style={{ display: 'block', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>
+                  <span style={{ display: 'block', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>
                     Make this pin public
                   </span>
                   <span style={{ display: 'block', marginTop: '2px', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', lineHeight: 1.3 }}>
@@ -484,11 +484,11 @@ export default function QuickAddModal({
             )}
 
             <button onClick={handlePinSave} disabled={pinSaving || !pinName.trim()}
-              style={{ width: '100%', padding: '9px', background: pinName.trim() ? '#1a1a2e' : '#111', border: `1px solid ${pinName.trim() ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: pinName.trim() ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: pinName.trim() && !pinSaving ? 'pointer' : 'not-allowed' }}>
+              style={{ width: '100%', padding: '9px', background: pinName.trim() ? '#1a1a2e' : '#111', border: `1px solid ${pinName.trim() ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: pinName.trim() ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: pinName.trim() && !pinSaving ? 'pointer' : 'not-allowed' }}>
               {pinSaving ? 'Saving…' : '📍 Save Pin'}
             </button>
             {pinDone && (
-              <div style={{ marginTop: '8px', padding: '6px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', letterSpacing: '.04em' }}>
+              <div style={{ marginTop: '8px', padding: '6px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', textAlign: 'center', letterSpacing: '.04em' }}>
                 ✓ Pin saved. Add another or close.
               </div>
             )}
@@ -497,7 +497,7 @@ export default function QuickAddModal({
           {/* ── Start a Community — campaign mode only, not hidden ── */}
           {!hideCommunity && (
             <div style={{ padding: '14px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '4px' }}>
-              <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '10px' }}>
+              <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>
                 🏘️ {existingCommunities.length > 0 ? 'Join or Start a Community' : 'Start a Community'}
               </div>
 
@@ -508,11 +508,11 @@ export default function QuickAddModal({
               {existingCommunities.length > 0 && (
                 <div style={{ display: 'flex', gap: '4px', marginBottom: '12px' }}>
                   <button type="button" onClick={() => setCommMode('join')}
-                    style={{ flex: 1, padding: '7px', background: commMode === 'join' ? '#2d5a1b' : '#111', border: `1px solid ${commMode === 'join' ? '#7fc458' : '#2e2e2e'}`, borderRadius: '3px', color: commMode === 'join' ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                    style={{ flex: 1, padding: '7px', background: commMode === 'join' ? '#2d5a1b' : '#111', border: `1px solid ${commMode === 'join' ? '#7fc458' : '#2e2e2e'}`, borderRadius: '3px', color: commMode === 'join' ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                     🤝 Join Existing
                   </button>
                   <button type="button" onClick={() => setCommMode('start')}
-                    style={{ flex: 1, padding: '7px', background: commMode === 'start' ? '#2d5a1b' : '#111', border: `1px solid ${commMode === 'start' ? '#7fc458' : '#2e2e2e'}`, borderRadius: '3px', color: commMode === 'start' ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                    style={{ flex: 1, padding: '7px', background: commMode === 'start' ? '#2d5a1b' : '#111', border: `1px solid ${commMode === 'start' ? '#7fc458' : '#2e2e2e'}`, borderRadius: '3px', color: commMode === 'start' ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                     🏡 Start New
                   </button>
                 </div>
@@ -522,9 +522,9 @@ export default function QuickAddModal({
               {commMode === 'join' && existingCommunities.length > 0 && (
                 <>
                   <div style={{ marginBottom: '8px' }}>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Community</div>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Community</div>
                     <select value={commJoinId} onChange={e => setCommJoinId(e.target.value)}
-                      style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                      style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                       <option value="">— pick a community —</option>
                       {existingCommunities.map(c => (
                         <option key={c.id} value={c.id}>{c.name} ({c.memberCount} member{c.memberCount === 1 ? '' : 's'})</option>
@@ -533,22 +533,22 @@ export default function QuickAddModal({
                   </div>
 
                   {!myPcId && userId && (
-                    <div style={{ marginBottom: '10px', padding: '8px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', lineHeight: 1.4 }}>
+                    <div style={{ marginBottom: '10px', padding: '8px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', lineHeight: 1.4 }}>
                       You need a PC assigned to this campaign before you can join a community. Ask the GM to invite you with a character.
                     </div>
                   )}
 
                   <button type="button" onClick={handleCommJoin} disabled={!commJoinId || !myPcId || commJoining}
-                    style={{ width: '100%', padding: '9px', background: commJoinId && myPcId ? '#1a2e10' : '#111', border: `1px solid ${commJoinId && myPcId ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: commJoinId && myPcId ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: commJoinId && myPcId && !commJoining ? 'pointer' : 'not-allowed' }}>
+                    style={{ width: '100%', padding: '9px', background: commJoinId && myPcId ? '#1a2e10' : '#111', border: `1px solid ${commJoinId && myPcId ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: commJoinId && myPcId ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: commJoinId && myPcId && !commJoining ? 'pointer' : 'not-allowed' }}>
                     {commJoining ? 'Joining…' : '🤝 Join Community'}
                   </button>
                   {commJoinDone && (
-                    <div style={{ marginTop: '8px', padding: '8px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', fontSize: '13px', color: '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', letterSpacing: '.04em', lineHeight: 1.4 }}>
+                    <div style={{ marginTop: '8px', padding: '8px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textAlign: 'center', letterSpacing: '.04em', lineHeight: 1.4 }}>
                       ⏳ Join request sent. The community&apos;s leader needs to approve before you&apos;re an active member.
                     </div>
                   )}
                   {commJoinError && (
-                    <div style={{ marginTop: '8px', padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+                    <div style={{ marginTop: '8px', padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                       {commJoinError}
                     </div>
                   )}
@@ -559,21 +559,21 @@ export default function QuickAddModal({
               {commMode === 'start' && (
               <>
               <div style={{ marginBottom: '8px' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Name</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Name</div>
                 <input value={commName} onChange={e => setCommName(e.target.value)} placeholder="e.g. The Greenhouse"
                   style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
               </div>
 
               <div style={{ marginBottom: '8px' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Description (optional)</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Description (optional)</div>
                 <textarea value={commDesc} onChange={e => setCommDesc(e.target.value)} rows={2}
                   style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
               </div>
 
               <div style={{ marginBottom: '8px' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Homestead pin (optional)</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Homestead pin (optional)</div>
                 <select value={commHomestead} onChange={e => setCommHomestead(e.target.value)}
-                  style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none' }}>
+                  style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                   <option value="">— none —</option>
                   {(() => {
                     // Homestead-tagged pins float to the top with a 🏡
@@ -603,13 +603,13 @@ export default function QuickAddModal({
                 )}
               </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                 <input type="checkbox" checked={commPublic} onChange={e => setCommPublic(e.target.checked)} />
                 Make public (LFG — coming soon)
               </label>
 
               <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Attachments (optional)</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Attachments (optional)</div>
                 <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: commAttachments.length > 0 ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
                   {commAttachments.length > 0 ? `${commAttachments.length} file${commAttachments.length > 1 ? 's' : ''} selected` : 'Click to attach files'}
                   <input type="file" multiple onChange={e => { if (e.target.files) setCommAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />
@@ -622,11 +622,11 @@ export default function QuickAddModal({
               </div>
 
               <button onClick={handleCommSave} disabled={commSaving || !commName.trim()}
-                style={{ width: '100%', padding: '9px', background: commName.trim() ? '#1a2e10' : '#111', border: `1px solid ${commName.trim() ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: commName.trim() ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: commName.trim() && !commSaving ? 'pointer' : 'not-allowed' }}>
+                style={{ width: '100%', padding: '9px', background: commName.trim() ? '#1a2e10' : '#111', border: `1px solid ${commName.trim() ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', color: commName.trim() ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: commName.trim() && !commSaving ? 'pointer' : 'not-allowed' }}>
                 {commSaving ? 'Saving…' : '🏘️ Create Community'}
               </button>
               {commDone && (
-                <div style={{ marginTop: '8px', padding: '6px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textAlign: 'center', letterSpacing: '.04em' }}>
+                <div style={{ marginTop: '8px', padding: '6px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', textAlign: 'center', letterSpacing: '.04em' }}>
                   ✓ Community created.
                 </div>
               )}
@@ -637,7 +637,7 @@ export default function QuickAddModal({
         </div>
 
         <button onClick={onClose}
-          style={{ marginTop: '1.25rem', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          style={{ marginTop: '1.25rem', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
           Done
         </button>
       </div>

@@ -195,7 +195,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
       {isGM && pins.length > 0 && (
         <div style={{ padding: '8px 10px', display: 'flex', gap: '4px' }}>
           <button onClick={allRevealed ? hideAll : revealAll}
-            style={{ padding: '2px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '2px 8px', background: allRevealed ? '#2a1210' : '#1a2e10', border: `1px solid ${allRevealed ? '#c0392b' : '#2d5a1b'}`, borderRadius: '3px', color: allRevealed ? '#f5a89a' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
             {allRevealed ? 'Hide All' : 'Reveal All'}
           </button>
         </div>
@@ -204,7 +204,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
       {/* Pin list */}
       <div style={{ overflowY: 'auto', padding: '4px' }}>
         {pins.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '8px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase' }}>
+          <div style={{ textAlign: 'center', padding: '8px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
             {isGM ? 'No campaign pins' : 'No pins revealed yet'}
           </div>
         ) : (
@@ -225,12 +225,12 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
                     style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical', marginBottom: '4px' }} />
                   <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Latitude</div>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Latitude</div>
                       <input value={editLat} onChange={e => setEditLat(e.target.value)} placeholder="Lat"
                         style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'monospace', boxSizing: 'border-box' }} />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Longitude</div>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Longitude</div>
                       <input value={editLng} onChange={e => setEditLng(e.target.value)} placeholder="Lng"
                         style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'monospace', boxSizing: 'border-box' }} />
                     </div>
@@ -244,9 +244,9 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
                   {/* Tactical Map link */}
                   {isGM && scenes.length > 0 && (
                     <div style={{ marginBottom: '4px' }}>
-                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Tactical Map</div>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Tactical Map</div>
                       <select value={editSceneId ?? ''} onChange={e => setEditSceneId(e.target.value || null)}
-                        style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
+                        style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
                         <option value="">— None —</option>
                         {scenes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>
@@ -254,13 +254,13 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
                   )}
                   {/* Sort order — explicit number that decides list position */}
                   <div style={{ marginBottom: '4px', width: '90px' }}>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Order</div>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Order</div>
                     <input value={editSortOrder} onChange={e => setEditSortOrder(e.target.value)} type="number" min="1" placeholder="#"
-                      style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', boxSizing: 'border-box', textAlign: 'center' }} />
+                      style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', textAlign: 'center' }} />
                   </div>
                   <div style={{ display: 'flex', gap: '4px' }}>
-                    <button onClick={saveEdit} style={{ flex: 1, padding: '3px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Save</button>
-                    <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: '3px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                    <button onClick={saveEdit} style={{ flex: 1, padding: '3px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Save</button>
+                    <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: '3px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                   </div>
                 </div>
               ) : (
@@ -279,7 +279,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
                     onDoubleClick={() => { if (pin.tactical_scene_id && onOpenScene) onOpenScene(pin.tactical_scene_id) }}
                     title={pin.tactical_scene_id ? 'Double-click to open tactical map' : 'Show on map'}
                   >
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       {pin.name}
                       {pin.tactical_scene_id && <span title="Has tactical map" style={{ fontSize: '13px', color: '#7ab3d4' }}>🗺️</span>}
                     </div>
@@ -298,13 +298,13 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, onPi
                     {canManage && (
                       <>
                         <button onClick={() => toggleReveal(pin)}
-                          style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: pin.revealed ? '#2a1210' : '#1a2e10', border: `1px solid ${pin.revealed ? '#c0392b' : '#2d5a1b'}`, color: pin.revealed ? '#f5a89a' : '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                          style={{ fontSize: '13px', padding: '0 5px', borderRadius: '2px', background: pin.revealed ? '#2a1210' : '#1a2e10', border: `1px solid ${pin.revealed ? '#c0392b' : '#2d5a1b'}`, color: pin.revealed ? '#f5a89a' : '#7fc458', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                           {pin.revealed ? 'Hide' : 'Show'}
                         </button>
                         <div style={{ display: 'flex', gap: '2px' }}>
-                          <button onClick={() => startEdit(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>Edit</button>
-                          <button onClick={() => promoteToWorld(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }} title="Add to world map">🌍</button>
-                          <button onClick={() => deletePin(pin.id)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #7a1f16', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Barlow Condensed, sans-serif', cursor: 'pointer' }}>×</button>
+                          <button onClick={() => startEdit(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>Edit</button>
+                          <button onClick={() => promoteToWorld(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }} title="Add to world map">🌍</button>
+                          <button onClick={() => deletePin(pin.id)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #7a1f16', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>×</button>
                         </div>
                       </>
                     )}
@@ -346,7 +346,7 @@ function AddressSearchRow({ onPick }: { onPick: (lat: number, lng: number) => vo
   }
   return (
     <div style={{ marginBottom: '4px' }}>
-      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Address search</div>
+      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Address search</div>
       <div style={{ display: 'flex', gap: '4px' }}>
         <input value={q}
           onChange={e => setQ(e.target.value)}
@@ -354,7 +354,7 @@ function AddressSearchRow({ onPick }: { onPick: (lat: number, lng: number) => vo
           placeholder="Street, city, landmark..."
           style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
         <button onClick={runSearch} disabled={searching || !q.trim()}
-          style={{ padding: '0 10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching || !q.trim() ? 'not-allowed' : 'pointer', opacity: searching || !q.trim() ? 0.5 : 1 }}>
+          style={{ padding: '0 10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching || !q.trim() ? 'not-allowed' : 'pointer', opacity: searching || !q.trim() ? 0.5 : 1 }}>
           {searching ? '…' : 'Search'}
         </button>
       </div>

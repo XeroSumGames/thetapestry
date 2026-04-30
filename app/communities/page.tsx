@@ -279,21 +279,21 @@ export default function CommunitiesIndexPage() {
     fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box',
   }
   const lbl: React.CSSProperties = {
-    fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif',
+    fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif',
     letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px',
   }
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-        <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '26px', letterSpacing: '.06em', textTransform: 'uppercase', color: '#c0392b', margin: 0 }}>My Communities</h1>
+        <h1 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '26px', letterSpacing: '.06em', textTransform: 'uppercase', color: '#c0392b', margin: 0 }}>My Communities</h1>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={handleOpenInvite}
-            style={{ padding: '6px 14px', background: '#2d5a1b', border: '1px solid #7fc458', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '6px 14px', background: '#2d5a1b', border: '1px solid #7fc458', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
             🤝 Invite to Community
           </button>
           <button onClick={handleOpenCreate}
-            style={{ padding: '6px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '6px 14px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
             + New Community
           </button>
         </div>
@@ -304,7 +304,7 @@ export default function CommunitiesIndexPage() {
       </p>
 
       {rows.length === 0 && (
-        <div style={{ padding: '3rem', textAlign: 'center', color: '#5a5550', fontSize: '16px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
+        <div style={{ padding: '3rem', textAlign: 'center', color: '#5a5550', fontSize: '16px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
           You haven&apos;t founded or joined any communities yet.
           <div style={{ marginTop: '8px', fontSize: '15px', color: '#cce0f5', textTransform: 'none', letterSpacing: 0 }}>
             Click <span style={{ color: '#c0392b' }}>+ New Community</span> above to found one inside any campaign you&apos;re a member of.
@@ -317,7 +317,7 @@ export default function CommunitiesIndexPage() {
         return (
           <section key={campaignId} style={{ marginBottom: '2rem' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '10px', paddingBottom: '4px', borderBottom: '1px solid #2e2e2e' }}>
-              <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '16px', color: '#EF9F27', letterSpacing: '.08em', textTransform: 'uppercase' }}>{first.campaign_name}</span>
+              <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', color: '#EF9F27', letterSpacing: '.08em', textTransform: 'uppercase' }}>{first.campaign_name}</span>
               {first.campaign_setting && <span style={{ fontSize: '13px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em' }}>{first.campaign_setting}</span>}
               {first.i_am_gm && <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#c0392b', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '2px', padding: '1px 6px', textTransform: 'uppercase', letterSpacing: '.06em' }}>GM</span>}
             </div>
@@ -329,13 +329,13 @@ export default function CommunitiesIndexPage() {
                   onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
                   onMouseLeave={e => (e.currentTarget.style.background = '#1a1a1a')}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{c.name}</span>
-                    <span style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: c.status === 'dissolved' ? '#2a1210' : c.is_community ? '#1a2e10' : '#2a2010', color: c.status === 'dissolved' ? '#f5a89a' : c.is_community ? '#7fc458' : '#EF9F27', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: '15px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{c.name}</span>
+                    <span style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: c.status === 'dissolved' ? '#2a1210' : c.is_community ? '#1a2e10' : '#2a2010', color: c.status === 'dissolved' ? '#f5a89a' : c.is_community ? '#7fc458' : '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                       {c.status === 'dissolved' ? 'Dissolved' : c.is_community ? 'Community' : 'Group'}
                     </span>
                   </div>
                   {c.description && <div style={{ fontSize: '13px', color: '#cce0f5', lineHeight: 1.35, marginBottom: '6px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.description}</div>}
-                  <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                     {c.member_count} member{c.member_count === 1 ? '' : 's'}{!c.is_community && c.member_count > 0 ? ` · ${13 - c.member_count} to Community` : ''}
                   </div>
                 </Link>
@@ -353,8 +353,8 @@ export default function CommunitiesIndexPage() {
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()}
             style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '460px' }}>
-            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>Invite to Community</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>Bring a PC aboard</div>
+            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Invite to Community</div>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>Bring a PC aboard</div>
             <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>
               Invites create a pending membership. The community&apos;s leader still has to approve before the PC becomes active.
             </div>
@@ -394,23 +394,23 @@ export default function CommunitiesIndexPage() {
             )}
 
             {inviteError && (
-              <div style={{ padding: '8px 10px', marginBottom: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+              <div style={{ padding: '8px 10px', marginBottom: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                 {inviteError}
               </div>
             )}
             {inviteDone && (
-              <div style={{ padding: '8px 10px', marginBottom: '10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textAlign: 'center' }}>
+              <div style={{ padding: '8px 10px', marginBottom: '10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textAlign: 'center' }}>
                 ✓ Invitation sent — awaiting leader approval.
               </div>
             )}
 
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => !inviting && setShowInvite(false)} disabled={inviting}
-                style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: inviting ? 'not-allowed' : 'pointer' }}>
+                style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: inviting ? 'not-allowed' : 'pointer' }}>
                 Close
               </button>
               <button onClick={handleInvite} disabled={inviting || !inviteCommId || !inviteCharId}
-                style={{ flex: 2, padding: '10px', background: inviteCommId && inviteCharId ? '#c0392b' : '#111', border: `1px solid ${inviteCommId && inviteCharId ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', color: inviteCommId && inviteCharId ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: inviting || !inviteCommId || !inviteCharId ? 'not-allowed' : 'pointer' }}>
+                style={{ flex: 2, padding: '10px', background: inviteCommId && inviteCharId ? '#c0392b' : '#111', border: `1px solid ${inviteCommId && inviteCharId ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', color: inviteCommId && inviteCharId ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: inviting || !inviteCommId || !inviteCharId ? 'not-allowed' : 'pointer' }}>
                 {inviting ? 'Sending…' : '🤝 Send Invite'}
               </button>
             </div>
@@ -424,8 +424,8 @@ export default function CommunitiesIndexPage() {
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div onClick={e => e.stopPropagation()}
             style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '440px' }}>
-            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: '4px' }}>New Community</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>Found a group of survivors</div>
+            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>New Community</div>
+            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>Found a group of survivors</div>
 
             <div style={{ marginBottom: '10px' }}>
               <div style={lbl}>Campaign</div>
@@ -465,7 +465,7 @@ export default function CommunitiesIndexPage() {
             </div>
 
             {createError && (
-              <div style={{ padding: '8px 10px', marginBottom: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+              <div style={{ padding: '8px 10px', marginBottom: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                 {createError}
                 {/row-level security/i.test(createError) && (
                   <div style={{ marginTop: '6px', color: '#cce0f5' }}>
@@ -477,11 +477,11 @@ export default function CommunitiesIndexPage() {
 
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => !creating && setShowCreate(false)} disabled={creating}
-                style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: creating ? 'not-allowed' : 'pointer' }}>
+                style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: creating ? 'not-allowed' : 'pointer' }}>
                 Cancel
               </button>
               <button onClick={handleCreate} disabled={creating || !newCampaignId || !newName.trim()}
-                style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: creating || !newCampaignId || !newName.trim() ? 'not-allowed' : 'pointer', opacity: creating || !newCampaignId || !newName.trim() ? 0.6 : 1 }}>
+                style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: creating || !newCampaignId || !newName.trim() ? 'not-allowed' : 'pointer', opacity: creating || !newCampaignId || !newName.trim() ? 0.6 : 1 }}>
                 {creating ? 'Creating…' : 'Create Community'}
               </button>
             </div>

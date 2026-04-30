@@ -54,7 +54,7 @@ export default function CharacterViewPage() {
           <img src={d.photoDataUrl} alt={d.name} style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '3px', border: '1px solid #3a3a3a', flexShrink: 0 }} />
         )}
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
             {d.name || 'Unnamed Character'}
           </div>
           <div style={{ fontSize: '13px', color: '#d4cfc9' }}>
@@ -68,11 +68,11 @@ export default function CharacterViewPage() {
         </div>
         <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
           <button onClick={() => router.push(`/characters/${id}/edit`)}
-            style={{ padding: '6px 14px', background: 'none', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '6px 14px', background: 'none', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Edit
           </button>
           <button onClick={() => router.push('/characters')}
-            style={{ padding: '6px 14px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '6px 14px', background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             Back
           </button>
         </div>
@@ -85,9 +85,9 @@ export default function CharacterViewPage() {
             const val = rapid[k] ?? 0
             return (
               <div key={k} style={{ background: val > 0 ? '#1a2e10' : '#242424', border: `1px solid ${val > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', padding: '8px 4px', textAlign: 'center' }}>
-                <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Barlow Condensed, sans-serif' }}>{k}</div>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
                 <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '4px' }}>{ATTR_FULL[k]}</div>
-                <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: val > 0 ? '#7fc458' : '#f5f2ee' }}>{sgn(val)}</div>
+                <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: val > 0 ? '#7fc458' : '#f5f2ee' }}>{sgn(val)}</div>
                 <div style={{ fontSize: '13px', color: val > 0 ? '#7fc458' : '#d4cfc9' }}>{ATTRIBUTE_LABELS[val]}</div>
               </div>
             )
@@ -108,7 +108,7 @@ export default function CharacterViewPage() {
           ].map(({ label, value, hi }) => (
             <div key={label} style={{ background: '#242424', border: `1px solid ${hi ? '#2d5a1b' : '#2e2e2e'}`, borderRadius: '3px', padding: '8px 10px' }}>
               <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '2px' }}>{label}</div>
-              <div style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: hi ? '#7fc458' : '#f5f2ee' }}>{value}</div>
+              <div style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: hi ? '#7fc458' : '#f5f2ee' }}>{value}</div>
             </div>
           ))}
         </div>
@@ -121,13 +121,13 @@ export default function CharacterViewPage() {
             {d.complication && (
               <div>
                 <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '3px' }}>Complication</div>
-                <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{d.complication}</div>
+                <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{d.complication}</div>
               </div>
             )}
             {d.motivation && (
               <div>
                 <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '3px' }}>Motivation</div>
-                <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{d.motivation}</div>
+                <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{d.motivation}</div>
               </div>
             )}
           </div>
@@ -139,7 +139,7 @@ export default function CharacterViewPage() {
           <div style={sectionTitle}>Trained Skills</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
             {skills.map((s: any) => (
-              <span key={s.skillName} style={{ fontSize: '13px', padding: '3px 10px', borderRadius: '3px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em' }}>
+              <span key={s.skillName} style={{ fontSize: '13px', padding: '3px 10px', borderRadius: '3px', background: '#1a2e10', border: '1px solid #2d5a1b', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                 {s.skillName} {sgn(s.level)}
               </span>
             ))}
@@ -175,7 +175,7 @@ export default function CharacterViewPage() {
           ].map(({ label, value }) => (
             <div key={label}>
               <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '3px' }}>{label}</div>
-              <div style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'Barlow Condensed, sans-serif', color: '#f5f2ee' }}>{value}</div>
+              <div style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>{value}</div>
             </div>
           ))}
         </div>
@@ -191,7 +191,7 @@ const section: React.CSSProperties = {
 }
 
 const sectionTitle: React.CSSProperties = {
-  fontFamily: 'Barlow Condensed, sans-serif',
+  fontFamily: 'Carlito, sans-serif',
   fontSize: '13px', fontWeight: 700, color: '#c0392b',
   textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px',
 }

@@ -9,11 +9,11 @@ function pad3(n: number) { return String(n).padStart(3, '0') }
 
 // ── Styling helpers (inline, matching the codebase pattern) ──
 const panel: React.CSSProperties = { background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1.5rem', marginBottom: '1rem' }
-const h1Style: React.CSSProperties = { fontFamily: '"Barlow Condensed", sans-serif', fontSize: '2rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px', borderBottom: '1px solid #c0392b', paddingBottom: '10px' }
-const h2Style: React.CSSProperties = { fontFamily: '"Barlow Condensed", sans-serif', fontSize: '14px', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }
-const btnPrimary: React.CSSProperties = { padding: '10px 20px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: '"Barlow Condensed", sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', textDecoration: 'none', display: 'inline-block' }
+const h1Style: React.CSSProperties = { fontFamily: '"Carlito", sans-serif', fontSize: '2rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px', borderBottom: '1px solid #c0392b', paddingBottom: '10px' }
+const h2Style: React.CSSProperties = { fontFamily: '"Carlito", sans-serif', fontSize: '14px', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c0392b', marginBottom: '8px' }
+const btnPrimary: React.CSSProperties = { padding: '10px 20px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: '"Carlito", sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', textDecoration: 'none', display: 'inline-block' }
 const btnSecondary: React.CSSProperties = { ...btnPrimary, background: '#242424', border: '1px solid #3a3a3a', color: '#d4cfc9' }
-const subLabel: React.CSSProperties = { fontSize: '13px', color: '#cce0f5', fontFamily: '"Barlow Condensed", sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }
+const subLabel: React.CSSProperties = { fontSize: '13px', color: '#cce0f5', fontFamily: '"Carlito", sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }
 
 interface Circle { cx: number; cy: number; r: number } // in display coords
 
@@ -305,7 +305,7 @@ export default function PortraitResizerPage() {
             transition: 'all 0.15s',
           }}
         >
-          <div style={{ fontFamily: '"Barlow Condensed", sans-serif', fontSize: '18px', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: isDragging ? '#c0392b' : '#f5f2ee' }}>
+          <div style={{ fontFamily: '"Carlito", sans-serif', fontSize: '18px', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: isDragging ? '#c0392b' : '#f5f2ee' }}>
             {isDragging ? 'Drop to process' : 'Drop an image here'}
           </div>
           <div style={{ color: '#5a5550', fontSize: '13px', marginTop: '8px' }}>or click to browse (JPG, PNG, GIF, WebP)</div>
@@ -375,7 +375,7 @@ export default function PortraitResizerPage() {
                       onChange={e => handleRadiusChange(parseInt(e.target.value, 10))}
                       style={{ flex: 1, accentColor: '#c0392b' }}
                     />
-                    <div style={{ fontFamily: '"Barlow Condensed", sans-serif', fontSize: '15px', color: '#f5f2ee', minWidth: '48px', textAlign: 'right' }}>
+                    <div style={{ fontFamily: '"Carlito", sans-serif', fontSize: '15px', color: '#f5f2ee', minWidth: '48px', textAlign: 'right' }}>
                       {Math.round(circle.r * 2)}px
                     </div>
                   </div>
@@ -431,7 +431,7 @@ export default function PortraitResizerPage() {
                 onChange={e => setQuality(parseFloat(e.target.value))}
                 style={{ flex: 1, accentColor: '#c0392b' }}
               />
-              <div style={{ fontFamily: '"Barlow Condensed", sans-serif', fontSize: '18px', fontWeight: 700, color: '#f5f2ee', minWidth: '48px', textAlign: 'right' }}>
+              <div style={{ fontFamily: '"Carlito", sans-serif', fontSize: '18px', fontWeight: 700, color: '#f5f2ee', minWidth: '48px', textAlign: 'right' }}>
                 {quality.toFixed(2)}
               </div>
             </div>
@@ -439,15 +439,15 @@ export default function PortraitResizerPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginTop: '1rem' }}>
               <div>
                 <div style={subLabel}>Original</div>
-                <div style={{ fontFamily: '"Barlow Condensed", sans-serif', fontSize: '16px', color: '#f5f2ee' }}>{origDims.w} × {origDims.h}</div>
+                <div style={{ fontFamily: '"Carlito", sans-serif', fontSize: '16px', color: '#f5f2ee' }}>{origDims.w} × {origDims.h}</div>
               </div>
               <div>
                 <div style={subLabel}>Output</div>
-                <div style={{ fontFamily: '"Barlow Condensed", sans-serif', fontSize: '16px', color: '#f5f2ee' }}>256 × 256</div>
+                <div style={{ fontFamily: '"Carlito", sans-serif', fontSize: '16px', color: '#f5f2ee' }}>256 × 256</div>
               </div>
               <div>
                 <div style={subLabel}>File size</div>
-                <div style={{ fontFamily: '"Barlow Condensed", sans-serif', fontSize: '16px', color: '#7fc458' }}>{fileSizeKB} KB</div>
+                <div style={{ fontFamily: '"Carlito", sans-serif', fontSize: '16px', color: '#7fc458' }}>{fileSizeKB} KB</div>
               </div>
             </div>
           </div>
@@ -468,7 +468,7 @@ export default function PortraitResizerPage() {
                       borderRadius: '3px',
                       color: active ? '#f5a89a' : '#d4cfc9',
                       fontSize: '14px',
-                      fontFamily: '"Barlow Condensed", sans-serif',
+                      fontFamily: '"Carlito", sans-serif',
                       letterSpacing: '.08em',
                       textTransform: 'uppercase',
                       fontWeight: 700,
@@ -487,7 +487,7 @@ export default function PortraitResizerPage() {
               </button>
               <button type="button" onClick={reset} style={btnSecondary}>Process Another</button>
               {uploadStatus === 'success' && (
-                <span style={{ color: '#7fc458', fontSize: '13px', fontFamily: '"Barlow Condensed", sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✓ Added to portrait bank</span>
+                <span style={{ color: '#7fc458', fontSize: '13px', fontFamily: '"Carlito", sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✓ Added to portrait bank</span>
               )}
             </div>
             <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '8px' }}>

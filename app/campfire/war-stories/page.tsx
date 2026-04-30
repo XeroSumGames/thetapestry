@@ -215,7 +215,7 @@ export default function WarStoriesPage() {
   }
   const lbl: React.CSSProperties = {
     display: 'block', fontSize: '13px', color: '#cce0f5',
-    fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em',
+    fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', marginBottom: '4px',
   }
 
@@ -225,7 +225,7 @@ export default function WarStoriesPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
         <div>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>
             War Stories
           </div>
           <div style={{ fontSize: '14px', color: '#5a8a40', lineHeight: 1.6 }}>
@@ -234,7 +234,7 @@ export default function WarStoriesPage() {
         </div>
         {!composing && (
           <button onClick={startCompose}
-            style={{ padding: '9px 16px', background: '#3a2516', border: '1px solid #b87333', borderRadius: '3px', color: '#b87333', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ padding: '9px 16px', background: '#3a2516', border: '1px solid #b87333', borderRadius: '3px', color: '#b87333', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             + New Story
           </button>
         )}
@@ -243,7 +243,7 @@ export default function WarStoriesPage() {
       {/* Composer */}
       {composing && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #b87333', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1.25rem' }}>
-          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '14px', fontWeight: 600, color: '#b87333', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '12px' }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 600, color: '#b87333', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '12px' }}>
             {editingId ? 'Edit Story' : 'New Story'}
           </div>
           <div style={{ marginBottom: '10px' }}>
@@ -308,11 +308,11 @@ export default function WarStoriesPage() {
           </div>
           <div style={{ display: 'flex', gap: '6px' }}>
             <button onClick={handleSave} disabled={!draft.title.trim() || !draft.body.trim() || saving}
-              style={{ flex: 1, padding: '9px', background: '#3a2516', border: '1px solid #b87333', borderRadius: '3px', color: '#b87333', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: saving ? 'wait' : 'pointer', opacity: (!draft.title.trim() || !draft.body.trim()) ? 0.5 : 1 }}>
+              style={{ flex: 1, padding: '9px', background: '#3a2516', border: '1px solid #b87333', borderRadius: '3px', color: '#b87333', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: saving ? 'wait' : 'pointer', opacity: (!draft.title.trim() || !draft.body.trim()) ? 0.5 : 1 }}>
               {saving ? 'Saving...' : (editingId ? 'Save Changes' : 'Post Story')}
             </button>
             <button onClick={() => { setComposing(false); setEditingId(null) }}
-              style={{ padding: '9px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              style={{ padding: '9px 18px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
               Cancel
             </button>
           </div>
@@ -332,7 +332,7 @@ export default function WarStoriesPage() {
             const isMine = s.author_user_id === myId
             return (
               <div key={s.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #b87333', borderRadius: '4px', padding: '1rem 1.25rem' }}>
-                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '22px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '6px' }}>
                   {s.title}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
@@ -342,7 +342,7 @@ export default function WarStoriesPage() {
                   {s.campaign_name && (
                     <>
                       <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
-                      <span style={{ padding: '1px 8px', background: '#3a2516', border: '1px solid #b87333', borderRadius: '3px', fontSize: '13px', color: '#b87333', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                      <span style={{ padding: '1px 8px', background: '#3a2516', border: '1px solid #b87333', borderRadius: '3px', fontSize: '13px', color: '#b87333', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                         {s.campaign_name}
                       </span>
                     </>
@@ -366,7 +366,7 @@ export default function WarStoriesPage() {
                         </a>
                       ) : (
                         <a key={att.path} href={att.url} target="_blank" rel="noreferrer"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b87333', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#b87333', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
                           📎 {att.name}
                         </a>
                       )
@@ -376,11 +376,11 @@ export default function WarStoriesPage() {
                 {isMine && (
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button onClick={() => startEdit(s)}
-                      style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       Edit
                     </button>
                     <button onClick={() => handleDelete(s.id)}
-                      style={{ padding: '5px 12px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      style={{ padding: '5px 12px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       Delete
                     </button>
                   </div>

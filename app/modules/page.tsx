@@ -118,11 +118,11 @@ export default function ModuleMarketplacePage() {
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 20px', color: '#d4cfc9' }}>
-      <div style={{ marginBottom: '6px', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '13px', color: '#c4a7f0', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>
+      <div style={{ marginBottom: '6px', fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#c4a7f0', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>
         Module System
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap', marginBottom: '8px' }}>
-        <h1 style={{ margin: 0, fontFamily: 'Barlow Condensed, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+        <h1 style={{ margin: 0, fontFamily: 'Carlito, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Module Marketplace
         </h1>
         {/* Inbound import path — once a GM has a campaign-snapshot
@@ -130,7 +130,7 @@ export default function ModuleMarketplacePage() {
             from here so users who land on the marketplace directly
             don't have to hunt for it in the sidebar. */}
         <Link href="/modules/import" style={{ textDecoration: 'none' }}>
-          <button style={{ padding: '9px 16px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <button style={{ padding: '9px 16px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             📂 Import from snapshot
           </button>
         </Link>
@@ -150,14 +150,14 @@ export default function ModuleMarketplacePage() {
         <select
           value={settingFilter}
           onChange={e => setSettingFilter(e.target.value)}
-          style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow Condensed, sans-serif', appearance: 'none', cursor: 'pointer' }}
+          style={{ padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none', cursor: 'pointer' }}
         >
           <option value="">All settings</option>
           {availableSettings.map(s => (
             <option key={s} value={s}>{SETTING_LABELS[s] ?? s}</option>
           ))}
         </select>
-        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginLeft: 'auto' }}>
+        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginLeft: 'auto' }}>
           {filtered ? `${filtered.length} module${filtered.length === 1 ? '' : 's'}` : '…'}
         </div>
       </div>
@@ -169,12 +169,12 @@ export default function ModuleMarketplacePage() {
       )}
 
       {modules === null ? (
-        <div style={{ padding: '40px 20px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+        <div style={{ padding: '40px 20px', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>
           Loading modules…
         </div>
       ) : filtered && filtered.length === 0 ? (
         <div style={{ padding: '40px 20px', textAlign: 'center', background: '#1a1a1a', border: '1px dashed #3a3a3a', borderRadius: '4px' }}>
-          <div style={{ fontSize: '14px', color: '#c4a7f0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
+          <div style={{ fontSize: '14px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
             {search || settingFilter ? 'No modules match those filters' : 'No modules yet'}
           </div>
           <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
@@ -242,7 +242,7 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
                 borderRadius: '3px',
                 color: '#c4a7f0',
                 fontSize: '13px',
-                fontFamily: 'Barlow Condensed, sans-serif',
+                fontFamily: 'Carlito, sans-serif',
                 letterSpacing: '.06em',
                 textTransform: 'uppercase',
                 textDecoration: 'none',
@@ -262,7 +262,7 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
                 borderRadius: '3px',
                 color: '#f5a89a',
                 fontSize: '13px',
-                fontFamily: 'Barlow Condensed, sans-serif',
+                fontFamily: 'Carlito, sans-serif',
                 letterSpacing: '.06em',
                 textTransform: 'uppercase',
                 cursor: deleting ? 'wait' : 'pointer',
@@ -289,11 +289,11 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
         {/* Body */}
         <div style={{ padding: '12px 14px', flex: '1 1 auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px' }}>
-            <div style={{ fontSize: '16px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', lineHeight: 1.2 }}>
+            <div style={{ fontSize: '16px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', lineHeight: 1.2 }}>
               {m.name}
             </div>
             {version && (
-              <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', flexShrink: 0 }}>
+              <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', flexShrink: 0 }}>
                 v{version}
               </div>
             )}
@@ -308,22 +308,22 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
           {/* Setting badge + visibility */}
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: 'auto', paddingTop: '6px' }}>
             {settingLabel && (
-              <span style={{ padding: '2px 8px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', fontSize: '13px', color: '#c4a7f0', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              <span style={{ padding: '2px 8px', background: '#2a1a3e', border: '1px solid #5a2e5a', borderRadius: '3px', fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 {settingLabel}
               </span>
             )}
             {m.visibility === 'unlisted' && (
-              <span style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              <span style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 🔗 Unlisted
               </span>
             )}
             {m.visibility === 'private' && (
-              <span style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              <span style={{ padding: '2px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                 🔒 Private
               </span>
             )}
             {publishedAt && (
-              <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
                 {new Date(publishedAt).toLocaleDateString()}
               </span>
             )}

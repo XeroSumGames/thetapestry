@@ -50,7 +50,7 @@ export default function NoteAttachmentsView({ attachments, onDelete }: Props) {
                   {att.name} <span style={{ color: '#5a5550' }}>({fmtSize(att.size)})</span>
                 </span>
                 <a href={att.url} target="_blank" rel="noreferrer"
-                  style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', padding: '2px 6px', border: '1px solid #2e2e5a', borderRadius: '2px' }}>
+                  style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', padding: '2px 6px', border: '1px solid #2e2e5a', borderRadius: '2px' }}>
                   Open
                 </a>
                 {onDelete && (
@@ -95,7 +95,7 @@ export default function NoteAttachmentsView({ attachments, onDelete }: Props) {
           />
           <button
             onClick={() => setLightbox(null)}
-            style={{ position: 'absolute', top: '16px', right: '16px', padding: '6px 14px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+            style={{ position: 'absolute', top: '16px', right: '16px', padding: '6px 14px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
           >
             Close
           </button>

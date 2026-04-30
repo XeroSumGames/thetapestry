@@ -55,7 +55,7 @@ export default function StepEight({ state, onChange }: Props) {
               borderRadius: '3px', cursor: 'pointer',
               background: tab === t ? '#c0392b' : '#242424',
               color: tab === t ? '#fff' : '#f5f2ee',
-              fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase',
+              fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase',
               transition: 'all .1s',
             }}>
               {t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
@@ -110,12 +110,12 @@ export default function StepEight({ state, onChange }: Props) {
               padding: '5px 12px', fontSize: '13px',
               border: '1px solid #1a3a5c', borderRadius: '3px',
               background: '#0f2035', color: '#7ab3d4', cursor: 'pointer',
-              fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '.05em', textTransform: 'uppercase',
+              fontFamily: 'Carlito, sans-serif', letterSpacing: '.05em', textTransform: 'uppercase',
             }}>
               Roll 1d3
             </button>
             {ammo > 0
-              ? <span style={{ fontSize: '13px', fontWeight: 600, color: '#7ab3d4', fontFamily: 'Barlow Condensed, sans-serif' }}>
+              ? <span style={{ fontSize: '13px', fontWeight: 600, color: '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>
                   {ammo} reload{ammo > 1 ? 's' : ''}
                 </span>
               : <span style={{ fontSize: '13px', color: '#cce0f5' }}>Not yet rolled</span>
@@ -229,7 +229,7 @@ export default function StepEight({ state, onChange }: Props) {
 }
 
 const sh: React.CSSProperties = {
-  fontFamily: 'Barlow Condensed, sans-serif',
+  fontFamily: 'Carlito, sans-serif',
   fontSize: '13px', fontWeight: 600, color: '#f5f2ee',
   textTransform: 'uppercase', letterSpacing: '.1em',
   margin: '1.25rem 0 8px', borderBottom: '1px solid #2e2e2e',
