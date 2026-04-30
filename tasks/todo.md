@@ -50,6 +50,17 @@
   rename across `lib/settings.ts`, `lib/setting-npcs.ts`,
   `lib/setting-pins.ts`, plus DB migration
   `sql/setting-rename-kings-crossroads.sql` (applied). Commit `b5f5602`.
+- **Font swap — Barlow Condensed → Carlito (legibility)** —
+  playtesters reported the narrow Barlow Condensed at 13px (the
+  project's minimum inline font-size) was hard to read on UI labels,
+  chips, and buttons. Carlito is the open-source metric-compatible
+  clone of Calibri: wider letterforms, far more legible at small sizes.
+  1,583 inline `font-family` references swapped across 91 files —
+  inline JSX styles, Leaflet popup HTML strings, canvas `ctx.font`,
+  double-quoted variants, and escaped-quote innerHTML. Body text keeps
+  regular `Barlow`. Carlito now loaded via Google Fonts in
+  `app/layout.tsx` (`Barlow+Condensed` removed from URL). Commit
+  `0baea8c`.
 
 ## ✅ Shipped 2026-04-29 (combat correctness + perf + C2 extraction)
 - **Grapple opposed-check tiers** — opposed checks now resolve by
