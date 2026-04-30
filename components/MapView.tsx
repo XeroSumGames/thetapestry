@@ -159,6 +159,15 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [encounterNarrative, setEncounterNarrative] = useState<string>('')
   const [encounterSubmitting, setEncounterSubmitting] = useState<boolean>(false)
 
+  // Phase E Sprint 5 — Community subscription. Set of world_community
+  // ids the current user follows. Loaded on mount; mutated inline by
+  // the Follow / Following toggle in the world-community popup. Used
+  // to seed the button label at popup-creation time + check current
+  // state when toggling.
+  const [subscribedIds, setSubscribedIds] = useState<Set<string>>(new Set())
+  const subscribedIdsRef = useRef<Set<string>>(new Set())
+  subscribedIdsRef.current = subscribedIds
+
   // Phase E Sprint 4b — Trade / Alliance / Feud links between
   // published communities. The user picks one of THEIR approved
   // world_communities + link type + narrative; submit inserts a
@@ -223,6 +232,45 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         setEncounterTarget({ worldCommunityId, name, sourceCampaignId })
         setEncounterCampaignId(eligible[0].id)
         setEncounterNarrative('')
+        return
+      }
+      // Follow button (Sprint 5). Toggle insert/delete on the
+      // community_subscriptions table; update the button's label +
+      // styling inline so the popup reflects the new state without
+      // a refetch. Buttons on other open popups stay stale until
+      // their popup is reopened — acceptable since following is a
+      // single-target action. Outer handler is sync; the actual DB
+      // toggle runs in an async IIFE so we don't fight TS about
+      // top-level await inside a non-async listener.
+      const followBtn = t.closest('[data-tapestry-follow="1"]') as HTMLElement | null
+      if (followBtn) {
+        e.preventDefault()
+        e.stopPropagation()
+        const wcid = followBtn.getAttribute('data-world-community-id') ?? ''
+        const userId = userIdRef.current
+        if (!wcid || !userId) return
+        const wasFollowing = subscribedIdsRef.current.has(wcid)
+        ;(async () => {
+          if (wasFollowing) {
+            const { error } = await supabase.from('community_subscriptions')
+              .delete().eq('user_id', userId).eq('world_community_id', wcid)
+            if (error) { alert(`Unfollow failed: ${error.message}`); return }
+            setSubscribedIds(prev => { const n = new Set(prev); n.delete(wcid); return n })
+          } else {
+            const { error } = await supabase.from('community_subscriptions')
+              .insert({ user_id: userId, world_community_id: wcid })
+            if (error) { alert(`Follow failed: ${error.message}`); return }
+            setSubscribedIds(prev => new Set(prev).add(wcid))
+          }
+          // Inline label + style swap so the popup reflects new state
+          // immediately. The next loadOverlay run picks up the
+          // canonical state from subscribedIdsRef.
+          const nowFollowing = !wasFollowing
+          followBtn.textContent = nowFollowing ? '★ Following' : '☆ Follow'
+          followBtn.style.background = nowFollowing ? '#1a2e10' : 'transparent'
+          followBtn.style.borderColor = nowFollowing ? '#2d5a1b' : '#2e2e2e'
+          followBtn.style.color = nowFollowing ? '#7fc458' : '#cce0f5'
+        })()
         return
       }
       // Link-propose button (Sprint 4b).
@@ -404,6 +452,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             .order('name')
           if (myWc) setMyPublishedCommunities(myWc as { id: string; name: string }[])
         }
+        // Phase E Sprint 5 — preload the user's community
+        // subscriptions so the world-community popup's Follow button
+        // seeds in the right state on first paint.
+        const { data: subs } = await supabase
+          .from('community_subscriptions')
+          .select('world_community_id')
+          .eq('user_id', user.id)
+        if (subs) setSubscribedIds(new Set((subs as any[]).map(r => r.world_community_id)))
       }
 
       const L = (await import('leaflet')).default
@@ -687,7 +743,15 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             ${row.last_public_update_at ? `<div style="font-size:10px;color:#aaa;margin-bottom:8px">Updated ${new Date(row.last_public_update_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>` : ''}
             ${currentUserId ? `
               <button data-tapestry-encounter="1" data-world-community-id="${row.id}" data-source-campaign-id="${row.source_campaign_id}" data-name="${escapedName.replace(/"/g, '&quot;')}" style="width:100%;padding:6px 10px;background:#2a102a;border:1px solid #5a2e5a;border-radius:3px;color:#d48bd4;font-size:13px;font-family:'Carlito',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-weight:600;margin-bottom:4px">🤝 My PCs encountered this</button>
-              <button data-tapestry-link="1" data-world-community-id="${row.id}" data-name="${escapedName.replace(/"/g, '&quot;')}" style="width:100%;padding:6px 10px;background:transparent;border:1px solid #5a2e5a;border-radius:3px;color:#d48bd4;font-size:13px;font-family:'Carlito',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">🔗 Propose link</button>
+              <button data-tapestry-link="1" data-world-community-id="${row.id}" data-name="${escapedName.replace(/"/g, '&quot;')}" style="width:100%;padding:6px 10px;background:transparent;border:1px solid #5a2e5a;border-radius:3px;color:#d48bd4;font-size:13px;font-family:'Carlito',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-bottom:4px">🔗 Propose link</button>
+              ${(() => {
+                const followed = subscribedIdsRef.current.has(row.id)
+                const bg = followed ? '#1a2e10' : 'transparent'
+                const bd = followed ? '#2d5a1b' : '#2e2e2e'
+                const fg = followed ? '#7fc458' : '#cce0f5'
+                const lbl = followed ? '★ Following' : '☆ Follow'
+                return `<button data-tapestry-follow="1" data-world-community-id="${row.id}" style="width:100%;padding:6px 10px;background:${bg};border:1px solid ${bd};border-radius:3px;color:${fg};font-size:13px;font-family:'Carlito',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">${lbl}</button>`
+              })()}
             ` : ''}
           </div>
         `

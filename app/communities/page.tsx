@@ -37,10 +37,27 @@ interface PinOption {
   name: string
 }
 
+// Phase E Sprint 5 — Community subscriptions. The user follows a
+// public-faced world_communities row; this page surfaces the list as
+// a "Following" section below My Communities so it's all in one place.
+interface FollowedCommunity {
+  id: string                       // community_subscriptions.id
+  worldCommunityId: string         // world_communities.id
+  name: string
+  description: string | null
+  sizeBand: string
+  communityStatus: string
+  factionLabel: string | null
+  homesteadLat: number | null
+  homesteadLng: number | null
+  followedAt: string
+}
+
 export default function CommunitiesIndexPage() {
   const supabase = createClient()
   const router = useRouter()
   const [rows, setRows] = useState<CommunityRow[]>([])
+  const [followed, setFollowed] = useState<FollowedCommunity[]>([])
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
 
@@ -89,7 +106,45 @@ export default function CommunitiesIndexPage() {
       }
     })
     setRows(enriched)
+    // Phase E Sprint 5 — load the user's followed communities (world
+    // map subscriptions). Joins community_subscriptions to
+    // world_communities for the public face. RLS scopes to the
+    // user's own subscriptions automatically.
+    const { data: subs } = await supabase
+      .from('community_subscriptions')
+      .select('id, world_community_id, created_at, world_communities!inner(id, name, description, size_band, community_status, faction_label, homestead_lat, homestead_lng, moderation_status)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+    const fol: FollowedCommunity[] = []
+    for (const r of (subs ?? []) as any[]) {
+      const wc = Array.isArray(r.world_communities) ? r.world_communities[0] : r.world_communities
+      // Skip rejected / pending — Follow should only show approved
+      // entries (the world map already does the same gate).
+      if (!wc || wc.moderation_status !== 'approved') continue
+      fol.push({
+        id: r.id,
+        worldCommunityId: wc.id,
+        name: wc.name,
+        description: wc.description ?? null,
+        sizeBand: wc.size_band ?? 'Group',
+        communityStatus: wc.community_status ?? 'Holding',
+        factionLabel: wc.faction_label ?? null,
+        homesteadLat: wc.homestead_lat ?? null,
+        homesteadLng: wc.homestead_lng ?? null,
+        followedAt: r.created_at,
+      })
+    }
+    setFollowed(fol)
     setLoading(false)
+  }
+
+  // Unfollow a public community from the My Communities page. Mirrors
+  // the world-map popup's toggle but lives here for users who want to
+  // prune their list without re-finding the marker on the map.
+  async function handleUnfollow(subscriptionId: string) {
+    const { error } = await supabase.from('community_subscriptions').delete().eq('id', subscriptionId)
+    if (error) { alert(`Unfollow failed: ${error.message}`); return }
+    setFollowed(prev => prev.filter(f => f.id !== subscriptionId))
   }
 
   async function loadEligibleCampaigns(uid: string) {
@@ -343,6 +398,57 @@ export default function CommunitiesIndexPage() {
           </section>
         )
       })}
+
+      {/* Phase E Sprint 5 — Following: public communities the user
+          has subscribed to via the world map's ★ Follow button. Shows
+          their public face (name + size + status + faction) and an
+          Unfollow button. The cards link to the world-map view
+          centered on each community for context. */}
+      {followed.length > 0 && (
+        <section style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '10px', paddingBottom: '4px', borderBottom: '1px solid #2e2e2e' }}>
+            <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', color: '#7ab3d4', letterSpacing: '.08em', textTransform: 'uppercase' }}>★ Following</span>
+            <span style={{ fontSize: '13px', color: '#5a5550', textTransform: 'uppercase', letterSpacing: '.08em' }}>{followed.length} community{followed.length === 1 ? '' : 's'} on the Tapestry</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px' }}>
+            {followed.map(f => {
+              const statusColor = f.communityStatus === 'Thriving' ? '#7fc458'
+                : f.communityStatus === 'Holding' ? '#cce0f5'
+                : f.communityStatus === 'Struggling' ? '#EF9F27'
+                : f.communityStatus === 'Dying' ? '#c0392b'
+                : '#5a5550'
+              const mapHref = f.homesteadLat != null && f.homesteadLng != null
+                ? `/map?lat=${f.homesteadLat}&lng=${f.homesteadLng}&zoom=10`
+                : '/map'
+              return (
+                <div key={f.id} style={{ background: '#1a1a1a', border: '1px solid #1a3a5c', borderRadius: '4px', padding: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{f.name}</span>
+                    <span style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#0f2035', color: statusColor, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                      {f.communityStatus}
+                    </span>
+                  </div>
+                  {f.description && <div style={{ fontSize: '13px', color: '#cce0f5', lineHeight: 1.35, marginBottom: '6px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{f.description}</div>}
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#1a1a2e', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{f.sizeBand}</span>
+                    {f.factionLabel && <span style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#2a2010', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>{f.factionLabel}</span>}
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <Link href={mapHref}
+                      style={{ flex: 1, padding: '4px 8px', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', textDecoration: 'none', textAlign: 'center' }}>
+                      🌐 On Map
+                    </Link>
+                    <button onClick={() => handleUnfollow(f.id)}
+                      style={{ flex: 1, padding: '4px 8px', background: 'transparent', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      ✕ Unfollow
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Invite to Community modal — creates a pending community_members
           row. The community's leader still has to approve before the PC
