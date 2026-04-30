@@ -35,9 +35,14 @@ interface Props {
   onPinFocus?: (pin: { id: string; lat: number; lng: number }) => void
   onOpenScene?: (sceneId: string) => void
   onPlaceOnTacticalMap?: (pin: CampaignPin) => Promise<void>
+  // In tactical mode, the X button removes the pin's markers from
+  // the active scene only; the campaign_pin row survives. Falls back
+  // to deletePin (which destroys the campaign_pin row entirely) when
+  // showTacticalMap is false.
+  onRemoveFromTacticalMap?: (pin: CampaignPin) => Promise<void>
 }
 
-export default function CampaignPins({ campaignId, isGM, isThriver = false, showTacticalMap = false, onPinFocus, onOpenScene, onPlaceOnTacticalMap }: Props) {
+export default function CampaignPins({ campaignId, isGM, isThriver = false, showTacticalMap = false, onPinFocus, onOpenScene, onPlaceOnTacticalMap, onRemoveFromTacticalMap }: Props) {
   // "Can manage" = campaign GM OR app-level Thriver. Thrivers get
   // parity on pin edit/delete so they can relocate stray pins across
   // any campaign they don't GM (e.g. the "dis ho" cleanup scenario).
@@ -348,7 +353,15 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                           ) : (
                             <button onClick={() => promoteToWorld(pin)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #2e2e5a', borderRadius: '2px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }} title="Add to world map">🌍</button>
                           )}
-                          <button onClick={() => deletePin(pin.id)} style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #7a1f16', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>×</button>
+                          {showTacticalMap && onRemoveFromTacticalMap ? (
+                            <button onClick={() => onRemoveFromTacticalMap(pin)}
+                              title="Remove pin marker from tactical map (campaign pin survives)"
+                              style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #7a1f16', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>×</button>
+                          ) : (
+                            <button onClick={() => deletePin(pin.id)}
+                              title="Delete pin"
+                              style={{ fontSize: '13px', padding: '0 4px', background: 'none', border: '1px solid #7a1f16', borderRadius: '2px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>×</button>
+                          )}
                         </div>
                       </>
                     )}

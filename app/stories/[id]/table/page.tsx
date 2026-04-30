@@ -6863,6 +6863,9 @@ export default function TablePage() {
                     // no square background, no name label. Position is
                     // (1,1) per the top-left spawn convention; the GM
                     // drags it where it actually belongs after.
+                    // campaign_pin_id is set so the symmetric "remove
+                    // from tactical map" path can target only this
+                    // pin's markers without colliding on emoji name.
                     const { data: activeScene } = await supabase
                       .from('tactical_scenes')
                       .select('id')
@@ -6877,8 +6880,32 @@ export default function TablePage() {
                       token_type: 'pin',
                       grid_x: 1, grid_y: 1,
                       is_visible: true, color: '#7ab3d4',
+                      campaign_pin_id: pin.id,
                     })
                     if (error) { alert(`Add to tactical map failed: ${error.message}`); return }
+                    setTokenRefreshKey(k => k + 1)
+                    initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+                  }}
+                  onRemoveFromTacticalMap={async (pin) => {
+                    // Tactical-mode X button. Removes ONLY this pin's
+                    // markers from the active scene; the campaign_pin
+                    // row survives so the user can re-stamp later via
+                    // the 🗺️ button. Silent no-op when no markers
+                    // exist — clicking X without ever having stamped
+                    // shouldn't error.
+                    const { data: activeScene } = await supabase
+                      .from('tactical_scenes')
+                      .select('id')
+                      .eq('campaign_id', id)
+                      .eq('is_active', true)
+                      .single()
+                    if (!activeScene) { alert('No active tactical scene.'); return }
+                    const { error } = await supabase.from('scene_tokens')
+                      .delete()
+                      .eq('scene_id', (activeScene as any).id)
+                      .eq('token_type', 'pin')
+                      .eq('campaign_pin_id', pin.id)
+                    if (error) { alert(`Remove from tactical map failed: ${error.message}`); return }
                     setTokenRefreshKey(k => k + 1)
                     initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
                   }} />
