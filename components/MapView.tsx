@@ -189,7 +189,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [attachments, setAttachments] = useState<File[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
-  const [editForm, setEditForm] = useState({ title: '', notes: '', categories: ['location'] as string[], event_date: '', sort_order: '', lat: '', lng: '', address: '' })
+  const [editForm, setEditForm] = useState({ title: '', notes: '', categories: ['location'] as string[], event_date: '', sort_order: '', lat: '', lng: '', address: '', cmod_active: false, cmod_impact: '', cmod_radius_km: '', cmod_label: '' })
   // Address autocomplete (Nominatim) state for the Edit Pin modal.
   // Mirrors the world-map address-search bar at the top — type 3+ chars
   // and we offer matching geocodes; click one to fill lat/lng/address.
@@ -900,7 +900,18 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   async function startEdit(pin: Pin) {
   setEditingPin(pin)
   const cats = Array.isArray(pin.categories) && pin.categories.length > 0 ? pin.categories : [pin.category ?? 'location']
-  setEditForm({ title: pin.title, notes: pin.notes, categories: cats, event_date: (pin as any).event_date ?? '', sort_order: pin.sort_order != null ? String(pin.sort_order) : '', lat: pin.lat != null ? String(pin.lat) : '', lng: pin.lng != null ? String(pin.lng) : '', address: (pin as any).address ?? '' })
+  setEditForm({
+    title: pin.title, notes: pin.notes, categories: cats,
+    event_date: (pin as any).event_date ?? '',
+    sort_order: pin.sort_order != null ? String(pin.sort_order) : '',
+    lat: pin.lat != null ? String(pin.lat) : '',
+    lng: pin.lng != null ? String(pin.lng) : '',
+    address: (pin as any).address ?? '',
+    cmod_active: (pin as any).cmod_active ?? false,
+    cmod_impact: (pin as any).cmod_impact != null ? String((pin as any).cmod_impact) : '',
+    cmod_radius_km: (pin as any).cmod_radius_km != null ? String((pin as any).cmod_radius_km) : '',
+    cmod_label: (pin as any).cmod_label ?? '',
+  })
   setEditAttachments([])
   setShowForm(false)
   // Load existing attachments
@@ -924,6 +935,17 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const updatePayload: Record<string, unknown> = { title: editForm.title, notes: editForm.notes, category: editForm.categories[0] ?? 'location', categories: editForm.categories, event_date: editForm.event_date.trim() || null, sort_order: Number.isNaN(sortVal) ? null : sortVal, address: editForm.address.trim() || null }
   if (!Number.isNaN(latVal)) updatePayload.lat = latVal
   if (!Number.isNaN(lngVal)) updatePayload.lng = lngVal
+  // World-event CMod propagation fields. Only round-tripped when
+  // the pin actually carries the world_event category — for any
+  // other category these stay untouched in the DB.
+  if (editForm.categories.includes('world_event')) {
+    const impactRaw = editForm.cmod_impact.trim()
+    const radiusRaw = editForm.cmod_radius_km.trim()
+    updatePayload.cmod_active = !!editForm.cmod_active
+    updatePayload.cmod_impact = impactRaw === '' ? null : (parseInt(impactRaw, 10) || 0)
+    updatePayload.cmod_radius_km = radiusRaw === '' ? null : Math.max(1, parseInt(radiusRaw, 10) || 0)
+    updatePayload.cmod_label = editForm.cmod_label.trim() || null
+  }
   const { error } = await supabase.from('map_pins').update(updatePayload).eq('id', editingPin.id)
   if (error) { alert('Error: ' + error.message); setEditUploading(false); return }
   // Upload new attachments
@@ -1617,6 +1639,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       </select>
     </div>
     {editForm.categories.includes('world_event') && (
+      <>
       <div style={{ marginBottom: '12px', display: 'flex', gap: '8px' }}>
         <div style={{ flex: 1 }}>
           <label style={lbl}>Event Date</label>
@@ -1627,6 +1650,34 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
           <input style={{ ...inp, textAlign: 'center' }} type="number" min="1" value={editForm.sort_order} onChange={e => setEditForm(p => ({ ...p, sort_order: e.target.value }))} placeholder="#" />
         </div>
       </div>
+      {/* CMod propagation block. While Active is on, the event auto-
+          applies its CMod to every community Homestead within Radius
+          km. Leave Impact blank for narrative-only events that need a
+          timeline marker but no mechanical effect. */}
+      <div style={{ marginBottom: '12px', padding: '10px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px' }}>
+        <label style={{ ...lbl, color: '#7ab3d4', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <input type="checkbox" checked={!!editForm.cmod_active} onChange={e => setEditForm(p => ({ ...p, cmod_active: e.target.checked }))} />
+          World Event — currently active
+        </label>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+          <div style={{ flex: '0 0 90px' }}>
+            <label style={lbl}>CMod Impact</label>
+            <input style={{ ...inp, textAlign: 'center' }} type="number" value={editForm.cmod_impact} onChange={e => setEditForm(p => ({ ...p, cmod_impact: e.target.value }))} placeholder="e.g. -2" title="Signed integer applied to every community Morale Check inside the radius. Negative for plagues/famines/wars; positive for relief shipments. Leave blank for narrative-only." />
+          </div>
+          <div style={{ flex: '0 0 110px' }}>
+            <label style={lbl}>Radius (km)</label>
+            <input style={{ ...inp, textAlign: 'center' }} type="number" min="1" value={editForm.cmod_radius_km} onChange={e => setEditForm(p => ({ ...p, cmod_radius_km: e.target.value }))} placeholder="500" title="How far the effect reaches from this pin. Defaults to 500 km if blank." />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={lbl}>CMod Label</label>
+            <input style={inp} value={editForm.cmod_label} onChange={e => setEditForm(p => ({ ...p, cmod_label: e.target.value }))} placeholder="e.g. Plague — Midwest" title="Short label shown in the Morale modal. Falls back to the pin title if blank." />
+          </div>
+        </div>
+        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
+          When <strong>Active</strong> is on, this event automatically applies its CMod to every community whose Homestead falls inside the radius — no manual entry required in the Weekly Morale Check.
+        </div>
+      </div>
+      </>
     )}
     <div style={{ marginBottom: '8px', display: 'flex', gap: '8px' }}>
       <div style={{ flex: 1 }}>

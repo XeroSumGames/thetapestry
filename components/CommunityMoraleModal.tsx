@@ -13,6 +13,11 @@ import {
   formatCmod,
   type CommunityMemberLite,
 } from '../lib/community-logic'
+import {
+  getActiveWorldEventsNearLocation,
+  getCommunityHomesteadCoords,
+  type ActiveWorldEvent,
+} from '../lib/world-events'
 
 // Phase C — Weekly Morale Check modal. Single-button flow: GM fills in
 // ad-hoc CMods / adjusts A/S mods if needed, clicks "Run Weekly Check",
@@ -110,6 +115,8 @@ interface FinalResult {
     enoughHands: number
     clearVoice: number
     safety: number
+    worldEvents: number
+    worldEventsDetail: Array<{ pinId: string; label: string; cmod: number; applied: boolean; distanceKm: number; radiusKm: number }>
     additional: number
   }
   newWeek: number
@@ -187,6 +194,14 @@ export default function CommunityMoraleModal({
   const [slotClearVoiceOverride, setSlotClearVoiceOverride] = useState<number | null>(null)
   const [slotSafetyOverride, setSlotSafetyOverride] = useState<number | null>(null)
 
+  // World Events — Distemper Timeline pins with cmod_active=true and
+  // a non-null cmod_impact within their radius of the community's
+  // Homestead. Spec-communities.md §13 #1 + sql/map-pins-world-event-cmod.sql.
+  // Each event is on by default but the GM can opt-out per-event
+  // (e.g. their community is medically isolated from a regional plague).
+  const [worldEvents, setWorldEvents] = useState<ActiveWorldEvent[]>([])
+  const [worldEventsApplied, setWorldEventsApplied] = useState<Set<string>>(new Set())
+
   // Final result payload once rolls fire
   const [result, setResult] = useState<FinalResult | null>(null)
   // Retention Check state — set when leader attempts to salvage on a
@@ -218,7 +233,23 @@ export default function CommunityMoraleModal({
     setSlotEnoughHandsOverride(null)
     setSlotClearVoiceOverride(null)
     setSlotSafetyOverride(null)
+    setWorldEvents([])
+    setWorldEventsApplied(new Set())
     setLoading(true)
+    // World Events query — runs in parallel with the prior-mood +
+    // leader fetches. Pulls the community's Homestead coords from
+    // campaign_pins, then asks the world-events helper which active
+    // timeline pins reach inside their radius. Default state: every
+    // returned event is "applied" — GM unchecks any that don't fit
+    // narratively. If the community has no Homestead pin, no events
+    // can apply (the helper returns null for coords).
+    ;(async () => {
+      const coords = await getCommunityHomesteadCoords(supabase, community.id)
+      if (!coords) return
+      const events = await getActiveWorldEventsNearLocation(supabase, coords.lat, coords.lng)
+      setWorldEvents(events)
+      setWorldEventsApplied(new Set(events.map(e => e.pinId)))
+    })()
     ;(async () => {
       // Parallel — prior Morale row for Mood, + the leader's stats for
       // the Morale roll (SRD p.22: check is made BY the designated
@@ -318,6 +349,12 @@ export default function CommunityMoraleModal({
   const slotEnoughHands = slotEnoughHandsOverride ?? autoEnoughHands
   const slotClearVoice = slotClearVoiceOverride ?? autoClearVoice
   const slotSafety = slotSafetyOverride ?? autoSafety
+  // World Events slot — sum of every applied (checked) event's CMod.
+  // Events the GM has unchecked drop out of the total but still get
+  // recorded on the morale-check snapshot for the audit trail.
+  const slotWorldEvents = worldEvents
+    .filter(e => worldEventsApplied.has(e.pinId))
+    .reduce((sum, e) => sum + e.cmod, 0)
 
   // NOTE (2026-04-23): Inspiration Lv4 "Beacon of Hope" (+4) and
   // Psychology* Lv4 "Insightful Counselor" (+3) auto-CMods were
@@ -355,7 +392,7 @@ export default function CommunityMoraleModal({
     // pre-form estimates, which are 0 before any roll fires).
     const moraleSlotsTotal =
       slotMood + fedCmodForMorale + clothedCmodForMorale +
-      slotEnoughHands + slotClearVoice + slotSafety + additionalMoraleCmod
+      slotEnoughHands + slotClearVoice + slotSafety + slotWorldEvents + additionalMoraleCmod
     const moraleDice = roll2d6()
     const moraleTotal = moraleDice.die1 + moraleDice.die2 + moraleAmod + moraleSmod + moraleSlotsTotal
     const moraleOutcome = classifyRoll(moraleTotal, moraleDice.die1, moraleDice.die2)
@@ -387,6 +424,18 @@ export default function CommunityMoraleModal({
         enoughHands: slotEnoughHands,
         clearVoice: slotClearVoice,
         safety: slotSafety,
+        worldEvents: slotWorldEvents,
+        // Audit trail: the full event list as seen at roll-time, with
+        // applied=true for the ones counted in the total. Lets the GM
+        // dashboard answer "why was last week so bad?" with specifics.
+        worldEventsDetail: worldEvents.map(e => ({
+          pinId: e.pinId,
+          label: e.label,
+          cmod: e.cmod,
+          applied: worldEventsApplied.has(e.pinId),
+          distanceKm: Math.round(e.distanceKm),
+          radiusKm: e.radiusKm,
+        })),
         additional: additionalMoraleCmod,
       },
       newWeek: community.week_number + 1,
@@ -731,7 +780,7 @@ export default function CommunityMoraleModal({
   // ── FORM stage ─────────────────────────────────────────
   if (stage === 'form') {
     const moraleCmodPreview =
-      slotMood + slotEnoughHands + slotClearVoice + slotSafety + additionalMoraleCmod
+      slotMood + slotEnoughHands + slotClearVoice + slotSafety + slotWorldEvents + additionalMoraleCmod
     return (
       <div style={backdrop} onClick={onClose}>
         <div style={panel} onClick={e => e.stopPropagation()}>
@@ -864,6 +913,40 @@ export default function CommunityMoraleModal({
                     onChange={e => setSlotSafetyOverride(e.target.value === '' ? null : parseInt(e.target.value) || 0)}
                     style={numInput} />
                 </div>
+                {/* World Events — auto-pulled from active Distemper Timeline
+                    pins inside the community's Homestead radius. Each event
+                    is on by default; uncheck to opt this community out (e.g.
+                    medically isolated from a regional plague). The slot
+                    contributes the SUM of every checked event's CMod. */}
+                {worldEvents.length > 0 && (
+                  <div style={{ ...slotRow, flexDirection: 'column', alignItems: 'stretch', gap: '4px', padding: '8px 10px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px' }}
+                    title="Distemper Timeline pins in the Homestead's region apply temporary CMods to this Morale Check. Uncheck any event whose effect doesn't apply narratively to this community.">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ ...label, flex: 1, color: '#7ab3d4' }}>World Events</span>
+                      <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto from active timeline pins</span>
+                      <span style={{ color: cmodColor(slotWorldEvents), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(slotWorldEvents)}</span>
+                      <div style={{ width: '64px' }} />
+                    </div>
+                    {worldEvents.map(ev => {
+                      const on = worldEventsApplied.has(ev.pinId)
+                      return (
+                        <label key={ev.pinId} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontFamily: 'Carlito, sans-serif', color: on ? '#cce0f5' : '#5a5550' }}>
+                          <input type="checkbox" checked={on} onChange={e => {
+                            setWorldEventsApplied(prev => {
+                              const next = new Set(prev)
+                              if (e.target.checked) next.add(ev.pinId)
+                              else next.delete(ev.pinId)
+                              return next
+                            })
+                          }} />
+                          <span style={{ flex: 1 }}>{ev.label}</span>
+                          <span style={{ fontSize: '13px', color: '#5a5550' }}>{Math.round(ev.distanceKm)} km</span>
+                          <span style={{ color: cmodColor(ev.cmod), fontWeight: 700, minWidth: '28px', textAlign: 'right' }}>{formatCmod(ev.cmod)}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                )}
                 {/* Additional — freeform */}
                 <div style={slotRow} title="GM freeform Fill-In-The-Gaps — event-specific modifiers this week (raids, crises, miracles, weather, a surprise resupply, a Distemper surge, etc.). Resets to 0 each time the modal opens so one-off events don't bleed into future weeks.">
                   <span style={{ ...label, flex: 1 }}>Additional (Fill-In-The-Gaps)</span>
@@ -990,6 +1073,7 @@ export default function CommunityMoraleModal({
               <span> · Hands <span style={{ color: cmodColor(r.moraleSlots.enoughHands), fontWeight: 700 }}>{formatCmod(r.moraleSlots.enoughHands)}</span></span>
               <span> · Voice <span style={{ color: cmodColor(r.moraleSlots.clearVoice), fontWeight: 700 }}>{formatCmod(r.moraleSlots.clearVoice)}</span></span>
               <span> · Watch <span style={{ color: cmodColor(r.moraleSlots.safety), fontWeight: 700 }}>{formatCmod(r.moraleSlots.safety)}</span></span>
+              {r.moraleSlots.worldEvents !== 0 && <span> · World Events <span style={{ color: cmodColor(r.moraleSlots.worldEvents), fontWeight: 700 }}>{formatCmod(r.moraleSlots.worldEvents)}</span></span>}
               {r.moraleSlots.additional !== 0 && <span> · Additional <span style={{ color: cmodColor(r.moraleSlots.additional), fontWeight: 700 }}>{formatCmod(r.moraleSlots.additional)}</span></span>}
             </div>
             <div style={{ marginTop: '6px', fontSize: '17px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
