@@ -23,3 +23,8 @@ COMMENT ON COLUMN public.tactical_scenes.grid_color IS
   'CSS color for grid lines. Common values: white, black, #888, #c0392b, etc.';
 COMMENT ON COLUMN public.tactical_scenes.grid_opacity IS
   'Grid line opacity 0..1. UI surfaces 5..100% as 0.05..1.0.';
+
+-- Force PostgREST to reload its schema cache so the new columns are
+-- visible to API queries immediately (otherwise UPDATEs against the
+-- new columns silently fail with PGRST205 until Supabase auto-reloads).
+NOTIFY pgrst, 'reload schema';

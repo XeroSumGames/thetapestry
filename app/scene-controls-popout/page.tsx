@@ -240,7 +240,9 @@ export default function SceneControlsPopoutPage() {
     const sceneId = scene.id
     const value = cellPx
     cellPxPersistRef.current = setTimeout(() => {
-      supabase.from('tactical_scenes').update({ cell_px: value }).eq('id', sceneId)
+      supabase.from('tactical_scenes').update({ cell_px: value }).eq('id', sceneId).then(({ error }: any) => {
+        if (error) console.error('[scene-controls] cell_px persist failed:', error.message)
+      })
     }, 400)
     return () => { if (cellPxPersistRef.current) clearTimeout(cellPxPersistRef.current) }
   }, [cellPx, scene?.id, supabase])
@@ -257,7 +259,9 @@ export default function SceneControlsPopoutPage() {
     const sceneId = scene.id
     const value = showGrid
     showGridPersistRef.current = setTimeout(() => {
-      supabase.from('tactical_scenes').update({ show_grid: value }).eq('id', sceneId)
+      supabase.from('tactical_scenes').update({ show_grid: value }).eq('id', sceneId).then(({ error }: any) => {
+        if (error) console.error('[scene-controls] show_grid persist failed:', error.message)
+      })
     }, 200)
     return () => { if (showGridPersistRef.current) clearTimeout(showGridPersistRef.current) }
   }, [showGrid, scene?.id, supabase])
@@ -270,7 +274,9 @@ export default function SceneControlsPopoutPage() {
     const sceneId = scene.id
     const value = gridColor
     gridColorPersistRef.current = setTimeout(() => {
-      supabase.from('tactical_scenes').update({ grid_color: value }).eq('id', sceneId)
+      supabase.from('tactical_scenes').update({ grid_color: value }).eq('id', sceneId).then(({ error }: any) => {
+        if (error) console.error('[scene-controls] grid_color persist failed:', error.message)
+      })
     }, 200)
     return () => { if (gridColorPersistRef.current) clearTimeout(gridColorPersistRef.current) }
   }, [gridColor, scene?.id, supabase])
@@ -283,7 +289,9 @@ export default function SceneControlsPopoutPage() {
     const sceneId = scene.id
     const value = gridOpacity
     gridOpacityPersistRef.current = setTimeout(() => {
-      supabase.from('tactical_scenes').update({ grid_opacity: value }).eq('id', sceneId)
+      supabase.from('tactical_scenes').update({ grid_opacity: value }).eq('id', sceneId).then(({ error }: any) => {
+        if (error) console.error('[scene-controls] grid_opacity persist failed:', error.message)
+      })
     }, 400)
     return () => { if (gridOpacityPersistRef.current) clearTimeout(gridOpacityPersistRef.current) }
   }, [gridOpacity, scene?.id, supabase])
