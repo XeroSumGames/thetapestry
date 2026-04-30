@@ -58,6 +58,11 @@ interface Props {
   viewingCharacterId?: string
   // If provided, shows a "Recruit" button right of the status badge.
   onRecruit?: () => void
+  // When this NPC is the viewing PC's Apprentice and the wizard hasn't
+  // run yet, the parent supplies this callback to mount a "Set Up
+  // Apprentice" trigger. Player-side counterpart of the same prop on
+  // NpcCard. Parent owns the wizard modal state.
+  onSetupApprentice?: () => void
 }
 
 type RecruitState =
@@ -66,7 +71,7 @@ type RecruitState =
   | { kind: 'failed'; outcome: string }
   | null
 
-export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecruit }: Props) {
+export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecruit, onSetupApprentice }: Props) {
   const supabase = createClient()
   const [enlarged, setEnlarged] = useState(false)
   const [cmod, setCmod] = useState<number | null>(null)
@@ -322,6 +327,17 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                   </button>
                 )}
               </>
+            )}
+            {/* Apprentice creation wizard trigger — only rendered when
+                this NPC is the viewing PC's Apprentice and the wizard
+                hasn't run yet. Lavender styling matches the Apprentice
+                cues elsewhere. Parent decides visibility. */}
+            {onSetupApprentice && (
+              <button onClick={onSetupApprentice}
+                title="This Apprentice is ready to be set up — pick a Paradigm and spend the 3 CDP RAPID + 5 CDP skill budget."
+                style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#2a102a', border: '1px solid #8b2e8b', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}>
+                ⭐ Set Up Apprentice
+              </button>
             )}
             {/* Search Remains — lootable only when the NPC is
                 dead / mortally wounded / unconscious. Hidden when

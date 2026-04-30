@@ -38,9 +38,14 @@ interface Props {
   // an "Inventory" button opens a panel where the GM can manage the
   // NPC's inventory and Give items to a PC (the loot-from-NPC flow).
   pcCharacters?: { id: string; name: string }[]
+  // When this NPC is an Apprentice whose creation wizard hasn't run yet
+  // AND the viewer is the master PC (or GM), the parent supplies this
+  // callback to mount the trigger button. Parent owns the wizard modal
+  // state so multiple open NpcCards share one instance.
+  onSetupApprentice?: () => void
 }
 
-export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPublished, onPlaceOnMap, campaignId, pcCharacters }: Props) {
+export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPublished, onPlaceOnMap, campaignId, pcCharacters, onSetupApprentice }: Props) {
   const supabase = createClient()
   const [enlarged, setEnlarged] = useState(false)
   const [showInventory, setShowInventory] = useState(false)
@@ -150,6 +155,19 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         {npc.npc_type && <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: tc.bg, border: `1px solid ${tc.border}`, color: tc.color, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{npc.npc_type}</span>}
         <span style={{ fontSize: '13px', padding: '0 4px', borderRadius: '2px', background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>{displayStatus}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '3px', flexShrink: 0 }}>
+          {/* Apprentice creation wizard trigger — only rendered when
+              the parent decides this NPC is an Apprentice whose wizard
+              hasn't run yet AND the viewer is the master PC or GM.
+              Lavender styling matches the existing Apprentice cues
+              (the post-recruit Apprentice Eligible banner uses the
+              same palette). */}
+          {onSetupApprentice && (
+            <button onClick={onSetupApprentice}
+              title="This Apprentice is ready to be set up — pick a Paradigm and spend the 3 CDP RAPID + 5 CDP skill budget."
+              style={{ padding: '2px 6px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+              ⭐ Set Up Apprentice
+            </button>
+          )}
           {onPublish && !isPublished && (
             <button onClick={onPublish} style={{ padding: '2px 6px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Publish</button>
           )}

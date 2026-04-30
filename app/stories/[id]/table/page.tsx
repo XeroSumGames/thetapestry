@@ -37,10 +37,11 @@ import { rollDamage, calculateDamage } from '../../../../lib/damage'
 import { restoreCampaignSnapshot, type CampaignSnapshot } from '../../../../lib/campaign-snapshot'
 import { useStableCallback } from '../../../../lib/useStableCallback'
 import { appendProgressionEntry } from '../../../../lib/progression-log'
+import ApprenticeCreationWizard from '../../../../components/ApprenticeCreationWizard'
 import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/weapons'
 import { getOutcome, outcomeColor, compactRollSummary, formatTime } from '../../../../lib/roll-helpers'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
-import { SKILLS } from '../../../../lib/xse-schema'
+import { SKILLS, MOTIVATIONS, COMPLICATIONS } from '../../../../lib/xse-schema'
 
 interface Campaign {
   id: string
@@ -138,6 +139,25 @@ interface RollResult {
   // as d2+d3 — misleadingly as a single die value). Length 2 for normal
   // rolls, length 3 for Insight-die 3d6 rolls.
   diceRolled?: number[]
+}
+
+// Apprentice bond — populated from community_members rows where
+// recruitment_type='apprentice' and apprentice_meta is set. Carries
+// just enough for NpcCard to render the wizard trigger and for the
+// wizard itself to find the right rows on save.
+interface ApprenticeBond {
+  communityMemberId: string
+  masterCharacterId: string
+  apprenticeMeta: {
+    motivation: string
+    motivation_roll: number
+    complication: string
+    complication_roll: number
+    paradigm?: string
+    background?: string
+    setup_complete?: boolean
+    setup_at?: string
+  }
 }
 
 interface InitiativeEntry {
@@ -430,6 +450,15 @@ export default function TablePage() {
   } | null>(null)
   // recruitment_type table for enforcing 1-Apprentice-per-PC on the UI side
   const [apprenticeByCharacter, setApprenticeByCharacter] = useState<Record<string, { id: string; npcName: string } | undefined>>({})
+  // Apprentice bonds keyed by npc_id — populated by
+  // loadPlayerNpcCommunityMap on mount + on community_members realtime.
+  // Drives the "✨ Set Up Apprentice" button on NpcCard. setup_complete
+  // flag distinguishes "needs wizard" from "already set up."
+  const [apprenticeBondsByNpcId, setApprenticeBondsByNpcId] = useState<Record<string, ApprenticeBond>>({})
+  // Which Apprentice (if any) the wizard is currently editing. Single
+  // wizard instance lifted to the page level so multiple open NpcCards
+  // can share it without state collisions.
+  const [setupApprenticeNpcId, setSetupApprenticeNpcId] = useState<string | null>(null)
   // Communities available to recruit into (loaded when modal opens).
   const [recruitCommunityList, setRecruitCommunityList] = useState<{ id: string; name: string; member_count: number }[]>([])
   // NPC memberships — which community (if any) each NPC is already in.
@@ -622,14 +651,26 @@ export default function TablePage() {
   async function loadPlayerNpcCommunityMap(campaignId: string) {
     const { data } = await supabase
       .from('community_members')
-      .select('npc_id, communities!inner(name, campaign_id)')
+      .select('id, npc_id, recruitment_type, apprentice_of_character_id, apprentice_meta, communities!inner(name, campaign_id)')
       .is('left_at', null)
       .eq('communities.campaign_id', campaignId)
     const map: Record<string, string> = {}
+    // Apprentice bonds keyed by npc_id — fuels the "Set Up Apprentice"
+    // button on NpcCard. setup_complete=true means the wizard already
+    // ran and the button hides.
+    const bonds: Record<string, ApprenticeBond> = {}
     for (const row of (data ?? []) as any[]) {
       if (row.npc_id) map[row.npc_id] = row.communities?.name ?? '?'
+      if (row.npc_id && row.recruitment_type === 'apprentice' && row.apprentice_meta && row.apprentice_of_character_id) {
+        bonds[row.npc_id] = {
+          communityMemberId: row.id,
+          masterCharacterId: row.apprentice_of_character_id,
+          apprenticeMeta: row.apprentice_meta,
+        }
+      }
     }
     setPlayerNpcCommunityMap(map)
+    setApprenticeBondsByNpcId(bonds)
   }
 
   async function loadRevealedNpcs(characterId: string | null, cnpcs: any[]) {
@@ -6170,6 +6211,17 @@ export default function TablePage() {
                     onPlaceOnMap={(combatActive || showTacticalMap) ? () => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined}
                     campaignId={id}
                     pcCharacters={entries.map(e => ({ id: e.character.id, name: e.character.name }))}
+                    onSetupApprentice={(() => {
+                      // Show the wizard trigger when this NPC is an Apprentice
+                      // whose creation wizard hasn't run yet. GMs see it on
+                      // every Apprentice (oversight); the master PC sees it
+                      // on theirs only.
+                      const bond = apprenticeBondsByNpcId[npc.id]
+                      if (!bond || bond.apprenticeMeta.setup_complete) return undefined
+                      const isMaster = !!myEntry && bond.masterCharacterId === myEntry.character.id
+                      if (!isGM && !isMaster) return undefined
+                      return () => setSetupApprenticeNpcId(npc.id)
+                    })()}
                   />
                 ) : (
                   <PlayerNpcCard key={cardKey}
@@ -6177,6 +6229,17 @@ export default function TablePage() {
                     onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
                     viewingCharacterId={myEntry?.character.id}
                     onRecruit={sessionStatus === 'active' ? () => openRecruitModal(npc.id) : undefined}
+                    onSetupApprentice={(() => {
+                      // Master PC sees the trigger on their own un-set-up
+                      // Apprentice. Same gate logic as the GM render path
+                      // above, but scoped to the master PC only (GM is
+                      // already in the NpcCard branch).
+                      const bond = apprenticeBondsByNpcId[npc.id]
+                      if (!bond || bond.apprenticeMeta.setup_complete) return undefined
+                      const isMaster = !!myEntry && bond.masterCharacterId === myEntry.character.id
+                      if (!isMaster) return undefined
+                      return () => setSetupApprenticeNpcId(npc.id)
+                    })()}
                   />
                 )
               })}
@@ -9307,13 +9370,39 @@ export default function TablePage() {
                         A Moment of High Insight (double-6) on this recruit allows {recruitResult.rollerName} to take {recruitResult.npcName} as an Apprentice (1 per PC).
                       </div>
                       <button onClick={async () => {
+                        // Auto-roll Motivation (Table 7) + Complication
+                        // (Table 6) for the Apprentice. Per spec §2a, these
+                        // are inherent character — the player does NOT get
+                        // to reroll or pick. Rolled here at "Take" time so
+                        // the values are locked in before the player ever
+                        // opens the Apprentice creation wizard.
+                        const motivationRoll = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1)
+                        const complicationRoll = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1)
+                        const motivation = MOTIVATIONS[motivationRoll]
+                        const complication = COMPLICATIONS[complicationRoll]
+                        const apprenticeMeta = {
+                          motivation, motivation_roll: motivationRoll,
+                          complication, complication_roll: complicationRoll,
+                          setup_complete: false,
+                        }
                         await supabase.from('community_members')
-                          .update({ recruitment_type: 'apprentice', apprentice_of_character_id: recruitRollerId })
+                          .update({
+                            recruitment_type: 'apprentice',
+                            apprentice_of_character_id: recruitRollerId,
+                            apprentice_meta: apprenticeMeta,
+                          })
                           .eq('community_id', recruitResult.communityId)
                           .eq('npc_id', recruitNpcId)
                         setRecruitResult(r => r ? { ...r, apprenticeApplied: true } : r)
                         // Apprentice bond — durable journey marker on the master PC.
-                        if (recruitRollerId) void appendProgressionLog(recruitRollerId, 'community', `⭐ Took ${recruitResult.npcName} as your Apprentice.`)
+                        // Includes the locked-in Motivation + Complication so the
+                        // player can read it back later and remember what their
+                        // Apprentice came into the world wanting and bearing.
+                        if (recruitRollerId) void appendProgressionLog(
+                          recruitRollerId,
+                          'community',
+                          `⭐ Took ${recruitResult.npcName} as your Apprentice — Motivation: ${motivation}, Complication: ${complication}.`,
+                        )
                         if (typeof window !== 'undefined') {
                           window.dispatchEvent(new CustomEvent('tapestry:recruit-updated', { detail: { npcId: recruitNpcId } }))
                         }
@@ -9330,6 +9419,39 @@ export default function TablePage() {
               )}
             </div>
           </div>
+        )
+      })()}
+
+      {/* Apprentice Creation Wizard — single instance, lifted from
+          NpcCard / PlayerNpcCard so multiple open NPC cards share it.
+          Mounts only when an Apprentice has been targeted via
+          setSetupApprenticeNpcId; saves write to campaign_npcs +
+          community_members.apprentice_meta + master PC progression log. */}
+      {setupApprenticeNpcId && (() => {
+        const targetNpc = campaignNpcs.find((n: any) => n.id === setupApprenticeNpcId)
+        const bond = apprenticeBondsByNpcId[setupApprenticeNpcId]
+        if (!targetNpc || !bond) {
+          // Defensive — if the data drifted between trigger and render,
+          // close the modal silently rather than rendering empty.
+          setSetupApprenticeNpcId(null)
+          return null
+        }
+        return (
+          <ApprenticeCreationWizard
+            communityMemberId={bond.communityMemberId}
+            campaignNpcId={targetNpc.id}
+            npcCurrentName={targetNpc.name}
+            masterCharacterId={bond.masterCharacterId}
+            apprenticeMeta={bond.apprenticeMeta}
+            onClose={() => setSetupApprenticeNpcId(null)}
+            onSaved={() => {
+              setSetupApprenticeNpcId(null)
+              // Refresh the apprentice bond map so the Set Up button
+              // hides on the card. The campaign_npcs realtime channel
+              // handles RAPID + skills + name refresh automatically.
+              void loadPlayerNpcCommunityMap(id)
+            }}
+          />
         )
       })()}
 
