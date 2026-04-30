@@ -1,21 +1,23 @@
 'use client'
-// StoryActionBar — the single, canonical action bar shown at the top of
-// every campaign page (hub + Edit + Snapshots + Sessions + Community).
-// Replaces both the inline 7-button cluster that used to live in
-// /stories/[id]/page.tsx AND the older <StoryToolsNav> sub-page nav.
+// StoryActionBar — the canonical campaign-page header rendered at the
+// top of every campaign page (hub + Edit + Snapshots + Sessions +
+// Community). Carries:
+//   1. Setting label + role chip — "CUSTOM SETTING — GAME MASTER"
+//   2. Campaign name as the big H1
+//   3. Optional description
+//   4. Red separator
+//   5. The 7-button action bar (Launch / Edit / Share / GM Kit /
+//      Snapshot / Publish / Delete)
 //
-// Per the 2026-04-29 directive — "when clicking any of these buttons,
-// this top bar should always look the same." Single component =
-// guaranteed visual + behavioral consistency.
-//
-// Buttons (in order):
-//   LAUNCH · EDIT · SHARE · GM KIT · SNAPSHOT · PUBLISH · DELETE
+// Per the 2026-04-29 follow-up directive — "make each of these sub-
+// pages look exactly like this. not just the buttons but the name at
+// the top too." Single component = guaranteed visual + behavioral
+// consistency end-to-end.
 //
 // The component is self-sufficient: given just a campaignId, it
-// loads everything it needs (campaign row for name/invite code/GM,
-// the existing module for the Publish-vs-Update label) and owns its
-// own modals (ModulePublishModal, the Delete confirm, the GM Kit
-// export progress state).
+// loads everything it needs (campaign row, setting lookup, existing
+// module, GM check) and owns its own modals (ModulePublishModal,
+// Delete confirm, GM Kit export progress).
 //
 // Active-page highlighting is driven by usePathname() so on the Edit
 // sub-page the EDIT button gets a brighter border + bold weight, and
@@ -28,6 +30,7 @@ import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { exportGmKit } from '../lib/gm-kit'
 import { getModuleForCampaign, archiveModule, type ModuleForCampaign } from '../lib/modules'
+import { SETTINGS } from '../lib/settings'
 import ModulePublishModal from './ModulePublishModal'
 
 interface CampaignLite {
@@ -35,6 +38,7 @@ interface CampaignLite {
   name: string
   description: string
   invite_code: string
+  setting: string
   gm_user_id: string
 }
 
@@ -76,7 +80,7 @@ export default function StoryActionBar({ campaignId }: Props) {
       const { user } = await getCachedAuth()
       const { data } = await supabase
         .from('campaigns')
-        .select('id, name, description, invite_code, gm_user_id')
+        .select('id, name, description, invite_code, setting, gm_user_id')
         .eq('id', campaignId)
         .maybeSingle()
       if (cancelled) return
@@ -173,12 +177,32 @@ export default function StoryActionBar({ campaignId }: Props) {
   }
 
   // Render nothing until the campaign loads — avoids a flash of an
-  // empty-state bar. The hub page renders its title above; if this
-  // bar is briefly absent on a hard reload it's hardly noticed.
+  // empty-state header. Brief absence on hard reload is hardly
+  // noticed; the page below it renders its own loading state.
   if (!campaign) return null
 
+  const settingLabel = SETTINGS[campaign.setting] ?? campaign.setting
+
   return (
-    <div style={{ display: 'flex', gap: '4px', marginBottom: '1.25rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+    <div>
+      {/* Canonical header — setting label + role + campaign name +
+          optional description + red separator. Mirrors the hub's
+          original H1 block so every sub-page reads as "FIGHT CLUB"
+          consistently. */}
+      <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1rem' }}>
+        <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px', fontFamily: 'Carlito, sans-serif' }}>
+          {settingLabel} &mdash; {isGM ? 'Game Master' : 'Player'}
+        </div>
+        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+          {campaign.name}
+        </div>
+        {campaign.description && (
+          <p style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '6px', lineHeight: 1.6 }}>{campaign.description}</p>
+        )}
+      </div>
+
+      {/* Action bar */}
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '1.25rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
       {/* Player view = a slimmer surface (Launch + Share only). The
           GM-only actions just don't render. */}
       <a href={`/stories/${campaignId}/table`} target="_blank" rel="noreferrer"
@@ -239,6 +263,7 @@ export default function StoryActionBar({ campaignId }: Props) {
         </button>
       )}
 
+      </div>
       {/* Publish modal — owned by the bar so it's reachable from any
           page that mounts the bar. Refreshes existingModule on success
           so the button re-labels with the new version number. */}

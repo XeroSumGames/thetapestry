@@ -77,11 +77,9 @@ export default function StorySnapshotsPage() {
   return (
     <div style={{ maxWidth: '780px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#d4cfc9' }}>
       <StoryActionBar campaignId={id} />
-      <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
-        <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600 }}>Snapshots</div>
-        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
-          {campaign.name}
-        </div>
+      {/* Sub-page label — small, below the canonical campaign name. */}
+      <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '1.25rem' }}>
+        Snapshots
       </div>
 
       <CampaignSnapshots campaignId={campaign.id} isGM={true} />

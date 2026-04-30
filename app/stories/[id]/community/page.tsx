@@ -217,8 +217,10 @@ export default function CommunityDashboardPage() {
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.5rem 1.5rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
       <StoryActionBar campaignId={campaignId} />
-      <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Community Dashboard</div>
-      <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '26px', color: '#EF9F27', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1.5rem', fontWeight: 700 }}>{campaignName}</div>
+      {/* Sub-page label — small, below the canonical campaign name. */}
+      <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '1.25rem' }}>
+        Community Dashboard
+      </div>
 
       {communities.length === 0 ? (
         <div style={{ ...cardBox, textAlign: 'center', color: '#cce0f5', fontSize: '15px' }}>

@@ -87,9 +87,10 @@ export default function EditCampaignPage() {
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
       <StoryActionBar campaignId={id} />
-      <h1 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '2rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px', borderBottom: '1px solid #c0392b', paddingBottom: '10px' }}>
+      {/* Sub-page label — small, below the canonical campaign name. */}
+      <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '1.25rem' }}>
         Edit Story
-      </h1>
+      </div>
       <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1.5rem' }}>
         {SETTINGS[setting] ?? setting}
       </div>

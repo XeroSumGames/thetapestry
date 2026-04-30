@@ -230,27 +230,15 @@ export default function CampaignPage() {
   return (
     <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
 
-      {/* Header */}
-      <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1rem' }}>
-        <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '3px', fontFamily: 'Carlito, sans-serif' }}>
-          {SETTINGS[campaign.setting] ?? campaign.setting} &mdash; {isGM ? 'Game Master' : 'Player'}
-        </div>
-        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee' }}>
-          {campaign.name}
-        </div>
-        {campaign.description && (
-          <p style={{ fontSize: '13px', color: '#d4cfc9', marginTop: '6px', lineHeight: 1.6 }}>{campaign.description}</p>
-        )}
-      </div>
+      {/* Canonical campaign-page header — setting label, role chip,
+          campaign name, description, red separator, and the action
+          bar (full 7 buttons for GM, slim Launch/Share for player).
+          Same component on every sub-page so the top of the page is
+          visually identical wherever you navigate. */}
+      <StoryActionBar campaignId={id} />
 
-      {/* Canonical action bar — same 7 buttons everywhere they need
-          to live (hub + sub-pages). Self-contained: loads campaign +
-          module state internally and owns its own Publish/Delete
-          modals. Per the 2026-04-29 directive making this bar look
-          identical across every campaign sub-page. */}
-      {isGM && <StoryActionBar campaignId={id} />}
-
-      {/* Action buttons — Player */}
+      {/* Player-only extras — kicked banner + Rejoin / Leave. The
+          shared bar already carries Launch + Share for everyone. */}
       {!isGM && (
         <>
           {amKicked && (
@@ -260,16 +248,11 @@ export default function CampaignPage() {
             </div>
           )}
           <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
-            {amKicked ? (
+            {amKicked && (
               <button onClick={handleRejoin} disabled={rejoining} style={{ ...btn('#1a2e10', '#7fc458', '#2d5a1b'), opacity: rejoining ? 0.6 : 1 } as any}>
                 {rejoining ? 'Rejoining…' : 'Rejoin Session'}
               </button>
-            ) : (
-              <a href={`/stories/${id}/table`} target="_blank" rel="noreferrer" style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
             )}
-            <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
-              {copied ? 'Copied!' : 'Share'}
-            </button>
             <button onClick={handleLeave} style={btn('#7a1f16', '#f5a89a', '#7a1f16') as any}>
               Leave
             </button>

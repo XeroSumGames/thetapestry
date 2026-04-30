@@ -131,13 +131,11 @@ export default function SessionHistoryPage() {
   return (
     <div style={{ padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
       <StoryActionBar campaignId={id} />
-      {/* Header */}
-      <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
-        <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
-          {campaignName}
-        </div>
-        <div style={{ fontSize: '14px', color: '#cce0f5' }}>Session History — {sessions.length} session{sessions.length !== 1 ? 's' : ''}</div>
+      {/* Sub-page label — small, below the canonical campaign name. */}
+      <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>
+        Session History
       </div>
+      <div style={{ fontSize: '14px', color: '#cce0f5', marginBottom: '1.25rem' }}>{sessions.length} session{sessions.length !== 1 ? 's' : ''}</div>
 
       {sessions.length === 0 ? (
         <div style={{ color: '#cce0f5', fontSize: '14px', textAlign: 'center', padding: '2rem' }}>No sessions recorded yet.</div>
