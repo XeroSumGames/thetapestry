@@ -85,6 +85,10 @@ export default function RandomCharacterPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnStoryId = searchParams.get('return')
+  // /characters/paradigms picks a specific Paradigm and routes here
+  // with ?paradigm=<name>. When present, seed with THAT Paradigm
+  // instead of a random pick. Otherwise behave as before.
+  const requestedParadigmName = searchParams.get('paradigm')
   const [status, setStatus] = useState('Generating character...')
 
   useEffect(() => {
@@ -93,8 +97,13 @@ export default function RandomCharacterPage() {
       const { user } = await getCachedAuth()
       if (!user) { setStatus('ready'); return }
 
-      // Pick a random paradigm
-      const paradigm = pick(PARADIGMS)
+      // Use the explicitly-requested Paradigm if /characters/paradigms
+      // sent us here; otherwise pick at random.
+      const requested = requestedParadigmName
+        ? PARADIGMS.find(p => p.name.toLowerCase() === requestedParadigmName.toLowerCase())
+        : null
+      const paradigm = requested ?? pick(PARADIGMS)
+      if (requested) setStatus(`Building a ${paradigm.name}…`)
 
       // Build wizard state
       const state = createWizardState()
