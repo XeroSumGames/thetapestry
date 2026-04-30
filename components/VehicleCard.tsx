@@ -1,11 +1,11 @@
 'use client'
 import { openPopout } from '../lib/popout'
+import { type InventoryItem, normalizeInventoryItem } from '../lib/inventory'
 
-export interface VehicleCargo {
-  name: string
-  qty: number
-  notes: string
-}
+// VehicleCargo unified to InventoryItem so PCs / NPCs / Vehicles all
+// share one shape. Older cargo rows in DB lacked .enc / .rarity / .custom;
+// normalizeInventoryItem fills those defaults at read time.
+export type VehicleCargo = InventoryItem
 
 export interface Vehicle {
   id: string
@@ -75,6 +75,15 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
   const wpColor = wpPct > 0.5 ? '#7fc458' : wpPct > 0.25 ? '#EF9F27' : '#c0392b'
   const fuelPct = v.fuel_max > 0 ? v.fuel_current / v.fuel_max : 0
 
+  // Cargo encumbrance — sum of (item.enc × qty) across cargo, normalized
+  // so legacy rows without .enc treat as 0. Compared to v.encumbrance
+  // (the vehicle's cap, derived from size × 20 per CRB §10).
+  const cargoTotalEnc = (v.cargo ?? []).reduce((sum, raw) => {
+    const item = normalizeInventoryItem(raw)
+    return sum + item.enc * item.qty
+  }, 0)
+  const cargoOverloaded = cargoTotalEnc > v.encumbrance
+
   const lbl: React.CSSProperties = { fontSize: '13px', color: '#888', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }
   const val: React.CSSProperties = { fontSize: '15px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }
 
@@ -98,17 +107,20 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
         )}
       </div>
 
-      {/* Stats row */}
+      {/* Stats row — Enc shows current cargo / cap so the player can
+          see at a glance whether the vehicle is loaded down. Red value
+          when over cap. */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '8px' }}>
         {[
-          { label: 'Size', value: v.size },
-          { label: 'Speed', value: v.speed },
-          { label: 'Pass', value: v.passengers },
-          { label: 'Enc', value: v.encumbrance },
+          { label: 'Size', value: v.size, color: undefined as string | undefined },
+          { label: 'Speed', value: v.speed, color: undefined },
+          { label: 'Pass', value: v.passengers, color: undefined },
+          { label: 'Enc', value: `${cargoTotalEnc} / ${v.encumbrance}`, color: cargoOverloaded ? '#c0392b' : undefined },
         ].map(s => (
-          <div key={s.label} style={{ flex: 1, background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '3px 0', textAlign: 'center' }}>
+          <div key={s.label} style={{ flex: 1, background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '3px 0', textAlign: 'center' }}
+            title={s.label === 'Enc' ? (cargoOverloaded ? `OVERLOADED — cargo (${cargoTotalEnc}) exceeds vehicle capacity (${v.encumbrance})` : `Cargo enc total / vehicle capacity`) : undefined}>
             <div style={lbl}>{s.label}</div>
-            <div style={val}>{s.value}</div>
+            <div style={{ ...val, color: s.color ?? val.color }}>{s.value}</div>
           </div>
         ))}
       </div>

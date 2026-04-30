@@ -6,6 +6,8 @@ import { useSearchParams } from 'next/navigation'
 import VehicleCard, { Vehicle } from '../../components/VehicleCard'
 import { classifyRoll } from '../../lib/community-logic'
 import { getWeaponByName } from '../../lib/weapons'
+import { type InventoryItem, normalizeInventoryItem } from '../../lib/inventory'
+import { EQUIPMENT } from '../../lib/xse-schema'
 
 // Eligible driver / brewer — a campaign PC or campaign NPC. Stats are
 // pulled at load time so the Driving / Brew check modal can prefill
@@ -59,6 +61,7 @@ export default function VehiclePage() {
   const [showAddCargo, setShowAddCargo] = useState(false)
   const [addName, setAddName] = useState('')
   const [addQty, setAddQty] = useState('1')
+  const [addEnc, setAddEnc] = useState('0')
   const [addNotes, setAddNotes] = useState('')
   // Driver/Brewer crew pool — populated alongside the vehicle.
   const [crew, setCrew] = useState<CrewMember[]>([])
@@ -598,9 +601,21 @@ export default function VehiclePage() {
         {/* Right column */}
         <div>
           {/* Cargo & Equipment */}
+          {(() => {
+            // Normalize cargo for read so legacy { name, qty, notes }
+            // rows pick up enc=0 / rarity=Common defaults. Display only;
+            // writes go through the new unified shape.
+            const normalizedCargo: InventoryItem[] = (vehicle.cargo ?? []).map(normalizeInventoryItem)
+            const cargoTotalEnc = normalizedCargo.reduce((s, i) => s + i.enc * i.qty, 0)
+            const overloaded = cargoTotalEnc > vehicle.encumbrance
+            return (
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>
               <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', flex: 1 }}>Cargo & Equipment</div>
+              <div style={{ fontSize: '13px', color: overloaded ? '#c0392b' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', marginRight: '8px' }}
+                title={overloaded ? `OVERLOADED — cargo ${cargoTotalEnc} exceeds vehicle capacity ${vehicle.encumbrance}` : 'Cargo enc total / vehicle capacity'}>
+                {cargoTotalEnc} / {vehicle.encumbrance}{overloaded && <span style={{ marginLeft: '6px', color: '#c0392b', fontWeight: 700 }}>OVERLOADED</span>}
+              </div>
               {canEdit && (
                 <button onClick={() => setShowAddCargo(!showAddCargo)}
                   style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: 'pointer', padding: '2px 8px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
@@ -609,19 +624,28 @@ export default function VehiclePage() {
               )}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 12px' }}>
-              {vehicle.cargo.map((item, idx) => (
+              {normalizedCargo.map((item, idx) => (
                 <div key={`${item.name}-${idx}`} style={{ display: 'flex', alignItems: 'baseline', gap: '4px', padding: '3px 0', borderBottom: '1px solid #1a1a1a', fontSize: '15px' }}>
                   <span style={{ color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
                     {item.name}
                     {item.qty > 1 && <span style={{ color: '#7ab3d4' }}> ×{item.qty}</span>}
                   </span>
+                  {item.enc > 0 && (
+                    <span style={{ color: '#7ab3d4', fontSize: '13px' }} title={`${item.enc} enc per item`}>
+                      [{item.enc * item.qty}]
+                    </span>
+                  )}
                   {item.notes && <span style={{ color: '#5a5550', fontSize: '14px' }}>{item.notes}</span>}
                   {canEdit && (
                     <button onClick={() => {
+                      // Use the underlying raw cargo array for writes —
+                      // splice the matching index, decrement qty if > 1,
+                      // else drop.
+                      const raw = vehicle.cargo ?? []
                       const newCargo = item.qty > 1
-                        ? vehicle.cargo.map((c, i) => i === idx ? { ...c, qty: c.qty - 1 } : c)
-                        : vehicle.cargo.filter((_, i) => i !== idx)
-                      updateVehicle({ ...vehicle, cargo: newCargo })
+                        ? raw.map((c, i) => i === idx ? { ...normalizeInventoryItem(c), qty: normalizeInventoryItem(c).qty - 1 } : c)
+                        : raw.filter((_, i) => i !== idx)
+                      updateVehicle({ ...vehicle, cargo: newCargo as any })
                     }} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '14px', cursor: 'pointer', padding: '0 2px', flexShrink: 0 }}
                       onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
                       onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>×</button>
@@ -632,21 +656,49 @@ export default function VehiclePage() {
             {showAddCargo && (
               <div style={{ marginTop: '8px', padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                 <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
-                  <input value={addName} onChange={e => setAddName(e.target.value)} placeholder="Item name"
+                  <input value={addName} onChange={e => {
+                    setAddName(e.target.value)
+                    // Auto-fill enc from EQUIPMENT catalog when the name
+                    // matches exactly. Falls through if it's a custom item
+                    // — the user can still set enc manually.
+                    const match = EQUIPMENT.find(eq => eq.name.toLowerCase() === e.target.value.trim().toLowerCase())
+                    if (match) setAddEnc(String(match.enc))
+                  }} placeholder="Item name (catalog matches autofill enc)"
                     autoFocus style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
                   <input value={addQty} onChange={e => setAddQty(e.target.value)} type="number" min="1" placeholder="Qty"
                     style={{ width: '50px', padding: '5px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
+                  <input value={addEnc} onChange={e => setAddEnc(e.target.value)} type="number" min="0" placeholder="Enc"
+                    title="Encumbrance per item — counts toward the vehicle's capacity"
+                    style={{ width: '52px', padding: '5px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
                 </div>
                 <input value={addNotes} onChange={e => setAddNotes(e.target.value)} placeholder="Notes (e.g. 300 rounds each)"
                   style={{ width: '100%', padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', marginBottom: '6px' }} />
                 <button onClick={() => {
                   if (!addName.trim() || !vehicle) return
-                  const existing = vehicle.cargo.find(c => c.name === addName.trim())
-                  const newCargo = existing
-                    ? vehicle.cargo.map(c => c === existing ? { ...c, qty: c.qty + (parseInt(addQty) || 1) } : c)
-                    : [...vehicle.cargo, { name: addName.trim(), qty: parseInt(addQty) || 1, notes: addNotes.trim() }]
+                  const trimmedName = addName.trim()
+                  const qty = Math.max(1, parseInt(addQty) || 1)
+                  const enc = Math.max(0, parseInt(addEnc) || 0)
+                  // Match the new shape — include enc/rarity/custom so
+                  // future writes stay consistent. Catalog hit sets
+                  // custom=false; otherwise treated as a custom item.
+                  const catalogHit = EQUIPMENT.find(eq => eq.name.toLowerCase() === trimmedName.toLowerCase())
+                  const raw = vehicle.cargo ?? []
+                  const existingIdx = raw.findIndex(c => normalizeInventoryItem(c).name === trimmedName)
+                  const newItem: InventoryItem = {
+                    name: trimmedName,
+                    qty,
+                    enc,
+                    rarity: catalogHit?.rarity ?? 'Common',
+                    notes: addNotes.trim() || (catalogHit?.notes ?? ''),
+                    custom: !catalogHit,
+                  }
+                  const newCargo: InventoryItem[] = existingIdx >= 0
+                    ? raw.map((c, i) => i === existingIdx
+                        ? { ...normalizeInventoryItem(c), qty: normalizeInventoryItem(c).qty + qty }
+                        : normalizeInventoryItem(c))
+                    : [...raw.map(normalizeInventoryItem), newItem]
                   updateVehicle({ ...vehicle, cargo: newCargo })
-                  setAddName(''); setAddQty('1'); setAddNotes(''); setShowAddCargo(false)
+                  setAddName(''); setAddQty('1'); setAddEnc('0'); setAddNotes(''); setShowAddCargo(false)
                 }} disabled={!addName.trim()}
                   style={{ width: '100%', padding: '6px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: addName.trim() ? 'pointer' : 'not-allowed', opacity: addName.trim() ? 1 : 0.5 }}>
                   Add Item
@@ -654,6 +706,8 @@ export default function VehiclePage() {
               </div>
             )}
           </div>
+            )
+          })()}
 
           {/* Operator Notes */}
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px' }}>

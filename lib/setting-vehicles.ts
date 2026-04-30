@@ -6,13 +6,19 @@
 // popout has no information to render.
 //
 // Shape MUST match VehicleCard's Vehicle interface (camelCase fields).
-// Cargo is { name, qty, notes }. wp_current/fuel_current default to
-// their respective max so the vehicle starts at full health/tank.
+// Cargo is the unified InventoryItem shape now (was { name, qty, notes }
+// only — extra fields default to enc=0 / rarity='Common' / custom=true
+// at read time via normalizeInventoryItem). wp_current/fuel_current
+// default to their respective max so the vehicle starts at full health/
+// tank.
 
 export interface SeedVehicleCargo {
   name: string
   qty: number
   notes?: string
+  enc?: number
+  rarity?: string
+  custom?: boolean
 }
 
 export interface SeedVehicle {
@@ -74,28 +80,34 @@ const MINNIE: SeedVehicle = {
       notes: 'Mounted in the roof weapon nest between the AC units. Fires forward in a 90° arc only.',
     },
   ],
+  // Enc values cataloged from lib/xse-schema.ts EQUIPMENT/weapons
+  // where there's a name match; otherwise reasonable estimates per
+  // SRD §05 weapon-class encumbrance (long guns 2, pistols/melee 1,
+  // mounted heavies 3, body armor 1, throwables 0). Sums to 98 of
+  // Minnie's 100 capacity — slack so a couple of looted extras fit
+  // before OVERLOADED kicks in.
   cargo: [
-    { name: 'Tactical Vests',       qty: 6,  notes: '-3 DMR/DMM' },
-    { name: 'Tactical Helmets',     qty: 6,  notes: '-1 DMR/DMM' },
-    { name: 'Tactical Shield',      qty: 2,  notes: '-1 DMR/DMM' },
-    { name: 'Automatic Rifles',     qty: 4,  notes: '300 rounds each' },
-    { name: 'Shotgun',              qty: 4,  notes: '40 rounds each' },
-    { name: 'Heavy Pistols',        qty: 6,  notes: '90 rounds each' },
-    { name: 'Light Pistols',        qty: 10, notes: '90 rounds each' },
-    { name: 'Hunting Rifle',        qty: 2,  notes: '50 rounds each' },
-    { name: 'M60 (Mounted)',        qty: 1,  notes: '300 rounds belt-fed' },
-    { name: 'Tactical Batons',      qty: 6,  notes: '' },
-    { name: 'Tasers',               qty: 3,  notes: '' },
-    { name: 'Grenades',             qty: 20, notes: '' },
-    { name: 'Flash-bang Grenades',  qty: 20, notes: '' },
-    { name: 'Hunting Knives',       qty: 10, notes: '' },
-    { name: 'Bow',                  qty: 2,  notes: '60 arrows' },
-    { name: 'Binoculars',           qty: 4,  notes: '' },
-    { name: 'Walkie-Talkies',       qty: 12, notes: '' },
-    { name: 'First Aid Kit',        qty: 6,  notes: '' },
-    { name: "Angler's Kit",         qty: 10, notes: '' },
-    { name: 'Toolkit',              qty: 1,  notes: '' },
-    { name: "Mechanic's Toolkit",   qty: 1,  notes: '' },
+    { name: 'Tactical Vests',       qty: 6,  enc: 1, notes: '-3 DMR/DMM' },
+    { name: 'Tactical Helmets',     qty: 6,  enc: 1, notes: '-1 DMR/DMM' },
+    { name: 'Tactical Shield',      qty: 2,  enc: 2, notes: '-1 DMR/DMM' },
+    { name: 'Automatic Rifles',     qty: 4,  enc: 2, notes: '300 rounds each' },
+    { name: 'Shotgun',              qty: 4,  enc: 2, notes: '40 rounds each' },
+    { name: 'Heavy Pistols',        qty: 6,  enc: 1, notes: '90 rounds each' },
+    { name: 'Light Pistols',        qty: 10, enc: 1, notes: '90 rounds each' },
+    { name: 'Hunting Rifle',        qty: 2,  enc: 2, notes: '50 rounds each' },
+    { name: 'M60 (Mounted)',        qty: 1,  enc: 3, notes: '300 rounds belt-fed' },
+    { name: 'Tactical Batons',      qty: 6,  enc: 1, notes: '' },
+    { name: 'Tasers',               qty: 3,  enc: 1, notes: '' },
+    { name: 'Grenades',             qty: 20, enc: 0, notes: '' },
+    { name: 'Flash-bang Grenades',  qty: 20, enc: 0, notes: '' },
+    { name: 'Hunting Knives',       qty: 10, enc: 1, notes: '' },
+    { name: 'Bow',                  qty: 2,  enc: 1, notes: '60 arrows' },
+    { name: 'Binoculars',           qty: 4,  enc: 1, notes: '' },
+    { name: 'Walkie-Talkies',       qty: 12, enc: 0, notes: '' },
+    { name: 'First Aid Kit',        qty: 6,  enc: 1, notes: '' },
+    { name: "Angler's Kit",         qty: 10, enc: 1, notes: '' },
+    { name: 'Toolkit',              qty: 1,  enc: 1, notes: '' },
+    { name: "Mechanic's Toolkit",   qty: 1,  enc: 1, notes: '' },
   ],
 }
 

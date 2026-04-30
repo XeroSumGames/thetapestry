@@ -31,6 +31,10 @@ export interface InventoryItem {
   qty: number
   custom: boolean
 }
+// Re-export the shared shape from lib/inventory for non-component
+// callers. The interface above remains for back-compat with existing
+// imports of `InventoryItem` from this file.
+export type { InventoryItem as SharedInventoryItem } from '../lib/inventory'
 
 interface Props {
   inventory: InventoryItem[]
