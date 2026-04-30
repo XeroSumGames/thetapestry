@@ -2,9 +2,11 @@
 
 **Source**: XSE SRD v1.1.06 (Distemper Release) + Distemper Core Rules v0.9.2. SRD-canonical where Core is vague.
 
-**Status**: Spec — not yet implemented.
+**Status (last verified 2026-04-29)**: ~85% implemented. Phases A–D fully shipped (campaign-local loop is live and playtested). Phase E (The Tapestry persistent world) is ~70% shipped — `world_communities` mirror table, Publish-to-Tapestry flow, Thriver moderation, world-map overlay, GM-to-GM encounter handshake, trade/alliance/feud links, migration on dissolution, and schism are all live. Four Phase E pieces remain open (World Event CMod propagation, per-community Campfire feed, player subscriptions, "start near existing community" wizard) plus the Lv4 Skill Trait auto-bonuses (locked behind the all-or-nothing Trait list).
 
 **Strategic weight**: 🚩 **Flagship feature** — one of the biggest, most meaningful, and most differentiating elements of Distemper, and a primary pillar of The Tapestry. Every Community created in a campaign becomes a node in a **shared persistent world** where communities from different tables can meet, trade, war, ally, schism, and migrate. Communities are the bridge between a single GM's campaign and the Distemperverse at large.
+
+This document is **both the design spec and the implementation tracker** — §1–§10 are the rules-extract (canonical from the rulebooks; do not drift) and §11 carries shipping status with file links to the actual code/SQL. When the rules and the code disagree, the rules are canonical and the code gets fixed.
 
 ---
 
@@ -45,6 +47,8 @@ This is what lifts Communities above a standard tabletop sub-system. Every Commu
 ### 0e. Implementation phase for the Tapestry layer
 
 Build the campaign-local system first (Phases A–D). Add the Tapestry / Persistent World layer as **Phase E** (see §11). Don't over-engineer before the local loop is solid — but build the DB with `published_at`, `world_visibility`, and `world_community_id` columns from day one so the migration to published entities is additive.
+
+✅ **Done as designed.** Phase A's [`sql/communities-phase-a.sql`](../sql/communities-phase-a.sql) carried the Phase E columns from day one, so the Phase E migration was purely additive — `world_communities` was a new table, not a backfill.
 
 ---
 
@@ -278,47 +282,68 @@ Fed/Clothed sub-check outcomes mirror the Morale scale:
 
 > Build-order rationale: local loop first (A→D). Once a single table can run a community week-to-week, the Tapestry layer (E) turns on the world-shared magic that makes this a flagship differentiator. Day-one DB should already carry `published_at`, `world_visibility`, `world_community_id` so Phase E is additive, not a migration.
 
+> **Status legend:** ✅ shipped · 🟡 partial · ❌ not started · 🔒 blocked on external dependency.
 
-### Phase A — Foundation
-- DB tables + RLS.
-- Create Community modal (name, description, Homestead pin).
-- Community tab in Assets panel — member list, role assignment (drag-drop or dropdown).
-- Manual add/remove members (no recruitment mechanic yet).
-- Members cache auto-count toward 13+ threshold.
+### Phase A — Foundation ✅ shipped
 
-### Phase B — Recruitment
-- NPC card "Recruit" button.
-- Recruitment modal with approach / skill / CMod / roll.
-- Auto-add on success per SRD outcome table.
-- First Impression integration.
-- Apprentice flag and bond tracking.
+- ✅ DB tables + RLS — [`sql/communities-phase-a.sql`](../sql/communities-phase-a.sql) (carries Phase E columns day-one).
+- ✅ Create Community modal (name, description, Homestead pin) — [`components/CampaignCommunity.tsx`](../components/CampaignCommunity.tsx) `handleCreate` + via [`components/QuickAddModal.tsx`](../components/QuickAddModal.tsx).
+- ✅ Community tab in Assets panel + standalone `/communities` index + `/communities/[id]` detail page.
+- ✅ Manual add/remove members — `handleAddMember` / `handleRemoveMember`.
+- ✅ Members cache auto-counts toward 13+ threshold (Group → Community status flip).
 
-### Phase C — Morale + Resources
-- Fed / Clothed check modals (sub-rolls).
-- Weekly Morale Check modal with modifier auto-fill.
-- Consequence application: remove % members, cmod_for_next, consecutive_failures counter.
-- 3-failure dissolution flow with confirmation.
-- Roll log entries for all community checks (custom card style like `combat_start`).
+### Phase B — Recruitment ✅ shipped (2026-04-22)
 
-### Phase D — Activity Blocks + Advanced
-- End Week button advances `week_number`; optionally prompts for off-screen activity outcomes.
-- Inspiration Lv4 / Psychology* Lv4 auto-CMod bonuses.
-- GM dashboard: morale history graph, role health over time, recruitment success rate.
-- Player-facing read-only Community summary.
-- Apprentice task delegation UI.
+- ✅ NPC card "Recruit" button.
+- ✅ Recruitment modal with approach / skill / CMod / roll — lives inline in [`app/stories/[id]/table/page.tsx`](../app/stories/[id]/table/page.tsx).
+- ✅ Auto-INSERT into `community_members` on success per the §3 outcome table.
+- ✅ First Impression CMod auto-applied from `npc_relationships.relationship_cmod`.
+- ✅ Inspiration skill stacks +1/level on top of the primary SMod (Distemper CRB).
+- ✅ Apprentice flag — gated to **Moment of High Insight (double-6) only**, per SRD §08 p.21 (Wild Success alone does NOT unlock).
+- ✅ Insight Dice on Recruitment (pre-roll 3d6 / +3 CMod + post-roll reroll with state reconciliation).
+- ✅ Custom roll_log card style + community milestone notification when a community first crosses 13 active members.
+- 🟡 **§2a Apprentice creation flow** — Motivation/Complication tables, +3 CDP RAPID, Paradigm pick, +5 CDP skills, 1-month training. The Apprentice *flag* exists; the SRD's full Apprentice-creation wizard is not surfaced. GMs improvise this off-platform. Pairs naturally with the future CDP Calculator backlog item.
 
-### Phase E — The Tapestry (Persistent World)
-- `world_communities` mirror table — sanitized, public-facing row per published community. Columns: `id`, `source_campaign_id`, `source_community_id`, `name`, `description`, `homestead_lat`, `homestead_lng`, `size_band`, `status`, `faction_label`, `last_public_update_at`, `published_by`, `thriver_approved`.
-- GM "Publish to Distemperverse" toggle on the Community panel — requires Thriver moderation queue approval (reuse existing `map_pins` promotion pattern).
-- **World map overlay** — published communities render on the world map with size-banded icons, status colors, and click-to-open public card.
-- **Community contact handshake** — "My campaign encounters Community X" from another table fires a GM-to-GM notification; both GMs opt in before any private data crosses.
-- **Trade / alliance / feud links** — narrative edges between two published communities, drawn as colored arcs on the world map.
-- **Migration on dissolution** — when a community collapses (3-failure), survivors offered to nearby published communities; receiving GMs choose to absorb.
-- **Schism mechanic** — large community can split into two; one keeps the Homestead, the other founds a new one elsewhere (may be instantly published or remain campaign-private).
-- **World Event CMod propagation** — Distemper Timeline pins in a region can apply temporary CMods to Morale Checks for every published community inside that region.
-- **Campfire feed per community** — Phase 6 Campfire shows a public timeline for each community: weekly outcomes, notable recruitments, schisms, dissolutions. GM-curated narrative updates.
-- **Community subscription** — players follow published communities across sessions and platforms.
-- **New-GM onboarding hook** — campaign-creation wizard offers "Start inside/around an existing published community" as an alternative to blank-slate.
+### Phase C — Morale + Resources ✅ shipped (2026-04-23)
+
+- ✅ Weekly Check modal — Fed → Clothed → Morale rolled together — [`components/CommunityMoraleModal.tsx`](../components/CommunityMoraleModal.tsx).
+- ✅ All 6 Morale modifier slots auto-filled (Mood / Fed / Clothed / Enough Hands / Clear Voice / Safety) with GM override on every slot + Additional freeform.
+- ✅ Fed / Clothed sub-checks with their own outcome → next-week-CMod mapping per §5.
+- ✅ Consequence application: 25% / 50% / 75% departures on Failure / Dire / Low Insight, weighted Unassigned → Cohort → Convert → Conscript → Founder → Apprentice. PCs never auto-removed (per §10).
+- ✅ `consecutive_failures` ticks on any failure tier, resets on any success tier; `week_number` increments on finalize.
+- ✅ 3-failure dissolution — Result stage flips to red "Finalize — Dissolve" button; all members soft-removed with `left_reason='dissolved'`; community flips `status='dissolved'`.
+- ✅ **Retention Check** (SRD §08 p.22 salvage roll) — fast-acting leader gets an immediate Morale Check using the prior cmod_for_next as Mood; success of any tier saves the community (consecutive_failures drops to 2).
+- ✅ Custom roll_log cards for `fed_check` / `clothed_check` / `morale_check` / `retention_check`.
+- ✅ New `morale_75` left_reason — [`sql/community-members-add-morale-75-reason.sql`](../sql/community-members-add-morale-75-reason.sql).
+
+### Phase D — Activity Blocks + Advanced ✅ mostly shipped (2026-04-23, Lv4 deferred)
+
+- ✅ Skip Week button (advances `week_number` without rolls — Activity Block off-screen time).
+- ✅ Pressgang Conscription — red warning banner on pick stage + blocking confirm() on submit.
+- ✅ GM Dashboard at `/stories/[id]/community` — Morale history (last 20), resource history (last 40), role distribution with SRD minimums, recruitment stats by approach, member breakdown by recruitment_type.
+- ✅ At-a-Glance block in expanded community body — Recent Morale chips (last 5) + "You" row showing viewer's role, Apprentice, recruited NPCs. Visible to everyone.
+- ✅ Apprentice task delegation — `community_members.current_task` text + GM-edit ✎ inline + "+ Assign task" affordance — [`sql/community-members-add-current-task.sql`](../sql/community-members-add-current-task.sql).
+- 🔒 **§6 Inspiration Lv4 "Beacon of Hope"** auto +4 Morale — *deferred to the broader Lv4 Skill Traits ship-together-or-not-at-all rule.*
+- 🔒 **§6 Psychology\* Lv4 "Insightful Counselor"** auto +3 Morale — *same backburner.*
+- 🔒 **Generic Lv4 trait surface on the character sheet + auto-application hooks for any Lv4 trait touching Morale/Recruitment/Fed/Clothed/combat** — *same backburner.*
+
+### Phase E — The Tapestry (Persistent World) 🟡 ~70% shipped
+
+- ✅ `world_communities` mirror table — [`sql/world-communities.sql`](../sql/world-communities.sql). Columns: `id`, `source_community_id`, `source_campaign_id`, `published_by`, `name`, `description`, `homestead_lat`, `homestead_lng`, `size_band`, `faction_label`, `community_status`, `moderation_status`, `approved_by`, `approved_at`, `last_public_update_at`. UNIQUE on `source_community_id` so re-publishing UPDATEs in place.
+- ✅ GM "Publish to Tapestry" toggle + modal — [`components/CampaignCommunity.tsx:1972`](../components/CampaignCommunity.tsx) → `handlePublish` at :883. Preview, faction label input, public-status compute, homestead resolution.
+- ✅ Thriver moderation queue (pending → approved/rejected) — [`app/moderate/page.tsx`](../app/moderate/page.tsx) + [`sql/world-communities-moderation-notify.sql`](../sql/world-communities-moderation-notify.sql).
+- ✅ Leader permissions — non-GM PC leader can publish their own community — [`sql/world-communities-leader-permissions.sql`](../sql/world-communities-leader-permissions.sql).
+- ✅ **World map overlay** — published communities render in [`components/MapView.tsx`](../components/MapView.tsx) with size-banded icons (radius 20→40px ramp by size band) and click-to-open public card.
+- ✅ **GM-to-GM contact handshake** — `community_encounters` table + 🤝 button on world-map cards + opt-in accept/decline + notification metadata jsonb — [`sql/community-encounters.sql`](../sql/community-encounters.sql).
+- ✅ **Trade / alliance / feud links** — `world_community_links` table with two-way consent (pending → active/declined), color-coded polylines on the world map (trade=green, alliance=blue, feud=red) — [`sql/world-community-links.sql`](../sql/world-community-links.sql).
+- ✅ **Migration on dissolution** — survivors of a 3-failure collapse offered to nearby published communities; receiving GMs choose to absorb — [`sql/community-migrations.sql`](../sql/community-migrations.sql) + [`sql/community-migrations-autocopy.sql`](../sql/community-migrations-autocopy.sql) + Migration modal in `CampaignCommunity.tsx`.
+- ✅ **Schism mechanic** — large community splits into two; one keeps the Homestead, the other founds a new one — `handleSchism` in `CampaignCommunity.tsx` + [`sql/community-members-add-schism-reason.sql`](../sql/community-members-add-schism-reason.sql).
+- ✅ Size band retaxonomy (Group / Small / Medium / Large / Huge / Nation State) — [`sql/world-communities-size-band-retaxonomy.sql`](../sql/world-communities-size-band-retaxonomy.sql).
+- ✅ Sanitized public face — internal roster / WP / secret properties never leave the campaign. Schema enforces this — `world_communities` carries no FK back into private tables.
+- ❌ **World Event CMod propagation** — Distemper Timeline pins in a region apply temporary CMods to Morale Checks for every published community in that region. Hook is missing — needs a regional bounding-box query at Morale Check time + a new modifier slot wired to active world events.
+- 🔒 **Campfire feed per community** — gated on Phase 4 (Campfire) shipping. Once Campfire exists, this is mostly a feed-adapter that pulls the published community's Morale outcomes, recruitments, schisms, dissolutions, and GM narrative updates.
+- ❌ **Community subscription for players** — no `community_subscriptions` table or follow UI. Lets players follow a published community across sessions; surfaces updates in their feed.
+- ❌ **New-GM onboarding hook** — campaign-creation wizard at `/stories/new` offers "Start inside/around an existing published community" as an alternative to blank-slate. Currently the wizard has Custom / Setting / Module; this would be a fourth option that seeds the new campaign adjacent to a published community (autopopulates Homestead pin + invites the new GM into the encounter handshake).
 
 ## 12. Out of Scope (explicit non-goals)
 
@@ -326,3 +351,22 @@ Fed/Clothed sub-check outcomes mirror the Morale scale:
 - Full trade-economy simulation — Phase E supports *narrative* trade/alliance *links* between communities, not a resource-exchange engine.
 - Procedural community generation — every community is GM-authored.
 - The existing world-map "Community" pin category remains as a lightweight flavor pin. Once Phase E ships, GMs will be nudged to promote such pins into full published communities if they're meant to be real entities.
+
+---
+
+## 13. What's left to ship (2026-04-29)
+
+Five real gaps + one parked-for-good-reason backburner.
+
+| # | Item | Phase | Size | Notes |
+|---|---|---|---|---|
+| 1 | World Event CMod propagation | E | ~half-day | Regional bounding-box query + new Morale modifier slot. Self-contained. |
+| 2 | Per-community Campfire feed | E | ~1 day after Campfire | Blocked on Phase 4 (Campfire) existing at all. Once it does, mostly a feed-adapter. |
+| 3 | Community subscription for players | E | ~1-2 days | New `community_subscriptions` table + Follow button on public card + Subscribed list on dashboard. |
+| 4 | "Start near existing community" wizard option | E | ~half-day | Fourth tile on `/stories/new` alongside Custom / Setting / Module. Seeds Homestead + opens encounter handshake. |
+| 5 | Apprentice creation flow §2a | B | ~1-2 days | Motivation/Complication tables + 3 CDP RAPID + Paradigm + 5 CDP skills + 1-month training. Pairs with the broader CDP Calculator backlog item. |
+| 🔒 | Lv4 Skill Traits (Inspiration "Beacon of Hope" + Psychology* "Insightful Counselor" + generic Lv4 sheet surface + auto-application hooks) | D | — | **Locked on the all-or-nothing Trait list landing.** Per project memory `project_lv4_traits.md`: Lv4 traits ship together or not at all. Until the full Trait list is authored, the GM stuffs Lv4 bonuses into the Morale "Additional" slot manually. |
+
+Total work to fully close the spec (excluding the locked Lv4 backburner and the Campfire-blocked item #2): **~4-5 working days.**
+
+The campaign-local loop is solid and playtested. The Tapestry layer is the only meaningful remaining surface, and the unbuilt pieces are the ones that hook deepest into adjacent unbuilt systems (Campfire, player engagement layer, new-GM onboarding) — not the Communities subsystem itself.
