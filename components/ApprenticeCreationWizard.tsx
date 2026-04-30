@@ -144,6 +144,43 @@ export default function ApprenticeCreationWizard({
     return val
   }
 
+  // Master PC's skill levels — drives the SRD §08 p.21 per-skill cap
+  // (Apprentice can be trained "up to PC skill level − 1" in any single
+  // skill the PC has). PCs store skills as data.skills[].skillName/level.
+  // Skills the PC doesn't have at level >= 1 can't be trained at all
+  // (cap goes negative, which clips deltas to 0).
+  const [masterSkills, setMasterSkills] = useState<Record<string, number>>({})
+  const [masterPcLoaded, setMasterPcLoaded] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data, error } = await supabase
+        .from('characters')
+        .select('data')
+        .eq('id', masterCharacterId)
+        .maybeSingle()
+      if (cancelled) return
+      if (error || !data) { setMasterPcLoaded(true); return }
+      const skills: Array<{ skillName: string; level: number }> = (data as any)?.data?.skills ?? []
+      const map: Record<string, number> = {}
+      for (const s of skills) map[s.skillName] = s.level
+      setMasterSkills(map)
+      setMasterPcLoaded(true)
+    })()
+    return () => { cancelled = true }
+  }, [supabase, masterCharacterId])
+
+  // SRD per-skill training cap. Master PC skills default to 0 (or -3
+  // for vocational defaults) when the row is missing. Cap is the lower
+  // of SKILL_MAX and (PC skill − 1). When the result is negative, no
+  // CDP can be spent — the wizard treats the Paradigm baseline as
+  // intrinsic and the SRD cap as governing further training only.
+  function getSkillCap(skillName: string): number {
+    const def = SKILLS.find(s => s.name === skillName)
+    const pcLevel = masterSkills[skillName] ?? (def?.vocational ? -3 : 0)
+    return Math.min(SKILL_MAX, pcLevel - 1)
+  }
+
   // Step gating — Continue button enabled when the current step is "complete enough."
   const canContinueFromIdentity = name.trim().length > 0
   const canContinueFromParadigm = paradigm !== null
@@ -317,6 +354,14 @@ export default function ApprenticeCreationWizard({
           {/* Step 1 — Identity */}
           {step === 'identity' && (
             <>
+              {/* Game-time framing note. The wizard runs once at the table
+                  but the SRD frames the whole ritual as taking 1 month of
+                  game time — Motivation/Complication, Paradigm, RAPID
+                  spend, skill training. GMs should advance the campaign
+                  clock to match before the Apprentice is fully integrated. */}
+              <div style={{ padding: '8px 12px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
+                <strong style={{ color: '#7ab3d4' }}>Game time:</strong> per SRD §08 p.21 the Apprentice ritual represents <strong>1 month</strong> of in-game time — the master PC training them in skills they have, while the Apprentice settles into the community. Advance your campaign clock accordingly.
+              </div>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Name</label>
                 <input value={name} onChange={e => setName(e.target.value)}
@@ -401,21 +446,44 @@ export default function ApprenticeCreationWizard({
                   {SKILL_BUDGET - skillSpent} CDP remaining
                 </div>
               </div>
+              {/* SRD §08 p.21 — explainer for the per-skill training cap.
+                  The Apprentice can only be trained in a skill up to one
+                  rank below the master PC's level in that skill. Skills
+                  the PC doesn't have can't be trained at all. The
+                  Paradigm baseline still stands either way. */}
+              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', padding: '6px 10px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', lineHeight: 1.4 }}>
+                <strong style={{ color: '#7ab3d4' }}>SRD training cap:</strong> per the SRD §08 p.21 you can only train your Apprentice up to <strong>your skill − 1</strong> in any given skill. Skills you don&apos;t have can&apos;t be trained — the Paradigm baseline still stands. Loading master PC: {masterPcLoaded ? <span style={{ color: '#7fc458' }}>ready</span> : <span style={{ color: '#EF9F27' }}>fetching…</span>}.
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', maxHeight: '420px', overflowY: 'auto', padding: '4px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                 {SKILLS.map(s => {
                   const base = getSkillBase(s.name)
                   const final = getSkillFinal(s.name)
                   const delta = skillDelta[s.name] ?? 0
-                  const canInc = skillSpent < SKILL_BUDGET && final < SKILL_MAX
+                  const def = s
+                  const pcLevel = masterSkills[s.name] ?? (def.vocational ? -3 : 0)
+                  const cap = getSkillCap(s.name)
+                  const trainable = cap >= (def.vocational ? -1 : 0)  // need at least one stepUp's worth of headroom
+                  const canInc = masterPcLoaded && skillSpent < SKILL_BUDGET && final < cap
                   const canDec = delta > 0
                   return (
-                    <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', background: '#1a1a1a', borderRadius: '2px' }}>
+                    <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 6px', background: '#1a1a1a', borderRadius: '2px', opacity: trainable ? 1 : 0.55 }}>
                       <span style={{ flex: 1, fontSize: '13px', color: final > base ? '#7fc458' : '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>{s.name}</span>
-                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', minWidth: '50px', textAlign: 'right' }}>base {base}</span>
+                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', minWidth: '50px', textAlign: 'right' }} title="Paradigm baseline">base {base}</span>
+                      <span style={{ fontSize: '13px', color: trainable ? '#7ab3d4' : '#5a5550', fontFamily: 'Carlito, sans-serif', minWidth: '60px', textAlign: 'right' }}
+                        title={trainable
+                          ? `Master PC has ${s.name} ${pcLevel}; cap = ${cap}`
+                          : `Master PC doesn't have ${s.name} — can't train`}>
+                        {trainable ? `cap ${cap}` : 'untrainable'}
+                      </span>
                       <button onClick={() => canDec && setSkillDelta(d => ({ ...d, [s.name]: (d[s.name] ?? 0) - 1 }))} disabled={!canDec}
                         style={{ padding: '1px 6px', background: canDec ? '#1a1a1a' : '#0f0f0f', border: '1px solid #3a3a3a', borderRadius: '2px', color: canDec ? '#f5a89a' : '#3a3a3a', cursor: canDec ? 'pointer' : 'not-allowed', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>▼</button>
                       <span style={{ minWidth: '24px', textAlign: 'center', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontWeight: 700 }}>{final}</span>
                       <button onClick={() => canInc && setSkillDelta(d => ({ ...d, [s.name]: (d[s.name] ?? 0) + 1 }))} disabled={!canInc}
+                        title={!masterPcLoaded ? 'Loading master PC…'
+                          : !trainable ? 'Master PC doesn\'t have this skill — can\'t train'
+                          : final >= cap ? `At training cap (${cap}) — your skill is ${pcLevel}`
+                          : skillSpent >= SKILL_BUDGET ? 'Out of CDP'
+                          : 'Step up'}
                         style={{ padding: '1px 6px', background: canInc ? '#1a2e10' : '#0f0f0f', border: '1px solid #3a3a3a', borderRadius: '2px', color: canInc ? '#7fc458' : '#3a3a3a', cursor: canInc ? 'pointer' : 'not-allowed', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>▲</button>
                     </div>
                   )

@@ -2,7 +2,7 @@
 
 **Source**: XSE SRD v1.1.06 (Distemper Release) + Distemper Core Rules v0.9.2. SRD-canonical where Core is vague.
 
-**Status (last verified 2026-04-30)**: ~96% implemented. Phases A–D fully shipped. Phase E ~95% shipped — World Event CMod propagation (#1), player subscriptions (#3), and the "start near existing community" wizard tile (#4) all landed 2026-04-30. Only one Phase E piece remains open: per-community Campfire feed, which is gated on Phase 4 (Campfire) existing at all. The Lv4 Skill Trait auto-bonuses are locked behind the all-or-nothing Trait list per `project_lv4_traits.md`.
+**Status (last verified 2026-04-30)**: ~98% implemented. Phases A–D fully shipped. Phase E ~95% shipped (World Event CMod propagation #1, player subscriptions #3, "start near existing community" wizard tile #4 all landed 2026-04-30). The Apprentice creation flow §2a was already substantially built; the SRD per-skill training cap (Apprentice ≤ master_PC.skill − 1) was added 2026-04-30 to fully match SRD §08 p.21. Only two pieces remain open: per-community Campfire feed (gated on Phase 4 Campfire existing at all) and Lv4 Skill Trait auto-bonuses (locked behind the all-or-nothing Trait list per `project_lv4_traits.md`).
 
 **Strategic weight**: 🚩 **Flagship feature** — one of the biggest, most meaningful, and most differentiating elements of Distemper, and a primary pillar of The Tapestry. Every Community created in a campaign becomes a node in a **shared persistent world** where communities from different tables can meet, trade, war, ally, schism, and migrate. Communities are the bridge between a single GM's campaign and the Distemperverse at large.
 
@@ -302,7 +302,7 @@ Fed/Clothed sub-check outcomes mirror the Morale scale:
 - ✅ Apprentice flag — gated to **Moment of High Insight (double-6) only**, per SRD §08 p.21 (Wild Success alone does NOT unlock).
 - ✅ Insight Dice on Recruitment (pre-roll 3d6 / +3 CMod + post-roll reroll with state reconciliation).
 - ✅ Custom roll_log card style + community milestone notification when a community first crosses 13 active members.
-- 🟡 **§2a Apprentice creation flow** — Motivation/Complication tables, +3 CDP RAPID, Paradigm pick, +5 CDP skills, 1-month training. The Apprentice *flag* exists; the SRD's full Apprentice-creation wizard is not surfaced. GMs improvise this off-platform. Pairs naturally with the future CDP Calculator backlog item.
+- ✅ **§2a Apprentice creation flow** — full 5-step wizard ([`components/ApprenticeCreationWizard.tsx`](../components/ApprenticeCreationWizard.tsx)) covering Identity (name + background) → Paradigm pick → 3 CDP RAPID spend (capped at +4 per attribute) → 5 CDP skill spend → Confirm. Motivation + Complication auto-rolled at recruit-time on the High-Insight branch and stored in `community_members.apprentice_meta` ([`sql/community-members-add-apprentice-meta.sql`](../sql/community-members-add-apprentice-meta.sql)). Save updates `campaign_npcs` (RAPID + skills + structured note block) and bumps `apprentice_meta.setup_complete=true`. Master PC's progression log gets an entry. Wizard launches from a "⭐ Set Up Apprentice" button on the Apprentice's NPC card ([`components/NpcCard.tsx`](../components/NpcCard.tsx)). **2026-04-30 update:** the Skills step now enforces the SRD's per-skill training cap — Apprentice's spend is capped at `min(SKILL_MAX, master_PC.skill − 1)` for each skill, rendering "untrainable" rows for skills the master PC doesn't have. Identity step shows a 1-month-of-game-time framing note. Pairs naturally with the future CDP Calculator backlog item for ongoing master-PC-funded skill purchases.
 
 ### Phase C — Morale + Resources ✅ shipped (2026-04-23)
 
@@ -356,7 +356,7 @@ Fed/Clothed sub-check outcomes mirror the Morale scale:
 
 ## 13. What's left to ship (2026-04-30)
 
-Two real gaps + one parked-for-good-reason backburner.
+One Campfire-blocked item + one parked-for-good-reason backburner. Every actively-buildable piece is shipped.
 
 | # | Item | Phase | Size | Notes |
 |---|---|---|---|---|
@@ -364,9 +364,9 @@ Two real gaps + one parked-for-good-reason backburner.
 | 2 | Per-community Campfire feed | E | ~1 day after Campfire | Blocked on Phase 4 (Campfire) existing at all. Once it does, mostly a feed-adapter. |
 | 3 | Community subscription for players | E | ~~~1-2 days~~ | ✅ Shipped 2026-04-30 (basic Follow/Unfollow + Following section was 2026-04-22; subscriber count chip + subscriber notify trigger + auto-status from Morale outcome added 2026-04-30). |
 | 4 | "Start near existing community" wizard option | E | ~~~half-day~~ | ✅ Shipped 2026-04-30. |
-| 5 | Apprentice creation flow §2a | B | ~1-2 days | Motivation/Complication tables + 3 CDP RAPID + Paradigm + 5 CDP skills + 1-month training. Pairs with the broader CDP Calculator backlog item. |
+| 5 | Apprentice creation flow §2a | B | ~~~1-2 days~~ | ✅ Shipped (wizard was substantially built earlier; SRD per-skill training cap + 1-month framing landed 2026-04-30). |
 | 🔒 | Lv4 Skill Traits (Inspiration "Beacon of Hope" + Psychology* "Insightful Counselor" + generic Lv4 sheet surface + auto-application hooks) | D | — | **Locked on the all-or-nothing Trait list landing.** Per project memory `project_lv4_traits.md`: Lv4 traits ship together or not at all. Until the full Trait list is authored, the GM stuffs Lv4 bonuses into the Morale "Additional" slot manually. |
 
-Total work to fully close the spec (excluding the locked Lv4 backburner and the Campfire-blocked item #2): **~1-2 working days** (Apprentice creation flow is the only remaining open item in the actively-buildable column).
+Total work to fully close the spec: **0 days actively-buildable.** Both remaining items are gated externally — Campfire (item #2) on Phase 4 shipping, Lv4 Traits on the Trait list being authored.
 
 The campaign-local loop is solid and playtested. The Tapestry layer is the only meaningful remaining surface, and the unbuilt pieces are the ones that hook deepest into adjacent unbuilt systems (Campfire, player engagement layer, new-GM onboarding) — not the Communities subsystem itself.
