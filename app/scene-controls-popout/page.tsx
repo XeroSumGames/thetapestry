@@ -343,7 +343,7 @@ export default function SceneControlsPopoutPage() {
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <Stepper label="Cell (ft)" value={scene.cell_feet ?? 3} onChange={v => updateSceneField('cell_feet', Math.max(1, v))} suffix="ft" />
-            <Stepper label="Cell (px)" value={cellPx} onChange={v => setCellPx(Math.max(20, Math.min(200, v)))} suffix="px" step={5} />
+            <Stepper label="Cell (px)" value={cellPx} onChange={v => setCellPx(Math.max(5, Math.min(200, v)))} suffix="px" step={5} />
           </div>
         </div>
       </div>
