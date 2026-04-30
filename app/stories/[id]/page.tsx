@@ -334,7 +334,7 @@ export default function CampaignPage() {
 
       {/* Action buttons — GM */}
       {isGM && (
-        <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
           <a href={`/stories/${id}/table`} target="_blank" rel="noreferrer" style={btn('#c0392b', '#fff', '#c0392b')}>Launch</a>
           <Link href={`/stories/${id}/edit`} style={btn('#242424', '#f5f2ee', '#3a3a3a')}>Edit</Link>
           <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4') as any}>
@@ -351,12 +351,12 @@ export default function CampaignPage() {
               title={existingModule
                 ? `Publish a new version of "${existingModule.name}" (current v${existingModule.latest_version?.version ?? '1.0.0'})`
                 : 'Publish this campaign as a reusable module other GMs can subscribe to'}>
-              📦 {existingModule ? `Module v${existingModule.latest_version?.version ?? '1.0.0'}` : 'Publish Module'}
+              {existingModule ? `Module v${existingModule.latest_version?.version ?? '1.0.0'}` : 'Publish'}
             </button>
           )}
           {existingModule?.archived_at && (
-            <span style={{ padding: '8px 12px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-              📦 Archived
+            <span style={{ padding: '6px 12px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', lineHeight: 1 }}>
+              Archived
             </span>
           )}
           {existingModule && !existingModule.archived_at && (
@@ -388,7 +388,7 @@ export default function CampaignPage() {
               You were removed from this session by the GM. You will not rejoin automatically — click <b>Rejoin Session</b> below when you are ready to return.
             </div>
           )}
-          <div style={{ display: 'flex', gap: '6px', marginBottom: '1.5rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
             {amKicked ? (
               <button onClick={handleRejoin} disabled={rejoining} style={{ ...btn('#1a2e10', '#7fc458', '#2d5a1b'), opacity: rejoining ? 0.6 : 1 } as any}>
                 {rejoining ? 'Rejoining…' : 'Rejoin Session'}
@@ -572,7 +572,11 @@ export default function CampaignPage() {
 
 function btn(bg: string, color: string, border: string): React.CSSProperties {
   return {
-    padding: '8px 18px', background: bg, border: `1px solid ${border}`,
+    // Padding tightened from 8px/18px → 6px/14px so all seven hub
+    // actions (Launch / Edit / Share / GM Kit / Snapshot / Publish /
+    // Delete) fit on one line at standard viewport widths without
+    // Delete dropping to a second row.
+    padding: '6px 14px', background: bg, border: `1px solid ${border}`,
     borderRadius: '3px', color, fontSize: '13px',
     fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
     textTransform: 'uppercase', textDecoration: 'none', cursor: 'pointer',
