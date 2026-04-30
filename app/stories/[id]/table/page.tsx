@@ -6,6 +6,7 @@ import CharacterCard, { LiveState } from '../../../../components/CharacterCard'
 import type { InventoryItem } from '../../../../components/InventoryPanel'
 import NpcRoster, { getNpcRingColor, getNpcTokenBorderColor } from '../../../../components/NpcRoster'
 import NpcCard from '../../../../components/NpcCard'
+import TradeNegotiationModal from '../../../../components/TradeNegotiationModal'
 import PlayerNpcCard from '../../../../components/PlayerNpcCard'
 import ObjectCard from '../../../../components/ObjectCard'
 import VehicleCard, { Vehicle } from '../../../../components/VehicleCard'
@@ -492,6 +493,52 @@ export default function TablePage() {
   // community_members; used to drive the "Deposit to community" option
   // in the InventoryPanel give-modal.
   const [pcCommunityMemberships, setPcCommunityMemberships] = useState<Record<string, { id: string; name: string }[]>>({})
+  // Trade modal target — when set, the TradeNegotiationModal mounts.
+  // Resolved against `campaignNpcs` (kind='npc') or fetched fresh from
+  // community_stockpile_items (kind='community') at open time.
+  const [tradeTarget, setTradeTarget] = useState<{ kind: 'npc' | 'community'; id: string } | null>(null)
+  // Resolved community stockpile + leader Barter for the trade modal.
+  // Fetched on demand when tradeTarget.kind === 'community'.
+  const [tradeCommunityData, setTradeCommunityData] = useState<{
+    name: string; inventory: InventoryItem[]; barterSmod: number; subtext?: string
+  } | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    if (!tradeTarget || tradeTarget.kind !== 'community') {
+      setTradeCommunityData(null)
+      return
+    }
+    ;(async () => {
+      const [{ data: comm }, { data: stockpile }] = await Promise.all([
+        supabase.from('communities').select('id, name, leader_npc_id, leader_user_id').eq('id', tradeTarget.id).maybeSingle(),
+        supabase.from('community_stockpile_items').select('*').eq('community_id', tradeTarget.id).order('name'),
+      ])
+      if (cancelled) return
+      // Resolve leader's Barter SMod. Leader could be an NPC or a PC.
+      let barterSmod = 0
+      const c: any = comm
+      if (c?.leader_npc_id) {
+        const { data: npc } = await supabase.from('campaign_npcs').select('skills').eq('id', c.leader_npc_id).maybeSingle()
+        const entries: Array<{ name: string; level: number }> = (npc as any)?.skills?.entries ?? []
+        barterSmod = entries.find(s => s.name === 'Barter')?.level ?? 0
+      } else if (c?.leader_user_id) {
+        const { data: chRow } = await supabase
+          .from('campaign_members')
+          .select('character_id, characters:character_id(data)')
+          .eq('campaign_id', id).eq('user_id', c.leader_user_id).maybeSingle()
+        const skills: Array<{ skillName: string; level: number }> = (chRow as any)?.characters?.data?.skills ?? []
+        barterSmod = skills.find(s => s.skillName === 'Barter')?.level ?? 0
+      }
+      if (cancelled) return
+      setTradeCommunityData({
+        name: c?.name ?? 'Community',
+        inventory: (stockpile ?? []) as InventoryItem[],
+        barterSmod,
+        subtext: 'Stockpile',
+      })
+    })()
+    return () => { cancelled = true }
+  }, [tradeTarget, supabase, id])
   // Which Apprentice (if any) the wizard is currently editing. Single
   // wizard instance lifted to the page level so multiple open NpcCards
   // can share it without state collisions.
@@ -6295,6 +6342,7 @@ export default function TablePage() {
                       if (!isGM && !isMaster) return undefined
                       return () => setSetupApprenticeNpcId(npc.id)
                     })()}
+                    onOpenTrade={myEntry ? () => setTradeTarget({ kind: 'npc', id: npc.id }) : undefined}
                   />
                 ) : (
                   <PlayerNpcCard key={cardKey}
@@ -8733,6 +8781,7 @@ export default function TablePage() {
                 isGM={isGM}
                 initialMode={communityModalMode}
                 initialModeToken={communityModalToken}
+                onOpenTradeWithCommunity={myEntry ? (communityId) => setTradeTarget({ kind: 'community', id: communityId }) : undefined}
               />
             </div>
           </div>
@@ -9906,6 +9955,152 @@ export default function TablePage() {
               // hides on the card. The campaign_npcs realtime channel
               // handles RAPID + skills + name refresh automatically.
               void loadPlayerNpcCommunityMap(id)
+            }}
+          />
+        )
+      })()}
+
+      {/* Trade Negotiation modal — single-roll opposed Barter check.
+          Resolves against an NPC or a community stockpile; on apply,
+          items move both ways via the existing inventory write paths. */}
+      {tradeTarget && myEntry && (() => {
+        const charData = myEntry.character.data ?? {}
+        const pcInventory = (charData.inventory ?? []) as InventoryItem[]
+        const pcAcuMod = charData.rapid?.ACU ?? 0
+        const pcSkills = (charData.skills ?? []) as Array<{ skillName: string; level: number }>
+        const pcBarter = pcSkills.find(s => s.skillName === 'Barter')?.level ?? 0
+        let target: { kind: 'npc' | 'community'; id: string; name: string; inventory: InventoryItem[]; barterSmod: number; subtext?: string } | null = null
+        if (tradeTarget.kind === 'npc') {
+          const npc: any = campaignNpcs.find((n: any) => n.id === tradeTarget.id)
+          if (!npc) { setTradeTarget(null); return null }
+          const npcInv: InventoryItem[] = Array.isArray(npc.inventory) ? npc.inventory : []
+          const npcSkillEntries: Array<{ name: string; level: number }> = npc.skills?.entries ?? []
+          const npcBarter = npcSkillEntries.find(s => s.name === 'Barter')?.level ?? 0
+          target = { kind: 'npc', id: npc.id, name: npc.name, inventory: npcInv, barterSmod: npcBarter, subtext: npc.npc_type ? npc.npc_type.toUpperCase() : undefined }
+        } else {
+          // Community target — resolved by the async useEffect above.
+          // While the fetch is in flight, render nothing; the modal
+          // pops in once the data lands.
+          if (!tradeCommunityData) return null
+          target = {
+            kind: 'community',
+            id: tradeTarget.id,
+            name: tradeCommunityData.name,
+            inventory: tradeCommunityData.inventory,
+            barterSmod: tradeCommunityData.barterSmod,
+            subtext: tradeCommunityData.subtext,
+          }
+        }
+        if (!target) return null
+        return (
+          <TradeNegotiationModal
+            pcName={myEntry.character.name}
+            pcInventory={pcInventory}
+            pcAcuMod={pcAcuMod}
+            pcBarterSmod={pcBarter}
+            target={target}
+            onClose={() => setTradeTarget(null)}
+            onApply={async ({ pcGives, pcGets, rollSummary, outcome }) => {
+              // Apply the deal as a single batch:
+              //   - Decrement PC inventory by pcGives, increment by pcGets
+              //   - Decrement target inventory by pcGets, increment by pcGives
+              const charId = myEntry.character.id
+              const newPcInv: InventoryItem[] = JSON.parse(JSON.stringify(pcInventory))
+              for (const g of pcGives) {
+                const idx = newPcInv.findIndex(i => i.name === g.name && i.custom === g.custom)
+                if (idx >= 0) {
+                  newPcInv[idx].qty -= g.selectedQty
+                  if (newPcInv[idx].qty <= 0) newPcInv.splice(idx, 1)
+                }
+              }
+              for (const r of pcGets) {
+                const idx = newPcInv.findIndex(i => i.name === r.name && i.custom === r.custom)
+                if (idx >= 0) newPcInv[idx].qty += r.selectedQty
+                else newPcInv.push({ ...r, qty: r.selectedQty })
+              }
+              // PC write
+              const { error: charErr } = await supabase
+                .from('characters')
+                .update({ data: { ...charData, inventory: newPcInv } })
+                .eq('id', charId)
+              if (charErr) throw new Error(`PC inventory write failed: ${charErr.message}`)
+              setEntries(prev => prev.map(e => e.character.id === charId
+                ? { ...e, character: { ...e.character, data: { ...e.character.data, inventory: newPcInv } } }
+                : e))
+              // Target write
+              if (tradeTarget!.kind === 'npc') {
+                const npc: any = campaignNpcs.find((n: any) => n.id === tradeTarget!.id)
+                if (!npc) throw new Error('NPC vanished mid-trade')
+                const newNpcInv: InventoryItem[] = JSON.parse(JSON.stringify(npc.inventory ?? []))
+                for (const r of pcGets) {
+                  const idx = newNpcInv.findIndex(i => i.name === r.name && i.custom === r.custom)
+                  if (idx >= 0) {
+                    newNpcInv[idx].qty -= r.selectedQty
+                    if (newNpcInv[idx].qty <= 0) newNpcInv.splice(idx, 1)
+                  }
+                }
+                for (const g of pcGives) {
+                  const idx = newNpcInv.findIndex(i => i.name === g.name && i.custom === g.custom)
+                  if (idx >= 0) newNpcInv[idx].qty += g.selectedQty
+                  else newNpcInv.push({ ...g, qty: g.selectedQty })
+                }
+                const { error: npcErr } = await supabase.from('campaign_npcs')
+                  .update({ inventory: newNpcInv })
+                  .eq('id', tradeTarget!.id)
+                if (npcErr) throw new Error(`NPC inventory write failed: ${npcErr.message}`)
+                setCampaignNpcs(prev => prev.map((n: any) => n.id === tradeTarget!.id ? { ...n, inventory: newNpcInv } : n))
+                setRosterNpcs(prev => prev.map((n: any) => n.id === tradeTarget!.id ? { ...n, inventory: newNpcInv } : n))
+                initChannelRef.current?.send({ type: 'broadcast', event: 'npc_inventory_changed', payload: { npcId: tradeTarget!.id } })
+              } else {
+                // Community stockpile target. PC gets items decrement
+                // existing stockpile rows (delete if qty hits 0); PC
+                // gives items insert/upsert by (name, custom).
+                const communityId = tradeTarget!.id
+                for (const r of pcGets) {
+                  const { data: existing } = await supabase
+                    .from('community_stockpile_items')
+                    .select('id, qty')
+                    .eq('community_id', communityId).eq('name', r.name).eq('custom', r.custom)
+                    .maybeSingle()
+                  if (!existing) continue
+                  const remaining = ((existing as any).qty ?? 0) - r.selectedQty
+                  if (remaining <= 0) {
+                    await supabase.from('community_stockpile_items').delete().eq('id', (existing as any).id)
+                  } else {
+                    await supabase.from('community_stockpile_items').update({ qty: remaining }).eq('id', (existing as any).id)
+                  }
+                }
+                for (const g of pcGives) {
+                  const { data: existing } = await supabase
+                    .from('community_stockpile_items')
+                    .select('id, qty')
+                    .eq('community_id', communityId).eq('name', g.name).eq('custom', g.custom)
+                    .maybeSingle()
+                  if (existing) {
+                    await supabase.from('community_stockpile_items')
+                      .update({ qty: ((existing as any).qty ?? 0) + g.selectedQty })
+                      .eq('id', (existing as any).id)
+                  } else {
+                    await supabase.from('community_stockpile_items').insert({
+                      community_id: communityId,
+                      name: g.name, qty: g.selectedQty, enc: g.enc, rarity: g.rarity,
+                      notes: g.notes, custom: g.custom,
+                    })
+                  }
+                }
+              }
+              // Single roll-log summary.
+              const giveStr = pcGives.map(g => `${g.name}×${g.selectedQty}`).join(', ') || '(nothing)'
+              const getStr = pcGets.map(g => `${g.name}×${g.selectedQty}`).join(', ') || '(nothing)'
+              await supabase.from('roll_log').insert({
+                campaign_id: id, user_id: userId, character_name: myEntry.character.name,
+                label: `⚖ Trade · ${rollSummary} · gave ${giveStr} got ${getStr}`,
+                die1: outcome.pcDie1, die2: outcome.pcDie2,
+                amod: pcAcuMod, smod: pcBarter, cmod: 0,
+                total: outcome.pcTotal,
+                outcome: 'barter',
+              })
+              setTradeTarget(null)
             }}
           />
         )

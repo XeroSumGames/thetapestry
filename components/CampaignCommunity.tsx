@@ -230,9 +230,13 @@ interface Props {
   // is just one extra click for nothing. Wins over `initialMode`
   // when both are set.
   initialOpenId?: string
+  // Trade trigger — when supplied, the stockpile section gets a
+  // "Trade with Stockpile" button. Parent owns the
+  // TradeNegotiationModal so multiple surfaces share one instance.
+  onOpenTradeWithCommunity?: (communityId: string) => void
 }
 
-export default function CampaignCommunity({ campaignId, isGM, initialMode, initialModeToken, initialOpenId }: Props) {
+export default function CampaignCommunity({ campaignId, isGM, initialMode, initialModeToken, initialOpenId, onOpenTradeWithCommunity }: Props) {
   const supabase = createClient()
 
   const [communities, setCommunities] = useState<Community[]>([])
@@ -2165,6 +2169,13 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
                           {stockpile.length === 0 ? 'empty' : `${stockpile.length} items · ${totalEnc} enc`}
                         </span>
+                        {onOpenTradeWithCommunity && stockpile.length > 0 && (
+                          <button onClick={() => onOpenTradeWithCommunity(c.id)}
+                            title="Open Barter Negotiation with this community's stockpile"
+                            style={{ padding: '2px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            ⚖ Trade
+                          </button>
+                        )}
                         <button onClick={() => setAddStockingForCommunity(isAdding ? null : c.id)}
                           style={{ padding: '2px 10px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                           {isAdding ? 'Cancel' : '+ Add'}
