@@ -4654,7 +4654,9 @@ export default function TablePage() {
         if (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight') {
           const phyAmod = targetEntry.character.data?.rapid?.PHY ?? 0
           const incapRounds = Math.max(1, Math.floor(Math.random() * 6) + 1 - phyAmod)
-          await supabase.from('character_states').update({ death_countdown: null, incap_rounds: incapRounds, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId)
+          const { data: stabRows, error: stabErr } = await supabase.from('character_states').update({ death_countdown: null, incap_rounds: incapRounds, updated_at: new Date().toISOString() }).eq('id', targetEntry.stateId).select('id, death_countdown, incap_rounds')
+          if (stabErr) console.error('[stabilize] character_states update error:', stabErr.message)
+          else if (!stabRows || stabRows.length === 0) console.warn('[stabilize] SILENT RLS FAIL — stabilize did not persist for', stTargetName, '— Run sql/character-states-rls-fix.sql.')
           setEntries(prev => prev.map(e => e.stateId === targetEntry.stateId ? { ...e, liveState: { ...e.liveState, death_countdown: null, incap_rounds: incapRounds } as any } : e))
           stabilizeResult = `${stTargetName} stabilized! Incapacitated for ${incapRounds} round${incapRounds !== 1 ? 's' : ''}, then regains 1 WP + 1 RP.`
           const medicName = pendingRoll.label.split(' — ')[0]
@@ -4667,7 +4669,9 @@ export default function TablePage() {
         if (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight') {
           const phyAmod = targetNpcStab.physicality ?? 0
           const incapRounds = Math.max(1, Math.floor(Math.random() * 6) + 1 - phyAmod)
-          await supabase.from('campaign_npcs').update({ death_countdown: null, incap_rounds: incapRounds }).eq('id', targetNpcStab.id)
+          const { data: nstabRows, error: nstabErr } = await supabase.from('campaign_npcs').update({ death_countdown: null, incap_rounds: incapRounds }).eq('id', targetNpcStab.id).select('id, death_countdown, incap_rounds')
+          if (nstabErr) console.error('[stabilize] campaign_npcs update error:', nstabErr.message)
+          else if (!nstabRows || nstabRows.length === 0) console.warn('[stabilize] SILENT RLS FAIL — NPC stabilize did not persist for', stTargetName)
           const npcPatch = { death_countdown: null, incap_rounds: incapRounds }
           setCampaignNpcs(prev => prev.map(n => n.id === targetNpcStab.id ? { ...n, ...npcPatch } : n))
           setRosterNpcs(prev => prev.map(n => n.id === targetNpcStab.id ? { ...n, ...npcPatch } : n))
