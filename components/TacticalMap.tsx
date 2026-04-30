@@ -180,6 +180,18 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   useEffect(() => { sceneRef.current = scene }, [scene])
 
   // Load scenes
+  // Tracks the last scene whose saved cellPx / imgScale we applied to
+  // local UI state. cellPx and imgScale are LIVE local controls — the
+  // popout's Cell-px stepper and the zoom slider write them via the
+  // broadcast channel without persisting to the DB on every tick.
+  // Without this guard, a `tactical_scenes` realtime UPDATE (e.g. from
+  // a +Col click on the popout writing grid_cols) re-runs loadScenes
+  // and clobbers the user's in-flight local cellPx / imgScale by
+  // snapping them back to the DB row. Result: the map appears to
+  // "enlarge" or "shrink" whenever you nudge cols/rows. Only sync from
+  // DB when the active scene ID actually changes.
+  const lastSyncedSceneIdRef = useRef<string | null>(null)
+
   async function loadScenes() {
     const { data } = await supabase.from('tactical_scenes').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: false })
     setScenes(data ?? [])
@@ -187,19 +199,25 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (active) {
       setScene(active)
       loadTokens(active.id)
-      // Apply saved visual settings
-      if (active.cell_px) setCellPx(active.cell_px)
-      if (active.img_scale) setImgScale(active.img_scale)
-      setMapLocked(active.is_locked ?? false)
+      // Apply saved visual settings ONLY on first load or scene switch.
+      if (lastSyncedSceneIdRef.current !== active.id) {
+        if (active.cell_px) setCellPx(active.cell_px)
+        if (active.img_scale) setImgScale(active.img_scale)
+        setMapLocked(active.is_locked ?? false)
+        lastSyncedSceneIdRef.current = active.id
+      }
     } else if (data && data.length > 0 && isGM) {
       // No active scene — auto-activate the most recent one
       const first = data[0]
       await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', first.id)
       setScene(first)
       loadTokens(first.id)
-      if (first.cell_px) setCellPx(first.cell_px)
-      if (first.img_scale) setImgScale(first.img_scale)
-      setMapLocked(first.is_locked ?? false)
+      if (lastSyncedSceneIdRef.current !== first.id) {
+        if (first.cell_px) setCellPx(first.cell_px)
+        if (first.img_scale) setImgScale(first.img_scale)
+        setMapLocked(first.is_locked ?? false)
+        lastSyncedSceneIdRef.current = first.id
+      }
     } else if ((!data || data.length === 0) && isGM) {
       // No scenes at all — open Create Scene modal
       setShowSetup(true)
