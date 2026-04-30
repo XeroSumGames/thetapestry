@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
+import { isMissingSchema, missingSchemaMessage } from '../../../lib/supabase-errors'
 
 // /campfire/war-stories — post memorable session moments, legendary rolls,
 // character beats. Cross-campaign feed: anyone signed in can read; authors
@@ -55,6 +56,12 @@ export default function WarStoriesPage() {
   const [newFiles, setNewFiles] = useState<File[]>([])
   const [existingAttachments, setExistingAttachments] = useState<Attachment[]>([])
   const [saving, setSaving] = useState(false)
+  // True when the war_stories table or one of its columns is absent
+  // from the schema cache — i.e. the GM hasn't applied the
+  // sql/war-stories.sql migration on this database yet. Detected on
+  // the first SELECT in loadStories(); locks the composer with a
+  // friendly banner instead of letting users hit a raw error on save.
+  const [tableMissing, setTableMissing] = useState(false)
 
   useEffect(() => {
     async function init() {
@@ -83,10 +90,18 @@ export default function WarStoriesPage() {
 
   async function loadStories() {
     setLoading(true)
-    const { data: rows } = await supabase
+    const { data: rows, error: readErr } = await supabase
       .from('war_stories')
       .select('*')
       .order('updated_at', { ascending: false })
+    // Migration not applied yet — set the flag, render the banner,
+    // skip the rest of the load. Don't blow up the page.
+    if (isMissingSchema(readErr)) {
+      setTableMissing(true)
+      setStories([])
+      setLoading(false)
+      return
+    }
     const list = (rows ?? []) as Story[]
     if (list.length === 0) { setStories([]); setLoading(false); return }
 
@@ -141,13 +156,31 @@ export default function WarStoriesPage() {
     let storyId: string
     if (editingId) {
       const { error } = await supabase.from('war_stories').update(payload).eq('id', editingId)
-      if (error) { alert('Error: ' + error.message); setSaving(false); return }
+      if (error) {
+        if (isMissingSchema(error)) {
+          setTableMissing(true)
+          alert(missingSchemaMessage('War Stories', 'sql/war-stories.sql'))
+        } else {
+          alert('Error: ' + error.message)
+        }
+        setSaving(false)
+        return
+      }
       storyId = editingId
     } else {
       const { data, error } = await supabase.from('war_stories')
         .insert({ ...payload, author_user_id: myId, attachments: [] })
         .select('id').single()
-      if (error || !data) { alert('Error: ' + (error?.message ?? 'unknown')); setSaving(false); return }
+      if (error || !data) {
+        if (isMissingSchema(error)) {
+          setTableMissing(true)
+          alert(missingSchemaMessage('War Stories', 'sql/war-stories.sql'))
+        } else {
+          alert('Error: ' + (error?.message ?? 'unknown'))
+        }
+        setSaving(false)
+        return
+      }
       storyId = data.id
     }
 
@@ -233,12 +266,26 @@ export default function WarStoriesPage() {
           </div>
         </div>
         {!composing && (
-          <button onClick={startCompose}
-            style={{ padding: '9px 16px', background: '#3a2516', border: '1px solid #b87333', borderRadius: '3px', color: '#b87333', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          <button onClick={startCompose} disabled={tableMissing}
+            title={tableMissing ? 'War Stories migration not applied yet — see banner below.' : undefined}
+            style={{ padding: '9px 16px', background: '#3a2516', border: '1px solid #b87333', borderRadius: '3px', color: '#b87333', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: tableMissing ? 'not-allowed' : 'pointer', opacity: tableMissing ? 0.4 : 1 }}>
             + New Story
           </button>
         )}
       </div>
+
+      {/* Migration-not-applied banner — friendly fallback when the
+          war_stories table is missing from the schema cache. The
+          composer + post button are disabled until a Thriver applies
+          the migration; existing readers don't see this. */}
+      {tableMissing && (
+        <div style={{ background: '#2a2010', border: '1px solid #5a4a1b', borderLeft: '3px solid #EF9F27', borderRadius: '4px', padding: '12px 16px', marginBottom: '1.25rem', color: '#EF9F27', fontSize: '14px', lineHeight: 1.5 }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '4px' }}>Feature not yet enabled</div>
+          <div style={{ color: '#d4cfc9' }}>
+            War Stories isn&apos;t live on this database yet — a Thriver needs to apply <code style={{ background: '#0f0f0f', padding: '1px 6px', borderRadius: '2px', color: '#EF9F27' }}>sql/war-stories.sql</code> (and <code style={{ background: '#0f0f0f', padding: '1px 6px', borderRadius: '2px', color: '#EF9F27' }}>sql/war-stories-attachments.sql</code> for image uploads) in Supabase. Once that&apos;s done, refresh and post away.
+          </div>
+        </div>
+      )}
 
       {/* Composer */}
       {composing && (
