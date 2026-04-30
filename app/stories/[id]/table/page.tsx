@@ -38,6 +38,8 @@ import { restoreCampaignSnapshot, type CampaignSnapshot } from '../../../../lib/
 import { useStableCallback } from '../../../../lib/useStableCallback'
 import { appendProgressionEntry } from '../../../../lib/progression-log'
 import ApprenticeCreationWizard from '../../../../components/ApprenticeCreationWizard'
+import { generateRandomNpc } from '../../../../lib/npc-generator'
+import { triangleBreakdown } from '../../../../lib/populate-triangle'
 import { getWeaponByName, getTraitValue, CONDITION_CMOD } from '../../../../lib/weapons'
 import { getOutcome, outcomeColor, compactRollSummary, formatTime } from '../../../../lib/roll-helpers'
 import { getRangeBand as getRangeBandFromFeet, getWeaponRangeCMod, canHitAtRange } from '../../../../lib/range-profiles'
@@ -385,6 +387,12 @@ export default function TablePage() {
   const [lootItems, setLootItems] = useState<{ name: string; qty: number; notes: string }[]>([])
   const [lootRecipients, setLootRecipients] = useState<Set<string>>(new Set())
   const [showCdpModal, setShowCdpModal] = useState(false)
+  // GM Tools → Populate. Bulk-generate NPCs distributed across the
+  // 1A:2F:3G:4B "triangle" per spec on 2026-04-30. populateBusy
+  // gates the button while the bulk insert runs.
+  const [showPopulateModal, setShowPopulateModal] = useState(false)
+  const [populateCount, setPopulateCount] = useState(5)
+  const [populateBusy, setPopulateBusy] = useState(false)
   const [cdpAmount, setCdpAmount] = useState(1)
   const [cdpRecipients, setCdpRecipients] = useState<Set<string>>(new Set())
   const [presenceCount, setPresenceCount] = useState(0)
@@ -5415,6 +5423,10 @@ export default function TablePage() {
               onClick: () => { setCdpAmount(1); setCdpRecipients(new Set(entries.map(e => e.stateId))); setShowCdpModal(true) },
             },
             {
+              label: 'Populate',
+              onClick: () => { setPopulateCount(5); setShowPopulateModal(true) },
+            },
+            {
               label: 'GM Screen',
               onClick: () => openPopout('/gm-screen', 'gm-screen', { w: 900, h: 700 }),
             },
@@ -7693,6 +7705,119 @@ export default function TablePage() {
           </div>
         </div>
       )}
+
+      {/* Populate Modal — bulk-generate NPCs distributed across the
+          triangle ratio (1 Antagonist : 2 Foes : 3 Goons : 4 Bystanders
+          per 10). Shows the count input + the live breakdown so the
+          GM knows exactly what they'll get before clicking Generate. */}
+      {showPopulateModal && (() => {
+        const breakdown = triangleBreakdown(populateCount)
+        return (
+          <div onClick={() => !populateBusy && setShowPopulateModal(false)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div onClick={e => e.stopPropagation()}
+              style={{ background: '#1a1a1a', border: '1px solid #5a4a1b', borderRadius: '4px', padding: '1.5rem', width: '420px', maxWidth: '100%' }}>
+              <div style={{ fontSize: '13px', color: '#EF9F27', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Populate</div>
+              <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>How many NPCs?</div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '14px', lineHeight: 1.5 }}>
+                Bulk-generates a mix of Antagonists, Foes, Goons, and Bystanders. Smaller groups skip the higher tiers — only 10+ generates an Antagonist.
+              </div>
+
+              {/* Count stepper */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+                <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', minWidth: '60px' }}>Count</span>
+                <button onClick={() => setPopulateCount(Math.max(1, populateCount - 1))} disabled={populateBusy}
+                  style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: populateBusy ? 'not-allowed' : 'pointer' }}>−</button>
+                <input type="number" min={1} max={50} value={populateCount}
+                  onChange={e => setPopulateCount(Math.max(1, Math.min(50, parseInt(e.target.value, 10) || 1)))}
+                  disabled={populateBusy}
+                  style={{ width: '60px', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', fontWeight: 700 }} />
+                <button onClick={() => setPopulateCount(Math.min(50, populateCount + 1))} disabled={populateBusy}
+                  style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', cursor: populateBusy ? 'not-allowed' : 'pointer' }}>+</button>
+                <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginLeft: 'auto' }}>max 50</span>
+              </div>
+
+              {/* Live breakdown */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '16px', padding: '10px 12px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Breakdown</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif' }}>
+                  <span>Antagonists</span><span style={{ fontWeight: 700, color: breakdown.antagonists > 0 ? '#d48bd4' : '#3a3a3a' }}>{breakdown.antagonists}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif' }}>
+                  <span>Foes</span><span style={{ fontWeight: 700, color: breakdown.foes > 0 ? '#f5a89a' : '#3a3a3a' }}>{breakdown.foes}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif' }}>
+                  <span>Goons</span><span style={{ fontWeight: 700, color: breakdown.goons > 0 ? '#EF9F27' : '#3a3a3a' }}>{breakdown.goons}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#7fc458', fontFamily: 'Carlito, sans-serif' }}>
+                  <span>Bystanders</span><span style={{ fontWeight: 700, color: breakdown.bystanders > 0 ? '#7fc458' : '#3a3a3a' }}>{breakdown.bystanders}</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={() => setShowPopulateModal(false)} disabled={populateBusy}
+                  style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: populateBusy ? 'not-allowed' : 'pointer' }}>
+                  Cancel
+                </button>
+                <button onClick={async () => {
+                  // Build the tier list in insertion order — Bystanders
+                  // first so they sort to the bottom of the roster after
+                  // Antagonists (sort_order ascending = top → Antag).
+                  setPopulateBusy(true)
+                  const tiers: string[] = []
+                  for (let i = 0; i < breakdown.antagonists; i++) tiers.push('antagonist')
+                  for (let i = 0; i < breakdown.foes; i++) tiers.push('foe')
+                  for (let i = 0; i < breakdown.goons; i++) tiers.push('goon')
+                  for (let i = 0; i < breakdown.bystanders; i++) tiers.push('bystander')
+                  // Find the current max sort_order so new NPCs append.
+                  const { data: maxRow } = await supabase
+                    .from('campaign_npcs')
+                    .select('sort_order')
+                    .eq('campaign_id', id)
+                    .order('sort_order', { ascending: false, nullsFirst: false })
+                    .limit(1).maybeSingle()
+                  const startSort = ((maxRow as any)?.sort_order ?? 0) + 1
+                  const rows = tiers.map((tier, i) => {
+                    const npc = generateRandomNpc(tier)
+                    return {
+                      campaign_id: id,
+                      name: npc.name,
+                      npc_type: npc.npc_type,
+                      reason: npc.reason,
+                      acumen: npc.acumen,
+                      physicality: npc.physicality,
+                      influence: npc.influence,
+                      dexterity: npc.dexterity,
+                      wp_max: 10 + npc.physicality + npc.dexterity,
+                      wp_current: 10 + npc.physicality + npc.dexterity,
+                      rp_max: 6 + npc.physicality,
+                      rp_current: 6 + npc.physicality,
+                      status: 'active',
+                      skills: { entries: npc.skillEntries, weapon: npc.weapon ?? null },
+                      notes: `${npc.notes}\n\nMotivation: ${npc.motivation}\nComplication: ${npc.complication}\nWords: ${npc.words.join(', ')}`,
+                      sort_order: startSort + i,
+                      folder: null,
+                      hidden_from_players: true,
+                    }
+                  })
+                  const { error: insErr } = await supabase.from('campaign_npcs').insert(rows)
+                  setPopulateBusy(false)
+                  if (insErr) {
+                    alert(`Populate failed: ${insErr.message}`)
+                    return
+                  }
+                  setShowPopulateModal(false)
+                  // Switch to the NPCs tab so the GM can see what just landed.
+                  setGmTab('npcs')
+                }} disabled={populateBusy}
+                  style={{ flex: 2, padding: '10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: populateBusy ? 'wait' : 'pointer', opacity: populateBusy ? 0.6 : 1, fontWeight: 700 }}>
+                  {populateBusy ? 'Generating…' : `Generate ${populateCount} NPC${populateCount !== 1 ? 's' : ''}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* CDP Award Modal */}
       {showCdpModal && (
