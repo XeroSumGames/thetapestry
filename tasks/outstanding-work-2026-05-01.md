@@ -93,9 +93,9 @@ Ready to pick up; each is self-contained.
 
 ### From 2026-04-30 close-out (Inventory followups)
 - [ ] **Apprentice CDP transfer** — master PC's earned CDP can flow to Apprentice.
-- [ ] **PC ↔ Vehicle item transfer.**
+- [x] **PC ↔ Vehicle item transfer.** ✅ Shipped 2026-05-01. InventoryPanel give modal now has a 🚗 vehicle group; clicking stashes the item into `campaigns.vehicles[N].cargo` with stack-merge by (name, custom).
 - [ ] **Withdrawal-to-PC on community stockpile** — today GM removes + manually adds.
-- [ ] **Realtime sub on `community_stockpile_items`.**
+- [x] **Realtime sub on `community_stockpile_items`.** ✅ Shipped 2026-05-01. CampaignCommunity subscribes to `postgres_changes` filtered to loaded community ids; deposits/withdrawals fan to all open viewers without manual reload.
 - [ ] **Multi-round haggling** (Barter currently single-roll).
 - [ ] **Barter Lv4 cheat-doubling** (locked behind Lv4 Trait list).
 - [ ] **Auto-relationship-penalty on Dire/Low Insight Barter outcome.**

@@ -6765,6 +6765,29 @@ export default function TablePage() {
                     if (error) { alert(`Deposit failed: ${error.message}`); return }
                   }
                 }}
+                otherVehicles={vehicles.map(v => ({ id: v.id, name: v.name ?? 'Vehicle' }))}
+                onGiveItemToVehicle={async (item: InventoryItem, targetVehicleId: string, qty: number) => {
+                  // Stash in campaigns.vehicles[N].cargo. Stack-merge
+                  // by (name, custom) to mirror the existing
+                  // community-stockpile pattern: if the cargo array
+                  // already has the same item, bump qty; else push a
+                  // new row. Whole vehicles[] is then written back to
+                  // the campaigns.vehicles jsonb in one update.
+                  const targetIdx = vehicles.findIndex(v => v.id === targetVehicleId)
+                  if (targetIdx < 0) { alert('Vehicle not found.'); return }
+                  const target = vehicles[targetIdx]
+                  const cargo = Array.isArray(target.cargo) ? [...target.cargo] : []
+                  const existingIdx = cargo.findIndex(c => c.name === item.name && (c.custom ?? false) === (item.custom ?? false))
+                  if (existingIdx >= 0) {
+                    cargo[existingIdx] = { ...cargo[existingIdx], qty: (cargo[existingIdx].qty ?? 0) + qty }
+                  } else {
+                    cargo.push({ name: item.name, enc: item.enc, rarity: item.rarity, notes: item.notes, qty, custom: !!item.custom })
+                  }
+                  const newVehicles = vehicles.map((v, i) => i === targetIdx ? { ...v, cargo } : v)
+                  setVehicles(newVehicles)
+                  const { error } = await supabase.from('campaigns').update({ vehicles: newVehicles }).eq('id', id)
+                  if (error) { alert(`Stash failed: ${error.message}`); return }
+                }}
                 onInventoryChange={(newInventory: InventoryItem[]) => {
                   // Patch our entries state so the new inventory persists when
                   // the character sheet closes and reopens without a loadEntries.

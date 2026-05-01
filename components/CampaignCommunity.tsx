@@ -425,6 +425,36 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, initialMode, initialModeToken, initialOpenId])
 
+  // Phase 4F (inventory followup, 2026-05-01) — realtime sub on
+  // community_stockpile_items. When player A deposits an item via
+  // the InventoryPanel give modal, player B's open community panel
+  // sees the row appear without a manual reload. Filter by
+  // community_id IN (loaded set) to avoid background traffic for
+  // panels that haven't been expanded yet.
+  useEffect(() => {
+    if (communities.length === 0) return
+    const ids = communities.map(c => c.id)
+    const channel = supabase.channel(`stockpile-${campaignId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'community_stockpile_items',
+        filter: `community_id=in.(${ids.join(',')})`,
+      }, (payload: any) => {
+        const cid = (payload.new?.community_id ?? payload.old?.community_id) as string | undefined
+        if (!cid) return
+        // Only refresh if this community's panel has been opened.
+        // Otherwise the lazy-load on next expand will pick up the
+        // current state.
+        if (stockpileLoadedFor.has(cid)) {
+          void loadStockpile(cid, true)
+        }
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [communities, stockpileLoadedFor])
+
   // Stockpile lazy-load. Pulls community_stockpile_items for one
   // community on first expand of its panel. Subsequent reloads are
   // explicit via loadStockpile(communityId, true).

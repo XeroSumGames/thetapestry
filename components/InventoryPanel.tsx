@@ -58,6 +58,11 @@ interface Props {
   // item into community_stockpile_items.
   otherCommunities?: { id: string; name: string }[]
   onGiveToCommunity?: (item: InventoryItem, targetCommunityId: string, qty: number) => void
+  // Optional vehicle recipients (cargo loadouts). Each entry is a
+  // vehicle the giver can stash in. Routed to onGiveToVehicle which
+  // updates campaigns.vehicles[i].cargo at the parent.
+  otherVehicles?: { id: string; name: string }[]
+  onGiveToVehicle?: (item: InventoryItem, targetVehicleId: string, qty: number) => void
 }
 
 const RARITY_COLORS: Record<string, { color: string; bg: string; border: string }> = {
@@ -66,7 +71,7 @@ const RARITY_COLORS: Record<string, { color: string; bg: string; border: string 
   Rare: { color: '#EF9F27', bg: '#2a2010', border: '#5a4a1b' },
 }
 
-export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSecondaryName, phyMod, canEdit, onUpdate, onClose, otherCharacters, onGiveTo, otherNpcs, onGiveToNpc, otherCommunities, onGiveToCommunity }: Props) {
+export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSecondaryName, phyMod, canEdit, onUpdate, onClose, otherCharacters, onGiveTo, otherNpcs, onGiveToNpc, otherCommunities, onGiveToCommunity, otherVehicles, onGiveToVehicle }: Props) {
   const [search, setSearch] = useState('')
   const [showCatalog, setShowCatalog] = useState(false)
   const [showCustom, setShowCustom] = useState(false)
@@ -123,15 +128,17 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
     setGiveQty(isSingleUse ? 1 : item.qty)
   }
 
-  function confirmGive(target: { id: string; kind: 'pc' | 'npc' | 'community' }) {
+  function confirmGive(target: { id: string; kind: 'pc' | 'npc' | 'community' | 'vehicle' }) {
     if (!givingItem) return
     if (target.kind === 'pc' && !onGiveTo) return
     if (target.kind === 'npc' && !onGiveToNpc) return
     if (target.kind === 'community' && !onGiveToCommunity) return
+    if (target.kind === 'vehicle' && !onGiveToVehicle) return
     const qty = Math.max(1, Math.min(giveQty, givingItem.qty))
     if (target.kind === 'pc') onGiveTo!(givingItem, target.id, qty)
     else if (target.kind === 'npc') onGiveToNpc!(givingItem, target.id, qty)
-    else onGiveToCommunity!(givingItem, target.id, qty)
+    else if (target.kind === 'community') onGiveToCommunity!(givingItem, target.id, qty)
+    else onGiveToVehicle!(givingItem, target.id, qty)
     // Decrement sender by exactly the chosen qty (drop the row if all gone).
     const idx = inventory.findIndex(i => i === givingItem || (i.name === givingItem.name && i.custom === givingItem.custom))
     if (idx >= 0) {
@@ -254,6 +261,16 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
                   title="Deposit to community stockpile"
                   style={{ padding: '4px 8px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
                   🏘 {c.name}
+                </button>
+              ))}
+              {/* Vehicle cargo recipients — green trim. Stashes the
+                  item in the campaign vehicle's cargo loadout
+                  (campaigns.vehicles[N].cargo). */}
+              {onGiveToVehicle && (otherVehicles ?? []).map(v => (
+                <button key={`vehicle:${v.id}`} onClick={() => confirmGive({ id: v.id, kind: 'vehicle' })}
+                  title="Stash in vehicle cargo"
+                  style={{ padding: '4px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  🚗 {v.name}
                 </button>
               ))}
               <button onClick={() => setGivingItem(null)}

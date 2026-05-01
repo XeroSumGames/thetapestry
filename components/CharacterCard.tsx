@@ -115,6 +115,11 @@ interface Props {
   // depositing items into the shared community stockpile.
   otherCommunities?: { id: string; name: string }[]
   onGiveItemToCommunity?: (item: InventoryItem, targetCommunityId: string, qty: number) => void
+  // Phase 4F (Inventory followup) — vehicle cargo recipients. Lets the
+  // PC stash items in any campaign vehicle. Parent updates
+  // campaigns.vehicles[N].cargo.
+  otherVehicles?: { id: string; name: string }[]
+  onGiveItemToVehicle?: (item: InventoryItem, targetVehicleId: string, qty: number) => void
   onInventoryChange?: (newInventory: InventoryItem[]) => void
   onWeaponChange?: (slot: 'weaponPrimary' | 'weaponSecondary', newWeapon: any) => void
 }
@@ -141,6 +146,8 @@ function CharacterCardImpl({
   onGiveItemToNpc,
   otherCommunities,
   onGiveItemToCommunity,
+  otherVehicles,
+  onGiveItemToVehicle,
   onInventoryChange,
   onWeaponChange,
 }: Props) {
@@ -887,6 +894,8 @@ function CharacterCardImpl({
           onGiveToNpc={onGiveItemToNpc}
           otherCommunities={otherCommunities}
           onGiveToCommunity={onGiveItemToCommunity}
+          otherVehicles={otherVehicles}
+          onGiveToVehicle={onGiveItemToVehicle}
         />
       )}
 
