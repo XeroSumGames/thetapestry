@@ -94,9 +94,15 @@ textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
 }
 
 @media print {
+  /* @page margin: 0 starves the browser of room for its auto-generated
+     header (date + page title) and footer (URL + page number). The
+     print sheet itself supplies the visual margin via #print-sheet-inner
+     padding so it still reads with breathing room. Users may also have
+     to uncheck the print dialog's 'Headers and footers' option in some
+     browsers — this CSS minimises but doesn't 100% suppress. */
   @page {
     size: Letter portrait;
-    margin: 0.4in 0.4in 0.4in 0.4in;
+    margin: 0;
   }
   body * {
     visibility: hidden;
@@ -118,6 +124,12 @@ textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
     background: #fff !important;
     color: #000 !important;
     z-index: 99999 !important;
+  }
+  /* Internal margin-equivalent — replaces the @page margin we zeroed
+     out above. Keeps content from running into the paper edge. */
+  .print-sheet-active #print-sheet-inner {
+    padding: 0.4in !important;
+    box-sizing: border-box !important;
   }
 }
 

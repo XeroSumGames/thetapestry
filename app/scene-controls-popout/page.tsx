@@ -422,7 +422,7 @@ export default function SceneControlsPopoutPage() {
           <option value="#27ae60">Green</option>
         </select>
         <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: '4px' }}>
-          <input type="range" min="5" max="100" value={Math.round(gridOpacity * 100)} onChange={e => setGridOpacity(parseInt(e.target.value) / 100)}
+          <input type="range" min="5" max="100" value={Math.round(gridOpacity * 100)} onChange={e => setGridOpacity(parseInt(e.target.value, 10) / 100)}
             style={{ flex: 1, accentColor: '#c0392b', minWidth: 0 }} />
           <span style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', minWidth: '34px', textAlign: 'right' }}>{Math.round(gridOpacity * 100)}%</span>
         </div>

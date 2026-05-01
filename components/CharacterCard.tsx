@@ -156,6 +156,11 @@ function CharacterCardImpl({
   const [deleting, setDeleting] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [printing, setPrinting] = useState(false)
+  const [printLiveState, setPrintLiveState] = useState<{
+    relationships: { name: string; cmod: number }[]
+    wounds: string[]
+    progressionLog: { date: string; type: string; text: string }[]
+  } | null>(null)
   // Phase 4F (Modal Unification) — Stress Check, Breaking Point, and
   // Lasting Wound all migrated from bespoke inline JSX to the shared
   // <RollModal> shell. The state shape now mirrors the canonical
@@ -293,9 +298,44 @@ function CharacterCardImpl({
     router.refresh()
   }
 
-  function handlePrint() {
+  async function handlePrint() {
+    // Gather live data so the print sheet reflects current relationships,
+    // lasting wounds, and tracker pip counts. Wizard print paths
+    // (characters/new, /quick, /[id]/edit) skip this and stay blank-form.
+    let relationships: { name: string; cmod: number }[] = []
+    try {
+      const { data: rels } = await supabase
+        .from('npc_relationships')
+        .select('relationship_cmod, npc:campaign_npcs!inner(name)')
+        .eq('character_id', c.id)
+        .order('relationship_cmod', { ascending: false })
+      relationships = (rels ?? []).map((r: any) => ({
+        name: r.npc?.name ?? '?',
+        cmod: r.relationship_cmod ?? 0,
+      }))
+    } catch (err) {
+      console.warn('[print] relationships fetch failed:', err)
+    }
+    // Wounds live in characters.data.progression_log entries with type='wound'.
+    // The full log itself ships through too — printed at the bottom so a
+    // player who prints months later still has the journey-marker record.
+    const log: Array<{ date: string; type: string; text: string }> = Array.isArray((c.data as any)?.progression_log)
+      ? (c.data as any).progression_log
+      : []
+    const wounds = log
+      .filter(e => e.type === 'wound')
+      .map(e => e.text.replace(/^🩸 Lasting Wound:\s*/, '').replace(/\.$/, ''))
+    setPrintLiveState({
+      relationships,
+      wounds,
+      progressionLog: log,
+    })
     setPrinting(true)
-    setTimeout(() => { window.print(); setPrinting(false) }, 100)
+    setTimeout(() => {
+      window.print()
+      setPrinting(false)
+      setPrintLiveState(null)
+    }, 100)
   }
 
   // Optimistic update: update local state immediately, fire Supabase in background
@@ -837,7 +877,7 @@ function CharacterCardImpl({
                 if (!localState) return
                 const type = prompt('Environmental Damage Type:\n1 = Falling (3 WP+RP per 10ft)\n2 = Drowning (3 WP + 3 RP)\n3 = Subsistence (1 RP/day)')
                 if (type === '1') {
-                  const ft = parseInt(prompt('How many feet fallen?') ?? '0')
+                  const ft = parseInt(prompt('How many feet fallen?') ?? '0', 10)
                   const dmg = Math.floor(ft / 10) * 3
                   if (dmg > 0) {
                     onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - dmg))
@@ -907,17 +947,17 @@ function CharacterCardImpl({
             <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Hours</div>
-                <input type="number" min={0} value={restHours} onChange={e => setRestHours(parseInt(e.target.value) || 0)}
+                <input type="number" min={0} value={restHours} onChange={e => setRestHours(parseInt(e.target.value, 10) || 0)}
                   style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Days</div>
-                <input type="number" min={0} value={restDays} onChange={e => setRestDays(parseInt(e.target.value) || 0)}
+                <input type="number" min={0} value={restDays} onChange={e => setRestDays(parseInt(e.target.value, 10) || 0)}
                   style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Weeks</div>
-                <input type="number" min={0} value={restWeeks} onChange={e => setRestWeeks(parseInt(e.target.value) || 0)}
+                <input type="number" min={0} value={restWeeks} onChange={e => setRestWeeks(parseInt(e.target.value, 10) || 0)}
                   style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
               </div>
             </div>
@@ -959,7 +999,7 @@ function CharacterCardImpl({
       {/* Hidden print sheet */}
       {printing && (
         <div className="print-sheet-container print-sheet-active">
-          <PrintSheet state={toWizardState(c.data)} />
+          <PrintSheet state={toWizardState(c.data)} liveState={printLiveState ?? undefined} />
         </div>
       )}
 

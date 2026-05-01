@@ -5,6 +5,7 @@ import { getCachedAuth } from '../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 import { trackGhostConversion } from '../../lib/events'
 import dynamic from 'next/dynamic'
+import WelcomeModal from '../../components/WelcomeModal'
 
 const MapView = dynamic(() => import('../../components/MapView'), { ssr: false })
 
@@ -29,6 +30,7 @@ export default function DashboardPage() {
   const [pendingPins, setPendingPins] = useState<Pin[]>([])
   const [acting, setActing] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [showWelcome, setShowWelcome] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -39,11 +41,12 @@ export default function DashboardPage() {
       trackGhostConversion()
       const { data: profile } = await supabase.from('profiles').select('username, role, onboarded').eq('id', user.id).single()
        if (profile) {
-        // DISABLED per playtest #12 — the forced `/welcome` redirect was
-        // trapping new users (they couldn't navigate away). Leave the
-        // dashboard accessible for everyone while /welcome is redesigned.
-        // Restore this line once the new welcome flow is ready:
-        //   if (!profile.onboarded) { router.push('/welcome'); return }
+        // First-visit welcome — replaces the trap-the-user `/welcome`
+        // redirect that was disabled in playtest #12. Now it's a
+        // dismissible modal on the dashboard; any dismiss flips
+        // onboarded=true so it doesn't reappear. /firsttimers stays
+        // available as a re-readable reference page.
+        if (!profile.onboarded) setShowWelcome(true)
         setUsername(profile.username)
         setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
         if (profile.role === 'thriver') {
@@ -97,6 +100,9 @@ export default function DashboardPage() {
         <MapView embedded showSidebar />
       </div>
 
+      {showWelcome && (
+        <WelcomeModal username={username} onClose={() => setShowWelcome(false)} />
+      )}
 
     </div>
   )

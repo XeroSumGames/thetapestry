@@ -45,6 +45,7 @@ The left sidebar is your main navigation. It contains:
     Welcome to the Tapestry — introductory page
     The World — the interactive world map
     My Stories — your campaigns (GM and player)
+    Rules — the XSE SRD v1.1 reference (public, no login required)
 
   SURVIVORS
     Creating a Survivor — tutorial page
@@ -245,7 +246,7 @@ RIGHT PANEL — GM TABS
 The GM sees four tabs:
   NPCs — the NPC roster (create, edit, manage NPCs)
   Assets — campaign pins with drag-to-reorder
-  GM Notes — private notes, auto-saved
+  GM Notes — private notes, drag-to-reorder, auto-saved
   Player Notes (for players) — submit notes to the GM
 
 Players see:

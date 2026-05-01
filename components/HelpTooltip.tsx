@@ -112,7 +112,7 @@ export default function HelpTooltip({ text, title, icon, iconStyle, anchorRight 
             lineHeight: 1.5,
             textAlign: 'left',
             cursor: 'default',
-            whiteSpace: 'normal',
+            whiteSpace: 'pre-line',
           }}
           // Stop propagation so the click handler on the button
           // doesn't toggle the popover when the user is reading it.

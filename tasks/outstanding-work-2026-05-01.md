@@ -92,9 +92,9 @@ Ready to pick up; each is self-contained.
 - [ ] **Streamline logging into missions.** `/login` → `/stories` → click campaign → "Join Session" → `/stories/[id]/table` is too many steps. Possible: deep-link straight to active session, auto-redirect from `/stories/[id]` to `/table` when GM has a session active, "Resume last session" tile on `/stories`. Discuss before shipping.
 
 ### From 2026-04-30 close-out (Inventory followups)
-- [ ] **Apprentice CDP transfer** — master PC's earned CDP can flow to Apprentice.
+- [x] **Apprentice CDP transfer** — ✅ Already shipped (audit 2026-05-01). The CDP Calculator's apprentice toggle deducts from the master PC's `character_states.cdp` directly per CRB §08 p.21 — no separate transfer ceremony needed.
 - [x] **PC ↔ Vehicle item transfer.** ✅ Shipped 2026-05-01. InventoryPanel give modal now has a 🚗 vehicle group; clicking stashes the item into `campaigns.vehicles[N].cargo` with stack-merge by (name, custom).
-- [ ] **Withdrawal-to-PC on community stockpile** — today GM removes + manually adds.
+- [x] **Withdrawal-to-PC on community stockpile.** ✅ Shipped 2026-05-01. New "Take" button on each stockpile row reads viewing PC's `data.inventory`, stack-merges by (name, custom), writes back, then decrements the stockpile via the existing remove path. Hidden when no PC is bound to the viewer.
 - [x] **Realtime sub on `community_stockpile_items`.** ✅ Shipped 2026-05-01. CampaignCommunity subscribes to `postgres_changes` filtered to loaded community ids; deposits/withdrawals fan to all open viewers without manual reload.
 - [ ] **Multi-round haggling** (Barter currently single-roll).
 - [ ] **Barter Lv4 cheat-doubling** (locked behind Lv4 Trait list).
@@ -106,7 +106,7 @@ Ready to pick up; each is self-contained.
 - [ ] **Re-seed an existing campaign with a setting's content** — currently seeding fires once at campaign creation. Build a Thriver/GM tool (`/tools/reseed-campaign?id=…`) that re-runs `SETTING_PINS` / `SETTING_NPCS` / `SETTING_SCENES` / `SETTING_HANDOUTS` against an existing campaign id with name-collision skipping (idempotent). Workaround today is "create a new campaign" or hand-write SQL.
 
 ### From 2026-04-29 (combat correctness + perf)
-- [ ] **Insight Die spend tracked on roll_log.** Add an `insight_used text` column (NULL / '3d6' / '+3cmod'), populate from `executeRoll` (and reroll path), surface in the extended-log card. Migration is non-destructive (NULL default), code path needs to thread `insightUsed` arg through `saveRollToLog`. Today only ~83% of 3d6 rolls are detectable from die2 packing; +3 CMod is indistinguishable from organic CMod.
+- [x] **Insight Die spend tracked on roll_log.** ✅ Already shipped (audit 2026-05-01). Schema: `sql/roll-log-insight-used.sql` adds `insight_used text` with CHECK ('3d6' / '+3cmod' / NULL). `saveRollToLog` accepts the field and writes it; RollsFeed reads it for the "Insight Die spent" banner with a dice-inference fallback for legacy rows.
 - [x] **GM Tools → Restore to Full Health is slow.** ✅ Already shipped (audit 2026-05-01). Handler at `app/stories/[id]/table/page.tsx:8472` already uses `Promise.all([...npcUpdates, ...pcUpdates, ...objUpdates])` — 11 sequential awaits collapsed to one parallel wave, three tables run concurrently. Comment in the code documents the pre-optimization timing.
 
 ### Other small items

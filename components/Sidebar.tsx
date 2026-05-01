@@ -18,7 +18,9 @@ import MessagesBell from './MessagesBell'
 //     My Survivors
 //     My Stories
 //     My Communities
-//     The Campfire — soon
+//     The Campfire
+//     Rumors
+//     The Rules
 //   ——— divider ———
 //   Survivors (header)
 //     Creating a Survivor
@@ -33,12 +35,6 @@ import MessagesBell from './MessagesBell'
 //     Rescale Tactical Scenes
 //     Logs
 //     Copy Map Position
-//   ——— soft-gap ———
-//   (soon items, no header)
-//     Rules — soon
-//     Equipment — soon
-//     Forums — soon
-//     Looking for Group — soon
 //   [Create Account / Sign In] or [Log Out]
 //   [Xero Sum Games tiny logo]
 
@@ -171,21 +167,11 @@ export default function Sidebar() {
       <Link href="/communities" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Communities</Link>
       <Link href="/campfire" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Campfire</Link>
       <Link href="/rumors"   style={linkStyle('#8b5cf6')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rumors</Link>
+      <Link href="/rules"    style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Rules</Link>
 
-      {/* Phase 4C — setting hubs. Two featured slugs per the locked
-          design (DZ + Kings Crossroads). Indented one level so they
-          read as children of the top-level destinations above without
-          adding a heavy section header. */}
-      <Link href="/settings/district_zero"
-        style={{ ...linkStyle('#7ab3d4'), paddingLeft: '28px' }}
-        onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
-        · District Zero
-      </Link>
-      <Link href="/settings/kings_crossroads_mall"
-        style={{ ...linkStyle('#EF9F27'), paddingLeft: '28px' }}
-        onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
-        · Kings Crossroads
-      </Link>
+      {/* Phase 4C — setting hubs (DZ + Kings Crossroads) moved into
+          /campfire 2026-05-01 per user spec; sidebar only shows the
+          top-level Tapestry destinations. */}
 
       {divider}
 
@@ -225,9 +211,8 @@ export default function Sidebar() {
 
       {/* (Removed 2026-05-01: Equipment "— soon" placeholder + the
           Forums + Looking for Group duplicates — those are still
-          reachable via /campfire's tab strip. Rules promoted to a real
-          link now that /rules ships the SRD reference.) */}
-      <Link href="/rules" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rules</Link>
+          reachable via /campfire's tab strip. The Rules promoted up
+          beside Rumors 2026-05-01.) */}
 
       {/* Spacer + bottom section */}
       <div style={{ flex: 1 }} />

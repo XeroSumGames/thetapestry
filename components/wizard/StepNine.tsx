@@ -4,7 +4,6 @@ import { WizardState, getCumulativeAttributes, getCumulativeSkills } from '../..
 import { ATTRIBUTE_LABELS, COMPLICATIONS, MOTIVATIONS, deriveSecondaryStats, AttributeName } from '../../lib/xse-schema'
 import { ALL_WEAPONS } from '../../lib/weapons'
 import { resizeImage } from '../../lib/image-utils'
-import PrintSheet from './PrintSheet'
 
 const ATTR_KEYS: AttributeName[] = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 const ATTR_FULL: Record<string, string> = {
@@ -277,10 +276,10 @@ export default function StepNine({ state, onChange }: Props) {
           placeholder="Any additional notes, GM hooks, or personality details..." />
       </div>
 
-      {/* Hidden print sheet — revealed only during print */}
-      <div className="print-sheet-container">
-        <PrintSheet state={state} />
-      </div>
+      {/* Print sheet container lives on the wizard route page, not
+          here, so we don't double-render two PrintSheets when Step 9
+          mounts. The parent's container is always print-sheet-active;
+          this child no longer needs one. */}
 
     </div>
   )

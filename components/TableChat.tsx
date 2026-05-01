@@ -259,13 +259,13 @@ export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whis
         alert(`Bad dice expression: "${diceCmd[1]}"\n\nFormat: /d NdM[+/-K] — e.g. /d 1d6, /d 3d20+3+2-1, /d 1d100-2`)
         return
       }
-      const count = Math.min(100, Math.max(1, parseInt(m[1])))
-      const sides = Math.min(1000, Math.max(2, parseInt(m[2])))
+      const count = Math.min(100, Math.max(1, parseInt(m[1], 10)))
+      const sides = Math.min(1000, Math.max(2, parseInt(m[2], 10)))
       let modifier = 0
       const modPart = m[3] ?? ''
       const modMatches = modPart.matchAll(/([+\-])(\d+)/g)
       for (const mm of modMatches) {
-        modifier += (mm[1] === '+' ? 1 : -1) * parseInt(mm[2])
+        modifier += (mm[1] === '+' ? 1 : -1) * parseInt(mm[2], 10)
       }
       const rolls: number[] = []
       for (let i = 0; i < count; i++) rolls.push(Math.floor(Math.random() * sides) + 1)

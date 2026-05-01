@@ -676,8 +676,8 @@ export default function VehiclePage() {
                 <button onClick={() => {
                   if (!addName.trim() || !vehicle) return
                   const trimmedName = addName.trim()
-                  const qty = Math.max(1, parseInt(addQty) || 1)
-                  const enc = Math.max(0, parseInt(addEnc) || 0)
+                  const qty = Math.max(1, parseInt(addQty, 10) || 1)
+                  const enc = Math.max(0, parseInt(addEnc, 10) || 0)
                   // Match the new shape — include enc/rarity/custom so
                   // future writes stay consistent. Catalog hit sets
                   // custom=false; otherwise treated as a custom item.
@@ -812,19 +812,19 @@ export default function VehiclePage() {
                 <div>
                   <div style={lbl}>AMOD</div>
                   <input type="number" value={check.amod}
-                    onChange={e => setCheck({ ...check, amod: parseInt(e.target.value) || 0 })}
+                    onChange={e => setCheck({ ...check, amod: parseInt(e.target.value, 10) || 0 })}
                     style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
                 </div>
                 <div>
                   <div style={lbl}>SMOD</div>
                   <input type="number" value={check.smod}
-                    onChange={e => setCheck({ ...check, smod: parseInt(e.target.value) || 0 })}
+                    onChange={e => setCheck({ ...check, smod: parseInt(e.target.value, 10) || 0 })}
                     style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
                 </div>
                 <div>
                   <div style={lbl}>CMOD</div>
                   <input type="number" value={check.cmod}
-                    onChange={e => setCheck({ ...check, cmod: parseInt(e.target.value) || 0 })}
+                    onChange={e => setCheck({ ...check, cmod: parseInt(e.target.value, 10) || 0 })}
                     style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
                 </div>
               </div>

@@ -508,6 +508,46 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }
   }
 
+  // Phase 4F (inventory followup, 2026-05-01) — withdraw a stockpile
+  // item TO the viewing PC's inventory. Two-step: read characters.data,
+  // stack-merge the item by (name, custom), write back; then call the
+  // existing removeStockpileItem to decrement the stockpile row by 1.
+  // GM-only is overkill — anyone with stockpile read access (campaign
+  // member) can withdraw, mirroring how the deposit flow doesn't gate
+  // on role. The ledger lives in roll_log via the existing log
+  // pipeline; future polish can add an explicit withdrawal log row.
+  async function withdrawStockpileItemToPc(rowId: string, communityId: string) {
+    if (!myCharacterId) {
+      alert('No PC selected — assign a character to this campaign before withdrawing from the stockpile.')
+      return
+    }
+    const row = (stockpileByCommunity[communityId] ?? []).find(r => r.id === rowId)
+    if (!row) return
+    // Read the PC's current inventory.
+    const { data: charRow, error: readErr } = await supabase
+      .from('characters')
+      .select('data')
+      .eq('id', myCharacterId)
+      .single()
+    if (readErr || !charRow) { alert(`Read failed: ${readErr?.message ?? 'unknown'}`); return }
+    const charData: any = charRow.data ?? {}
+    const inv: InventoryItem[] = Array.isArray(charData.inventory) ? [...charData.inventory] : []
+    const existingIdx = inv.findIndex(i => i.name === row.name && (i.custom ?? false) === (row.custom ?? false))
+    if (existingIdx >= 0) {
+      inv[existingIdx] = { ...inv[existingIdx], qty: (inv[existingIdx].qty ?? 0) + 1 }
+    } else {
+      inv.push({ name: row.name, enc: row.enc, rarity: row.rarity, notes: row.notes, qty: 1, custom: !!row.custom })
+    }
+    const { error: writeErr } = await supabase
+      .from('characters')
+      .update({ data: { ...charData, inventory: inv } })
+      .eq('id', myCharacterId)
+    if (writeErr) { alert(`Write failed: ${writeErr.message}`); return }
+    // Decrement the stockpile via the existing helper. This handles
+    // both the qty>1 update AND the qty=1 delete branches.
+    await removeStockpileItem(rowId, communityId)
+  }
+
   // Decrement a stockpile item's qty by 1 (or delete if it'd hit 0).
   async function removeStockpileItem(rowId: string, communityId: string) {
     const row = (stockpileByCommunity[communityId] ?? []).find(r => r.id === rowId)
@@ -2440,11 +2480,23 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                                 </span>
                               )}
                               {item.notes && <span style={{ color: '#5a5550', fontSize: '13px' }}>{item.notes}</span>}
-                              <button onClick={() => removeStockpileItem(item.id, c.id)}
-                                title={item.qty > 1 ? 'Decrement qty' : 'Remove item'}
-                                style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '13px', cursor: 'pointer', padding: '0 2px', flexShrink: 0 }}
-                                onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
-                                onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>×</button>
+                              <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                                {/* Take — withdraw 1 to viewing PC's inventory.
+                                    Hidden when no PC is bound to the viewer
+                                    (GM-only / unassigned campaign member). */}
+                                {myCharacterId && (
+                                  <button onClick={() => withdrawStockpileItemToPc(item.id, c.id)}
+                                    title="Take 1 — moves to your inventory"
+                                    style={{ background: 'transparent', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '13px', cursor: 'pointer', padding: '0 6px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                                    Take
+                                  </button>
+                                )}
+                                <button onClick={() => removeStockpileItem(item.id, c.id)}
+                                  title={item.qty > 1 ? 'Decrement qty (no take)' : 'Remove item'}
+                                  style={{ background: 'none', border: 'none', color: '#cce0f5', fontSize: '13px', cursor: 'pointer', padding: '0 2px' }}
+                                  onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
+                                  onMouseLeave={e => (e.currentTarget.style.color = '#cce0f5')}>×</button>
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -2472,8 +2524,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                             const catalogHit = EQUIPMENT.find(eq => eq.name.toLowerCase() === trimmedName.toLowerCase())
                             await addStockpileItem(c.id, {
                               name: trimmedName,
-                              qty: Math.max(1, parseInt(addStockQty) || 1),
-                              enc: Math.max(0, parseInt(addStockEnc) || 0),
+                              qty: Math.max(1, parseInt(addStockQty, 10) || 1),
+                              enc: Math.max(0, parseInt(addStockEnc, 10) || 0),
                               notes: addStockNotes.trim() || (catalogHit?.notes ?? ''),
                               custom: !catalogHit,
                               rarity: catalogHit?.rarity ?? 'Common',

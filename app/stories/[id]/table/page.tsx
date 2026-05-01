@@ -13,6 +13,7 @@ import VehicleCard, { Vehicle } from '../../../../components/VehicleCard'
 import RollModal, { type RollResult as SharedRollResult } from '../../../../components/RollModal'
 import NotificationBell from '../../../../components/NotificationBell'
 import MessagesBell from '../../../../components/MessagesBell'
+import HelpTooltip from '../../../../components/HelpTooltip'
 import InitiativeBar from '../../../../components/InitiativeBar'
 import { useChatPanel, ChatMessageRow, ChatMessageList, ChatComposer } from '../../../../components/TableChat'
 import { useRollsFeed, RollEntry as RollEntryCard } from '../../../../components/RollsFeed'
@@ -1436,6 +1437,19 @@ export default function TablePage() {
           actions_remaining: 2,
         }
       })
+
+    // Auto-reveal hidden NPCs entering combat. Without this, players
+    // would see anonymous turn names appearing in initiative for NPCs
+    // they can't actually look up. The token-placement trigger in
+    // sql/campaign-npcs-hidden-from-players.sql handles tokens on the
+    // tactical map; this covers the initiative-roster path. Fire-and-
+    // forget — the table UPDATE doesn't block combat start.
+    const npcIdsToReveal = rosterNpcs
+      .filter(n => selectedNpcIds.has(n.id) && (n as any).hidden_from_players === true)
+      .map(n => n.id)
+    if (npcIdsToReveal.length > 0) {
+      void supabase.from('campaign_npcs').update({ hidden_from_players: false }).in('id', npcIdsToReveal)
+    }
 
     // Sort client-side to determine first active combatant (avoids a re-fetch)
     const allRows = [...pcRows, ...npcRows]
@@ -3772,7 +3786,7 @@ export default function TablePage() {
     const characterName = firstPartIsKnownName
       ? firstPart
       : (syncedSelectedEntry?.character.name ?? myEntry?.character.name ?? 'Unknown')
-    let cmodVal = parseInt(cmod) || 0
+    let cmodVal = parseInt(cmod, 10) || 0
     // Add range band CMod for weapon attacks
     if (pendingRoll.weapon) cmodVal += getRangeCMod()
     let die1: number, die2: number
@@ -7894,7 +7908,7 @@ export default function TablePage() {
                 const nameEl = document.getElementById('loot-item-name') as HTMLInputElement
                 const qtyEl = document.getElementById('loot-item-qty') as HTMLInputElement
                 if (!nameEl?.value.trim()) return
-                setLootItems(prev => [...prev, { name: nameEl.value.trim(), qty: parseInt(qtyEl?.value) || 1, notes: '' }])
+                setLootItems(prev => [...prev, { name: nameEl.value.trim(), qty: parseInt(qtyEl?.value, 10) || 1, notes: '' }])
                 nameEl.value = ''
                 qtyEl.value = '1'
                 nameEl.focus()
@@ -9698,7 +9712,15 @@ export default function TablePage() {
 
                   {/* Approach */}
                   <div style={{ marginBottom: '12px' }}>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Approach</div>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
+                      Approach
+                      <HelpTooltip
+                        title="Recruitment Approach"
+                        text={
+                          'Cohort — cooperative. The NPC joins for a shared interest, goal, or perceived benefit. Best with Persuasion, Inspiration, or Charm. Probationary through the next Morale Check; the outcome decides whether they stick around or drift off.\n\nConscript — coercive. The PC must have already established a credible threat (weapons drawn, leverage held, escape cut off) before the roll. Best with Intimidation or Bluff. Stays compliant only while the threat holds; the first Morale Check typically becomes an escape attempt.\n\nConvert — ideological. The NPC is brought in by shared belief, worldview, or cause. Best with Inspiration, Religion, or a relevant Ideology. Probationary through the first Morale Check; if they pass it, they become long-term committed.'
+                        }
+                      />
+                    </div>
                     <div style={{ display: 'flex', gap: '4px' }}>
                       {(['cohort', 'conscript', 'convert'] as RecruitApproach[]).map(ap => (
                         <button key={ap} onClick={() => { setRecruitApproach(ap); setRecruitSkill('') }}
@@ -9769,7 +9791,7 @@ export default function TablePage() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span>GM adjustment</span>
-                        <input type="number" value={recruitGmCmod} onChange={e => setRecruitGmCmod(parseInt(e.target.value) || 0)}
+                        <input type="number" value={recruitGmCmod} onChange={e => setRecruitGmCmod(parseInt(e.target.value, 10) || 0)}
                           style={{ width: '60px', padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'right' }} />
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #2e2e5a', marginTop: '4px', paddingTop: '4px', fontWeight: 700 }}>
@@ -10041,6 +10063,25 @@ export default function TablePage() {
             pcBarterSmod={pcBarter}
             target={target}
             onClose={() => setTradeTarget(null)}
+            onRelationshipDamage={async () => {
+              // PC rolled Dire Failure or Low Insight against an NPC.
+              // Decrement (PC, NPC) relationship_cmod by 1, floor at -3.
+              // Insert a row with cmod=-1 if no relationship exists yet.
+              const charId = myEntry.character.id
+              const npcId = target.id
+              const { data: existing } = await supabase
+                .from('npc_relationships')
+                .select('id, relationship_cmod')
+                .eq('character_id', charId).eq('npc_id', npcId).maybeSingle()
+              if (existing) {
+                const next = Math.max(-3, (existing.relationship_cmod ?? 0) - 1)
+                await supabase.from('npc_relationships').update({ relationship_cmod: next }).eq('id', existing.id)
+              } else {
+                await supabase.from('npc_relationships').insert({
+                  character_id: charId, npc_id: npcId, relationship_cmod: -1,
+                })
+              }
+            }}
             onApply={async ({ pcGives, pcGets, rollSummary, outcome }) => {
               // Apply the deal as a single batch:
               //   - Decrement PC inventory by pcGives, increment by pcGets

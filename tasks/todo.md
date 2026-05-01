@@ -1,5 +1,23 @@
 # Tapestry — To Do & Backlog
 
+## ✅ Shipped 2026-05-01 (XSE SRD web reference + GM Notes drag-to-reorder)
+
+**XSE SRD as a public web reference (`/rules/*`):**
+- Sidebar `Rules` promoted from "— soon" placeholder to a real link. Public-prefix gating (`PUBLIC_PREFIXES`) added to `LayoutShell.tsx` so guests can read the SRD without an account.
+- New `/rules` landing — 13-card section grid (§01–§08 + Appendices A–D). 11 stub pages render their anchor outline + a "forthcoming" notice; only `/rules/communities` ships full copy.
+- `/rules/communities` (Style A — one long page, 16 anchors) — full §08 copy reconciled against `tasks/rules-extract-communities.md`. 4 "Try it →" callouts deep-link to `/communities` and `/characters/new`.
+- `/rules/communities2` + 5 sub-pages (Style B — many short pages) — same SRD content split across `/recruitment`, `/apprentices`, `/morale`, `/structure`, `/crb-additions` for an A/B comparison test. Orange `StyleBanner` at the top of every comparison page flips to the other style anchor-aware. Loser of A/B gets deleted in one commit. ([components/rules/StyleBanner.tsx](../components/rules/StyleBanner.tsx))
+- `RulesNav` left rail — non-scrolling column; only `<main>` scrolls (sticky was unreliable inside LayoutShell's existing scroll context). IntersectionObserver pinned to `<main>` so the active-anchor highlight tracks correctly. Manual `scrollIntoView` on hash-change so deep links like `/rules/communities#apprentices` land on the heading. ([components/rules/RulesNav.tsx](../components/rules/RulesNav.tsx), [app/rules/layout.tsx](../app/rules/layout.tsx))
+- Wix export — `scripts/build-rules-html.mjs` fetches every `/rules/*` page, extracts `<main>`, absolutizes links to the live Tapestry domain, writes one HTML file per route to `out/wix-rules/` for paste into Wix HTML-embed blocks (Strategy B). Scheduled remote agent `trig_01WynguxqCjrQLWRaGfwjxr7` runs it ~30min after the deploy. ([scripts/build-rules-html.mjs](../scripts/build-rules-html.mjs))
+- Sketch + test plan: [tasks/rules-srd-web-sketch.md](rules-srd-web-sketch.md), [tasks/rulescommunitiestestplan-2026-05-01.md](rulescommunitiestestplan-2026-05-01.md).
+
+**GM Notes drag-to-reorder:**
+- Each note in `GmNotes.tsx` is now `draggable`; drop above or below another note (decided by mouse Y vs row midpoint, 2px green bar previews the landing zone). All notes renumber 1..N on drop and persist in parallel via `Promise.all`. Optimistic local update reverts to server truth if any update fails.
+- New `campaign_notes.sort_order integer` column with idempotent backfill `ROW_NUMBER() OVER (PARTITION BY campaign_id ORDER BY created_at ASC)`. Index on `(campaign_id, sort_order)`. ([sql/campaign-notes-sort-order.sql](../sql/campaign-notes-sort-order.sql))
+- New notes go to the end (max `sort_order` + 1). Component is column-tolerant — if the migration hasn't been run yet, the alert points the user to the SQL file.
+
+---
+
 ## ✅ Shipped 2026-04-30 (Phase E close-out + Inventory full sweep + map-setup persistence)
 
 **Communities Phase E (the world layer):**

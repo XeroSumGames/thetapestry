@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'The Tapestry <onboarding@resend.dev>',
+          from: 'The Tapestry <noreply@distemperverse.com>',
           to: 'xerosumstudio@gmail.com',
           subject: `[The Tapestry] ${title}`,
           text: `${body}${link ? `\n\n${link}` : ''}`,

@@ -8,8 +8,8 @@ import {
   ruleTableThStyle,
   ruleTableTdStyle,
 } from '../../../../components/rules/RuleSection'
-import StyleBanner from '../../../../components/rules/StyleBanner'
-import SubNav from '../../../../components/rules/communities/SubNav'
+import SectionSubNav from '../../../../components/rules/SectionSubNav'
+import { findSection } from '../../../../lib/rules/sections'
 
 const moodRow = (
   roll: string,
@@ -33,13 +33,7 @@ export const metadata = { title: 'Morale Check — XSE SRD §08' }
 export default function MoralePage() {
   return (
     <>
-      <StyleBanner
-        current="B"
-        otherHref="/rules/communities#morale"
-        otherLabel="Style A"
-        description="Style B: Morale lives on its own page. Style A keeps Recruitment / Apprentices / Morale / Structure all on one scrolling page."
-      />
-      <SubNav />
+      <SectionSubNav section={findSection('communities')!} />
       <RuleHero
         eyebrow="§08 · Communities › Morale"
         title="Morale Check"

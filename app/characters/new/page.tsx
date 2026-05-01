@@ -101,7 +101,13 @@ export default function NewCharacterPage() {
     logFirstEvent('first_character_created', { name: character.name })
     setSaved(true)
     setSaving(false)
+    // Send the user somewhere sensible. If they came in via a "join
+    // this story" flow, return them to the story they were joining;
+    // otherwise drop them on /characters where the new entry lives.
+    // Without this redirect the wizard sticks on step 9 with the
+    // green "Character saved!" toast and no obvious next action.
     if (returnStoryId) router.push(`/stories/${returnStoryId}`)
+    else router.push('/characters')
   }
 
   function handlePrint() {
@@ -236,8 +242,12 @@ export default function NewCharacterPage() {
         </div>
       </div>
 
-      {/* Print sheet - hidden on screen, visible on print */}
-      <div className="print-sheet-container">
+      {/* Print sheet — hidden on screen via @media screen rule, made
+          visible on @media print by the print-sheet-active class.
+          Without the active class the global print rule
+          `.print-sheet-container:not(.print-sheet-active)` hides it
+          via display:none and the printed page comes out blank. */}
+      <div className="print-sheet-container print-sheet-active">
         <PrintSheet state={state} />
       </div>
 

@@ -98,6 +98,10 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [contentQty, setContentQty] = useState(1)
   const [lootingObj, setLootingObj] = useState<ObjectToken | null>(null)
   const [lootCharId, setLootCharId] = useState('')
+  // Per-item picker state for granular Give. Keyed by item index in
+  // lootingObj.contents. Mirrors ObjectCard's pattern.
+  const [lootItemPick, setLootItemPick] = useState<Record<number, string>>({})
+  const [givingItemIdx, setGivingItemIdx] = useState<number | null>(null)
   // Crop modal — selected file waits here until user confirms crop, then uploads.
   // `target` distinguishes between the Add-object flow and the Edit-object flow
   // so we know where to apply the resulting URL.
@@ -554,47 +558,142 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       {/* Loot modal */}
       {lootingObj && entries && (
         <div onClick={() => setLootingObj(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10002, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '280px' }}>
-            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>🎒 Loot from {lootingObj.name}</div>
-            <div style={{ marginBottom: '8px' }}>
-              {lootingObj.contents.map((item, i) => (
-                <div key={i} style={{ fontSize: '13px', color: '#f5f2ee', marginBottom: '2px' }}>
-                  {item.type === 'weapon' ? '🔫' : '🎒'} {item.name} ×{item.quantity}
-                </div>
-              ))}
-            </div>
-            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Give to</div>
-            <select value={lootCharId} onChange={e => setLootCharId(e.target.value)}
-              style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none', marginBottom: '10px' }}>
-              <option value="">Select character...</option>
-              {entries.map(e => <option key={e.character.id} value={e.character.id}>{e.character.name}</option>)}
-            </select>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '380px', maxWidth: '92vw' }}>
+            <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>🎒 Loot from {lootingObj.name}</div>
+            {lootingObj.contents.length === 0 ? (
+              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', marginBottom: '10px' }}>Nothing left inside.</div>
+            ) : (
+              <div style={{ marginBottom: '10px' }}>
+                {lootingObj.contents.map((item, i) => {
+                  const charId = lootItemPick[i] ?? ''
+                  const busy = givingItemIdx === i
+                  return (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee', borderBottom: '1px solid #2e2e2e' }}>
+                      <span style={{ flex: 1 }}>
+                        {item.type === 'weapon' ? '🔫' : '🎒'} {item.name}{item.quantity > 1 ? ` ×${item.quantity}` : ''}
+                      </span>
+                      <select
+                        value={charId}
+                        onChange={e => setLootItemPick(prev => ({ ...prev, [i]: e.target.value }))}
+                        style={{ padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none', maxWidth: '130px' }}>
+                        <option value="">Give to...</option>
+                        {entries.map(e => (
+                          <option key={e.character.id} value={e.character.id}>{e.character.name}</option>
+                        ))}
+                      </select>
+                      <button
+                        disabled={!charId || busy}
+                        onClick={async () => {
+                          const charEntry = entries.find(e => e.character.id === charId)
+                          if (!charEntry) return
+                          setGivingItemIdx(i)
+                          const currentEquip: string[] = charEntry.character.data?.equipment ?? []
+                          const additions: string[] = []
+                          for (let q = 0; q < item.quantity; q++) additions.push(item.name)
+                          const updatedEquip = [...currentEquip, ...additions]
+                          // Bail before mutating the object if the character
+                          // write fails — otherwise the item would disappear
+                          // (RLS denial / network hiccup, etc.).
+                          const { error: charErr } = await supabase
+                            .from('characters')
+                            .update({ data: { ...charEntry.character.data, equipment: updatedEquip } })
+                            .eq('id', charId)
+                          if (charErr) {
+                            alert(`Give failed: ${charErr.message}`)
+                            setGivingItemIdx(null)
+                            return
+                          }
+                          // Remove this item from the object's contents
+                          const remaining = lootingObj.contents.filter((_, idx) => idx !== i)
+                          const { error: tokenErr } = await supabase
+                            .from('scene_tokens')
+                            .update({ contents: remaining })
+                            .eq('id', lootingObj.id)
+                          if (tokenErr) {
+                            alert(`Item went to character, but couldn't update the object: ${tokenErr.message}`)
+                            setGivingItemIdx(null)
+                            return
+                          }
+                          setObjects(prev => prev.map(o => o.id === lootingObj.id ? { ...o, contents: remaining } : o))
+                          setLootingObj({ ...lootingObj, contents: remaining })
+                          // Reindex per-item picks (later indices shift down by 1)
+                          setLootItemPick(prev => {
+                            const next: Record<number, string> = {}
+                            for (const [k, v] of Object.entries(prev)) {
+                              const idx = Number(k)
+                              if (idx === i) continue
+                              next[idx > i ? idx - 1 : idx] = v
+                            }
+                            return next
+                          })
+                          onLoot?.(lootingObj.name, item, charId, charEntry.character.name)
+                          setGivingItemIdx(null)
+                        }}
+                        style={{ padding: '2px 8px', background: charId ? '#1a2e10' : '#242424', border: `1px solid ${charId ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: charId ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: charId && !busy ? 'pointer' : 'not-allowed' }}>
+                        {busy ? '…' : 'Give'}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            {/* Bulk path stays for "give everything to one PC" — useful
+                when the GM doesn't need granularity. */}
+            {lootingObj.contents.length > 0 && (
+              <>
+                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Or Loot All to</div>
+                <select value={lootCharId} onChange={e => setLootCharId(e.target.value)}
+                  style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none', marginBottom: '10px' }}>
+                  <option value="">Select character...</option>
+                  {entries.map(e => <option key={e.character.id} value={e.character.id}>{e.character.name}</option>)}
+                </select>
+              </>
+            )}
             <div style={{ display: 'flex', gap: '6px' }}>
-              <button disabled={!lootCharId} onClick={async () => {
-                if (!lootCharId) return
-                const charEntry = entries.find(e => e.character.id === lootCharId)
-                if (!charEntry) return
-                // Add items to character equipment
-                const currentEquip: string[] = charEntry.character.data?.equipment ?? []
-                const newItems: string[] = []
-                for (const item of lootingObj.contents) {
-                  for (let q = 0; q < item.quantity; q++) newItems.push(item.name)
-                }
-                const updatedEquip = [...currentEquip, ...newItems]
-                await supabase.from('characters').update({ data: { ...charEntry.character.data, equipment: updatedEquip } }).eq('id', lootCharId)
-                // Clear contents from the object
-                await supabase.from('scene_tokens').update({ contents: [] }).eq('id', lootingObj.id)
-                setObjects(prev => prev.map(o => o.id === lootingObj.id ? { ...o, contents: [] } : o))
-                // Callback for log entry
-                for (const item of lootingObj.contents) {
-                  onLoot?.(lootingObj.name, item, lootCharId, charEntry.character.name)
-                }
-                setLootingObj(null)
-              }}
-                style={{ ...chipBtn, flex: 1, background: lootCharId ? '#1a2e10' : '#242424', border: `1px solid ${lootCharId ? '#2d5a1b' : '#3a3a3a'}`, color: lootCharId ? '#7fc458' : '#5a5550' }}>
-                Loot All
-              </button>
-              <button onClick={() => setLootingObj(null)} style={{ ...chipBtn, flex: 1 }}>Cancel</button>
+              {lootingObj.contents.length > 0 && (
+                <button disabled={!lootCharId} onClick={async () => {
+                  if (!lootCharId) return
+                  const charEntry = entries.find(e => e.character.id === lootCharId)
+                  if (!charEntry) return
+                  const currentEquip: string[] = charEntry.character.data?.equipment ?? []
+                  const newItems: string[] = []
+                  for (const item of lootingObj.contents) {
+                    for (let q = 0; q < item.quantity; q++) newItems.push(item.name)
+                  }
+                  const updatedEquip = [...currentEquip, ...newItems]
+                  // Bail before clearing the object if the character write
+                  // fails — otherwise the loot vanishes (RLS denial, network
+                  // hiccup, etc. all silently dropped items pre-fix).
+                  const { error: charErr } = await supabase
+                    .from('characters')
+                    .update({ data: { ...charEntry.character.data, equipment: updatedEquip } })
+                    .eq('id', lootCharId)
+                  if (charErr) {
+                    alert(`Loot failed: ${charErr.message}`)
+                    return
+                  }
+                  const { error: tokenErr } = await supabase
+                    .from('scene_tokens')
+                    .update({ contents: [] })
+                    .eq('id', lootingObj.id)
+                  if (tokenErr) {
+                    // Items already on the character — surface so GM knows
+                    // the object still shows contents and can clear manually.
+                    alert(`Items transferred to character, but couldn't clear the object: ${tokenErr.message}`)
+                    return
+                  }
+                  setObjects(prev => prev.map(o => o.id === lootingObj.id ? { ...o, contents: [] } : o))
+                  for (const item of lootingObj.contents) {
+                    onLoot?.(lootingObj.name, item, lootCharId, charEntry.character.name)
+                  }
+                  setLootingObj(null)
+                  setLootItemPick({})
+                }}
+                  style={{ ...chipBtn, flex: 1, background: lootCharId ? '#1a2e10' : '#242424', border: `1px solid ${lootCharId ? '#2d5a1b' : '#3a3a3a'}`, color: lootCharId ? '#7fc458' : '#5a5550' }}>
+                  Loot All
+                </button>
+              )}
+              <button onClick={() => { setLootingObj(null); setLootItemPick({}) }} style={{ ...chipBtn, flex: 1 }}>{lootingObj.contents.length === 0 ? 'Done' : 'Cancel'}</button>
             </div>
           </div>
         </div>
@@ -718,7 +817,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                     {EQUIPMENT.map(e => <option key={e.name} value={`equipment:${e.name}`}>{e.name}</option>)}
                   </optgroup>
                 </select>
-                <input type="number" min={1} max={99} value={contentQty} onChange={e => setContentQty(parseInt(e.target.value) || 1)}
+                <input type="number" min={1} max={99} value={contentQty} onChange={e => setContentQty(parseInt(e.target.value, 10) || 1)}
                   style={{ width: '32px', padding: '3px 2px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
                 <button onClick={() => {
                   if (!contentPickerValue) return

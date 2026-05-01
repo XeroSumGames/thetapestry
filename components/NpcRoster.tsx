@@ -12,7 +12,7 @@ function parseSkillText(text: string): SkillEntry[] {
   if (!text.trim()) return []
   return text.split(',').map(s => {
     const match = s.trim().match(/^(.+?)\s+(-?\d+)$/)
-    if (match) return { name: match[1], level: parseInt(match[2]) }
+    if (match) return { name: match[1], level: parseInt(match[2], 10) }
     return null
   }).filter(Boolean) as SkillEntry[]
 }
@@ -940,7 +940,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   const rapidField = (label: string, key: keyof typeof form, short: string) => (
     <div style={{ flex: 1, minWidth: '60px' }}>
       <div style={{ fontSize: '13px', color: '#cce0f5', letterSpacing: '.06em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '3px', textAlign: 'center' }}>{short}</div>
-      <select value={form[key] as number} onChange={e => setForm(f => ({ ...f, [key]: parseInt(e.target.value) }))}
+      <select value={form[key] as number} onChange={e => setForm(f => ({ ...f, [key]: parseInt(e.target.value, 10) }))}
         style={{ width: '100%', padding: '4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', appearance: 'none' }}>
         {[-2, -1, 0, 1, 2, 3, 4].map(v => (
           <option key={v} value={v}>{v > 0 ? `+${v}` : v} {RAPID_LABELS[v]}</option>
@@ -1574,7 +1574,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                     <option value="">Select skill...</option>
                     {ALL_SKILLS.map(sk => <option key={sk} value={sk}>{sk}</option>)}
                   </select>
-                  <select value={s.level} onChange={e => setForm(f => ({ ...f, skillEntries: f.skillEntries.map((sk, j) => j === i ? { ...sk, level: parseInt(e.target.value) } : sk) }))}
+                  <select value={s.level} onChange={e => setForm(f => ({ ...f, skillEntries: f.skillEntries.map((sk, j) => j === i ? { ...sk, level: parseInt(e.target.value, 10) } : sk) }))}
                     style={{ width: '60px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', appearance: 'none' }}>
                     {[-3, -2, -1, 0, 1, 2, 3, 4].map(v => <option key={v} value={v}>{v > 0 ? `+${v}` : v}</option>)}
                   </select>
@@ -1717,7 +1717,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                   return (
                     <div key={pc.characterId} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                       <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: '80px' }}>{pc.characterName}</span>
-                      <select value={cmod} onChange={e => handleRelationshipChange(pc.characterId, parseInt(e.target.value))}
+                      <select value={cmod} onChange={e => handleRelationshipChange(pc.characterId, parseInt(e.target.value, 10))}
                         style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: cmod > 0 ? '#7fc458' : cmod < 0 ? '#f5a89a' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                         {FIRST_IMPRESSIONS.map(fi => (
                           <option key={fi.value} value={fi.value}>{fi.value > 0 ? `+${fi.value}` : fi.value} — {fi.label}</option>

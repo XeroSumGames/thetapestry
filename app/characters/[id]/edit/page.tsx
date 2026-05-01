@@ -179,8 +179,9 @@ export default function EditCharacterPage() {
         </div>
       </div>
 
-      {/* Print sheet - hidden on screen, visible on print */}
-      <div className="print-sheet-container">
+      {/* Print sheet — print-sheet-active is required for the print
+          rule to keep it visible (otherwise it gets display:none'd). */}
+      <div className="print-sheet-container print-sheet-active">
         <PrintSheet state={state} />
       </div>
 
