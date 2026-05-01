@@ -14,6 +14,20 @@ interface Note {
   created_at: string
   attachments: Attachment[]
   shared: boolean
+  display_order: number | null
+}
+
+// Stable client-side sort. Notes with display_order win; ties + nulls
+// fall through to created_at. Keeps the list stable both during the
+// migration window (column may not exist yet — display_order will be
+// undefined on every row) and afterwards.
+function sortNotes(arr: Note[]): Note[] {
+  return [...arr].sort((a, b) => {
+    const ao = a.display_order ?? Number.MAX_SAFE_INTEGER
+    const bo = b.display_order ?? Number.MAX_SAFE_INTEGER
+    if (ao !== bo) return ao - bo
+    return a.created_at.localeCompare(b.created_at)
+  })
 }
 
 export default function GmNotes({ campaignId }: { campaignId: string }) {
@@ -26,6 +40,11 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [saving, setSaving] = useState(false)
   const [uploadingNoteId, setUploadingNoteId] = useState<string | null>(null)
+  // Drag-to-reorder state. draggingId is the note being dragged;
+  // dropTargetId + dropPosition show where it'll land if released.
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null)
+  const [dropPosition, setDropPosition] = useState<'above' | 'below'>('above')
 
   useEffect(() => { load() }, [campaignId])
 
@@ -34,8 +53,13 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
       .from('campaign_notes')
       .select('*')
       .eq('campaign_id', campaignId)
-      .order('created_at', { ascending: true })
-    setNotes((data ?? []).map((n: any) => ({ ...n, attachments: n.attachments ?? [], shared: n.shared ?? false })))
+    const rows: Note[] = (data ?? []).map((n: any) => ({
+      ...n,
+      attachments: n.attachments ?? [],
+      shared: n.shared ?? false,
+      display_order: n.display_order ?? null,
+    }))
+    setNotes(sortNotes(rows))
   }
 
   async function uploadFiles(noteId: string, files: File[]): Promise<Attachment[]> {
@@ -66,12 +90,21 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
   async function handleSave() {
     if (!title.trim()) return
     setSaving(true)
+    // New notes go to the end of the list — find the current max
+    // display_order and add 1. If no notes have an order yet (migration
+    // not run), display_order stays null and the new row sorts after
+    // existing rows by created_at, which is what users expect.
+    const maxOrder = notes.reduce<number>(
+      (m, n) => (n.display_order != null && n.display_order > m ? n.display_order : m),
+      0,
+    )
     // 1. Insert the note row to get an id.
     const { data: inserted, error } = await supabase.from('campaign_notes').insert({
       campaign_id: campaignId,
       title: title.trim(),
       content: content.trim(),
       attachments: [],
+      display_order: maxOrder + 1,
     }).select('id').single()
     if (error || !inserted) {
       console.error('[GmNotes] insert error:', error?.message)
@@ -132,6 +165,60 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
       next.has(id) ? next.delete(id) : next.add(id)
       return next
     })
+  }
+
+  // Reorder dragged note relative to the drop target, then renumber
+  // every note 1..N and persist. We renumber the whole list (rather
+  // than fractional indices) because note counts are small and a clean
+  // 1..N layout makes the SQL trivial.
+  async function reorderNotes(
+    fromId: string,
+    toId: string,
+    placeBelow: boolean,
+  ) {
+    if (fromId === toId) return
+    const fromIdx = notes.findIndex(n => n.id === fromId)
+    const toIdx = notes.findIndex(n => n.id === toId)
+    if (fromIdx < 0 || toIdx < 0) return
+    const next = [...notes]
+    const [moved] = next.splice(fromIdx, 1)
+    // After splice, the target's index shifts down by 1 if the moved
+    // item was previously above it. Recompute the insert position
+    // against the post-splice array.
+    const newToIdx = next.findIndex(n => n.id === toId)
+    const insertAt = placeBelow ? newToIdx + 1 : newToIdx
+    next.splice(insertAt, 0, moved)
+    // No-op if the order is already correct (e.g. dragged to the same
+    // visual spot).
+    if (next.every((n, i) => n.id === notes[i].id)) return
+    // Optimistic update with renumbered display_order so the UI tracks
+    // the new order even before Supabase responds.
+    const renumbered = next.map((n, i) => ({ ...n, display_order: i + 1 }))
+    setNotes(renumbered)
+    // Persist in parallel. If the column doesn't exist yet (migration
+    // not run), the first error surfaces with a guiding alert and we
+    // revert. Bounded by note count, so a Promise.all is fine.
+    const results = await Promise.all(
+      renumbered.map(n =>
+        supabase
+          .from('campaign_notes')
+          .update({ display_order: n.display_order })
+          .eq('id', n.id),
+      ),
+    )
+    const firstErr = results.find(r => r.error)?.error
+    if (firstErr) {
+      const msg = firstErr.message || ''
+      if (msg.includes('display_order') || msg.includes('column')) {
+        alert(
+          'Reorder failed: the display_order column is missing.\n\n' +
+            'Run sql/gm-notes-display-order.sql in the Supabase SQL Editor, then try again.',
+        )
+      } else {
+        alert(`Reorder failed: ${msg}`)
+      }
+      await load() // revert to server truth
+    }
   }
 
   function fmtSize(bytes: number): string {
@@ -203,11 +290,76 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
           No notes yet
         </div>
       )}
-      {notes.map(n => (
-        <div key={n.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+      {notes.map(n => {
+        const isDragging = draggingId === n.id
+        const isDropTarget = dropTargetId === n.id && draggingId !== n.id
+        return (
+        <div
+          key={n.id}
+          draggable
+          onDragStart={e => {
+            setDraggingId(n.id)
+            // dataTransfer is required for Firefox to start a drag.
+            e.dataTransfer.effectAllowed = 'move'
+            try { e.dataTransfer.setData('text/plain', n.id) } catch {}
+          }}
+          onDragEnd={() => {
+            setDraggingId(null)
+            setDropTargetId(null)
+          }}
+          onDragOver={e => {
+            if (!draggingId || draggingId === n.id) return
+            e.preventDefault()
+            e.dataTransfer.dropEffect = 'move'
+            // Decide drop position by mouse Y vs row midpoint.
+            const rect = e.currentTarget.getBoundingClientRect()
+            const placeBelow = e.clientY > rect.top + rect.height / 2
+            setDropTargetId(n.id)
+            setDropPosition(placeBelow ? 'below' : 'above')
+          }}
+          onDragLeave={e => {
+            // Only clear if we're truly leaving this row (not entering a child).
+            const related = e.relatedTarget as Node | null
+            if (related && e.currentTarget.contains(related)) return
+            if (dropTargetId === n.id) setDropTargetId(null)
+          }}
+          onDrop={e => {
+            if (!draggingId || draggingId === n.id) return
+            e.preventDefault()
+            const placeBelow = dropPosition === 'below'
+            setDropTargetId(null)
+            void reorderNotes(draggingId, n.id, placeBelow)
+            setDraggingId(null)
+          }}
+          style={{
+            background: '#1a1a1a',
+            border: '1px solid #2e2e2e',
+            borderRadius: '3px',
+            opacity: isDragging ? 0.4 : 1,
+            // Drop indicator: a 2px red bar above or below the target.
+            borderTop:
+              isDropTarget && dropPosition === 'above'
+                ? '2px solid #c0392b'
+                : '1px solid #2e2e2e',
+            borderBottom:
+              isDropTarget && dropPosition === 'below'
+                ? '2px solid #c0392b'
+                : '1px solid #2e2e2e',
+          }}
+        >
           <div onClick={() => toggle(n.id)}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', cursor: 'pointer' }}>
-            <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>
+              {/* Drag handle — visually indicates the row is draggable.
+                  The whole row is `draggable`, so a click on the handle
+                  starts a drag like anywhere else on the row. */}
+              <span
+                aria-hidden
+                title="Drag to reorder"
+                style={{ cursor: 'grab', color: '#5a5550', fontSize: '15px', lineHeight: 1, userSelect: 'none' }}
+              >
+                ⋮⋮
+              </span>
               {n.title}
               {n.shared && <span style={{ marginLeft: '6px', fontSize: '13px', color: '#7fc458' }}>SHARED</span>}
               {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '13px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
@@ -273,7 +425,8 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
             </div>
           )}
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
