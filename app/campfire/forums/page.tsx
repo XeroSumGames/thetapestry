@@ -100,6 +100,10 @@ export default function ForumsIndexPage() {
   const [hasMore, setHasMore] = useState<boolean>(true)
   const [loadingMore, setLoadingMore] = useState<boolean>(false)
   const PAGE_SIZE = 50
+  // Phase 4E (final) — FTS state. Same shape as War Stories.
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [searchActive, setSearchActive] = useState<boolean>(false)
+  const [searching, setSearching] = useState<boolean>(false)
 
   useEffect(() => {
     async function init() {
@@ -151,6 +155,45 @@ export default function ForumsIndexPage() {
       campaign_name: t.campaign_id ? (campMap[t.campaign_id] ?? null) : null,
     })))
     setLoading(false)
+  }
+
+  // Phase 4E (final) — FTS. Replaces the visible thread list with up
+  // to 50 hits matching the query against title+body via search_tsv.
+  async function runSearch() {
+    const q = searchQuery.trim()
+    if (!q) {
+      setSearchActive(false)
+      setHasMore(true)
+      await loadThreads()
+      return
+    }
+    setSearching(true)
+    setSearchActive(true)
+    const { data: rows } = await supabase
+      .from('forum_threads')
+      .select('*')
+      .textSearch('search_tsv', q, { type: 'plain', config: 'english' })
+      .order('latest_reply_at', { ascending: false })
+      .limit(50)
+    const list = (rows ?? []) as Thread[]
+    setHasMore(false)
+    if (list.length === 0) { setThreads([]); setSearching(false); return }
+    const authorIds = Array.from(new Set(list.map(t => t.author_user_id)))
+    const campaignIds = Array.from(new Set(list.map(t => t.campaign_id).filter((x): x is string => !!x)))
+    const [profRes, campRes] = await Promise.all([
+      supabase.from('profiles').select('id, username').in('id', authorIds),
+      campaignIds.length > 0
+        ? supabase.from('campaigns').select('id, name').in('id', campaignIds)
+        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    ])
+    const nameMap = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.username]))
+    const campMap = Object.fromEntries((campRes.data ?? []).map((c: any) => [c.id, c.name]))
+    setThreads(list.map(t => ({
+      ...t,
+      author_username: nameMap[t.author_user_id] ?? 'Unknown',
+      campaign_name: t.campaign_id ? (campMap[t.campaign_id] ?? null) : null,
+    })))
+    setSearching(false)
   }
 
   // Phase 4E — fetch the next page beyond the loaded threads. Uses
@@ -396,6 +439,24 @@ export default function ForumsIndexPage() {
           </div>
         </div>
       )}
+
+      {/* Phase 4E (final) — full-text search. */}
+      <form onSubmit={e => { e.preventDefault(); runSearch() }}
+        style={{ display: 'flex', gap: '6px', marginBottom: '0.75rem', alignItems: 'center' }}>
+        <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search threads…"
+          style={{ flex: 1, padding: '8px 12px', background: '#1a1a1a', border: `1px solid ${searchActive ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+        <button type="submit" disabled={searching}
+          style={{ padding: '8px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching ? 'wait' : 'pointer', fontWeight: 600 }}>
+          {searching ? '…' : '🔍 Search'}
+        </button>
+        {searchActive && (
+          <button type="button" onClick={() => { setSearchQuery(''); setSearchActive(false); loadThreads() }}
+            style={{ padding: '8px 12px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            Clear
+          </button>
+        )}
+      </form>
 
       {/* Setting filter chip strip — featured settings + Global. Click "All"
           to clear; chips combine with the category chips below. */}

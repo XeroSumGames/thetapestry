@@ -11,6 +11,8 @@ import {
   settingAccent,
   useUrlSettingFilter,
 } from '../../../lib/campfire-settings'
+import ReactionButtons, { aggregateReactions, type ReactionAggregate } from '../../../components/ReactionButtons'
+import InlineRepliesPanel from '../../../components/InlineRepliesPanel'
 
 // /campfire/lfg — bulletin board for finding GMs and players. Cross-campaign
 // by design: this is the meta layer, not tied to any single story. Anyone
@@ -28,6 +30,8 @@ interface LfgPost {
   schedule: string | null
   moderation_status: 'pending' | 'approved' | 'rejected'
   moderator_notes: string | null
+  // Phase 4E final — count maintained by lfg_post_replies trigger.
+  reply_count: number | null
   created_at: string
   updated_at: string
 }
@@ -73,6 +77,15 @@ export default function LfgPage() {
   const [hasMore, setHasMore] = useState<boolean>(true)
   const [loadingMore, setLoadingMore] = useState<boolean>(false)
   const PAGE_SIZE = 50
+  // Phase 4E (final) — reaction aggregates per LFG post.
+  const [reactions, setReactions] = useState<Record<string, ReactionAggregate>>({})
+  // Phase 4E (final) — inline reply expand. Single open id at a time.
+  const [openRepliesFor, setOpenRepliesFor] = useState<string | null>(null)
+  const [replyCountOverride, setReplyCountOverride] = useState<Record<string, number>>({})
+  // Phase 4E (final) — FTS state.
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [searchActive, setSearchActive] = useState<boolean>(false)
+  const [searching, setSearching] = useState<boolean>(false)
   const [composing, setComposing] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState<{ kind: Kind; title: string; body: string; scope: Scope; setting: string; schedule: string }>({
@@ -160,19 +173,30 @@ export default function LfgPage() {
 
   async function sendInvite(otherUserId: string, postId: string, campaign: { id: string; name: string; invite_code: string }) {
     if (!myId) return
-    // Use the existing get_or_create_dm RPC so we don't need to touch
-    // conversation_participants directly. SECURITY DEFINER inside the RPC
-    // handles the 1:1 conversation lookup-or-create.
-    const { data: dmId, error: dmErr } = await supabase.rpc('get_or_create_dm', { other_user_id: otherUserId })
-    if (dmErr || !dmId) { alert('Could not open DM: ' + (dmErr?.message ?? 'unknown')); return }
-    const inviteUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/join/${campaign.invite_code}`
-    const body = `You're invited to join my campaign "${campaign.name}". Tap to join: ${inviteUrl}`
-    const { error: msgErr } = await supabase.from('messages').insert({
-      conversation_id: dmId,
+    // Phase 4E (final) — replaces the old DM-with-link flow with a
+    // structured campaign_invitations row. The trigger creates a
+    // notification on the recipient with type='campaign_invitation'
+    // carrying invitation_id in metadata; NotificationBell renders
+    // inline Accept / Decline buttons that update the row's status,
+    // which in turn triggers an auto-add to campaign_members + a
+    // response notification back to the sender.
+    const { error } = await supabase.from('campaign_invitations').insert({
+      campaign_id: campaign.id,
       sender_user_id: myId,
-      body,
+      recipient_user_id: otherUserId,
+      message: null,
     })
-    if (msgErr) { alert('Could not send invite DM: ' + msgErr.message); return }
+    if (error) {
+      // Unique constraint on (campaign_id, recipient_user_id, status='pending')
+      // means a duplicate pending invite already exists. Treat that as
+      // success — the user already has the prior invite waiting.
+      if (error.code === '23505') {
+        alert('You already have a pending invite to this player on this campaign.')
+      } else {
+        alert('Could not send invite: ' + error.message)
+        return
+      }
+    }
     const key = `${postId}:${otherUserId}`
     setInvitingFor(null)
     setInviteSentFor(prev => new Set(prev).add(key))
@@ -267,7 +291,57 @@ export default function LfgPage() {
     setMyInterests(myInts)
     setInterestsByPost(byPost)
     setPosts(list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown' })))
+    // Reaction hydration for the visible posts.
+    const ids = list.map(p => p.id)
+    if (ids.length > 0) {
+      const { data: reactRows } = await supabase
+        .from('lfg_post_reactions')
+        .select('post_id, user_id, kind')
+        .in('post_id', ids)
+      setReactions(aggregateReactions(reactRows ?? [], 'post_id', myCurrentId))
+    }
     setLoading(false)
+  }
+
+  // Phase 4E (final) — FTS. Replaces the visible post list with up to
+  // 50 hits. Doesn't fetch interests for hits (they're roster-only on
+  // author-owned posts; if your search hits your own posts you'll
+  // already have those interests cached from the initial load).
+  async function runSearch() {
+    const q = searchQuery.trim()
+    if (!q) {
+      setSearchActive(false)
+      setHasMore(true)
+      await loadPosts()
+      return
+    }
+    setSearching(true)
+    setSearchActive(true)
+    const { data: rows } = await supabase
+      .from('lfg_posts')
+      .select('*')
+      .textSearch('search_tsv', q, { type: 'plain', config: 'english' })
+      .order('updated_at', { ascending: false })
+      .limit(50)
+    const list = (rows ?? []) as LfgPost[]
+    setHasMore(false)
+    if (list.length === 0) { setPosts([]); setSearching(false); return }
+    const authorIds = Array.from(new Set(list.map(p => p.author_user_id)))
+    const { data: profs } = await supabase
+      .from('profiles')
+      .select('id, username')
+      .in('id', authorIds)
+    const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
+    setPosts(list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown' })))
+    const ids = list.map(p => p.id)
+    if (ids.length > 0) {
+      const { data: reactRows } = await supabase
+        .from('lfg_post_reactions')
+        .select('post_id, user_id, kind')
+        .in('post_id', ids)
+      setReactions(aggregateReactions(reactRows ?? [], 'post_id', myId))
+    }
+    setSearching(false)
   }
 
   // Phase 4E — append the next page. Cursor = current posts.length.
@@ -294,6 +368,15 @@ export default function LfgPage() {
       .in('id', authorIds)
     const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
     setPosts(prev => [...prev, ...list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown' }))])
+    const ids = list.map(p => p.id)
+    if (ids.length > 0) {
+      const { data: reactRows } = await supabase
+        .from('lfg_post_reactions')
+        .select('post_id, user_id, kind')
+        .in('post_id', ids)
+      const more = aggregateReactions(reactRows ?? [], 'post_id', myId)
+      setReactions(prev => ({ ...prev, ...more }))
+    }
     setLoadingMore(false)
   }
 
@@ -558,6 +641,24 @@ export default function LfgPage() {
         </div>
       )}
 
+      {/* Phase 4E (final) — full-text search. */}
+      <form onSubmit={e => { e.preventDefault(); runSearch() }}
+        style={{ display: 'flex', gap: '6px', marginBottom: '0.75rem', alignItems: 'center' }}>
+        <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search LFG posts…"
+          style={{ flex: 1, padding: '8px 12px', background: '#1a1a1a', border: `1px solid ${searchActive ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+        <button type="submit" disabled={searching}
+          style={{ padding: '8px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching ? 'wait' : 'pointer', fontWeight: 600 }}>
+          {searching ? '…' : '🔍 Search'}
+        </button>
+        {searchActive && (
+          <button type="button" onClick={() => { setSearchQuery(''); setSearchActive(false); loadPosts() }}
+            style={{ padding: '8px 12px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            Clear
+          </button>
+        )}
+      </form>
+
       {/* Setting filter chip strip — featured settings + Global. Click "All"
           to clear; combines with the kind chips below. */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
@@ -659,6 +760,18 @@ export default function LfgPage() {
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  {/* Phase 4E — reaction row. Available for everyone
+                      including the author (votes signal "this looks
+                      worth pursuing" rather than self-promotion). */}
+                  <ReactionButtons
+                    table="lfg_post_reactions"
+                    fkColumn="post_id"
+                    targetId={p.id}
+                    userId={myId}
+                    initialUp={reactions[p.id]?.up ?? 0}
+                    initialDown={reactions[p.id]?.down ?? 0}
+                    initialOwn={reactions[p.id]?.own ?? null}
+                  />
                   {/* Asymmetric flow: viewers express interest with a toggle;
                       authors see the roster of interested users below the
                       action row and can DM them from there. The author never
@@ -713,7 +826,30 @@ export default function LfgPage() {
                       </div>
                     )}
                   </div>
+                  {/* Phase 4E — replies toggle for everyone. */}
+                  {(() => {
+                    const liveCount = replyCountOverride[p.id] ?? p.reply_count ?? 0
+                    const open = openRepliesFor === p.id
+                    return (
+                      <button onClick={() => setOpenRepliesFor(open ? null : p.id)}
+                        style={{ padding: '6px 14px', background: open ? '#1a3a5c' : '#242424', border: `1px solid ${open ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: open ? '#7ab3d4' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        💬 {liveCount} {liveCount === 1 ? 'reply' : 'replies'} {open ? '▴' : '▾'}
+                      </button>
+                    )
+                  })()}
                 </div>
+                {openRepliesFor === p.id && (
+                  <InlineRepliesPanel
+                    table="lfg_post_replies"
+                    fkColumn="post_id"
+                    parentId={p.id}
+                    userId={myId}
+                    onReplyCountChange={delta => setReplyCountOverride(prev => ({
+                      ...prev,
+                      [p.id]: (prev[p.id] ?? p.reply_count ?? 0) + delta,
+                    }))}
+                  />
+                )}
                 {/* Interested-user roster — author-only. RLS scopes the rows
                     in interestsByPost so this list is empty for everyone
                     except the post's author. The 💬 Message button here is

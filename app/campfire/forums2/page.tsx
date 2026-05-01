@@ -3,11 +3,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
+import { aggregateReactions, type ReactionAggregate } from '../../../components/ReactionButtons'
 
 // /campfire/forums2 — Reddit/Lemmy-style mockup of the same forum data, for
-// player feedback. Votes are LOCAL STATE ONLY — they reset on refresh and
-// don't persist anywhere. If we choose this direction we'll add a votes
-// table + RLS in a follow-up. The existing forum_threads / forum_replies
+// player feedback. Votes now PERSIST via forum_thread_reactions (Phase 4E
+// final bundle) — the bespoke vertical-rail UI is preserved; only the
+// state mechanics changed. The existing forum_threads / forum_replies
 // tables drive the content; clicking a thread routes to the existing
 // /campfire/forums/[id] reader so the reading experience is consistent.
 
@@ -42,25 +43,10 @@ interface Thread {
 
 interface ThreadWithMeta extends Thread {
   author_username: string
-  seed_score: number   // deterministic baseline so threads look varied
 }
 
 type Filter = 'all' | Category
 type Sort = 'hot' | 'new' | 'top'
-
-// Hash a string to a small int for deterministic seeded values.
-function hashStr(s: string) {
-  let h = 0
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
-  return h
-}
-
-// Pseudo-score: reply_count * 3 + hash mod 90, biased so most threads land
-// 0–120 and the busiest thread gets the highest. Pinned threads get +50.
-function seedScore(t: Thread) {
-  const base = t.reply_count * 3 + (hashStr(t.id) % 90)
-  return t.pinned ? base + 50 : base
-}
 
 export default function Forums2Page() {
   const supabase = createClient()
@@ -72,8 +58,10 @@ export default function Forums2Page() {
   const [filter, setFilter] = useState<Filter>('all')
   const [sort, setSort] = useState<Sort>('hot')
 
-  // Local-only vote state: thread id -> +1 / -1 / 0. Reset on refresh.
-  const [myVote, setMyVote] = useState<Record<string, 1 | -1 | 0>>({})
+  // Persisted reactions (Phase 4E final). Aggregated up/down counts +
+  // own vote per thread id. Hydrated from forum_thread_reactions.
+  const [reactions, setReactions] = useState<Record<string, ReactionAggregate>>({})
+  const [pendingVote, setPendingVote] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     async function init() {
@@ -91,28 +79,63 @@ export default function Forums2Page() {
       .from('forum_threads')
       .select('*')
     const list = (rows ?? []) as Thread[]
-    if (list.length === 0) { setThreads([]); setLoading(false); return }
+    if (list.length === 0) { setThreads([]); setLoading(false); setReactions({}); return }
     const authorIds = Array.from(new Set(list.map(t => t.author_user_id)))
-    const { data: profs } = await supabase
-      .from('profiles')
-      .select('id, username')
-      .in('id', authorIds)
-    const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
+    const ids = list.map(t => t.id)
+    const [profsRes, reactRes, authRes] = await Promise.all([
+      supabase.from('profiles').select('id, username').in('id', authorIds),
+      supabase.from('forum_thread_reactions').select('thread_id, user_id, kind').in('thread_id', ids),
+      getCachedAuth(),
+    ])
+    const nameMap = Object.fromEntries((profsRes.data ?? []).map((p: any) => [p.id, p.username]))
     setThreads(list.map(t => ({
       ...t,
       author_username: nameMap[t.author_user_id] ?? 'Unknown',
-      seed_score: seedScore(t),
     })))
+    setReactions(aggregateReactions(reactRes.data ?? [], 'thread_id', authRes.user?.id ?? null))
     setLoading(false)
   }
 
-  function castVote(id: string, dir: 1 | -1) {
-    setMyVote(v => ({ ...v, [id]: v[id] === dir ? 0 : dir }))
+  // Persist a vote and optimistically reflect the count + own marker.
+  // Same logic as components/ReactionButtons.tsx but inlined here so
+  // the bespoke vertical-rail UI keeps its handcrafted look.
+  async function castVote(id: string, dir: 1 | -1) {
+    if (!myId || pendingVote.has(id)) return
+    setPendingVote(prev => new Set(prev).add(id))
+    const direction: 'up' | 'down' = dir === 1 ? 'up' : 'down'
+    const current = reactions[id] ?? { up: 0, down: 0, own: null as 'up' | 'down' | null }
+    let next: ReactionAggregate
+    if (current.own === direction) {
+      // Retract.
+      next = { up: direction === 'up' ? Math.max(0, current.up - 1) : current.up,
+               down: direction === 'down' ? Math.max(0, current.down - 1) : current.down,
+               own: null }
+      setReactions(prev => ({ ...prev, [id]: next }))
+      const { error } = await supabase
+        .from('forum_thread_reactions')
+        .delete()
+        .eq('thread_id', id)
+        .eq('user_id', myId)
+      if (error) setReactions(prev => ({ ...prev, [id]: current }))
+    } else {
+      const wasOpposite = current.own && current.own !== direction
+      next = {
+        up: direction === 'up' ? current.up + 1 : (wasOpposite ? Math.max(0, current.up - 1) : current.up),
+        down: direction === 'down' ? current.down + 1 : (wasOpposite ? Math.max(0, current.down - 1) : current.down),
+        own: direction,
+      }
+      setReactions(prev => ({ ...prev, [id]: next }))
+      const { error } = await supabase
+        .from('forum_thread_reactions')
+        .upsert({ thread_id: id, user_id: myId, kind: direction }, { onConflict: 'thread_id,user_id' })
+      if (error) setReactions(prev => ({ ...prev, [id]: current }))
+    }
+    setPendingVote(prev => { const n = new Set(prev); n.delete(id); return n })
   }
 
   function effectiveScore(t: ThreadWithMeta) {
-    const v = myVote[t.id] ?? 0
-    return t.seed_score + v
+    const r = reactions[t.id] ?? { up: 0, down: 0 }
+    return r.up - r.down
   }
 
   const sorted = useMemo(() => {
@@ -133,7 +156,7 @@ export default function Forums2Page() {
       arr.sort((a, b) => effectiveScore(b) - effectiveScore(a))
     }
     return arr
-  }, [threads, filter, sort, myVote])
+  }, [threads, filter, sort, reactions])
 
   function formatRelative(iso: string) {
     const d = new Date(iso)
@@ -173,7 +196,7 @@ export default function Forums2Page() {
           </span>
         </div>
         <div style={{ fontSize: '14px', color: '#5a8a40', lineHeight: 1.6 }}>
-          Reddit-style preview. Votes are local-only (reset on refresh) — let us know what you think.
+          Reddit-style preview. Votes persist across refreshes — let us know what you think.
         </div>
       </div>
 
@@ -233,7 +256,8 @@ export default function Forums2Page() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {sorted.map(t => {
             const accent = CATEGORY_ACCENT[t.category]
-            const v = myVote[t.id] ?? 0
+            const own = reactions[t.id]?.own ?? null
+            const v = own === 'up' ? 1 : own === 'down' ? -1 : 0
             const score = effectiveScore(t)
             const excerpt = t.body.replace(/\s+/g, ' ').trim().slice(0, 220)
             return (

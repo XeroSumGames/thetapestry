@@ -179,6 +179,35 @@ export default function NotificationBell() {
     if (!n.read) markAsRead(n.id)
   }
 
+  // Phase 4E (final) — campaign invitations. LFG sendInvite now writes
+  // a campaign_invitations row; the recipient sees a notification with
+  // metadata.invitation_id. Accept flips status to 'accepted' (server
+  // trigger auto-adds them to campaign_members + redirects); Decline
+  // flips to 'declined' (server trigger notifies the sender).
+  async function handleCampaignInvitationAction(n: Notification, accepted: boolean) {
+    const invitationId = n.metadata?.invitation_id as string | undefined
+    if (!invitationId) return
+    setActingId(n.id)
+    const { error } = await supabase
+      .from('campaign_invitations')
+      .update({
+        status: accepted ? 'accepted' : 'declined',
+        responded_at: new Date().toISOString(),
+      })
+      .eq('id', invitationId)
+    setActingId(null)
+    if (error) { alert(`Action failed: ${error.message}`); return }
+    setActionedIds(prev => { const next = new Set(prev); next.add(n.id); return next })
+    if (!n.read) markAsRead(n.id)
+    // On accept, jump straight into the campaign so the user isn't
+    // left wondering whether anything happened. The server trigger
+    // already inserted them into campaign_members.
+    if (accepted) {
+      const campaignId = n.metadata?.campaign_id as string | undefined
+      if (campaignId) router.push(`/stories/${campaignId}`)
+    }
+  }
+
   async function handleLinkAction(n: Notification, accepted: boolean) {
     const linkId = n.metadata?.link_id as string | undefined
     if (!linkId) return
@@ -455,6 +484,35 @@ export default function NotificationBell() {
       }
     }
 
+    // Phase 4E (final) — campaign invitations. Body shape from the
+    // notify_campaign_invitation trigger:
+    //   '<sender> invited you to "<campaign>"'
+    if (type === 'campaign_invitation') {
+      const m = body.match(/^(.+?) invited you to "(.+)"$/)
+      if (m) {
+        return (
+          <>
+            <span style={{ color: '#7ab3d4', fontWeight: 700 }}>{m[1]}</span> invited you to join{' '}
+            <span style={{ color: '#EF9F27' }}>"{m[2]}"</span>
+          </>
+        )
+      }
+    }
+    // ... and the response back to the sender.
+    if (type === 'campaign_invitation_response') {
+      const m = body.match(/^(.+?) (accepted|declined) your invitation to "(.+)"$/)
+      if (m) {
+        const accepted = m[2] === 'accepted'
+        return (
+          <>
+            <span style={{ color: '#cce0f5', fontWeight: 700 }}>{m[1]}</span>{' '}
+            <span style={{ color: accepted ? '#7fc458' : '#f5a89a', fontWeight: 700, textTransform: 'uppercase' }}>{m[2]}</span>{' '}
+            your invitation to <span style={{ color: '#EF9F27' }}>"{m[3]}"</span>
+          </>
+        )
+      }
+    }
+
     if (type === 'inventory_received') {
       const itemName = (metadata as any)?.item_name as string | undefined
       const qty = (metadata as any)?.qty as number | undefined
@@ -595,16 +653,18 @@ export default function NotificationBell() {
                     what makes the action durable; this UI is a
                     convenience surface so the recipient doesn't have
                     to navigate to the source community to respond. */}
-                {(n.type === 'community_encounter' || n.type === 'community_link_proposal' || n.type === 'community_migration')
+                {(n.type === 'community_encounter' || n.type === 'community_link_proposal' || n.type === 'community_migration' || n.type === 'campaign_invitation')
                   && !actionedIds.has(n.id)
-                  && (n.metadata?.encounter_id || n.metadata?.link_id || n.metadata?.migration_id) && (
+                  && (n.metadata?.encounter_id || n.metadata?.link_id || n.metadata?.migration_id || n.metadata?.invitation_id) && (
                   <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }} onClick={e => e.stopPropagation()}>
                     <button
                       onClick={() => n.type === 'community_encounter'
                         ? handleEncounterAction(n, true)
                         : n.type === 'community_link_proposal'
                           ? handleLinkAction(n, true)
-                          : handleMigrationAction(n, true)}
+                          : n.type === 'community_migration'
+                            ? handleMigrationAction(n, true)
+                            : handleCampaignInvitationAction(n, true)}
                       disabled={actingId === n.id}
                       style={{ padding: '4px 12px', background: '#1a2010', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: actingId === n.id ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: actingId === n.id ? 0.4 : 1 }}>
                       ✓ Accept
@@ -614,14 +674,16 @@ export default function NotificationBell() {
                         ? handleEncounterAction(n, false)
                         : n.type === 'community_link_proposal'
                           ? handleLinkAction(n, false)
-                          : handleMigrationAction(n, false)}
+                          : n.type === 'community_migration'
+                            ? handleMigrationAction(n, false)
+                            : handleCampaignInvitationAction(n, false)}
                       disabled={actingId === n.id}
                       style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: actingId === n.id ? 'not-allowed' : 'pointer', opacity: actingId === n.id ? 0.4 : 1 }}>
                       ✗ Decline
                     </button>
                   </div>
                 )}
-                {actionedIds.has(n.id) && (n.type === 'community_encounter' || n.type === 'community_link_proposal' || n.type === 'community_migration') && (
+                {actionedIds.has(n.id) && (n.type === 'community_encounter' || n.type === 'community_link_proposal' || n.type === 'community_migration' || n.type === 'campaign_invitation') && (
                   <div style={{ marginTop: '6px', fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✓ Responded</div>
                 )}
               </div>

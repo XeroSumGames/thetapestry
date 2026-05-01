@@ -12,6 +12,8 @@ import {
   settingAccent,
   useUrlSettingFilter,
 } from '../../../lib/campfire-settings'
+import ReactionButtons, { aggregateReactions, type ReactionAggregate } from '../../../components/ReactionButtons'
+import InlineRepliesPanel from '../../../components/InlineRepliesPanel'
 
 // /campfire/war-stories — post memorable session moments, legendary rolls,
 // character beats. Cross-campaign feed: anyone signed in can read; authors
@@ -36,6 +38,9 @@ interface Story {
   setting: string | null
   moderation_status: 'pending' | 'approved' | 'rejected'
   moderator_notes: string | null
+  // Phase 4E final — count maintained by the war_story_replies trigger.
+  // Nullable to tolerate rows from before the migration.
+  reply_count: number | null
   created_at: string
   updated_at: string
 }
@@ -74,6 +79,23 @@ export default function WarStoriesPage() {
   const [hasMore, setHasMore] = useState<boolean>(true)
   const [loadingMore, setLoadingMore] = useState<boolean>(false)
   const PAGE_SIZE = 50
+  // Phase 4E (final) — reaction aggregates per story. Empty default so
+  // first paint shows ▲0 / ▼0 until the loader fills in.
+  const [reactions, setReactions] = useState<Record<string, ReactionAggregate>>({})
+  // Phase 4E (final) — full-text search. searchQuery is the user-typed
+  // string; searchActive flips to true while a search is running and
+  // the visible list is search-result-driven (vs. the normal feed).
+  // Pagination is disabled in search mode (rank-ordered hits, capped).
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [searchActive, setSearchActive] = useState<boolean>(false)
+  const [searching, setSearching] = useState<boolean>(false)
+  // Phase 4E (final) — inline reply expand. Stored as a single id so
+  // only one panel is open at a time; clicking the toggle on another
+  // story switches focus.
+  const [openRepliesFor, setOpenRepliesFor] = useState<string | null>(null)
+  // Local override for reply_count so the chip number updates live as
+  // replies post / delete without a full refetch.
+  const [replyCountOverride, setReplyCountOverride] = useState<Record<string, number>>({})
   // Composer attachment state. `newFiles` = picks waiting to upload on save;
   // `existingAttachments` = files already saved on the story being edited
   // (so the editor can remove them). Fresh-post flow only uses newFiles.
@@ -149,7 +171,73 @@ export default function WarStoriesPage() {
       author_username: nameMap[s.author_user_id] ?? 'Unknown',
       campaign_name: s.campaign_id ? (campMap[s.campaign_id] ?? null) : null,
     })))
+    // Reaction hydration — single batched fetch keyed by story ids so
+    // each card's ▲/▼ counts are paint-ready on first render.
+    const ids = list.map(s => s.id)
+    if (ids.length > 0) {
+      const { data: reactRows } = await supabase
+        .from('war_story_reactions')
+        .select('war_story_id, user_id, kind')
+        .in('war_story_id', ids)
+      setReactions(aggregateReactions(reactRows ?? [], 'war_story_id', myId))
+    }
     setLoading(false)
+  }
+
+  // Phase 4E (final) — FTS search. Replaces the visible list with up
+  // to 50 highest-ranked hits matching the query against title+body.
+  // Submitting an empty/whitespace query clears search mode and falls
+  // back to the standard feed.
+  async function runSearch() {
+    const q = searchQuery.trim()
+    if (!q) {
+      setSearchActive(false)
+      setHasMore(true)
+      await loadStories()
+      return
+    }
+    setSearching(true)
+    setSearchActive(true)
+    const { data: rows, error } = await supabase
+      .from('war_stories')
+      .select('*')
+      .textSearch('search_tsv', q, { type: 'plain', config: 'english' })
+      .order('updated_at', { ascending: false })
+      .limit(50)
+    if (error) {
+      alert('Search failed: ' + error.message)
+      setSearching(false)
+      return
+    }
+    const list = (rows ?? []) as Story[]
+    setHasMore(false)  // search results don't paginate
+    if (list.length === 0) { setStories([]); setSearching(false); return }
+    const authorIds = Array.from(new Set(list.map(s => s.author_user_id)))
+    const campaignIds = Array.from(new Set(list.map(s => s.campaign_id).filter((x): x is string => !!x)))
+    const [profRes, campRes] = await Promise.all([
+      supabase.from('profiles').select('id, username').in('id', authorIds),
+      campaignIds.length > 0
+        ? supabase.from('campaigns').select('id, name').in('id', campaignIds)
+        : Promise.resolve({ data: [] }),
+    ])
+    const nameMap = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.username]))
+    const campMap = Object.fromEntries((campRes.data ?? []).map((c: any) => [c.id, c.name]))
+    setStories(list.map(s => ({
+      ...s,
+      attachments: Array.isArray(s.attachments) ? s.attachments : [],
+      author_username: nameMap[s.author_user_id] ?? 'Unknown',
+      campaign_name: s.campaign_id ? (campMap[s.campaign_id] ?? null) : null,
+    })))
+    // Hydrate reactions for the search hits.
+    const ids = list.map(s => s.id)
+    if (ids.length > 0) {
+      const { data: reactRows } = await supabase
+        .from('war_story_reactions')
+        .select('war_story_id, user_id, kind')
+        .in('war_story_id', ids)
+      setReactions(aggregateReactions(reactRows ?? [], 'war_story_id', myId))
+    }
+    setSearching(false)
   }
 
   // Phase 4E — append the next page of stories. Same offset shape as
@@ -183,6 +271,16 @@ export default function WarStoriesPage() {
       author_username: nameMap[s.author_user_id] ?? 'Unknown',
       campaign_name: s.campaign_id ? (campMap[s.campaign_id] ?? null) : null,
     }))])
+    // Append reactions for the newly-loaded ids.
+    const ids = list.map(s => s.id)
+    if (ids.length > 0) {
+      const { data: reactRows } = await supabase
+        .from('war_story_reactions')
+        .select('war_story_id, user_id, kind')
+        .in('war_story_id', ids)
+      const more = aggregateReactions(reactRows ?? [], 'war_story_id', myId)
+      setReactions(prev => ({ ...prev, ...more }))
+    }
     setLoadingMore(false)
   }
 
@@ -531,6 +629,28 @@ export default function WarStoriesPage() {
         </div>
       )}
 
+      {/* Phase 4E (final) — full-text search. Submitting fires an FTS
+          query against title+body via the search_tsv generated column;
+          clearing returns to the standard feed. */}
+      {!tableMissing && (
+        <form onSubmit={e => { e.preventDefault(); runSearch() }}
+          style={{ display: 'flex', gap: '6px', marginBottom: '0.75rem', alignItems: 'center' }}>
+          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search stories…"
+            style={{ flex: 1, padding: '8px 12px', background: '#1a1a1a', border: `1px solid ${searchActive ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+          <button type="submit" disabled={searching}
+            style={{ padding: '8px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching ? 'wait' : 'pointer', fontWeight: 600 }}>
+            {searching ? '…' : '🔍 Search'}
+          </button>
+          {searchActive && (
+            <button type="button" onClick={() => { setSearchQuery(''); setSearchActive(false); loadStories() }}
+              style={{ padding: '8px 12px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              Clear
+            </button>
+          )}
+        </form>
+      )}
+
       {/* Setting filter chip strip — featured settings + Global. Click "All"
           to clear. War Stories has no other axis of filtering, so this is
           the only chip row. */}
@@ -632,17 +752,56 @@ export default function WarStoriesPage() {
                     })}
                   </div>
                 )}
-                {isMine && (
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <button onClick={() => startEdit(s)}
-                      style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                      Edit
-                    </button>
-                    <button onClick={() => handleDelete(s.id)}
-                      style={{ padding: '5px 12px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                      Delete
-                    </button>
-                  </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  {/* Phase 4E — reactions row. Available to everyone
+                      signed in; the author can still vote on their own
+                      story (mirrors Forums B). */}
+                  <ReactionButtons
+                    table="war_story_reactions"
+                    fkColumn="war_story_id"
+                    targetId={s.id}
+                    userId={myId}
+                    initialUp={reactions[s.id]?.up ?? 0}
+                    initialDown={reactions[s.id]?.down ?? 0}
+                    initialOwn={reactions[s.id]?.own ?? null}
+                  />
+                  {/* Phase 4E — replies toggle. Inline-expand panel
+                      mirrors the Forums reply UX without needing a
+                      detail page. */}
+                  {(() => {
+                    const liveCount = replyCountOverride[s.id] ?? s.reply_count ?? 0
+                    const open = openRepliesFor === s.id
+                    return (
+                      <button onClick={() => setOpenRepliesFor(open ? null : s.id)}
+                        style={{ padding: '5px 12px', background: open ? '#1a3a5c' : '#242424', border: `1px solid ${open ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: open ? '#7ab3d4' : '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        💬 {liveCount} {liveCount === 1 ? 'reply' : 'replies'} {open ? '▴' : '▾'}
+                      </button>
+                    )
+                  })()}
+                  {isMine && (
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button onClick={() => startEdit(s)}
+                        style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        Edit
+                      </button>
+                      <button onClick={() => handleDelete(s.id)}
+                        style={{ padding: '5px 12px', background: '#242424', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {openRepliesFor === s.id && (
+                  <InlineRepliesPanel
+                    table="war_story_replies"
+                    fkColumn="war_story_id"
+                    parentId={s.id}
+                    userId={myId}
+                    onReplyCountChange={delta => setReplyCountOverride(prev => ({
+                      ...prev,
+                      [s.id]: (prev[s.id] ?? s.reply_count ?? 0) + delta,
+                    }))}
+                  />
                 )}
               </div>
             )
