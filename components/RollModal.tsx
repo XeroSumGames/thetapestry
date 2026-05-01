@@ -79,7 +79,10 @@ export interface RollModalProps {
   preRollExtras?: React.ReactNode
 
   // ── Roll trigger ──────────────────────────────────────────────
-  onRoll: () => void | Promise<void>
+  // Required for the standard pre-roll → roll flow. Optional when the
+  // caller is using the shell as a result-only display (e.g. when an
+  // upstream modal already handled the picker + roll-fire path).
+  onRoll?: () => void | Promise<void>
   rolling?: boolean
   /** Override the Roll button label (default: "Roll"). */
   rollLabel?: string
@@ -226,8 +229,8 @@ export default function RollModal(props: RollModalProps) {
           <div style={{ marginBottom: '10px' }}>{warnings}</div>
         )}
 
-        {/* Roll button */}
-        {!result && (
+        {/* Roll button — only when the caller wired up onRoll. */}
+        {!result && onRoll && (
           <div style={{ display: 'flex', gap: '6px' }}>
             <button onClick={() => onRoll()} disabled={rolling || rollDisabled}
               style={{ flex: 1, padding: '10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, cursor: (rolling || rollDisabled) ? 'not-allowed' : 'pointer', opacity: (rolling || rollDisabled) ? 0.5 : 1 }}>

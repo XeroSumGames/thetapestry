@@ -10,6 +10,7 @@ import TradeNegotiationModal from '../../../../components/TradeNegotiationModal'
 import PlayerNpcCard from '../../../../components/PlayerNpcCard'
 import ObjectCard from '../../../../components/ObjectCard'
 import VehicleCard, { Vehicle } from '../../../../components/VehicleCard'
+import RollModal, { type RollResult as SharedRollResult } from '../../../../components/RollModal'
 import NotificationBell from '../../../../components/NotificationBell'
 import MessagesBell from '../../../../components/MessagesBell'
 import InitiativeBar from '../../../../components/InitiativeBar'
@@ -9563,7 +9564,11 @@ export default function TablePage() {
       )}
 
       {/* ── Recruitment Modal (Communities Phase B) ─────────────────── */}
-      {showRecruit && (() => {
+      {/* ── PICK STEP — bespoke recruitment setup (PC / NPC / community
+          / approach / skill picker). Modal Unification Pass 2 keeps
+          this picker as-is and delegates the RESULT step to the shared
+          <RollModal> shell rendered separately below. */}
+      {showRecruit && recruitStep === 'pick' && (() => {
         const eligibleNpcs = getRecruitEligibleNpcs()
         const pickedNpc = eligibleNpcs.find((n: any) => n.id === recruitNpcId)
         const rollerEntry = entries.find(e => e.character.id === recruitRollerId)
@@ -9578,12 +9583,7 @@ export default function TablePage() {
             ? recruitNewCommunityName.trim().length > 0
             : !!recruitCommunityId
         )
-        const pcHasApprentice = recruitRollerId ? !!apprenticeByCharacter[recruitRollerId] : false
         const poachingNpcCommunity = recruitNpcId ? npcCommunityMap[recruitNpcId] : null
-        // Apprentice eligibility — SRD §08 p.21: ONLY a Moment of
-        // High Insight (double-6) grants the Apprentice option.
-        // Wild Success (plain 14+ without matching faces) does not.
-        const isHighInsight = recruitResult?.outcome === 'High Insight'
         return (
           <div onClick={closeRecruitModal}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
@@ -9591,13 +9591,11 @@ export default function TablePage() {
               style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '520px', maxHeight: '85vh', overflowY: 'auto' }}>
               <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Recruitment</div>
               <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>
-                {recruitStep === 'pick' ? 'Pick target & approach' : recruitStep === 'roll' ? 'Review the roll' : 'Outcome'}
+                Pick target & approach
               </div>
 
-              {/* ── STEP PICK ── */}
-              {recruitStep === 'pick' && (
-                <>
-                  {/* Roller PC — players only see their own PC; GMs
+              <>
+                {/* Roller PC — players only see their own PC; GMs
                       see everyone (they may orchestrate on behalf of
                       an absent player). Stops Percy from rolling a
                       First Impression or Recruitment Check *as* Ada. */}
@@ -9787,145 +9785,157 @@ export default function TablePage() {
                       style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
                     <button onClick={executeRecruitRoll} disabled={!canRoll}
                       style={{ flex: 2, padding: '10px', background: canRoll ? '#c0392b' : '#2a1210', border: `1px solid ${canRoll ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: canRoll ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: canRoll ? 'pointer' : 'not-allowed' }}>
-                      🎲 Roll Recruitment
-                    </button>
-                  </div>
-                </>
-              )}
+                    🎲 Roll Recruitment
+                  </button>
+                </div>
+              </>
 
-              {/* ── STEP RESULT ── */}
-              {recruitStep === 'result' && recruitResult && (
-                <>
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
-                    {([recruitResult.die1, recruitResult.die2, ...(recruitResult.die3 !== undefined ? [recruitResult.die3] : [])]).map((d, i) => (
-                      <div key={i} style={{ flex: 1, padding: '12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', textAlign: 'center', fontSize: '24px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{d}</div>
-                    ))}
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>
-                    [{recruitResult.die1}+{recruitResult.die2}{recruitResult.die3 !== undefined ? `+${recruitResult.die3}` : ''}]
-                    {recruitResult.amod !== 0 && <span style={{ color: recruitResult.amod > 0 ? '#7fc458' : '#c0392b' }}> {recruitResult.amod > 0 ? '+' : ''}{recruitResult.amod} AMod</span>}
-                    {recruitResult.smod !== 0 && <span style={{ color: recruitResult.smod > 0 ? '#7fc458' : '#c0392b' }}> {recruitResult.smod > 0 ? '+' : ''}{recruitResult.smod} SMod</span>}
-                    {recruitResult.cmod !== 0 && <span style={{ color: recruitResult.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {recruitResult.cmod > 0 ? '+' : ''}{recruitResult.cmod} CMod</span>}
-                    <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {recruitResult.total}</span>
-                  </div>
-                  <div style={{ fontSize: '18px', fontWeight: 700, color: outcomeColor(recruitResult.outcome), fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '1rem' }}>
-                    {recruitResult.outcome}
-                  </div>
-                  <div style={{ padding: '12px', background: recruitResult.inserted ? '#0f1a0f' : '#2a1210', border: `1px solid ${recruitResult.inserted ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', marginBottom: '1rem', lineHeight: 1.4 }}>
-                    {recruitResult.inserted ? (
-                      <>
-                        <strong>{recruitResult.npcName}</strong> joined <strong>{recruitResult.communityName}</strong>
-                        {recruitResult.apprenticeApplied ? ` as an Apprentice to ${recruitResult.rollerName}.` : ` as a ${recruitResult.approach.charAt(0).toUpperCase() + recruitResult.approach.slice(1)}.`}
-                      </>
-                    ) : (
-                      <>The attempt failed. <strong>{recruitResult.npcName}</strong> is not joining {recruitResult.communityName}.</>
-                    )}
-                  </div>
-
-                  {/* Post-roll Insight Die reroll — spend 1 to reroll a single die.
-                      Moments of Insight (double-1 Low / double-6 High) are
-                      locked per XSE rules: the double-face outcome
-                      overrides the modifier math and cannot be rerolled
-                      or otherwise altered. Hide the reroll box in that
-                      case. */}
-                  {(() => {
-                    const rollerEntry = entries.find(e => e.character.name === recruitResult.rollerName)
-                    const insightAvail = rollerEntry?.liveState?.insight_dice ?? 0
-                    if (insightAvail < 1) return null
-                    if (recruitResult.outcome === 'Low Insight' || recruitResult.outcome === 'High Insight') return null
-                    const btn = (label: string, which: 1 | 2 | 3) => (
-                      <button onClick={() => rerollRecruitDie(which)}
-                        style={{ flex: 1, padding: '8px 10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                        {label}
-                      </button>
-                    )
-                    return (
-                      <div style={{ marginBottom: '1rem', padding: '10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px' }}>
-                        <div style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Spend Insight to Reroll</span>
-                          <span style={{ color: '#cce0f5' }}>{insightAvail} available</span>
-                        </div>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          {btn(`Re-roll Die 1 (${recruitResult.die1})`, 1)}
-                          {btn(`Re-roll Die 2 (${recruitResult.die2})`, 2)}
-                          {recruitResult.die3 !== undefined && btn(`Re-roll Die 3 (${recruitResult.die3})`, 3)}
-                        </div>
-                        <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '6px', lineHeight: 1.4 }}>
-                          Rerolling flips membership state if the outcome crosses the success line.
-                        </div>
-                      </div>
-                    )
-                  })()}
-
-                  {/* Apprentice toggle — re-shown only after a Moment
-                      of High Insight (double-6). Wild Success alone
-                      does NOT unlock Apprentice per XSE SRD §08 p.21. */}
-                  {isHighInsight && recruitResult.inserted && !recruitResult.apprenticeApplied && !pcHasApprentice && (
-                    <div style={{ padding: '10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', marginBottom: '1rem' }}>
-                      <div style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>⭐ Apprentice Eligible</div>
-                      <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px' }}>
-                        A Moment of High Insight (double-6) on this recruit allows {recruitResult.rollerName} to take {recruitResult.npcName} as an Apprentice (1 per PC).
-                      </div>
-                      <button onClick={async () => {
-                        // Auto-roll Motivation (Table 7) + Complication
-                        // (Table 6) for the Apprentice. Per spec §2a, these
-                        // are inherent character — the player does NOT get
-                        // to reroll or pick. Rolled here at "Take" time so
-                        // the values are locked in before the player ever
-                        // opens the Apprentice creation wizard.
-                        const motivationRoll = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1)
-                        const complicationRoll = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1)
-                        const motivation = MOTIVATIONS[motivationRoll]
-                        const complication = COMPLICATIONS[complicationRoll]
-                        // Apprentices "come with" age + three trait words per
-                        // SRD §08 p.21 — rolled here at recruit-time so the
-                        // values are inherent character before the wizard
-                        // opens. Editable on the Identity step but pre-filled.
-                        const age = rollApprenticeAge()
-                        const threeWords = rollThreeWords()
-                        const apprenticeMeta = {
-                          motivation, motivation_roll: motivationRoll,
-                          complication, complication_roll: complicationRoll,
-                          age,
-                          three_words: threeWords,
-                          setup_complete: false,
-                        }
-                        await supabase.from('community_members')
-                          .update({
-                            recruitment_type: 'apprentice',
-                            apprentice_of_character_id: recruitRollerId,
-                            apprentice_meta: apprenticeMeta,
-                          })
-                          .eq('community_id', recruitResult.communityId)
-                          .eq('npc_id', recruitNpcId)
-                        setRecruitResult(r => r ? { ...r, apprenticeApplied: true } : r)
-                        // Apprentice bond — durable journey marker on the master PC.
-                        // Includes the locked-in Motivation + Complication so the
-                        // player can read it back later and remember what their
-                        // Apprentice came into the world wanting and bearing.
-                        if (recruitRollerId) void appendProgressionLog(
-                          recruitRollerId,
-                          'community',
-                          `⭐ Took ${recruitResult.npcName} (age ${age}, ${threeWords.join(' / ')}) as your Apprentice — Motivation: ${motivation}, Complication: ${complication}.`,
-                        )
-                        if (typeof window !== 'undefined') {
-                          window.dispatchEvent(new CustomEvent('tapestry:recruit-updated', { detail: { npcId: recruitNpcId } }))
-                        }
-                      }}
-                        style={{ padding: '6px 12px', background: '#8b2e8b', border: '1px solid #d48bd4', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                        Take as Apprentice
-                      </button>
-                    </div>
-                  )}
-
-                  <button onClick={closeRecruitModal}
-                    style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Close</button>
-                </>
-              )}
             </div>
           </div>
         )
       })()}
+
+      {/* ── RESULT STEP — unified <RollModal> shell. Apprentice toggle
+          + Insight Die rerolls live in renderOutcome since they're
+          recruitment-specific (the shell's standard 2-die reroll
+          plumbing doesn't cover the 3d6 Insight pre-roll case). */}
+      <RollModal
+        open={!!recruitResult && showRecruit && recruitStep === 'result'}
+        onClose={closeRecruitModal}
+        title="Recruitment"
+        subtitle={recruitResult ? `${recruitResult.rollerName} → ${recruitResult.npcName}${recruitResult.approach ? ` · ${recruitResult.approach.charAt(0).toUpperCase()}${recruitResult.approach.slice(1)}` : ''}` : undefined}
+        rollFormula="2d6 + INF + Skill + CMod"
+        amod={recruitResult?.amod ?? 0}
+        smod={recruitResult?.smod ?? 0}
+        cmod={recruitResult?.cmod ?? 0}
+        result={recruitResult ? {
+          die1: recruitResult.die1,
+          die2: recruitResult.die2,
+          die3: recruitResult.die3,
+          amod: recruitResult.amod,
+          smod: recruitResult.smod,
+          cmod: recruitResult.cmod,
+          total: recruitResult.total,
+          outcome: recruitResult.outcome,
+          diceRolled: recruitResult.die3 !== undefined
+            ? [recruitResult.die1, recruitResult.die2, recruitResult.die3]
+            : [recruitResult.die1, recruitResult.die2],
+        } satisfies SharedRollResult : null}
+        renderOutcome={(r) => {
+          if (!recruitResult) return null
+          const outcome = recruitResult.outcome
+          const isHighInsight = outcome === 'High Insight'
+          const pcHasApprentice = recruitRollerId ? !!apprenticeByCharacter[recruitRollerId] : false
+          const rollerEntry = entries.find(e => e.character.name === recruitResult.rollerName)
+          const insightAvail = rollerEntry?.liveState?.insight_dice ?? 0
+          const insightLocked = outcome === 'Low Insight' || outcome === 'High Insight'
+          const showRerolls = insightAvail > 0 && !insightLocked
+          return (
+            <>
+              {/* Math line */}
+              <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', textAlign: 'center' }}>
+                [{recruitResult.die1}+{recruitResult.die2}{recruitResult.die3 !== undefined ? `+${recruitResult.die3}` : ''}]
+                {r.amod !== 0 && <span style={{ color: r.amod > 0 ? '#7fc458' : '#c0392b' }}> {r.amod > 0 ? '+' : ''}{r.amod} AMod</span>}
+                {r.smod !== 0 && <span style={{ color: r.smod > 0 ? '#7fc458' : '#c0392b' }}> {r.smod > 0 ? '+' : ''}{r.smod} SMod</span>}
+                {r.cmod !== 0 && <span style={{ color: r.cmod > 0 ? '#7ab3d4' : '#EF9F27' }}> {r.cmod > 0 ? '+' : ''}{r.cmod} CMod</span>}
+                <span style={{ color: '#f5f2ee', fontWeight: 700 }}> = {r.total}</span>
+              </div>
+              {/* Outcome banner */}
+              <div style={{ fontSize: '18px', fontWeight: 700, color: outcomeColor(outcome), fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '1rem', textAlign: 'center' }}>
+                {outcome}
+              </div>
+              {/* Joined/failed card */}
+              <div style={{ padding: '12px', background: recruitResult.inserted ? '#0f1a0f' : '#2a1210', border: `1px solid ${recruitResult.inserted ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', marginBottom: '1rem', lineHeight: 1.4 }}>
+                {recruitResult.inserted ? (
+                  <>
+                    <strong>{recruitResult.npcName}</strong> joined <strong>{recruitResult.communityName}</strong>
+                    {recruitResult.apprenticeApplied ? ` as an Apprentice to ${recruitResult.rollerName}.` : ` as a ${recruitResult.approach.charAt(0).toUpperCase() + recruitResult.approach.slice(1)}.`}
+                  </>
+                ) : (
+                  <>The attempt failed. <strong>{recruitResult.npcName}</strong> is not joining {recruitResult.communityName}.</>
+                )}
+              </div>
+              {/* Reroll buttons (custom — supports up to 3 dice for the
+                  3d6 Insight pre-roll case) */}
+              {showRerolls && (
+                <div style={{ marginBottom: '1rem', padding: '10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px' }}>
+                  <div style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Spend Insight to Reroll</span>
+                    <span style={{ color: '#cce0f5' }}>{insightAvail} available</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button onClick={() => rerollRecruitDie(1)}
+                      style={{ flex: 1, padding: '8px 10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      Re-roll Die 1 ({recruitResult.die1})
+                    </button>
+                    <button onClick={() => rerollRecruitDie(2)}
+                      style={{ flex: 1, padding: '8px 10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      Re-roll Die 2 ({recruitResult.die2})
+                    </button>
+                    {recruitResult.die3 !== undefined && (
+                      <button onClick={() => rerollRecruitDie(3)}
+                        style={{ flex: 1, padding: '8px 10px', background: '#1a0f1a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        Re-roll Die 3 ({recruitResult.die3})
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '6px', lineHeight: 1.4 }}>
+                    Rerolling flips membership state if the outcome crosses the success line.
+                  </div>
+                </div>
+              )}
+              {/* Apprentice toggle — High Insight only */}
+              {isHighInsight && recruitResult.inserted && !recruitResult.apprenticeApplied && !pcHasApprentice && (
+                <div style={{ padding: '10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>⭐ Apprentice Eligible</div>
+                  <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px' }}>
+                    A Moment of High Insight (double-6) on this recruit allows {recruitResult.rollerName} to take {recruitResult.npcName} as an Apprentice (1 per PC).
+                  </div>
+                  <button onClick={async () => {
+                    const motivationRoll = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1)
+                    const complicationRoll = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1)
+                    const motivation = MOTIVATIONS[motivationRoll]
+                    const complication = COMPLICATIONS[complicationRoll]
+                    const age = rollApprenticeAge()
+                    const threeWords = rollThreeWords()
+                    const apprenticeMeta = {
+                      motivation, motivation_roll: motivationRoll,
+                      complication, complication_roll: complicationRoll,
+                      age,
+                      three_words: threeWords,
+                      setup_complete: false,
+                    }
+                    await supabase.from('community_members')
+                      .update({
+                        recruitment_type: 'apprentice',
+                        apprentice_of_character_id: recruitRollerId,
+                        apprentice_meta: apprenticeMeta,
+                      })
+                      .eq('community_id', recruitResult.communityId)
+                      .eq('npc_id', recruitNpcId)
+                    setRecruitResult(r => r ? { ...r, apprenticeApplied: true } : r)
+                    if (recruitRollerId) void appendProgressionLog(
+                      recruitRollerId,
+                      'community',
+                      `⭐ Took ${recruitResult.npcName} (age ${age}, ${threeWords.join(' / ')}) as your Apprentice — Motivation: ${motivation}, Complication: ${complication}.`,
+                    )
+                    if (typeof window !== 'undefined') {
+                      window.dispatchEvent(new CustomEvent('tapestry:recruit-updated', { detail: { npcId: recruitNpcId } }))
+                    }
+                  }}
+                    style={{ padding: '6px 12px', background: '#8b2e8b', border: '1px solid #d48bd4', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Take as Apprentice
+                  </button>
+                </div>
+              )}
+            </>
+          )
+        }}
+        postRollCloseLabel="Close"
+        onPostRollClose={closeRecruitModal}
+      />
+      {/* (legacy roll-step + result-step JSX consolidated above) */}
+      {false && (() => null)()}
 
       {/* Apprentice Creation Wizard — single instance, lifted from
           NpcCard / PlayerNpcCard so multiple open NPC cards share it.
