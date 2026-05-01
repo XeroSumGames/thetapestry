@@ -1,8 +1,14 @@
 import RulesNav from '../../components/rules/RulesNav'
 
-// /rules/* layout — sticky left rail nav + scrolling content. Sits inside
-// the global Tapestry sidebar (LayoutShell), so visually we have:
-//   [Tapestry Sidebar] [RulesNav] [content]
+// /rules/* layout. Visually: [Tapestry Sidebar] [RulesNav] [content].
+//
+// Scroll model: the OUTER flex container uses height: 100% + overflow:
+// hidden so the rules layout fills its slot in LayoutShell exactly. The
+// <main> column is the only scrolling region — that keeps RulesNav
+// statically pinned in its own column. Position: sticky was unreliable
+// here because LayoutShell's children-wrapper already provides the
+// scrolling context; nesting another sticky inside that landed the
+// "stick at top" behaviour intermittently.
 
 export const metadata = {
   title: 'Rules — XSE SRD',
@@ -18,7 +24,9 @@ export default function RulesLayout({ children }: { children: React.ReactNode })
         background: '#0f0f0f',
         color: '#f5f2ee',
         fontFamily: 'Barlow, sans-serif',
-        minHeight: '100vh',
+        height: '100%',
+        minHeight: 0,
+        overflow: 'hidden',
       }}
     >
       <RulesNav />
@@ -26,11 +34,12 @@ export default function RulesLayout({ children }: { children: React.ReactNode })
         style={{
           flex: 1,
           minWidth: 0,
+          overflowY: 'auto',
           padding: '2.5rem 2rem 5rem',
-          maxWidth: 880,
+          scrollBehavior: 'smooth',
         }}
       >
-        {children}
+        <div style={{ maxWidth: 880, margin: '0 auto' }}>{children}</div>
       </main>
     </div>
   )
