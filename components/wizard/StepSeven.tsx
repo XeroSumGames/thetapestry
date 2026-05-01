@@ -1,10 +1,26 @@
 'use client'
 import { WizardState, getCumulativeAttributes } from '../../lib/xse-engine'
-import { ATTRIBUTE_LABELS, deriveSecondaryStats } from '../../lib/xse-schema'
+import { ATTRIBUTE_LABELS, deriveSecondaryStats, type AttributeName } from '../../lib/xse-schema'
+import HelpTooltip from '../HelpTooltip'
+import { ATTRIBUTE_DESCRIPTIONS, ENCUMBRANCE_DESCRIPTION } from '../../lib/help-text'
 
-const ATTR_KEYS = ['RSN', 'ACU', 'PHY', 'INF', 'DEX'] as const
+const ATTR_KEYS: AttributeName[] = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 const ATTR_FULL: Record<string, string> = {
   RSN: 'Reason', ACU: 'Acumen', PHY: 'Physicality', INF: 'Influence', DEX: 'Dexterity'
+}
+
+// Per-derived-stat help copy. Plain prose so tooltips can paint
+// quickly without crossing libraries.
+const DERIVED_DESCRIPTIONS: Record<string, string> = {
+  'Wound Points': 'Wound Points (WP) — physical hit points. PCs go Mortally Wounded at 0 and roll a death countdown. Max = 6 + PHY AMod.',
+  'Resilience Points': 'Resilience Points (RP) — short-term toughness, used to soak grit + adrenaline checks. Max = 6 + PHY AMod.',
+  'Initiative': 'Initiative — turn order in combat. Roll 2d6 + DEX AMod + ACU AMod. Higher rolls go first.',
+  'Perception': 'Perception modifier — added to spotting / awareness checks. Equals RSN AMod + ACU AMod.',
+  'Encumbrance': ENCUMBRANCE_DESCRIPTION,
+  'Stress Modifier': 'Stress Modifier — added to Stress Checks (the gate roll when stress hits 5). Equals RSN AMod + ACU AMod.',
+  'Melee Defence': 'Melee Defence Modifier (DMM) — subtracted from incoming melee damage. Equals PHY AMod.',
+  'Ranged Defence': 'Ranged Defence Modifier (DMR) — subtracted from incoming ranged damage. Equals DEX AMod.',
+  'Morality': 'Morality — moral compass tracker, 0–7. GM-driven; affects how NPCs read your PC. Starts at 3 (neutral).',
 }
 
 interface Props {
@@ -42,7 +58,10 @@ export default function StepSeven({ state }: Props) {
               border: `1px solid ${val > 0 ? '#c0392b' : '#3a3a3a'}`,
               borderRadius: '3px', padding: '8px 4px', textAlign: 'center',
             }}>
-              <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif' }}>{k}</div>
+              <div style={{ fontSize: '13px', color: '#d4cfc9', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                {k}
+                <HelpTooltip title={`${k} — ${ATTR_FULL[k]}`} text={ATTRIBUTE_DESCRIPTIONS[k]} iconStyle={{ width: '13px', height: '13px', fontSize: '13px' }} />
+              </div>
               <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '5px', lineHeight: 1.2 }}>{ATTR_FULL[k]}</div>
               <div style={{ fontSize: '17px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: val > 0 ? '#f5a89a' : '#f5f2ee', margin: '4px 0' }}>
                 {sgn(val)}
@@ -61,8 +80,11 @@ export default function StepSeven({ state }: Props) {
             background: '#242424', border: `1px solid ${hi ? '#7a1f16' : '#2e2e2e'}`,
             borderRadius: '3px', padding: '8px 10px',
           }}>
-            <div style={{ fontSize: '9.5px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '1px' }}>
-              {label}
+            <div style={{ fontSize: '13px', color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '1px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span>{label}</span>
+              {DERIVED_DESCRIPTIONS[label] && (
+                <HelpTooltip title={label} text={DERIVED_DESCRIPTIONS[label]} iconStyle={{ width: '12px', height: '12px', fontSize: '13px' }} />
+              )}
             </div>
             <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: hi ? '#f5a89a' : '#f5f2ee' }}>
               {typeof value === 'number' && value <= 3 && label !== 'Morality' && label !== 'Wound Points' && label !== 'Resilience Points' && label !== 'Encumbrance' ? sgn(value) : value}

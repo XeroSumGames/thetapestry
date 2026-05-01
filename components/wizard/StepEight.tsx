@@ -1,8 +1,14 @@
 'use client'
 import { useMemo, useState } from 'react'
 import { WizardState } from '../../lib/xse-engine'
-import { ALL_WEAPONS, type Weapon, type WeaponCategory } from '../../lib/weapons'
+import { ALL_WEAPONS, TRAIT_DESCRIPTIONS, type Weapon, type WeaponCategory } from '../../lib/weapons'
 import { EQUIPMENT } from '../../lib/xse-schema'
+import HelpTooltip from '../HelpTooltip'
+import {
+  ENCUMBRANCE_DESCRIPTION,
+  RARITY_DESCRIPTION,
+  RANGE_BAND_DESCRIPTIONS,
+} from '../../lib/help-text'
 
 // What They Have — character-creation step 8. Redesigned 2026-05-01:
 //
@@ -199,15 +205,53 @@ function WeaponSection({
                 {w.category}
               </span>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {w.name}{' '}
-                  <span style={{ fontSize: '13px', fontWeight: 500, color: rarityColor, marginLeft: '4px', textTransform: 'uppercase', letterSpacing: '.06em' }}>{w.rarity}</span>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <span>{w.name}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', fontSize: '13px', fontWeight: 500, color: rarityColor, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                    {w.rarity}
+                    <HelpTooltip title="Rarity" text={RARITY_DESCRIPTION} iconStyle={{ width: '12px', height: '12px', fontSize: '13px' }} />
+                  </span>
                 </div>
-                <div style={{ fontSize: '13px', color: '#cce0f5' }}>
-                  {w.range} · {w.damage} · RP {w.rpPercent}% · ENC {w.enc}
-                  {w.clip != null && ` · Clip ${w.clip}`}
+                <div style={{ fontSize: '13px', color: '#cce0f5', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    {w.range}
+                    <HelpTooltip title={`Range — ${w.range}`} text={RANGE_BAND_DESCRIPTIONS[w.range] ?? ''} iconStyle={{ width: '12px', height: '12px', fontSize: '13px' }} />
+                  </span>
+                  <span>·</span>
+                  <span>{w.damage}</span>
+                  <span>·</span>
+                  <span>RP {w.rpPercent}%</span>
+                  <span>·</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    ENC {w.enc}
+                    <HelpTooltip title="Encumbrance" text={ENCUMBRANCE_DESCRIPTION} iconStyle={{ width: '12px', height: '12px', fontSize: '13px' }} />
+                  </span>
+                  {w.clip != null && <><span>·</span><span>Clip {w.clip}</span></>}
                   {w.traits.length > 0 && (
-                    <span style={{ color: '#7ab3d4', marginLeft: '4px' }}>· {w.traits.join(', ')}</span>
+                    <>
+                      <span>·</span>
+                      <span style={{ color: '#7ab3d4', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                        {w.traits.map((t, i) => {
+                          // Trait label may include "(N)" suffix; strip
+                          // for the description lookup.
+                          const baseName = t.replace(/\s*\(\d+\).*$/, '').trim()
+                          const desc = TRAIT_DESCRIPTIONS[baseName]
+                          return (
+                            <span key={i} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                              {i > 0 && <span style={{ marginRight: '2px' }}>,</span>}
+                              {t}
+                              {desc && (
+                                <HelpTooltip
+                                  title={baseName}
+                                  text={desc}
+                                  iconStyle={{ width: '12px', height: '12px', fontSize: '13px', borderColor: '#7ab3d4', color: '#7ab3d4' }}
+                                />
+                              )}
+                            </span>
+                          )
+                        })}
+                      </span>
+                    </>
                   )}
                 </div>
               </div>
@@ -302,15 +346,20 @@ function EquipmentList({ selected, tab, setTab, query, setQuery, onChange }: Equ
                 fontFamily: 'Barlow, sans-serif',
                 color: '#f5f2ee',
               }}>
-              <span style={{ fontSize: '13px', color: rarityColor, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, minWidth: '64px', textAlign: 'center' }}>
+              <span style={{ fontSize: '13px', color: rarityColor, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, minWidth: '64px', textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
                 {item.rarity}
+                <HelpTooltip title="Rarity" text={RARITY_DESCRIPTION} iconStyle={{ width: '12px', height: '12px', fontSize: '13px' }} />
               </span>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {item.name}
                 </div>
-                <div style={{ fontSize: '13px', color: '#cce0f5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  ENC {item.enc}{item.notes ? ` · ${item.notes}` : ''}
+                <div style={{ fontSize: '13px', color: '#cce0f5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    ENC {item.enc}
+                    <HelpTooltip title="Encumbrance" text={ENCUMBRANCE_DESCRIPTION} iconStyle={{ width: '12px', height: '12px', fontSize: '13px' }} />
+                  </span>
+                  {item.notes && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>· {item.notes}</span>}
                 </div>
               </div>
               {sel && (

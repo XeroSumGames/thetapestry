@@ -2,6 +2,8 @@
 import { useState } from 'react'
 import { WizardState, StepData, getCumulativeAttributes, getCumulativeSkills, skillStepUp } from '../../lib/xse-engine'
 import { SKILLS, ATTRIBUTE_LABELS, SKILL_LABELS, PROFESSIONS, AttributeName, SkillValue } from '../../lib/xse-schema'
+import HelpTooltip from '../HelpTooltip'
+import { CDP_DESCRIPTION, SKILL_TIER_DESCRIPTION, VOCATIONAL_DESCRIPTION } from '../../lib/help-text'
 
 const ATTR_KEYS: AttributeName[] = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 const ATTR_FULL: Record<AttributeName, string> = {
@@ -99,14 +101,14 @@ export default function StepFour({ state, onChange }: Props) {
         const gained = Object.entries(d.skillDeltas ?? {}).filter(([, v]) => (v ?? 0) > 0).map(([n]) => n)
         return (
           <div key={idx} style={{ background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px 12px', marginBottom: '8px' }}>
-            <div style={{ fontSize: '9.5px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '5px', fontFamily: 'Carlito, sans-serif' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '5px', fontFamily: 'Carlito, sans-serif' }}>
               Step {num}: {title}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', padding: '2px 0', borderBottom: '1px solid #2e2e2e' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '2px 0', borderBottom: '1px solid #2e2e2e' }}>
               <span style={{ color: '#d4cfc9' }}>Attribute</span>
               <span style={{ fontWeight: 500, color: '#f5f2ee' }}>{attrStr}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', padding: '2px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '2px 0' }}>
               <span style={{ color: '#d4cfc9' }}>Skills</span>
               <span style={{ fontWeight: 500, color: '#f5f2ee', maxWidth: '65%', textAlign: 'right', wordBreak: 'break-word' }}>
                 {gained.length ? gained.join(', ') : 'none'}
@@ -131,7 +133,11 @@ export default function StepFour({ state, onChange }: Props) {
       </div>
 
       {/* Skill picker — 4 CDP */}
-      <div style={sh}>Skills — 4 CDP (max Professional +3)</div>
+      <div style={{ ...sh, display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span>Skills — 4 CDP (max Professional +3)</span>
+        <HelpTooltip title="Skill levels" text={SKILL_TIER_DESCRIPTION} />
+        <HelpTooltip title="Vocational skills (*)" text={VOCATIONAL_DESCRIPTION} icon="*" iconStyle={{ color: '#EF9F27', borderColor: '#EF9F27' }} />
+      </div>
       {profSkills.length > 0 && (
         <p style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '6px', lineHeight: 1.6 }}>
           Profession skills highlighted: {profSkills.join(', ')}
@@ -143,7 +149,10 @@ export default function StepFour({ state, onChange }: Props) {
             <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', border: `1px solid ${i < skillCDPSpent ? '#c0392b' : '#3a3a3a'}`, background: i < skillCDPSpent ? '#c0392b' : '#0f0f0f' }} />
           ))}
         </div>
-        <span style={{ fontSize: '13px', color: '#f5f2ee', flex: 1 }}>Skill CDP</span>
+        <span style={{ fontSize: '13px', color: '#f5f2ee', flex: 1, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          Skill CDP
+          <HelpTooltip title="Character Development Points" text={CDP_DESCRIPTION} />
+        </span>
         <span style={{ fontSize: '13px', fontWeight: 600, minWidth: '36px', textAlign: 'right', color: skillCDPSpent >= 4 ? '#f5a89a' : '#f5f2ee' }}>
           {4 - skillCDPSpent} left
         </span>
@@ -170,10 +179,15 @@ export default function StepFour({ state, onChange }: Props) {
               borderRadius: '3px', padding: '5px 7px', background: '#242424',
             }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '11.5px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: isProfSk ? '#f5a89a' : deltaThisStep > 0 ? '#f5a89a' : '#f5f2ee' }}>
-                  {sk.name}{sk.vocational ? '*' : ''}
+                <div style={{ fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: isProfSk ? '#f5a89a' : deltaThisStep > 0 ? '#f5a89a' : '#f5f2ee', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{sk.name}{sk.vocational ? '*' : ''}</span>
+                  <HelpTooltip
+                    title={`${sk.name}${sk.vocational ? ' (vocational)' : ''} — ${sk.attribute}`}
+                    text={sk.description ?? 'No description on file.'}
+                    iconStyle={{ width: '12px', height: '12px', fontSize: '13px' }}
+                  />
                 </div>
-                <div style={{ fontSize: '9.5px', color: '#d4cfc9' }}>
+                <div style={{ fontSize: '13px', color: '#d4cfc9' }}>
                   {sk.attribute} — {SKILL_LABELS[cumVal]}{deltaThisStep > 0 ? ` (+${deltaThisStep})` : ''}
                 </div>
               </div>
