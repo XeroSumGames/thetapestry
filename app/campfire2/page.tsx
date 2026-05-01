@@ -140,7 +140,7 @@ export default function CampfireMockupPage() {
                   <div style={{ fontFamily: 'Distemper, Carlito, sans-serif', fontSize: '26px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '10px', lineHeight: 1.1 }}>
                     {hub.name}
                   </div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', lineHeight: 1.5, marginBottom: '14px' }}>
+                  <div style={{ fontSize: '15px', color: '#cce0f5', lineHeight: 1.5, marginBottom: '14px' }}>
                     {hub.tagline}
                   </div>
                   <div style={{ fontSize: '13px', letterSpacing: '.1em', textTransform: 'uppercase', color: accent, fontWeight: 700 }}>
@@ -166,7 +166,7 @@ export default function CampfireMockupPage() {
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                     <span style={{ fontSize: '20px', lineHeight: 1, opacity: isSoon ? 0.4 : 1, filter: isSoon ? 'grayscale(1)' : 'none' }}>{card.glyph}</span>
-                    <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '15px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: isSoon ? '#5a5a5a' : card.accent, flex: 1 }}>
+                    <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: isSoon ? '#5a5a5a' : card.accent, flex: 1 }}>
                       {card.label}
                     </span>
                     {card.badge === 'preview' && (
@@ -176,7 +176,7 @@ export default function CampfireMockupPage() {
                       <span style={{ fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', color: '#cce0f5', opacity: 0.5 }}>soon</span>
                     )}
                   </div>
-                  <div style={{ fontSize: '14px', color: isSoon ? '#5a5a5a' : '#cce0f5', lineHeight: 1.5 }}>
+                  <div style={{ fontSize: '15px', color: isSoon ? '#5a5a5a' : '#cce0f5', lineHeight: 1.5 }}>
                     {card.description}
                   </div>
                 </>
