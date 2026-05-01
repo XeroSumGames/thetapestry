@@ -81,7 +81,7 @@ Each item is independent; pick off as needed. None are blocking.
 Ready to pick up; each is self-contained.
 
 ### From 2026-04-29 chat — roll-log clarity + modal unification
-- [ ] **Empty-adventure module clone fails on null pin name.** Creating a new Empty (Chased-content) campaign throws `Campaign created but module clone failed: pins: null value in column "name"…`. Lives in `cloneModuleIntoCampaign` in `lib/modules.ts` — one pin row in the Empty/Chased module snapshot is missing `name`. Fix shape: defensive coalesce on the mapper + audit the published Empty module's snapshot. Repro: `/stories/new` → Empty setting → Save.
+- [x] **Empty-adventure module clone fails on null pin name.** ✅ Already shipped — `lib/modules.ts:316` does `resolvedName = p.name ?? p.title` with a warn-and-skip fallback for rows missing both. Audit confirmed 2026-05-01.
 - [ ] **Gut Instinct results presentation rework.** Current Gut Instinct rolls land in the standard roll modal but the *result framing* doesn't communicate what the player learned. Needs design discussion: narrative card in the feed? Overlay on the rolling PC's sheet? GM-only insight via DM? Mechanics fine; comprehension issue.
 - [ ] **First Impression → straight to roll modal.** Today First Impression has a separate pre-roll picker (target NPC + skill). Skip the picker and dump straight into the main Attack Roll modal pre-populated with `INF + Manipulation/Streetwise/Psychology` and the NPC pre-targeted. Saves ~3-4 clicks.
 - [ ] **Modal unification — Attack Roll is the gold standard.** Every roll modal should match its shape (roll breakdown, target dropdown, CMod input, Insight Dice pre-roll + post-roll reroll). Modals to normalize: Stress Check, Breaking Point, Lasting Wound, Recruit, Stabilize, Distract, Coordinate, Group Check, Gut Instinct, First Impression. Multi-commit refactor; needs a shared `<RollModal>` shell.
@@ -180,7 +180,7 @@ Ready to pick up; each is self-contained.
 Phase A (MVP) ✅, Phase B (versioning) ✅, Phase B+ (lifecycle) ✅. Open:
 
 ### Phase A leftover
-- [ ] Migrate existing Arena seed (`setting_seed_*` tables) into a `modules` row; deprecate seed tables.
+- [x] Migrate existing Arena seed (`setting_seed_*` tables) into a `modules` row. ✅ Already shipped — the Thriver tool at `/tools/migrate-settings-to-modules` publishes all 5 deprecated settings (Empty / Chased / Minnie / Basement / Arena) as Modules. Audit confirmed 2026-05-01.
 
 ### Phase C — Marketplace
 - [ ] `/modules` browse + search + filters (setting, tags, rating, subscriber count)

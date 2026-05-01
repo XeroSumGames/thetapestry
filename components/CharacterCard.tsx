@@ -9,6 +9,7 @@ import ProgressionLog, { LogEntry, createLogEntry } from './ProgressionLog'
 import { appendProgressionEntry } from '../lib/progression-log'
 import CharacterEvolution from './CharacterEvolution'
 import { openPopout } from '../lib/popout'
+import RollModal, { type RollResult } from './RollModal'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, CONDITIONS, Condition, ALL_WEAPONS, MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getTraitValue } from '../lib/weapons'
 import { computeEncumbrance } from '../lib/encumbrance'
 import PrintSheet from './wizard/PrintSheet'
@@ -148,13 +149,25 @@ function CharacterCardImpl({
   const [deleting, setDeleting] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [printing, setPrinting] = useState(false)
+  // Phase 4F (Modal Unification) — Stress Check, Breaking Point, and
+  // Lasting Wound all migrated from bespoke inline JSX to the shared
+  // <RollModal> shell. The state shape now mirrors the canonical
+  // Attack Roll modal: `pending` controls visibility, `cmod` is a
+  // numeric input, `result` is a RollResult-shaped object set after
+  // the roll fires. Cascade is preserved (Stress Check failure auto-
+  // opens Breaking Point on close).
   const [stressCheckPending, setStressCheckPending] = useState(false)
-  const [stressCheckCmod, setStressCheckCmod] = useState('0')
-  const [stressCheckResult, setStressCheckResult] = useState<{ die1: number; die2: number; amod: number; cmod: number; total: number; success: boolean } | null>(null)
+  const [stressCheckCmod, setStressCheckCmod] = useState<number>(0)
+  const [stressCheckResult, setStressCheckResult] = useState<RollResult | null>(null)
   const [breakingPointPending, setBreakingPointPending] = useState(false)
-  const [breakingPointCmod, setBreakingPointCmod] = useState('0')
-  const [breakingPointResult, setBreakingPointResult] = useState<{ roll: number; cmod: number; result: { name: string; effect: string }; durationHours: number } | null>(null)
-  const [lastingWoundResult, setLastingWoundResult] = useState<{ roll: number; cmod: number; result: { name: string; effect: string } } | null>(null)
+  const [breakingPointCmod, setBreakingPointCmod] = useState<number>(0)
+  // Breaking Point + Lasting Wound now carry the table-lookup result
+  // alongside the dice in the RollResult shape so the shared shell
+  // can render dice + the custom outcome card via renderOutcome.
+  const [breakingPointResult, setBreakingPointResult] = useState<(RollResult & { table_name: string; table_effect: string; durationHours: number }) | null>(null)
+  const [lastingWoundPending, setLastingWoundPending] = useState(false)
+  const [lastingWoundCmod, setLastingWoundCmod] = useState<number>(0)
+  const [lastingWoundResult, setLastingWoundResult] = useState<(RollResult & { table_name: string; table_effect: string }) | null>(null)
   const [showRestModal, setShowRestModal] = useState(false)
   const [showInventory, setShowInventory] = useState(false)
   const [showEvolution, setShowEvolution] = useState(false)
@@ -207,7 +220,7 @@ function CharacterCardImpl({
       // prevStress === -1 means first mount — also trigger if stress is already at 5
       if (liveState.stress >= 5 && prevStress < 5 && !stressCheckPending && !breakingPointPending) {
         setStressCheckPending(true)
-        setStressCheckCmod('0')
+        setStressCheckCmod(0)
         setStressCheckResult(null)
       }
     }
@@ -459,7 +472,10 @@ function CharacterCardImpl({
                           🩸 Mortally Wounded{localState.death_countdown != null ? ` — Death in ${localState.death_countdown} round${localState.death_countdown !== 1 ? 's' : ''}` : ''}
                         </div>
                         <button onClick={() => {
-                          // PHY check first — success = no lasting wound, failure = roll Table 12
+                          // PHY check first — success = no lasting wound,
+                          // failure = open the unified Lasting Wound roll
+                          // modal so the player can input a CMod (rare;
+                          // specific traits/conditions might apply one).
                           const d1 = Math.floor(Math.random() * 6) + 1
                           const d2 = Math.floor(Math.random() * 6) + 1
                           const phyMod = rapid.PHY ?? 0
@@ -467,10 +483,8 @@ function CharacterCardImpl({
                           if (total >= 9) {
                             alert(`Physicality Check: ${d1}+${d2}+${phyMod} = ${total} — Success! No lasting wound.`)
                           } else {
-                            const lw = rollOnTable(LASTING_WOUNDS_TABLE)
-                            setLastingWoundResult(lw)
-                            // Lasting Wounds are permanent — durable journey marker.
-                            void appendProgressionEntry(supabase, c.id, 'wound', `🩸 Lasting Wound: ${lw.result.name}.`)
+                            setLastingWoundCmod(0)
+                            setLastingWoundPending(true)
                           }
                         }}
                           style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
@@ -940,157 +954,183 @@ function CharacterCardImpl({
         </div>
       )}
 
-      {/* Stress Check modal — triggers when stress hits 5 */}
-      {stressCheckPending && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '2px solid #EF9F27', borderRadius: '4px', padding: '1.5rem', width: '360px', textAlign: 'center' }}>
-            <div style={{ fontSize: '13px', color: '#EF9F27', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Stress Check</div>
-            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>Stress has reached maximum</div>
-            <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '4px' }}>Roll 2d6 + RSN ({rapid.RSN ?? 0 >= 0 ? '+' : ''}{rapid.RSN ?? 0}) + ACU ({rapid.ACU ?? 0 >= 0 ? '+' : ''}{rapid.ACU ?? 0})</div>
-            <div style={{ fontSize: '13px', color: '#7fc458', marginBottom: '12px' }}>Success = drop to 4 stress. Failure = Breaking Point.</div>
-            {!stressCheckResult ? (
-              <>
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Conditional Modifier</label>
-                  <input type="number" value={stressCheckCmod} onChange={e => setStressCheckCmod(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') {
-                      const cmodVal = parseInt(stressCheckCmod) || 0
-                      const amod = (rapid.RSN ?? 0) + (rapid.ACU ?? 0)
-                      const d1 = Math.floor(Math.random() * 6) + 1
-                      const d2 = Math.floor(Math.random() * 6) + 1
-                      const total = d1 + d2 + amod + cmodVal
-                      setStressCheckResult({ die1: d1, die2: d2, amod, cmod: cmodVal, total, success: total >= 7 })
-                    }}}
-                    autoFocus
-                    style={{ display: 'block', width: '80px', margin: '6px auto 0', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '18px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', outline: 'none' }} />
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {isGM && (
-                    <button onClick={() => {
-                      setStressCheckPending(false)
-                      setStressCheckResult(null)
-                      setStressCheckCmod('0')
-                    }}
-                      style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-                  )}
-                  <button onClick={() => {
-                    const cmodVal = parseInt(stressCheckCmod) || 0
-                    const amod = (rapid.RSN ?? 0) + (rapid.ACU ?? 0)
-                    const d1 = Math.floor(Math.random() * 6) + 1
-                    const d2 = Math.floor(Math.random() * 6) + 1
-                    const total = d1 + d2 + amod + cmodVal
-                    setStressCheckResult({ die1: d1, die2: d2, amod, cmod: cmodVal, total, success: total >= 7 })
-                  }}
-                    style={{ flex: isGM ? 2 : 1, padding: '10px', background: '#EF9F27', border: 'none', borderRadius: '3px', color: '#1a1a1a', fontSize: '14px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Roll Stress Check</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', color: '#f5f2ee', marginBottom: '4px' }}>
-                  {stressCheckResult.die1} + {stressCheckResult.die2}
-                  <span style={{ color: '#7ab3d4' }}> {stressCheckResult.amod >= 0 ? '+' : ''}{stressCheckResult.amod}</span>
-                  {stressCheckResult.cmod !== 0 && <span style={{ color: '#EF9F27' }}> {stressCheckResult.cmod >= 0 ? '+' : ''}{stressCheckResult.cmod}</span>}
-                  <span style={{ color: '#d4cfc9' }}> = {stressCheckResult.total}</span>
-                </div>
-                <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', color: stressCheckResult.success ? '#7fc458' : '#c0392b', marginBottom: '12px' }}>
-                  {stressCheckResult.success ? 'Success — Held It Together' : 'Failure — Breaking Point'}
-                </div>
-                <button onClick={async () => {
-                  if (!localState) return
-                  // Capture result BEFORE state resets so the log row reads
-                  // the correct dice + total even after we clear the state.
-                  const r = stressCheckResult
-                  setStressCheckPending(false)
-                  if (r.success) {
-                    updateStat(localState.id, 'stress', 4)
-                  } else {
-                    updateStat(localState.id, 'stress', 5)
-                    setBreakingPointPending(true)
-                    setBreakingPointCmod('0')
-                  }
-                  setStressCheckResult(null)
-                  // Log the stress-check outcome into the campaign feed so
-                  // the GM (and other players) can see who held it together
-                  // and who broke. compactRollSummary picks the label up via
-                  // the "Calms Themselves" branch added in this commit.
-                  if (campaignIdProp) {
-                    try {
-                      const { user } = await getCachedAuth()
-                      if (user) {
-                        await supabase.from('roll_log').insert({
-                          campaign_id: campaignIdProp,
-                          user_id: user.id,
-                          character_name: c.name,
-                          label: `${c.name} — Stress Check`,
-                          die1: r.die1, die2: r.die2,
-                          amod: r.amod, smod: 0, cmod: r.cmod,
-                          total: r.total,
-                          outcome: r.success ? 'Success' : 'Failure',
-                        })
-                      }
-                    } catch (e) {
-                      console.warn('[stress-check] roll_log insert failed:', e)
-                    }
-                  }
-                }}
-                  style={{ width: '100%', padding: '10px', background: stressCheckResult.success ? '#1a2e10' : '#c0392b', border: `1px solid ${stressCheckResult.success ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  {stressCheckResult.success ? 'Continue' : 'Roll on Breaking Point Table'}
-                </button>
-              </>
-            )}
+      {/* ── Phase 4F: unified roll modals via <RollModal> shell ────── */}
+      {/* Stress Check — fires when stress hits 5. RSN+ACU drives AMod;
+          success ≥ 7 = drop to 4, failure = Breaking Point cascade. */}
+      <RollModal
+        open={stressCheckPending}
+        onClose={() => { setStressCheckPending(false); setStressCheckResult(null); setStressCheckCmod(0) }}
+        title="Stress Check"
+        subtitle={`${c.name} — Stress at maximum`}
+        rollFormula="2d6 + RSN + ACU + CMod"
+        amod={(rapid.RSN ?? 0) + (rapid.ACU ?? 0)}
+        smod={0}
+        cmod={stressCheckCmod}
+        setCmod={stressCheckResult ? undefined : setStressCheckCmod}
+        warnings={stressCheckResult ? null : (
+          <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', padding: '6px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', textAlign: 'center' }}>
+            Success ≥ 7 → drop to 4 stress · Failure → Breaking Point
           </div>
-        </div>
-      )}
+        )}
+        onRoll={() => {
+          const amod = (rapid.RSN ?? 0) + (rapid.ACU ?? 0)
+          const d1 = Math.floor(Math.random() * 6) + 1
+          const d2 = Math.floor(Math.random() * 6) + 1
+          const total = d1 + d2 + amod + stressCheckCmod
+          setStressCheckResult({
+            die1: d1, die2: d2, amod, smod: 0, cmod: stressCheckCmod, total,
+            outcome: total >= 7 ? 'Success — Held It Together' : 'Failure — Breaking Point',
+          })
+        }}
+        rollLabel="Roll Stress Check"
+        result={stressCheckResult}
+        postRollCloseLabel={stressCheckResult?.outcome.startsWith('Success') ? 'Continue' : 'Roll on Breaking Point Table'}
+        onPostRollClose={async () => {
+          if (!localState || !stressCheckResult) return
+          const r = stressCheckResult
+          const success = r.outcome.startsWith('Success')
+          setStressCheckPending(false)
+          if (success) {
+            updateStat(localState.id, 'stress', 4)
+          } else {
+            updateStat(localState.id, 'stress', 5)
+            setBreakingPointPending(true)
+            setBreakingPointCmod(0)
+          }
+          setStressCheckResult(null)
+          // Log to roll_log so the GM + table see who held it together.
+          if (campaignIdProp) {
+            try {
+              const { user } = await getCachedAuth()
+              if (user) {
+                await supabase.from('roll_log').insert({
+                  campaign_id: campaignIdProp,
+                  user_id: user.id,
+                  character_name: c.name,
+                  label: `${c.name} — Stress Check`,
+                  die1: r.die1, die2: r.die2,
+                  amod: r.amod, smod: 0, cmod: r.cmod,
+                  total: r.total,
+                  outcome: success ? 'Success' : 'Failure',
+                })
+              }
+            } catch (e) {
+              console.warn('[stress-check] roll_log insert failed:', e)
+            }
+          }
+        }}
+      />
 
-      {/* Breaking Point — CMod prompt */}
-      {breakingPointPending && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '2px solid #c0392b', borderRadius: '4px', padding: '1.5rem', width: '360px', textAlign: 'center' }}>
-            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Breaking Point</div>
-            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '16px' }}>You have broken</div>
-            <button onClick={() => {
-              if (!localState) return
-              const bp = rollOnTable(BREAKING_POINT_TABLE)
-              const durationHours = Math.floor(Math.random() * 6) + 1
-              setBreakingPointResult({ ...bp, durationHours })
-              setBreakingPointPending(false)
-              updateStat(localState.id, 'stress', 0)
-              // Breaking Point — durable journey marker on the PC.
-              void appendProgressionEntry(supabase, c.id, 'stress', `⚡ Breaking Point: ${bp.result.name} (${durationHours}h).`)
-            }}
-              style={{ width: '100%', padding: '10px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontWeight: 700, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Roll Breaking Point</button>
-          </div>
-        </div>
-      )}
+      {/* Breaking Point — d6+d6+CMod table lookup. Custom outcome
+          renderer shows the table result + 1d6h duration. */}
+      <RollModal
+        open={breakingPointPending}
+        onClose={() => { setBreakingPointPending(false); setBreakingPointResult(null); setBreakingPointCmod(0) }}
+        title="Breaking Point"
+        subtitle={`${c.name} has broken`}
+        rollFormula="2d6 + CMod (Table 13)"
+        amod={0}
+        smod={0}
+        cmod={breakingPointCmod}
+        setCmod={breakingPointResult ? undefined : setBreakingPointCmod}
+        onRoll={() => {
+          if (!localState) return
+          const bp = rollOnTable(BREAKING_POINT_TABLE, breakingPointCmod)
+          const d1 = Math.floor(Math.random() * 6) + 1
+          const d2 = Math.floor(Math.random() * 6) + 1
+          // rollOnTable already rolled internally; for the shared shell
+          // we want consistent dice in the output, so re-derive d1/d2
+          // from the raw total. (The table result is what matters; the
+          // dice display is cosmetic for the shell.)
+          const adjusted = Math.max(2, Math.min(12, bp.roll + breakingPointCmod))
+          const durationHours = Math.floor(Math.random() * 6) + 1
+          setBreakingPointResult({
+            die1: Math.min(6, Math.max(1, Math.ceil(bp.roll / 2))),
+            die2: bp.roll - Math.min(6, Math.max(1, Math.ceil(bp.roll / 2))),
+            amod: 0, smod: 0, cmod: breakingPointCmod, total: adjusted,
+            outcome: bp.result.name,
+            table_name: bp.result.name,
+            table_effect: bp.result.effect,
+            durationHours,
+          })
+          setBreakingPointPending(false)
+          updateStat(localState.id, 'stress', 0)
+          void appendProgressionEntry(supabase, c.id, 'stress', `⚡ Breaking Point: ${bp.result.name} (${durationHours}h).`)
+        }}
+        rollLabel="Roll Breaking Point"
+        result={breakingPointResult}
+        renderOutcome={(r) => {
+          const br = r as RollResult & { table_name: string; table_effect: string; durationHours: number }
+          return (
+            <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+              <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>
+                {br.table_name}
+              </div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px' }}>
+                Rolled: {br.die1 + br.die2}{r.cmod !== 0 ? ` ${r.cmod > 0 ? '+' : ''}${r.cmod} CMod = ${r.total}` : ''}
+              </div>
+              <div style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', padding: '10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px' }}>
+                {br.table_effect}
+              </div>
+              <div style={{ fontSize: '13px', color: '#cce0f5' }}>Stress has been reset to 0.</div>
+              <div style={{ fontSize: '13px', color: '#EF9F27', marginTop: '4px' }}>Duration: {br.durationHours} hour{br.durationHours !== 1 ? 's' : ''}</div>
+            </div>
+          )
+        }}
+        postRollCloseLabel="Acknowledge"
+        onPostRollClose={() => { setBreakingPointResult(null); setBreakingPointCmod(0) }}
+      />
 
-      {/* Breaking Point result modal */}
-      {breakingPointResult && (
-        <div onClick={() => setBreakingPointResult(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '2px solid #c0392b', borderRadius: '4px', padding: '1.5rem', width: '360px', textAlign: 'center' }}>
-            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Breaking Point</div>
-            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px' }}>{breakingPointResult.result.name}</div>
-            <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '8px' }}>Rolled: {breakingPointResult.roll}{breakingPointResult.cmod !== 0 ? ` (${breakingPointResult.cmod > 0 ? '+' : ''}${breakingPointResult.cmod} CMod = ${Math.max(2, Math.min(12, breakingPointResult.roll + breakingPointResult.cmod))})` : ''}</div>
-            <div style={{ fontSize: '15px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', marginBottom: '1.5rem', padding: '10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px' }}>{breakingPointResult.result.effect}</div>
-            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '4px' }}>Stress has been reset to 0.</div>
-            <div style={{ fontSize: '13px', color: '#EF9F27', marginBottom: '1rem' }}>Duration: {breakingPointResult.durationHours} hour{breakingPointResult.durationHours !== 1 ? 's' : ''}</div>
-            <button onClick={() => setBreakingPointResult(null)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Acknowledge</button>
-          </div>
-        </div>
-      )}
-
-      {/* Lasting Wound modal */}
-      {lastingWoundResult && (
-        <div onClick={() => setLastingWoundResult(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '2px solid #c0392b', borderRadius: '4px', padding: '1.5rem', width: '360px', textAlign: 'center' }}>
-            <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Lasting Wound</div>
-            <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px' }}>{lastingWoundResult.result.name}</div>
-            <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '8px' }}>Rolled: {lastingWoundResult.roll}</div>
-            <div style={{ fontSize: '15px', color: '#c0392b', fontFamily: 'Carlito, sans-serif', marginBottom: '1.5rem', padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px' }}>{lastingWoundResult.result.effect}</div>
-            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem' }}>This wound is permanent and cannot be healed.</div>
-            <button onClick={() => setLastingWoundResult(null)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>Acknowledge</button>
-          </div>
-        </div>
-      )}
+      {/* Lasting Wound — Table 12 lookup, opens after a failed PHY
+          check. Permanent; no rerolls. */}
+      <RollModal
+        open={lastingWoundPending}
+        onClose={() => { setLastingWoundPending(false); setLastingWoundResult(null); setLastingWoundCmod(0) }}
+        title="Lasting Wound Check"
+        subtitle={`${c.name} — Physicality check failed`}
+        rollFormula="2d6 + CMod (Table 12)"
+        amod={0}
+        smod={0}
+        cmod={lastingWoundCmod}
+        setCmod={lastingWoundResult ? undefined : setLastingWoundCmod}
+        onRoll={() => {
+          const lw = rollOnTable(LASTING_WOUNDS_TABLE, lastingWoundCmod)
+          const adjusted = Math.max(2, Math.min(12, lw.roll + lastingWoundCmod))
+          const d1 = Math.min(6, Math.max(1, Math.ceil(lw.roll / 2)))
+          setLastingWoundResult({
+            die1: d1,
+            die2: lw.roll - d1,
+            amod: 0, smod: 0, cmod: lastingWoundCmod, total: adjusted,
+            outcome: lw.result.name,
+            table_name: lw.result.name,
+            table_effect: lw.result.effect,
+          })
+          setLastingWoundPending(false)
+          // Lasting Wounds are permanent — durable journey marker.
+          void appendProgressionEntry(supabase, c.id, 'wound', `🩸 Lasting Wound: ${lw.result.name}.`)
+        }}
+        rollLabel="Roll Lasting Wound"
+        result={lastingWoundResult}
+        renderOutcome={(r) => {
+          const lw = r as RollResult & { table_name: string; table_effect: string }
+          return (
+            <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+              <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '24px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>
+                {lw.table_name}
+              </div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px' }}>
+                Rolled: {lw.die1 + lw.die2}{r.cmod !== 0 ? ` ${r.cmod > 0 ? '+' : ''}${r.cmod} CMod = ${r.total}` : ''}
+              </div>
+              <div style={{ fontSize: '14px', color: '#c0392b', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', padding: '10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px' }}>
+                {lw.table_effect}
+              </div>
+              <div style={{ fontSize: '13px', color: '#cce0f5' }}>This wound is permanent and cannot be healed.</div>
+            </div>
+          )
+        }}
+        postRollCloseLabel="Acknowledge"
+        onPostRollClose={() => { setLastingWoundResult(null); setLastingWoundCmod(0) }}
+      />
 
       {/* Character Evolution / CDP Calculator — opens from the
           purple Evolution button. Owns its own confirm overlay +
