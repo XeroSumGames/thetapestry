@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import MessagesPage from '../messages/page'
 import LfgPage from './lfg/page'
 import ForumsPage from './forums/page'
@@ -97,6 +98,23 @@ export default function CampfirePage() {
           <div style={{ fontSize: '13px', color: '#5a8a40', lineHeight: 1.5 }}>
             Take a seat. Here you can connect with players, GMs, and visitors outside of campaigns.
           </div>
+        </div>
+
+        {/* Setting hubs — moved here from the left sidebar 2026-05-01.
+            Lives at the top of /campfire as a placeholder until the
+            broader landing-page redesign happens. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+            Hubs:
+          </span>
+          <Link href="/settings/district_zero"
+            style={{ padding: '5px 12px', background: '#1a1a1a', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            District Zero
+          </Link>
+          <Link href="/settings/kings_crossroads_mall"
+            style={{ padding: '5px 12px', background: '#1a1a1a', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            Kings Crossroads
+          </Link>
         </div>
 
         {/* Setting context dropdown. Aligned to the right of the tab bar
