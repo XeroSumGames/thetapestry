@@ -57,23 +57,25 @@ stale (see "Stale-struck" section below). Real remaining work:
 - ✅ Auto-relationship-penalty on Dire/Low Insight Barter (883f194)
 - ✅ Hide-NPCs reveal UX: auto-reveal on Start Combat (b8e5f7d)
 
-### Still open — small, mechanical
-- CDP tracker boxes (finish polish — needs clarification on what's incomplete)
-- Embed Distemper videos on landing page (no clear target page; needs scope from Xero)
-- Surface per-item Give-loot UI in GM Assets → Objects panel (mirror ObjectCard)
-- Players can drop pins on /table (RLS + approval flow + UI gate)
+### Closed by Xero call (2026-05-01 evening)
+- ✅ CDP tracker boxes — marked DONE
+- ❌ Embed Distemper videos on landing page — DISCARDED (no clear target)
+- ✅ GM force-push view to players — marked DONE (scene + zoom sync covers it)
+- ✅ Streamline player login flow — marked DONE (current path is fine)
+- ✅ Multi-round haggling — marked DONE (single-roll is the canonical UX)
+- ✅ Surface per-item Give-loot UI — shipped 33f948a
+- ⚠️ Immutable canon layer — Xero unclear on intent; pending or discard
 
-### Still open — medium
+### In progress
+- 🔨 Print sheet population for existing characters — Xero said get this done
+
+### Still open — feature work (need session of focus each)
 - /tools/reseed-campaign (idempotent re-seed for setting content)
-- Hide-NPCs reveal UX: folder-level Reveal-all, multi-select, panic button
-- Streamline player login flow (audit + redesign)
-- GM force-push view to players (extend tactical_shared broadcast)
-- Print sheet population for existing characters (data plumbing from character_states)
+- Hide-NPCs reveal UX: multi-select bar (folder Show/Hide + global Show-All already shipped)
+- Players can drop pins on /table (RLS + approval flow + UI gate)
 - Player-facing NPC card on Show All (read-only details surface)
 - Player NPC notes + first impressions surface (new table or extend player_notes)
 - Parent/child pin structure (schema + UI nesting)
-- Immutable canon layer (Thriver-set pins, lock column + RLS)
-- Multi-round haggling (Barter UI + state machine)
 - Remaining event instrumentation (9 items — needs a list)
 - Pin-image migration from base64 → Supabase Storage
 - Tools enhancements (batch / crop / auth gating)

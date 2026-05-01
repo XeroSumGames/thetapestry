@@ -3,11 +3,26 @@ import { WizardState, getCumulativeAttributes, getCumulativeSkills } from '../..
 import { SKILLS, ATTRIBUTE_LABELS, deriveSecondaryStats } from '../../lib/xse-schema'
 import { ALL_WEAPONS } from '../../lib/weapons'
 
-interface Props {
-  state: WizardState
+// Optional live-state payload for printing an existing campaign character.
+// Wizard contexts (Backstory / Quick / Random / Edit) print without it and
+// keep the original blank-form behavior. CharacterCard's print path fills
+// it in so the printed sheet shows current relationships, lasting wounds,
+// and partially-filled trackers (Stress / Insight / CDP / Morality).
+export interface PrintLiveState {
+  relationships?: { name: string; cmod: number }[]
+  wounds?: string[]
+  currentStress?: number
+  currentInsight?: number
+  currentCdp?: number
+  currentMorality?: number
 }
 
-export default function PrintSheet({ state }: Props) {
+interface Props {
+  state: WizardState
+  liveState?: PrintLiveState
+}
+
+export default function PrintSheet({ state, liveState }: Props) {
   const rapid = getCumulativeAttributes(state.steps)
   const derived = deriveSecondaryStats(rapid)
   const skills = getCumulativeSkills(state.steps)
@@ -93,23 +108,29 @@ export default function PrintSheet({ state }: Props) {
         </div>
       </div>
 
-      {/* Trackers row: Stress, Insight, CDP, Morality */}
+      {/* Trackers row: Stress, Insight, CDP, Morality. When liveState is
+          provided (printing from CharacterCard), fill the first N boxes
+          to reflect current values; otherwise render blank for hand-fill
+          (wizard print preview). */}
       <div style={{ display: 'flex', gap: '8pt', marginBottom: '6pt' }}>
         {[
-          { label: 'Stress', count: 5, color: '#000' },
-          { label: 'Insight', count: 10, color: '#000' },
-          { label: 'CDP', count: 10, color: '#000' },
-          { label: 'Morality', count: 7, color: '#000' },
-        ].map(t => (
-          <div key={t.label} style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: '6pt', color: '#000', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif', marginBottom: '2pt' }}>{t.label}</div>
-            <div style={{ display: 'flex', gap: '1.5pt', justifyContent: 'center' }}>
-              {Array.from({ length: t.count }).map((_, i) => (
-                <div key={i} style={{ width: '7pt', height: '7pt', borderRadius: '1pt', border: `0.5pt solid ${t.color}`, background: 'transparent' }} />
-              ))}
+          { label: 'Stress',   count: 5,  filled: liveState?.currentStress },
+          { label: 'Insight',  count: 10, filled: liveState?.currentInsight },
+          { label: 'CDP',      count: 10, filled: liveState?.currentCdp },
+          { label: 'Morality', count: 7,  filled: liveState?.currentMorality },
+        ].map(t => {
+          const fillN = Math.max(0, Math.min(t.count, t.filled ?? 0))
+          return (
+            <div key={t.label} style={{ flex: 1, textAlign: 'center' }}>
+              <div style={{ fontSize: '6pt', color: '#000', textTransform: 'uppercase', letterSpacing: '.06em', fontFamily: 'Carlito, sans-serif', marginBottom: '2pt' }}>{t.label}</div>
+              <div style={{ display: 'flex', gap: '1.5pt', justifyContent: 'center' }}>
+                {Array.from({ length: t.count }).map((_, i) => (
+                  <div key={i} style={{ width: '7pt', height: '7pt', borderRadius: '1pt', border: '0.5pt solid #000', background: i < fillN ? '#000' : 'transparent' }} />
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Skills grid */}
@@ -206,15 +227,45 @@ export default function PrintSheet({ state }: Props) {
           {state.rations && <div style={{ fontSize: '6pt', color: '#000' }}>Rations: {state.rations}</div>}
           {!state.equipment && !state.incidentalItem && <div style={{ fontSize: '6pt', color: '#000' }}>None</div>}
         </div>
-        {/* Relationships */}
+        {/* Relationships — pre-fills from npc_relationships when liveState
+            is provided; falls back to 4 empty rule-lines for hand-fill. */}
         <div style={{ flex: 1, background: '#fff', border: '1px solid #000', borderRadius: '3pt', padding: '4pt 6pt' }}>
           <div style={{ fontSize: '6pt', color: '#000', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2pt' }}>Relationships / CMod</div>
-          {Array.from({ length: 4 }).map((_, i) => <div key={i} style={{ borderBottom: '0.5pt solid #000', height: '10pt' }} />)}
+          {(() => {
+            const rels = liveState?.relationships ?? []
+            const lines = Math.max(4, rels.length)
+            return Array.from({ length: lines }).map((_, i) => {
+              const r = rels[i]
+              return (
+                <div key={i} style={{ borderBottom: '0.5pt solid #000', height: '10pt', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '7pt', fontFamily: 'Carlito, sans-serif', color: '#000' }}>
+                  {r ? (
+                    <>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{r.name}</span>
+                      <span style={{ fontWeight: 700 }}>{r.cmod > 0 ? `+${r.cmod}` : r.cmod}</span>
+                    </>
+                  ) : null}
+                </div>
+              )
+            })
+          })()}
         </div>
-        {/* Lasting Wounds */}
+        {/* Lasting Wounds — pulled from progression_log entries with
+            type='wound' when liveState is provided; blank rule-lines
+            for the wizard print path. */}
         <div style={{ flex: 1, background: '#fff', border: '1px solid #000', borderRadius: '3pt', padding: '4pt 6pt' }}>
           <div style={{ fontSize: '6pt', color: '#000', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2pt' }}>Lasting Wounds & Notes</div>
-          {Array.from({ length: 4 }).map((_, i) => <div key={i} style={{ borderBottom: '0.5pt solid #000', height: '10pt' }} />)}
+          {(() => {
+            const wounds = liveState?.wounds ?? []
+            const lines = Math.max(4, wounds.length)
+            return Array.from({ length: lines }).map((_, i) => {
+              const w = wounds[i]
+              return (
+                <div key={i} style={{ borderBottom: '0.5pt solid #000', height: '10pt', display: 'flex', alignItems: 'center', fontSize: '7pt', fontFamily: 'Carlito, sans-serif', color: '#000' }}>
+                  {w ? <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>🩸 {w}</span> : null}
+                </div>
+              )
+            })
+          })()}
         </div>
       </div>
 

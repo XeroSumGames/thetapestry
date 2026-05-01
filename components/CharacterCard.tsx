@@ -156,6 +156,14 @@ function CharacterCardImpl({
   const [deleting, setDeleting] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [printing, setPrinting] = useState(false)
+  const [printLiveState, setPrintLiveState] = useState<{
+    relationships: { name: string; cmod: number }[]
+    wounds: string[]
+    currentStress?: number
+    currentInsight?: number
+    currentCdp?: number
+    currentMorality?: number
+  } | null>(null)
   // Phase 4F (Modal Unification) — Stress Check, Breaking Point, and
   // Lasting Wound all migrated from bespoke inline JSX to the shared
   // <RollModal> shell. The state shape now mirrors the canonical
@@ -293,9 +301,45 @@ function CharacterCardImpl({
     router.refresh()
   }
 
-  function handlePrint() {
+  async function handlePrint() {
+    // Gather live data so the print sheet reflects current relationships,
+    // lasting wounds, and tracker pip counts. Wizard print paths
+    // (characters/new, /quick, /[id]/edit) skip this and stay blank-form.
+    let relationships: { name: string; cmod: number }[] = []
+    try {
+      const { data: rels } = await supabase
+        .from('npc_relationships')
+        .select('relationship_cmod, npc:campaign_npcs!inner(name)')
+        .eq('character_id', c.id)
+        .order('relationship_cmod', { ascending: false })
+      relationships = (rels ?? []).map((r: any) => ({
+        name: r.npc?.name ?? '?',
+        cmod: r.relationship_cmod ?? 0,
+      }))
+    } catch (err) {
+      console.warn('[print] relationships fetch failed:', err)
+    }
+    // Wounds live in characters.data.progression_log entries with type='wound'.
+    const log: Array<{ type: string; text: string }> = Array.isArray((c.data as any)?.progression_log)
+      ? (c.data as any).progression_log
+      : []
+    const wounds = log
+      .filter(e => e.type === 'wound')
+      .map(e => e.text.replace(/^🩸 Lasting Wound:\s*/, '').replace(/\.$/, ''))
+    setPrintLiveState({
+      relationships,
+      wounds,
+      currentStress: localState?.stress ?? 0,
+      currentInsight: localState?.insight_dice ?? 0,
+      currentCdp: localState?.cdp ?? 0,
+      currentMorality: localState?.morality ?? 0,
+    })
     setPrinting(true)
-    setTimeout(() => { window.print(); setPrinting(false) }, 100)
+    setTimeout(() => {
+      window.print()
+      setPrinting(false)
+      setPrintLiveState(null)
+    }, 100)
   }
 
   // Optimistic update: update local state immediately, fire Supabase in background
@@ -959,7 +1003,7 @@ function CharacterCardImpl({
       {/* Hidden print sheet */}
       {printing && (
         <div className="print-sheet-container print-sheet-active">
-          <PrintSheet state={toWizardState(c.data)} />
+          <PrintSheet state={toWizardState(c.data)} liveState={printLiveState ?? undefined} />
         </div>
       )}
 
