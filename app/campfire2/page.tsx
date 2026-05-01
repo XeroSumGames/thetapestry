@@ -176,7 +176,7 @@ export default function CampfireMockupPage() {
                       <span style={{ fontSize: '13px', letterSpacing: '.06em', textTransform: 'uppercase', color: '#cce0f5', opacity: 0.5 }}>soon</span>
                     )}
                   </div>
-                  <div style={{ fontSize: '13px', color: isSoon ? '#5a5a5a' : '#cce0f5', lineHeight: 1.5 }}>
+                  <div style={{ fontSize: '14px', color: isSoon ? '#5a5a5a' : '#cce0f5', lineHeight: 1.5 }}>
                     {card.description}
                   </div>
                 </>
