@@ -6352,16 +6352,21 @@ export default function TablePage() {
                     viewingCharacterId={myEntry?.character.id}
                     onRecruit={sessionStatus === 'active' ? () => openRecruitModal(npc.id) : undefined}
                     onSetupApprentice={(() => {
-                      // Master PC sees the trigger on their own un-set-up
-                      // Apprentice. Same gate logic as the GM render path
-                      // above, but scoped to the master PC only (GM is
-                      // already in the NpcCard branch).
                       const bond = apprenticeBondsByNpcId[npc.id]
                       if (!bond || bond.apprenticeMeta.setup_complete) return undefined
                       const isMaster = !!myEntry && bond.masterCharacterId === myEntry.character.id
                       if (!isMaster) return undefined
                       return () => setSetupApprenticeNpcId(npc.id)
                     })()}
+                    // First Impression skip-the-picker (2026-05-01).
+                    // Drops straight into the roll modal pre-populated
+                    // with the viewing PC + this NPC. Wired only when
+                    // the player has a character on this campaign;
+                    // PlayerNpcCard hides the button if no
+                    // viewingCharacterId.
+                    onFirstImpression={myEntry
+                      ? () => triggerFirstImpression(myEntry.character.name, npc.id, npc.name)
+                      : undefined}
                   />
                 )
               })}
@@ -6460,6 +6465,9 @@ export default function TablePage() {
                       onClose={() => setViewingNpcs(prev => prev.filter(n => n.id !== npc.id))}
                       viewingCharacterId={myEntry?.character.id}
                       onRecruit={sessionStatus === 'active' ? () => openRecruitModal(npc.id) : undefined}
+                      onFirstImpression={myEntry
+                        ? () => triggerFirstImpression(myEntry.character.name, npc.id, npc.name)
+                        : undefined}
                     />
                   )}
                   {/* Resize handle — bottom-right corner. Drag to resize the

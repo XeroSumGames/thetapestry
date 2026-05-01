@@ -83,7 +83,7 @@ Ready to pick up; each is self-contained.
 ### From 2026-04-29 chat — roll-log clarity + modal unification
 - [x] **Empty-adventure module clone fails on null pin name.** ✅ Already shipped — `lib/modules.ts:316` does `resolvedName = p.name ?? p.title` with a warn-and-skip fallback for rows missing both. Audit confirmed 2026-05-01.
 - [ ] **Gut Instinct results presentation rework.** Current Gut Instinct rolls land in the standard roll modal but the *result framing* doesn't communicate what the player learned. Needs design discussion: narrative card in the feed? Overlay on the rolling PC's sheet? GM-only insight via DM? Mechanics fine; comprehension issue.
-- [ ] **First Impression → straight to roll modal.** Today First Impression has a separate pre-roll picker (target NPC + skill). Skip the picker and dump straight into the main Attack Roll modal pre-populated with `INF + Manipulation/Streetwise/Psychology` and the NPC pre-targeted. Saves ~3-4 clicks.
+- [x] **First Impression → straight to roll modal.** ✅ Shipped 2026-05-01. PlayerNpcCard gained an inline "🤝 First Impression" button (when `onFirstImpression` is wired AND no recorded relationship exists yet). Clicking fires `triggerFirstImpression(currentPC, npc, npc.name)` directly, dumping into the universal roll modal with INF + best of Manipulation/Streetwise/Psychology + NPC pre-targeted. Saves ~3-4 clicks per use. Special-check picker still works for backward compat.
 - [ ] **Modal unification — Attack Roll is the gold standard.** Every roll modal should match its shape (roll breakdown, target dropdown, CMod input, Insight Dice pre-roll + post-roll reroll). Modals to normalize: Stress Check, Breaking Point, Lasting Wound, Recruit, Stabilize, Distract, Coordinate, Group Check, Gut Instinct, First Impression. Multi-commit refactor; needs a shared `<RollModal>` shell.
 
 ### From 2026-04-27 Mongrels playtest
@@ -107,7 +107,7 @@ Ready to pick up; each is self-contained.
 
 ### From 2026-04-29 (combat correctness + perf)
 - [ ] **Insight Die spend tracked on roll_log.** Add an `insight_used text` column (NULL / '3d6' / '+3cmod'), populate from `executeRoll` (and reroll path), surface in the extended-log card. Migration is non-destructive (NULL default), code path needs to thread `insightUsed` arg through `saveRollToLog`. Today only ~83% of 3d6 rolls are detectable from die2 packing; +3 CMod is indistinguishable from organic CMod.
-- [ ] **GM Tools → Restore to Full Health is slow.** With 11+ targets the handler fires N sequential UPDATEs (character_states for PCs, campaign_npcs for NPCs, scene_tokens for Objects). Batch the UPDATEs by table — one per table with `.in('id', ids)`, run all three concurrently via `Promise.all`. Add a "Restoring…" disabled state.
+- [x] **GM Tools → Restore to Full Health is slow.** ✅ Already shipped (audit 2026-05-01). Handler at `app/stories/[id]/table/page.tsx:8472` already uses `Promise.all([...npcUpdates, ...pcUpdates, ...objUpdates])` — 11 sequential awaits collapsed to one parallel wave, three tables run concurrently. Comment in the code documents the pre-optimization timing.
 
 ### Other small items
 - [ ] **Destroyed-object portrait swap** — object tokens with WP should optionally carry a `destroyed_portrait_url`; render that image instead of the intact one when WP hits 0. Falls back to current shatter-crack overlay.

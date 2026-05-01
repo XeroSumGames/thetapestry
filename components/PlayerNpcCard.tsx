@@ -63,6 +63,14 @@ interface Props {
   // Apprentice" trigger. Player-side counterpart of the same prop on
   // NpcCard. Parent owns the wizard modal state.
   onSetupApprentice?: () => void
+  // Phase: First Impression skip-the-picker (2026-05-01). When the
+  // parent provides this callback, a "First Impression" button shows
+  // on the card header — clicking it fires the roll directly via
+  // triggerFirstImpression with the viewing PC + this NPC pre-set.
+  // Hidden when there's already a recorded First Impression
+  // (cmod != null && cmod !== 0) since a second roll on the same pair
+  // overwrites the first; suppress to avoid accidental clobbering.
+  onFirstImpression?: () => void
 }
 
 type RecruitState =
@@ -71,7 +79,7 @@ type RecruitState =
   | { kind: 'failed'; outcome: string }
   | null
 
-export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecruit, onSetupApprentice }: Props) {
+export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecruit, onSetupApprentice, onFirstImpression }: Props) {
   const supabase = createClient()
   const [enlarged, setEnlarged] = useState(false)
   const [cmod, setCmod] = useState<number | null>(null)
@@ -363,6 +371,19 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
                   fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em' }}>
                 1st {cmod > 0 ? `+${cmod}` : cmod}
               </span>
+            )}
+            {/* First Impression — quick-fire button that skips the
+                special-check picker. Hidden when the viewing PC has
+                already rolled (cmod != null && cmod !== 0) so a
+                misclick doesn't overwrite the existing relationship.
+                Active state: button visible when onFirstImpression is
+                wired AND no recorded relationship exists yet. */}
+            {onFirstImpression && viewingCharacterId && (cmod == null || cmod === 0) && (
+              <button onClick={onFirstImpression}
+                title={`Roll a First Impression on ${npc.name} — INF + best of Manipulation / Streetwise / Psychology.`}
+                style={{ fontSize: '13px', padding: '1px 8px', borderRadius: '2px', background: '#0f2035', border: '1px solid #1a3a5c', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 600 }}>
+                🤝 First Impression
+              </button>
             )}
           </div>
         </div>
