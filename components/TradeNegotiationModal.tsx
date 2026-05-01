@@ -72,6 +72,11 @@ interface Props {
     rollSummary: string
     outcome: TradeOutcome
   }) => Promise<void>
+  // Fired once when the PC rolls Dire Failure or Low Insight on an
+  // NPC barter (insulted / refused outcomes). Parent decrements the
+  // (PC, NPC) relationship_cmod by 1 with -3 floor. Not fired for
+  // community targets — communities have no per-character CMod.
+  onRelationshipDamage?: () => Promise<void>
 }
 
 function rarityWeight(item: InventoryItem): number {
@@ -83,7 +88,7 @@ function totalWeight(items: SelectedItem[]): number {
 }
 
 export default function TradeNegotiationModal({
-  pcName, pcInventory, pcAcuMod, pcBarterSmod, target, onClose, onApply,
+  pcName, pcInventory, pcAcuMod, pcBarterSmod, target, onClose, onApply, onRelationshipDamage,
 }: Props) {
   const [pcGivesIdx, setPcGivesIdx] = useState<Record<number, number>>({})  // sourceIdx → qty
   const [pcGetsIdx, setPcGetsIdx] = useState<Record<number, number>>({})
@@ -91,6 +96,24 @@ export default function TradeNegotiationModal({
   const [applying, setApplying] = useState(false)
   const [outcome, setOutcome] = useState<TradeOutcome | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Set once when a Dire Failure / Low Insight outcome fires its
+  // relationship-damage callback, so re-renders don't double-apply.
+  const [relDamageApplied, setRelDamageApplied] = useState(false)
+
+  // Auto-apply the relationship penalty exactly once when the PC
+  // rolls a catastrophic Barter outcome against an NPC. Communities
+  // have no per-character CMod, so they're skipped.
+  useEffect(() => {
+    if (!outcome || relDamageApplied) return
+    const isPenaltyOutcome = outcome.pcOutcome === 'Dire Failure' || outcome.pcOutcome === 'Low Insight'
+    if (!isPenaltyOutcome) return
+    if (target.kind !== 'npc') return
+    if (!onRelationshipDamage) return
+    setRelDamageApplied(true)
+    void onRelationshipDamage().catch(err => {
+      console.error('[TradeNegotiation] relationship damage write failed:', err)
+    })
+  }, [outcome, relDamageApplied, target.kind, onRelationshipDamage])
 
   // ESC closes (unless mid-apply).
   useEffect(() => {
@@ -163,8 +186,12 @@ export default function TradeNegotiationModal({
   }
 
   function outcomeBadge(o: TradeOutcome): { color: string; bg: string; border: string; label: string; sub: string } {
-    if (o.pcOutcome === 'Low Insight') return { color: '#f5a89a', bg: '#2a1210', border: '#7a1f16', label: '✗ Insulted',     sub: 'Negotiation collapses; relationship damaged' }
-    if (o.pcOutcome === 'Dire Failure') return { color: '#f5a89a', bg: '#2a1210', border: '#7a1f16', label: '✗ Refused',     sub: 'Counterparty walks away from the table' }
+    // Sub-text reflects the relationship-CMod auto-penalty for NPC
+    // targets. Communities don't get the penalty applied (no per-char
+    // CMod), so the sub stays generic for them.
+    const isNpc = target.kind === 'npc'
+    if (o.pcOutcome === 'Low Insight') return { color: '#f5a89a', bg: '#2a1210', border: '#7a1f16', label: '✗ Insulted',     sub: isNpc ? 'Negotiation collapses; relationship −1 CMod (auto-applied)' : 'Negotiation collapses' }
+    if (o.pcOutcome === 'Dire Failure') return { color: '#f5a89a', bg: '#2a1210', border: '#7a1f16', label: '✗ Refused',     sub: isNpc ? 'Counterparty walks away; relationship −1 CMod (auto-applied)' : 'Counterparty walks away from the table' }
     if (!o.pcWon)                        return { color: '#EF9F27', bg: '#2a2010', border: '#5a4a1b', label: '⚖ Counter-offered', sub: 'GM may adjudicate alternate terms' }
     if (o.pcOutcome === 'High Insight')  return { color: '#d48bd4', bg: '#2a102a', border: '#5a2e5a', label: '✦ Generous Deal',   sub: 'NPC throws in extra at GM\'s discretion' }
     if (o.pcOutcome === 'Wild Success')  return { color: '#7fc458', bg: '#1a2e10', border: '#2d5a1b', label: '✓ Deal Struck',     sub: 'Terms accepted on PC\'s side' }

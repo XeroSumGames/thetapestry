@@ -10050,6 +10050,25 @@ export default function TablePage() {
             pcBarterSmod={pcBarter}
             target={target}
             onClose={() => setTradeTarget(null)}
+            onRelationshipDamage={async () => {
+              // PC rolled Dire Failure or Low Insight against an NPC.
+              // Decrement (PC, NPC) relationship_cmod by 1, floor at -3.
+              // Insert a row with cmod=-1 if no relationship exists yet.
+              const charId = myEntry.character.id
+              const npcId = target.id
+              const { data: existing } = await supabase
+                .from('npc_relationships')
+                .select('id, relationship_cmod')
+                .eq('character_id', charId).eq('npc_id', npcId).maybeSingle()
+              if (existing) {
+                const next = Math.max(-3, (existing.relationship_cmod ?? 0) - 1)
+                await supabase.from('npc_relationships').update({ relationship_cmod: next }).eq('id', existing.id)
+              } else {
+                await supabase.from('npc_relationships').insert({
+                  character_id: charId, npc_id: npcId, relationship_cmod: -1,
+                })
+              }
+            }}
             onApply={async ({ pcGives, pcGets, rollSummary, outcome }) => {
               // Apply the deal as a single batch:
               //   - Decrement PC inventory by pcGives, increment by pcGets
