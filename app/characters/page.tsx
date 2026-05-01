@@ -77,17 +77,27 @@ export default function CharactersPage() {
             + Test Character
           </button>
         )}
-        <a href='/characters/new' style={{ padding: '7px 18px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
-          New Character
-        </a>
+        {/* New-character path picker — replaces the single
+            "New Character" button. Surfaces the four creation flows
+            so newcomers know they exist (the sidebar's "Survivors"
+            section also lists them, but having them here on the
+            page they'll already be visiting is the more discoverable
+            spot). Same colors as the sidebar row. */}
+        <a href='/characters/new' style={creationBtn('#c0392b', '#fff', '#c0392b')}>Backstory</a>
+        <a href='/characters/quick' style={creationBtn('#1a3a5c', '#7ab3d4', '#7ab3d4')}>Quick</a>
+        <a href='/characters/random' style={creationBtn('#2a2010', '#EF9F27', '#5a4a1b')}>Random</a>
+        <a href='/characters/paradigms' style={creationBtn('#1a2a3a', '#cce0f5', '#3a3a3a')}>Paradigm</a>
       </div>
 
       {characters.length === 0 && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '3rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '1rem' }}>No characters yet.</div>
-          <a href='/characters/new' style={{ padding: '9px 22px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
-            Create your first character
-          </a>
+          <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '1rem' }}>No characters yet — pick a path:</div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <a href='/characters/new' style={creationBtn('#c0392b', '#fff', '#c0392b')}>Backstory</a>
+            <a href='/characters/quick' style={creationBtn('#1a3a5c', '#7ab3d4', '#7ab3d4')}>Quick</a>
+            <a href='/characters/random' style={creationBtn('#2a2010', '#EF9F27', '#5a4a1b')}>Random</a>
+            <a href='/characters/paradigms' style={creationBtn('#1a2a3a', '#cce0f5', '#3a3a3a')}>Paradigm</a>
+          </div>
         </div>
       )}
 
@@ -148,4 +158,16 @@ export default function CharactersPage() {
       </div>
     </div>
   )
+}
+
+// Helper for the four-way creation-path picker at the top of the page.
+function creationBtn(bg: string, fg: string, border: string): React.CSSProperties {
+  return {
+    padding: '7px 18px', background: bg,
+    border: `1px solid ${border}`, borderRadius: '3px',
+    color: fg, fontSize: '13px',
+    fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
+    textTransform: 'uppercase', textDecoration: 'none',
+    fontWeight: 700,
+  }
 }

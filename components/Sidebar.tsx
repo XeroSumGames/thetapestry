@@ -135,12 +135,14 @@ export default function Sidebar() {
           <span style={{ color: '#7fc458', fontSize: '14px', letterSpacing: '.12em', textTransform: 'uppercase' }}>Ghost <span style={{ fontSize: '13px' }}>— You Don&apos;t Exist</span></span>
         ) : (
           <>
-            {/* Line 1: Username (Role) — centred */}
+            {/* Line 1: Username, with the role badge ONLY for Thrivers.
+                Survivor is the default — surfacing the badge for every
+                logged-in user adds visual noise without adding info. */}
             <div style={{ fontSize: '14px', letterSpacing: '.1em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '7px', textAlign: 'center' }}>
               <span style={{ color: '#f5f2ee' }}>{username}</span>
-              <span style={{ color: userRole === 'thriver' ? '#c0392b' : '#7fc458', marginLeft: '5px' }}>
-                ({userRole === 'thriver' ? 'Thriver' : 'Survivor'})
-              </span>
+              {userRole === 'thriver' && (
+                <span style={{ color: '#c0392b', marginLeft: '5px' }}>(Thriver)</span>
+              )}
             </div>
             {/* Line 2: icons — equal-width slots so visual midpoints
                 line up regardless of each component's internal padding.
@@ -230,11 +232,11 @@ export default function Sidebar() {
         </>
       )}
 
-      {/* Coming soon — always visible, no section header per user spec */}
-      <a href="#" style={soonStyle}>Rules {soonSuffix}</a>
-      <a href="#" style={soonStyle}>Equipment {soonSuffix}</a>
-      <Link href="/campfire/forums" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Forums</Link>
-      <Link href="/campfire/lfg" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Looking for Group</Link>
+      {/* (Removed 2026-05-01: Rules / Equipment "— soon" placeholders
+          and the Forums + Looking for Group sidebar links. Rules and
+          Equipment had no destination; Forums + LFG are still
+          reachable via /campfire's tab strip — a duplicate entry in
+          the sidebar was clutter.) */}
 
       {/* Spacer + bottom section */}
       <div style={{ flex: 1 }} />
