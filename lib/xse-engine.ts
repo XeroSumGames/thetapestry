@@ -61,7 +61,13 @@ export function skillStepUp(current: SkillValue, vocational: boolean): SkillValu
   return idx < steps.length - 1 ? steps[idx + 1] : current
 }
 
-export function skillStepDown(current: SkillValue, base: SkillValue): SkillValue {
+export function skillStepDown(current: SkillValue, base: SkillValue, vocational: boolean = false): SkillValue {
+  // Mirror the vocational-skill jump from skillStepUp: untrained
+  // vocational skills (-3) skip 0 and land at 1 on the FIRST CDP
+  // spend. The reverse — clicking − to undo that spend — must skip
+  // 0 too and return all the way to -3, otherwise the toggle is
+  // asymmetric and the player loses the -3 floor on un-pick.
+  if (vocational && current === 1 && base === -3) return -3
   const steps: SkillValue[] = [-3, 0, 1, 2, 3, 4]
   const idx = steps.indexOf(current)
   const prev = idx > 0 ? steps[idx - 1] : current

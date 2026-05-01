@@ -199,7 +199,34 @@ export default function NewCharacterPage() {
             </button>
           )}
           {step < 9
-            ? <button onClick={() => { if (requireAuth()) return; setState(p => ({ ...p, currentStep: Math.min(9, p.currentStep + 1) })); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={navBtn(true)}>
+            ? <button onClick={() => {
+                if (requireAuth()) return
+                // Unspent-CDP guard: each StepAttr step grants a skill
+                // budget. Players who advance without spending all of
+                // it lose those CDP — there's no carry-forward. Map
+                // step → (stepIndex, budget) and warn if there's a gap.
+                const budgets: Record<number, { idx: number; budget: number; label: string }> = {
+                  1: { idx: 0, budget: 2, label: 'Step 1' },
+                  2: { idx: 1, budget: 3, label: 'Step 2' },
+                  3: { idx: 2, budget: 3, label: 'Step 3' },
+                  5: { idx: 4, budget: 3, label: 'Step 5' },
+                }
+                const b = budgets[step]
+                if (b) {
+                  const spent = state.steps[b.idx]?.skillCDPSpent ?? 0
+                  if (spent < b.budget) {
+                    const remaining = b.budget - spent
+                    const ok = window.confirm(
+                      `${b.label} has ${remaining} unspent skill CDP. ` +
+                      `Once you advance, those CDP are gone — there's no carry-forward.\n\n` +
+                      `Advance anyway?`,
+                    )
+                    if (!ok) return
+                  }
+                }
+                setState(p => ({ ...p, currentStep: Math.min(9, p.currentStep + 1) }))
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }} style={navBtn(true)}>
                 Advance
               </button>
             : <button onClick={handleSave} disabled={saving || saved} style={{ ...navBtn(true), opacity: saving || saved ? 0.6 : 1 }}>

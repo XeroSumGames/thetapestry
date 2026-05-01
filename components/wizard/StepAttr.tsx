@@ -62,8 +62,12 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
       if (deltaThisStep <= 0) return
       // cumBase = the skill value coming INTO this step from prior steps
       const cumBase = (cumVal - deltaThisStep) as SkillValue
-      // Step cumVal down exactly one level, but never below cumBase (the prior-step floor)
-      const newCumVal = skillStepDown(cumVal as SkillValue, cumBase as SkillValue)
+      // Step cumVal down exactly one level, but never below cumBase
+      // (the prior-step floor). Pass `skill.vocational` so the
+      // helper mirrors skillStepUp's -3→1 jump for first-spend
+      // un-picks (without it, 1 → 0 on a vocational skill loses
+      // the -3 untrained floor).
+      const newCumVal = skillStepDown(cumVal as SkillValue, cumBase as SkillValue, skill.vocational)
       const newDelta = newCumVal - cumBase
       if (newDelta <= 0) delete newDeltas[skillName]
       else newDeltas[skillName] = newDelta
