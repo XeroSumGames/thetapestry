@@ -1,5 +1,8 @@
-import StubPage from '../../../components/rules/StubPage'
+import SectionHub from '../../../components/rules/SectionHub'
+import { findSection } from '../../../lib/rules/sections'
+
+export const metadata = { title: 'Combat — XSE SRD §06' }
 
 export default function Page() {
-  return <StubPage slug="combat" />
+  return <SectionHub section={findSection('combat')!} />
 }

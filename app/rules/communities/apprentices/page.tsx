@@ -4,21 +4,15 @@ import {
   P,
   Term,
 } from '../../../../components/rules/RuleSection'
-import StyleBanner from '../../../../components/rules/StyleBanner'
-import SubNav from '../../../../components/rules/communities/SubNav'
+import SectionSubNav from '../../../../components/rules/SectionSubNav'
+import { findSection } from '../../../../lib/rules/sections'
 
 export const metadata = { title: 'Apprentices — XSE SRD §08' }
 
 export default function ApprenticesPage() {
   return (
     <>
-      <StyleBanner
-        current="B"
-        otherHref="/rules/communities#apprentices"
-        otherLabel="Style A"
-        description="Style B: Apprentices are their own page. Style A keeps everything in one long Communities page."
-      />
-      <SubNav />
+      <SectionSubNav section={findSection('communities')!} />
       <RuleHero
         eyebrow="§08 · Communities › Apprentices"
         title="Apprentices"

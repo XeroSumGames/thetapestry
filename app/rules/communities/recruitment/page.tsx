@@ -8,8 +8,8 @@ import {
   ruleTableThStyle,
   ruleTableTdStyle,
 } from '../../../../components/rules/RuleSection'
-import StyleBanner from '../../../../components/rules/StyleBanner'
-import SubNav from '../../../../components/rules/communities/SubNav'
+import SectionSubNav from '../../../../components/rules/SectionSubNav'
+import { findSection } from '../../../../lib/rules/sections'
 
 const outcomeRow = (
   roll: string,
@@ -29,13 +29,7 @@ export const metadata = { title: 'Recruitment Check — XSE SRD §08' }
 export default function RecruitmentPage() {
   return (
     <>
-      <StyleBanner
-        current="B"
-        otherHref="/rules/communities#recruitment"
-        otherLabel="Style A"
-        description="Style B: this subsection is its own page. Style A puts everything on one page with anchor links."
-      />
-      <SubNav />
+      <SectionSubNav section={findSection('communities')!} />
       <RuleHero
         eyebrow="§08 · Communities › Recruitment"
         title="Recruitment Check"

@@ -4,21 +4,15 @@ import {
   P,
   Term,
 } from '../../../../components/rules/RuleSection'
-import StyleBanner from '../../../../components/rules/StyleBanner'
-import SubNav from '../../../../components/rules/communities/SubNav'
+import SectionSubNav from '../../../../components/rules/SectionSubNav'
+import { findSection } from '../../../../lib/rules/sections'
 
 export const metadata = { title: 'CRB Additions — XSE SRD §08' }
 
 export default function CRBAdditionsPage() {
   return (
     <>
-      <StyleBanner
-        current="B"
-        otherHref="/rules/communities#crb-additions"
-        otherLabel="Style A"
-        description="Style B: setting-flavour additions on their own page. Style A appends them to the end of the long Communities page."
-      />
-      <SubNav />
+      <SectionSubNav section={findSection('communities')!} />
       <RuleHero
         eyebrow="§08 · Communities › CRB Additions"
         title="Distemper CRB additions"

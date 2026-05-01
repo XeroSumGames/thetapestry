@@ -7,8 +7,8 @@ import {
   ruleTableThStyle,
   ruleTableTdStyle,
 } from '../../../../components/rules/RuleSection'
-import StyleBanner from '../../../../components/rules/StyleBanner'
-import SubNav from '../../../../components/rules/communities/SubNav'
+import SectionSubNav from '../../../../components/rules/SectionSubNav'
+import { findSection } from '../../../../lib/rules/sections'
 
 const moodRow = (
   roll: string,
@@ -32,13 +32,7 @@ export const metadata = { title: 'Community Structure — XSE SRD §08' }
 export default function StructurePage() {
   return (
     <>
-      <StyleBanner
-        current="B"
-        otherHref="/rules/communities#structure"
-        otherLabel="Style A"
-        description="Style B: Structure on its own page. Style A keeps it inline with Recruitment, Apprentices, Morale."
-      />
-      <SubNav />
+      <SectionSubNav section={findSection('communities')!} />
       <RuleHero
         eyebrow="§08 · Communities › Structure"
         title="Community Structure"
