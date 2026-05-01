@@ -8,6 +8,7 @@ import {
   ruleTableThStyle,
   ruleTableTdStyle,
 } from '../../../components/rules/RuleSection'
+import StyleBanner from '../../../components/rules/StyleBanner'
 
 // /rules/communities — full long-page test of the Blades-style anchored
 // reference. Source: tasks/rules-extract-communities.md (canonical, with
@@ -72,6 +73,12 @@ export const metadata = {
 export default function CommunitiesRulesPage() {
   return (
     <>
+      <StyleBanner
+        current="A"
+        otherHref="/rules/communities2"
+        otherLabel="Style B"
+        description="One long page. Every subsection on this single URL — ⌘-F finds anything, but the page is a long scroll. Style B splits each subsection into its own URL."
+      />
       <RuleHero
         eyebrow="§08 · Communities"
         title="Communities"
