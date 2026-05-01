@@ -72,7 +72,6 @@ export const RULE_SECTIONS: RuleSection[] = [
       { id: 'paradigms', label: 'Paradigms & Pregens' },
       { id: 'character-evolution', label: 'Character Evolution' },
     ],
-    stub: true,
   },
   {
     slug: 'skills',
@@ -84,7 +83,6 @@ export const RULE_SECTIONS: RuleSection[] = [
       { id: 'inspiration', label: 'Inspiration' },
       { id: 'psychology', label: 'Psychology*' },
     ],
-    stub: true,
   },
   {
     slug: 'combat',
@@ -98,7 +96,6 @@ export const RULE_SECTIONS: RuleSection[] = [
       { id: 'incapacitation', label: 'Incapacitation' },
       { id: 'stress', label: 'Stress & Breaking Point' },
     ],
-    stub: true,
   },
   {
     slug: 'equipment',
@@ -110,7 +107,6 @@ export const RULE_SECTIONS: RuleSection[] = [
       { id: 'item-traits', label: 'Item Traits' },
       { id: 'upkeep', label: 'Upkeep' },
     ],
-    stub: true,
   },
   {
     slug: 'communities',
