@@ -1,5 +1,103 @@
 # Tapestry — To Do & Backlog
 
+## ✅ Shipped 2026-04-30 (Phase E close-out + Inventory full sweep + map-setup persistence)
+
+**Communities Phase E (the world layer):**
+- World Event CMod propagation — `map_pins` gets `cmod_active`/`cmod_impact`/`cmod_radius_km`/`cmod_label`; the Weekly Morale Check modal now auto-applies all matching active timeline events within their radius. New "World Events" slot with per-event opt-out checkboxes; full audit trail in `modifiers_json.worldEventsDetail`. ([sql/map-pins-world-event-cmod.sql](../sql/map-pins-world-event-cmod.sql), [lib/world-events.ts](../lib/world-events.ts), [components/CommunityMoraleModal.tsx](../components/CommunityMoraleModal.tsx))
+- Player community subscriptions polish — denormalized `subscriber_count` + ★ chip on world-map popups + Following cards; subscriber-notify trigger fans cross-scope public-info changes to followers; Weekly Morale Check finalize bumps `world_communities.last_public_update_at` and auto-recomputes `community_status` from outcome (Thriving/Holding/Struggling/Dying/Dissolved). ([sql/world-communities-subscriber-count.sql](../sql/world-communities-subscriber-count.sql), [sql/world-communities-subscriber-notify.sql](../sql/world-communities-subscriber-notify.sql))
+- "Start near existing community" wizard tile — fourth tile on /stories/new alongside Custom / Setting / Module. Picks an approved world community, seeds the new campaign's Homestead pin at its coords, fires the encounter handshake to the source GM. Self-filtered (own communities hidden).
+
+**Apprentice creation flow rewrite:**
+- Apprentice creation flipped from Paradigm-based to **Profession-based** per SRD §08 p.21 (Xero clarification). New 5-step wizard: Identity (name + age + 3 trait words + background) → Profession pick (12 PROFESSIONS, each seeds 1 CDP per profession-skill) → 3 CDP RAPID (baseline 0) → 5 CDP skills (per-skill SRD cap = master_PC.skill − 1) → Confirm. Recruit-time auto-rolls Motivation/Complication AND age + 3 words. ([components/ProfessionPicker.tsx](../components/ProfessionPicker.tsx), [components/ApprenticeCreationWizard.tsx](../components/ApprenticeCreationWizard.tsx), [lib/xse-engine.ts](../lib/xse-engine.ts) `THREE_WORDS_LIST` / `rollThreeWords` / `rollApprenticeAge`)
+
+**Inventory system — full queue closed:**
+- **#1** Encumbrance time-tick — GM Tools → Time. House-rule: every overencumbered PC + NPC loses 1 RP per hour over the limit. Hours stepper, affected-list preview with INCAP red-flag, single roll-log summary. PCs hitting RP=0 from non-zero with WP > 0 get the existing Mortal/Incap pipeline (incap_rounds + Stress pip).
+- **#2** PC ↔ NPC trade — InventoryPanel give modal now shows three recipient groups: 👤 PCs (existing), 🎭 NPCs (new), 🏘 communities. Hidden-from-players NPCs filtered out for non-GM viewers; dead NPCs filtered too.
+- **#3** Vehicle cargo unification — VehicleCargo aliased to InventoryItem; tolerant reads for legacy { name, qty, notes } rows; vehicle popout cargo editor surfaces enc + total/cap; VehicleCard summary stat shows current/cap with OVERLOADED red. Minnie's seed cargo backfilled with enc values (98 of 100 cap, 2 slack). ([lib/inventory.ts](../lib/inventory.ts))
+- **#4** Shared community stockpile — new `community_stockpile_items` table (row-per-item, RLS gated to campaign members). 📦 Stockpile section under Role Coverage in CampaignCommunity panel; inline + Add (catalog autofills enc); InventoryPanel give modal gains 🏘 community recipients for deposits. Withdrawal-to-PC and realtime sub left as followups. ([sql/community-stockpile.sql](../sql/community-stockpile.sql))
+- **#5** Barter trade negotiation — single-roll opposed Barter check between PC and target (NPC or community). Two-column item picker, rarity-weighted fairness gauge (Common 1 / Uncommon 2 / Rare 4), Roll Barter button, Apply Deal moves items both ways in one batch. Outcome states (Wild/High Insight = generous; Success = struck; Counter-offered = NPC won; Refused/Insulted = Dire/Low). ([components/TradeNegotiationModal.tsx](../components/TradeNegotiationModal.tsx))
+
+**Map / scene polish:**
+- Cell PX persistence — `tactical_scenes.cell_px` is now hydrated on popout open (gated by lastSyncedSceneIdRef so realtime UPDATEs don't clobber in-flight changes); debounced write on user change. Schema NOTIFY pgrst added so column changes propagate immediately. Persist failures now log to console with a `[scene-controls] <field> persist failed: <message>` tag.
+- Grid settings persistence — show_grid / grid_color / grid_opacity now survive main-window refresh. Same scene-id-keyed hydration pattern. ([sql/tactical-scenes-grid-persist.sql](../sql/tactical-scenes-grid-persist.sql))
+- Cell PX lower bound dropped 20 → 5 (still steps in 5s).
+
+**GM screen + popouts:**
+- GM Screen (`/gm-screen`) drag + resize + lock for the 7 reference panels — each box draggable by title bar, resizable via native CSS resize, layout persisted to localStorage; toolbar Lock/Edit toggle + Reset Layout. 8th GM Notes panel mounted via `next/dynamic` ssr:false + force-dynamic so SSR doesn't fail on the Supabase client.
+- Map Setup popout dropdown — "Reuse map" lists every uploaded map across all the GM's campaigns (de-duped by URL, sorted alphabetically as `Campaign → Scene`); picking one stamps the URL onto the current scene without re-uploading.
+- Delete Map / Delete Scene confirms moved to in-app modal (native confirm() was getting clipped in the narrow popout).
+
+**Pin system:**
+- Category icon picker on campaign pin edit + view-mode emoji indicator (shared lib/pin-categories.ts taxonomy with MapView).
+- 🌍 Add to world map button → 🗺️ Add to tactical map button when in tactical mode; spawns a `token_type='pin'` minimal marker (just emoji, no square, no label) at (1,1).
+- Tactical-mode X removes only the pin's markers from the active scene; campaign pin survives. New `scene_tokens.campaign_pin_id` links markers back to source. ([sql/scene-tokens-campaign-pin-link.sql](../sql/scene-tokens-campaign-pin-link.sql))
+
+**Comic reader:**
+- New `/reader-popout?pin=<id>` page. Pins with `reader_mode='comic'` get a 📖 button; popout flips through the pin's image attachments (sorted natural-numerically) with single/spread/fit toggles, page slider, full keyboard nav. ([sql/campaign-pins-reader-mode.sql](../sql/campaign-pins-reader-mode.sql))
+
+**Story creation flow:**
+- /rumors "All settings" filter repurposed as Sort By (Featured / Newest / Most subscribed / A–Z / Z–A).
+- /stories/new — Custom Setting moves Starting Location above the "Or start from a Module" picker so location pinning happens first.
+- Paradigm Pick → Step 4 (Final Review) on the edit wizard (was landing on Step 0).
+
+**Tab + UI:**
+- Mode-aware sidebar tab default — Pins for campaign map, NPCs for tactical/combat. Auto-flips on mode change only when user is on the other mode's default (Assets/Notes survive).
+- NPC roster per-folder MAP/UNMAP button next to SHOW (places markers without revealing).
+- Communities Phase E status: 96% implemented overall. Two items remain (per-community Campfire feed = blocked on Campfire existing → see Phase 4 plan below; Lv4 Skill Traits = locked on all-or-nothing Trait list).
+
+---
+
+## 🚀 Phase 4 — Campfire (scoped 2026-04-30)
+
+**Reframe:** Phase 4 is **85% built** — Forums (A + B preview), War Stories, LFG, Timestamp tool, hub routing all production-ready. The actual remaining work is the cross-scope plumbing.
+
+**Locked design decisions:**
+1. **Forums design** — both A (Discourse) and B (Reddit) are parked. UX redesign deferred until Xero has new direction.
+2. **Thriver approval** — required only when content leaves the GM's group. Campaign-internal = no approval. Setting / global = approval required.
+3. **Setting hubs** — DZ + Kings Crossroads only (both already in setting taxonomy with full NPC + pin seed registries). Other settings (Custom / Mongrels / Chased / Arena) deferred.
+4. **Community feed auto-posts** — ship auto first, parse back if too noisy. Morale outcomes / schism / migration / dissolution all auto-post.
+5. **Default scope on new posts** — campaign-private (least surprising; Vegas-rules content stays in-campaign by default).
+
+**Sprint plan (~7-10 days for 4A-D, polish 4E opportunistic):**
+
+### Phase 4A — Per-setting feed layer (~2-3 days, foundational)
+- DB: add `setting text NULL` + `(setting, created_at DESC)` index to `forum_threads`, `war_stories`, `lfg_posts`. Single migration + NOTIFY pgrst.
+- Compose UX: radio "Where to post?" with three options (campaign / setting / global). Setting + global flag `moderation_status='pending'`.
+- Reader UX: setting-filter chip strip (All · DZ · Kings Crossroads · Distemper · etc.) on each surface. /campfire dropdown for one-click context switch.
+
+### Phase 4B — Promotion + moderation flow (~2 days, depends on 4A)
+- DB: add `moderation_status` (`approved` | `pending` | `rejected`) + `approved_by` + `approved_at` to the same three tables. Same shape as `world_communities`.
+- Compose: campaign-internal → instant publish; setting / global → pending. Author always sees own pending posts with a banner.
+- Moderation queue: extend [app/moderate/page.tsx](../app/moderate/page.tsx) with sections for pending forums / war stories / LFG. Approve / Reject buttons mirror existing world_communities pattern.
+
+### Phase 4C — Setting hubs DZ + Kings Crossroads (~2-3 days, depends on 4A + 4B)
+- Route: `app/settings/[setting]/page.tsx` — single dynamic page for any registered setting.
+- Layout: name + tagline → canon timeline (from `SETTING_PINS[setting]`) + community pin layer (`world_communities` filtered) → setting feed (4A's filter applied to Forums / War Stories / LFG) → "Run a campaign in [Setting]" button (jumps to /stories/new?setting=X).
+- Sidebar: new "Settings" expandable with DZ + Kings Crossroads.
+
+### Phase 4D — Per-community Campfire feed (~1 day)
+- Closes spec-communities §2.
+- Auto-posts: Morale Check finalize → `📊 <Community> · Week N · <Outcome>` with modifiers_json summary. Schism / Migration / Dissolution → auto-post the event. Manual GM "Post community update" for free-form.
+- Surface: Community detail page + /communities Following card render the latest 5-10 events.
+
+### Phase 4E — Polish (each ~1 day, opportunistic)
+- [ ] Pagination on every feed (currently unbounded `.select('*')`)
+- [ ] Full-text search across Forums / War Stories / LFG
+- [ ] Reactions on War Stories + LFG (persist Forums B votes; extend pattern)
+- [ ] Comment threading on War Stories + LFG (Forums has it; others flat)
+- [ ] Notifications UI for LFG interest pings (rows exist, no read/dismiss view)
+- [ ] Inline `<t:UNIX:f>` token rendering in body text
+- [ ] Formal `campaign_invitations` accept/reject flow (replaces DM-with-link)
+- [ ] LFG filters by setting + schedule
+
+**Explicit non-goals for Phase 4:**
+- ❌ Forum redesign (parked)
+- ❌ Hubs for Mongrels / Chased / Custom / Arena
+- ❌ Homebrew tab (placeholder stays placeholder until design)
+- ❌ User profiles / reputation
+
+---
+
 ## ✅ Shipped 2026-04-29 (UI Streamline + Modules curation + portrait/community polish)
 
 - **Persistent GM nav across all sub-pages** — new `<StoryToolsNav>`

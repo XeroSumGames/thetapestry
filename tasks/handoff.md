@@ -1,90 +1,162 @@
-# Session Handoff — 2026-04-29 (UI Streamline + Modules curation + persistent GM nav)
+# Tapestry Handoff — 2026-04-30 close-out
 
-## TL;DR
-- **Multi-day session arc closed:** every item from the UI Streamline list (Enter→GM Tools, Snapshot to its own page, drop Clone, persistent button row, Edit-page snapshot panel removed) is shipped. Plus: Modules marketplace got an EDIT page + cover upload + sort_order curation, Survivors gallery balances correctly, Communities click-through auto-expands.
-- **Earlier in this session arc:** Distract redesign (5 commits), C2 InitiativeBar extraction, perf sweep (memo + useStableCallback), Grapple opposed-check tier fix, player-side Search Remains loot RPC, snapshot RESTORE auto-launch, weapon jam persistence, Kings Crossing → Kings Crossroads rename, setting consolidation (5 deprecated settings → published modules).
-- **Worktree:** `C:\TheTapestry\.claude\worktrees\beautiful-dijkstra-8da918` on `claude/beautiful-dijkstra-8da918` tracking main. Working tree clean (only `.claude/settings.local.json` permission deltas, intentionally not committed).
-- **`C:\TheTapestry`** is synced to `main` — the user's primary working dir matches what's live on Vercel.
+Single-file picture of where things stand at end of session for the next clean chat to pick up.
 
-## Pick up here
+---
 
-The user has no specific outstanding ask — they wrapped the session by saying "push, commit, update todo and everything else, then get me a handoff ready." So the next chat should open ready to either:
+## Where we are
 
-1. **Pick up from the backlog** — top candidates flagged by Xero this week:
-   - Restore-to-Full-Health perf (n+1 fetch on the multi-target restore modal — batch into 3 concurrent table-scoped UPDATEs)
-   - "Streamline logging into missions" (player-side login → join → table is too many clicks; need to discuss before shipping)
-   - Hide-NPCs reveal UX streamlining (data layer works; reveal flow needs fewer clicks)
-   - Vehicles + Handouts in `cloneSnapshotIntoCampaign` v1.1.0 (parked when Xero pivoted to UI Streamline)
-   - Re-run `/tools/migrate-settings-to-modules` — the descriptions/order changed, existing module rows in DB are stale; tool has UPDATE-on-conflict but Xero hasn't re-clicked yet
-   - Apply `sql/modules-sort-order.sql` if not yet run (Xero hasn't confirmed)
+**Communities flagship is 95% complete.** Phase E closed out fully this session — World Event CMod propagation, player subscriptions polish, "Start near existing community" wizard, and the Apprentice creation rewrite (Profession-based, with SRD per-skill cap + age + 3 trait words). Two remaining Phase E items are externally blocked:
+- Per-community Campfire feed → blocked on Phase 4 Campfire (now scoped — see below).
+- Lv4 Skill Trait auto-bonuses → locked on the all-or-nothing Trait list landing.
 
-2. **Wait for playtest reports** — the next Mongrels session is what'll surface the next round of bugs. Items 5–11 of the C1 testing checklist still aren't formally retested (Sprint slowness, UNEQUIP button visibility, X button on Initiative bar, etc.) but most are likely already fixed by chat-loop kill / parallelization / auth-cache work.
+**Inventory system queue is closed.** All 5 items shipped: encumbrance time-tick, PC↔NPC trade, vehicle cargo unification (with vehicle enc cap tracking), shared community stockpile, Barter trade negotiation. Plus the InventoryItem shape is now the single source of truth across PCs / NPCs / vehicles / community stockpiles.
 
-**Open the next chat with this question:**
-> "What's next — backlog item, or did the playtest surface new bugs?"
+**Phase 4 (Campfire) was scoped today.** Major reframe: 85% of Campfire is already built (Forums A + B preview, War Stories, LFG, Timestamp tool, hub routing). The actual remaining work is cross-scope plumbing.
 
-## What shipped this session arc (newest first)
+---
 
-```
-af15ca1 ui: persistent StoryToolsNav + Survivors gallery + community auto-expand
-d8eeb23 feat(modules): sort_order column for /modules curation + UI on Edit page
-84b831d ui(stories): rename Enter→GM Tools, Snapshot tab, drop Clone, drop new-tab
-8951b0f feat(modules): EDIT button + cover-image upload page; reorder /stories/new fields
-197491d feat(modules): reorder migration list + new descriptions + The Basement rename
-b310ccd feat(modules): Thriver migration tool to publish 5 deprecated settings
-b5f5602 fix(setting): rename King's Crossing → Kings Crossroads (Delaware geography)
-70fa32f ui(stories): trim setting list + remove "New Campaign" button
-743fa75 perf(render): React.memo on heavy children + useStableCallback for TacticalMap
-7930e3b perf(table): parallelize 5 sequential await pairs (loadEntries + rollsFeed)
-42291ba fix(jam): persist Low-Insight jam flag so Unjam stays available
-11ddf77 feat(loot): player-side "Search Remains" via SECURITY DEFINER RPC
-4ebd57f fix(grapple): opposed-check resolves by outcome tier, not binary success
-7c26a9d feat(snapshots): auto-launch table after admin-page restore
-7544bf8 feat(grapple): add Conditional Modifier input to the Grapple modal
-... (and 50+ earlier commits in this multi-day arc — see git log for the full picture)
-```
+## What shipped this session (one line each)
 
-## Two systemic wins worth understanding (still in force)
+Communities Phase E:
+- World Event CMod propagation — `map_pins.cmod_*` columns + Weekly Morale slot with per-event opt-out
+- Player subscriptions polish — denormalized count + ★ chip + subscriber-notify trigger + auto-status from Morale outcome
+- "Start near existing community" wizard — fourth tile on /stories/new
+- Apprentice creation rewrite — Profession-based (12 PROFESSIONS, +1 CDP per skill), 5-step wizard with age + 3 trait words
 
-**Auth Web-Lock contention** — `supabase.auth.getUser()` takes a Web Lock, and a backgrounded tab mid-mount holding it makes login spin forever. `lib/auth-cache.ts` provides `getCachedAuth()` (30 s TTL local snapshot from `getSession()`). The codemod migrated 44 files. Any new code calling `supabase.auth.getUser()` directly is a regression risk — use `getCachedAuth()`.
+Inventory:
+- Encumbrance time-tick (GM Tools → Time, -1 RP per hour overencumbered)
+- PC ↔ NPC trade (give modal lists 👤 PCs / 🎭 NPCs / 🏘 communities)
+- Vehicle cargo unification (InventoryItem shape, `cargoTotal/cap` Enc display)
+- Community stockpile (`community_stockpile_items` table, 📦 section under Role Coverage, deposit via give modal)
+- Barter negotiation (single-roll opposed check, rarity-weighted fairness gauge, two-way item move on Apply Deal)
 
-**Render-perf memo pattern** — `TacticalMap` is fully memoized (every callback consumed via `useStableCallback` to keep stable identity). Same memo wrap landed on `CharacterCard` and `NpcRoster`, but their parent's call sites (the table page) still pass inline `new Set(...)` and inline arrows on every render. Memo currently doesn't skip those two — fixing it is a follow-up: stabilize the call-site props in `app/stories/[id]/table/page.tsx`.
+Map / scene:
+- Cell PX persistence (`tactical_scenes.cell_px` hydrated on popout open with scene-id-keyed guard)
+- Grid settings persistence (`show_grid` / `grid_color` / `grid_opacity` columns + same hydration pattern)
+- Cell PX min dropped 20 → 5
+- GM Screen drag + resize + lock (with 8th GM Notes panel, ssr:false to avoid SSR Supabase failure)
+- Map Setup popout reuse-map dropdown (lists every uploaded map across all the GM's campaigns)
+- Delete Map / Delete Scene confirms moved to in-app modal
+- Pin category icon picker on campaign pins (shared lib/pin-categories.ts)
+- 🌍 → 🗺️ button toggle in tactical mode (drops a token_type='pin' minimal-emoji marker)
+- Tactical X removes only this pin's markers (not the campaign pin)
+- New `scene_tokens.campaign_pin_id` for the pin marker linkage
 
-## Critical files / locations (where the scar tissue is)
+Other:
+- Comic reader popout (`/reader-popout?pin=<id>` with single/spread/fit toggles, slider, keyboard nav)
+- /rumors All-settings filter → Sort By
+- /stories/new — Custom Setting moves Starting Location above Module picker
+- Paradigm Pick → Step 4 (Final Review)
+- Mode-aware sidebar tab default (Pins for campaign, NPCs for tactical)
+- NPC roster MAP/UNMAP per-folder button (places markers without revealing)
+- Paradigms intro text width fix (drops the 780px cap)
 
-- [app/stories/[id]/table/page.tsx](app/stories/[id]/table/page.tsx) — ~9300-line megafile. Most combat work happens here. C2 already extracted `InitiativeBar`; future C3 candidates: action-button strip, roll modal, GM Tools dropdown.
-- [components/StoryToolsNav.tsx](components/StoryToolsNav.tsx) — new shared nav. If you add a new GM sub-page, mount this at the top.
-- [components/CharacterCard.tsx](components/CharacterCard.tsx) — has the new Evolution button (purple, scrolls to Progression Log block on the same card).
-- [components/CampaignCommunity.tsx](components/CampaignCommunity.tsx) — `initialOpenId` prop now lets callers auto-expand a specific community.
-- [lib/modules.ts](lib/modules.ts) — sort order: `.order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false })`.
-- [app/modules/[id]/edit/page.tsx](app/modules/[id]/edit/page.tsx) — module editor (cover upload + name/tagline/description/sort_order). Author-or-Thriver gated.
-- [lib/auth-cache.ts](lib/auth-cache.ts) — 30 s TTL session cache. Use `getCachedAuth()` everywhere.
-- [lib/useStableCallback.ts](lib/useStableCallback.ts) — stable callback identity with fresh closures.
-- [lib/debug-log.ts](lib/debug-log.ts) — telemetry (errors + page-load timing). NO global fetch wrapper (was reverted as too invasive).
+---
 
-## SQL applied this session arc
+## Phase 4 — Campfire (NEXT MAJOR WORK)
 
-- `sql/setting-rename-kings-crossroads.sql` — applied (Xero confirmed)
-- `sql/loot-npc-item-rpc.sql` — applied
-- `sql/modules-sort-order.sql` — **NOT yet confirmed applied** (re-run to pin Empty=1, Chased=2, Minnie=3, Basement=4, Arena=5)
-- `sql/debug-log.sql` — applied
+**Scoped today; ready to start. Full plan in [tasks/todo.md](todo.md) under "🚀 Phase 4 — Campfire". Memory: `project_phase_4_campfire.md`.**
 
-## Workflow rules (still in force)
+The 85% that's already built (audit at /campfire):
+- Forums (Discourse-style threads + a Reddit-style "Forums B" preview)
+- War Stories (cross-campaign feed with attachments)
+- LFG (GM/Player bulletin board with interest roster + invite-via-DM)
+- Timestamp tool (Discord `<t:UNIX:f>` generator)
+- Hub routing
 
-- `C:\TheTapestry` is permanently on `main`. After every push from the worktree, run `git -C C:/TheTapestry pull origin main` (memory rule covers this).
-- No long-lived feature branches. Ship same-session or use a flag.
-- Push first, fast-fail on the live Vercel deploy (Xero is the only real-site user).
-- Memory rules: keep using `getCachedAuth`, never sub-13px inline fontSize, header buttons via `hdrBtn()` helper.
+The 15% that's actually Phase 4:
 
-## Test plans written this session
+| Phase | Item | Size | Notes |
+|---|---|---|---|
+| 4A | Per-setting feed layer | 2-3 days | foundational, do first |
+| 4B | Promotion + moderation flow | 2 days | depends on 4A |
+| 4C | Setting hubs (DZ + Kings Crossroads only) | 2-3 days | depends on 4A + 4B |
+| 4D | Per-community Campfire feed | 1 day | closes spec-communities §2; can interleave |
+| 4E | Polish wave (pagination, FTS, reactions, threading, notif UI, inline tokens, formal invites, LFG filters) | 1-2 days each | opportunistic |
 
-Living in `C:\TheTapestry\tasks\` (and the worktree mirror):
-- `persistent-nav-survivors-communities-testplan.md` — today's commit
-- `modules-edit-cover-testplan.md`
-- `modules-sort-order-testplan.md`
-- `setting-migration-testplan.md`
-- `kings-crossroads-rename-testplan.md`
-- `gm-tools-streamline-testplan.md`
-- `loot-search-remains-testplan.md`
-- `grapple-opposed-tiers-testplan.md`
-- (older C1 / Distract testplans still valid)
+**Locked design decisions (do not re-litigate without Xero):**
+1. Forums design parked — both A and B disliked, no rework yet
+2. Thriver approval ONLY when content leaves the GM's group (campaign-internal = no review)
+3. Setting hubs = DZ + Kings Crossroads only (other settings deferred)
+4. Community feed = ship auto-posts first, parse back if noisy
+5. Default scope on new posts = campaign-private
+
+**Explicit non-goals:** Forum redesign, hubs for Mongrels/Chased/Custom/Arena, Homebrew tab, user profiles/reputation.
+
+---
+
+## Inventory followups (left in queue, all small)
+
+- Apprentice CDP transfer — master PC's earned CDP can flow to Apprentice
+- PC ↔ Vehicle item transfer
+- Withdrawal-to-PC on community stockpile (today GM removes + manually adds)
+- Realtime sub on `community_stockpile_items`
+- Multi-round haggling (Barter currently single-roll)
+- Barter Lv4 cheat-doubling (locked behind Lv4 Trait list)
+- Auto-relationship-penalty on Dire/Low Insight Barter outcome
+
+---
+
+## Active backlog (not blocked, ready to pick up)
+
+Recent friction items in [tasks/todo.md §"🎯 From 2026-04-29 chat"](todo.md):
+- Empty-adventure module clone fails on null pin name
+- Gut Instinct results presentation rework
+- First Impression → straight to roll modal
+- Modal unification across Stress / Breaking Point / Lasting Wound / Recruit / Stabilize / Distract / Coordinate / Group / Gut Instinct / First Impression
+
+Mongrels playtest backlog (§"🎯 From 2026-04-27"):
+- Initiative lag investigation
+- Hide-NPCs reveal UX streamlining
+- King's Crossing Mall tactical scenes + handouts
+- `/tools/reseed-campaign?id=…` for re-seeding existing campaigns
+
+Big features still on the spec but unstarted:
+- **Modules System Phase A** ([tasks/spec-modules.md](spec-modules.md)) — entire MVP unbuilt: publish wizard + tables + clone-on-campaign-create. Supersedes GM Kit v1.
+- **Doors / Line of sight / Dynamic lighting** on tactical maps — separate big lifts.
+- **CDP Calculator** at `/characters/[id]/evolve`.
+- **"What They Have" overhaul** — character creation step needs all weapon families (Heavy / Demolitions / Explosives currently missing).
+
+---
+
+## Backburner (don't touch unless specific trigger)
+
+- **Campaign calendar** — deferred. Triggers: forgetting Skip Week → frozen community for 4+ sessions, world events that should've ended still applying, wanting "X days passed" auto-consumption, encumbrance tick wanting auto-fire.
+- **Thriver godmode UI sweep** — DB-side done; UI sweep pending (widen `isGM &&` → `(isGM || isThriver) &&` across admin affordances).
+
+---
+
+## Tooling state
+
+- **All SQL migrations applied** (user confirmed earlier in session).
+- **Worktree clean.** `claude/nervous-cohen-894724` is up to date with `origin/main`.
+- **Primary worktree** at `C:/TheTapestry` synced via `git -C C:/TheTapestry pull origin main` after every push (per memory feedback_working_directory).
+- **No outstanding test plans needing user verification.** All 2026-04-30 features have test plans in `tasks/`.
+
+---
+
+## Memory rules in play (quick checklist for the incoming chat)
+
+- Carlito font default (Barlow Condensed killed 2026-04-29)
+- Min inline fontSize = 13px (guardrail at `scripts/check-font-sizes.mjs`)
+- Header buttons = 28px height, use `hdrBtn()` helper
+- Carlito + `#cce0f5` as the safe text-on-dark combo (NEVER `#3a3a3a`)
+- Push to live, test on live (Vercel = dev env, user is only real user)
+- After every push from worktree, `git -C C:/TheTapestry pull origin main`
+- User does NO git ops — Claude does ALL of them end-to-end
+- Don't ask "want to break?" — user finds it patronizing
+- Long-term fix > quick fix; surface latent bugs even when off-request
+- Communities flagship = treat Phase E items as priority
+- Lv4 Skill Traits ship together or not at all — don't piecemeal
+
+---
+
+## Suggested first move for the next chat
+
+Start **Phase 4A (per-setting feed layer)**. It's the foundational primitive — 4B / 4C / 4D all need the `setting` discriminator. Single migration + compose UX changes on three feed surfaces (forum_threads, war_stories, lfg_posts). ~2-3 days estimate.
+
+If Xero pivots, the next-best targets are:
+- **Modules MVP Phase A** — biggest greenfield content engine, single coherent feature
+- **Modal unification** — chips away at the "every roll modal looks slightly different" friction
+- **"What They Have" overhaul** — closes a recurring complaint about character creation
