@@ -439,6 +439,22 @@ export default function NotificationBell() {
     // item_name / qty / from_label / target_character_name. Body shape
     // (from notify_inventory_received RPC):
     //   You received <qty>× <item> from <from_label>
+    // Phase 4E — LFG interest pings. Body shape:
+    //   '<username> is interested in "<post title>"'
+    // Trigger lives in sql/lfg-interests.sql; clicking the row deep-
+    // links to the post on /campfire/lfg via `link`.
+    if (type === 'lfg_interest') {
+      const m = body.match(/^(.+?) is interested in "(.+)"$/)
+      if (m) {
+        return (
+          <>
+            <span style={{ color: '#7ab3d4', fontWeight: 700 }}>{m[1]}</span> is interested in{' '}
+            <span style={{ color: '#cce0f5' }}>"{m[2]}"</span>
+          </>
+        )
+      }
+    }
+
     if (type === 'inventory_received') {
       const itemName = (metadata as any)?.item_name as string | undefined
       const qty = (metadata as any)?.qty as number | undefined

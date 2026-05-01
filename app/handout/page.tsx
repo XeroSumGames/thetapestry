@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import { useSearchParams } from 'next/navigation'
 import NoteAttachmentsView, { NoteAttachment } from '../../components/NoteAttachmentsView'
+import { renderRichText } from '../../lib/rich-text'
 
 interface Note {
   id: string
@@ -48,7 +49,7 @@ export default function HandoutPage() {
       </div>
 
       <div style={{ fontSize: '16px', color: '#cce0f5', lineHeight: 1.8, whiteSpace: 'pre-wrap', marginBottom: '24px' }}>
-        {note.content}
+        {renderRichText(note.content, { linkify: true })}
       </div>
 
       {note.attachments.length > 0 && (

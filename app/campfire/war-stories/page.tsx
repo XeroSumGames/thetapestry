@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { isMissingSchema, missingSchemaMessage } from '../../../lib/supabase-errors'
+import { renderRichText } from '../../../lib/rich-text'
 import {
   composePickerOptions,
   SETTING_FILTER_CHIPS,
@@ -69,6 +70,10 @@ export default function WarStoriesPage() {
   // Seeded from the ?setting= URL param so picking a setting on the
   // /campfire hub propagates here.
   const [settingFilter, setSettingFilter] = useUrlSettingFilter()
+  // Phase 4E — pagination. Same cursor-based shape as Forums.
+  const [hasMore, setHasMore] = useState<boolean>(true)
+  const [loadingMore, setLoadingMore] = useState<boolean>(false)
+  const PAGE_SIZE = 50
   // Composer attachment state. `newFiles` = picks waiting to upload on save;
   // `existingAttachments` = files already saved on the story being edited
   // (so the editor can remove them). Fresh-post flow only uses newFiles.
@@ -113,6 +118,7 @@ export default function WarStoriesPage() {
       .from('war_stories')
       .select('*')
       .order('updated_at', { ascending: false })
+      .range(0, PAGE_SIZE - 1)
     // Migration not applied yet — set the flag, render the banner,
     // skip the rest of the load. Don't blow up the page.
     if (isMissingSchema(readErr)) {
@@ -122,6 +128,7 @@ export default function WarStoriesPage() {
       return
     }
     const list = (rows ?? []) as Story[]
+    setHasMore(list.length === PAGE_SIZE)
     if (list.length === 0) { setStories([]); setLoading(false); return }
 
     const authorIds = Array.from(new Set(list.map(s => s.author_user_id)))
@@ -143,6 +150,40 @@ export default function WarStoriesPage() {
       campaign_name: s.campaign_id ? (campMap[s.campaign_id] ?? null) : null,
     })))
     setLoading(false)
+  }
+
+  // Phase 4E — append the next page of stories. Same offset shape as
+  // Forums; new updated_at touches above the cursor are tolerable for
+  // a polish-tier feed.
+  async function loadMoreStories() {
+    if (loadingMore || !hasMore || tableMissing) return
+    setLoadingMore(true)
+    const offset = stories.length
+    const { data: rows } = await supabase
+      .from('war_stories')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      .range(offset, offset + PAGE_SIZE - 1)
+    const list = (rows ?? []) as Story[]
+    setHasMore(list.length === PAGE_SIZE)
+    if (list.length === 0) { setLoadingMore(false); return }
+    const authorIds = Array.from(new Set(list.map(s => s.author_user_id)))
+    const campaignIds = Array.from(new Set(list.map(s => s.campaign_id).filter((x): x is string => !!x)))
+    const [profRes, campRes] = await Promise.all([
+      supabase.from('profiles').select('id, username').in('id', authorIds),
+      campaignIds.length > 0
+        ? supabase.from('campaigns').select('id, name').in('id', campaignIds)
+        : Promise.resolve({ data: [] }),
+    ])
+    const nameMap = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.username]))
+    const campMap = Object.fromEntries((campRes.data ?? []).map((c: any) => [c.id, c.name]))
+    setStories(prev => [...prev, ...list.map(s => ({
+      ...s,
+      attachments: Array.isArray(s.attachments) ? s.attachments : [],
+      author_username: nameMap[s.author_user_id] ?? 'Unknown',
+      campaign_name: s.campaign_id ? (campMap[s.campaign_id] ?? null) : null,
+    }))])
+    setLoadingMore(false)
   }
 
   function startCompose() {
@@ -567,7 +608,7 @@ export default function WarStoriesPage() {
                   )}
                 </div>
                 <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: (s.attachments.length > 0 || isMine) ? '12px' : 0 }}>
-                  {s.body}
+                  {renderRichText(s.body, { linkify: true })}
                 </div>
                 {/* Attachments. Images render as clickable thumbnails
                     (open full-size in new tab); non-images show as a
@@ -606,6 +647,16 @@ export default function WarStoriesPage() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Phase 4E — Load older stories. */}
+      {!loading && hasMore && stories.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+          <button onClick={loadMoreStories} disabled={loadingMore}
+            style={{ padding: '8px 18px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: loadingMore ? 'wait' : 'pointer', opacity: loadingMore ? 0.6 : 1 }}>
+            {loadingMore ? 'Loading…' : 'Load older stories'}
+          </button>
         </div>
       )}
     </div>

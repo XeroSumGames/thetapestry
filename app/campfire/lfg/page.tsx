@@ -65,6 +65,14 @@ export default function LfgPage() {
   // Seeded from the ?setting= URL param so picking a setting on the
   // /campfire hub propagates here.
   const [settingFilter, setSettingFilter] = useUrlSettingFilter()
+  // Phase 4E — schedule freetext filter. Schedule is a free-text column
+  // (e.g. "Sundays 7pm EST", "Bi-weekly Tuesdays") so we substring-match
+  // case-insensitively rather than try to parse natural-language times.
+  const [scheduleQuery, setScheduleQuery] = useState<string>('')
+  // Phase 4E — pagination. Same shape as Forums + War Stories.
+  const [hasMore, setHasMore] = useState<boolean>(true)
+  const [loadingMore, setLoadingMore] = useState<boolean>(false)
+  const PAGE_SIZE = 50
   const [composing, setComposing] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState<{ kind: Kind; title: string; body: string; scope: Scope; setting: string; schedule: string }>({
@@ -211,7 +219,9 @@ export default function LfgPage() {
       .from('lfg_posts')
       .select('*')
       .order('updated_at', { ascending: false })
+      .range(0, PAGE_SIZE - 1)
     const list = (postRows ?? []) as LfgPost[]
+    setHasMore(list.length === PAGE_SIZE)
 
     if (list.length === 0) {
       setPosts([])
@@ -258,6 +268,33 @@ export default function LfgPage() {
     setInterestsByPost(byPost)
     setPosts(list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown' })))
     setLoading(false)
+  }
+
+  // Phase 4E — append the next page. Cursor = current posts.length.
+  // We don't refetch interests here; they were already pulled in full
+  // via the RLS-scoped select on the initial load (it's small enough
+  // to hydrate everything visible in one round-trip). New posts coming
+  // in via realtime are out-of-scope for v1.
+  async function loadMorePosts() {
+    if (loadingMore || !hasMore) return
+    setLoadingMore(true)
+    const offset = posts.length
+    const { data: postRows } = await supabase
+      .from('lfg_posts')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      .range(offset, offset + PAGE_SIZE - 1)
+    const list = (postRows ?? []) as LfgPost[]
+    setHasMore(list.length === PAGE_SIZE)
+    if (list.length === 0) { setLoadingMore(false); return }
+    const authorIds = Array.from(new Set(list.map(p => p.author_user_id)))
+    const { data: profs } = await supabase
+      .from('profiles')
+      .select('id, username')
+      .in('id', authorIds)
+    const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
+    setPosts(prev => [...prev, ...list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown' }))])
+    setLoadingMore(false)
   }
 
   async function toggleInterest(postId: string) {
@@ -374,7 +411,12 @@ export default function LfgPage() {
     if (settingFilter === '') return posts.filter(p => !p.setting)
     return posts.filter(p => p.setting === settingFilter)
   }, [posts, settingFilter])
-  const visible = filter === 'all' ? settingFiltered : settingFiltered.filter(p => p.kind === filter)
+  const kindFiltered = filter === 'all' ? settingFiltered : settingFiltered.filter(p => p.kind === filter)
+  // Schedule filter applies last (most specific). Empty query = no filter.
+  const scheduleQ = scheduleQuery.trim().toLowerCase()
+  const visible = scheduleQ === ''
+    ? kindFiltered
+    : kindFiltered.filter(p => (p.schedule ?? '').toLowerCase().includes(scheduleQ))
   // Author banner counts. LFG has no campaign scope, so every post
   // queues — non-zero counts here are normal, not exceptional.
   const myPendingCount = posts.filter(p => p.author_user_id === myId && p.moderation_status === 'pending').length
@@ -533,8 +575,8 @@ export default function LfgPage() {
         })}
       </div>
 
-      {/* Kind filter chips */}
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '1rem' }}>
+      {/* Kind filter chips + Schedule freetext filter (Phase 4E). */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
         {([
           ['all', 'All', '#f5f2ee'],
           ['gm_seeking_players', 'GMs', KIND_ACCENT.gm_seeking_players],
@@ -545,6 +587,19 @@ export default function LfgPage() {
             {label}
           </button>
         ))}
+        <div style={{ flex: 1 }} />
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <input value={scheduleQuery} onChange={e => setScheduleQuery(e.target.value)}
+            placeholder="Filter by schedule (e.g. Sundays, weekly)…"
+            style={{ width: '260px', padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+          {scheduleQuery && (
+            <button onClick={() => setScheduleQuery('')}
+              title="Clear schedule filter"
+              style={{ padding: '5px 10px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              ×
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Post list */}
@@ -718,6 +773,16 @@ export default function LfgPage() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Phase 4E — Load older LFG posts. */}
+      {!loading && hasMore && posts.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+          <button onClick={loadMorePosts} disabled={loadingMore}
+            style={{ padding: '8px 18px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: loadingMore ? 'wait' : 'pointer', opacity: loadingMore ? 0.6 : 1 }}>
+            {loadingMore ? 'Loading…' : 'Load older posts'}
+          </button>
         </div>
       )}
     </div>

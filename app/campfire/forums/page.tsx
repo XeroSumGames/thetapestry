@@ -94,6 +94,12 @@ export default function ForumsIndexPage() {
   // scope pill on the composer. Same query as War Stories — pulled via
   // campaign_members so it includes player roles, not just GM.
   const [myCampaigns, setMyCampaigns] = useState<{ id: string; name: string }[]>([])
+  // Phase 4E — pagination. Initial fetch grabs PAGE_SIZE rows; "Load
+  // older" appends the next page. hasMore stays true until a fetch
+  // returns fewer rows than the page size.
+  const [hasMore, setHasMore] = useState<boolean>(true)
+  const [loadingMore, setLoadingMore] = useState<boolean>(false)
+  const PAGE_SIZE = 50
 
   useEffect(() => {
     async function init() {
@@ -125,7 +131,9 @@ export default function ForumsIndexPage() {
       .select('*')
       .order('pinned', { ascending: false })
       .order('latest_reply_at', { ascending: false })
+      .range(0, PAGE_SIZE - 1)
     const list = (rows ?? []) as Thread[]
+    setHasMore(list.length === PAGE_SIZE)
     if (list.length === 0) { setThreads([]); setLoading(false); return }
     const authorIds = Array.from(new Set(list.map(t => t.author_user_id)))
     const campaignIds = Array.from(new Set(list.map(t => t.campaign_id).filter((x): x is string => !!x)))
@@ -143,6 +151,42 @@ export default function ForumsIndexPage() {
       campaign_name: t.campaign_id ? (campMap[t.campaign_id] ?? null) : null,
     })))
     setLoading(false)
+  }
+
+  // Phase 4E — fetch the next page beyond the loaded threads. Uses
+  // offset-based pagination; new posts arriving above the cursor are
+  // tolerable since pinned threads always sort first and the rest
+  // sort by latest_reply_at (a sequence number proxy that mostly
+  // monotonically increases for active threads).
+  async function loadMoreThreads() {
+    if (loadingMore || !hasMore) return
+    setLoadingMore(true)
+    const offset = threads.length
+    const { data: rows } = await supabase
+      .from('forum_threads')
+      .select('*')
+      .order('pinned', { ascending: false })
+      .order('latest_reply_at', { ascending: false })
+      .range(offset, offset + PAGE_SIZE - 1)
+    const list = (rows ?? []) as Thread[]
+    setHasMore(list.length === PAGE_SIZE)
+    if (list.length === 0) { setLoadingMore(false); return }
+    const authorIds = Array.from(new Set(list.map(t => t.author_user_id)))
+    const campaignIds = Array.from(new Set(list.map(t => t.campaign_id).filter((x): x is string => !!x)))
+    const [profRes, campRes] = await Promise.all([
+      supabase.from('profiles').select('id, username').in('id', authorIds),
+      campaignIds.length > 0
+        ? supabase.from('campaigns').select('id, name').in('id', campaignIds)
+        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    ])
+    const nameMap = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.username]))
+    const campMap = Object.fromEntries((campRes.data ?? []).map((c: any) => [c.id, c.name]))
+    setThreads(prev => [...prev, ...list.map(t => ({
+      ...t,
+      author_username: nameMap[t.author_user_id] ?? 'Unknown',
+      campaign_name: t.campaign_id ? (campMap[t.campaign_id] ?? null) : null,
+    }))])
+    setLoadingMore(false)
   }
 
   function startCompose() {
@@ -538,6 +582,18 @@ export default function ForumsIndexPage() {
               </a>
             )
           })}
+        </div>
+      )}
+
+      {/* Phase 4E — Load older. Visible whenever the most recent fetch
+          returned a full page (more rows likely exist). Cursor is the
+          number of currently-loaded threads. */}
+      {!loading && hasMore && threads.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+          <button onClick={loadMoreThreads} disabled={loadingMore}
+            style={{ padding: '8px 18px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: loadingMore ? 'wait' : 'pointer', opacity: loadingMore ? 0.6 : 1 }}>
+            {loadingMore ? 'Loading…' : 'Load older threads'}
+          </button>
         </div>
       )}
     </div>
