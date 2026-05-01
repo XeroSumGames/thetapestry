@@ -1438,6 +1438,19 @@ export default function TablePage() {
         }
       })
 
+    // Auto-reveal hidden NPCs entering combat. Without this, players
+    // would see anonymous turn names appearing in initiative for NPCs
+    // they can't actually look up. The token-placement trigger in
+    // sql/campaign-npcs-hidden-from-players.sql handles tokens on the
+    // tactical map; this covers the initiative-roster path. Fire-and-
+    // forget — the table UPDATE doesn't block combat start.
+    const npcIdsToReveal = rosterNpcs
+      .filter(n => selectedNpcIds.has(n.id) && (n as any).hidden_from_players === true)
+      .map(n => n.id)
+    if (npcIdsToReveal.length > 0) {
+      void supabase.from('campaign_npcs').update({ hidden_from_players: false }).in('id', npcIdsToReveal)
+    }
+
     // Sort client-side to determine first active combatant (avoids a re-fetch)
     const allRows = [...pcRows, ...npcRows]
     // Secondary tiebreak on name so this log ordering matches the initiative
