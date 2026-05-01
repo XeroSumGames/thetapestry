@@ -6,6 +6,7 @@ import { getCachedAuth } from '../lib/auth-cache'
 import { logFirstEvent } from '../lib/events'
 import { PIN_CATEGORIES, getCategoryEmoji as sharedGetCategoryEmoji } from '../lib/pin-categories'
 import QuickAddModal from './QuickAddModal'
+import { searchNominatimUSFirst } from '../lib/nominatim-search'
 
 type PinTier = 'landmark' | 'location' | 'event' | 'personal'
 
@@ -1540,8 +1541,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   if (e.target.value.length >= 3) {
                     debounceRef.current = setTimeout(async () => {
                       try {
-                        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(e.target.value)}&limit=5`)
-                        const data = await res.json()
+                        const data = await searchNominatimUSFirst(e.target.value)
                         setSuggestions(data)
                       } catch { setSuggestions([]) }
                     }, 300)
@@ -1683,9 +1683,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
           if (v.trim().length >= 3) {
             editAddressDebounceRef.current = setTimeout(async () => {
               try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(v)}&limit=5`)
-                const data = await res.json()
-                setEditAddressSuggestions(Array.isArray(data) ? data : [])
+                const data = await searchNominatimUSFirst(v)
+                setEditAddressSuggestions(data)
               } catch { setEditAddressSuggestions([]) }
             }, 300)
           } else {

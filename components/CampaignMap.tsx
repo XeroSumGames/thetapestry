@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { searchNominatimUSFirst } from '../lib/nominatim-search'
 
 interface CampaignPin {
   id: string
@@ -330,8 +331,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               if (e.target.value.length >= 3) {
                 debounceRef.current = setTimeout(async () => {
                   try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(e.target.value)}&limit=5`)
-                    setSuggestions(await res.json())
+                    setSuggestions(await searchNominatimUSFirst(e.target.value))
                   } catch { setSuggestions([]) }
                 }, 300)
               } else { setSuggestions([]) }

@@ -4,6 +4,7 @@ import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { PIN_CATEGORIES, getCategoryEmoji, getCategoryLabel } from '../lib/pin-categories'
 import { openPopout } from '../lib/popout'
+import { searchNominatimUSFirst } from '../lib/nominatim-search'
 
 interface CampaignPin {
   id: string
@@ -415,10 +416,8 @@ function AddressSearchRow({ onPick }: { onPick: (lat: number, lng: number) => vo
     if (!query) return
     setSearching(true)
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`
-      const res = await fetch(url, { headers: { 'Accept': 'application/json' } })
-      const data = await res.json()
-      setResults(Array.isArray(data) ? data : [])
+      const data = await searchNominatimUSFirst(query)
+      setResults(data)
     } catch (err: any) {
       console.warn('[address-search] failed:', err?.message ?? err)
       setResults([])

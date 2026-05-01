@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import { useRouter, useParams } from 'next/navigation'
+import { searchNominatimUSFirst } from '../../../../lib/nominatim-search'
 import { SETTINGS } from '../../../../lib/settings'
 import StoryActionBar from '../../../../components/StoryActionBar'
 // Snapshot management used to live embedded on this Edit page; pulled
@@ -127,8 +128,7 @@ export default function EditCampaignPage() {
               if (e.target.value.length >= 3) {
                 debounceRef.current = setTimeout(async () => {
                   try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(e.target.value)}&limit=5`)
-                    const data = await res.json()
+                    const data = await searchNominatimUSFirst(e.target.value)
                     setLocationSuggestions(data)
                   } catch { setLocationSuggestions([]) }
                 }, 300)

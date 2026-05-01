@@ -1,6 +1,7 @@
 'use client'
 import { WizardState, getCumulativeAttributes, getCumulativeSkills } from '../../lib/xse-engine'
-import { SKILLS, ATTRIBUTE_LABELS, deriveSecondaryStats, MELEE_WEAPONS, RANGED_WEAPONS } from '../../lib/xse-schema'
+import { SKILLS, ATTRIBUTE_LABELS, deriveSecondaryStats } from '../../lib/xse-schema'
+import { ALL_WEAPONS } from '../../lib/weapons'
 
 interface Props {
   state: WizardState
@@ -13,9 +14,12 @@ export default function PrintSheet({ state }: Props) {
   const step4 = state.steps[3] ?? {}
   const step6 = state.steps[5] ?? {}
 
-  const allWeapons = [...MELEE_WEAPONS.map(w => ({ ...w, cat: 'melee' })), ...RANGED_WEAPONS.map(w => ({ ...w, cat: 'ranged' }))]
-  const pWep = allWeapons.find(w => w.name === state.weaponPrimary)
-  const sWep = allWeapons.find(w => w.name === state.weaponSecondary)
+  // 2026-05-01: migrated from xse-schema's MELEE_WEAPONS/RANGED_WEAPONS
+  // (which only carried 2 categories) to the canonical lib/weapons.ts
+  // catalog covering all 4. Now Heavy + Explosive PCs print with full
+  // stats instead of a name-only fallback.
+  const pWep = ALL_WEAPONS.find(w => w.name === state.weaponPrimary)
+  const sWep = ALL_WEAPONS.find(w => w.name === state.weaponSecondary)
 
   function sgn(v: number) { return v > 0 ? `+${v}` : String(v) }
 
@@ -165,8 +169,8 @@ export default function PrintSheet({ state }: Props) {
                 <div style={{ display: 'flex', padding: '3pt 6pt', gap: '4pt', fontSize: '6pt' }}>
                   {[
                     { l: 'Range', v: wep.range },
-                    { l: 'Damage', v: 'damageBase' in wep ? `${'damageDice' in wep && wep.damageDice ? `${wep.damageBase}+${wep.damageDice}` : wep.damageBase}` : '' },
-                    { l: 'RP%', v: 'rpPercent' in wep ? `${wep.rpPercent}%` : '' },
+                    { l: 'Damage', v: wep.damage },
+                    { l: 'RP%', v: `${wep.rpPercent}%` },
                     { l: 'ENC', v: wep.enc },
                     { l: 'Cond', v: 'Used' },
                   ].map(({ l, v }) => (
@@ -176,11 +180,11 @@ export default function PrintSheet({ state }: Props) {
                     </div>
                   ))}
                 </div>
-                {wep.cat === 'ranged' && 'clipSize' in wep && (
+                {wep.clip != null && (
                   <div style={{ padding: '2pt 6pt', borderTop: '1px solid #000', display: 'flex', alignItems: 'center', gap: '4pt' }}>
-                    <span style={{ fontSize: '5pt', color: '#000' }}>Ammo ({wep.clipSize}):</span>
+                    <span style={{ fontSize: '5pt', color: '#000' }}>Ammo ({wep.clip}):</span>
                     <div style={{ display: 'flex', gap: '1.5pt', flexWrap: 'wrap' }}>
-                      {Array.from({ length: Math.min(wep.clipSize as number, 30) }).map((_, i) => (
+                      {Array.from({ length: Math.min(wep.clip, 30) }).map((_, i) => (
                         <div key={i} style={{ width: '5pt', height: '5pt', border: '0.5pt solid #000', background: 'transparent' }} />
                       ))}
                     </div>

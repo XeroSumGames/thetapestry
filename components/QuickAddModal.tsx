@@ -17,6 +17,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { appendProgressionEntry } from '../lib/progression-log'
+import { searchNominatimUSFirst } from '../lib/nominatim-search'
 
 export interface QuickAddModalProps {
   mode: 'campaign' | 'world'
@@ -102,9 +103,8 @@ export default function QuickAddModal({
     if (!q) return
     setAddrSearching(true)
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`)
-      const data = await res.json()
-      setAddrResults(Array.isArray(data) ? data : [])
+      const data = await searchNominatimUSFirst(q)
+      setAddrResults(data)
     } catch (err) {
       console.warn('[quick-add] address search failed:', err)
       setAddrResults([])

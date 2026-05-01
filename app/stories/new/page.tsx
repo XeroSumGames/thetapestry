@@ -4,6 +4,7 @@ import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { logEvent } from '../../../lib/events'
+import { searchNominatimUSFirst } from '../../../lib/nominatim-search'
 import { SETTING_PINS } from '../../../lib/setting-pins'
 import { SETTING_NPCS } from '../../../lib/setting-npcs'
 import { SETTING_SCENES } from '../../../lib/setting-scenes'
@@ -366,8 +367,7 @@ export default function NewCampaignPage() {
                   if (e.target.value.length >= 3) {
                     debounceRef.current = setTimeout(async () => {
                       try {
-                        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(e.target.value)}&limit=5`)
-                        const data = await res.json()
+                        const data = await searchNominatimUSFirst(e.target.value)
                         setLocationSuggestions(data)
                       } catch { setLocationSuggestions([]) }
                     }, 300)
