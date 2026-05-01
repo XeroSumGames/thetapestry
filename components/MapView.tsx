@@ -111,6 +111,10 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [pinSearch, setPinSearch] = useState('')
   const [expandedPinId, setExpandedPinId] = useState<string | null>(null)
   const [usernames, setUsernames] = useState<Record<string, string>>({})
+  // Author-role lookup for the CANON badge. Built from the same profiles
+  // fetch that populates usernames; lives in state so the folder-list
+  // render below can decide whether to show the inline CANON tag.
+  const [thriverUserIds, setThriverUserIds] = useState<Set<string>>(new Set())
   const [pinAttachments, setPinAttachments] = useState<Record<string, { name: string; url: string }[]>>({})
   const [pinsVisible, setPinsVisible] = useState(true)
   const [sidebarTab, setSidebarTab] = useState<'public' | 'mine' | 'campaign'>('public')
@@ -547,10 +551,10 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     setPins(data)
 
     // Resolve usernames + author roles. Author role drives the CANON
-    // badge: pins authored by a Thriver are flagged as authoritative
-    // setting content (the Tapestry team's published pins) and get a
-    // 🛡️ CANON badge on both the marker and the popup so users can
-    // distinguish them from community-submitted rumours at a glance.
+    // badge: pins authored by a Thriver are authoritative Tapestry-team
+    // content (e.g. "The Mousetrap"). Surfaced as a 🛡️ overlay on the
+    // marker icon and as an inline 'CANON' tag next to the pin title in
+    // the expanded folder-list row. (Tried a popup pill — too heavy.)
     const uids = [...new Set(data.map((p: any) => p.user_id).filter(Boolean))]
     const thriverIds = new Set<string>()
     if (uids.length > 0) {
@@ -562,6 +566,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         }
       }
     }
+    setThriverUserIds(thriverIds)
 
     // Remove old cluster group
     if (clusterGroupRef.current) { mapInst.removeLayer(clusterGroupRef.current) }
@@ -612,15 +617,15 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       })
       const nearSetting = getNearSetting(pin.lat, pin.lng)
       const nearbyCount = data.filter((p: Pin) => p.id !== pin.id && Math.abs(p.lat - pin.lat) < 0.1 && Math.abs(p.lng - pin.lng) < 0.1).length
-      // CANON pill in the popup header — gold pill on dark bg, Carlito
-      // letterspacing so it reads as an authoritative tag, not a status.
-      const canonPill = isCanon
-        ? `<span title="Canon — published by The Tapestry team" style="font-family:Carlito,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#EF9F27;background:#2a2010;border:1px solid #EF9F27;border-radius:2px;padding:1px 6px;margin-left:6px;white-space:nowrap;">🛡️ Canon</span>`
-        : ''
+      // CANON badge on the popup looked too heavy; the marker overlay
+      // alone carries the visual signal here. The inline CANON tag in
+      // the folder-list row (further below in the JSX) covers the case
+      // where users are scanning the pin browser instead of clicking a
+      // marker.
       const marker = leaflet.marker([pin.lat, pin.lng], { icon })
         .bindPopup(`
           <div style="font-family:Barlow,sans-serif;min-width:220px;max-width:300px">
-            <div style="font-weight:700;font-size:15px;margin-bottom:4px;display:flex;align-items:center;flex-wrap:wrap;">${emoji} ${pin.title}${canonPill}</div>
+            <div style="font-weight:700;font-size:15px;margin-bottom:4px">${emoji} ${pin.title}</div>
             ${pin.notes ? `<div style="font-size:13px;color:#555;margin-bottom:6px;line-height:1.4">${pin.notes}</div>` : ''}
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
               <span style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.06em;padding:1px 4px;background:#f0f0f0;border-radius:2px">${pin.category ?? 'location'}</span>
@@ -1482,7 +1487,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                 style={{ padding: '4px 10px 4px 34px', cursor: 'pointer', borderLeft: `2px solid ${isExpanded ? '#c0392b' : 'transparent'}`, background: isExpanded ? '#1a1a1a' : 'transparent' }}
                                 onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = '#1a1a1a' }}
                                 onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = 'transparent' }}>
-                                <div style={{ fontSize: '13px', color: '#f5f2ee', overflow: isExpanded ? 'visible' : 'hidden', textOverflow: 'ellipsis', whiteSpace: isExpanded ? 'normal' : 'nowrap' }}>{p.title}</div>
+                                <div style={{ fontSize: '13px', color: '#f5f2ee', overflow: isExpanded ? 'visible' : 'hidden', textOverflow: 'ellipsis', whiteSpace: isExpanded ? 'normal' : 'nowrap' }}>
+                                  {p.title}
+                                  {isExpanded && p.user_id && thriverUserIds.has(p.user_id) && (
+                                    <span title="Canon — published by The Tapestry team" style={{ marginLeft: '6px', padding: '1px 6px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '2px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
+                                      🛡️ Canon
+                                    </span>
+                                  )}
+                                </div>
                                 {isExpanded && (
                                   <div style={{ marginTop: '4px' }}>
                                     {p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, marginBottom: '6px' }}>{p.notes}</div>}
