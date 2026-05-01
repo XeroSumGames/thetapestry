@@ -45,7 +45,8 @@ The left sidebar is your main navigation. It contains:
     Welcome to the Tapestry — introductory page
     The World — the interactive world map
     My Stories — your campaigns (GM and player)
-    Rules — the XSE SRD v1.1 reference (public, no login required)
+    Rules — the full XSE SRD v1.1 reference (all 13 sections — §01 Overview
+            through §08 Communities + Appendices A-D — public, no login required)
 
   SURVIVORS
     Creating a Survivor — tutorial page
