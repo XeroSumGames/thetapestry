@@ -13,6 +13,7 @@ import VehicleCard, { Vehicle } from '../../../../components/VehicleCard'
 import RollModal, { type RollResult as SharedRollResult } from '../../../../components/RollModal'
 import NotificationBell from '../../../../components/NotificationBell'
 import MessagesBell from '../../../../components/MessagesBell'
+import HelpTooltip from '../../../../components/HelpTooltip'
 import InitiativeBar from '../../../../components/InitiativeBar'
 import { useChatPanel, ChatMessageRow, ChatMessageList, ChatComposer } from '../../../../components/TableChat'
 import { useRollsFeed, RollEntry as RollEntryCard } from '../../../../components/RollsFeed'
@@ -9698,7 +9699,15 @@ export default function TablePage() {
 
                   {/* Approach */}
                   <div style={{ marginBottom: '12px' }}>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Approach</div>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
+                      Approach
+                      <HelpTooltip
+                        title="Recruitment Approach"
+                        text={
+                          'Cohort — cooperative. The NPC joins for a shared interest, goal, or perceived benefit. Best with Persuasion, Inspiration, or Charm. Probationary through the next Morale Check; the outcome decides whether they stick around or drift off.\n\nConscript — coercive. The PC must have already established a credible threat (weapons drawn, leverage held, escape cut off) before the roll. Best with Intimidation or Bluff. Stays compliant only while the threat holds; the first Morale Check typically becomes an escape attempt.\n\nConvert — ideological. The NPC is brought in by shared belief, worldview, or cause. Best with Inspiration, Religion, or a relevant Ideology. Probationary through the first Morale Check; if they pass it, they become long-term committed.'
+                        }
+                      />
+                    </div>
                     <div style={{ display: 'flex', gap: '4px' }}>
                       {(['cohort', 'conscript', 'convert'] as RecruitApproach[]).map(ap => (
                         <button key={ap} onClick={() => { setRecruitApproach(ap); setRecruitSkill('') }}
