@@ -179,6 +179,21 @@ export default function Sidebar() {
       <Link href="/campfire" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Campfire</Link>
       <Link href="/rumors"   style={linkStyle('#8b5cf6')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rumors</Link>
 
+      {/* Phase 4C — setting hubs. Two featured slugs per the locked
+          design (DZ + Kings Crossroads). Indented one level so they
+          read as children of the top-level destinations above without
+          adding a heavy section header. */}
+      <Link href="/settings/district_zero"
+        style={{ ...linkStyle('#7ab3d4'), paddingLeft: '28px' }}
+        onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
+        · District Zero
+      </Link>
+      <Link href="/settings/kings_crossroads_mall"
+        style={{ ...linkStyle('#EF9F27'), paddingLeft: '28px' }}
+        onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
+        · Kings Crossroads
+      </Link>
+
       {divider}
 
       {/* Survivors — character creation paths */}

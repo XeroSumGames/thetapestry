@@ -2,14 +2,14 @@
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { logEvent } from '../../../lib/events'
 import { SETTING_PINS } from '../../../lib/setting-pins'
 import { SETTING_NPCS } from '../../../lib/setting-npcs'
 import { SETTING_SCENES } from '../../../lib/setting-scenes'
 import { SETTING_HANDOUTS } from '../../../lib/setting-handouts'
 import { SETTING_VEHICLES } from '../../../lib/setting-vehicles'
-import { STORY_SETTING_OPTIONS } from '../../../lib/settings'
+import { STORY_SETTING_OPTIONS, STORY_SETTING_VALUES } from '../../../lib/settings'
 import { listAvailableModules, cloneModuleIntoCampaign, type ModuleListing } from '../../../lib/modules'
 
 function generateCode(): string {
@@ -30,9 +30,18 @@ interface PublishedCommunity {
 }
 
 export default function NewCampaignPage() {
+  // Phase 4C — accept ?setting=<slug> from the setting hub's "Run a
+  // Campaign in [Setting]" CTA. Pre-seeds the setting picker so the
+  // user lands on Custom Setting / DZ / Kings Crossroads already
+  // selected. Unknown slugs fall back to '' (no preselection) rather
+  // than erroring; STORY_SETTING_VALUES is the canonical list.
+  const searchParams = useSearchParams()
+  const settingFromQuery = searchParams?.get('setting') ?? ''
+  const initialSetting = (STORY_SETTING_VALUES as readonly string[]).includes(settingFromQuery) ? settingFromQuery : ''
+
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [setting, setSetting] = useState('')
+  const [setting, setSetting] = useState(initialSetting)
   const [mapStyle, setMapStyle] = useState('topo')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
