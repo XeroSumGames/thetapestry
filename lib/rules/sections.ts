@@ -128,7 +128,6 @@ export const RULE_SECTIONS: RuleSection[] = [
     title: 'Appendix A — Tables',
     summary: 'All reference tables in one place: outcomes, modifiers, traits.',
     anchors: [],
-    stub: true,
   },
   {
     slug: 'appendix-skills',
@@ -136,7 +135,6 @@ export const RULE_SECTIONS: RuleSection[] = [
     title: 'Appendix B — Skills',
     summary: 'The full skill catalog with descriptions.',
     anchors: [],
-    stub: true,
   },
   {
     slug: 'appendix-equipment',
@@ -144,7 +142,6 @@ export const RULE_SECTIONS: RuleSection[] = [
     title: 'Appendix C — Weapons & Equipment',
     summary: 'Weapon stats, equipment lists, and item traits in detail.',
     anchors: [],
-    stub: true,
   },
   {
     slug: 'appendix-paradigms',
@@ -152,7 +149,6 @@ export const RULE_SECTIONS: RuleSection[] = [
     title: 'Appendix D — Paradigms',
     summary: 'The 12 Distemper Paradigms and Vibe Shifts.',
     anchors: [],
-    stub: true,
   },
 ]
 
