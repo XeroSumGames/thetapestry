@@ -4,26 +4,51 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { RULE_SECTIONS } from '../../lib/rules/sections'
 
-// Sticky left-rail nav for /rules/*. Active section's anchors expand inline;
-// inactive sections collapse to title only. The currently-visible H2 on the
-// page becomes the highlighted anchor (IntersectionObserver).
+// Left-rail nav for /rules/*. Active section's anchors expand inline;
+// inactive sections collapse to title only. The currently-visible H2 on
+// the page becomes the highlighted anchor (IntersectionObserver).
 
 export default function RulesNav() {
   const pathname = usePathname()
   const activeSlug = pathname.replace(/^\/rules\/?/, '').split('/')[0] || ''
   const [activeAnchor, setActiveAnchor] = useState<string>('')
 
-  // Track which H2 is currently most visible. Intersect at 30% from top so
-  // the highlight changes when the section heading hits the upper third of
-  // the viewport, not at the moment it enters from the bottom.
+  // Initial-load anchor scroll. With main being a scroll container
+  // (instead of the document), the browser's native "scroll to hash on
+  // load" may not engage. Manually scrollIntoView the hash target after
+  // hydration so deep links like /rules/communities#apprentices land in
+  // the right spot. Also re-runs on hash changes inside the page.
+  useEffect(() => {
+    function scrollToHash() {
+      const hash = window.location.hash.slice(1)
+      if (!hash) return
+      const target = document.getElementById(hash)
+      if (target) target.scrollIntoView({ behavior: 'auto', block: 'start' })
+    }
+    // Defer one frame so layout has settled before we measure.
+    const timer = window.setTimeout(scrollToHash, 0)
+    window.addEventListener('hashchange', scrollToHash)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('hashchange', scrollToHash)
+    }
+  }, [pathname])
+
+  // Track which H2 is currently most visible. Scroll happens on the
+  // <main> column (see app/rules/layout.tsx), so we pin the
+  // IntersectionObserver root to that element. Without an explicit root,
+  // the observer would watch viewport intersections — but the viewport
+  // doesn't scroll, only main does, so the highlight wouldn't update.
+  // Intersect at 35% from top so the highlight changes when a heading
+  // hits the upper third of the visible area.
   useEffect(() => {
     const headings = Array.from(
       document.querySelectorAll<HTMLElement>('main [data-rule-anchor]'),
     )
     if (headings.length === 0) return
+    const root = headings[0].closest('main')
     const obs = new IntersectionObserver(
       entries => {
-        // Track all entries currently above 50% of viewport, pick the lowest.
         const visible = entries
           .filter(e => e.isIntersecting)
           .map(e => ({
@@ -35,7 +60,7 @@ export default function RulesNav() {
         const lowest = visible.reduce((a, b) => (a.top > b.top ? a : b))
         setActiveAnchor(lowest.id)
       },
-      { rootMargin: '0px 0px -65% 0px', threshold: 0 },
+      { root, rootMargin: '0px 0px -65% 0px', threshold: 0 },
     )
     headings.forEach(h => obs.observe(h))
     return () => obs.disconnect()
@@ -82,10 +107,7 @@ export default function RulesNav() {
         flexShrink: 0,
         borderRight: '1px solid #2e2e2e',
         background: '#0f0f0f',
-        position: 'sticky',
-        top: 0,
-        alignSelf: 'flex-start',
-        maxHeight: '100vh',
+        height: '100%',
         overflowY: 'auto',
         paddingTop: 12,
         paddingBottom: 24,
