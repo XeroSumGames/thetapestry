@@ -14,6 +14,7 @@ interface Note {
   created_at: string
   attachments: Attachment[]
   shared: boolean
+  sort_order: number | null
 }
 
 export default function GmNotes({ campaignId }: { campaignId: string }) {
@@ -26,16 +27,58 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [saving, setSaving] = useState(false)
   const [uploadingNoteId, setUploadingNoteId] = useState<string | null>(null)
+  // HTML5 drag-and-drop reorder state. dragId is the note being
+  // dragged; dragOverId is the row currently being hovered as the drop
+  // target. Showing a top-border highlight on dragOverId gives the GM
+  // a visual landing zone without needing a library.
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
 
   useEffect(() => { load() }, [campaignId])
 
   async function load() {
+    // sort_order ASC, NULLS LAST so any post-migration row that lands
+    // without an order still gets a stable spot at the bottom; ties
+    // (NULL or duplicate sort_order) resolve by created_at ASC.
     const { data } = await supabase
       .from('campaign_notes')
       .select('*')
       .eq('campaign_id', campaignId)
+      .order('sort_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true })
-    setNotes((data ?? []).map((n: any) => ({ ...n, attachments: n.attachments ?? [], shared: n.shared ?? false })))
+    setNotes((data ?? []).map((n: any) => ({
+      ...n,
+      attachments: n.attachments ?? [],
+      shared: n.shared ?? false,
+      sort_order: n.sort_order ?? null,
+    })))
+  }
+
+  // Reorder helper. Splices the dragged note into the target position
+  // (drop above the target) and renumbers all sort_orders 0..N-1 in
+  // one pass. N is small (a few notes per campaign), so an O(N)
+  // batch update is cheaper than fractional-index math.
+  async function reorderNote(srcId: string, dstId: string) {
+    if (srcId === dstId) return
+    const srcIdx = notes.findIndex(n => n.id === srcId)
+    const dstIdx = notes.findIndex(n => n.id === dstId)
+    if (srcIdx < 0 || dstIdx < 0) return
+    const next = [...notes]
+    const [moved] = next.splice(srcIdx, 1)
+    // If moving down, dst index shifts left by 1 after the splice.
+    const insertAt = srcIdx < dstIdx ? dstIdx - 1 : dstIdx
+    next.splice(insertAt, 0, moved)
+    // Optimistic local update — write through to DB after.
+    const renumbered = next.map((n, i) => ({ ...n, sort_order: i }))
+    setNotes(renumbered)
+    // Batch the writes; failures here just mean the next reload
+    // re-pulls the canonical order. Server-side trigger could batch
+    // this in one shot if N grows large enough to matter.
+    await Promise.all(
+      renumbered.map(n =>
+        supabase.from('campaign_notes').update({ sort_order: n.sort_order }).eq('id', n.id)
+      )
+    )
   }
 
   async function uploadFiles(noteId: string, files: File[]): Promise<Attachment[]> {
@@ -204,15 +247,38 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
         </div>
       )}
       {notes.map(n => (
-        <div key={n.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+        <div key={n.id}
+          draggable
+          onDragStart={() => setDragId(n.id)}
+          onDragEnd={() => { setDragId(null); setDragOverId(null) }}
+          onDragOver={e => { if (dragId && dragId !== n.id) { e.preventDefault(); setDragOverId(n.id) } }}
+          onDragLeave={() => { if (dragOverId === n.id) setDragOverId(null) }}
+          onDrop={e => {
+            e.preventDefault()
+            if (dragId && dragId !== n.id) reorderNote(dragId, n.id)
+            setDragId(null); setDragOverId(null)
+          }}
+          style={{
+            background: '#1a1a1a',
+            border: '1px solid #2e2e2e',
+            borderTop: dragOverId === n.id ? '2px solid #7fc458' : '1px solid #2e2e2e',
+            borderRadius: '3px',
+            opacity: dragId === n.id ? 0.4 : 1,
+          }}>
           <div onClick={() => toggle(n.id)}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', cursor: 'pointer' }}>
-            <span style={{ fontSize: '14px', fontWeight: 600, color: '#f5f2ee' }}>
-              {n.title}
-              {n.shared && <span style={{ marginLeft: '6px', fontSize: '13px', color: '#7fc458' }}>SHARED</span>}
-              {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '13px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: '#f5f2ee', minWidth: 0, flex: 1 }}>
+              {/* Drag handle — purely visual (the whole card is draggable);
+                  the grip glyph just signals "this is reorderable" so a GM
+                  doesn't have to discover the affordance by accident. */}
+              <span title="Drag to reorder" style={{ color: '#5a5550', cursor: 'grab', fontSize: '13px', userSelect: 'none', flexShrink: 0 }}>⋮⋮</span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                {n.title}
+                {n.shared && <span style={{ marginLeft: '6px', fontSize: '13px', color: '#7fc458' }}>SHARED</span>}
+                {n.attachments.length > 0 && <span style={{ marginLeft: '8px', fontSize: '13px', color: '#7ab3d4' }}>📎 {n.attachments.length}</span>}
+              </span>
             </span>
-            <span style={{ fontSize: '13px', color: '#5a5550' }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
+            <span style={{ fontSize: '13px', color: '#5a5550', flexShrink: 0 }}>{expanded.has(n.id) ? '▲' : '▼'}</span>
           </div>
           {expanded.has(n.id) && (
             <div style={{ padding: '0 10px 10px', borderTop: '1px solid #2e2e2e' }}>
