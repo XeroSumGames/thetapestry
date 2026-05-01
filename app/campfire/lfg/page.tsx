@@ -1,9 +1,16 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { renderRichText } from '../../../lib/rich-text'
 import { useRouter } from 'next/navigation'
+import {
+  composePickerOptions,
+  SETTING_FILTER_CHIPS,
+  settingLabel,
+  settingAccent,
+  useUrlSettingFilter,
+} from '../../../lib/campfire-settings'
 
 // /campfire/lfg — bulletin board for finding GMs and players. Cross-campaign
 // by design: this is the meta layer, not tied to any single story. Anyone
@@ -29,6 +36,11 @@ interface PostWithAuthor extends LfgPost {
 
 type Filter = 'all' | 'gm_seeking_players' | 'player_seeking_game'
 
+// Compose-time scope. LFG has no campaign_id concept (LFG is by nature
+// looking-for-cross-campaign), so the choices are setting-tagged or
+// global only — no campaign scope.
+type Scope = 'setting' | 'global'
+
 const KIND_LABEL: Record<Kind, string> = {
   gm_seeking_players: 'GM seeking players',
   player_seeking_game: 'Player seeking game',
@@ -47,10 +59,14 @@ export default function LfgPage() {
   const [posts, setPosts] = useState<PostWithAuthor[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<Filter>('all')
+  // null = "All settings"; '' = "Global only"; <slug> = single setting.
+  // Seeded from the ?setting= URL param so picking a setting on the
+  // /campfire hub propagates here.
+  const [settingFilter, setSettingFilter] = useUrlSettingFilter()
   const [composing, setComposing] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [draft, setDraft] = useState<{ kind: Kind; title: string; body: string; setting: string; schedule: string }>({
-    kind: 'gm_seeking_players', title: '', body: '', setting: '', schedule: '',
+  const [draft, setDraft] = useState<{ kind: Kind; title: string; body: string; scope: Scope; setting: string; schedule: string }>({
+    kind: 'gm_seeking_players', title: '', body: '', scope: 'setting', setting: 'district_zero', schedule: '',
   })
   const [saving, setSaving] = useState(false)
   // Which post's Share popover is open (id) and per-post copy-confirmation flash.
@@ -275,13 +291,26 @@ export default function LfgPage() {
 
   function startCompose() {
     setEditingId(null)
-    setDraft({ kind: 'gm_seeking_players', title: '', body: '', setting: '', schedule: '' })
+    setDraft({ kind: 'gm_seeking_players', title: '', body: '', scope: 'setting', setting: 'district_zero', schedule: '' })
     setComposing(true)
   }
 
   function startEdit(p: PostWithAuthor) {
     setEditingId(p.id)
-    setDraft({ kind: p.kind, title: p.title, body: p.body, setting: p.setting ?? '', schedule: p.schedule ?? '' })
+    // Old rows may carry free-text settings ("Distemper, Chased, Homebrew...")
+    // that don't map to any registered slug. If we recognize the slug, keep
+    // the Setting scope; otherwise fall back to Global so the editor doesn't
+    // show a broken option in the dropdown.
+    const knownSlugs = composePickerOptions().map(o => o.value)
+    const isKnown = !!p.setting && knownSlugs.includes(p.setting)
+    setDraft({
+      kind: p.kind,
+      title: p.title,
+      body: p.body,
+      scope: isKnown ? 'setting' : 'global',
+      setting: isKnown ? p.setting! : 'district_zero',
+      schedule: p.schedule ?? '',
+    })
     setComposing(true)
   }
 
@@ -298,7 +327,10 @@ export default function LfgPage() {
       kind: draft.kind,
       title: draft.title.trim(),
       body: draft.body.trim(),
-      setting: draft.setting.trim() || null,
+      // Setting scope writes the slug; Global scope writes null. The
+      // freetext input was deprecated in Phase 4A — old rows survive but
+      // editing one snaps it to the slug picker (or Global if unknown).
+      setting: draft.scope === 'setting' ? draft.setting : null,
       schedule: draft.schedule.trim() || null,
     }
     if (editingId) {
@@ -326,7 +358,26 @@ export default function LfgPage() {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
-  const visible = filter === 'all' ? posts : posts.filter(p => p.kind === filter)
+  // Setting filter applied first, kind filter on top of that. Mirrors
+  // the layout: setting chip strip is the outer/primary axis, the kind
+  // pills (GMs / Players) tighten further.
+  const settingFiltered = useMemo(() => {
+    if (settingFilter === null) return posts
+    if (settingFilter === '') return posts.filter(p => !p.setting)
+    return posts.filter(p => p.setting === settingFilter)
+  }, [posts, settingFilter])
+  const visible = filter === 'all' ? settingFiltered : settingFiltered.filter(p => p.kind === filter)
+  // Per-chip counts for the setting strip — respects the active kind filter
+  // so the badge numbers match what'll actually show.
+  const settingCounts = useMemo(() => {
+    const base = filter === 'all' ? posts : posts.filter(p => p.kind === filter)
+    const map: Record<string, number> = { __all__: base.length, __global__: 0 }
+    base.forEach(p => {
+      if (!p.setting) map.__global__++
+      else map[p.setting] = (map[p.setting] ?? 0) + 1
+    })
+    return map
+  }, [posts, filter])
 
   // ── Styles ───────────────────────────────────────────────────────
   const inp: React.CSSProperties = {
@@ -394,17 +445,37 @@ export default function LfgPage() {
             <textarea style={{ ...inp, minHeight: '110px', resize: 'vertical', fontFamily: 'Barlow, sans-serif' }} value={draft.body} onChange={e => setDraft(d => ({ ...d, body: e.target.value }))}
               placeholder={draft.kind === 'gm_seeking_players' ? 'Describe the campaign — tone, themes, what kind of players you want.' : 'Describe what you are looking for — playstyle, character ideas, schedule.'} />
           </div>
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-            <div style={{ flex: 1 }}>
-              <label style={lbl}>Setting</label>
-              <input style={inp} value={draft.setting} onChange={e => setDraft(d => ({ ...d, setting: e.target.value }))}
-                placeholder="Distemper, Chased, Homebrew..." />
+          <div style={{ marginBottom: '12px' }}>
+            <label style={lbl}>Where to post?</label>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
+              {(['setting', 'global'] as Scope[]).map(s => {
+                const active = draft.scope === s
+                const accent = s === 'setting' ? '#7ab3d4' : '#9aa5b0'
+                return (
+                  <button key={s} onClick={() => setDraft(d => ({ ...d, scope: s }))}
+                    style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? accent : '#3a3a3a'}`, background: active ? '#242424' : '#1a1a1a', color: active ? accent : '#d4cfc9' }}>
+                    {s === 'setting' ? '🏷 Setting' : '🌐 Global'}
+                  </button>
+                )
+              })}
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={lbl}>Schedule</label>
-              <input style={inp} value={draft.schedule} onChange={e => setDraft(d => ({ ...d, schedule: e.target.value }))}
-                placeholder="Sundays 7pm EST, weekly..." />
-            </div>
+            {draft.scope === 'setting' ? (
+              <select value={draft.setting} onChange={e => setDraft(d => ({ ...d, setting: e.target.value }))}
+                style={{ ...inp, appearance: 'none', cursor: 'pointer' }}>
+                {composePickerOptions().map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            ) : (
+              <div style={{ fontSize: '13px', color: '#9aa5b0', fontStyle: 'italic', padding: '4px 2px' }}>
+                Open to any setting — visible everywhere.
+              </div>
+            )}
+          </div>
+          <div style={{ marginBottom: '12px' }}>
+            <label style={lbl}>Schedule</label>
+            <input style={inp} value={draft.schedule} onChange={e => setDraft(d => ({ ...d, schedule: e.target.value }))}
+              placeholder="Sundays 7pm EST, weekly..." />
           </div>
           <div style={{ display: 'flex', gap: '6px' }}>
             <button onClick={handleSave} disabled={!draft.title.trim() || !draft.body.trim() || saving}
@@ -419,7 +490,24 @@ export default function LfgPage() {
         </div>
       )}
 
-      {/* Filter chips */}
+      {/* Setting filter chip strip — featured settings + Global. Click "All"
+          to clear; combines with the kind chips below. */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
+        {SETTING_FILTER_CHIPS.map(opt => {
+          const key = opt.value === null ? '__all__' : (opt.value === '' ? '__global__' : opt.value)
+          const count = settingCounts[key] ?? 0
+          const active = settingFilter === opt.value
+          return (
+            <button key={key} onClick={() => setSettingFilter(opt.value)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '999px', border: `1px solid ${active ? opt.accent : '#3a3a3a'}`, background: active ? `${opt.accent}22` : '#1a1a1a', color: active ? opt.accent : '#d4cfc9' }}>
+              <span>{opt.label}</span>
+              <span style={{ background: active ? `${opt.accent}33` : '#242424', color: active ? opt.accent : '#9aa5b0', padding: '1px 7px', borderRadius: '999px', fontSize: '13px', fontWeight: 700 }}>{count}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Kind filter chips */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '1rem' }}>
         {([
           ['all', 'All', '#f5f2ee'],
@@ -464,11 +552,14 @@ export default function LfgPage() {
                 </div>
                 {(p.setting || p.schedule) && (
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                    {p.setting && (
-                      <span style={{ padding: '2px 8px', background: '#0f2035', border: '1px solid #2e4a6b', borderRadius: '3px', fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                        {p.setting}
-                      </span>
-                    )}
+                    {p.setting && (() => {
+                      const tagAccent = settingAccent(p.setting)
+                      return (
+                        <span style={{ padding: '2px 8px', background: `${tagAccent}22`, border: `1px solid ${tagAccent}55`, borderRadius: '3px', fontSize: '13px', color: tagAccent, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                          {settingLabel(p.setting)}
+                        </span>
+                      )
+                    })()}
                     {p.schedule && (
                       <span style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
                         {p.schedule}

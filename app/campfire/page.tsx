@@ -7,6 +7,7 @@ import ForumsPage from './forums/page'
 import Forums2Page from './forums2/page'
 import WarStoriesPage from './war-stories/page'
 import TimestampPage from './timestamp/page'
+import { FEATURED_SETTING_SLUGS, settingLabel } from '../../lib/campfire-settings'
 
 // /campfire — one-stop-shop. Each Campfire feature is rendered as a tab
 // here; we import the existing route components directly so deep-links
@@ -61,6 +62,21 @@ export default function CampfirePage() {
     router.replace(`/campfire?${sp.toString()}`, { scroll: false })
   }, [activeTab])
 
+  // Setting context dropdown — Phase 4A. Writes ?setting=<slug> | "global" | (unset)
+  // and the embedded surfaces (forums, war stories, LFG) read it via
+  // useUrlSettingFilter so all three feeds filter together. Doesn't apply
+  // to messages or timestamps.
+  const settingParam = searchParams.get('setting') ?? ''
+  function handleSettingChange(value: string) {
+    const sp = new URLSearchParams(searchParams.toString())
+    if (!value) sp.delete('setting')
+    else sp.set('setting', value)
+    router.replace(`/campfire?${sp.toString()}`, { scroll: false })
+  }
+  // Hide the dropdown on tabs where it doesn't do anything (Messages,
+  // Timestamps, Homebrew). Keeps the header tidy.
+  const settingDropdownApplies = activeTab === 'lfg' || activeTab === 'forums' || activeTab === 'forums2' || activeTab === 'war-stories'
+
   const active = TABS.find(t => t.id === activeTab) ?? TABS[0]
   // Messages embeds a flex-fill layout (sidebar + thread); LFG and Forums
   // are scrollable max-width feeds. Switch the wrapper between the two
@@ -82,6 +98,31 @@ export default function CampfirePage() {
             Take a seat. Here you can connect with players, GMs, and visitors outside of campaigns.
           </div>
         </div>
+
+        {/* Setting context dropdown. Aligned to the right of the tab bar
+            on the same row. Picking a setting writes ?setting=…; the
+            embedded feed surfaces read it and filter accordingly. */}
+        {settingDropdownApplies && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+            <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+              Setting context:
+            </span>
+            <select value={settingParam} onChange={e => handleSettingChange(e.target.value)}
+              style={{ padding: '5px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
+              <option value="">All settings</option>
+              {FEATURED_SETTING_SLUGS.map(slug => (
+                <option key={slug} value={slug}>{settingLabel(slug)}</option>
+              ))}
+              <option value="global">Global only</option>
+            </select>
+            {settingParam && (
+              <button onClick={() => handleSettingChange('')}
+                style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                Clear
+              </button>
+            )}
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
           {TABS.map(t => {

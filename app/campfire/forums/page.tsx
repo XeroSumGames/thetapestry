@@ -3,6 +3,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
+import {
+  composePickerOptions,
+  SETTING_FILTER_CHIPS,
+  settingLabel,
+  settingAccent,
+  useUrlSettingFilter,
+} from '../../../lib/campfire-settings'
 
 // /campfire/forums — Discourse-style index. Avatar bubble + category pill
 // + title + first-line excerpt on the left; reply count + latest activity
@@ -47,6 +54,7 @@ interface Thread {
   reply_count: number
   latest_reply_at: string
   created_at: string
+  setting: string | null
 }
 
 interface ThreadWithAuthor extends Thread {
@@ -54,6 +62,12 @@ interface ThreadWithAuthor extends Thread {
 }
 
 type Filter = 'all' | Category
+
+// Compose-time scope. 'setting' = tag with a setting slug; 'global' = no
+// tag (cross-setting). Forums don't have a campaign_id column, so the
+// "campaign-private" scope from the Phase 4A spec is intentionally absent
+// here — see tasks/handoff.md for the open decision.
+type Scope = 'setting' | 'global'
 
 export default function ForumsIndexPage() {
   const supabase = createClient()
@@ -63,9 +77,13 @@ export default function ForumsIndexPage() {
   const [threads, setThreads] = useState<ThreadWithAuthor[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<Filter>('all')
+  // null = "All settings"; '' = "Global only"; <slug> = single setting.
+  // Seeded from the ?setting= URL param so picking a setting on the
+  // /campfire hub propagates here.
+  const [settingFilter, setSettingFilter] = useUrlSettingFilter()
   const [composing, setComposing] = useState(false)
-  const [draft, setDraft] = useState<{ category: Category; title: string; body: string }>({
-    category: 'general', title: '', body: '',
+  const [draft, setDraft] = useState<{ category: Category; title: string; body: string; scope: Scope; setting: string }>({
+    category: 'general', title: '', body: '', scope: 'setting', setting: 'district_zero',
   })
   const [saving, setSaving] = useState(false)
 
@@ -99,7 +117,7 @@ export default function ForumsIndexPage() {
   }
 
   function startCompose() {
-    setDraft({ category: 'general', title: '', body: '' })
+    setDraft({ category: 'general', title: '', body: '', scope: 'setting', setting: 'district_zero' })
     setComposing(true)
   }
 
@@ -111,6 +129,7 @@ export default function ForumsIndexPage() {
       category: draft.category,
       title: draft.title.trim(),
       body: draft.body.trim(),
+      setting: draft.scope === 'setting' ? draft.setting : null,
     }).select('id').single()
     setSaving(false)
     if (error) { alert('Error: ' + error.message); return }
@@ -131,12 +150,30 @@ export default function ForumsIndexPage() {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
-  const visible = filter === 'all' ? threads : threads.filter(t => t.category === filter)
+  // Apply both filters in turn. Setting filter first (cheaper), then category.
+  const settingFiltered = useMemo(() => {
+    if (settingFilter === null) return threads
+    if (settingFilter === '') return threads.filter(t => !t.setting)
+    return threads.filter(t => t.setting === settingFilter)
+  }, [threads, settingFilter])
+  const visible = filter === 'all' ? settingFiltered : settingFiltered.filter(t => t.category === filter)
+  // Category counts respect the active setting filter so the badge numbers
+  // match what the user actually sees when they click a category.
   const counts = useMemo(() => {
-    const c: Record<Filter, number> = { all: threads.length, lore: 0, rules: 0, 'session-recaps': 0, general: 0 }
-    threads.forEach(t => { c[t.category]++ })
+    const c: Record<Filter, number> = { all: settingFiltered.length, lore: 0, rules: 0, 'session-recaps': 0, general: 0 }
+    settingFiltered.forEach(t => { c[t.category]++ })
     return c
-  }, [threads])
+  }, [settingFiltered])
+  // Setting-chip counts respect the active category filter, mirror logic.
+  const settingCounts = useMemo(() => {
+    const base = filter === 'all' ? threads : threads.filter(t => t.category === filter)
+    const map: Record<string, number> = { __all__: base.length, __global__: 0 }
+    base.forEach(t => {
+      if (!t.setting) map.__global__++
+      else map[t.setting] = (map[t.setting] ?? 0) + 1
+    })
+    return map
+  }, [threads, filter])
 
   const inp: React.CSSProperties = {
     width: '100%', padding: '8px 10px', background: '#242424',
@@ -188,6 +225,33 @@ export default function ForumsIndexPage() {
             </div>
           </div>
           <div style={{ marginBottom: '10px' }}>
+            <label style={lbl}>Where to post?</label>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
+              {(['setting', 'global'] as Scope[]).map(s => {
+                const active = draft.scope === s
+                const accent = s === 'setting' ? '#7ab3d4' : '#9aa5b0'
+                return (
+                  <button key={s} onClick={() => setDraft(d => ({ ...d, scope: s }))}
+                    style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? accent : '#3a3a3a'}`, background: active ? '#242424' : '#1a1a1a', color: active ? accent : '#d4cfc9' }}>
+                    {s === 'setting' ? '🏷 Setting' : '🌐 Global'}
+                  </button>
+                )
+              })}
+            </div>
+            {draft.scope === 'setting' ? (
+              <select value={draft.setting} onChange={e => setDraft(d => ({ ...d, setting: e.target.value }))}
+                style={{ ...inp, appearance: 'none', cursor: 'pointer' }}>
+                {composePickerOptions().map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            ) : (
+              <div style={{ fontSize: '13px', color: '#9aa5b0', fontStyle: 'italic', padding: '4px 2px' }}>
+                Cross-setting — no setting tag. Visible everywhere.
+              </div>
+            )}
+          </div>
+          <div style={{ marginBottom: '10px' }}>
             <label style={lbl}>Title</label>
             <input style={inp} value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} placeholder="What's on your mind?" />
           </div>
@@ -208,7 +272,27 @@ export default function ForumsIndexPage() {
         </div>
       )}
 
-      {/* Filter chips with per-category counts */}
+      {/* Setting filter chip strip — featured settings + Global. Click "All"
+          to clear; chips combine with the category chips below. */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
+        {SETTING_FILTER_CHIPS.map(opt => {
+          const key = opt.value === null ? '__all__' : (opt.value === '' ? '__global__' : opt.value)
+          const count = settingCounts[key] ?? 0
+          const active = settingFilter === opt.value
+          return (
+            <FilterChip
+              key={key}
+              label={opt.label}
+              count={count}
+              accent={opt.accent}
+              active={active}
+              onClick={() => setSettingFilter(opt.value)}
+            />
+          )
+        })}
+      </div>
+
+      {/* Category filter chips with per-category counts */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <FilterChip
           label="All"
@@ -292,6 +376,14 @@ export default function ForumsIndexPage() {
                     </span>
                     {t.pinned && <span style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>📌 Pinned</span>}
                     {t.locked && <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>🔒 Locked</span>}
+                    {t.setting && (() => {
+                      const tagAccent = settingAccent(t.setting)
+                      return (
+                        <span style={{ padding: '1px 8px', background: `${tagAccent}22`, color: tagAccent, border: `1px solid ${tagAccent}55`, borderRadius: '999px', fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                          {settingLabel(t.setting)}
+                        </span>
+                      )
+                    })()}
                     <span style={{ fontSize: '13px', color: '#cce0f5' }}>· {t.author_username}</span>
                   </div>
                   <div style={{

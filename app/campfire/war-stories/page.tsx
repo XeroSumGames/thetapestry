@@ -1,9 +1,16 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { isMissingSchema, missingSchemaMessage } from '../../../lib/supabase-errors'
+import {
+  composePickerOptions,
+  SETTING_FILTER_CHIPS,
+  settingLabel,
+  settingAccent,
+  useUrlSettingFilter,
+} from '../../../lib/campfire-settings'
 
 // /campfire/war-stories — post memorable session moments, legendary rolls,
 // character beats. Cross-campaign feed: anyone signed in can read; authors
@@ -25,6 +32,7 @@ interface Story {
   title: string
   body: string
   attachments: Attachment[]
+  setting: string | null
   created_at: string
   updated_at: string
 }
@@ -33,6 +41,11 @@ interface StoryWithMeta extends Story {
   author_username: string
   campaign_name: string | null
 }
+
+// Compose-time scope. Campaign = tag with the chosen campaign (private to
+// that group post-Phase-4B). Setting = cross-campaign within a setting hub.
+// Global = nothing (visible to everyone, no setting filter).
+type Scope = 'campaign' | 'setting' | 'global'
 
 const BUCKET = 'war-stories'
 const IMAGE_RE = /\.(png|jpe?g|gif|webp|svg)$/i
@@ -47,9 +60,13 @@ export default function WarStoriesPage() {
   const [loading, setLoading] = useState(true)
   const [composing, setComposing] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [draft, setDraft] = useState<{ title: string; body: string; campaign_id: string }>({
-    title: '', body: '', campaign_id: '',
+  const [draft, setDraft] = useState<{ title: string; body: string; campaign_id: string; scope: Scope; setting: string }>({
+    title: '', body: '', campaign_id: '', scope: 'campaign', setting: 'district_zero',
   })
+  // null = "All settings"; '' = "Global only"; <slug> = single setting.
+  // Seeded from the ?setting= URL param so picking a setting on the
+  // /campfire hub propagates here.
+  const [settingFilter, setSettingFilter] = useUrlSettingFilter()
   // Composer attachment state. `newFiles` = picks waiting to upload on save;
   // `existingAttachments` = files already saved on the story being edited
   // (so the editor can remove them). Fresh-post flow only uses newFiles.
@@ -128,7 +145,13 @@ export default function WarStoriesPage() {
 
   function startCompose() {
     setEditingId(null)
-    setDraft({ title: '', body: '', campaign_id: '' })
+    // Default to Campaign scope when the user has any campaigns; fall back
+    // to Setting otherwise. Auto-pick the most recent campaign so the
+    // common "I want to share what just happened in our session" flow
+    // takes one click.
+    const defaultCampaignId = myCampaigns[0]?.id ?? ''
+    const defaultScope: Scope = defaultCampaignId ? 'campaign' : 'setting'
+    setDraft({ title: '', body: '', campaign_id: defaultCampaignId, scope: defaultScope, setting: 'district_zero' })
     setNewFiles([])
     setExistingAttachments([])
     setComposing(true)
@@ -136,7 +159,17 @@ export default function WarStoriesPage() {
 
   function startEdit(s: StoryWithMeta) {
     setEditingId(s.id)
-    setDraft({ title: s.title, body: s.body, campaign_id: s.campaign_id ?? '' })
+    // Reconstruct the scope from the saved row. campaign_id wins if both
+    // are set (shouldn't happen via the composer but tolerate it). Fall
+    // back to setting if there's no campaign tag.
+    const scope: Scope = s.campaign_id ? 'campaign' : (s.setting ? 'setting' : 'global')
+    setDraft({
+      title: s.title,
+      body: s.body,
+      campaign_id: s.campaign_id ?? '',
+      scope,
+      setting: s.setting ?? 'district_zero',
+    })
     setNewFiles([])
     setExistingAttachments(Array.isArray(s.attachments) ? s.attachments : [])
     setComposing(true)
@@ -145,10 +178,17 @@ export default function WarStoriesPage() {
   async function handleSave() {
     if (!myId || !draft.title.trim() || !draft.body.trim() || saving) return
     setSaving(true)
+    // The scope radio collapses into the campaign_id + setting columns:
+    //   campaign → campaign_id set, setting null
+    //   setting  → campaign_id null, setting set
+    //   global   → both null
+    // Belt-and-braces null-out the unselected one so editing a row from
+    // one scope to another doesn't leave stale data behind.
     const payload = {
       title: draft.title.trim(),
       body: draft.body.trim(),
-      campaign_id: draft.campaign_id || null,
+      campaign_id: draft.scope === 'campaign' ? (draft.campaign_id || null) : null,
+      setting: draft.scope === 'setting' ? draft.setting : null,
     }
 
     // Determine the story id we'll upload attachments under. For edits the
@@ -241,6 +281,27 @@ export default function WarStoriesPage() {
     return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
+  // Apply the active setting chip filter to the loaded stories. The chip
+  // strip itself is the only filter axis on War Stories — no category, no
+  // kind, so this collapses straight to the visible list.
+  const visibleStories = useMemo(() => {
+    if (settingFilter === null) return stories
+    if (settingFilter === '') return stories.filter(s => !s.setting)
+    return stories.filter(s => s.setting === settingFilter)
+  }, [stories, settingFilter])
+
+  // Per-chip counts shown in the badge. __all__ is the unfiltered total;
+  // __global__ counts rows with no setting tag. Featured slugs map to
+  // their slug key directly.
+  const settingCounts = useMemo(() => {
+    const map: Record<string, number> = { __all__: stories.length, __global__: 0 }
+    stories.forEach(s => {
+      if (!s.setting) map.__global__++
+      else map[s.setting] = (map[s.setting] ?? 0) + 1
+    })
+    return map
+  }, [stories])
+
   const inp: React.CSSProperties = {
     width: '100%', padding: '8px 10px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee',
@@ -303,18 +364,50 @@ export default function WarStoriesPage() {
             <textarea style={{ ...inp, minHeight: '200px', resize: 'vertical', fontFamily: 'Barlow, sans-serif', lineHeight: 1.55 }} value={draft.body} onChange={e => setDraft(d => ({ ...d, body: e.target.value }))}
               placeholder="Tell the table what happened." />
           </div>
-          {myCampaigns.length > 0 && (
-            <div style={{ marginBottom: '12px' }}>
-              <label style={lbl}>From Campaign (optional)</label>
+          {/* Scope picker — replaces the old "From Campaign (optional)"
+              dropdown. Three options: campaign-private (default if user
+              has campaigns), setting-tagged, or fully global. The
+              sub-control below the radio adapts to the selected scope. */}
+          <div style={{ marginBottom: '12px' }}>
+            <label style={lbl}>Where to post?</label>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
+              {(['campaign', 'setting', 'global'] as Scope[]).map(s => {
+                const active = draft.scope === s
+                const accent = s === 'campaign' ? '#b87333' : (s === 'setting' ? '#7ab3d4' : '#9aa5b0')
+                const disabled = s === 'campaign' && myCampaigns.length === 0
+                const label = s === 'campaign' ? '👥 Campaign' : (s === 'setting' ? '🏷 Setting' : '🌐 Global')
+                return (
+                  <button key={s} onClick={() => !disabled && setDraft(d => ({ ...d, scope: s }))}
+                    disabled={disabled}
+                    title={disabled ? 'You aren’t a member of any campaign yet.' : undefined}
+                    style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: disabled ? 'not-allowed' : 'pointer', borderRadius: '3px', border: `1px solid ${active ? accent : '#3a3a3a'}`, background: active ? '#242424' : '#1a1a1a', color: active ? accent : '#d4cfc9', opacity: disabled ? 0.4 : 1 }}>
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+            {draft.scope === 'campaign' && myCampaigns.length > 0 && (
               <select value={draft.campaign_id} onChange={e => setDraft(d => ({ ...d, campaign_id: e.target.value }))}
                 style={{ ...inp, appearance: 'none', cursor: 'pointer' }}>
-                <option value="">— None —</option>
                 {myCampaigns.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
-            </div>
-          )}
+            )}
+            {draft.scope === 'setting' && (
+              <select value={draft.setting} onChange={e => setDraft(d => ({ ...d, setting: e.target.value }))}
+                style={{ ...inp, appearance: 'none', cursor: 'pointer' }}>
+                {composePickerOptions().map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            )}
+            {draft.scope === 'global' && (
+              <div style={{ fontSize: '13px', color: '#9aa5b0', fontStyle: 'italic', padding: '4px 2px' }}>
+                Cross-setting — no setting or campaign tag. Visible everywhere.
+              </div>
+            )}
+          </div>
           <div style={{ marginBottom: '12px' }}>
             <label style={lbl}>Attachments (optional)</label>
             {/* Existing (edit-only). Each row has a × to remove; removal
@@ -366,16 +459,36 @@ export default function WarStoriesPage() {
         </div>
       )}
 
+      {/* Setting filter chip strip — featured settings + Global. Click "All"
+          to clear. War Stories has no other axis of filtering, so this is
+          the only chip row. */}
+      {!tableMissing && (
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '1rem', flexWrap: 'wrap' }}>
+          {SETTING_FILTER_CHIPS.map(opt => {
+            const key = opt.value === null ? '__all__' : (opt.value === '' ? '__global__' : opt.value)
+            const count = settingCounts[key] ?? 0
+            const active = settingFilter === opt.value
+            return (
+              <button key={key} onClick={() => setSettingFilter(opt.value)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '999px', border: `1px solid ${active ? opt.accent : '#3a3a3a'}`, background: active ? `${opt.accent}22` : '#1a1a1a', color: active ? opt.accent : '#d4cfc9' }}>
+                <span>{opt.label}</span>
+                <span style={{ background: active ? `${opt.accent}33` : '#242424', color: active ? opt.accent : '#9aa5b0', padding: '1px 7px', borderRadius: '999px', fontSize: '13px', fontWeight: 700 }}>{count}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {/* Story list */}
       {loading ? (
         <div style={{ fontSize: '13px', color: '#cce0f5', textAlign: 'center', padding: '2rem' }}>Loading...</div>
-      ) : stories.length === 0 ? (
+      ) : visibleStories.length === 0 ? (
         <div style={{ fontSize: '13px', color: '#cce0f5', textAlign: 'center', padding: '2rem', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
-          No stories yet. Be the first to post one.
+          {settingFilter === null ? 'No stories yet. Be the first to post one.' : 'No stories match this filter.'}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {stories.map(s => {
+          {visibleStories.map(s => {
             const isMine = s.author_user_id === myId
             return (
               <div key={s.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #b87333', borderRadius: '4px', padding: '1rem 1.25rem' }}>
@@ -394,6 +507,17 @@ export default function WarStoriesPage() {
                       </span>
                     </>
                   )}
+                  {s.setting && (() => {
+                    const tagAccent = settingAccent(s.setting)
+                    return (
+                      <>
+                        <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                        <span style={{ padding: '1px 8px', background: `${tagAccent}22`, color: tagAccent, border: `1px solid ${tagAccent}55`, borderRadius: '3px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                          {settingLabel(s.setting)}
+                        </span>
+                      </>
+                    )
+                  })()}
                 </div>
                 <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: (s.attachments.length > 0 || isMine) ? '12px' : 0 }}>
                   {s.body}
