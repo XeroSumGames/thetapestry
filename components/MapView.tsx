@@ -546,11 +546,21 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     if (!data) return
     setPins(data)
 
-    // Resolve usernames
+    // Resolve usernames + author roles. Author role drives the CANON
+    // badge: pins authored by a Thriver are flagged as authoritative
+    // setting content (the Tapestry team's published pins) and get a
+    // 🛡️ CANON badge on both the marker and the popup so users can
+    // distinguish them from community-submitted rumours at a glance.
     const uids = [...new Set(data.map((p: any) => p.user_id).filter(Boolean))]
+    const thriverIds = new Set<string>()
     if (uids.length > 0) {
-      const { data: profiles } = await supabase.from('profiles').select('id, username').in('id', uids)
-      if (profiles) setUsernames(Object.fromEntries(profiles.map((p: any) => [p.id, p.username])))
+      const { data: profiles } = await supabase.from('profiles').select('id, username, role').in('id', uids)
+      if (profiles) {
+        setUsernames(Object.fromEntries(profiles.map((p: any) => [p.id, p.username])))
+        for (const p of profiles as any[]) {
+          if (typeof p.role === 'string' && p.role.toLowerCase() === 'thriver') thriverIds.add(p.id)
+        }
+      }
     }
 
     // Remove old cluster group
@@ -589,16 +599,28 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       const emoji = pin.pin_type === 'rumor' ? '❓' : getCategoryEmoji(pin.category ?? 'location')
       const tier = getPinTier(pin)
       const ts = getTierStyles(tier)
+      const isCanon = !!pin.user_id && thriverIds.has(pin.user_id)
+      // Canon overlay sits at the top-right corner of the marker. Gold
+      // background, dark border so it stays visible on any map tile.
+      // Tooltip explains the meaning to first-time visitors.
+      const canonOverlay = isCanon
+        ? `<div title="Canon — published by The Tapestry team" style="position:absolute;top:-3px;right:-3px;width:13px;height:13px;background:#EF9F27;border:1.5px solid #1a1a1a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.6);">🛡️</div>`
+        : ''
       const icon = leaflet.divIcon({
-        html: `<div style="font-size:16px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(26,26,26,0.85);border:2px solid #c0392b;box-shadow:0 0 6px rgba(192,57,43,0.5);" title="${pin.title}">${emoji}</div>`,
+        html: `<div style="position:relative;font-size:16px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(26,26,26,0.85);border:2px solid #c0392b;box-shadow:0 0 6px rgba(192,57,43,0.5);" title="${pin.title}${isCanon ? ' (Canon)' : ''}">${emoji}${canonOverlay}</div>`,
         className: '', iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -33],
       })
       const nearSetting = getNearSetting(pin.lat, pin.lng)
       const nearbyCount = data.filter((p: Pin) => p.id !== pin.id && Math.abs(p.lat - pin.lat) < 0.1 && Math.abs(p.lng - pin.lng) < 0.1).length
+      // CANON pill in the popup header — gold pill on dark bg, Carlito
+      // letterspacing so it reads as an authoritative tag, not a status.
+      const canonPill = isCanon
+        ? `<span title="Canon — published by The Tapestry team" style="font-family:Carlito,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#EF9F27;background:#2a2010;border:1px solid #EF9F27;border-radius:2px;padding:1px 6px;margin-left:6px;white-space:nowrap;">🛡️ Canon</span>`
+        : ''
       const marker = leaflet.marker([pin.lat, pin.lng], { icon })
         .bindPopup(`
           <div style="font-family:Barlow,sans-serif;min-width:220px;max-width:300px">
-            <div style="font-weight:700;font-size:15px;margin-bottom:4px">${emoji} ${pin.title}</div>
+            <div style="font-weight:700;font-size:15px;margin-bottom:4px;display:flex;align-items:center;flex-wrap:wrap;">${emoji} ${pin.title}${canonPill}</div>
             ${pin.notes ? `<div style="font-size:13px;color:#555;margin-bottom:6px;line-height:1.4">${pin.notes}</div>` : ''}
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
               <span style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.06em;padding:1px 4px;background:#f0f0f0;border-radius:2px">${pin.category ?? 'location'}</span>
