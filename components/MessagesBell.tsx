@@ -1,7 +1,7 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
-import { getCachedAuth } from '../lib/auth-cache'
+import { useBellDropdown } from '../lib/hooks/useBellDropdown'
 
 interface ConvItem {
   conversation_id: string
@@ -40,10 +40,6 @@ const MAX_ITEMS = 10
 export default function MessagesBell() {
   const supabase = createClient()
   const [items, setItems] = useState<ConvItem[]>([])
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  const channelRef = useRef<any>(null)
-  const userIdRef = useRef<string | null>(null)
 
   async function loadConversations(uid: string) {
     // 1. My conversations + last_read_at.
@@ -113,48 +109,28 @@ export default function MessagesBell() {
     setItems(built)
   }
 
-  useEffect(() => {
-    async function init() {
-      const { user } = await getCachedAuth()
-      if (!user) return
-      userIdRef.current = user.id
-      await loadConversations(user.id)
-
-      // Realtime: any new message in a conv I'm in → reload list. Also
-      // watch my own last_read_at updates so the bell + bold state clear
-      // when I read a thread elsewhere (e.g. in the messages page).
-      channelRef.current = supabase.channel(`msgs_bell_${user.id}`)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-        }, () => {
-          if (userIdRef.current) loadConversations(userIdRef.current)
-        })
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'conversation_participants',
-          filter: `user_id=eq.${user.id}`,
-        }, () => {
-          if (userIdRef.current) loadConversations(userIdRef.current)
-        })
-        .subscribe()
-    }
-    init()
-    return () => {
-      if (channelRef.current) supabase.removeChannel(channelRef.current)
-    }
-  }, [])
-
-  // Close dropdown on outside click — same pattern as NotificationBell.
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    if (open) document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [open])
+  // Auth + realtime + outside-click + open state via the shared
+  // bell-dropdown scaffolding. Realtime watches new messages (any conv
+  // the user participates in) AND last_read_at updates on the user's
+  // own participant row — so reading a thread elsewhere (e.g. in the
+  // /messages page) clears the bell's bold state too.
+  const { userId, open, setOpen, containerRef } = useBellDropdown({
+    channelKey: 'msgs_bell',
+    loadItems: (uid) => loadConversations(uid),
+    setupChannel: (channel, uid) => channel
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+      }, () => loadConversations(uid))
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'conversation_participants',
+        filter: `user_id=eq.${uid}`,
+      }, () => loadConversations(uid))
+      .subscribe(),
+  })
 
   function openConversation(convId: string | null) {
     // Per-row OPEN deep-links to /messages?conv=<id>; the messages page
@@ -172,15 +148,14 @@ export default function MessagesBell() {
   // back and reloadConversations would give the same result, but the
   // optimistic local flip keeps the UI snappy.
   async function markAllAsRead() {
-    const uid = userIdRef.current
-    if (!uid) return
+    if (!userId) return
     const unreadConvIds = items.filter(i => i.is_unread).map(i => i.conversation_id)
     if (unreadConvIds.length === 0) return
     const now = new Date().toISOString()
     const { error } = await supabase
       .from('conversation_participants')
       .update({ last_read_at: now })
-      .eq('user_id', uid)
+      .eq('user_id', userId)
       .in('conversation_id', unreadConvIds)
     if (error) { console.error('[MessagesBell] markAllAsRead error:', error.message); return }
     setItems(prev => prev.map(i => unreadConvIds.includes(i.conversation_id) ? { ...i, is_unread: false } : i))
@@ -190,7 +165,7 @@ export default function MessagesBell() {
   const dim = unreadCount === 0
 
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+    <div ref={containerRef} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
       <button
         onClick={() => setOpen(prev => !prev)}
         title={dim ? 'Messages — no unread' : `Messages — ${unreadCount} unread`}
@@ -239,7 +214,7 @@ export default function MessagesBell() {
           // Anchored just below the icon, hard left so it doesn't run
           // off-screen on narrow windows. Matches NotificationBell.
           position: 'fixed',
-          top: (ref.current?.getBoundingClientRect().bottom ?? 40) + 4 + 'px',
+          top: (containerRef.current?.getBoundingClientRect().bottom ?? 40) + 4 + 'px',
           left: '10px',
           width: '380px',
           maxWidth: 'calc(100vw - 20px)',
@@ -277,7 +252,7 @@ export default function MessagesBell() {
             </div>
           ) : (
             items.map(it => {
-              const myUid = userIdRef.current
+              const myUid = userId
               const fromMe = !!myUid && it.latest_sender_user_id === myUid
               // For 1:1 DMs, "<other>". For group chats with N>1 others,
               // join the names so the recipient is identifiable.

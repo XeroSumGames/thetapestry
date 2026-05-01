@@ -1,8 +1,8 @@
 'use client'
-import { useEffect, useState, useRef } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
-import { getCachedAuth } from '../lib/auth-cache'
+import { useBellDropdown } from '../lib/hooks/useBellDropdown'
 
 interface Notification {
   id: string
@@ -34,64 +34,45 @@ function timeAgo(iso: string): string {
 export default function NotificationBell() {
   const supabase = createClient()
   const router = useRouter()
-  const [userId, setUserId] = useState<string | null>(null)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
-  const [open, setOpen] = useState(false)
   // Phase E Sprint 4c — once the user accepts or declines an action
   // notification (encounter / link proposal), drop it into this set
   // so the inline buttons hide. Keyed by notification id; cleared on
   // bell-init reload.
   const [actionedIds, setActionedIds] = useState<Set<string>>(new Set())
   const [actingId, setActingId] = useState<string | null>(null)
-  const ref = useRef<HTMLDivElement>(null)
-  const channelRef = useRef<any>(null)
 
-  useEffect(() => {
-    async function init() {
-      const { user } = await getCachedAuth()
-      if (!user) return
-      setUserId(user.id)
-
-      // Fetch recent notifications
+  // Auth + realtime + outside-click + open state via the shared
+  // bell-dropdown scaffolding. Realtime subscribes to new notifications
+  // for this user only — RLS gates rows, but the explicit filter also
+  // keeps the wire chatter scoped.
+  const { userId, open, setOpen, containerRef } = useBellDropdown({
+    channelKey: 'notif',
+    loadItems: async (uid) => {
       const { data } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', uid)
         .order('created_at', { ascending: false })
         .limit(10)
       const items = data ?? []
       setNotifications(items)
       setUnreadCount(items.filter((n: any) => !n.read).length)
-
-      // Subscribe to new notifications
-      channelRef.current = supabase.channel(`notif_${user.id}`)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        }, (payload: any) => {
-          const newNotif = payload.new as Notification
-          setNotifications(prev => [newNotif, ...prev].slice(0, 10))
-          setUnreadCount(prev => prev + 1)
-        })
-        .subscribe()
-    }
-    init()
-    return () => {
-      if (channelRef.current) supabase.removeChannel(channelRef.current)
-    }
-  }, [])
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    if (open) document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [open])
+    },
+    setupChannel: (channel, uid) => channel
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${uid}`,
+      }, (payload: any) => {
+        const newNotif = payload.new as Notification
+        setNotifications(prev => [newNotif, ...prev].slice(0, 10))
+        setUnreadCount(prev => prev + 1)
+      })
+      .subscribe(),
+  })
 
   async function markAsRead(id: string) {
     const { error } = await supabase.from('notifications').update({ read: true }).eq('id', id)
@@ -549,7 +530,7 @@ export default function NotificationBell() {
   if (!userId) return null
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div ref={containerRef} style={{ position: 'relative' }}>
       <button onClick={() => setOpen(prev => !prev)}
         style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill={unreadCount > 0 ? '#EF9F27' : '#3a3a3a'} xmlns="http://www.w3.org/2000/svg">
@@ -571,7 +552,7 @@ export default function NotificationBell() {
 
       {open && (
         <div className="drag-blocker" style={{
-          position: 'fixed', top: (ref.current?.getBoundingClientRect().bottom ?? 40) + 4 + 'px', left: '10px',
+          position: 'fixed', top: (containerRef.current?.getBoundingClientRect().bottom ?? 40) + 4 + 'px', left: '10px',
           // Wider container + hard clip so long notification bodies
           // wrap cleanly instead of punching out the right edge.
           width: '360px', maxWidth: 'calc(100vw - 20px)',
