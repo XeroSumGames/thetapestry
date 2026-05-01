@@ -214,7 +214,7 @@ export default function TradeNegotiationModal({
         <span style={{ flex: 1, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
           {item.name} <span style={{ color: '#5a5550' }}>×{item.qty}</span>
         </span>
-        <span style={{ fontSize: '11px', color: rarityCol, fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: '60px', textAlign: 'right' }}>
+        <span style={{ fontSize: '13px', color: rarityCol, fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', minWidth: '60px', textAlign: 'right' }}>
           {item.rarity}
         </span>
         <button onClick={() => setQty(selected - 1)} disabled={selected <= 0}
