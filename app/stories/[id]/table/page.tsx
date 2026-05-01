@@ -864,6 +864,18 @@ export default function TablePage() {
   }, [entries, isGM])
 
   useEffect(() => {
+    // Race guard. The mount effect's load() does multiple awaits before
+    // it gets to assigning channels to refs. If the user navigates from
+    // /stories/A/table → /stories/B/table mid-load, the cleanup for A
+    // fires (refs may still be null at that moment, so removeChannel is
+    // a no-op), then load(B) starts. When load(A) resumes after its
+    // awaits and assigns its channel objects to the refs, those
+    // assignments either (a) leak the A-channels if load(B) overwrites
+    // the same ref later, or (b) get torn down on the next nav, after
+    // burning a session of duplicated channels. Setting `cancelled`
+    // true in cleanup, and checking before each channel assignment,
+    // makes load() bail cleanly the moment the effect goes stale.
+    let cancelled = false
     async function load() {
       // ── Wave 1 ──────────────────────────────────────────────────
       // auth + campaign load in parallel — neither depends on the
@@ -1002,6 +1014,7 @@ export default function TablePage() {
       // Load revealed NPCs — GM sees all, players see their own
       if (camp.gm_user_id === user.id) {
         await loadRevealedNpcs(null, cnpcs)
+        if (cancelled) return
         revealChannelRef.current = supabase.channel(`reveals_${id}`)
           .on('postgres_changes', { event: '*', schema: 'public', table: 'npc_relationships' }, () => {
             loadRevealedNpcs(null, cnpcs)
@@ -1012,6 +1025,7 @@ export default function TablePage() {
         if (myMember?.character_id) {
           myCharIdRef.current = myMember.character_id
           await loadRevealedNpcs(myMember.character_id, cnpcs)
+          if (cancelled) return
           revealChannelRef.current = supabase.channel(`reveals_${id}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'npc_relationships' }, () => {
               if (myCharIdRef.current) loadRevealedNpcs(myCharIdRef.current, cnpcs)
@@ -1020,6 +1034,7 @@ export default function TablePage() {
         }
       }
 
+      if (cancelled) return
       // Keep the community map fresh — when an NPC is recruited, the
       // player roster should immediately show the community bucket.
       communityMembersChannelRef.current = supabase.channel(`community_members_${id}`)
@@ -1028,10 +1043,12 @@ export default function TablePage() {
         })
         .subscribe()
 
+      if (cancelled) return
       channelRef.current = supabase.channel(`table_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'character_states', filter: `campaign_id=eq.${id}` }, () => loadEntries(id))
         .subscribe()
 
+      if (cancelled) return
       membersChannelRef.current = supabase.channel(`members_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_members', filter: `campaign_id=eq.${id}` }, async () => {
           // Refetch members with character data, ensure their character_state exists,
@@ -1053,6 +1070,7 @@ export default function TablePage() {
       // Chat realtime channel now lives inside useChatPanel — no
       // separate subscription needed here.
 
+      if (cancelled) return
       initChannelRef.current = supabase.channel(`initiative_${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_order', filter: `campaign_id=eq.${id}` }, () => loadInitiative(id))
         .on('broadcast', { event: 'combat_ended' }, () => { setInitiativeOrder([]); setCombatActive(false); setViewingNpcs([]); setShowTacticalMap(true) })
@@ -1160,6 +1178,7 @@ export default function TablePage() {
         })
         .subscribe()
 
+      if (cancelled) return
       campaignChannelRef.current = supabase.channel(`campaign_${id}`)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'campaigns', filter: `id=eq.${id}` }, (payload: any) => {
           const row = payload.new
@@ -1169,6 +1188,7 @@ export default function TablePage() {
         })
         .subscribe()
 
+      if (cancelled) return
       // NPC roster realtime — without this, damage applied to an NPC updates
       // the DB but the GM (and players) keep seeing the old HP because
       // rosterNpcs/campaignNpcs only refresh on combat-start or page reload.
@@ -1215,6 +1235,7 @@ export default function TablePage() {
         })
         .subscribe()
 
+      if (cancelled) return
       // Presence — track how many users are on this table page
       try {
         const presChannel = supabase.channel(`presence_table_${id}_${Date.now()}`, { config: { presence: { key: user.id } } })
@@ -1234,15 +1255,19 @@ export default function TablePage() {
     }
     load()
     return () => {
-      if (channelRef.current) supabase.removeChannel(channelRef.current)
-      if (membersChannelRef.current) supabase.removeChannel(membersChannelRef.current)
-      if (npcsChannelRef.current) supabase.removeChannel(npcsChannelRef.current)
+      cancelled = true
+      // Null each ref after removeChannel so a stale load() that resumes
+      // after this cleanup can't observe an obsolete channel object via
+      // the ref and accidentally interact with it.
+      if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null }
+      if (membersChannelRef.current) { supabase.removeChannel(membersChannelRef.current); membersChannelRef.current = null }
+      if (npcsChannelRef.current) { supabase.removeChannel(npcsChannelRef.current); npcsChannelRef.current = null }
       // chat channel teardown is handled by useChatPanel's own cleanup.
-      if (initChannelRef.current) supabase.removeChannel(initChannelRef.current)
-      if (campaignChannelRef.current) supabase.removeChannel(campaignChannelRef.current)
-      if (revealChannelRef.current) supabase.removeChannel(revealChannelRef.current)
-      if (communityMembersChannelRef.current) supabase.removeChannel(communityMembersChannelRef.current)
-      if (presenceChannelRef.current) supabase.removeChannel(presenceChannelRef.current)
+      if (initChannelRef.current) { supabase.removeChannel(initChannelRef.current); initChannelRef.current = null }
+      if (campaignChannelRef.current) { supabase.removeChannel(campaignChannelRef.current); campaignChannelRef.current = null }
+      if (revealChannelRef.current) { supabase.removeChannel(revealChannelRef.current); revealChannelRef.current = null }
+      if (communityMembersChannelRef.current) { supabase.removeChannel(communityMembersChannelRef.current); communityMembersChannelRef.current = null }
+      if (presenceChannelRef.current) { supabase.removeChannel(presenceChannelRef.current); presenceChannelRef.current = null }
     }
   }, [id])
 
@@ -1257,8 +1282,14 @@ export default function TablePage() {
   // persists for users after this, expand to a teardown+resubscribe.
   useEffect(() => {
     if (!id) return
-    function handleVisibility() {
-      if (document.hidden) return
+    // Debounce the catch-up refetch. A user alt-tabbing quickly (Win+L
+    // lock screen, focus-then-blur, etc.) can fire visibilitychange
+    // multiple times in <500ms, and the un-debounced version dispatched
+    // five full DB fetches for every flap. 500ms is comfortably below
+    // any user-perceptible "I came back" window but above the typical
+    // OS-level focus dance.
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null
+    function runRefetch() {
       void (async () => {
         loadEntries(id)
         rollsFeed.refetch()
@@ -1277,8 +1308,19 @@ export default function TablePage() {
         }
       })()
     }
+    function handleVisibility() {
+      if (document.hidden) return
+      if (debounceTimer) clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(() => {
+        debounceTimer = null
+        runRefetch()
+      }, 500)
+    }
     document.addEventListener('visibilitychange', handleVisibility)
-    return () => document.removeEventListener('visibilitychange', handleVisibility)
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [id, isGM])
 
   // Roll requests broadcast from the /character-sheet popout window. The
