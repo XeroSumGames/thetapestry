@@ -159,10 +159,7 @@ function CharacterCardImpl({
   const [printLiveState, setPrintLiveState] = useState<{
     relationships: { name: string; cmod: number }[]
     wounds: string[]
-    currentStress?: number
-    currentInsight?: number
-    currentCdp?: number
-    currentMorality?: number
+    progressionLog: { date: string; type: string; text: string }[]
   } | null>(null)
   // Phase 4F (Modal Unification) — Stress Check, Breaking Point, and
   // Lasting Wound all migrated from bespoke inline JSX to the shared
@@ -320,7 +317,9 @@ function CharacterCardImpl({
       console.warn('[print] relationships fetch failed:', err)
     }
     // Wounds live in characters.data.progression_log entries with type='wound'.
-    const log: Array<{ type: string; text: string }> = Array.isArray((c.data as any)?.progression_log)
+    // The full log itself ships through too — printed at the bottom so a
+    // player who prints months later still has the journey-marker record.
+    const log: Array<{ date: string; type: string; text: string }> = Array.isArray((c.data as any)?.progression_log)
       ? (c.data as any).progression_log
       : []
     const wounds = log
@@ -329,10 +328,7 @@ function CharacterCardImpl({
     setPrintLiveState({
       relationships,
       wounds,
-      currentStress: localState?.stress ?? 0,
-      currentInsight: localState?.insight_dice ?? 0,
-      currentCdp: localState?.cdp ?? 0,
-      currentMorality: localState?.morality ?? 0,
+      progressionLog: log,
     })
     setPrinting(true)
     setTimeout(() => {
