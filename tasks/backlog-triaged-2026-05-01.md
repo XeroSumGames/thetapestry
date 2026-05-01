@@ -1,8 +1,18 @@
-# Backlog Triage — 2026-05-01 (updated 2026-05-01 evening)
+# Backlog Triage — 2026-05-01 (updated 2026-05-01 late evening)
 
-Total items reviewed: ~95. Bucket counts after this session's pass:
-BLOCKING 0 (all 5 shipped), NICE-TO-HAVE 25 (10 stale-struck or shipped),
-ALREADY SHIPPED 30, ASPIRATIONAL 35.
+Total items reviewed: ~95. Bucket counts after the full session:
+BLOCKING 0 (all 5 shipped), NICE-TO-HAVE 8 actually open (the rest shipped
+or stale-struck), ALREADY SHIPPED 40+, ASPIRATIONAL 35.
+
+Big late-session work added (not in original backlog):
+  • Print sheet redesign per Xero's annotated preview (header trim, hand-fill
+    boxes with grey CDP hints, progression log added). Commit a979af2.
+  • SRD redesigned in the Style B winner shape — every section now uses the
+    generic SectionHub component with a card grid. Commit 9ad81c3.
+  • GM Notes drag-to-reorder, GM Screen per-panel × close, /campfire portal
+    promotion, player pins on /table, CANON badge on Thriver pins.
+
+End-of-session summary at tasks/handoff-2026-05-01-evening.md.
 
 Source: `tasks/backlog-2026-05-01.md`. Verified against current code and recent commits (HEAD `66d271c`).
 
@@ -57,26 +67,29 @@ stale (see "Stale-struck" section below). Real remaining work:
 - ✅ Auto-relationship-penalty on Dire/Low Insight Barter (883f194)
 - ✅ Hide-NPCs reveal UX: auto-reveal on Start Combat (b8e5f7d)
 
-### Closed by Xero call (2026-05-01 evening)
-- ✅ CDP tracker boxes — marked DONE
+### Closed by Xero call + late-session work
+- ✅ CDP tracker boxes — DONE (resolved into print-sheet hand-fill rewrite)
 - ❌ Embed Distemper videos on landing page — DISCARDED (no clear target)
-- ✅ GM force-push view to players — marked DONE (scene + zoom sync covers it)
-- ✅ Streamline player login flow — marked DONE (current path is fine)
-- ✅ Multi-round haggling — marked DONE (single-roll is the canonical UX)
+- ✅ GM force-push view to players — DONE (scene + zoom sync covers it)
+- ✅ Streamline player login flow — DONE (current path is fine)
+- ✅ Multi-round haggling — DONE (single-roll is the canonical UX)
 - ✅ Surface per-item Give-loot UI — shipped 33f948a
-- ⚠️ Immutable canon layer — Xero unclear on intent; pending or discard
+- ✅ Immutable canon layer — shipped as 🛡️ CANON badge (748013c, 2286583)
+- ✅ Print sheet population — shipped 2e04ef4, then redesigned a979af2
+- ✅ Players can drop pins on /table — shipped aa5c6e8
+- ✅ GM Notes drag-to-reorder — shipped 7eea88f (+ user's parallel refinement merged)
+- ✅ GM Screen per-panel × close — shipped 642c64b
+- ✅ Auto-relationship-penalty on Dire/Low Insight Barter — shipped 883f194
+- ✅ Hide-NPCs auto-reveal on Start Combat — shipped b8e5f7d
+- ✅ Recruit Approach tooltip — shipped 8bc95ee
 
-### In progress
-- 🔨 Print sheet population for existing characters — Xero said get this done
-
-### Still open — feature work (need session of focus each)
+### Still open — feature work (next-session candidates)
 - /tools/reseed-campaign (idempotent re-seed for setting content)
 - Hide-NPCs reveal UX: multi-select bar (folder Show/Hide + global Show-All already shipped)
-- Players can drop pins on /table (RLS + approval flow + UI gate)
-- Player-facing NPC card on Show All (read-only details surface)
-- Player NPC notes + first impressions surface (new table or extend player_notes)
+- Player-facing NPC card on Show All (read-only details surface) — needs design call
+- Player NPC notes UI (table shipped — sql/player-npc-notes.sql; PlayerNpcCard hookup pending)
 - Parent/child pin structure (schema + UI nesting)
-- Remaining event instrumentation (9 items — needs a list)
+- Remaining event instrumentation (9 items — needs the list from Xero)
 - Pin-image migration from base64 → Supabase Storage
 - Tools enhancements (batch / crop / auth gating)
 
