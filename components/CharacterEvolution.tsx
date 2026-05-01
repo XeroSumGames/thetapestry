@@ -31,6 +31,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { SKILLS, type AttributeName, type SkillValue } from '../lib/xse-schema'
 import { skillRaiseCost, skillNextLevel, rapidRaiseCost, isLv4Step } from '../lib/cdp-costs'
 import { appendProgressionEntry } from '../lib/progression-log'
+import { getCachedAuth } from '../lib/auth-cache'
 
 const ATTR_ORDER: AttributeName[] = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 const ATTR_FULL: Record<AttributeName, string> = {
@@ -316,6 +317,42 @@ export default function CharacterEvolution({
         logType,
         `${headline}${narrative}`,
       )
+
+      // 4) Append a roll_log entry with outcome='evolution' so the
+      //    spend surfaces in the session feed (per the spec). Fire
+      //    fire-and-forget — the spend already committed; a failed
+      //    feed insert shouldn't roll anything back. damage_json
+      //    carries the structured spend so future renderers (or a
+      //    GM oversight surface) can decode the entry without
+      //    parsing label text.
+      try {
+        const { user } = await getCachedAuth()
+        if (user?.id) {
+          const targetLabel = target === 'apprentice' && apprentice
+            ? `${characterName}'s Apprentice (${apprentice.name})`
+            : characterName
+          await supabase.from('roll_log').insert({
+            campaign_id: campaignId,
+            user_id: user.id,
+            character_name: targetLabel,
+            label: `${targetLabel} — ${headline.replace(/^📈\s*/, '')}`,
+            outcome: 'evolution',
+            damage_json: {
+              kind: pending.kind,           // 'rapid' | 'skill'
+              key: pending.key,             // attr name or skill name
+              from_level: pending.fromLevel,
+              to_level: pending.toLevel,
+              cost: pending.cost,
+              target: target === 'apprentice' ? 'apprentice' : 'self',
+              apprentice_npc_id: target === 'apprentice' ? apprentice?.npcId ?? null : null,
+              narrative: pending.needsNarrative ? pending.narrative.trim() : null,
+              new_cdp_balance: newCdp,
+            },
+          })
+        }
+      } catch (e: any) {
+        console.warn('[CharacterEvolution] roll_log insert failed:', e?.message ?? String(e))
+      }
 
       onSaved()
       onClose()

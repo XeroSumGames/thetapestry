@@ -148,13 +148,7 @@ Ready to pick up; each is self-contained.
 ## 4. Big features unstarted
 
 ### CDP Calculator / Character Evolution
-- [ ] Build `/characters/[id]/evolve` (or modal on the character sheet):
-  1. Show character's current CDP balance from `data.cdp` (already tracked)
-  2. List buyable upgrades per the rules — attribute raises (cost = current value × multiplier), skill raises (cost = next-level cost), new trait picks (cost depends on tier)
-  3. Preview the cost before commit
-  4. Apply the spend in one transaction (decrement `data.cdp`, write the changes, append a `roll_log` entry with `outcome='evolution'`)
-  5. Reuse the wizard's CDP cost tables — extract into a shared helper if needed
-  - Player-facing tool, GM doesn't approve (CDP is GM-awarded already, spend is the player's call). Audit log entry covers GM oversight. The "Evolution" button on every CharacterCard currently smooth-scrolls to the Progression Log; it'll wire up to this when shipped.
+- [x] **Shipped.** The Evolution button on every CharacterCard opens the [`<CharacterEvolution>` modal](components/CharacterEvolution.tsx) — the spec's "or modal on the character sheet" path. SRD-canonical costs (1 CDP to learn a skill, 2N+1 per skill step, 3×(N+1) per RAPID step), one-step-at-a-time, Lv 4 narrative gate (12-char minimum), apprentice raises log to the master PC's progression_log. Audit closed 2026-05-01; the missing `roll_log` insert with `outcome='evolution'` was added in a follow-up commit so the table feed surfaces the spend.
 
 ### Tactical map — long-term big lifts
 - [ ] **Dynamic lighting on tactical map.** Player vision limited by light sources (torches, lanterns, sun); areas outside lit radius render fogged. Lights layer on `tactical_scenes` (`{ x, y, radius, color }[]`), per-token visibility computed against light sources, fog-of-war canvas pass on the player side.

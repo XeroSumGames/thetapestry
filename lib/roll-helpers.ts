@@ -291,6 +291,13 @@ export function compactRollSummary(r: { label: string; character_name: string; t
   if (r.outcome === 'fed_check' || r.outcome === 'clothed_check' || r.outcome === 'morale_check' || r.outcome === 'retention_check') {
     return r.label.replace(/^[\u{1F33E}\u{1F527}\u{1F4CA}\u{1F64F}]\s*/u, '')
   }
+  // CDP Calculator spends. Stored label is the headline from
+  // CharacterEvolution ("<character> — <Skill> Lv 2 → Lv 3 — 5 CDP."),
+  // already narrative-friendly — just strip any leading emoji and keep
+  // the rest. Lv 4 narrative quote stays inline if present.
+  if (r.outcome === 'evolution') {
+    return r.label.replace(/^📈\s*/, '')
+  }
   // Vehicle mounted-weapon attack — label format from /vehicle popout:
   //   "🎯 <weapon> attack → <target> · <vehicle> · <crew> · Ranged Combat (DEX) · <outcome>"
   //   (or without "→ <target>" when no target was selected)
