@@ -399,7 +399,7 @@ export default function CommunitiesIndexPage() {
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-        <h1 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '26px', letterSpacing: '.06em', textTransform: 'uppercase', color: '#c0392b', margin: 0 }}>My Communities</h1>
+        <h1 style={{ fontFamily: 'Distemper, Carlito, sans-serif', fontSize: '30px', letterSpacing: '.06em', textTransform: 'uppercase', color: '#c0392b', margin: 0, lineHeight: 1.1 }}>My Communities</h1>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={handleOpenInvite}
             style={{ padding: '6px 14px', background: '#2d5a1b', border: '1px solid #7fc458', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
