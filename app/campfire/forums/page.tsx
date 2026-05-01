@@ -55,19 +55,21 @@ interface Thread {
   latest_reply_at: string
   created_at: string
   setting: string | null
+  campaign_id: string | null
 }
 
 interface ThreadWithAuthor extends Thread {
   author_username: string
+  campaign_name: string | null
 }
 
 type Filter = 'all' | Category
 
-// Compose-time scope. 'setting' = tag with a setting slug; 'global' = no
-// tag (cross-setting). Forums don't have a campaign_id column, so the
-// "campaign-private" scope from the Phase 4A spec is intentionally absent
-// here — see tasks/handoff.md for the open decision.
-type Scope = 'setting' | 'global'
+// Compose-time scope. Mirrors War Stories: campaign-private (default
+// when the user has any campaigns), setting-tagged, or fully global.
+// Phase 4B will use this to gate moderation — campaign scope skips
+// review, setting/global queues for thriver approval.
+type Scope = 'campaign' | 'setting' | 'global'
 
 export default function ForumsIndexPage() {
   const supabase = createClient()
@@ -82,16 +84,33 @@ export default function ForumsIndexPage() {
   // /campfire hub propagates here.
   const [settingFilter, setSettingFilter] = useUrlSettingFilter()
   const [composing, setComposing] = useState(false)
-  const [draft, setDraft] = useState<{ category: Category; title: string; body: string; scope: Scope; setting: string }>({
-    category: 'general', title: '', body: '', scope: 'setting', setting: 'district_zero',
+  const [draft, setDraft] = useState<{ category: Category; title: string; body: string; scope: Scope; setting: string; campaign_id: string }>({
+    category: 'general', title: '', body: '', scope: 'setting', setting: 'district_zero', campaign_id: '',
   })
   const [saving, setSaving] = useState(false)
+  // Campaigns the user belongs to (GM or player). Used by the Campaign
+  // scope pill on the composer. Same query as War Stories — pulled via
+  // campaign_members so it includes player roles, not just GM.
+  const [myCampaigns, setMyCampaigns] = useState<{ id: string; name: string }[]>([])
 
   useEffect(() => {
     async function init() {
       const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
       setMyId(user.id)
+      // Fetch the user's campaigns once for the Campaign scope picker.
+      // Mirrors the War Stories pattern: pulled via campaign_members so
+      // player-role campaigns appear, not just GM-owned ones. Cheap; no
+      // need to refetch on every loadThreads call.
+      const { data: memberRows } = await supabase
+        .from('campaign_members')
+        .select('campaign_id, campaigns:campaign_id(id, name)')
+        .eq('user_id', user.id)
+      const camps = ((memberRows ?? []) as any[])
+        .map(r => r.campaigns as { id: string; name: string } | null)
+        .filter((c): c is { id: string; name: string } => !!c && !!c.id && !!c.name)
+      const seen = new Set<string>()
+      setMyCampaigns(camps.filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true }))
       await loadThreads()
     }
     init()
@@ -107,28 +126,47 @@ export default function ForumsIndexPage() {
     const list = (rows ?? []) as Thread[]
     if (list.length === 0) { setThreads([]); setLoading(false); return }
     const authorIds = Array.from(new Set(list.map(t => t.author_user_id)))
-    const { data: profs } = await supabase
-      .from('profiles')
-      .select('id, username')
-      .in('id', authorIds)
-    const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
-    setThreads(list.map(t => ({ ...t, author_username: nameMap[t.author_user_id] ?? 'Unknown' })))
+    const campaignIds = Array.from(new Set(list.map(t => t.campaign_id).filter((x): x is string => !!x)))
+    const [profRes, campRes] = await Promise.all([
+      supabase.from('profiles').select('id, username').in('id', authorIds),
+      campaignIds.length > 0
+        ? supabase.from('campaigns').select('id, name').in('id', campaignIds)
+        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    ])
+    const nameMap = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.username]))
+    const campMap = Object.fromEntries((campRes.data ?? []).map((c: any) => [c.id, c.name]))
+    setThreads(list.map(t => ({
+      ...t,
+      author_username: nameMap[t.author_user_id] ?? 'Unknown',
+      campaign_name: t.campaign_id ? (campMap[t.campaign_id] ?? null) : null,
+    })))
     setLoading(false)
   }
 
   function startCompose() {
-    setDraft({ category: 'general', title: '', body: '', scope: 'setting', setting: 'district_zero' })
+    // Default to Campaign scope when the user has any campaigns; fall
+    // back to Setting otherwise. Auto-pick the most recent campaign so
+    // the common "I want to ask my group a question" flow takes one
+    // click. Mirrors War Stories.
+    const defaultCampaignId = myCampaigns[0]?.id ?? ''
+    const defaultScope: Scope = defaultCampaignId ? 'campaign' : 'setting'
+    setDraft({ category: 'general', title: '', body: '', scope: defaultScope, setting: 'district_zero', campaign_id: defaultCampaignId })
     setComposing(true)
   }
 
   async function handleCreate() {
     if (!myId || !draft.title.trim() || !draft.body.trim() || saving) return
     setSaving(true)
+    // Scope collapses into the campaign_id + setting columns. Same shape
+    // as War Stories: only one of campaign_id / setting is populated;
+    // global has both NULL. Phase 4B uses scope === 'campaign' as the
+    // moderation skip-review signal.
     const { data, error } = await supabase.from('forum_threads').insert({
       author_user_id: myId,
       category: draft.category,
       title: draft.title.trim(),
       body: draft.body.trim(),
+      campaign_id: draft.scope === 'campaign' ? (draft.campaign_id || null) : null,
       setting: draft.scope === 'setting' ? draft.setting : null,
     }).select('id').single()
     setSaving(false)
@@ -227,27 +265,40 @@ export default function ForumsIndexPage() {
           <div style={{ marginBottom: '10px' }}>
             <label style={lbl}>Where to post?</label>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
-              {(['setting', 'global'] as Scope[]).map(s => {
+              {(['campaign', 'setting', 'global'] as Scope[]).map(s => {
                 const active = draft.scope === s
-                const accent = s === 'setting' ? '#7ab3d4' : '#9aa5b0'
+                const accent = s === 'campaign' ? '#b87333' : (s === 'setting' ? '#7ab3d4' : '#9aa5b0')
+                const disabled = s === 'campaign' && myCampaigns.length === 0
+                const label = s === 'campaign' ? '👥 Campaign' : (s === 'setting' ? '🏷 Setting' : '🌐 Global')
                 return (
-                  <button key={s} onClick={() => setDraft(d => ({ ...d, scope: s }))}
-                    style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${active ? accent : '#3a3a3a'}`, background: active ? '#242424' : '#1a1a1a', color: active ? accent : '#d4cfc9' }}>
-                    {s === 'setting' ? '🏷 Setting' : '🌐 Global'}
+                  <button key={s} onClick={() => !disabled && setDraft(d => ({ ...d, scope: s }))}
+                    disabled={disabled}
+                    title={disabled ? 'You aren’t a member of any campaign yet.' : undefined}
+                    style={{ padding: '6px 14px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: disabled ? 'not-allowed' : 'pointer', borderRadius: '3px', border: `1px solid ${active ? accent : '#3a3a3a'}`, background: active ? '#242424' : '#1a1a1a', color: active ? accent : '#d4cfc9', opacity: disabled ? 0.4 : 1 }}>
+                    {label}
                   </button>
                 )
               })}
             </div>
-            {draft.scope === 'setting' ? (
+            {draft.scope === 'campaign' && myCampaigns.length > 0 && (
+              <select value={draft.campaign_id} onChange={e => setDraft(d => ({ ...d, campaign_id: e.target.value }))}
+                style={{ ...inp, appearance: 'none', cursor: 'pointer' }}>
+                {myCampaigns.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            )}
+            {draft.scope === 'setting' && (
               <select value={draft.setting} onChange={e => setDraft(d => ({ ...d, setting: e.target.value }))}
                 style={{ ...inp, appearance: 'none', cursor: 'pointer' }}>
                 {composePickerOptions().map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
-            ) : (
+            )}
+            {draft.scope === 'global' && (
               <div style={{ fontSize: '13px', color: '#9aa5b0', fontStyle: 'italic', padding: '4px 2px' }}>
-                Cross-setting — no setting tag. Visible everywhere.
+                Cross-setting — no setting or campaign tag. Visible everywhere.
               </div>
             )}
           </div>
@@ -384,6 +435,11 @@ export default function ForumsIndexPage() {
                         </span>
                       )
                     })()}
+                    {t.campaign_name && (
+                      <span style={{ padding: '1px 8px', background: '#3a2516', color: '#b87333', border: '1px solid #b8733355', borderRadius: '999px', fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                        👥 {t.campaign_name}
+                      </span>
+                    )}
                     <span style={{ fontSize: '13px', color: '#cce0f5' }}>· {t.author_username}</span>
                   </div>
                   <div style={{

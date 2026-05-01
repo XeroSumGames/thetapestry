@@ -109,11 +109,41 @@ Confirm:
 
 ---
 
-## Open follow-ups (NOT in 4A scope)
+## Phase 4A.5 — Forum-thread campaign scope (added in same session)
+
+The 4A composer for Forums shipped with Setting/Global only because `forum_threads` had no `campaign_id`. Phase 4A.5 closes that gap so all three Phase 4 surfaces (Forums, War Stories, LFG) can use the same compose flow, and so Phase 4B's moderation gate can use `scope === 'campaign'` as the auto-approve path.
+
+### Migration
+
+Apply `sql/forum-threads-campaign-id.sql` to prod. Adds `campaign_id uuid REFERENCES campaigns(id) ON DELETE SET NULL` plus `idx_forum_threads_campaign`. Mirrors the war_stories shape exactly. Purely additive.
+
+### 10. Forums — Campaign scope flow
+
+1. Navigate to `/campfire/forums`, click `+ New Thread`.
+2. The **Where to post?** radio should now have THREE pills: **👥 Campaign** (default-selected when you have any campaigns), **🏷 Setting**, **🌐 Global**.
+3. With Campaign selected, a campaign dropdown appears below auto-populated to your most recent campaign. Pick a campaign, write a title + body, post.
+4. After redirect, navigate back to `/campfire/forums` and confirm the new thread shows a **👥 [Campaign Name]** orange pill in the row meta line, parallel to the setting badge.
+5. If you have NO campaigns: the Campaign pill should be visibly disabled (40% opacity, tooltip "You aren’t a member of any campaign yet.") and the default scope falls to Setting.
+6. **Scope switching:** flip from Campaign → Setting on the radio mid-compose. The campaign dropdown disappears, setting dropdown appears. Save → row should have `setting='district_zero'` and `campaign_id=NULL`.
+7. **DB sanity:** in Supabase, `SELECT campaign_id, setting, count(*) FROM forum_threads GROUP BY campaign_id, setting;` → confirm only one of the two columns is non-null per row.
+
+### 11. Forums — Campaign tag display
+
+1. On `/campfire/forums`, threads with `campaign_id` set should render the orange `👥 [Campaign Name]` pill in the row meta strip (between any setting badge and the author name).
+2. Threads without a campaign tag don't show the pill (parity with War Stories behavior).
+3. The pill is informational — it does NOT affect the chip-strip filter (filter only filters by setting). This is intentional for now; campaign-as-filter would need an "Only my campaigns" chip and is out of 4A.5 scope.
+
+### Visibility note (NOT yet implemented)
+
+The campaign_id tag is purely informational in 4A.5. **RLS still says "anyone signed in can read."** Same as War Stories today. So a forum thread tagged with someone else's campaign IS technically visible to you — the tag just labels it. If Xero wants true Vegas-rules privacy ("only my campaign sees campaign-tagged threads"), that's a separate RLS pass that should also apply to War Stories for consistency. Flagged here so it's not forgotten when Phase 4B lands.
+
+---
+
+## Open follow-ups (NOT in 4A / 4A.5 scope)
 
 These came up while building 4A — leaving them flagged for Xero to decide if/when:
 
-1. **Forum-thread campaign scope.** The locked design says default scope on new posts = campaign-private. War Stories supports it (via existing `campaign_id`). LFG doesn't need it (cross-campaign by nature). **Forums has no `campaign_id` column**, so campaign-private forum threads aren't possible today. The Forums composer ships with Setting/Global only — no Campaign option. Adding `campaign_id` is a one-line ALTER + composer pill + reader chip; do it as Phase 4A.5 if Xero wants campaign-private discussion threads.
+1. **Tighten RLS on campaign-tagged threads + War Stories.** Per above — the campaign_id column is just a tag today, not a privacy gate. If "campaign-private" should mean truly private, both `forum_threads` and `war_stories` need RLS that filters by campaign membership when campaign_id is set.
 
 2. **Backfill of old LFG freetext setting rows.** Pre-Phase-4A LFG posts have `setting` values like "Distemper", "Homebrew", "Chased". These don't match any slug, so they only show in the All filter. A backfill could map known values ("Distemper" → null treat-as-Global, "Chased" → chased slug, etc.) — but small-N and the user says they have ~0 of these in prod realistically. Skip unless it bites.
 
@@ -126,8 +156,12 @@ These came up while building 4A — leaving them flagged for Xero to decide if/w
 
 ## Rollback (if shit hits the fan)
 
-The migration is purely additive — no column removals, no constraint adds, no data writes. To roll back:
+The migrations are purely additive — no column removals, no constraint adds, no data writes. To roll back 4A + 4A.5:
 ```sql
+-- 4A.5
+DROP INDEX IF EXISTS idx_forum_threads_campaign;
+ALTER TABLE forum_threads DROP COLUMN IF EXISTS campaign_id;
+-- 4A
 DROP INDEX IF EXISTS idx_forum_threads_setting;
 DROP INDEX IF EXISTS idx_war_stories_setting;
 DROP INDEX IF EXISTS idx_lfg_posts_setting;
