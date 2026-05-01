@@ -106,6 +106,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   const [pinForm, setPinForm] = useState({ name: '', notes: '', category: 'location' })
   const [saving, setSaving] = useState(false)
   const [attachments, setAttachments] = useState<File[]>([])
+  // Brief inline confirmation after a non-GM player submits a pin —
+  // their own pin lands as revealed=false so they can't see it back
+  // until the GM approves. Without this confirmation the form just
+  // disappears and the player can't tell whether the submission worked.
+  const [submittedNotice, setSubmittedNotice] = useState(false)
 
   // Keep ref in sync so the Leaflet click handler sees current state
   useEffect(() => { placingRef.current = placing }, [placing])
@@ -242,6 +247,13 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     setAttachments([])
     setPlacing(false)
     setSaving(false)
+    // Player path: pins land as revealed=false and the GM moderates
+    // them. Show a 3-second inline confirmation so the submitter has
+    // a clear signal their pin reached the GM.
+    if (!isGM) {
+      setSubmittedNotice(true)
+      setTimeout(() => setSubmittedNotice(false), 3000)
+    }
   }
 
   useEffect(() => {
@@ -318,12 +330,15 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       {/* Search + layer switcher — single right column (matches MapView) */}
       <div style={{ position: 'absolute', top: '6px', right: '6px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '4px' }}>
-          {isGM && (
-            <button type="button" onClick={() => { setPlacing(p => !p); setNewPin(null); setAttachments([]) }}
-              style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${placing ? '#2d5a1b' : '#3a3a3a'}`, background: placing ? '#1a2e10' : 'rgba(15,15,15,.85)', color: placing ? '#7fc458' : '#d4cfc9' }}>
-              {placing ? '✕ Cancel' : '+ Pin'}
-            </button>
-          )}
+          {/* + Pin opens to all campaign members, not just the GM. RLS
+              already permits members to INSERT into campaign_pins; the
+              old isGM gate was UI-only. Player pins land revealed=false
+              so the GM sees them in CampaignPins for review/reveal. */}
+          <button type="button" onClick={() => { setPlacing(p => !p); setNewPin(null); setAttachments([]) }}
+            title={isGM ? 'Drop a pin on the campaign map' : 'Suggest a pin — GM will review and reveal it'}
+            style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${placing ? '#2d5a1b' : '#3a3a3a'}`, background: placing ? '#1a2e10' : 'rgba(15,15,15,.85)', color: placing ? '#7fc458' : '#d4cfc9' }}>
+            {placing ? '✕ Cancel' : isGM ? '+ Pin' : '+ Suggest Pin'}
+          </button>
           <div style={{ position: 'relative' }}>
             <input value={searchQuery} onChange={e => {
               setSearchQuery(e.target.value)
@@ -371,6 +386,14 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       {placing && !newPin && (
         <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(26,46,16,0.95)', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' }}>
           Click on the map to place a pin
+        </div>
+      )}
+
+      {/* Player pin submitted — 3-second confirmation that the pin
+          reached the GM for review. Only fires for non-GM submitters. */}
+      {submittedNotice && (
+        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(26,46,16,0.95)', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' }}>
+          ✓ Pin submitted — GM will review
         </div>
       )}
 
