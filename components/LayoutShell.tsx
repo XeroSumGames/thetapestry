@@ -8,6 +8,9 @@ import Sidebar from './Sidebar'
 
 // Pages that ghosts (unauthenticated users) can view
 const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/stories', '/campaigns', '/characters', '/creating-a-character', '/characters/new', '/characters/quick', '/characters/random']
+// Path prefixes that ghosts can view (matches the path AND any subpath).
+// Used for the SRD rules viewer where every section gets its own subroute.
+const PUBLIC_PREFIXES = ['/rules']
 
 // Pages that always hide the sidebar
 const NO_SIDEBAR_PAGES = ['/login', '/signup', '/firsttimers']
@@ -158,7 +161,10 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   // so deep links — especially invite URLs like /join/<code> — survive the
   // login round-trip. Previously this pushed to a bare /login and silently
   // dropped the destination, so invited users ended up at /dashboard.
-  const isPublicPage = PUBLIC_PAGES.some(p => pathname === p) || pathname === '/map'
+  const isPublicPage =
+    PUBLIC_PAGES.some(p => pathname === p) ||
+    PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/')) ||
+    pathname === '/map'
   if (!isAuthenticated && !isPublicPage && !['/login', '/signup', '/firsttimers'].includes(pathname)) {
     const search = typeof window !== 'undefined' ? window.location.search : ''
     const fullPath = pathname + search

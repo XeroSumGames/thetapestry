@@ -92,13 +92,6 @@ export default function Sidebar() {
     borderLeft: `3px solid ${accent}`, marginBottom: '2px',
   })
 
-  const soonStyle = {
-    display: 'block' as const, padding: '10px 14px', color: '#cce0f5',
-    textDecoration: 'none', fontSize: '15px', fontFamily: 'Carlito, sans-serif',
-    letterSpacing: '.04em', textTransform: 'uppercase' as const,
-    borderLeft: '3px solid transparent', marginBottom: '2px',
-  }
-
   const sectionHeading = {
     padding: '10px 14px 6px', fontSize: '15px', color: '#f5f2ee',
     fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em',
@@ -110,8 +103,6 @@ export default function Sidebar() {
   function hover(e: React.MouseEvent<HTMLAnchorElement>, on: boolean) {
     e.currentTarget.style.background = on ? '#242424' : 'transparent'
   }
-
-  const soonSuffix = <span style={{ fontSize: '13px', color: '#cce0f5' }}>&mdash; soon</span>
 
   return (
     <div style={{ width: '220px', flexShrink: 0, background: '#1a1a1a', borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
@@ -232,11 +223,11 @@ export default function Sidebar() {
         </>
       )}
 
-      {/* (Removed 2026-05-01: Rules / Equipment "— soon" placeholders
-          and the Forums + Looking for Group sidebar links. Rules and
-          Equipment had no destination; Forums + LFG are still
-          reachable via /campfire's tab strip — a duplicate entry in
-          the sidebar was clutter.) */}
+      {/* (Removed 2026-05-01: Equipment "— soon" placeholder + the
+          Forums + Looking for Group duplicates — those are still
+          reachable via /campfire's tab strip. Rules promoted to a real
+          link now that /rules ships the SRD reference.) */}
+      <Link href="/rules" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rules</Link>
 
       {/* Spacer + bottom section */}
       <div style={{ flex: 1 }} />
