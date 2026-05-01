@@ -231,7 +231,7 @@ export default function Sidebar() {
       )}
 
       {/* Coming soon — always visible, no section header per user spec */}
-      <a href="#" style={soonStyle}>Rules {soonSuffix}</a>
+      <Link href="/rules" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rules</Link>
       <a href="#" style={soonStyle}>Equipment {soonSuffix}</a>
       <Link href="/campfire/forums" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Forums</Link>
       <Link href="/campfire/lfg" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Looking for Group</Link>
