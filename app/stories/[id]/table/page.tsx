@@ -2752,6 +2752,23 @@ export default function TablePage() {
 
   const handleMapThrowCancel = useStableCallback(() => setThrowMode(null))
 
+  // TacticalMap only cares about the five throw fields — the rest of
+  // the throwMode state (weapon, amod, smod, label) belongs to the
+  // roll modal. Memoizing the projection keeps the prop reference
+  // stable across re-renders that don't actually mutate throwMode,
+  // so TacticalMap (which is wrapped in memo internally) doesn't
+  // re-mount its in-flight throw arc / target preview every render.
+  const tacticalThrowMode = useMemo(
+    () => throwMode ? {
+      attackerCharId: throwMode.attackerCharId,
+      attackerNpcId: throwMode.attackerNpcId,
+      rangeFeet: throwMode.rangeFeet,
+      hasBlast: throwMode.hasBlast,
+      friendlyCharacterIds: throwMode.friendlyCharacterIds,
+    } : null,
+    [throwMode],
+  )
+
   async function deferInitiative(entryId: string) {
     const idx = initiativeOrder.findIndex(e => e.id === entryId)
     if (idx < 0 || idx >= initiativeOrder.length - 1) return
@@ -6363,7 +6380,7 @@ export default function TablePage() {
               onTokensUpdate={handleMapTokensUpdate}
               onMoveComplete={handleMapMoveComplete}
               onMoveCancel={handleMapMoveCancel}
-              throwMode={throwMode ? { attackerCharId: throwMode.attackerCharId, attackerNpcId: throwMode.attackerNpcId, rangeFeet: throwMode.rangeFeet, hasBlast: throwMode.hasBlast, friendlyCharacterIds: throwMode.friendlyCharacterIds } : null}
+              throwMode={tacticalThrowMode}
               onThrowComplete={handleMapThrowComplete}
               onThrowCancel={handleMapThrowCancel}
             />

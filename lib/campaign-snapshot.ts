@@ -128,13 +128,27 @@ export async function restoreCampaignSnapshot(
   }
 
   // 4. Restore scenes + tokens. Scenes carry their original id so that
-  //    tokens' scene_id still points where it should.
-  for (const { scene, tokens } of snap.scenes) {
-    const { error: sErr } = await supabase.from('tactical_scenes').insert([stripGenerated(scene)])
-    if (sErr) { errors.push(`scene ${scene.name}: ${sErr.message}`); continue }
-    if (tokens.length > 0) {
-      const { error: tErr } = await supabase.from('scene_tokens').insert(tokens.map(stripGenerated))
-      if (tErr) errors.push(`scene ${scene.name} tokens: ${tErr.message}`)
+  //    tokens' scene_id still points where it should. We insert ALL
+  //    scenes in one shot, then ALL tokens in one shot — replaces the
+  //    previous per-scene `for await` loop that paid one round-trip per
+  //    scene. Trade-off: a single bad scene now fails the whole batch
+  //    rather than skipping that scene and continuing. Restore is
+  //    inherently best-effort + best-as-atomic anyway (the wipe already
+  //    happened), so all-or-nothing is the safer mode.
+  if (snap.scenes.length > 0) {
+    const sceneRows = snap.scenes.map(({ scene }) => stripGenerated(scene))
+    const { error: sErr } = await supabase.from('tactical_scenes').insert(sceneRows)
+    if (sErr) {
+      errors.push(`scenes: ${sErr.message}`)
+    } else {
+      const allTokens: any[] = []
+      for (const { tokens } of snap.scenes) {
+        for (const t of tokens) allTokens.push(stripGenerated(t))
+      }
+      if (allTokens.length > 0) {
+        const { error: tErr } = await supabase.from('scene_tokens').insert(allTokens)
+        if (tErr) errors.push(`tokens: ${tErr.message}`)
+      }
     }
   }
 
@@ -229,23 +243,35 @@ export async function cloneSnapshotIntoCampaign(
     if (r.error) errors.push(`notes: ${r.error.message}`)
   }
 
-  // 5) Scenes + their tokens. Scenes first with the remapped id, then
-  //    tokens pointing at that new scene_id and remapped npc_id. Player
-  //    references (token_type='pc', character_id) get nulled — they
-  //    belong to the original campaign's members.
-  for (const { scene, tokens } of snap.scenes) {
-    const newSceneId = sceneIdMap.get(scene.id)!
-    const { error: sErr } = await supabase.from('tactical_scenes').insert([{ ...scene, id: newSceneId, campaign_id: targetCampaignId }])
-    if (sErr) { errors.push(`scene ${scene.name}: ${sErr.message}`); continue }
-    if (tokens.length > 0) {
-      const remapped = tokens.map((t: any) => {
-        const out = { ...t, id: newId(), scene_id: newSceneId }
-        if (t.npc_id) out.npc_id = npcIdMap.get(t.npc_id) ?? null
-        if (t.character_id) out.character_id = null  // target has different players
-        return out
-      })
-      const { error: tErr } = await supabase.from('scene_tokens').insert(remapped)
-      if (tErr) errors.push(`scene ${scene.name} tokens: ${tErr.message}`)
+  // 5) Scenes + their tokens — same single-batch shape as restore.
+  //    Scenes go in one INSERT (with remapped ids), then ALL tokens
+  //    go in another (pointing at the new scene_id + remapped npc_id;
+  //    PC references nulled since the target campaign has different
+  //    members).
+  if (snap.scenes.length > 0) {
+    const sceneRows = snap.scenes.map(({ scene }) => ({
+      ...scene,
+      id: sceneIdMap.get(scene.id),
+      campaign_id: targetCampaignId,
+    }))
+    const { error: sErr } = await supabase.from('tactical_scenes').insert(sceneRows)
+    if (sErr) {
+      errors.push(`scenes: ${sErr.message}`)
+    } else {
+      const allTokens: any[] = []
+      for (const { scene, tokens } of snap.scenes) {
+        const newSceneId = sceneIdMap.get(scene.id)!
+        for (const t of tokens) {
+          const out = { ...t, id: newId(), scene_id: newSceneId }
+          if (t.npc_id) out.npc_id = npcIdMap.get(t.npc_id) ?? null
+          if (t.character_id) out.character_id = null
+          allTokens.push(out)
+        }
+      }
+      if (allTokens.length > 0) {
+        const { error: tErr } = await supabase.from('scene_tokens').insert(allTokens)
+        if (tErr) errors.push(`tokens: ${tErr.message}`)
+      }
     }
   }
 

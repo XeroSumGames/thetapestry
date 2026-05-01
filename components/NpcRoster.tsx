@@ -365,9 +365,16 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     setNpcs(renumbered)
     setDragId(null)
     setDragOverId(null)
-    await Promise.all(renumbered.map(n =>
-      supabase.from('campaign_npcs').update({ sort_order: n.sort_order }).eq('id', n.id)
-    ))
+    // Only persist rows whose sort_order actually changed. A drag from
+    // index 2 → 5 only mutates positions 2..5 — the rest of the roster
+    // keeps its existing sort_order, so we skip those updates.
+    const prevOrder = new Map(npcs.map(n => [n.id, n.sort_order ?? null]))
+    const dirty = renumbered.filter(n => prevOrder.get(n.id) !== n.sort_order)
+    if (dirty.length > 0) {
+      await Promise.all(dirty.map(n =>
+        supabase.from('campaign_npcs').update({ sort_order: n.sort_order }).eq('id', n.id)
+      ))
+    }
   }
 
   useEffect(() => {
@@ -564,9 +571,14 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   async function renameFolder(oldName: string, newName: string) {
     if (!newName.trim() || newName.trim() === oldName) { setRenamingFolder(null); return }
     const trimmed = newName.trim()
-    await Promise.all(npcs.filter(n => (n.folder ?? 'Uncategorized') === oldName).map(n =>
-      supabase.from('campaign_npcs').update({ folder: trimmed }).eq('id', n.id)
-    ))
+    // Single UPDATE…IN — every NPC in the old folder gets the same
+    // new value, so collapse the per-row Promise.all into one query.
+    const ids = npcs
+      .filter(n => (n.folder ?? 'Uncategorized') === oldName)
+      .map(n => n.id)
+    if (ids.length > 0) {
+      await supabase.from('campaign_npcs').update({ folder: trimmed }).in('id', ids)
+    }
     setFolderOrder(prev => {
       const next = prev.map(f => f === oldName ? trimmed : f)
       if (typeof window !== 'undefined') localStorage.setItem(`npc_folder_order_${campaignId}`, JSON.stringify(next))
