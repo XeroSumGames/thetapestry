@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { WizardState, getCumulativeAttributes, getCumulativeSkills } from '../../lib/xse-engine'
 import { ATTRIBUTE_LABELS, COMPLICATIONS, MOTIVATIONS, deriveSecondaryStats, AttributeName } from '../../lib/xse-schema'
+import { ALL_WEAPONS } from '../../lib/weapons'
 import { resizeImage } from '../../lib/image-utils'
 import PrintSheet from './PrintSheet'
 
@@ -185,22 +186,52 @@ export default function StepNine({ state, onChange }: Props) {
         </div>
       )}
 
-      {/* Weapons & gear */}
+      {/* Weapons & gear — Primary + Secondary are now editable
+          dropdowns so the player can swap their seeded/picked
+          loadout from the Final Touch screen without backtracking
+          through Step 8. Other fields stay readonly. */}
       <div style={section}>
         <div style={sectionTitle}>Weapons &amp; gear</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          {[
-            ['Primary weapon',   state.weaponPrimary],
-            ['Secondary weapon', state.weaponSecondary],
+          {/* Primary weapon dropdown */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <label style={fieldLabel}>Primary weapon</label>
+            <select value={state.weaponPrimary}
+              onChange={e => onChange({ weaponPrimary: e.target.value, primaryAmmo: 0 })}
+              style={{ ...fieldInput, appearance: 'none', cursor: 'pointer' }}>
+              <option value="">— None —</option>
+              {ALL_WEAPONS.map(w => (
+                <option key={w.name} value={w.name}>
+                  {w.name} ({w.category} · {w.damage})
+                </option>
+              ))}
+            </select>
+          </div>
+          {/* Secondary weapon dropdown */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <label style={fieldLabel}>Secondary weapon</label>
+            <select value={state.weaponSecondary}
+              onChange={e => onChange({ weaponSecondary: e.target.value, secondaryAmmo: 0 })}
+              style={{ ...fieldInput, appearance: 'none', cursor: 'pointer' }}>
+              <option value="">— None —</option>
+              {ALL_WEAPONS.map(w => (
+                <option key={w.name} value={w.name}>
+                  {w.name} ({w.category} · {w.damage})
+                </option>
+              ))}
+            </select>
+          </div>
+          {/* Ammo — readonly (set on Step 8 via the Roll 1d3 button) */}
+          {([
             ['Primary ammo',     state.primaryAmmo ? `${state.primaryAmmo} reload${state.primaryAmmo > 1 ? 's' : ''}` : '—'],
             ['Secondary ammo',   state.secondaryAmmo ? `${state.secondaryAmmo} reload${state.secondaryAmmo > 1 ? 's' : ''}` : '—'],
             ['Equipment',        state.equipment],
             ['Incidental item',  state.incidentalItem],
             ['Rations',          state.rations],
-          ].map(([label, value]) => (
-            <div key={String(label)} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+          ] as [string, string][]).map(([label, value]) => (
+            <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
               <label style={fieldLabel}>{label}</label>
-              <input style={{ ...fieldInput, opacity: String(label).includes('ammo') ? 0.5 : 1 }} defaultValue={String(value)} readOnly={String(label).includes('ammo')} />
+              <input style={{ ...fieldInput, opacity: label.includes('ammo') ? 0.5 : 1 }} defaultValue={value} readOnly={label.includes('ammo')} />
             </div>
           ))}
         </div>

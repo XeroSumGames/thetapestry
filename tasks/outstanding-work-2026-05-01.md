@@ -125,15 +125,9 @@ Ready to pick up; each is self-contained.
 
 ### Character creation gaps
 - [ ] **Tooltips throughout character creation** — hover/tap explanations on skills, attributes (RAPID), and other game terms so new players understand what each thing does without leaving the page.
-- [ ] **Overhaul "What They Have" / Weapons + Equipment step.** Current layout is unwieldy AND only includes Melee + Ranged. Missing Heavy Weapons, Demolitions, Explosives, future categories. Redesign:
-  - Tabbed or filtered category picker covering ALL weapon families (Melee / Ranged / Heavy / Explosives / etc.)
-  - Search across the full weapon catalog
-  - Compact card / row layout — fewer dense fields per item, cleaner secondary stats
-  - Equipment side gets the same treatment (categorized, searchable)
-  - Stays compatible with Paradigm + Random flows that pre-seed weapons
-  - Every character creator hits this surface
-- [ ] **Clean up Weapons/Equipment page** — superseded by overhaul above; keep until overhaul ships.
-- [ ] **Weapon dropdowns on Final Touch screen** — let players swap their seeded/picked weapons via a dropdown selector instead of being locked into the default loadout.
+- [x] **Overhaul "What They Have" / Weapons + Equipment step** — ✅ shipped 2026-05-01. StepEight now imports from `lib/weapons.ts` (canonical 42-weapon catalog covering Melee / Ranged / Heavy / Explosive). 5 tabs + search input on each weapon section. Compact single-row layout per weapon. Equipment picker gains rarity tabs + search. Pre-existing `fontSize: '8.5px'` guardrail violations fixed in the rebuild.
+- [x] **Clean up Weapons/Equipment page** — closed alongside the overhaul above.
+- [x] **Weapon dropdowns on Final Touch screen** — ✅ shipped 2026-05-01. StepNine's Primary + Secondary weapon fields are now `<select>` dropdowns over the full catalog (other fields stay readonly).
 - [ ] **CDP tracker boxes** (partially fixed; finish).
 
 ### Map / pins
