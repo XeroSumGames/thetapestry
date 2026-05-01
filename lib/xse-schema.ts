@@ -23,7 +23,7 @@ export type ItemTrait =
   | 'Stunned'
   | 'Tracking'
   | 'Unwieldy';
-export type CreationMethod = 'backstory' | 'paradigm' | 'pregen';
+export type CreationMethod = 'backstory' | 'pregen';
 
 // ----------------------------
 // ATTRIBUTE MODIFIER TABLE
@@ -669,7 +669,6 @@ export interface XSECharacter {
 
   // Creation
   creationMethod: CreationMethod;
-  paradigmName?: string;
 
   // Attributes
   rapid: Record<AttributeName, AttributeValue>;

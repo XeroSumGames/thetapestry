@@ -157,8 +157,6 @@ export default function RandomCharacterPage() {
       setStatus('Saving...')
 
       const character = buildCharacter(state)
-      character.paradigmName = paradigm.name
-      character.creationMethod = 'paradigm'
 
       const { error, data: newChar } = await supabase.from('characters').insert({
         user_id: user.id,
