@@ -26,6 +26,8 @@ interface LfgPost {
   body: string
   setting: string | null
   schedule: string | null
+  moderation_status: 'pending' | 'approved' | 'rejected'
+  moderator_notes: string | null
   created_at: string
   updated_at: string
 }
@@ -323,7 +325,7 @@ export default function LfgPage() {
     if (!myId) return
     if (!draft.title.trim() || !draft.body.trim() || saving) return
     setSaving(true)
-    const payload = {
+    const payload: Record<string, any> = {
       kind: draft.kind,
       title: draft.title.trim(),
       body: draft.body.trim(),
@@ -332,6 +334,12 @@ export default function LfgPage() {
       // editing one snaps it to the slug picker (or Global if unknown).
       setting: draft.scope === 'setting' ? draft.setting : null,
       schedule: draft.schedule.trim() || null,
+      // Phase 4B: LFG has no campaign scope (it's cross-campaign by
+      // definition), so every post queues for thriver review. Edits
+      // re-queue too — content changed, prior approval no longer holds.
+      moderation_status: 'pending',
+      approved_by: null,
+      approved_at: null,
     }
     if (editingId) {
       const { error } = await supabase.from('lfg_posts').update(payload).eq('id', editingId)
@@ -367,6 +375,10 @@ export default function LfgPage() {
     return posts.filter(p => p.setting === settingFilter)
   }, [posts, settingFilter])
   const visible = filter === 'all' ? settingFiltered : settingFiltered.filter(p => p.kind === filter)
+  // Author banner counts. LFG has no campaign scope, so every post
+  // queues — non-zero counts here are normal, not exceptional.
+  const myPendingCount = posts.filter(p => p.author_user_id === myId && p.moderation_status === 'pending').length
+  const myRejectedCount = posts.filter(p => p.author_user_id === myId && p.moderation_status === 'rejected').length
   // Per-chip counts for the setting strip — respects the active kind filter
   // so the badge numbers match what'll actually show.
   const settingCounts = useMemo(() => {
@@ -417,6 +429,20 @@ export default function LfgPage() {
           </button>
         )}
       </div>
+
+      {/* Author moderation banner. Every LFG post queues, so this is
+          the user's own pending list. */}
+      {(myPendingCount > 0 || myRejectedCount > 0) && (
+        <div style={{ background: '#2a2010', border: '1px solid #5a4a1b', borderLeft: '3px solid #EF9F27', borderRadius: '4px', padding: '10px 14px', marginBottom: '1rem', fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+          {myPendingCount > 0 && (
+            <span>⏳ You have {myPendingCount} post{myPendingCount > 1 ? 's' : ''} awaiting Thriver review.</span>
+          )}
+          {myPendingCount > 0 && myRejectedCount > 0 && <span> </span>}
+          {myRejectedCount > 0 && (
+            <span style={{ color: '#f5a89a' }}>✗ {myRejectedCount} post{myRejectedCount > 1 ? 's' : ''} not approved.</span>
+          )}
+        </div>
+      )}
 
       {/* Composer */}
       {composing && (
@@ -543,6 +569,16 @@ export default function LfgPage() {
                   <span style={{ fontSize: '13px', color: '#cce0f5' }}>by {p.author_username}</span>
                   <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
                   <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTimestamp(p.updated_at)}</span>
+                  {p.moderation_status === 'pending' && (
+                    <span style={{ padding: '1px 8px', background: '#2a2010', color: '#EF9F27', border: '1px solid #EF9F27', borderRadius: '999px', fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                      ⏳ Pending review
+                    </span>
+                  )}
+                  {p.moderation_status === 'rejected' && (
+                    <span style={{ padding: '1px 8px', background: '#2a1010', color: '#f5a89a', border: '1px solid #c0392b', borderRadius: '999px', fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                      ✗ Rejected
+                    </span>
+                  )}
                 </div>
                 <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '8px' }}>
                   {p.title}

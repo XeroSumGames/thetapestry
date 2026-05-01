@@ -53,7 +53,7 @@ const navLink: React.CSSProperties = {
 }
 
 export default function ModerationPage() {
-  const [section, setSection] = useState<'rumors' | 'users' | 'npcs' | 'communities' | 'modules'>('users')
+  const [section, setSection] = useState<'rumors' | 'users' | 'npcs' | 'communities' | 'modules' | 'forums' | 'warstories' | 'lfg'>('users')
   const [pins, setPins] = useState<Pin[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending')
@@ -70,6 +70,16 @@ export default function ModerationPage() {
   const [communitiesLoading, setCommunitiesLoading] = useState(false)
   const [modules, setModules] = useState<any[]>([])
   const [modulesLoading, setModulesLoading] = useState(false)
+  // Phase 4B — three new Campfire moderation queues. Same shape as
+  // world_communities: text moderation_status with pending/approved/
+  // rejected, approve writes approved_by + approved_at. RLS for all
+  // three tables lets thrivers SELECT/UPDATE.
+  const [forumThreads, setForumThreads] = useState<any[]>([])
+  const [forumsLoading, setForumsLoading] = useState(false)
+  const [warStories, setWarStories] = useState<any[]>([])
+  const [warStoriesLoading, setWarStoriesLoading] = useState(false)
+  const [lfgPosts, setLfgPosts] = useState<any[]>([])
+  const [lfgLoading, setLfgLoading] = useState(false)
   // Role check — all four queues on this page are gated by an RLS
   // policy that requires profiles.role = 'thriver'. Non-Thrivers see
   // 0 rows silently, which is a trap. We pull the role once on mount
@@ -80,18 +90,21 @@ export default function ModerationPage() {
   // when there's something waiting. Users counts "new in last 7
   // days" (no moderation status concept there); rumors / npcs /
   // communities count actual pending rows.
-  const [pendingCounts, setPendingCounts] = useState<{ users: number; rumors: number; npcs: number; communities: number; modules: number }>({ users: 0, rumors: 0, npcs: 0, communities: 0, modules: 0 })
+  const [pendingCounts, setPendingCounts] = useState<{ users: number; rumors: number; npcs: number; communities: number; modules: number; forums: number; warstories: number; lfg: number }>({ users: 0, rumors: 0, npcs: 0, communities: 0, modules: 0, forums: 0, warstories: 0, lfg: 0 })
   const router = useRouter()
   const supabase = createClient()
 
   async function loadPendingCounts() {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const [rumorsRes, npcsRes, commsRes, usersRes, modulesRes] = await Promise.all([
+    const [rumorsRes, npcsRes, commsRes, usersRes, modulesRes, forumsRes, warstoriesRes, lfgRes] = await Promise.all([
       supabase.from('map_pins').select('id', { count: 'exact', head: true }).eq('pin_type', 'rumor').eq('status', 'pending'),
       supabase.from('world_npcs').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('world_communities').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
       supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo),
       supabase.from('modules').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending').eq('visibility', 'listed'),
+      supabase.from('forum_threads').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
+      supabase.from('war_stories').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
+      supabase.from('lfg_posts').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
     ])
     setPendingCounts({
       rumors: rumorsRes.count ?? 0,
@@ -99,6 +112,9 @@ export default function ModerationPage() {
       communities: commsRes.count ?? 0,
       users: usersRes.count ?? 0,
       modules: modulesRes.count ?? 0,
+      forums: forumsRes.count ?? 0,
+      warstories: warstoriesRes.count ?? 0,
+      lfg: lfgRes.count ?? 0,
     })
   }
 
@@ -131,6 +147,9 @@ export default function ModerationPage() {
     if (section === 'npcs') loadWorldNpcs()
     if (section === 'communities') loadWorldCommunities()
     if (section === 'modules') loadModules()
+    if (section === 'forums') loadForumThreads()
+    if (section === 'warstories') loadWarStories()
+    if (section === 'lfg') loadLfgPosts()
   }, [section, filter])
 
   async function loadWorldNpcs() {
@@ -268,6 +287,149 @@ export default function ModerationPage() {
     setActing(null)
   }
 
+  // ── Phase 4B: Campfire moderation loaders ─────────────────────────
+  // Each loader does a plain SELECT (no embed-join) plus a single
+  // batched profiles lookup for author usernames. Mirrors the
+  // world_communities pattern in this same file. Filter is the shared
+  // pending/approved/rejected state.
+
+  async function loadForumThreads() {
+    setForumsLoading(true)
+    const { data, error } = await supabase
+      .from('forum_threads')
+      .select('*')
+      .eq('moderation_status', filter)
+      .order('created_at', { ascending: false })
+    if (error) { setForumsLoading(false); setForumThreads([]); return }
+    const rows = data ?? []
+    const authorIds = Array.from(new Set(rows.map((r: any) => r.author_user_id).filter(Boolean)))
+    const campaignIds = Array.from(new Set(rows.map((r: any) => r.campaign_id).filter(Boolean)))
+    const [profsRes, campsRes] = await Promise.all([
+      authorIds.length > 0 ? supabase.from('profiles').select('id, username').in('id', authorIds) : Promise.resolve({ data: [] }),
+      campaignIds.length > 0 ? supabase.from('campaigns').select('id, name').in('id', campaignIds) : Promise.resolve({ data: [] }),
+    ])
+    const profMap = new Map((profsRes.data ?? []).map((p: any) => [p.id, p.username]))
+    const campMap = new Map((campsRes.data ?? []).map((c: any) => [c.id, c.name]))
+    setForumThreads(rows.map((r: any) => ({
+      ...r,
+      author_username: profMap.get(r.author_user_id) ?? 'unknown',
+      campaign_name: r.campaign_id ? campMap.get(r.campaign_id) ?? null : null,
+    })))
+    setForumsLoading(false)
+  }
+
+  async function handleForumAction(id: string, status: 'approved' | 'rejected') {
+    setActing(id)
+    const { user } = await getCachedAuth()
+    const { error } = await supabase.from('forum_threads').update({
+      moderation_status: status,
+      approved_by: user?.id ?? null,
+      approved_at: new Date().toISOString(),
+    }).eq('id', id)
+    if (error) { alert(`Moderation action failed: ${error.message}`); setActing(null); return }
+    setForumThreads(prev => prev.filter(t => t.id !== id))
+    setActing(null)
+  }
+
+  async function handleForumDelete(id: string) {
+    if (!confirm('Permanently delete this thread? This also removes all replies.')) return
+    setActing(id)
+    const { error } = await supabase.from('forum_threads').delete().eq('id', id)
+    if (error) { alert(`Delete failed: ${error.message}`); setActing(null); return }
+    setForumThreads(prev => prev.filter(t => t.id !== id))
+    setActing(null)
+  }
+
+  async function loadWarStories() {
+    setWarStoriesLoading(true)
+    const { data, error } = await supabase
+      .from('war_stories')
+      .select('*')
+      .eq('moderation_status', filter)
+      .order('created_at', { ascending: false })
+    if (error) { setWarStoriesLoading(false); setWarStories([]); return }
+    const rows = data ?? []
+    const authorIds = Array.from(new Set(rows.map((r: any) => r.author_user_id).filter(Boolean)))
+    const campaignIds = Array.from(new Set(rows.map((r: any) => r.campaign_id).filter(Boolean)))
+    const [profsRes, campsRes] = await Promise.all([
+      authorIds.length > 0 ? supabase.from('profiles').select('id, username').in('id', authorIds) : Promise.resolve({ data: [] }),
+      campaignIds.length > 0 ? supabase.from('campaigns').select('id, name').in('id', campaignIds) : Promise.resolve({ data: [] }),
+    ])
+    const profMap = new Map((profsRes.data ?? []).map((p: any) => [p.id, p.username]))
+    const campMap = new Map((campsRes.data ?? []).map((c: any) => [c.id, c.name]))
+    setWarStories(rows.map((r: any) => ({
+      ...r,
+      author_username: profMap.get(r.author_user_id) ?? 'unknown',
+      campaign_name: r.campaign_id ? campMap.get(r.campaign_id) ?? null : null,
+    })))
+    setWarStoriesLoading(false)
+  }
+
+  async function handleWarStoryAction(id: string, status: 'approved' | 'rejected') {
+    setActing(id)
+    const { user } = await getCachedAuth()
+    const { error } = await supabase.from('war_stories').update({
+      moderation_status: status,
+      approved_by: user?.id ?? null,
+      approved_at: new Date().toISOString(),
+    }).eq('id', id)
+    if (error) { alert(`Moderation action failed: ${error.message}`); setActing(null); return }
+    setWarStories(prev => prev.filter(s => s.id !== id))
+    setActing(null)
+  }
+
+  async function handleWarStoryDelete(id: string) {
+    if (!confirm('Permanently delete this story? Attachments are NOT auto-cleaned (manual S3 cleanup if needed).')) return
+    setActing(id)
+    const { error } = await supabase.from('war_stories').delete().eq('id', id)
+    if (error) { alert(`Delete failed: ${error.message}`); setActing(null); return }
+    setWarStories(prev => prev.filter(s => s.id !== id))
+    setActing(null)
+  }
+
+  async function loadLfgPosts() {
+    setLfgLoading(true)
+    const { data, error } = await supabase
+      .from('lfg_posts')
+      .select('*')
+      .eq('moderation_status', filter)
+      .order('created_at', { ascending: false })
+    if (error) { setLfgLoading(false); setLfgPosts([]); return }
+    const rows = data ?? []
+    const authorIds = Array.from(new Set(rows.map((r: any) => r.author_user_id).filter(Boolean)))
+    const profsRes = authorIds.length > 0
+      ? await supabase.from('profiles').select('id, username').in('id', authorIds)
+      : { data: [] as any[] }
+    const profMap = new Map((profsRes.data ?? []).map((p: any) => [p.id, p.username]))
+    setLfgPosts(rows.map((r: any) => ({
+      ...r,
+      author_username: profMap.get(r.author_user_id) ?? 'unknown',
+    })))
+    setLfgLoading(false)
+  }
+
+  async function handleLfgAction(id: string, status: 'approved' | 'rejected') {
+    setActing(id)
+    const { user } = await getCachedAuth()
+    const { error } = await supabase.from('lfg_posts').update({
+      moderation_status: status,
+      approved_by: user?.id ?? null,
+      approved_at: new Date().toISOString(),
+    }).eq('id', id)
+    if (error) { alert(`Moderation action failed: ${error.message}`); setActing(null); return }
+    setLfgPosts(prev => prev.filter(p => p.id !== id))
+    setActing(null)
+  }
+
+  async function handleLfgDelete(id: string) {
+    if (!confirm('Permanently delete this LFG post? Attached interest rows go too.')) return
+    setActing(id)
+    const { error } = await supabase.from('lfg_posts').delete().eq('id', id)
+    if (error) { alert(`Delete failed: ${error.message}`); setActing(null); return }
+    setLfgPosts(prev => prev.filter(p => p.id !== id))
+    setActing(null)
+  }
+
   async function load() {
     setLoading(true)
     const { data: rawData } = await supabase
@@ -396,13 +558,20 @@ export default function ModerationPage() {
           tab keeps its red accent so the user can tell where they
           are. Count badge appears next to the label. */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        {(['users', 'rumors', 'npcs', 'communities', 'modules'] as const).map(s => {
+        {(['users', 'rumors', 'npcs', 'communities', 'modules', 'forums', 'warstories', 'lfg'] as const).map(s => {
           const count = pendingCounts[s]
           const hasPending = count > 0
           const isActive = section === s
           const borderColor = isActive ? '#c0392b' : (hasPending ? '#2d5a1b' : '#3a3a3a')
           const color = isActive ? '#f5a89a' : (hasPending ? '#7fc458' : '#d4cfc9')
-          const label = s === 'rumors' ? 'Rumor Queue' : s === 'users' ? 'Users' : s === 'npcs' ? 'NPCs' : s === 'communities' ? '🌐 Communities' : '📦 Modules'
+          const label = s === 'rumors' ? 'Rumor Queue'
+            : s === 'users' ? 'Users'
+            : s === 'npcs' ? 'NPCs'
+            : s === 'communities' ? '🌐 Communities'
+            : s === 'modules' ? '📦 Modules'
+            : s === 'forums' ? '💬 Forums'
+            : s === 'warstories' ? '🎭 War Stories'
+            : '🎲 LFG'
           return (
             <button key={s} onClick={() => setSection(s)} style={{
               padding: '7px 16px',
@@ -807,8 +976,185 @@ export default function ModerationPage() {
         </>
       )}
 
+      {/* ── FORUMS (Phase 4B) ── */}
+      {section === 'forums' && (
+        <CampfireQueue
+          title="Forum Threads"
+          icon="💬"
+          accent="#7fc458"
+          rows={forumThreads}
+          loading={forumsLoading}
+          filter={filter}
+          setFilter={setFilter}
+          acting={acting}
+          onApprove={(id) => handleForumAction(id, 'approved')}
+          onReject={(id) => handleForumAction(id, 'rejected')}
+          onDelete={handleForumDelete}
+          renderRow={(t: any) => (
+            <>
+              <div style={{ fontSize: '19px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '4px' }}>
+                💬 {t.title}
+              </div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px' }}>
+                by <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{t.author_username}</span> · {formatDate(t.created_at)} · <span style={{ color: '#7fc458', textTransform: 'uppercase', letterSpacing: '.04em' }}>{t.category}</span>
+                {t.setting && <span style={{ color: '#7ab3d4', marginLeft: '6px' }}>· {t.setting}</span>}
+                {t.campaign_name && <span style={{ color: '#b87333', marginLeft: '6px' }}>· {t.campaign_name}</span>}
+              </div>
+              <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a', whiteSpace: 'pre-wrap' }}>
+                {t.body}
+              </div>
+            </>
+          )}
+        />
+      )}
+
+      {/* ── WAR STORIES (Phase 4B) ── */}
+      {section === 'warstories' && (
+        <CampfireQueue
+          title="War Stories"
+          icon="🎭"
+          accent="#b87333"
+          rows={warStories}
+          loading={warStoriesLoading}
+          filter={filter}
+          setFilter={setFilter}
+          acting={acting}
+          onApprove={(id) => handleWarStoryAction(id, 'approved')}
+          onReject={(id) => handleWarStoryAction(id, 'rejected')}
+          onDelete={handleWarStoryDelete}
+          renderRow={(s: any) => (
+            <>
+              <div style={{ fontSize: '19px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '4px' }}>
+                🎭 {s.title}
+              </div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px' }}>
+                by <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{s.author_username}</span> · {formatDate(s.created_at)}
+                {s.setting && <span style={{ color: '#7ab3d4', marginLeft: '6px' }}>· {s.setting}</span>}
+                {s.campaign_name && <span style={{ color: '#b87333', marginLeft: '6px' }}>· {s.campaign_name}</span>}
+              </div>
+              <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a', whiteSpace: 'pre-wrap' }}>
+                {s.body}
+              </div>
+              {Array.isArray(s.attachments) && s.attachments.length > 0 && (
+                <div style={{ fontSize: '13px', color: '#7ab3d4', marginBottom: '8px' }}>
+                  📎 {s.attachments.length} attachment{s.attachments.length !== 1 ? 's' : ''}
+                </div>
+              )}
+            </>
+          )}
+        />
+      )}
+
+      {/* ── LFG (Phase 4B) ── */}
+      {section === 'lfg' && (
+        <CampfireQueue
+          title="Looking for Group"
+          icon="🎲"
+          accent="#7ab3d4"
+          rows={lfgPosts}
+          loading={lfgLoading}
+          filter={filter}
+          setFilter={setFilter}
+          acting={acting}
+          onApprove={(id) => handleLfgAction(id, 'approved')}
+          onReject={(id) => handleLfgAction(id, 'rejected')}
+          onDelete={handleLfgDelete}
+          renderRow={(p: any) => (
+            <>
+              <div style={{ fontSize: '19px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '4px' }}>
+                🎲 {p.title}
+              </div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px' }}>
+                by <span style={{ color: '#f5f2ee', fontWeight: 600 }}>{p.author_username}</span> · {formatDate(p.created_at)} · <span style={{ color: '#7ab3d4', textTransform: 'uppercase', letterSpacing: '.04em' }}>{p.kind === 'gm_seeking_players' ? 'GM seeking players' : 'Player seeking game'}</span>
+                {p.setting && <span style={{ color: '#7ab3d4', marginLeft: '6px' }}>· {p.setting}</span>}
+                {p.schedule && <span style={{ color: '#7fc458', marginLeft: '6px' }}>· {p.schedule}</span>}
+              </div>
+              <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '8px', padding: '8px 10px', background: '#242424', borderRadius: '3px', borderLeft: '2px solid #3a3a3a', whiteSpace: 'pre-wrap' }}>
+                {p.body}
+              </div>
+            </>
+          )}
+        />
+      )}
+
       </>)}
 
     </div>
   )
 }
+
+// Reusable queue UI for the three Campfire moderation surfaces. Same
+// shape as the inline world_communities + modules blocks above (filter
+// pills, count line, empty state, row list with action buttons), just
+// generic over the row content via the renderRow prop.
+function CampfireQueue({
+  title, icon, accent, rows, loading, filter, setFilter, acting,
+  onApprove, onReject, onDelete, renderRow,
+}: {
+  title: string; icon: string; accent: string;
+  rows: any[]; loading: boolean;
+  filter: 'pending' | 'approved' | 'rejected';
+  setFilter: (f: 'pending' | 'approved' | 'rejected') => void;
+  acting: string | null;
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
+  onDelete: (id: string) => void;
+  renderRow: (row: any) => React.ReactNode;
+}) {
+  return (
+    <>
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem' }}>
+        {(['pending', 'approved', 'rejected'] as const).map(f => (
+          <button key={f} onClick={() => setFilter(f)} style={{
+            padding: '7px 16px',
+            border: `1px solid ${filter === f ? '#c0392b' : '#3a3a3a'}`,
+            background: filter === f ? '#2a1210' : '#242424',
+            color: filter === f ? '#f5a89a' : '#d4cfc9',
+            borderRadius: '3px', cursor: 'pointer',
+            fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+            letterSpacing: '.06em', textTransform: 'uppercase',
+          }}>{f}</button>
+        ))}
+      </div>
+
+      <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem' }}>
+        {loading ? 'Loading...' : `${rows.length} ${filter} ${title.toLowerCase()}`}
+      </div>
+
+      {!loading && rows.length === 0 && (
+        <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '3rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>
+          No {filter} {title.toLowerCase()}.
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {rows.map(r => (
+          <div key={r.id} style={{ padding: '14px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${filter === 'approved' ? '#7fc458' : filter === 'rejected' ? '#c0392b' : accent}`, borderRadius: '4px' }}>
+            {renderRow(r)}
+            {r.moderator_notes && (
+              <div style={{ fontSize: '13px', color: '#f5a89a', marginBottom: '8px', padding: '6px 8px', background: '#2a1010', borderRadius: '3px', border: '1px solid #c0392b' }}>
+                <span style={{ color: '#5a5550', letterSpacing: '.06em', textTransform: 'uppercase' }}>Moderator notes:</span> {r.moderator_notes}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {filter === 'pending' && (
+                <>
+                  <button onClick={() => onApprove(r.id)} disabled={acting === r.id} style={actionBtn('#2d5a1b', '#7fc458')}>Approve</button>
+                  <button onClick={() => onReject(r.id)} disabled={acting === r.id} style={actionBtn('#7a1f16', '#f5a89a')}>Reject</button>
+                </>
+              )}
+              {filter === 'approved' && (
+                <button onClick={() => onReject(r.id)} disabled={acting === r.id} style={actionBtn('#7a1f16', '#f5a89a')}>Revoke</button>
+              )}
+              {filter === 'rejected' && (
+                <button onClick={() => onApprove(r.id)} disabled={acting === r.id} style={actionBtn('#2d5a1b', '#7fc458')}>Approve</button>
+              )}
+              <button onClick={() => onDelete(r.id)} disabled={acting === r.id} style={actionBtn('#2e2e2e', '#cce0f5')}>Delete</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  )
+}
+

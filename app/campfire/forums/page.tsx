@@ -56,6 +56,8 @@ interface Thread {
   created_at: string
   setting: string | null
   campaign_id: string | null
+  moderation_status: 'pending' | 'approved' | 'rejected'
+  moderator_notes: string | null
 }
 
 interface ThreadWithAuthor extends Thread {
@@ -159,8 +161,10 @@ export default function ForumsIndexPage() {
     setSaving(true)
     // Scope collapses into the campaign_id + setting columns. Same shape
     // as War Stories: only one of campaign_id / setting is populated;
-    // global has both NULL. Phase 4B uses scope === 'campaign' as the
-    // moderation skip-review signal.
+    // global has both NULL. Phase 4B: campaign-internal posts skip
+    // review (instant approve), setting/global queue for thriver.
+    const isCampaignScope = draft.scope === 'campaign' && !!draft.campaign_id
+    const moderation_status = isCampaignScope ? 'approved' : 'pending'
     const { data, error } = await supabase.from('forum_threads').insert({
       author_user_id: myId,
       category: draft.category,
@@ -168,6 +172,10 @@ export default function ForumsIndexPage() {
       body: draft.body.trim(),
       campaign_id: draft.scope === 'campaign' ? (draft.campaign_id || null) : null,
       setting: draft.scope === 'setting' ? draft.setting : null,
+      moderation_status,
+      approved_at: isCampaignScope ? new Date().toISOString() : null,
+      // approved_by stays null for self-publish — only Thriver review
+      // sets approved_by. Convention matches world_communities.
     }).select('id').single()
     setSaving(false)
     if (error) { alert('Error: ' + error.message); return }
@@ -195,6 +203,12 @@ export default function ForumsIndexPage() {
     return threads.filter(t => t.setting === settingFilter)
   }, [threads, settingFilter])
   const visible = filter === 'all' ? settingFiltered : settingFiltered.filter(t => t.category === filter)
+  // Author banner — counts the user's own pending + rejected threads so
+  // we can surface a "your N posts are awaiting review" alert at the top
+  // of the feed. RLS already lets the author see their own pending/
+  // rejected rows alongside everyone's approved ones.
+  const myPendingCount = threads.filter(t => t.author_user_id === myId && t.moderation_status === 'pending').length
+  const myRejectedCount = threads.filter(t => t.author_user_id === myId && t.moderation_status === 'rejected').length
   // Category counts respect the active setting filter so the badge numbers
   // match what the user actually sees when they click a category.
   const counts = useMemo(() => {
@@ -244,6 +258,22 @@ export default function ForumsIndexPage() {
           </button>
         )}
       </div>
+
+      {/* Author moderation banner — surfaces own pending/rejected counts
+          so the user knows their setting/global posts are queued.
+          Campaign-scoped posts skip review entirely so they never
+          contribute to this count. */}
+      {(myPendingCount > 0 || myRejectedCount > 0) && (
+        <div style={{ background: '#2a2010', border: '1px solid #5a4a1b', borderLeft: '3px solid #EF9F27', borderRadius: '4px', padding: '10px 14px', marginBottom: '1rem', fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+          {myPendingCount > 0 && (
+            <span>⏳ You have {myPendingCount} thread{myPendingCount > 1 ? 's' : ''} awaiting Thriver review.</span>
+          )}
+          {myPendingCount > 0 && myRejectedCount > 0 && <span> </span>}
+          {myRejectedCount > 0 && (
+            <span style={{ color: '#f5a89a' }}>✗ {myRejectedCount} thread{myRejectedCount > 1 ? 's' : ''} were not approved.</span>
+          )}
+        </div>
+      )}
 
       {/* Composer */}
       {composing && (
@@ -438,6 +468,20 @@ export default function ForumsIndexPage() {
                     {t.campaign_name && (
                       <span style={{ padding: '1px 8px', background: '#3a2516', color: '#b87333', border: '1px solid #b8733355', borderRadius: '999px', fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
                         👥 {t.campaign_name}
+                      </span>
+                    )}
+                    {/* Moderation status — only rendered for non-approved
+                        rows (approved is the default visual). RLS ensures
+                        only the author or a thriver sees pending/rejected
+                        rows in the first place. */}
+                    {t.moderation_status === 'pending' && (
+                      <span style={{ padding: '1px 8px', background: '#2a2010', color: '#EF9F27', border: '1px solid #EF9F27', borderRadius: '999px', fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                        ⏳ Pending review
+                      </span>
+                    )}
+                    {t.moderation_status === 'rejected' && (
+                      <span style={{ padding: '1px 8px', background: '#2a1010', color: '#f5a89a', border: '1px solid #c0392b', borderRadius: '999px', fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                        ✗ Rejected
                       </span>
                     )}
                     <span style={{ fontSize: '13px', color: '#cce0f5' }}>· {t.author_username}</span>

@@ -139,6 +139,109 @@ The campaign_id tag is purely informational in 4A.5. **RLS still says "anyone si
 
 ---
 
+## Phase 4B — Promotion + moderation flow (added in same session)
+
+Adds the world_communities-style moderation pattern (`moderation_status` / `approved_by` / `approved_at` / `moderator_notes`) to all three Campfire feed tables, tightens SELECT RLS so pending/rejected rows are only visible to author + thrivers, and extends `/moderate` with three new queue sections.
+
+### Migration
+
+Apply `sql/campfire-moderation.sql` to prod. Adds the 4 columns to each of `forum_threads` / `war_stories` / `lfg_posts` plus index on (moderation_status, created_at). The default for the new column is `'approved'` so all existing rows stay public — no content goes dark on apply.
+
+The migration also REPLACES the SELECT policies on all three tables with the three-tier read pattern (approved-public, own, thriver). The original `ft_select` / `ws_select` / `lfg_select` policies are dropped and replaced. Plus a new `*_update_thriver` policy on each table so the moderation page can flip status.
+
+### 12. Compose gating per surface
+
+**Setup:** sign in as a non-Thriver user. Have at least one campaign you GM or are a member of.
+
+#### 12a. Forums — Campaign scope = instant publish
+1. /campfire/forums → New Thread → Campaign scope (default), pick a campaign.
+2. Title + body, Post.
+3. After redirect, navigate back to /campfire/forums. Thread should appear immediately with NO "⏳ Pending review" pill — it's instantly approved.
+4. DB sanity: `SELECT moderation_status FROM forum_threads ORDER BY created_at DESC LIMIT 1;` → `approved`.
+
+#### 12b. Forums — Setting scope = pending
+1. New Thread → Setting scope, pick District Zero.
+2. Post → after redirect, the thread row shows the `⏳ Pending review` pill in the meta strip.
+3. The author banner at the top of /campfire/forums says "⏳ You have 1 thread awaiting Thriver review."
+4. Sign in as a different non-Thriver user (in another browser/incognito). Navigate to /campfire/forums. The pending thread should NOT be visible — RLS hides it.
+5. DB sanity: row has `moderation_status='pending'`, `approved_by=NULL`, `approved_at=NULL`.
+
+#### 12c. Forums — Global scope = pending
+Same as 12b but with Global scope. Row tagged neither setting nor campaign.
+
+#### 12d. War Stories — same three flows
+Repeat 12a-c on /campfire/war-stories. Same expected behavior:
+- Campaign-scoped → instant publish, no pending pill.
+- Setting-scoped → pending, banner shows "⏳ You have 1 story awaiting Thriver review."
+- Global-scoped → pending.
+- Re-edit a campaign-scoped story to setting scope → it should re-queue (moderation_status flips back to pending).
+
+#### 12e. LFG — every post = pending
+1. /campfire/lfg → New Post (any kind, any setting/global).
+2. Post → row shows `⏳ Pending review`. Banner appears.
+3. Other users (non-Thriver) don't see the pending row.
+4. DB sanity: every new lfg_posts insert has `moderation_status='pending'`.
+
+### 13. Author can see own pending/rejected
+
+1. As the author, /campfire/forums (or war-stories or lfg) → your own pending posts ARE visible to you, with the pending pill.
+2. Sign out and sign in as a different non-Thriver user → those same pending posts are NOT visible.
+3. RLS hat-check via Supabase SQL: `SELECT count(*) FROM forum_threads WHERE moderation_status = 'pending';` returns total when run as Thriver, returns only your own when run as non-Thriver author, returns 0 when run as a third party.
+
+### 14. /moderate — three new queue sections
+
+**Required:** sign in as a Thriver.
+
+1. /moderate → tab strip should now have 8 tabs total: Users · Rumor Queue · NPCs · 🌐 Communities · 📦 Modules · **💬 Forums** · **🎭 War Stories** · **🎲 LFG**.
+2. Pending counts on the new three tabs should reflect actual pending rows. If you posted setting/global content above, those tabs light up green with a count badge.
+3. Click 💬 Forums → see your pending threads. Each row shows title, author, category, setting/campaign tags, body excerpt, plus Approve / Reject / Delete buttons.
+4. **Approve flow:** click Approve on a pending row → row drops from the queue. Sign in as a different user, navigate to /campfire/forums → the thread is now visible publicly with no pending pill. DB: `moderation_status='approved'`, `approved_by=<thriver id>`, `approved_at=<now>`.
+5. **Reject flow:** click Reject on another pending row. Sign back in as the author → the row still shows in their own feed but with `✗ Rejected` pill instead of pending. The banner now says "✗ 1 thread not approved." (Other users still don't see rejected rows.)
+6. **Filter pills (pending/approved/rejected):** clicking each updates the queue. Approved shows previously-approved-by-thriver content. Rejected shows previously-rejected. Each has a Revoke button (approved → rejected) or Approve button (rejected → approved) for reversibility.
+7. **Delete:** the Delete button on any row in any filter permanently removes the post (RLS allows author OR thriver to delete; this is the thriver path). Confirm modal first.
+8. Repeat steps 3-7 on the **🎭 War Stories** and **🎲 LFG** tabs. Each has the same shape.
+
+### 15. Edit-flow re-queue check
+
+1. As an author, edit one of your previously-APPROVED war stories (campaign scope → setting scope).
+2. Save → the row should re-queue: `moderation_status='pending'`, `approved_by=NULL`, `approved_at=NULL`. Pending pill reappears.
+3. Reverse: edit a setting-scoped story back to campaign scope → it instant-approves. Note: this does NOT auto-restore the original `approved_by` (thriver review identity is fresh per state).
+
+### 16. Migration rollback
+
+Drop the new columns + indexes + policies safely with:
+```sql
+DROP POLICY IF EXISTS "ft_update_thriver" ON forum_threads;
+DROP POLICY IF EXISTS "ft_select_approved" ON forum_threads;
+DROP POLICY IF EXISTS "ft_select_own" ON forum_threads;
+DROP POLICY IF EXISTS "ft_select_thriver" ON forum_threads;
+-- Restore original open SELECT
+CREATE POLICY "ft_select" ON forum_threads FOR SELECT USING (auth.uid() IS NOT NULL);
+
+DROP POLICY IF EXISTS "ws_update_thriver" ON war_stories;
+DROP POLICY IF EXISTS "ws_select_approved" ON war_stories;
+DROP POLICY IF EXISTS "ws_select_own" ON war_stories;
+DROP POLICY IF EXISTS "ws_select_thriver" ON war_stories;
+CREATE POLICY "ws_select" ON war_stories FOR SELECT USING (auth.uid() IS NOT NULL);
+
+DROP POLICY IF EXISTS "lfg_update_thriver" ON lfg_posts;
+DROP POLICY IF EXISTS "lfg_select_approved" ON lfg_posts;
+DROP POLICY IF EXISTS "lfg_select_own" ON lfg_posts;
+DROP POLICY IF EXISTS "lfg_select_thriver" ON lfg_posts;
+CREATE POLICY "lfg_select" ON lfg_posts FOR SELECT USING (auth.uid() IS NOT NULL);
+
+DROP INDEX IF EXISTS idx_forum_threads_moderation;
+DROP INDEX IF EXISTS idx_war_stories_moderation;
+DROP INDEX IF EXISTS idx_lfg_posts_moderation;
+
+ALTER TABLE forum_threads DROP COLUMN IF EXISTS moderation_status, DROP COLUMN IF EXISTS approved_by, DROP COLUMN IF EXISTS approved_at, DROP COLUMN IF EXISTS moderator_notes;
+ALTER TABLE war_stories  DROP COLUMN IF EXISTS moderation_status, DROP COLUMN IF EXISTS approved_by, DROP COLUMN IF EXISTS approved_at, DROP COLUMN IF EXISTS moderator_notes;
+ALTER TABLE lfg_posts    DROP COLUMN IF EXISTS moderation_status, DROP COLUMN IF EXISTS approved_by, DROP COLUMN IF EXISTS approved_at, DROP COLUMN IF EXISTS moderator_notes;
+NOTIFY pgrst, 'reload schema';
+```
+
+---
+
 ## Open follow-ups (NOT in 4A / 4A.5 scope)
 
 These came up while building 4A — leaving them flagged for Xero to decide if/when:

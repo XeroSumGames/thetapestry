@@ -33,6 +33,8 @@ interface Story {
   body: string
   attachments: Attachment[]
   setting: string | null
+  moderation_status: 'pending' | 'approved' | 'rejected'
+  moderator_notes: string | null
   created_at: string
   updated_at: string
 }
@@ -183,12 +185,21 @@ export default function WarStoriesPage() {
     //   setting  → campaign_id null, setting set
     //   global   → both null
     // Belt-and-braces null-out the unselected one so editing a row from
-    // one scope to another doesn't leave stale data behind.
-    const payload = {
+    // one scope to another doesn't leave stale data behind. Phase 4B:
+    // campaign-scoped stories skip thriver review (instant approve);
+    // setting/global queue for moderation. Editing an existing story
+    // from setting → campaign re-approves; campaign → setting re-queues.
+    const isCampaignScope = draft.scope === 'campaign' && !!draft.campaign_id
+    const payload: Record<string, any> = {
       title: draft.title.trim(),
       body: draft.body.trim(),
       campaign_id: draft.scope === 'campaign' ? (draft.campaign_id || null) : null,
       setting: draft.scope === 'setting' ? draft.setting : null,
+      moderation_status: isCampaignScope ? 'approved' : 'pending',
+      approved_at: isCampaignScope ? new Date().toISOString() : null,
+      // Clear approved_by when re-queueing so the moderator sees a
+      // fresh review.
+      approved_by: isCampaignScope ? null : null,
     }
 
     // Determine the story id we'll upload attachments under. For edits the
@@ -302,6 +313,12 @@ export default function WarStoriesPage() {
     return map
   }, [stories])
 
+  // Author banner counts — surfaces own pending/rejected so the user
+  // knows their setting/global stories are queued. Campaign-scoped
+  // stories instant-publish so they never contribute.
+  const myPendingCount = stories.filter(s => s.author_user_id === myId && s.moderation_status === 'pending').length
+  const myRejectedCount = stories.filter(s => s.author_user_id === myId && s.moderation_status === 'rejected').length
+
   const inp: React.CSSProperties = {
     width: '100%', padding: '8px 10px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee',
@@ -345,6 +362,20 @@ export default function WarStoriesPage() {
           <div style={{ color: '#d4cfc9' }}>
             War Stories isn&apos;t live on this database yet — a Thriver needs to apply <code style={{ background: '#0f0f0f', padding: '1px 6px', borderRadius: '2px', color: '#EF9F27' }}>sql/war-stories.sql</code> (and <code style={{ background: '#0f0f0f', padding: '1px 6px', borderRadius: '2px', color: '#EF9F27' }}>sql/war-stories-attachments.sql</code> for image uploads) in Supabase. Once that&apos;s done, refresh and post away.
           </div>
+        </div>
+      )}
+
+      {/* Author moderation banner. Only setting/global stories queue;
+          campaign-scoped instant-publish so they don't appear here. */}
+      {(myPendingCount > 0 || myRejectedCount > 0) && (
+        <div style={{ background: '#2a2010', border: '1px solid #5a4a1b', borderLeft: '3px solid #EF9F27', borderRadius: '4px', padding: '10px 14px', marginBottom: '1rem', fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+          {myPendingCount > 0 && (
+            <span>⏳ You have {myPendingCount} stor{myPendingCount > 1 ? 'ies' : 'y'} awaiting Thriver review.</span>
+          )}
+          {myPendingCount > 0 && myRejectedCount > 0 && <span> </span>}
+          {myRejectedCount > 0 && (
+            <span style={{ color: '#f5a89a' }}>✗ {myRejectedCount} stor{myRejectedCount > 1 ? 'ies' : 'y'} not approved.</span>
+          )}
         </div>
       )}
 
@@ -518,6 +549,22 @@ export default function WarStoriesPage() {
                       </>
                     )
                   })()}
+                  {s.moderation_status === 'pending' && (
+                    <>
+                      <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                      <span style={{ padding: '1px 8px', background: '#2a2010', color: '#EF9F27', border: '1px solid #EF9F27', borderRadius: '3px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>
+                        ⏳ Pending review
+                      </span>
+                    </>
+                  )}
+                  {s.moderation_status === 'rejected' && (
+                    <>
+                      <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                      <span style={{ padding: '1px 8px', background: '#2a1010', color: '#f5a89a', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>
+                        ✗ Rejected
+                      </span>
+                    </>
+                  )}
                 </div>
                 <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: (s.attachments.length > 0 || isMine) ? '12px' : 0 }}>
                   {s.body}
