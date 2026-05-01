@@ -901,11 +901,11 @@ export default function CommunityMoraleModal({
               </div>
               <div style={rowFlex}>
                 <span style={label} title="Attribute Modifier — the roller's relevant Rapid Range Attribute. NPCs default to 0.">AMod</span>
-                <input type="number" value={fedAmod} onChange={e => setFedAmod(parseInt(e.target.value) || 0)} style={numInput} />
+                <input type="number" value={fedAmod} onChange={e => setFedAmod(parseInt(e.target.value, 10) || 0)} style={numInput} />
                 <span style={label} title="Skill Modifier — the roller's level in the skill used (Farming / Scavenging / Survival). NPC default 1 ('reasonable proficiency' per the rules).">SMod</span>
-                <input type="number" value={fedSmod} onChange={e => setFedSmod(parseInt(e.target.value) || 0)} style={numInput} />
+                <input type="number" value={fedSmod} onChange={e => setFedSmod(parseInt(e.target.value, 10) || 0)} style={numInput} />
                 <span style={label} title="Circumstance Modifier — any one-off GM adjustments to this specific roll (tool quality, weather, luck, etc.).">+ CMod</span>
-                <input type="number" value={fedCmod} onChange={e => setFedCmod(parseInt(e.target.value) || 0)} style={numInput} />
+                <input type="number" value={fedCmod} onChange={e => setFedCmod(parseInt(e.target.value, 10) || 0)} style={numInput} />
               </div>
             </div>
 
@@ -917,11 +917,11 @@ export default function CommunityMoraleModal({
               </div>
               <div style={rowFlex}>
                 <span style={label} title="Attribute Modifier — the roller's relevant Rapid Range Attribute. NPCs default to 0.">AMod</span>
-                <input type="number" value={clothedAmod} onChange={e => setClothedAmod(parseInt(e.target.value) || 0)} style={numInput} />
+                <input type="number" value={clothedAmod} onChange={e => setClothedAmod(parseInt(e.target.value, 10) || 0)} style={numInput} />
                 <span style={label} title="Skill Modifier — the roller's level in the skill used (Mechanic / Tinkerer). NPC default 1 ('reasonable proficiency' per the rules).">SMod</span>
-                <input type="number" value={clothedSmod} onChange={e => setClothedSmod(parseInt(e.target.value) || 0)} style={numInput} />
+                <input type="number" value={clothedSmod} onChange={e => setClothedSmod(parseInt(e.target.value, 10) || 0)} style={numInput} />
                 <span style={label} title="Circumstance Modifier — any one-off GM adjustments to this specific roll.">+ CMod</span>
-                <input type="number" value={clothedCmod} onChange={e => setClothedCmod(parseInt(e.target.value) || 0)} style={numInput} />
+                <input type="number" value={clothedCmod} onChange={e => setClothedCmod(parseInt(e.target.value, 10) || 0)} style={numInput} />
               </div>
             </div>
 
@@ -957,7 +957,7 @@ export default function CommunityMoraleModal({
                   <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(moodFromPrior), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(moodFromPrior)}</span>
                   <input type="number" value={slotMoodOverride ?? ''} placeholder="—"
-                    onChange={e => setSlotMoodOverride(e.target.value === '' ? null : parseInt(e.target.value) || 0)}
+                    onChange={e => setSlotMoodOverride(e.target.value === '' ? null : parseInt(e.target.value, 10) || 0)}
                     style={numInput} />
                 </div>
                 {/* Enough Hands */}
@@ -966,7 +966,7 @@ export default function CommunityMoraleModal({
                   <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(autoEnoughHands), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoEnoughHands)}</span>
                   <input type="number" value={slotEnoughHandsOverride ?? ''} placeholder="—"
-                    onChange={e => setSlotEnoughHandsOverride(e.target.value === '' ? null : parseInt(e.target.value) || 0)}
+                    onChange={e => setSlotEnoughHandsOverride(e.target.value === '' ? null : parseInt(e.target.value, 10) || 0)}
                     style={numInput} />
                 </div>
                 {/* A Clear Voice */}
@@ -975,7 +975,7 @@ export default function CommunityMoraleModal({
                   <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(autoClearVoice), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoClearVoice)}</span>
                   <input type="number" value={slotClearVoiceOverride ?? ''} placeholder="—"
-                    onChange={e => setSlotClearVoiceOverride(e.target.value === '' ? null : parseInt(e.target.value) || 0)}
+                    onChange={e => setSlotClearVoiceOverride(e.target.value === '' ? null : parseInt(e.target.value, 10) || 0)}
                     style={numInput} />
                 </div>
                 {/* Safety */}
@@ -984,7 +984,7 @@ export default function CommunityMoraleModal({
                   <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>auto</span>
                   <span style={{ color: cmodColor(autoSafety), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(autoSafety)}</span>
                   <input type="number" value={slotSafetyOverride ?? ''} placeholder="—"
-                    onChange={e => setSlotSafetyOverride(e.target.value === '' ? null : parseInt(e.target.value) || 0)}
+                    onChange={e => setSlotSafetyOverride(e.target.value === '' ? null : parseInt(e.target.value, 10) || 0)}
                     style={numInput} />
                 </div>
                 {/* World Events — auto-pulled from active Distemper Timeline
@@ -1027,7 +1027,7 @@ export default function CommunityMoraleModal({
                   <span style={{ ...label, color: '#5a5550', fontSize: '17px' }}>GM freeform</span>
                   <span style={{ color: cmodColor(additionalMoraleCmod), fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, minWidth: '32px', textAlign: 'right' }}>{formatCmod(additionalMoraleCmod)}</span>
                   <input type="number" value={additionalMoraleCmod}
-                    onChange={e => setAdditionalMoraleCmod(parseInt(e.target.value) || 0)}
+                    onChange={e => setAdditionalMoraleCmod(parseInt(e.target.value, 10) || 0)}
                     style={numInput} />
                 </div>
               </div>
@@ -1052,7 +1052,7 @@ export default function CommunityMoraleModal({
 
               <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <span style={label} title="The Morale roll uses the leader's Influence AMod (INF attribute value). Auto-filled from the designated leader's sheet; override if the GM has a reason.">Leader INF AMod</span>
-                <input type="number" value={moraleAmod} onChange={e => setMoraleAmod(parseInt(e.target.value) || 0)} style={numInput} />
+                <input type="number" value={moraleAmod} onChange={e => setMoraleAmod(parseInt(e.target.value, 10) || 0)} style={numInput} />
                 <span style={label} title="Pick the skill the leader is using to rally the community this week. SMod follows the selection; each option shows the leader's current level in that skill.">Skill</span>
                 <select value={moraleSkillName}
                   onChange={e => {
@@ -1070,7 +1070,7 @@ export default function CommunityMoraleModal({
                   })}
                 </select>
                 <span style={label} title="The selected skill's level. Auto-filled from the skill picker; editable for one-off GM overrides.">SMod</span>
-                <input type="number" value={moraleSmod} onChange={e => setMoraleSmod(parseInt(e.target.value) || 0)} style={numInput} />
+                <input type="number" value={moraleSmod} onChange={e => setMoraleSmod(parseInt(e.target.value, 10) || 0)} style={numInput} />
                 <div style={{ marginLeft: 'auto', fontSize: '17px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
                   Pre-roll CMod (no Fed/Clothed yet): <span style={{ color: cmodColor(moraleCmodPreview), fontWeight: 700 }}>{formatCmod(moraleCmodPreview)}</span>
                 </div>
@@ -1216,7 +1216,7 @@ export default function CommunityMoraleModal({
                       })}
                     </select>
                     <span style={{ fontSize: '17px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>SMod</span>
-                    <input type="number" value={retentionSmod} onChange={e => setRetentionSmod(parseInt(e.target.value) || 0)}
+                    <input type="number" value={retentionSmod} onChange={e => setRetentionSmod(parseInt(e.target.value, 10) || 0)}
                       style={{ width: '60px', padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '17px', fontFamily: 'Carlito, sans-serif', textAlign: 'center' }} />
                   </div>
                   <button onClick={attemptRetentionCheck}

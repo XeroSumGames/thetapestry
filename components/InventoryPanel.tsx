@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { EQUIPMENT, EquipmentItem } from '../lib/xse-schema'
 import { ALL_WEAPONS, getWeaponByName } from '../lib/weapons'
 import { computeEncumbrance, BASE_ENC_LIMIT } from '../lib/encumbrance'
@@ -81,6 +81,14 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
   const [givingItem, setGivingItem] = useState<InventoryItem | null>(null)
   const [giveQty, setGiveQty] = useState(1)
 
+  // Keep a ref to the latest inventory so confirmGive() can compute its
+  // decrement against fresh state. Without this, a realtime broadcast
+  // that mutates inventory while the give modal is open would have its
+  // change overwritten by the stale closure when the user clicks a
+  // recipient (we'd call onUpdate with the pre-broadcast snapshot).
+  const inventoryRef = useRef(inventory)
+  useEffect(() => { inventoryRef.current = inventory }, [inventory])
+
   const { weaponEnc, invEnc, currentEnc, encLimit, backpackBonus, overloaded } =
     computeEncumbrance(inventory, weaponPrimaryName, weaponSecondaryName, phyMod)
 
@@ -129,24 +137,27 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
   }
 
   function confirmGive(target: { id: string; kind: 'pc' | 'npc' | 'community' | 'vehicle' }) {
-    if (!givingItem) return
+    const item = givingItem
+    if (!item) return
     if (target.kind === 'pc' && !onGiveTo) return
     if (target.kind === 'npc' && !onGiveToNpc) return
     if (target.kind === 'community' && !onGiveToCommunity) return
     if (target.kind === 'vehicle' && !onGiveToVehicle) return
-    const qty = Math.max(1, Math.min(giveQty, givingItem.qty))
-    if (target.kind === 'pc') onGiveTo!(givingItem, target.id, qty)
-    else if (target.kind === 'npc') onGiveToNpc!(givingItem, target.id, qty)
-    else if (target.kind === 'community') onGiveToCommunity!(givingItem, target.id, qty)
-    else onGiveToVehicle!(givingItem, target.id, qty)
-    // Decrement sender by exactly the chosen qty (drop the row if all gone).
-    const idx = inventory.findIndex(i => i === givingItem || (i.name === givingItem.name && i.custom === givingItem.custom))
+    const qty = Math.max(1, Math.min(giveQty, item.qty))
+    if (target.kind === 'pc') onGiveTo!(item, target.id, qty)
+    else if (target.kind === 'npc') onGiveToNpc!(item, target.id, qty)
+    else if (target.kind === 'community') onGiveToCommunity!(item, target.id, qty)
+    else onGiveToVehicle!(item, target.id, qty)
+    // Decrement sender against the latest inventory (read via ref so a
+    // realtime update mid-modal can't be clobbered by a stale snapshot).
+    const current = inventoryRef.current
+    const idx = current.findIndex(i => i === item || (i.name === item.name && i.custom === item.custom))
     if (idx >= 0) {
-      const remaining = inventory[idx].qty - qty
+      const remaining = current[idx].qty - qty
       if (remaining <= 0) {
-        onUpdate(inventory.filter((_, j) => j !== idx))
+        onUpdate(current.filter((_, j) => j !== idx))
       } else {
-        onUpdate(inventory.map((i, j) => j === idx ? { ...i, qty: remaining } : i))
+        onUpdate(current.map((i, j) => j === idx ? { ...i, qty: remaining } : i))
       }
     }
     setGivingItem(null)
@@ -227,7 +238,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
                 <button onClick={() => setGiveQty(q => Math.max(1, q - 1))}
                   style={{ width: '22px', height: '22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', lineHeight: 1 }}>−</button>
                 <input type="number" min={1} max={givingItem.qty} value={giveQty}
-                  onChange={e => setGiveQty(Math.max(1, Math.min(givingItem.qty, parseInt(e.target.value) || 1)))}
+                  onChange={e => setGiveQty(Math.max(1, Math.min(givingItem.qty, parseInt(e.target.value, 10) || 1)))}
                   style={{ width: '50px', padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
                 <button onClick={() => setGiveQty(q => Math.min(givingItem.qty, q + 1))}
                   style={{ width: '22px', height: '22px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', lineHeight: 1 }}>+</button>

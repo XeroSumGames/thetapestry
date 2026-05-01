@@ -117,18 +117,15 @@ export default function MessagesPage() {
       .in('id', allUserIds)
     const profileMap: Record<string, string> = Object.fromEntries((profiles ?? []).map((p: any) => [p.id, p.username]))
 
-    // Fetch latest message per conversation.
+    // Fetch latest message per conversation in ONE round-trip via the
+    // get_latest_messages_for_conversations RPC (DISTINCT ON under the
+    // hood). Replaces the old N+1.
+    const { data: latestRows } = await supabase
+      .rpc('get_latest_messages_for_conversations', { conv_ids: convIds })
     const latestMap: Record<string, any> = {}
-    await Promise.all(convIds.map(async (cid: string) => {
-      const { data } = await supabase
-        .from('messages')
-        .select('body, created_at, sender_user_id')
-        .eq('conversation_id', cid)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      if (data) latestMap[cid] = data
-    }))
+    for (const row of (latestRows ?? []) as Array<{ conversation_id: string; body: string; created_at: string; sender_user_id: string }>) {
+      latestMap[row.conversation_id] = { body: row.body, created_at: row.created_at, sender_user_id: row.sender_user_id }
+    }
 
     const convs: ConversationRow[] = cpRows.map((row: any) => {
       const parts = (allParticipants ?? [])

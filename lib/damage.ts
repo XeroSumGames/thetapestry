@@ -28,14 +28,14 @@ export function rollDamage(damageStr: string, phyAmod = 0, isMelee = false): {
 
   // Handle "+1" format (Brass Knuckles)
   if (damageStr.match(/^\+?\d+$/) && !damageStr.includes('d')) {
-    base = parseInt(damageStr.replace('+', ''))
+    base = parseInt(damageStr.replace('+', ''), 10)
   } else {
     // Parse "X+YdZ" or "YdZ"
     const match = damageStr.match(/^(\d+)?\+?(\d+)d(\d+)$/)
     if (match) {
-      base = match[1] ? parseInt(match[1]) : 0
-      const count = parseInt(match[2])
-      const sides = parseInt(match[3])
+      base = match[1] ? parseInt(match[1], 10) : 0
+      const count = parseInt(match[2], 10)
+      const sides = parseInt(match[3], 10)
       diceRoll = rollDice(count, sides)
       diceDesc = `${count}d${sides}`
     }

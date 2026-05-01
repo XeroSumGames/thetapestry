@@ -877,7 +877,7 @@ function CharacterCardImpl({
                 if (!localState) return
                 const type = prompt('Environmental Damage Type:\n1 = Falling (3 WP+RP per 10ft)\n2 = Drowning (3 WP + 3 RP)\n3 = Subsistence (1 RP/day)')
                 if (type === '1') {
-                  const ft = parseInt(prompt('How many feet fallen?') ?? '0')
+                  const ft = parseInt(prompt('How many feet fallen?') ?? '0', 10)
                   const dmg = Math.floor(ft / 10) * 3
                   if (dmg > 0) {
                     onStatUpdate?.(localState.id, 'wp_current', Math.max(0, localState.wp_current - dmg))
@@ -947,17 +947,17 @@ function CharacterCardImpl({
             <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Hours</div>
-                <input type="number" min={0} value={restHours} onChange={e => setRestHours(parseInt(e.target.value) || 0)}
+                <input type="number" min={0} value={restHours} onChange={e => setRestHours(parseInt(e.target.value, 10) || 0)}
                   style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Days</div>
-                <input type="number" min={0} value={restDays} onChange={e => setRestDays(parseInt(e.target.value) || 0)}
+                <input type="number" min={0} value={restDays} onChange={e => setRestDays(parseInt(e.target.value, 10) || 0)}
                   style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Weeks</div>
-                <input type="number" min={0} value={restWeeks} onChange={e => setRestWeeks(parseInt(e.target.value) || 0)}
+                <input type="number" min={0} value={restWeeks} onChange={e => setRestWeeks(parseInt(e.target.value, 10) || 0)}
                   style={{ width: '100%', padding: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', boxSizing: 'border-box' }} />
               </div>
             </div>

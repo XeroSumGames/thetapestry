@@ -3786,7 +3786,7 @@ export default function TablePage() {
     const characterName = firstPartIsKnownName
       ? firstPart
       : (syncedSelectedEntry?.character.name ?? myEntry?.character.name ?? 'Unknown')
-    let cmodVal = parseInt(cmod) || 0
+    let cmodVal = parseInt(cmod, 10) || 0
     // Add range band CMod for weapon attacks
     if (pendingRoll.weapon) cmodVal += getRangeCMod()
     let die1: number, die2: number
@@ -7908,7 +7908,7 @@ export default function TablePage() {
                 const nameEl = document.getElementById('loot-item-name') as HTMLInputElement
                 const qtyEl = document.getElementById('loot-item-qty') as HTMLInputElement
                 if (!nameEl?.value.trim()) return
-                setLootItems(prev => [...prev, { name: nameEl.value.trim(), qty: parseInt(qtyEl?.value) || 1, notes: '' }])
+                setLootItems(prev => [...prev, { name: nameEl.value.trim(), qty: parseInt(qtyEl?.value, 10) || 1, notes: '' }])
                 nameEl.value = ''
                 qtyEl.value = '1'
                 nameEl.focus()
@@ -9791,7 +9791,7 @@ export default function TablePage() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span>GM adjustment</span>
-                        <input type="number" value={recruitGmCmod} onChange={e => setRecruitGmCmod(parseInt(e.target.value) || 0)}
+                        <input type="number" value={recruitGmCmod} onChange={e => setRecruitGmCmod(parseInt(e.target.value, 10) || 0)}
                           style={{ width: '60px', padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'right' }} />
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #2e2e5a', marginTop: '4px', paddingTop: '4px', fontWeight: 700 }}>

@@ -55,7 +55,7 @@ export function getTraitValue(traits: string[], traitName: string): number | nul
   const t = traits.find(tr => tr.startsWith(traitName))
   if (!t) return null
   const match = t.match(/\((\d+)\)/)
-  return match ? parseInt(match[1]) : 0
+  return match ? parseInt(match[1], 10) : 0
 }
 
 // ── MELEE WEAPONS (Table 16) ──

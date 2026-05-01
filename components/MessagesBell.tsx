@@ -73,20 +73,16 @@ export default function MessagesBell() {
       (profiles ?? []).map((p: any) => [p.id, p.username])
     )
 
-    // 3. Latest message per conversation (any sender, including me — read
-    //    items can show "You sent <other> a message at ..."). Parallel
-    //    fetch; conv count per user is small enough for this to be fine.
+    // 3. Latest message per conversation in ONE round-trip. The RPC
+    //    uses DISTINCT ON to return at most one row per conversation,
+    //    ordered newest-first per conv. RLS still applies (no
+    //    SECURITY DEFINER) so cross-user access stays gated.
+    const { data: latestRows } = await supabase
+      .rpc('get_latest_messages_for_conversations', { conv_ids: convIds })
     const latestMap: Record<string, { body: string; created_at: string; sender_user_id: string }> = {}
-    await Promise.all(convIds.map(async (cid: string) => {
-      const { data } = await supabase
-        .from('messages')
-        .select('body, created_at, sender_user_id')
-        .eq('conversation_id', cid)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      if (data) latestMap[cid] = data
-    }))
+    for (const row of (latestRows ?? []) as Array<{ conversation_id: string; body: string; created_at: string; sender_user_id: string }>) {
+      latestMap[row.conversation_id] = { body: row.body, created_at: row.created_at, sender_user_id: row.sender_user_id }
+    }
 
     // 4. Build items, skipping conversations with no messages yet.
     const built: ConvItem[] = convIds

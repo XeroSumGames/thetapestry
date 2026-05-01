@@ -169,6 +169,9 @@ export default function ApprenticeCreationWizard({
   // (cap goes negative, which clips deltas to 0).
   const [masterSkills, setMasterSkills] = useState<Record<string, number>>({})
   const [masterPcLoaded, setMasterPcLoaded] = useState(false)
+  // Surface load failures so the user understands why every skill cap
+  // shows "untrainable" — silent failure here looked like a broken wizard.
+  const [masterPcLoadError, setMasterPcLoadError] = useState<string | null>(null)
   useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -178,7 +181,16 @@ export default function ApprenticeCreationWizard({
         .eq('id', masterCharacterId)
         .maybeSingle()
       if (cancelled) return
-      if (error || !data) { setMasterPcLoaded(true); return }
+      if (error) {
+        setMasterPcLoadError(error.message)
+        setMasterPcLoaded(true)
+        return
+      }
+      if (!data) {
+        setMasterPcLoadError('master character not found')
+        setMasterPcLoaded(true)
+        return
+      }
       const skills: Array<{ skillName: string; level: number }> = (data as any)?.data?.skills ?? []
       const map: Record<string, number> = {}
       for (const s of skills) map[s.skillName] = s.level
@@ -482,8 +494,13 @@ export default function ApprenticeCreationWizard({
                 </div>
               </div>
               <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', padding: '6px 10px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', lineHeight: 1.4 }}>
-                <strong style={{ color: '#7ab3d4' }}>SRD training cap:</strong> per SRD §08 p.21 you can only train your Apprentice up to <strong>your skill − 1</strong> in any given skill. Skills you don&apos;t have can&apos;t be trained — the Profession baseline still stands. Loading master PC: {masterPcLoaded ? <span style={{ color: '#7fc458' }}>ready</span> : <span style={{ color: '#EF9F27' }}>fetching…</span>}.
+                <strong style={{ color: '#7ab3d4' }}>SRD training cap:</strong> per SRD §08 p.21 you can only train your Apprentice up to <strong>your skill − 1</strong> in any given skill. Skills you don&apos;t have can&apos;t be trained — the Profession baseline still stands. Loading master PC: {masterPcLoadError ? <span style={{ color: '#f5a89a' }}>failed — {masterPcLoadError}</span> : masterPcLoaded ? <span style={{ color: '#7fc458' }}>ready</span> : <span style={{ color: '#EF9F27' }}>fetching…</span>}.
               </div>
+              {masterPcLoadError && (
+                <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', lineHeight: 1.4 }}>
+                  Couldn&apos;t load the master PC&apos;s skill list, so every skill is currently capped untrainable. Close this wizard and try again, or reload the page.
+                </div>
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', maxHeight: '420px', overflowY: 'auto', padding: '4px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                 {SKILLS.map(s => {
                   const base = getSkillBase(s.name)

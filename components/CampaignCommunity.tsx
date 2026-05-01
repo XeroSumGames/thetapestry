@@ -2524,8 +2524,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                             const catalogHit = EQUIPMENT.find(eq => eq.name.toLowerCase() === trimmedName.toLowerCase())
                             await addStockpileItem(c.id, {
                               name: trimmedName,
-                              qty: Math.max(1, parseInt(addStockQty) || 1),
-                              enc: Math.max(0, parseInt(addStockEnc) || 0),
+                              qty: Math.max(1, parseInt(addStockQty, 10) || 1),
+                              enc: Math.max(0, parseInt(addStockEnc, 10) || 0),
                               notes: addStockNotes.trim() || (catalogHit?.notes ?? ''),
                               custom: !catalogHit,
                               rarity: catalogHit?.rarity ?? 'Common',

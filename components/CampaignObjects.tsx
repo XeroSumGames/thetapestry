@@ -591,10 +591,29 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                           const additions: string[] = []
                           for (let q = 0; q < item.quantity; q++) additions.push(item.name)
                           const updatedEquip = [...currentEquip, ...additions]
-                          await supabase.from('characters').update({ data: { ...charEntry.character.data, equipment: updatedEquip } }).eq('id', charId)
+                          // Bail before mutating the object if the character
+                          // write fails — otherwise the item would disappear
+                          // (RLS denial / network hiccup, etc.).
+                          const { error: charErr } = await supabase
+                            .from('characters')
+                            .update({ data: { ...charEntry.character.data, equipment: updatedEquip } })
+                            .eq('id', charId)
+                          if (charErr) {
+                            alert(`Give failed: ${charErr.message}`)
+                            setGivingItemIdx(null)
+                            return
+                          }
                           // Remove this item from the object's contents
                           const remaining = lootingObj.contents.filter((_, idx) => idx !== i)
-                          await supabase.from('scene_tokens').update({ contents: remaining }).eq('id', lootingObj.id)
+                          const { error: tokenErr } = await supabase
+                            .from('scene_tokens')
+                            .update({ contents: remaining })
+                            .eq('id', lootingObj.id)
+                          if (tokenErr) {
+                            alert(`Item went to character, but couldn't update the object: ${tokenErr.message}`)
+                            setGivingItemIdx(null)
+                            return
+                          }
                           setObjects(prev => prev.map(o => o.id === lootingObj.id ? { ...o, contents: remaining } : o))
                           setLootingObj({ ...lootingObj, contents: remaining })
                           // Reindex per-item picks (later indices shift down by 1)
@@ -642,8 +661,27 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                     for (let q = 0; q < item.quantity; q++) newItems.push(item.name)
                   }
                   const updatedEquip = [...currentEquip, ...newItems]
-                  await supabase.from('characters').update({ data: { ...charEntry.character.data, equipment: updatedEquip } }).eq('id', lootCharId)
-                  await supabase.from('scene_tokens').update({ contents: [] }).eq('id', lootingObj.id)
+                  // Bail before clearing the object if the character write
+                  // fails — otherwise the loot vanishes (RLS denial, network
+                  // hiccup, etc. all silently dropped items pre-fix).
+                  const { error: charErr } = await supabase
+                    .from('characters')
+                    .update({ data: { ...charEntry.character.data, equipment: updatedEquip } })
+                    .eq('id', lootCharId)
+                  if (charErr) {
+                    alert(`Loot failed: ${charErr.message}`)
+                    return
+                  }
+                  const { error: tokenErr } = await supabase
+                    .from('scene_tokens')
+                    .update({ contents: [] })
+                    .eq('id', lootingObj.id)
+                  if (tokenErr) {
+                    // Items already on the character — surface so GM knows
+                    // the object still shows contents and can clear manually.
+                    alert(`Items transferred to character, but couldn't clear the object: ${tokenErr.message}`)
+                    return
+                  }
                   setObjects(prev => prev.map(o => o.id === lootingObj.id ? { ...o, contents: [] } : o))
                   for (const item of lootingObj.contents) {
                     onLoot?.(lootingObj.name, item, lootCharId, charEntry.character.name)
@@ -779,7 +817,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                     {EQUIPMENT.map(e => <option key={e.name} value={`equipment:${e.name}`}>{e.name}</option>)}
                   </optgroup>
                 </select>
-                <input type="number" min={1} max={99} value={contentQty} onChange={e => setContentQty(parseInt(e.target.value) || 1)}
+                <input type="number" min={1} max={99} value={contentQty} onChange={e => setContentQty(parseInt(e.target.value, 10) || 1)}
                   style={{ width: '32px', padding: '3px 2px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
                 <button onClick={() => {
                   if (!contentPickerValue) return

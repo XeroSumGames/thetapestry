@@ -940,7 +940,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   async function handleSaveEdit() {
   if (!editingPin || !editForm.title.trim()) return
   setEditUploading(true)
-  const sortVal = editForm.sort_order.trim() ? parseInt(editForm.sort_order) : null
+  const sortVal = editForm.sort_order.trim() ? parseInt(editForm.sort_order, 10) : null
   const latVal = editForm.lat.trim() ? parseFloat(editForm.lat) : NaN
   const lngVal = editForm.lng.trim() ? parseFloat(editForm.lng) : NaN
   const updatePayload: Record<string, unknown> = { title: editForm.title, notes: editForm.notes, category: editForm.categories[0] ?? 'location', categories: editForm.categories, event_date: editForm.event_date.trim() || null, sort_order: Number.isNaN(sortVal) ? null : sortVal, address: editForm.address.trim() || null }
