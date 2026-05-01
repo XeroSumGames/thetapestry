@@ -124,6 +124,7 @@ const DEFAULT_LAYOUT: Record<BoxKey, BoxLayout> = {
 
 const STORAGE_LAYOUT = 'gmscreen.layout.v1'
 const STORAGE_LOCKED = 'gmscreen.locked.v1'
+const STORAGE_HIDDEN = 'gmscreen.hidden.v1'
 
 const sectionHeading: React.CSSProperties = { fontSize: '15px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }
 const cellStyle: React.CSSProperties = { fontSize: '15px', fontFamily: 'Carlito, sans-serif', padding: '2px 6px', borderBottom: '1px solid #2e2e2e' }
@@ -136,6 +137,10 @@ export default function GMScreen() {
   const campaignId = searchParams?.get('c') ?? ''
   const [layout, setLayout] = useState<Record<BoxKey, BoxLayout>>(DEFAULT_LAYOUT)
   const [locked, setLocked] = useState<boolean>(true)
+  // Per-box hide. The × in each title bar adds the box key here so the
+  // user can declutter to just the panels they care about. Persisted in
+  // localStorage; Reset Layout clears it so everything comes back.
+  const [hiddenBoxes, setHiddenBoxes] = useState<Set<BoxKey>>(new Set())
   const [hydrated, setHydrated] = useState(false)
   const boxRefs = useRef<Partial<Record<BoxKey, HTMLDivElement | null>>>({})
   const dragRef = useRef<{ key: BoxKey; startX: number; startY: number; origX: number; origY: number } | null>(null)
@@ -151,6 +156,11 @@ export default function GMScreen() {
       }
       const savedLock = localStorage.getItem(STORAGE_LOCKED)
       if (savedLock !== null) setLocked(savedLock === 'true')
+      const savedHidden = localStorage.getItem(STORAGE_HIDDEN)
+      if (savedHidden) {
+        const arr = JSON.parse(savedHidden)
+        if (Array.isArray(arr)) setHiddenBoxes(new Set(arr as BoxKey[]))
+      }
     } catch {}
     setHydrated(true)
   }, [])
@@ -164,6 +174,11 @@ export default function GMScreen() {
     if (!hydrated) return
     try { localStorage.setItem(STORAGE_LOCKED, String(locked)) } catch {}
   }, [locked, hydrated])
+
+  useEffect(() => {
+    if (!hydrated) return
+    try { localStorage.setItem(STORAGE_HIDDEN, JSON.stringify(Array.from(hiddenBoxes))) } catch {}
+  }, [hiddenBoxes, hydrated])
 
   useEffect(() => {
     if (!hydrated) return
@@ -221,12 +236,27 @@ export default function GMScreen() {
   }
 
   function resetLayout() {
-    if (!confirm('Reset all panels to default layout?')) return
+    if (!confirm('Reset all panels to default layout? (Restores any hidden panels too.)')) return
     setLayout(DEFAULT_LAYOUT)
+    setHiddenBoxes(new Set())
   }
 
-  const canvasWidth = Math.max(...Object.values(layout).map(l => l.x + l.w)) + 12
-  const canvasHeight = Math.max(...Object.values(layout).map(l => l.y + l.h)) + 12
+  function hideBox(key: BoxKey) {
+    setHiddenBoxes(prev => {
+      const next = new Set(prev)
+      next.add(key)
+      return next
+    })
+  }
+
+  // Canvas extents drive the absolute-positioned area's width/height.
+  // Hidden boxes are excluded so closing a far-positioned panel collapses
+  // the empty space instead of leaving a giant scrollable margin.
+  const visibleLayouts = (Object.entries(layout) as [BoxKey, BoxLayout][])
+    .filter(([k]) => !hiddenBoxes.has(k))
+    .map(([, l]) => l)
+  const canvasWidth = visibleLayouts.length > 0 ? Math.max(...visibleLayouts.map(l => l.x + l.w)) + 12 : 600
+  const canvasHeight = visibleLayouts.length > 0 ? Math.max(...visibleLayouts.map(l => l.y + l.h)) + 12 : 400
 
   function boxStyle(key: BoxKey): React.CSSProperties {
     const { x, y, w, h } = layout[key]
@@ -243,7 +273,10 @@ export default function GMScreen() {
       borderRadius: '4px',
       overflow: 'auto',
       resize: locked ? 'none' : 'both',
-      display: 'flex',
+      // display:none on hidden boxes hides them while keeping refs +
+      // localStorage-persisted layout intact, so Reset Layout can bring
+      // them straight back without re-hydrating from defaults.
+      display: hiddenBoxes.has(key) ? 'none' : 'flex',
       flexDirection: 'column',
       boxSizing: 'border-box',
     }
@@ -257,7 +290,36 @@ export default function GMScreen() {
       userSelect: 'none',
       background: locked ? 'transparent' : '#22303d',
       flexShrink: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '8px',
     }
+  }
+
+  // Close × in the title bar of each box. stopPropagation so the click
+  // doesn't trigger drag start; the parent's onMouseDown is set on the
+  // whole title bar. Visible regardless of locked state — declutter is
+  // a separate concern from edit-layout mode.
+  function closeBtn(key: BoxKey): React.ReactNode {
+    return (
+      <button
+        onMouseDown={e => e.stopPropagation()}
+        onClick={e => { e.stopPropagation(); hideBox(key) }}
+        title="Hide this panel — Reset Layout brings it back"
+        aria-label="Hide panel"
+        style={{
+          width: 22, height: 22, padding: 0,
+          background: 'transparent', border: '1px solid #3a3a3a', borderRadius: 3,
+          color: '#cce0f5', fontSize: 13, fontFamily: 'Carlito, sans-serif',
+          lineHeight: 1, cursor: 'pointer', flexShrink: 0,
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#2a1210'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#c0392b'; (e.currentTarget as HTMLButtonElement).style.color = '#f5a89a' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#3a3a3a'; (e.currentTarget as HTMLButtonElement).style.color = '#cce0f5' }}
+      >
+        ×
+      </button>
+    )
   }
 
   const bodyStyle: React.CSSProperties = { padding: '6px 12px 10px', overflow: 'auto', flex: 1 }
@@ -299,6 +361,7 @@ export default function GMScreen() {
         <div ref={el => { boxRefs.current['outcomes'] = el }} style={boxStyle('outcomes')}>
           <div onMouseDown={e => startDrag('outcomes', e)} style={dragHandleStyle()}>
             <div style={sectionHeading}>Outcomes</div>
+            {closeBtn('outcomes')}
           </div>
           <div style={bodyStyle}>
             {OUTCOMES.map(o => (
@@ -315,6 +378,7 @@ export default function GMScreen() {
         <div ref={el => { boxRefs.current['combat-actions'] = el }} style={boxStyle('combat-actions')}>
           <div onMouseDown={e => startDrag('combat-actions', e)} style={dragHandleStyle()}>
             <div style={sectionHeading}>Combat Actions</div>
+            {closeBtn('combat-actions')}
           </div>
           <div style={bodyStyle}>
             {COMBAT_ACTIONS.map(a => (
@@ -331,6 +395,7 @@ export default function GMScreen() {
         <div ref={el => { boxRefs.current['range-bands'] = el }} style={boxStyle('range-bands')}>
           <div onMouseDown={e => startDrag('range-bands', e)} style={dragHandleStyle()}>
             <div style={sectionHeading}>Range Bands</div>
+            {closeBtn('range-bands')}
           </div>
           <div style={bodyStyle}>
             {RANGE_BANDS.map(r => (
@@ -346,6 +411,7 @@ export default function GMScreen() {
         <div ref={el => { boxRefs.current['weapon-condition'] = el }} style={boxStyle('weapon-condition')}>
           <div onMouseDown={e => startDrag('weapon-condition', e)} style={dragHandleStyle()}>
             <div style={sectionHeading}>Weapon Condition</div>
+            {closeBtn('weapon-condition')}
           </div>
           <div style={bodyStyle}>
             {CONDITIONS.map(c => (
@@ -361,6 +427,7 @@ export default function GMScreen() {
         <div ref={el => { boxRefs.current['cmods'] = el }} style={boxStyle('cmods')}>
           <div onMouseDown={e => startDrag('cmods', e)} style={dragHandleStyle()}>
             <div style={sectionHeading}>Conditional Modifiers</div>
+            {closeBtn('cmods')}
           </div>
           <div style={bodyStyle}>
             {CMODS.map(c => (
@@ -376,6 +443,7 @@ export default function GMScreen() {
         <div ref={el => { boxRefs.current['healing'] = el }} style={boxStyle('healing')}>
           <div onMouseDown={e => startDrag('healing', e)} style={dragHandleStyle()}>
             <div style={sectionHeading}>Healing & Recovery</div>
+            {closeBtn('healing')}
           </div>
           <div style={bodyStyle}>
             {HEALING.map(h => (
@@ -391,6 +459,7 @@ export default function GMScreen() {
         <div ref={el => { boxRefs.current['skills-attrs'] = el }} style={boxStyle('skills-attrs')}>
           <div onMouseDown={e => startDrag('skills-attrs', e)} style={dragHandleStyle()}>
             <div style={sectionHeading}>Skills → Attributes</div>
+            {closeBtn('skills-attrs')}
           </div>
           <div style={bodyStyle}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
@@ -411,6 +480,7 @@ export default function GMScreen() {
         <div ref={el => { boxRefs.current['gm-notes'] = el }} style={boxStyle('gm-notes')}>
           <div onMouseDown={e => startDrag('gm-notes', e)} style={dragHandleStyle()}>
             <div style={sectionHeading}>GM Notes</div>
+            {closeBtn('gm-notes')}
           </div>
           <div style={{ overflow: 'auto', flex: 1, padding: '6px 10px 10px' }}>
             {campaignId ? (
