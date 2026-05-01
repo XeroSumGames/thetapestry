@@ -18,6 +18,10 @@ import {
   getCommunityHomesteadCoords,
   type ActiveWorldEvent,
 } from '../lib/world-events'
+import {
+  logMoraleOutcome,
+  logDissolution,
+} from '../lib/community-events'
 
 // Phase C — Weekly Morale Check modal. Single-button flow: GM fills in
 // ad-hoc CMods / adjusts A/S mods if needed, clicks "Run Weekly Check",
@@ -612,11 +616,60 @@ export default function CommunityMoraleModal({
       .update(worldUpdate)
       .eq('source_community_id', community.id)
 
+    // 4c) Phase 4D — auto-post the Morale outcome to the per-community
+    //     Campfire feed. Always logs morale_outcome; on dissolution,
+    //     ALSO logs a separate dissolution event so the Feed timeline
+    //     reads "the Morale failed → the community dissolved" as two
+    //     stacked cards. Both are fire-and-forget — feed insert failure
+    //     never breaks the finalize path.
+    const leaderName = leaderInfo?.name ?? community.name
+    const moraleSlotsSummary = (() => {
+      const slots = result.moraleSlots as unknown as Record<string, number>
+      const parts: string[] = []
+      if (slots?.mood) parts.push(`Mood ${formatCmod(slots.mood)}`)
+      if (slots?.fed) parts.push(`Fed ${formatCmod(slots.fed)}`)
+      if (slots?.clothed) parts.push(`Clothed ${formatCmod(slots.clothed)}`)
+      if (slots?.enoughHands) parts.push(`Hands ${formatCmod(slots.enoughHands)}`)
+      if (slots?.clearVoice) parts.push(`Voice ${formatCmod(slots.clearVoice)}`)
+      if (slots?.safety) parts.push(`Safety ${formatCmod(slots.safety)}`)
+      if (slots?.worldEvents) parts.push(`World ${formatCmod(slots.worldEvents)}`)
+      if (slots?.additional) parts.push(`Other ${formatCmod(slots.additional)}`)
+      return parts.join(', ') || '—'
+    })()
+    if (userId) {
+      await logMoraleOutcome({
+        supabase,
+        communityId: community.id,
+        authorUserId: userId,
+        payload: {
+          week: newWeek,
+          outcome: morale.outcome.toLowerCase().replace(/ /g, '_'),
+          fed_outcome: fed.outcome.toLowerCase().replace(/ /g, '_'),
+          clothed_outcome: clothed.outcome.toLowerCase().replace(/ /g, '_'),
+          departures_count: reallyDissolves ? membersBefore : departureIds.length,
+          modifiers_summary: moraleSlotsSummary,
+          total: morale.total,
+          leader_name: leaderName,
+        },
+      })
+      if (reallyDissolves) {
+        await logDissolution({
+          supabase,
+          communityId: community.id,
+          authorUserId: userId,
+          payload: {
+            week: newWeek,
+            consecutive_failures: finalConsFailures,
+            members_lost: membersBefore,
+          },
+        })
+      }
+    }
+
     // 5) Log rows for the session feed. Morale card is credited to the
     //    designated leader (per SRD p.22); Fed/Clothed stay credited to
     //    the community since SRD p.24 says those are assumed to be
     //    rolled by generic NPCs of reasonable proficiency.
-    const leaderName = leaderInfo?.name ?? community.name
     const fedLabel = `🌾 Week ${newWeek} · ${community.name} — Fed Check: ${fed.outcome}`
     const clothedLabel = `🔧 Week ${newWeek} · ${community.name} — Clothed Check: ${clothed.outcome}`
     const moraleSuffix = reallyDissolves

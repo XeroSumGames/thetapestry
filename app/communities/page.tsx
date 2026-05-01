@@ -4,6 +4,12 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
 import Link from 'next/link'
+import {
+  type CommunityEventRow,
+  eventIcon,
+  eventAccent,
+  eventSummaryLine,
+} from '../../lib/community-events'
 
 // My Communities — top-level index. Lists every community the current user
 // can see (via RLS — they're the GM of the campaign, or a member of it).
@@ -65,6 +71,7 @@ interface PinOption {
 interface FollowedCommunity {
   id: string                       // community_subscriptions.id
   worldCommunityId: string         // world_communities.id
+  sourceCommunityId: string        // communities.id (used to fetch events)
   name: string
   description: string | null
   sizeBand: string
@@ -75,6 +82,10 @@ interface FollowedCommunity {
   followedAt: string
   subscriberCount: number          // total followers on the world face
   lastPublicUpdateAt: string | null
+  // Phase 4D — recent community events (latest 3 by created_at DESC).
+  // Populated for followers via the public-published RLS branch on
+  // community_events. Null for any community without recent events.
+  recentEvents?: CommunityEventRow[]
 }
 
 export default function CommunitiesIndexPage() {
@@ -136,7 +147,7 @@ export default function CommunitiesIndexPage() {
     // user's own subscriptions automatically.
     const { data: subs } = await supabase
       .from('community_subscriptions')
-      .select('id, world_community_id, created_at, world_communities!inner(id, name, description, size_band, community_status, faction_label, homestead_lat, homestead_lng, moderation_status, subscriber_count, last_public_update_at)')
+      .select('id, world_community_id, created_at, world_communities!inner(id, source_community_id, name, description, size_band, community_status, faction_label, homestead_lat, homestead_lng, moderation_status, subscriber_count, last_public_update_at)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
     const fol: FollowedCommunity[] = []
@@ -148,6 +159,7 @@ export default function CommunitiesIndexPage() {
       fol.push({
         id: r.id,
         worldCommunityId: wc.id,
+        sourceCommunityId: wc.source_community_id,
         name: wc.name,
         description: wc.description ?? null,
         sizeBand: wc.size_band ?? 'Group',
@@ -159,6 +171,26 @@ export default function CommunitiesIndexPage() {
         subscriberCount: wc.subscriber_count ?? 0,
         lastPublicUpdateAt: wc.last_public_update_at ?? null,
       })
+    }
+    // Phase 4D — batch-fetch the most recent 3 events per followed
+    // community. RLS on community_events has a public-published branch
+    // that lets us read events for any approved-published community
+    // without needing campaign membership.
+    const sourceIds = fol.map(f => f.sourceCommunityId).filter(Boolean)
+    if (sourceIds.length > 0) {
+      const { data: eventRows } = await supabase
+        .from('community_events')
+        .select('id, community_id, event_type, payload, author_user_id, created_at')
+        .in('community_id', sourceIds)
+        .order('created_at', { ascending: false })
+      const byCom: Record<string, CommunityEventRow[]> = {}
+      for (const row of ((eventRows ?? []) as CommunityEventRow[])) {
+        if (!byCom[row.community_id]) byCom[row.community_id] = []
+        if (byCom[row.community_id].length < 3) byCom[row.community_id].push(row)
+      }
+      for (const f of fol) {
+        f.recentEvents = byCom[f.sourceCommunityId] ?? []
+      }
     }
     setFollowed(fol)
     setLoading(false)
@@ -461,6 +493,22 @@ export default function CommunitiesIndexPage() {
                     <span title="Followers on the Tapestry"
                       style={{ fontSize: '13px', padding: '1px 6px', borderRadius: '2px', background: '#2a1a3e', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>★ {f.subscriberCount}</span>
                   </div>
+                  {f.recentEvents && f.recentEvents.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginBottom: '8px', paddingTop: '6px', borderTop: '1px dashed #2e2e2e' }}>
+                      {f.recentEvents.map(ev => {
+                        const accent = eventAccent(ev.event_type)
+                        return (
+                          <div key={ev.id} title={new Date(ev.created_at).toLocaleString()}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '2px 0', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <span style={{ fontSize: '13px' }}>{eventIcon(ev.event_type)}</span>
+                            <span style={{ color: accent, letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {eventSummaryLine(ev)}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                   {f.lastPublicUpdateAt && (
                     <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', marginBottom: '8px' }}
                       title={new Date(f.lastPublicUpdateAt).toLocaleString()}>

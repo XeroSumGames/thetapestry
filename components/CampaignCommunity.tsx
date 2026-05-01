@@ -6,6 +6,16 @@ import { appendProgressionEntry } from '../lib/progression-log'
 import CommunityMoraleModal from './CommunityMoraleModal'
 import { type InventoryItem } from '../lib/inventory'
 import { EQUIPMENT } from '../lib/xse-schema'
+import {
+  logSchism,
+  logMigration,
+  logManualPost,
+  type CommunityEventRow,
+  eventIcon,
+  eventAccent,
+  eventSummaryLine,
+  formatEventDate,
+} from '../lib/community-events'
 
 // Phase A — Communities foundation. Lists communities for a campaign, lets
 // the GM create one, drill into the member roster, add/remove members from
@@ -254,6 +264,18 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const [addStockNotes, setAddStockNotes] = useState('')
   const [addStockingForCommunity, setAddStockingForCommunity] = useState<string | null>(null)
   const [members, setMembers] = useState<Record<string, Member[]>>({})   // key = community_id, status='active'
+  // Phase 4D — per-community Campfire feed. Stored as a map so each
+  // accordion can render its own Feed section without re-fetching.
+  // eventDrafts holds the manual-composer textarea per community
+  // (only one open at a time but state is keyed by id for safety).
+  const [communityEvents, setCommunityEvents] = useState<Record<string, CommunityEventRow[]>>({})
+  const [eventComposerOpenFor, setEventComposerOpenFor] = useState<string | null>(null)
+  const [eventDraftBody, setEventDraftBody] = useState<string>('')
+  const [eventSubmitting, setEventSubmitting] = useState(false)
+  // Username lookup hydrated from event author_user_ids — small map so
+  // the feed can render "by <username>" without round-tripping the
+  // profiles table per-card.
+  const [eventAuthors, setEventAuthors] = useState<Record<string, string>>({})
   const [pendingByCommunity, setPendingByCommunity] = useState<Record<string, Member[]>>({})
   // Last-5 Morale outcomes per community, newest-first. Drives the
   // "Recent Morale" trend chip strip on the At-a-Glance block.
@@ -614,6 +636,37 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         }
       }
       setWorldRows(worldByCom)
+      // Phase 4D — per-community feed. Pull the most-recent 20 events
+      // per community in one batch (RLS scopes by campaign membership).
+      // Hydrate author usernames in the same pass so the feed cards
+      // can render "by <username>" without a per-card lookup.
+      const { data: eventRows } = await supabase
+        .from('community_events')
+        .select('id, community_id, event_type, payload, author_user_id, created_at')
+        .in('community_id', coms.map(c => c.id))
+        .order('created_at', { ascending: false })
+      const eventsByCom: Record<string, CommunityEventRow[]> = {}
+      const eventAuthorIds = new Set<string>()
+      for (const row of ((eventRows ?? []) as CommunityEventRow[])) {
+        const cid = row.community_id
+        if (!eventsByCom[cid]) eventsByCom[cid] = []
+        if (eventsByCom[cid].length < 20) eventsByCom[cid].push(row)
+        if (row.author_user_id) eventAuthorIds.add(row.author_user_id)
+      }
+      setCommunityEvents(eventsByCom)
+      if (eventAuthorIds.size > 0) {
+        const { data: profs } = await supabase
+          .from('profiles')
+          .select('id, username')
+          .in('id', Array.from(eventAuthorIds))
+        const authMap: Record<string, string> = {}
+        for (const p of ((profs ?? []) as any[])) {
+          authMap[p.id] = p.username ?? ''
+        }
+        setEventAuthors(authMap)
+      } else {
+        setEventAuthors({})
+      }
       // Phase E Sprint 4e — survivors per dissolved community for
       // the Migration modal. Soft-removed rows with left_reason
       // 'dissolved' are the eligible offer pool.
@@ -768,6 +821,40 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }))
   }
 
+  // ── Phase 4D — manual community-event composer ──────────────────
+  // Drives the "📝 Post community update" affordance inside the Feed
+  // section. GM-only. Reuses the same lib/community-events.ts pipeline
+  // as the auto-posts so the rendered card shapes are uniform.
+  function openEventComposer(communityId: string) {
+    setEventComposerOpenFor(communityId)
+    setEventDraftBody('')
+  }
+  function closeEventComposer() {
+    if (eventSubmitting) return
+    setEventComposerOpenFor(null)
+    setEventDraftBody('')
+  }
+  async function handleManualPost() {
+    if (!eventComposerOpenFor || eventSubmitting) return
+    const body = eventDraftBody.trim()
+    if (!body) { alert('Write something first.'); return }
+    setEventSubmitting(true)
+    const { user } = await getCachedAuth()
+    if (!user?.id) { setEventSubmitting(false); return }
+    await logManualPost({
+      supabase,
+      communityId: eventComposerOpenFor,
+      authorUserId: user.id,
+      payload: { body },
+    })
+    setEventSubmitting(false)
+    setEventComposerOpenFor(null)
+    setEventDraftBody('')
+    // Reload events so the new post shows immediately. Cheap; only
+    // re-fetches the events table.
+    await load()
+  }
+
   // ── Phase E Sprint 4e — Migration handlers ──────────────────────
   function openMigrationModal(c: Community) {
     setMigrationCommunityId(c.id)
@@ -818,6 +905,23 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     const { error } = await supabase.from('community_migrations').insert(rows)
     setMigrationSubmitting(false)
     if (error) { alert(`Migration offer failed: ${error.message}`); return }
+    // Phase 4D — auto-post the migration to the source community's feed.
+    // The target community is a world_communities row; we resolve its
+    // public name from the dropdown options that backed the modal.
+    if (user?.id) {
+      const targetMeta = migrationTargets.find(t => t.id === migrationTargetId)
+      await logMigration({
+        supabase,
+        communityId: original.id,
+        authorUserId: user.id,
+        payload: {
+          target_community_id: migrationTargetId,
+          target_community_name: targetMeta?.name ?? '(unknown community)',
+          members_moved: rows.length,
+          narrative: migrationNarrative.trim() || null,
+        },
+      })
+    }
     setMigrationCommunityId(null)
     setMigrationTargetId('')
     setMigrationPickedIds(new Set())
@@ -920,6 +1024,22 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       setSchismSubmitting(false)
       alert(`Schism partial: new community created + members removed but the new roster insert failed: ${insErr.message}. You may need to add the breakaway members manually.`)
       return
+    }
+    // Phase 4D — auto-post the schism to the original community's feed.
+    // (The new community gets its own implicit "founded by schism" entry
+    // via the manual composer if the GM wants to record it.)
+    const { user: schismUser } = await getCachedAuth()
+    if (schismUser?.id) {
+      await logSchism({
+        supabase,
+        communityId: original.id,
+        authorUserId: schismUser.id,
+        payload: {
+          new_community_id: newComm.id,
+          new_community_name: newComm.name,
+          members_left: sourceMembers.length,
+        },
+      })
     }
     setSchismSubmitting(false)
     setSchismCommunityId(null)
@@ -2022,6 +2142,101 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     </button>
                   </div>
                 )}
+
+                {/* Phase 4D — per-community Campfire feed. Renders the
+                    most recent N events with type-keyed icons + accents.
+                    GM gets a "📝 Post community update" affordance for
+                    free-form notes. Auto-posts (Morale outcome / schism
+                    / migration / dissolution) appear here automatically.
+                    Hidden when there's nothing to show AND the viewer
+                    is a non-GM (no manual composer to expose). */}
+                {(() => {
+                  const events = communityEvents[c.id] ?? []
+                  if (events.length === 0 && !isGM) return null
+                  const RECENT_LIMIT = 8
+                  const recent = events.slice(0, RECENT_LIMIT)
+                  const composerOpen = eventComposerOpenFor === c.id
+                  return (
+                    <div style={{ padding: '10px 12px', background: '#141414', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700 }}>
+                            🔥 Community Feed
+                          </div>
+                          <div style={{ fontSize: '13px', color: '#9aa5b0', fontFamily: 'Carlito, sans-serif' }}>
+                            Auto-logs Morale outcomes, schisms, migrations, and dissolution. {isGM ? 'GMs can also post free-form updates.' : null}
+                          </div>
+                        </div>
+                        {isGM && !composerOpen && (
+                          <button onClick={() => openEventComposer(c.id)}
+                            style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #cce0f5', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                            📝 Post update
+                          </button>
+                        )}
+                      </div>
+                      {composerOpen && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '8px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                          <textarea value={eventDraftBody} onChange={e => setEventDraftBody(e.target.value)}
+                            placeholder="Note for the community feed — narrative, council news, downtime events, etc."
+                            style={{ width: '100%', minHeight: '70px', resize: 'vertical', padding: '8px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', lineHeight: 1.5 }} />
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button onClick={handleManualPost} disabled={eventSubmitting || !eventDraftBody.trim()}
+                              style={{ flex: 1, padding: '7px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: eventSubmitting ? 'wait' : 'pointer', fontWeight: 600, opacity: eventDraftBody.trim() ? 1 : 0.5 }}>
+                              {eventSubmitting ? 'Posting…' : 'Post to feed'}
+                            </button>
+                            <button onClick={closeEventComposer} disabled={eventSubmitting}
+                              style={{ padding: '7px 14px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: eventSubmitting ? 'wait' : 'pointer' }}>
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {events.length === 0 ? (
+                        <div style={{ fontSize: '13px', color: '#9aa5b0', fontStyle: 'italic', padding: '4px 0' }}>
+                          No events yet. The feed fills in as Morale checks finalize, schisms fire, or you post manually.
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {recent.map(ev => {
+                            const accent = eventAccent(ev.event_type)
+                            const icon = eventIcon(ev.event_type)
+                            const summary = eventSummaryLine(ev)
+                            const author = ev.author_user_id ? (eventAuthors[ev.author_user_id] ?? null) : null
+                            return (
+                              <div key={ev.id} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '10px', alignItems: 'center', padding: '6px 10px', background: '#1a1a1a', borderLeft: `3px solid ${accent}`, borderRadius: '3px' }}>
+                                <span style={{ fontSize: '15px' }}>{icon}</span>
+                                <div style={{ minWidth: 0 }}>
+                                  <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {summary}
+                                  </div>
+                                  <div style={{ fontSize: '13px', color: '#9aa5b0', fontFamily: 'Carlito, sans-serif' }}>
+                                    {author ? `by ${author} · ` : ''}{formatEventDate(ev.created_at)}
+                                  </div>
+                                </div>
+                                {isGM && (
+                                  <button onClick={async () => {
+                                    if (!confirm('Remove this entry from the community feed? Auto-posts can be reposted by re-running the action; manual posts are permanent on delete.')) return
+                                    await supabase.from('community_events').delete().eq('id', ev.id)
+                                    await load()
+                                  }}
+                                    title="Delete this event"
+                                    style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#9aa5b0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>
+                                    ×
+                                  </button>
+                                )}
+                              </div>
+                            )
+                          })}
+                          {events.length > RECENT_LIMIT && (
+                            <div style={{ fontSize: '13px', color: '#9aa5b0', fontStyle: 'italic', padding: '4px 0' }}>
+                              + {events.length - RECENT_LIMIT} older event{events.length - RECENT_LIMIT === 1 ? '' : 's'}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
 
                 {/* Phase E — Publish to Tapestry strip. Shows
                     the world-facing status chip + actions. Community
