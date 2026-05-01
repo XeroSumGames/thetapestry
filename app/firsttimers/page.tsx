@@ -13,28 +13,26 @@ export default function FirstTimersPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    // /firsttimers used to redirect to /dashboard once profiles.onboarded
+    // was true, trapping users on a one-shot intro. Now /firsttimers is a
+    // re-readable reference page; the first-visit welcome lives in
+    // <WelcomeModal /> on /dashboard. Logged-out visitors can still see
+    // the page (the DistemperVerse pitch is fine as a public read).
     async function load() {
       const { user } = await getCachedAuth()
-      if (!user) { router.push('/login'); return }
-      trackGhostConversion()
-      const { data: profile, error: profileErr } = await supabase.from('profiles').select('username, onboarded').eq('id', user.id).single()
-      if (profileErr) {
-        console.error('[FirstTimers] profile load error:', profileErr.message)
-        setError(`Could not load your profile: ${profileErr.message}`)
-        return
+      if (user) {
+        trackGhostConversion()
+        const { data: profile } = await supabase.from('profiles').select('username').eq('id', user.id).single()
+        if (profile) setUsername(profile.username)
       }
-      if (!profile) {
-        console.error('[FirstTimers] no profile found for user:', user.id)
-        setError('Your profile was not created. Please contact support.')
-        return
-      }
-      if (profile.onboarded) { router.push('/dashboard'); return }
-      setUsername(profile.username)
     }
     load()
   }, [])
 
   async function handleGetStarted() {
+    // Idempotent — flips onboarded=true if it isn't already, then
+    // sends the user back to the dashboard. Same end state as the
+    // modal's CTA so re-readers don't get stuck on the intro.
     setMarking(true)
     const { user } = await getCachedAuth()
     if (user) await supabase.from('profiles').update({ onboarded: true }).eq('id', user.id)
