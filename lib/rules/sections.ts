@@ -34,7 +34,6 @@ export const RULE_SECTIONS: RuleSection[] = [
       { id: 'key-features', label: 'Key Features of XSE' },
       { id: 'naming-conventions', label: 'Dice & Naming Conventions' },
     ],
-    stub: true,
   },
   {
     slug: 'core-mechanics',
@@ -50,7 +49,6 @@ export const RULE_SECTIONS: RuleSection[] = [
       { id: 'attribute-checks', label: 'Attribute, Group, Opposed Checks' },
       { id: 'first-impressions', label: 'First Impressions' },
     ],
-    stub: true,
   },
   {
     slug: 'character-overview',
@@ -63,7 +61,6 @@ export const RULE_SECTIONS: RuleSection[] = [
       { id: 'secondary-stats', label: 'Secondary Stats' },
       { id: 'fleshing-out', label: 'Fleshing A Character Out' },
     ],
-    stub: true,
   },
   {
     slug: 'character-creation',
