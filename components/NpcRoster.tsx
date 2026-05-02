@@ -6,6 +6,8 @@ import { logEvent } from '../lib/events'
 import { generateRandomNpc, ALL_SKILLS, SkillEntry } from '../lib/npc-generator'
 import { resizeImage } from '../lib/image-utils'
 import { MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getWeaponByName } from '../lib/weapons'
+import { EQUIPMENT } from '../lib/xse-schema'
+import type { InventoryItem } from '../lib/inventory'
 import PortraitBankPicker from './PortraitBankPicker'
 import { openPopout } from '../lib/popout'
 import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
@@ -268,6 +270,10 @@ const emptyForm = {
   weapon: null as any,
   weapon2: null as any,
   folder: '' as string,
+  // GM-authored inventory — items the player will see when looting
+  // this NPC via 🎒 Search Remains. Distinct from `equipment` (the
+  // weapon/armor block), and separate from skills.
+  inventoryEntries: [] as InventoryItem[],
 }
 
 function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initiativeNpcOrder, onAddToCombat, pcEntries, onViewNpc, viewingNpcIds, editNpcId, onEditStarted, externalNpcs, onPlaceOnMap, onRemoveFromMap, onPlaceFolderOnMap, onTacticalRefresh, onUnmapFolder, npcIdsOnMap, onNpcDeleted }: Props) {
@@ -465,6 +471,19 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       influence: npc.influence,
       dexterity: npc.dexterity,
       skillEntries: Array.isArray(npc.skills?.entries) ? npc.skills.entries : (typeof npc.skills?.text === 'string' ? parseSkillText(npc.skills.text) : []),
+      // Inventory — tolerant: falsy / non-array → []. Missing fields
+      // (enc/rarity/notes/custom) get defaults so the form renders
+      // without explosions on legacy rows.
+      inventoryEntries: Array.isArray(npc.inventory)
+        ? (npc.inventory as any[]).map(it => ({
+            name: typeof it?.name === 'string' ? it.name : '',
+            qty: typeof it?.qty === 'number' && it.qty > 0 ? it.qty : 1,
+            enc: typeof it?.enc === 'number' ? it.enc : 0,
+            rarity: typeof it?.rarity === 'string' ? it.rarity : 'Common',
+            notes: typeof it?.notes === 'string' ? it.notes : '',
+            custom: typeof it?.custom === 'boolean' ? it.custom : true,
+          }))
+        : [],
       notes: npc.notes ?? '',
       public_description: npc.public_description ?? '',
       status: npc.status,
@@ -523,6 +542,9 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       complication: form.complication || null,
       three_words: form.threeWords.filter(w => w),
       folder: form.folder.trim() || null,
+      // Strip empty rows the GM may have left while editing — name
+      // is the only required field; an item with no name isn't real.
+      inventory: form.inventoryEntries.filter(it => it.name.trim()),
       wp_max: 10 + form.physicality + form.dexterity,
       rp_max: 6 + form.physicality,
       ...(!editingId ? { wp_current: 10 + form.physicality + form.dexterity, rp_current: 6 + form.physicality } : {}),
@@ -1711,6 +1733,73 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                   {SKILL_HINTS[form.npc_type]}
                 </div>
               )}
+            </div>
+
+            {/* Inventory — items players see when looting via 🎒 Search
+                Remains. Quick-pick from the SRD catalog OR add a custom
+                row. Empty rows are stripped on save so leaving a stub
+                while editing doesn't pollute the loot table. */}
+            <div style={{ marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '6px', marginBottom: '4px' }}>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif' }}>Inventory (loot)</div>
+                <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{form.inventoryEntries.length} item{form.inventoryEntries.length === 1 ? '' : 's'}</span>
+              </div>
+              {form.inventoryEntries.map((item, i) => (
+                <div key={i} style={{ display: 'flex', gap: '4px', marginBottom: '4px', alignItems: 'center' }}>
+                  <input value={item.name}
+                    onChange={e => setForm(f => ({ ...f, inventoryEntries: f.inventoryEntries.map((it, j) => j === i ? { ...it, name: e.target.value } : it) }))}
+                    placeholder="Item name"
+                    style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+                  <input type="number" min={1} value={item.qty}
+                    onChange={e => setForm(f => ({ ...f, inventoryEntries: f.inventoryEntries.map((it, j) => j === i ? { ...it, qty: Math.max(1, parseInt(e.target.value, 10) || 1) } : it) }))}
+                    title="Quantity"
+                    style={{ width: '52px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center' }} />
+                  <input type="number" min={0} step={0.5} value={item.enc}
+                    onChange={e => setForm(f => ({ ...f, inventoryEntries: f.inventoryEntries.map((it, j) => j === i ? { ...it, enc: Math.max(0, parseFloat(e.target.value) || 0) } : it) }))}
+                    title="Encumbrance"
+                    style={{ width: '52px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center' }} />
+                  <select value={item.rarity}
+                    onChange={e => setForm(f => ({ ...f, inventoryEntries: f.inventoryEntries.map((it, j) => j === i ? { ...it, rarity: e.target.value } : it) }))}
+                    style={{ width: '94px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+                    <option value="Common">Common</option>
+                    <option value="Uncommon">Uncommon</option>
+                    <option value="Rare">Rare</option>
+                  </select>
+                  <button onClick={() => setForm(f => ({ ...f, inventoryEntries: f.inventoryEntries.filter((_, j) => j !== i) }))} type="button"
+                    title="Remove item"
+                    style={{ background: 'none', border: 'none', color: '#f5a89a', cursor: 'pointer', fontSize: '14px', padding: '0 4px' }}>×</button>
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: '4px', marginTop: '4px', alignItems: 'center' }}>
+                <select value="" onChange={e => {
+                  if (!e.target.value) return
+                  const cat = EQUIPMENT.find(eq => eq.name === e.target.value)
+                  if (!cat) return
+                  setForm(f => {
+                    // Stack onto an existing non-custom row of the same name.
+                    const existingIdx = f.inventoryEntries.findIndex(it => it.name === cat.name && !it.custom)
+                    if (existingIdx >= 0) {
+                      return { ...f, inventoryEntries: f.inventoryEntries.map((it, j) => j === existingIdx ? { ...it, qty: it.qty + 1 } : it) }
+                    }
+                    return { ...f, inventoryEntries: [...f.inventoryEntries, { name: cat.name, qty: 1, enc: cat.enc, rarity: cat.rarity, notes: cat.notes, custom: false }] }
+                  })
+                  e.target.value = ''
+                }}
+                  style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none', cursor: 'pointer' }}>
+                  <option value="">+ From SRD catalog…</option>
+                  {EQUIPMENT.map(eq => (
+                    <option key={eq.name} value={eq.name}>{eq.name} · {eq.rarity} · enc {eq.enc}</option>
+                  ))}
+                </select>
+                <button type="button"
+                  onClick={() => setForm(f => ({ ...f, inventoryEntries: [...f.inventoryEntries, { name: '', qty: 1, enc: 0, rarity: 'Common', notes: '', custom: true }] }))}
+                  style={{ padding: '4px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  + Custom
+                </button>
+              </div>
+              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '6px', fontStyle: 'italic' }}>
+                Players loot these via 🎒 Search Remains when this NPC is dead, mortally wounded, or unconscious.
+              </div>
             </div>
 
             {/* Motivation & Complication */}
