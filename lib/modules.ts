@@ -14,6 +14,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getCachedAuth } from './auth-cache'
+import { logEvent } from './events'
 
 // ── Shapes that a module snapshot carries ──────────────────────
 // These are loose on purpose: the publish wizard (Sprint 2) is the
@@ -807,6 +808,13 @@ export async function publishModuleVersion(
     .select('id')
     .single()
   if (vErr || !versionRow) throw new Error(`Publish version failed: ${vErr?.message ?? 'unknown'}`)
+
+  void logEvent('module_published', {
+    module_id: moduleId,
+    version: params.version,
+    visibility: params.visibility,
+    is_first_publish: !params.moduleId,
+  })
 
   return { moduleId: moduleId as string, versionId: versionRow.id as string }
 }

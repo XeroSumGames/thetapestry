@@ -33,6 +33,7 @@ import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 import { skillRaiseCost, skillNextLevel, rapidRaiseCost, isLv4Step } from '../lib/cdp-costs'
 import { appendProgressionEntry } from '../lib/progression-log'
 import { getCachedAuth } from '../lib/auth-cache'
+import { logEvent } from '../lib/events'
 
 const ATTR_ORDER: AttributeName[] = ['RSN', 'ACU', 'PHY', 'INF', 'DEX']
 const ATTR_FULL: Record<AttributeName, string> = {
@@ -349,6 +350,16 @@ export default function CharacterEvolution({
               narrative: pending.needsNarrative ? pending.narrative.trim() : null,
               new_cdp_balance: newCdp,
             },
+          })
+          void logEvent('character_evolved', {
+            character_id: characterId,
+            campaign_id: campaignId,
+            kind: pending.kind,
+            key: pending.key,
+            from: pending.fromLevel,
+            to: pending.toLevel,
+            cost: pending.cost,
+            target: target === 'apprentice' ? 'apprentice' : 'self',
           })
         }
       } catch (e: any) {

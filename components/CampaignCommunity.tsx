@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
 import { appendProgressionEntry } from '../lib/progression-log'
+import { logEvent } from '../lib/events'
 import CommunityMoraleModal from './CommunityMoraleModal'
 import { type InventoryItem } from '../lib/inventory'
 import { EQUIPMENT } from '../lib/xse-schema'
@@ -1373,6 +1374,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }).select().single()
     if (error) { setCreating(false); alert(`Create failed: ${error.message}`); return }
     const newComm = data as Community
+    void logEvent('community_created', { id: newComm.id, name: newComm.name, campaign_id: campaignId })
     // Auto-enroll the creator's PC as founding active member, so the
     // leader shows up in the roster and starts the member-count at 1.
     // Quietly skips if the creator doesn't have a PC in this campaign

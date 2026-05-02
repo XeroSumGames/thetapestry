@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
+import { logEvent } from '../../../lib/events'
 import { isMissingSchema, missingSchemaMessage } from '../../../lib/supabase-errors'
 import { renderRichText } from '../../../lib/rich-text'
 import {
@@ -372,6 +373,11 @@ export default function WarStoriesPage() {
         return
       }
       storyId = data.id
+      void logEvent('war_story_published', {
+        story_id: storyId,
+        campaign_id: (payload as any).campaign_id ?? null,
+        setting: (payload as any).setting ?? null,
+      })
     }
 
     // Upload each picked file to <author>/<story>/<filename>. upsert:true

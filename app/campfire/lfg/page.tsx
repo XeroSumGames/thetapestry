@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
+import { logEvent } from '../../../lib/events'
 import { renderRichText } from '../../../lib/rich-text'
 import { useRouter } from 'next/navigation'
 import {
@@ -404,6 +405,7 @@ export default function LfgPage() {
       if (error) { alert('Error: ' + error.message) }
       else {
         setMyInterests(prev => new Set(prev).add(postId))
+        void logEvent('lfg_interest_pinged', { post_id: postId })
       }
     }
     setInterestPending(prev => {
@@ -467,6 +469,10 @@ export default function LfgPage() {
     } else {
       const { error } = await supabase.from('lfg_posts').insert({ ...payload, author_user_id: myId })
       if (error) { alert('Error: ' + error.message); setSaving(false); return }
+      void logEvent('lfg_post_created', {
+        kind: (payload as any).kind,
+        setting: (payload as any).setting ?? null,
+      })
     }
     setSaving(false)
     setComposing(false)

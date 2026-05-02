@@ -3390,6 +3390,14 @@ export default function TablePage() {
       logRowId: logRow?.id,
       mode3d6,
     })
+    void logEvent('recruit_attempted', {
+      campaign_id: id,
+      approach: recruitApproach,
+      outcome,
+      npc_id: recruitNpcId,
+      community_id: finalCommunityId,
+      apprentice: applyApprentice,
+    })
     setRecruitStep('result')
     // Reload feed so the new log row appears immediately.
     await rollsFeed.refetch()

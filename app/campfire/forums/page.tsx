@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
+import { logEvent } from '../../../lib/events'
 import { useRouter } from 'next/navigation'
 import {
   composePickerOptions,
@@ -264,6 +265,15 @@ export default function ForumsIndexPage() {
       // approved_by stays null for self-publish — only Thriver review
       // sets approved_by. Convention matches world_communities.
     }).select('id').single()
+    if (data && !error) {
+      void logEvent('forum_thread_created', {
+        thread_id: (data as any).id,
+        scope: draft.scope,
+        setting: draft.setting ?? null,
+        campaign_id: draft.scope === 'campaign' ? draft.campaign_id ?? null : null,
+        moderation_status,
+      })
+    }
     setSaving(false)
     if (error) { alert('Error: ' + error.message); return }
     setComposing(false)

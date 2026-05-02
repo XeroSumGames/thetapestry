@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
+import { logEvent } from '../lib/events'
 import { PIN_CATEGORIES, getCategoryEmoji, getCategoryLabel } from '../lib/pin-categories'
 import { openPopout } from '../lib/popout'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
@@ -116,11 +117,19 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
   async function toggleReveal(pin: CampaignPin) {
     await supabase.from('campaign_pins').update({ revealed: !pin.revealed }).eq('id', pin.id)
     setPins(prev => prev.map(p => p.id === pin.id ? { ...p, revealed: !p.revealed } : p))
+    if (!pin.revealed) {
+      // Only log on the reveal-direction; un-reveal isn't worth tracking.
+      void logEvent('pin_revealed', { pin_id: pin.id, campaign_id: campaignId, bulk: false })
+    }
   }
 
   async function revealAll() {
+    const hidden = pins.filter(p => !p.revealed)
     await supabase.from('campaign_pins').update({ revealed: true }).eq('campaign_id', campaignId)
     setPins(prev => prev.map(p => ({ ...p, revealed: true })))
+    if (hidden.length > 0) {
+      void logEvent('pin_revealed', { campaign_id: campaignId, bulk: true, count: hidden.length })
+    }
   }
 
   async function hideAll() {

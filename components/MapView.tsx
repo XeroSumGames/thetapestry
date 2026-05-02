@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
-import { logFirstEvent } from '../lib/events'
+import { logFirstEvent, logEvent } from '../lib/events'
 import { PIN_CATEGORIES, getCategoryEmoji as sharedGetCategoryEmoji } from '../lib/pin-categories'
 import QuickAddModal from './QuickAddModal'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
@@ -459,6 +459,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       alert(`Whisper failed: ${error.message}`)
     } else {
       setWhisperDraft('')
+      void logEvent('whisper_posted', { length: content.length })
       // Realtime sub picks up the row; no manual refresh needed.
     }
     setPostingWhisper(false)

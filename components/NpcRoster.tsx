@@ -2,6 +2,7 @@
 import { memo, useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
+import { logEvent } from '../lib/events'
 import { generateRandomNpc, ALL_SKILLS, SkillEntry } from '../lib/npc-generator'
 import { resizeImage } from '../lib/image-utils'
 import { MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getWeaponByName } from '../lib/weapons'
@@ -805,6 +806,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       return next
     })
     await supabase.from('scene_tokens').update({ is_visible: true }).in('npc_id', npcIds)
+    void logEvent('npc_revealed', { count: npcIds.length, campaign_id: campaignId })
   }
 
   async function hideNpcsByIds(npcIds: string[]) {

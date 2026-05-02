@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { logEvent } from '../lib/events'
 import {
   classifyRoll,
   outcomeToMoraleCmod,
@@ -578,6 +579,13 @@ export default function CommunityMoraleModal({
       status: nextStatus,
       ...(reallyDissolves ? { dissolved_at: now } : {}),
     }).eq('id', community.id)
+
+    void logEvent('morale_check_run', {
+      community_id: community.id,
+      week: newWeek,
+      outcome: morale.outcome,
+      dissolved: reallyDissolves,
+    })
 
     // 4b) If this community is published to the Tapestry, bump its
     //     world-facing public face. ALWAYS update last_public_update_at
