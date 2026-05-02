@@ -345,30 +345,37 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
                 🔒 Private
               </span>
             )}
-            {/* Rating chip — only shown when at least one review
-                exists so we don't litter cards with phantom 0-stars on
-                fresh modules. Maintained denormalized on
-                modules.avg_rating + modules.rating_count via the
-                trigger in sql/modules-phase-c-reviews.sql. */}
-            {(m.rating_count ?? 0) > 0 && (
-              <span style={{
-                marginLeft: 'auto',
-                padding: '2px 8px', background: '#2a2010', border: '1px solid #5a4a1b',
-                borderRadius: '3px', fontSize: '13px', color: '#EF9F27',
-                fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
-                display: 'inline-flex', alignItems: 'center', gap: '4px',
-              }}
-                title={`Average rating across ${m.rating_count} review${m.rating_count === 1 ? '' : 's'}`}>
-                ⭐ {(m.avg_rating ?? 0).toFixed(1)} <span style={{ opacity: 0.7, marginLeft: '2px' }}>({m.rating_count})</span>
-              </span>
-            )}
+            {/* Rating chip — always rendered for visual consistency
+                with the 📥 chip. When rating_count is 0 we show
+                "Unrated" in a muted treatment instead of "0.0 (0)" so
+                fresh modules don't look like they got 1-star bombed.
+                Maintained denormalized on modules.avg_rating +
+                modules.rating_count via the trigger in
+                sql/modules-phase-c-reviews.sql. */}
+            <span style={{
+              marginLeft: 'auto',
+              padding: '2px 8px',
+              background: (m.rating_count ?? 0) > 0 ? '#2a2010' : '#242424',
+              border: `1px solid ${(m.rating_count ?? 0) > 0 ? '#5a4a1b' : '#3a3a3a'}`,
+              borderRadius: '3px', fontSize: '13px',
+              color: (m.rating_count ?? 0) > 0 ? '#EF9F27' : '#5a5550',
+              fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
+              display: 'inline-flex', alignItems: 'center', gap: '4px',
+            }}
+              title={(m.rating_count ?? 0) > 0
+                ? `Average rating across ${m.rating_count} review${m.rating_count === 1 ? '' : 's'}`
+                : 'No reviews yet'}>
+              {(m.rating_count ?? 0) > 0
+                ? <>⭐ {(m.avg_rating ?? 0).toFixed(1)} <span style={{ opacity: 0.7, marginLeft: '2px' }}>({m.rating_count})</span></>
+                : <>⭐ Unrated</>
+              }
+            </span>
             {/* Subscriber count chip — shown on every card; reads
                 "0 downloads" for fresh modules so the chip is always
                 visible (helps players gauge popularity at a glance).
                 Maintained denormalized on modules.subscriber_count via
                 the trigger in sql/modules-subscriber-count.sql. */}
             <span style={{
-              marginLeft: (m.rating_count ?? 0) > 0 ? 0 : 'auto',
               padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b',
               borderRadius: '3px', fontSize: '13px', color: '#7fc458',
               fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
