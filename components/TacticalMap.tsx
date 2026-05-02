@@ -814,7 +814,45 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // they've fogged. Drawn before tokens so token portraits go on
     // top for the GM (we'll separately suppress player-side tokens
     // sitting in fog below).
-    const fogMap = fogLocalRef.current
+    //
+    // PC vision punch-through: each PC token clears a Chebyshev
+    // radius around itself from the rendered fog. Computed at draw
+    // time so the GM's authored fog_state stays untouched — the GM
+    // edit-mode view still shows the raw layer for predictable
+    // painting. Out of edit mode, the GM sees what the players see.
+    const VISION_RADIUS_CELLS = 6
+    const rawFog = fogLocalRef.current
+    let fogMap = rawFog
+    if (!fogEditMode && Object.keys(rawFog).length > 0) {
+      const visible = new Set<string>()
+      for (const tok of tokensRef.current) {
+        if (tok.token_type === 'object') continue
+        if (!tok.character_id) continue // PC only — NPC vision = Phase 3 work
+        const gw = tok.grid_w ?? 1
+        const gh = tok.grid_h ?? 1
+        const r = VISION_RADIUS_CELLS
+        // For multi-cell PCs (rare) we sweep from every footprint
+        // cell so an irregular party token still illuminates
+        // correctly. Single-cell PCs collapse to one origin.
+        for (let fx = 0; fx < gw; fx++) {
+          for (let fy = 0; fy < gh; fy++) {
+            const ox = tok.grid_x + fx
+            const oy = tok.grid_y + fy
+            for (let dx = -r; dx <= r; dx++) {
+              for (let dy = -r; dy <= r; dy++) {
+                if (Math.max(Math.abs(dx), Math.abs(dy)) > r) continue
+                visible.add(`${ox + dx},${oy + dy}`)
+              }
+            }
+          }
+        }
+      }
+      const effective: Record<string, boolean> = {}
+      for (const k of Object.keys(rawFog)) {
+        if (rawFog[k] && !visible.has(k)) effective[k] = true
+      }
+      fogMap = effective
+    }
     const fogKeys = Object.keys(fogMap)
     if (fogKeys.length > 0) {
       const cellW = gridW / s.grid_cols
