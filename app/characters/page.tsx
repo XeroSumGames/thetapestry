@@ -60,7 +60,7 @@ export default function CharactersPage() {
 
   return (
     <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '12px' }}>
         <div style={{ fontFamily: 'Distemper, Carlito, sans-serif', fontSize: '26px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1 }}>
           My Survivors
         </div>
@@ -74,15 +74,15 @@ export default function CharactersPage() {
             }
           }}
             style={{ padding: '7px 18px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            + Test Character
+            Test Character
           </button>
         )}
-        {/* New-character path picker — replaces the single
-            "New Character" button. Surfaces the four creation flows
-            so newcomers know they exist (the sidebar's "Survivors"
-            section also lists them, but having them here on the
-            page they'll already be visiting is the more discoverable
-            spot). Same colors as the sidebar row. */}
+      </div>
+
+      {/* Creation-path picker — own row beneath the header so the
+          surface stays uncrowded and the four flows are scannable.
+          Same color codes as the sidebar's Survivors section. */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
         <a href='/characters/new' style={creationBtn('#c0392b', '#fff', '#c0392b')}>Backstory</a>
         <a href='/characters/quick' style={creationBtn('#1a3a5c', '#7ab3d4', '#7ab3d4')}>Quick</a>
         <a href='/characters/random' style={creationBtn('#2a2010', '#EF9F27', '#5a4a1b')}>Random</a>
