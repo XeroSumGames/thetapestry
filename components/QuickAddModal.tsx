@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { appendProgressionEntry } from '../lib/progression-log'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
-import { LABEL_STYLE } from '../lib/style-helpers'
+import { LABEL_STYLE, ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 
 export interface QuickAddModalProps {
   mode: 'campaign' | 'world'
@@ -376,10 +376,8 @@ export default function QuickAddModal({
     : 'Drop a pin on the map, start a community, or both. Each saves independently and can include attachments.'
 
   return (
-    <div onClick={onClose}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div onClick={e => e.stopPropagation()}
-        style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: hideCommunity ? '440px' : '760px', maxHeight: '88vh', overflowY: 'auto' }}>
+    <ModalBackdrop onClose={onClose} zIndex={Z_INDEX.criticalModal} opacity={0.88} padding="1rem">
+      <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: hideCommunity ? '440px' : '760px', maxHeight: '88vh', overflowY: 'auto' }}>
         <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Quick Add</div>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>{title}</div>
         <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1.25rem', fontFamily: 'Barlow, sans-serif' }}>{subtitle}</div>
@@ -642,6 +640,6 @@ export default function QuickAddModal({
           Done
         </button>
       </div>
-    </div>
+    </ModalBackdrop>
   )
 }

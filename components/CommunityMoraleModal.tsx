@@ -23,6 +23,7 @@ import {
   logDissolution,
 } from '../lib/community-events'
 import type { Community, Member } from '../lib/types/community'
+import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 
 // Phase C — Weekly Morale Check modal. Single-button flow: GM fills in
 // ad-hoc CMods / adjusts A/S mods if needed, clicks "Run Weekly Check",
@@ -760,11 +761,7 @@ export default function CommunityMoraleModal({
   }
 
   // ── Styles shared with the existing app conventions ─────────────
-  const backdrop: React.CSSProperties = {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 2000, padding: '20px',
-  }
+  // Backdrop now via <ModalBackdrop> at each return below.
   const panel: React.CSSProperties = {
     background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px',
     width: '640px', maxWidth: '100%', maxHeight: 'calc(100vh - 40px)',
@@ -839,8 +836,8 @@ export default function CommunityMoraleModal({
     const moraleCmodPreview =
       slotMood + slotEnoughHands + slotClearVoice + slotSafety + slotWorldEvents + additionalMoraleCmod
     return (
-      <div style={backdrop} onClick={onClose}>
-        <div style={panel} onClick={e => e.stopPropagation()}>
+      <ModalBackdrop onClose={onClose} zIndex={Z_INDEX.modal} opacity={0.75} padding="20px">
+        <div style={panel}>
           <div style={header}>
             <div>
               <div style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
@@ -1070,7 +1067,7 @@ export default function CommunityMoraleModal({
             </button>
           </div>
         </div>
-      </div>
+      </ModalBackdrop>
     )
   }
 
@@ -1094,8 +1091,8 @@ export default function CommunityMoraleModal({
   )
 
   return (
-    <div style={backdrop} onClick={onClose}>
-      <div style={panel} onClick={e => e.stopPropagation()}>
+    <ModalBackdrop onClose={onClose} zIndex={Z_INDEX.modal} opacity={0.75} padding="20px">
+      <div style={panel}>
         <div style={header}>
           <div>
             <div style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
@@ -1259,6 +1256,6 @@ export default function CommunityMoraleModal({
           </button>
         </div>
       </div>
-    </div>
+    </ModalBackdrop>
   )
 }

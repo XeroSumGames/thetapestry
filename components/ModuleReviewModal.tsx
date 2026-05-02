@@ -22,6 +22,7 @@ import {
 } from '../lib/modules'
 import { diffSnapshots, summarizeDiff, type SectionDiff } from '../lib/module-diff'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 
 export interface ModuleReviewModalProps {
   supabase: SupabaseClient
@@ -198,11 +199,7 @@ export default function ModuleReviewModal({
   }
 
   // ── Styles (match ModulePublishModal) ──────────────────────────
-  const backdrop: React.CSSProperties = {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 2000, padding: '20px',
-  }
+  // Backdrop now via <ModalBackdrop> below.
   const panel: React.CSSProperties = {
     background: '#1a1a1a', border: '1px solid #5a2e5a', borderLeft: '3px solid #8b5cf6',
     borderRadius: '4px', width: '720px', maxWidth: '100%',
@@ -271,8 +268,8 @@ export default function ModuleReviewModal({
   }
 
   return (
-    <div style={backdrop} onClick={onClose}>
-      <div style={panel} onClick={e => e.stopPropagation()}>
+    <ModalBackdrop onClose={onClose} zIndex={Z_INDEX.modal} opacity={0.75} padding="20px">
+      <div style={panel}>
 
         <div style={header}>
           <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c4a7f0' }}>
@@ -365,6 +362,6 @@ export default function ModuleReviewModal({
         </div>
 
       </div>
-    </div>
+    </ModalBackdrop>
   )
 }

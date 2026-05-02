@@ -21,6 +21,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { type InventoryItem } from '../lib/inventory'
 import { classifyRoll } from '../lib/community-logic'
+import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 
 const RARITY_WEIGHT: Record<string, number> = {
   Common: 1, Uncommon: 2, Rare: 4,
@@ -256,10 +257,8 @@ export default function TradeNegotiationModal({
   const hasSelections = pcGives.length > 0 || pcGets.length > 0
 
   return (
-    <div onClick={!applying ? onClose : undefined}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-      <div onClick={e => e.stopPropagation()}
-        style={{ background: '#1a1a1a', border: '1px solid #5a4a1b', borderRadius: '4px', width: '880px', maxWidth: '100%', maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <ModalBackdrop onClose={!applying ? onClose : undefined} zIndex={Z_INDEX.criticalModalOver} opacity={0.85} padding="20px">
+      <div style={{ background: '#1a1a1a', border: '1px solid #5a4a1b', borderRadius: '4px', width: '880px', maxWidth: '100%', maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Header */}
         <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -376,6 +375,6 @@ export default function TradeNegotiationModal({
           </div>
         </div>
       </div>
-    </div>
+    </ModalBackdrop>
   )
 }
