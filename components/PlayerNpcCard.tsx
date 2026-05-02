@@ -85,6 +85,14 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
   const [enlarged, setEnlarged] = useState(false)
   const [cmod, setCmod] = useState<number | null>(null)
   const [recruitState, setRecruitState] = useState<RecruitState>(null)
+  // Player-private NPC notes. Scoped to (character_id, npc_id) so a
+  // user with multiple PCs in one campaign keeps separate threads
+  // per PC. The GM doesn't see these — they have campaign_npcs.notes
+  // for their own bookkeeping.
+  const [notes, setNotes] = useState<string>('')
+  const [notesLoaded, setNotesLoaded] = useState(false)
+  const [notesDirty, setNotesDirty] = useState(false)
+  const [notesSaving, setNotesSaving] = useState(false)
 
   // ── Search Remains (player-side loot) ──
   // Lazily-loaded NPC inventory — only fetched when the looter opens the
@@ -127,6 +135,49 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
     })()
     return () => { cancelled = true }
   }, [npc.id, viewingCharacterId])
+
+  // Load the viewing PC's existing note (if any) for this NPC. Reset
+  // dirty state on each (character, npc) switch so the textarea starts
+  // clean. We use maybeSingle since most (character, npc) pairs won't
+  // have a row yet — the unique constraint guarantees at most one.
+  useEffect(() => {
+    if (!viewingCharacterId) { setNotes(''); setNotesLoaded(false); return }
+    let cancelled = false
+    setNotesLoaded(false)
+    ;(async () => {
+      const { data } = await supabase
+        .from('player_npc_notes')
+        .select('note')
+        .eq('npc_id', npc.id)
+        .eq('character_id', viewingCharacterId)
+        .maybeSingle()
+      if (cancelled) return
+      setNotes((data as any)?.note ?? '')
+      setNotesDirty(false)
+      setNotesLoaded(true)
+    })()
+    return () => { cancelled = true }
+  }, [npc.id, viewingCharacterId])
+
+  async function saveNotes() {
+    if (!viewingCharacterId || !notesDirty) return
+    setNotesSaving(true)
+    // Upsert keyed on the unique (character_id, npc_id) pair; the
+    // trigger updates updated_at on every UPDATE so we don't have to
+    // pass it explicitly.
+    const { error } = await supabase
+      .from('player_npc_notes')
+      .upsert(
+        { character_id: viewingCharacterId, npc_id: npc.id, note: notes },
+        { onConflict: 'character_id,npc_id' },
+      )
+    if (error) {
+      console.error('[PlayerNpcCard] notes save failed:', error.message)
+    } else {
+      setNotesDirty(false)
+    }
+    setNotesSaving(false)
+  }
 
   // Recruit-state lookup. Runs on every card open. Cheap: two
   // small queries, neither returns more than 1 row.
@@ -390,6 +441,36 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
         </div>
         <button onClick={onClose} style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', flexShrink: 0 }}>Close</button>
       </div>
+
+      {/* Player NPC notes — private to the viewing PC. Saves on blur
+          via upsert keyed on (character_id, npc_id). The GM doesn't
+          see these; they have campaign_npcs.notes for their own
+          bookkeeping. Hidden until the load completes so the textarea
+          doesn't flash empty before the existing note appears. */}
+      {viewingCharacterId && notesLoaded && (
+        <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #2e2e2e' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '3px' }}>
+            <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#cce0f5', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+              My Notes
+            </span>
+            <span style={{ fontSize: '13px', color: notesSaving ? '#7ab3d4' : notesDirty ? '#EF9F27' : '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              {notesSaving ? 'Saving…' : notesDirty ? 'Unsaved' : 'Saved'}
+            </span>
+          </div>
+          <textarea
+            value={notes}
+            onChange={e => { setNotes(e.target.value); setNotesDirty(true) }}
+            onBlur={() => { void saveNotes() }}
+            placeholder="What does your character think of this NPC? Lies they told. Debts owed. Suspicions."
+            rows={3}
+            style={{
+              width: '100%', resize: 'vertical', boxSizing: 'border-box',
+              padding: '6px 8px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px',
+              color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5,
+            }}
+          />
+        </div>
+      )}
 
       {enlarged && npc.portrait_url && (
         <div onClick={() => setEnlarged(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}>
