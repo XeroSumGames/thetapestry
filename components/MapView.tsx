@@ -70,6 +70,11 @@ interface Pin {
   sort_order?: number
   event_date?: string | null
   address?: string | null
+  // Parent/child structure — null for top-level pins, references
+  // another map_pins.id for sub-rumors (e.g. "the basement" hanging
+  // off "the abandoned warehouse"). FK is ON DELETE SET NULL so a
+  // deleted parent orphans its children rather than cascading.
+  parent_pin_id?: string | null
 }
 
 interface PinForm {
@@ -184,7 +189,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [attachments, setAttachments] = useState<File[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingPin, setEditingPin] = useState<Pin | null>(null)
-  const [editForm, setEditForm] = useState({ title: '', notes: '', categories: ['location'] as string[], event_date: '', sort_order: '', lat: '', lng: '', address: '', cmod_active: false, cmod_impact: '', cmod_radius_km: '', cmod_label: '' })
+  const [editForm, setEditForm] = useState({ title: '', notes: '', categories: ['location'] as string[], event_date: '', sort_order: '', lat: '', lng: '', address: '', cmod_active: false, cmod_impact: '', cmod_radius_km: '', cmod_label: '', parent_pin_id: '' })
   // Address autocomplete (Nominatim) state for the Edit Pin modal.
   // Mirrors the world-map address-search bar at the top — type 3+ chars
   // and we offer matching geocodes; click one to fill lat/lng/address.
@@ -993,6 +998,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     cmod_impact: (pin as any).cmod_impact != null ? String((pin as any).cmod_impact) : '',
     cmod_radius_km: (pin as any).cmod_radius_km != null ? String((pin as any).cmod_radius_km) : '',
     cmod_label: (pin as any).cmod_label ?? '',
+    parent_pin_id: (pin as any).parent_pin_id ?? '',
   })
   setEditAttachments([])
   setShowForm(false)
@@ -1014,7 +1020,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const sortVal = editForm.sort_order.trim() ? parseInt(editForm.sort_order, 10) : null
   const latVal = editForm.lat.trim() ? parseFloat(editForm.lat) : NaN
   const lngVal = editForm.lng.trim() ? parseFloat(editForm.lng) : NaN
-  const updatePayload: Record<string, unknown> = { title: editForm.title, notes: editForm.notes, category: editForm.categories[0] ?? 'location', categories: editForm.categories, event_date: editForm.event_date.trim() || null, sort_order: Number.isNaN(sortVal) ? null : sortVal, address: editForm.address.trim() || null }
+  const updatePayload: Record<string, unknown> = { title: editForm.title, notes: editForm.notes, category: editForm.categories[0] ?? 'location', categories: editForm.categories, event_date: editForm.event_date.trim() || null, sort_order: Number.isNaN(sortVal) ? null : sortVal, address: editForm.address.trim() || null, parent_pin_id: editForm.parent_pin_id || null }
   if (!Number.isNaN(latVal)) updatePayload.lat = latVal
   if (!Number.isNaN(lngVal)) updatePayload.lng = lngVal
   // World-event CMod propagation fields. Only round-tripped when
@@ -1455,6 +1461,31 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   } else {
                     folderMap[cat].sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''))
                   }
+                  // Parent/child interleave — when a pin's parent_pin_id
+                  // points to another pin in this same folder, render the
+                  // child directly under its parent (and indent it in the
+                  // row markup). Children whose parent isn't in this
+                  // folder render at top-level alongside everyone else.
+                  const arr = folderMap[cat]
+                  const idsInFolder = new Set(arr.map(p => p.id))
+                  const childrenByParent: Record<string, Pin[]> = {}
+                  const topLevel: Pin[] = []
+                  for (const p of arr) {
+                    const parent = (p as any).parent_pin_id as string | null | undefined
+                    if (parent && idsInFolder.has(parent)) {
+                      if (!childrenByParent[parent]) childrenByParent[parent] = []
+                      childrenByParent[parent].push(p)
+                    } else {
+                      topLevel.push(p)
+                    }
+                  }
+                  const reordered: Pin[] = []
+                  for (const p of topLevel) {
+                    reordered.push(p)
+                    const kids = childrenByParent[p.id]
+                    if (kids) reordered.push(...kids)
+                  }
+                  folderMap[cat] = reordered
                 }
                 // Sort categories: Distemper Timeline first, then the rest in PIN_CATEGORIES order
                 const sortedCats = PIN_CATEGORIES.filter(c => folderMap[c.value] && folderMap[c.value].length > 0)
@@ -1583,34 +1614,42 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                       </div>
                       {isOpen && (
                         <div style={{ padding: '2px 0 4px' }}>
-                          {folderPins.map(p => {
-                            const isExpanded = expandedPinId === p.id
-                            return (
-                              <div key={p.id} onClick={() => {
-                                if (isExpanded) { setExpandedPinId(null) }
-                                else {
-                                  setExpandedPinId(p.id); flyToPin(p)
-                                  supabase.from('map_pins').update({ view_count: ((p as any).view_count ?? 0) + 1 }).eq('id', p.id)
-                                  if (!pinAttachments[p.id]) {
-                                    supabase.storage.from('pin-attachments').list(`${p.user_id}/${p.id}`).then(({ data: files }: any) => {
-                                      if (files && files.length > 0) {
-                                        const atts = files.map((f: any) => {
-                                          const { data: urlData } = supabase.storage.from('pin-attachments').getPublicUrl(`${p.user_id}/${p.id}/${f.name}`)
-                                          return { name: f.name, url: urlData.publicUrl }
-                                        })
-                                        setPinAttachments(prev => ({ ...prev, [p.id]: atts }))
-                                      } else {
-                                        setPinAttachments(prev => ({ ...prev, [p.id]: [] }))
-                                      }
-                                    })
+                          {(() => {
+                            // Build a quick lookup so child rows can detect
+                            // they're siblings of a parent in this folder
+                            // and pick up the indent treatment.
+                            const folderIds = new Set(folderPins.map(p => p.id))
+                            return folderPins.map(p => {
+                              const isExpanded = expandedPinId === p.id
+                              const parentId = (p as any).parent_pin_id as string | null | undefined
+                              const isChild = !!parentId && folderIds.has(parentId)
+                              return (
+                                <div key={p.id} onClick={() => {
+                                  if (isExpanded) { setExpandedPinId(null) }
+                                  else {
+                                    setExpandedPinId(p.id); flyToPin(p)
+                                    supabase.from('map_pins').update({ view_count: ((p as any).view_count ?? 0) + 1 }).eq('id', p.id)
+                                    if (!pinAttachments[p.id]) {
+                                      supabase.storage.from('pin-attachments').list(`${p.user_id}/${p.id}`).then(({ data: files }: any) => {
+                                        if (files && files.length > 0) {
+                                          const atts = files.map((f: any) => {
+                                            const { data: urlData } = supabase.storage.from('pin-attachments').getPublicUrl(`${p.user_id}/${p.id}/${f.name}`)
+                                            return { name: f.name, url: urlData.publicUrl }
+                                          })
+                                          setPinAttachments(prev => ({ ...prev, [p.id]: atts }))
+                                        } else {
+                                          setPinAttachments(prev => ({ ...prev, [p.id]: [] }))
+                                        }
+                                      })
+                                    }
                                   }
-                                }
-                              }}
-                                style={{ padding: '4px 10px 4px 34px', cursor: 'pointer', borderLeft: `2px solid ${isExpanded ? '#c0392b' : 'transparent'}`, background: isExpanded ? '#1a1a1a' : 'transparent' }}
-                                onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = '#1a1a1a' }}
-                                onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = 'transparent' }}>
-                                <div style={{ fontSize: '13px', color: '#f5f2ee', overflow: isExpanded ? 'visible' : 'hidden', textOverflow: 'ellipsis', whiteSpace: isExpanded ? 'normal' : 'nowrap' }}>
-                                  {p.title}
+                                }}
+                                  style={{ padding: isChild ? '4px 10px 4px 50px' : '4px 10px 4px 34px', cursor: 'pointer', borderLeft: `2px solid ${isExpanded ? '#c0392b' : 'transparent'}`, background: isExpanded ? '#1a1a1a' : 'transparent' }}
+                                  onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = '#1a1a1a' }}
+                                  onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = 'transparent' }}>
+                                  <div style={{ fontSize: '13px', color: '#f5f2ee', overflow: isExpanded ? 'visible' : 'hidden', textOverflow: 'ellipsis', whiteSpace: isExpanded ? 'normal' : 'nowrap' }}>
+                                    {isChild && <span style={{ color: '#5a5550', marginRight: '4px' }}>↳</span>}
+                                    {p.title}
                                   {isExpanded && p.user_id && thriverUserIds.has(p.user_id) && (
                                     <span title="Canon — published by The Tapestry team" style={{ marginLeft: '6px', padding: '1px 6px', background: '#2a2010', border: '1px solid #EF9F27', borderRadius: '2px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
                                       🛡️ Canon
@@ -1659,9 +1698,10 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                     )}
                                   </div>
                                 )}
-                              </div>
-                            )
-                          })}
+                                </div>
+                              )
+                            })
+                          })()}
                         </div>
                       )}
                     </div>
@@ -1775,6 +1815,24 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         {PIN_CATEGORIES.filter(c => !editForm.categories.includes(c.value)).map(c => (
           <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>
         ))}
+      </select>
+    </div>
+    {/* Parent pin — optional. When set, this pin nests under the
+        chosen pin in the browser (a "rumor about the basement"
+        hangs off "the abandoned warehouse"). The picker excludes
+        the editing pin itself + any pin that already has it as
+        an ancestor, so accidental cycles are blocked. */}
+    <div style={{ marginBottom: '12px' }}>
+      <label style={lbl}>Parent Pin (optional)</label>
+      <select style={inp} value={editForm.parent_pin_id}
+        onChange={e => setEditForm(p => ({ ...p, parent_pin_id: e.target.value }))}>
+        <option value="">— top-level (no parent) —</option>
+        {pins
+          .filter(p => p.id !== editingPin?.id && p.parent_pin_id !== editingPin?.id)
+          .sort((a, b) => a.title.localeCompare(b.title))
+          .map(p => (
+            <option key={p.id} value={p.id}>{p.title}</option>
+          ))}
       </select>
     </div>
     {editForm.categories.includes('world_event') && (
