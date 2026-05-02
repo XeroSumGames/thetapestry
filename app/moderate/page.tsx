@@ -567,11 +567,11 @@ export default function ModerationPage() {
           const label = s === 'rumors' ? 'Rumor Queue'
             : s === 'users' ? 'Users'
             : s === 'npcs' ? 'NPCs'
-            : s === 'communities' ? '🌐 Communities'
-            : s === 'modules' ? '📦 Modules'
-            : s === 'forums' ? '💬 Forums'
-            : s === 'warstories' ? '🎭 War Stories'
-            : '🎲 LFG'
+            : s === 'communities' ? 'Communities'
+            : s === 'modules' ? 'Modules'
+            : s === 'forums' ? 'Forums'
+            : s === 'warstories' ? 'War Stories'
+            : 'LFG'
           return (
             <button key={s} onClick={() => setSection(s)} style={{
               padding: '7px 16px',
