@@ -18,6 +18,7 @@ interface Campaign {
   id: string
   name: string
   setting: string | null
+  gm_username: string
 }
 
 const panel: React.CSSProperties = { background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1.25rem', marginBottom: '1rem' }
@@ -47,9 +48,24 @@ export default function ReseedCampaignPage() {
       setIsThriver(thriver)
       if (thriver) {
         // Thriver bypass on campaigns RLS lets us list every campaign,
-        // not just the GM's own. Order by name for scannability.
-        const { data } = await supabase.from('campaigns').select('id, name, setting').order('name')
-        setCampaigns((data ?? []) as Campaign[])
+        // not just the GM's own. Order by name for scannability. Also
+        // resolve GM usernames so the picker reads
+        // "Campaign Name · setting (gmUsername)" — matches the format
+        // Xero asked for so a Thriver can disambiguate same-named
+        // campaigns by who owns them.
+        const { data } = await supabase
+          .from('campaigns')
+          .select('id, name, setting, gm_user_id')
+          .order('name')
+        const camps = (data ?? []) as any[]
+        const gmIds = [...new Set(camps.map(c => c.gm_user_id).filter(Boolean))]
+        const { data: profs } = await supabase.from('profiles').select('id, username').in('id', gmIds)
+        const usernameById: Record<string, string> = {}
+        for (const p of (profs ?? []) as any[]) usernameById[p.id] = p.username
+        setCampaigns(camps.map(c => ({
+          id: c.id, name: c.name, setting: c.setting,
+          gm_username: usernameById[c.gm_user_id] ?? '?',
+        })))
       }
       setAuthChecked(true)
     })()
@@ -101,7 +117,9 @@ export default function ReseedCampaignPage() {
           style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', marginBottom: '12px' }}>
           <option value="">— pick a campaign —</option>
           {campaigns.map(c => (
-            <option key={c.id} value={c.id}>{c.name}{c.setting ? ` · ${c.setting}` : ''}</option>
+            <option key={c.id} value={c.id}>
+              {c.name}{c.setting ? ` · ${c.setting}` : ''} ({c.gm_username})
+            </option>
           ))}
         </select>
         <button onClick={handlePreview} disabled={!campaignId || computing} style={{ ...btnSecondary, opacity: !campaignId || computing ? 0.5 : 1 }}>
