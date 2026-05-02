@@ -1659,6 +1659,25 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                                 </div>
                                 {isExpanded && (
                                   <div style={{ marginTop: '4px' }}>
+                                    {/* Parent breadcrumb — surfaces the parent
+                                        pin's title when this pin is nested.
+                                        Click jumps to the parent (expand it +
+                                        flyTo). Lookup is against `pins`, so
+                                        cross-folder parents still resolve. */}
+                                    {(() => {
+                                      const parentId = (p as any).parent_pin_id as string | null | undefined
+                                      if (!parentId) return null
+                                      const parent = pins.find(x => x.id === parentId)
+                                      if (!parent) return null
+                                      return (
+                                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
+                                          Sub-pin of <button onClick={e => { e.stopPropagation(); setExpandedPinId(parent.id); flyToPin(parent) }}
+                                            style={{ background: 'none', border: 'none', color: '#7ab3d4', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
+                                            {parent.title}
+                                          </button>
+                                        </div>
+                                      )
+                                    })()}
                                     {p.notes && <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, marginBottom: '6px' }}>{p.notes}</div>}
                                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
                                       {p.category === 'world_event'

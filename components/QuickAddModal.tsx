@@ -92,6 +92,12 @@ export default function QuickAddModal({
   // off so players aren't spamming the queue with private bookmarks.
   // Thrivers can also uncheck to keep a pin private to themselves.
   const [worldShare, setWorldShare] = useState(false)
+  // Parent pin nesting — optional. Lets a sub-rumor ("the basement")
+  // hang off a parent pin ("the abandoned warehouse") so dense
+  // narrative geography doesn't flat-spam the world map. Picker is
+  // populated below from existing world pins owned by this user.
+  const [pinParentId, setPinParentId] = useState('')
+  const [parentPinChoices, setParentPinChoices] = useState<{ id: string; title: string }[]>([])
 
   // Address search — geocodes a human-typed place name via Nominatim
   // and fills in Lat/Lng when the player picks a result. No auto-
@@ -180,6 +186,15 @@ export default function QuickAddModal({
     if (initialLng != null) setPinLng(String(initialLng))
   }, [initialLat, initialLng])
 
+  // World mode — load this user's existing world pins to populate the
+  // optional Parent Pin picker. Scoped to user_id so the dropdown
+  // stays personal (you nest under your own pins, not strangers').
+  useEffect(() => {
+    if (mode !== 'world' || !userId) return
+    supabase.from('map_pins').select('id, title').eq('user_id', userId).order('title', { ascending: true })
+      .then(({ data }: { data: { id: string; title: string }[] | null }) => setParentPinChoices(data ?? []))
+  }, [mode, userId])
+
   const categories = mode === 'world' ? WORLD_CATEGORIES : CAMPAIGN_CATEGORIES
 
   async function handlePinSave() {
@@ -233,6 +248,7 @@ export default function QuickAddModal({
         categories: [pinCategory],
         pin_type: pinType,
         status: pinStatus,
+        parent_pin_id: pinParentId || null,
       }).select('id').single()
       if (error || !data) {
         setPinSaving(false)
@@ -259,6 +275,13 @@ export default function QuickAddModal({
     setPinNotes('')
     setPinAttachments([])
     setWorldShare(false)
+    setPinParentId('')
+    // World mode — refresh parent picker so the just-saved pin
+    // appears as a candidate parent for follow-up sub-rumors.
+    if (mode === 'world' && userId) {
+      const { data: parents } = await supabase.from('map_pins').select('id, title').eq('user_id', userId).order('title', { ascending: true })
+      setParentPinChoices((parents ?? []) as { id: string; title: string }[])
+    }
     // Refresh the pin list so the Homestead dropdown sees it.
     if (mode === 'campaign' && campaignId) {
       const { data: pins } = await supabase.from('campaign_pins').select('id, name, category').eq('campaign_id', campaignId).order('name', { ascending: true })
@@ -442,6 +465,21 @@ export default function QuickAddModal({
                 {categories.map(c => <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>)}
               </select>
             </div>
+
+            {/* World mode — optional Parent Pin picker. Nests this pin
+                under another world pin in the sidebar (a sub-rumor
+                hanging off a parent location). Hidden in campaign
+                mode; campaign_pins doesn't carry the same FK. */}
+            {mode === 'world' && parentPinChoices.length > 0 && (
+              <div style={{ marginBottom: '8px' }}>
+                <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Parent Pin (optional)</div>
+                <select value={pinParentId} onChange={e => setPinParentId(e.target.value)}
+                  style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
+                  <option value="">— top-level (no parent) —</option>
+                  {parentPinChoices.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                </select>
+              </div>
+            )}
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Notes (optional)</div>
