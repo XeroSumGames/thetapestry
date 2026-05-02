@@ -1,6 +1,7 @@
 'use client'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../lib/auth-cache'
 
 const OUTPUT_SIZE = 256
 const DISPLAY_MAX = 500 // max width/height of the source preview
@@ -36,6 +37,28 @@ export default function PortraitResizerPage() {
   const [counts, setCounts] = useState<{ man: number; woman: number }>({ man: 0, woman: 0 })
   const [imgSrc, setImgSrc] = useState<string | null>(null) // data URL — survives re-renders
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success'>('idle')
+  // Batch mode — multi-file upload that auto-centers the crop circle
+  // (radius = min(w, h) / 2) and uploads each file in sequence. Faster
+  // than the single-image flow when seeding a setting bank from a
+  // folder of cleanly-cropped portraits. For images that need a custom
+  // crop, the GM still uses the single-image flow.
+  const [batchRunning, setBatchRunning] = useState(false)
+  const [batchProgress, setBatchProgress] = useState<{ done: number; total: number; current: string }>({ done: 0, total: 0, current: '' })
+  const [batchResults, setBatchResults] = useState<{ ok: number; failed: { name: string; error: string }[] }>({ ok: 0, failed: [] })
+  // Thriver-only gate. The tool uploads into the public portrait-bank
+  // bucket + bumps platform-wide counters, so signed-in randos
+  // shouldn't be able to add or replace official portraits.
+  const [authChecked, setAuthChecked] = useState(false)
+  const [isThriver, setIsThriver] = useState(false)
+  useEffect(() => {
+    (async () => {
+      const { user } = await getCachedAuth()
+      if (!user) { setAuthChecked(true); return }
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      setIsThriver((profile?.role ?? '').toString().toLowerCase() === 'thriver')
+      setAuthChecked(true)
+    })()
+  }, [supabase])
 
   // Fetch global counters on mount
   useEffect(() => {
@@ -276,12 +299,154 @@ export default function PortraitResizerPage() {
     setTimeout(() => setUploadStatus('idle'), 2500)
   }
 
+  // Render an image to a square JPEG blob using a centered, max-radius
+  // circle crop. Used by the batch mode where there's no draggable
+  // crop UI — the input image is assumed to already be roughly
+  // portrait-shaped and the auto-center is good enough.
+  async function renderAutoCircle(img: HTMLImageElement, size: number): Promise<Blob | null> {
+    const r = Math.min(img.width, img.height) / 2
+    const cx = img.width / 2
+    const cy = img.height / 2
+    const sx = cx - r
+    const sy = cy - r
+    const sSize = r * 2
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.fillStyle = '#1a1a1a'
+    ctx.fillRect(0, 0, size, size)
+    ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, size, size)
+    return new Promise(res => canvas.toBlob(b => res(b), 'image/jpeg', 0.85))
+  }
+
+  function loadFileAsImage(file: File): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const img = new Image()
+        img.onload = () => resolve(img)
+        img.onerror = () => reject(new Error('Image decode failed'))
+        img.src = reader.result as string
+      }
+      reader.onerror = () => reject(new Error('File read failed'))
+      reader.readAsDataURL(file)
+    })
+  }
+
+  async function handleBatch(files: FileList) {
+    if (batchRunning || files.length === 0) return
+    setBatchRunning(true)
+    setBatchResults({ ok: 0, failed: [] })
+    setBatchProgress({ done: 0, total: files.length, current: '' })
+    const results: { ok: number; failed: { name: string; error: string }[] } = { ok: 0, failed: [] }
+    const list = Array.from(files)
+    for (let i = 0; i < list.length; i++) {
+      const file = list[i]
+      setBatchProgress({ done: i, total: list.length, current: file.name })
+      try {
+        if (!file.type.startsWith('image/')) {
+          results.failed.push({ name: file.name, error: 'Not an image' })
+          continue
+        }
+        const img = await loadFileAsImage(file)
+        const [b256, b56, b32] = await Promise.all([
+          renderAutoCircle(img, 256),
+          renderAutoCircle(img, 56),
+          renderAutoCircle(img, 32),
+        ])
+        if (!b256 || !b56 || !b32) {
+          results.failed.push({ name: file.name, error: 'Canvas render failed' })
+          continue
+        }
+        const { data: nData, error: rpcErr } = await supabase.rpc('increment_portrait_counter', { g: gender })
+        if (rpcErr) {
+          results.failed.push({ name: file.name, error: `Counter: ${rpcErr.message}` })
+          continue
+        }
+        const n: number = typeof nData === 'number' ? nData : 0
+        const base = `NPC-${gender === 'man' ? 'MAN' : 'WOMAN'}-${pad3(n)}`
+        const path256 = `${gender}/256/${base}.jpg`
+        const path56 = `${gender}/56/${base}.jpg`
+        const path32 = `${gender}/32/${base}.jpg`
+        const ups = await Promise.all([
+          supabase.storage.from('portrait-bank').upload(path256, b256, { contentType: 'image/jpeg', upsert: true }),
+          supabase.storage.from('portrait-bank').upload(path56, b56, { contentType: 'image/jpeg', upsert: true }),
+          supabase.storage.from('portrait-bank').upload(path32, b32, { contentType: 'image/jpeg', upsert: true }),
+        ])
+        const upErr = ups.find(u => u.error)
+        if (upErr?.error) {
+          results.failed.push({ name: file.name, error: `Upload: ${upErr.error.message}` })
+          continue
+        }
+        const url256 = supabase.storage.from('portrait-bank').getPublicUrl(path256).data.publicUrl
+        const url56 = supabase.storage.from('portrait-bank').getPublicUrl(path56).data.publicUrl
+        const url32 = supabase.storage.from('portrait-bank').getPublicUrl(path32).data.publicUrl
+        const { error: insErr } = await supabase.from('portrait_bank').insert({
+          number: n, gender, url_256: url256, url_56: url56, url_32: url32,
+        })
+        if (insErr) {
+          results.failed.push({ name: file.name, error: `Metadata: ${insErr.message}` })
+          continue
+        }
+        results.ok++
+        setCounts(prev => ({ ...prev, [gender]: n }))
+      } catch (err: any) {
+        results.failed.push({ name: file.name, error: err?.message ?? 'unknown' })
+      }
+      setBatchResults({ ...results })
+    }
+    setBatchProgress({ done: list.length, total: list.length, current: '' })
+    setBatchResults(results)
+    setBatchRunning(false)
+  }
+
+  if (!authChecked) return null
+  if (!isThriver) return (
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Barlow, sans-serif', color: '#cce0f5', textAlign: 'center' }}>
+      Thriver access only.
+    </div>
+  )
+
   return (
     <div>
       <h1 style={h1Style}>Portrait Resizer</h1>
       <div style={{ color: '#cce0f5', fontSize: '14px', marginBottom: '1.5rem', fontFamily: 'Barlow, sans-serif' }}>
         Drop any image and export it as a 256×256 JPEG — ready for the NPC portrait bank.
         Drag the circle to choose what gets captured, or resize it to zoom.
+      </div>
+
+      {/* Batch upload — multi-file picker that auto-centers the crop
+          circle and uploads each file in sequence. Use this for cleanly-
+          cropped portrait sets where the auto-center is good enough.
+          Single-image flow below is still the right tool when each
+          image needs a custom crop. */}
+      <div style={{ ...panel, background: '#1a1a2e', border: '1px solid #2e2e5a' }}>
+        <div style={h2Style}>Batch Upload (auto-center crop)</div>
+        <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px', fontFamily: 'Barlow, sans-serif' }}>
+          Pick multiple images at once. Each is auto-cropped to a centered max-radius circle, rendered at 256/56/32 px, and uploaded as <strong style={{ color: '#7ab3d4' }}>{gender === 'man' ? 'Male' : 'Female'}</strong> portraits in sequence. Switch the gender pill below before starting.
+        </div>
+        <input
+          type="file" accept="image/*" multiple disabled={batchRunning}
+          onChange={e => { const files = e.target.files; if (files && files.length > 0) handleBatch(files); e.target.value = '' }}
+          style={{ fontFamily: 'Barlow, sans-serif', fontSize: '13px', color: '#d4cfc9' }}
+        />
+        {batchRunning && (
+          <div style={{ marginTop: '8px', fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>
+            Processing {batchProgress.done + 1} / {batchProgress.total} — {batchProgress.current}
+          </div>
+        )}
+        {!batchRunning && (batchResults.ok > 0 || batchResults.failed.length > 0) && (
+          <div style={{ marginTop: '10px', fontSize: '13px', color: batchResults.failed.length === 0 ? '#7fc458' : '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+            ✓ {batchResults.ok} uploaded · ✗ {batchResults.failed.length} failed
+            {batchResults.failed.length > 0 && (
+              <pre style={{ marginTop: '6px', fontSize: '13px', color: '#f5a89a', fontFamily: 'monospace', textTransform: 'none', letterSpacing: 0, whiteSpace: 'pre-wrap' }}>
+                {batchResults.failed.map(f => `${f.name}: ${f.error}`).join('\n')}
+              </pre>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Drop zone / file picker (hidden once an image is loaded) */}

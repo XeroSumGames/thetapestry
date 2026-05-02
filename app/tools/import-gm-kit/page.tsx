@@ -1,6 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
+import { getCachedAuth } from '../../../lib/auth-cache'
 import JSZip from 'jszip'
 
 interface Counts {
@@ -24,6 +25,20 @@ export default function ImportGmKitPage() {
   const [running, setRunning] = useState(false)
   const [result, setResult] = useState<{ counts: Counts; errors: Errors } | null>(null)
   const [error, setError] = useState<string>('')
+  // Thriver-only gate. The tool writes pins / NPCs / scenes / handouts
+  // straight into a campaign; allowing arbitrary signed-in users would
+  // be a wide-open vandalism vector.
+  const [authChecked, setAuthChecked] = useState(false)
+  const [isThriver, setIsThriver] = useState(false)
+  useEffect(() => {
+    (async () => {
+      const { user } = await getCachedAuth()
+      if (!user) { setAuthChecked(true); return }
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      setIsThriver((profile?.role ?? '').toString().toLowerCase() === 'thriver')
+      setAuthChecked(true)
+    })()
+  }, [supabase])
 
   async function readJson<T = any>(zip: JSZip, name: string): Promise<T | null> {
     const f = zip.file(name)
@@ -145,6 +160,13 @@ export default function ImportGmKitPage() {
     color: '#d4cfc9', textTransform: 'uppercase', letterSpacing: '.08em',
     marginBottom: '6px', fontFamily: 'Carlito, sans-serif',
   }
+
+  if (!authChecked) return null
+  if (!isThriver) return (
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Barlow, sans-serif', color: '#cce0f5', textAlign: 'center' }}>
+      Thriver access only.
+    </div>
+  )
 
   return (
     <div style={{ maxWidth: '640px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
