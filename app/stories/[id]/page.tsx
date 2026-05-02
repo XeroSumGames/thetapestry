@@ -230,35 +230,33 @@ export default function CampaignPage() {
   return (
     <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
 
+      {/* Kicked banner above the action bar so the explanation reads
+          before the Rejoin button. The banner-then-buttons order also
+          keeps the action row visually unbroken. Player-only. */}
+      {!isGM && amKicked && (
+        <div style={{ background: '#2a1210', border: '1px solid #c0392b', borderRadius: '4px', padding: '12px 14px', marginBottom: '12px', color: '#f5a89a', fontSize: '13px', lineHeight: 1.5 }}>
+          <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a', marginBottom: '4px' }}>Removed from Session</div>
+          You were removed from this session by the GM. You will not rejoin automatically — click <b>Rejoin Session</b> below when you are ready to return.
+        </div>
+      )}
+
       {/* Canonical campaign-page header — setting label, role chip,
           campaign name, description, red separator, and the action
-          bar (full 7 buttons for GM, slim Launch/Share for player).
-          Same component on every sub-page so the top of the page is
-          visually identical wherever you navigate. */}
-      <StoryActionBar campaignId={id} />
-
-      {/* Player-only extras — kicked banner + Rejoin / Leave. The
-          shared bar already carries Launch + Share for everyone. */}
-      {!isGM && (
+          bar (full 7 buttons for GM, slim Launch/Share for player +
+          inline Rejoin/Leave via extraButtons so all player actions
+          sit on a single row). */}
+      <StoryActionBar campaignId={id} extraButtons={!isGM ? (
         <>
           {amKicked && (
-            <div style={{ background: '#2a1210', border: '1px solid #c0392b', borderRadius: '4px', padding: '12px 14px', marginBottom: '12px', color: '#f5a89a', fontSize: '13px', lineHeight: 1.5 }}>
-              <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a', marginBottom: '4px' }}>Removed from Session</div>
-              You were removed from this session by the GM. You will not rejoin automatically — click <b>Rejoin Session</b> below when you are ready to return.
-            </div>
-          )}
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
-            {amKicked && (
-              <button onClick={handleRejoin} disabled={rejoining} style={{ ...btn('#1a2e10', '#7fc458', '#2d5a1b'), opacity: rejoining ? 0.6 : 1 } as any}>
-                {rejoining ? 'Rejoining…' : 'Rejoin Session'}
-              </button>
-            )}
-            <button onClick={handleLeave} style={btn('#7a1f16', '#f5a89a', '#7a1f16') as any}>
-              Leave
+            <button onClick={handleRejoin} disabled={rejoining} style={{ ...btn('#1a2e10', '#7fc458', '#2d5a1b'), opacity: rejoining ? 0.6 : 1 } as any}>
+              {rejoining ? 'Rejoining…' : 'Rejoin Session'}
             </button>
-          </div>
+          )}
+          <button onClick={handleLeave} style={btn('#7a1f16', '#f5a89a', '#7a1f16') as any}>
+            Leave
+          </button>
         </>
-      )}
+      ) : undefined} />
 
       {/* Invite link — both views */}
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>

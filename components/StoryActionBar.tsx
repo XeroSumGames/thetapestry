@@ -44,9 +44,15 @@ interface CampaignLite {
 
 interface Props {
   campaignId: string
+  // Optional trailing slot rendered at the end of the action-bar flex
+  // row. Used by /stories/[id] to drop in player-only Rejoin / Leave
+  // buttons so all the actions sit on a single visual row instead of
+  // splitting Launch+Share above and Rejoin+Leave below the kicked
+  // banner.
+  extraButtons?: React.ReactNode
 }
 
-export default function StoryActionBar({ campaignId }: Props) {
+export default function StoryActionBar({ campaignId, extraButtons }: Props) {
   const supabase = createClient()
   const router = useRouter()
   const pathname = usePathname() ?? ''
@@ -262,6 +268,7 @@ export default function StoryActionBar({ campaignId }: Props) {
           Delete
         </button>
       )}
+      {extraButtons}
 
       </div>
       {/* Publish modal — owned by the bar so it's reachable from any
