@@ -574,13 +574,14 @@ export default function ModerationPage() {
             : 'LFG'
           return (
             <button key={s} onClick={() => setSection(s)} style={{
-              padding: '7px 16px',
+              padding: '7px 10px',
               border: `1px solid ${borderColor}`,
               background: isActive ? '#2a1210' : (hasPending ? '#0f1a0f' : '#242424'),
               color,
               borderRadius: '3px', cursor: 'pointer',
               fontSize: '13px', fontFamily: 'Carlito, sans-serif',
-              letterSpacing: '.06em', textTransform: 'uppercase',
+              letterSpacing: '.04em', textTransform: 'uppercase',
+              whiteSpace: 'nowrap',
               display: 'flex', alignItems: 'center', gap: '6px',
             }}>
               <span>{label}</span>
