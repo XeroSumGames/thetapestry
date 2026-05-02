@@ -46,9 +46,6 @@ Each of these I can open a file and start typing on right now.
 ### Need Xero design call
 - **Player-facing NPC card on Show All click** — when a GM hits "Show All" and an unintroduced NPC pops into the player's roster, what does the player see when they click it? Already shows portrait, name, type, status, First Impression CMod, Recruit button. Open question: do we add a `description` field, or a "Demand introduction" Recruit-style button, or something else? Has been blocked on this design call across multiple sessions.
 
-### Content prep (waiting on author copy, not code)
-- **SRD section content (7 main sections still stub-hub)** — Overview §01, Core Mechanics §02, Character Overview §03, Character Creation §04, Skills §05, Combat §06, Equipment §07. Each renders a hub-with-cards but the anchor sub-pages don't exist (cards point at `/rules/<section>/<anchor>` 404s). Communities §08 has 5 real sub-pages; Appendices A–D have inline reference content. **Open question for Xero**: take the inline-content path (one long page per section, like the appendices) or the sub-page path (each anchor its own page, like Communities)? Different writing pattern, different UX.
-
 ### King's Crossroads Mall content
 In progress (off this list).
 
