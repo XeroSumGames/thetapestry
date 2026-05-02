@@ -118,8 +118,15 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   const [thriverUserIds, setThriverUserIds] = useState<Set<string>>(new Set())
   const [pinAttachments, setPinAttachments] = useState<Record<string, { name: string; url: string }[]>>({})
   const [pinsVisible, setPinsVisible] = useState(true)
-  const [sidebarTab, setSidebarTab] = useState<'public' | 'mine' | 'campaign'>('public')
+  const [sidebarTab, setSidebarTab] = useState<'public' | 'mine' | 'campaign' | 'whispers'>('public')
   const [campaignPins, setCampaignPins] = useState<{ id: string; name: string; notes: string | null; lat: number; lng: number; category: string; campaign_name: string }[]>([])
+  // Whispers — public message wall. Distinct from the in-table /whisper
+  // chat command (private DM). Anyone signed-in posts; Thrivers can
+  // hard-delete. Schema in sql/whispers.sql; RLS enforces both.
+  const [whispers, setWhispers] = useState<{ id: string; author_user_id: string; content: string; created_at: string; author_username?: string }[]>([])
+  const [whisperDraft, setWhisperDraft] = useState('')
+  const [postingWhisper, setPostingWhisper] = useState(false)
+  const [deletingWhisperId, setDeletingWhisperId] = useState<string | null>(null)
   // Phase E Sprint 3 polish — synthetic "🌐 Published Communities"
   // sidebar folder. Populated during loadPins so the sidebar can
   // list approved world_communities alongside the normal pin folder
@@ -401,6 +408,69 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   useEffect(() => { if (mapInstanceRef.current) loadPins() }, [hiddenFolders, userId])
   // Load campaign pins when tab switches to campaign
   useEffect(() => { if (sidebarTab === 'campaign' && userId) loadCampaignPins() }, [sidebarTab, userId])
+
+  // Load whispers when the tab is selected; subscribe to realtime so a
+  // new post from another user shows up without a refresh. Cleanup
+  // unsubscribes on tab switch / unmount.
+  useEffect(() => {
+    if (sidebarTab !== 'whispers' || !userId) return
+    let cancelled = false
+    async function loadWhispers() {
+      const { data } = await supabase
+        .from('whispers')
+        .select('id, author_user_id, content, created_at')
+        .order('created_at', { ascending: false })
+        .limit(100)
+      if (cancelled || !data) return
+      // Resolve author usernames for any ids not already cached.
+      const missingIds = [...new Set(data.map((w: any) => w.author_user_id).filter((id: string) => !usernames[id]))]
+      let nameMap = { ...usernames }
+      if (missingIds.length > 0) {
+        const { data: profs } = await supabase.from('profiles').select('id, username').in('id', missingIds)
+        for (const p of (profs ?? []) as any[]) nameMap[p.id] = p.username
+        setUsernames(nameMap)
+      }
+      setWhispers(data.map((w: any) => ({ ...w, author_username: nameMap[w.author_user_id] })))
+    }
+    loadWhispers()
+    const ch = supabase.channel(`whispers_feed`).on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'whispers' },
+      () => { void loadWhispers() },
+    ).subscribe()
+    return () => { cancelled = true; supabase.removeChannel(ch) }
+  }, [sidebarTab, userId])
+
+  async function postWhisper() {
+    if (!userId || postingWhisper) return
+    const content = whisperDraft.trim()
+    if (!content) return
+    setPostingWhisper(true)
+    const { error } = await supabase.from('whispers').insert({
+      author_user_id: userId,
+      content,
+    })
+    if (error) {
+      alert(`Whisper failed: ${error.message}`)
+    } else {
+      setWhisperDraft('')
+      // Realtime sub picks up the row; no manual refresh needed.
+    }
+    setPostingWhisper(false)
+  }
+
+  async function deleteWhisper(id: string) {
+    if (deletingWhisperId) return
+    setDeletingWhisperId(id)
+    const { error } = await supabase.from('whispers').delete().eq('id', id)
+    if (error) {
+      alert(`Delete failed: ${error.message}`)
+    } else {
+      // Realtime sub will refresh; do an optimistic prune for snappiness.
+      setWhispers(prev => prev.filter(w => w.id !== id))
+    }
+    setDeletingWhisperId(null)
+  }
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => {
     if (typeof window !== 'undefined') {
       try { const saved = localStorage.getItem('tapestry_folder_state'); if (saved) return new Set(JSON.parse(saved)) } catch {}
@@ -1265,17 +1335,70 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
             {/* Tabs */}
             {userId && (
               <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e' }}>
-                {(['public', 'mine', 'campaign'] as const).map(tab => (
+                {(['public', 'mine', 'campaign', 'whispers'] as const).map(tab => (
                   <button key={tab} onClick={() => setSidebarTab(tab)}
                     style={{ flex: 1, padding: '6px', background: sidebarTab === tab ? '#242424' : 'transparent', border: 'none', borderBottom: sidebarTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: sidebarTab === tab ? '#f5f2ee' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    {tab === 'public' ? 'Public' : tab === 'mine' ? 'My Pins' : 'Campaign'}
+                    {tab === 'public' ? 'Public' : tab === 'mine' ? 'My Pins' : tab === 'campaign' ? 'Campaign' : 'Whispers'}
                   </button>
                 ))}
               </div>
             )}
             {/* Content */}
             <div style={{ flex: 1, overflowY: 'auto' }}>
-              {sidebarTab === 'campaign' ? (
+              {sidebarTab === 'whispers' ? (
+                /* Whispers — public message wall. Compose at top, list
+                    below, newest first. Thrivers see an X next to each
+                    row to hard-delete. */
+                <div style={{ padding: '8px 10px' }}>
+                  <div style={{ marginBottom: '10px' }}>
+                    <textarea
+                      value={whisperDraft}
+                      onChange={e => setWhisperDraft(e.target.value.slice(0, 500))}
+                      placeholder="Whisper into the dark... (max 500 chars)"
+                      rows={3}
+                      style={{ width: '100%', padding: '6px 8px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5, resize: 'vertical', boxSizing: 'border-box' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{whisperDraft.length}/500</span>
+                      <button onClick={postWhisper} disabled={postingWhisper || !whisperDraft.trim()}
+                        style={{ padding: '4px 12px', background: whisperDraft.trim() ? '#1a2e10' : '#242424', border: `1px solid ${whisperDraft.trim() ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: whisperDraft.trim() ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: postingWhisper ? 'wait' : whisperDraft.trim() ? 'pointer' : 'not-allowed' }}>
+                        {postingWhisper ? '…' : 'Whisper'}
+                      </button>
+                    </div>
+                  </div>
+                  {whispers.length === 0 ? (
+                    <div style={{ padding: '1.5rem', textAlign: 'center', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                      No whispers yet
+                    </div>
+                  ) : (
+                    whispers.map(w => (
+                      <div key={w.id} style={{ padding: '8px 0', borderBottom: '1px solid #2e2e2e', display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '2px' }}>
+                            <span style={{ fontSize: '13px', color: w.author_user_id === userId ? '#7fc458' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>
+                              {w.author_username ?? '?'}
+                            </span>
+                            <span title={new Date(w.created_at).toLocaleString()} style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
+                              {(() => { const ms = Date.now() - new Date(w.created_at).getTime(); const m = Math.floor(ms / 60000); if (m < 1) return 'just now'; if (m < 60) return `${m}m`; const h = Math.floor(m / 60); if (h < 24) return `${h}h`; const d = Math.floor(h / 24); return `${d}d` })()}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                            {w.content}
+                          </div>
+                        </div>
+                        {userRole === 'thriver' && (
+                          <button onClick={() => { if (confirm('Delete this whisper?')) deleteWhisper(w.id) }} disabled={deletingWhisperId === w.id}
+                            title="Thriver: delete this whisper"
+                            style={{ flexShrink: 0, width: 22, height: 22, padding: 0, background: 'transparent', border: '1px solid #3a3a3a', borderRadius: 3, color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: deletingWhisperId === w.id ? 'wait' : 'pointer', lineHeight: 1 }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#2a1210'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#c0392b'; (e.currentTarget as HTMLButtonElement).style.color = '#f5a89a' }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#3a3a3a'; (e.currentTarget as HTMLButtonElement).style.color = '#cce0f5' }}>
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              ) : sidebarTab === 'campaign' ? (
                 /* Campaign pins tab */
                 campaignPins.length === 0 ? (
                   <div style={{ padding: '2rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>No campaign pins shared with you.</div>
