@@ -128,7 +128,7 @@ function CampfirePortal() {
             The Campfire
           </div>
           <div style={{ fontSize: '14px', color: '#cce0f5', lineHeight: 1.5, maxWidth: '680px' }}>
-            Take a seat. Connect with players, GMs, and visitors outside of campaigns — or step into one of the live setting hubs below.
+            Take a seat. Connect with players, GMs, and visitors outside of campaigns.
           </div>
         </div>
 
