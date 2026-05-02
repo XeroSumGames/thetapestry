@@ -27,7 +27,8 @@
 // the parent (scroll area vs fixed bottom strip), so they're separate
 // exports rather than a single wrapper component.
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { memo, useEffect, useRef, useState, useCallback } from 'react'
+import { Virtuoso } from 'react-virtuoso'
 import { createClient } from '../lib/supabase-browser'
 import { renderRichText } from '../lib/rich-text'
 
@@ -167,7 +168,14 @@ interface ChatMessageRowProps {
   formatTime: (iso: string) => string
 }
 
-export function ChatMessageRow({ message, viewerUserId, entries, formatTime }: ChatMessageRowProps) {
+// React.memo so a parent re-render doesn't re-execute the entries.find
+// + renderRichText for every visible chat row when nothing about that
+// row changed. Pairs with virtualization in <ChatMessageList> below —
+// virtualization keeps off-screen rows out of the DOM, memo keeps
+// on-screen rows from re-parsing on unrelated parent ticks.
+export const ChatMessageRow = memo(function ChatMessageRow({
+  message, viewerUserId, entries, formatTime,
+}: ChatMessageRowProps) {
   const isW = !!message.is_whisper
   const whisperLabel = isW
     ? message.user_id === viewerUserId
@@ -192,7 +200,7 @@ export function ChatMessageRow({ message, viewerUserId, entries, formatTime }: C
       <div style={{ fontSize: '14px', color: '#f5f2ee', lineHeight: 1.4 }}>{renderRichText(message.message)}</div>
     </div>
   )
-}
+})
 
 // ── Chat-tab list ────────────────────────────────────────────────
 
@@ -201,9 +209,17 @@ interface ChatMessageListProps {
   viewerUserId: string | null
   entries: ChatTableEntry[]
   formatTime: (iso: string) => string
+  // The parent's existing scroll container. When supplied, the list
+  // virtualizes via react-virtuoso's `customScrollParent` mode — only
+  // visible rows get rendered, even though the parent owns the scrollbar
+  // (shared with the Logs / Both tabs). Until the ref resolves on first
+  // mount we fall back to a plain map render so nothing flickers.
+  scrollParent?: HTMLElement | null
 }
 
-export function ChatMessageList({ messages, viewerUserId, entries, formatTime }: ChatMessageListProps) {
+export function ChatMessageList({
+  messages, viewerUserId, entries, formatTime, scrollParent,
+}: ChatMessageListProps) {
   if (messages.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
@@ -211,12 +227,41 @@ export function ChatMessageList({ messages, viewerUserId, entries, formatTime }:
       </div>
     )
   }
+  // First render: scrollParent state hasn't resolved yet (parent's
+  // useEffect populates it post-mount). Render the rows plainly so
+  // there's no flash of empty list. Once the parent re-renders with
+  // the resolved scrollParent, we swap to the virtualized path.
+  if (!scrollParent) {
+    return (
+      <>
+        {messages.map(m => (
+          <ChatMessageRow key={m.id} message={m} viewerUserId={viewerUserId} entries={entries} formatTime={formatTime} />
+        ))}
+      </>
+    )
+  }
   return (
-    <>
-      {messages.map(m => (
-        <ChatMessageRow key={m.id} message={m} viewerUserId={viewerUserId} entries={entries} formatTime={formatTime} />
-      ))}
-    </>
+    <Virtuoso
+      data={messages}
+      customScrollParent={scrollParent}
+      // followOutput="smooth" keeps the list anchored to the bottom on
+      // new messages — same behavior the parent's scroll-to-bottom
+      // helper provides for the rolls feed. Returning 'smooth' from
+      // the function (rather than the boolean true) lets Virtuoso
+      // skip the auto-scroll if the user has scrolled up to read
+      // older messages, so receiving a new line doesn't yank them
+      // back to the bottom.
+      followOutput={(atBottom) => atBottom ? 'smooth' : false}
+      itemContent={(_, m) => (
+        <ChatMessageRow
+          message={m}
+          viewerUserId={viewerUserId}
+          entries={entries}
+          formatTime={formatTime}
+        />
+      )}
+      computeItemKey={(_, m) => m.id}
+    />
   )
 }
 

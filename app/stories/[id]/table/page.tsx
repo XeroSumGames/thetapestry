@@ -206,6 +206,14 @@ export default function TablePage() {
   const router = useRouter()
   const supabase = createClient()
   const rollsFeed = useRollsFeed({ campaignId: id })
+  // Callback ref that wires the feed scroll container to BOTH the
+  // existing rollsFeed.rollFeedRef (used by useRollsFeed for its
+  // scrollToBottom helper) AND the feedScrollEl state (used by the
+  // Chat tab's Virtuoso virtualization). Same DOM node, two consumers.
+  const setFeedScrollContainer = useCallback((el: HTMLDivElement | null) => {
+    rollsFeed.rollFeedRef.current = el
+    setFeedScrollEl(el)
+  }, [rollsFeed.rollFeedRef])
   const channelRef = useRef<any>(null)
   const initChannelRef = useRef<any>(null)
   const membersChannelRef = useRef<any>(null)
@@ -598,6 +606,12 @@ export default function TablePage() {
   const [assetsFolderState, setAssetsFolderState] = useState<Set<string>>(new Set())
   const [sheetMode, setSheetMode] = useState<'inline' | 'overlay'>('inline')
   const [feedTab, setFeedTab] = useState<'rolls' | 'chat' | 'both'>('both')
+  // The Chat tab's <ChatMessageList> virtualizes via react-virtuoso's
+  // customScrollParent mode, sharing the scroll container that already
+  // serves the Logs / Both tabs (rollsFeed.rollFeedRef). Virtuoso needs
+  // the actual DOM node, not a ref, so we mirror it into state via a
+  // mount-time effect below — refs don't trigger re-renders on update.
+  const [feedScrollEl, setFeedScrollEl] = useState<HTMLDivElement | null>(null)
   // Chat state (messages, channel, refetch, clear) lives in the
   // useChatPanel hook in components/TableChat.tsx — this is just the
   // call-site. We keep the hook here (not inside <TableChat>) so the
@@ -6272,7 +6286,7 @@ export default function TablePage() {
               </button>
             ))}
           </div>
-          <div ref={rollsFeed.rollFeedRef} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+          <div ref={setFeedScrollContainer} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
             {sessionStatus === 'idle' && (
               isGM ? (
                 <button onClick={startSession} disabled={sessionActing}
@@ -6307,7 +6321,7 @@ export default function TablePage() {
             )}
             {/* Chat messages (Chat tab only) — render delegated. */}
             {feedTab === 'chat' && (
-              <ChatMessageList messages={chat.messages} viewerUserId={userId} entries={entries} formatTime={formatTime} />
+              <ChatMessageList messages={chat.messages} viewerUserId={userId} entries={entries} formatTime={formatTime} scrollParent={feedScrollEl} />
             )}
             {/* Both tab — merged chronological feed. Roll branches stay
                 inline (huge JSX with lots of parent-scope helpers); chat
