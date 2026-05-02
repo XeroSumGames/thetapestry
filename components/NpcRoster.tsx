@@ -640,6 +640,14 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
   const [showCombatPicker, setShowCombatPicker] = useState(false)
   const [combatPickerIds, setCombatPickerIds] = useState<Set<string>>(new Set())
+  // Multi-select mode for cross-folder bulk Hide/Reveal. Folder-level
+  // and global Show-All shipped earlier — this is "I want to hide
+  // these 7 NPCs scattered across 3 folders in one click." Clicking
+  // a card while selectMode=true toggles selectedIds; the floating
+  // action bar at the bottom of the roster shows what to do next.
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkBusy, setBulkBusy] = useState<'hide' | 'reveal' | null>(null)
   const [relationships, setRelationships] = useState<Relationship[]>([])
   const [showReveal, setShowReveal] = useState(false)
   const [revealIds, setRevealIds] = useState<Set<string>>(new Set())
@@ -994,6 +1002,14 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
             </button>
           )
         })()}
+        {npcs.length > 1 && (
+          <button
+            onClick={() => { setSelectMode(s => !s); setSelectedIds(new Set()) }}
+            title={selectMode ? 'Exit multi-select' : 'Multi-select for bulk Hide/Reveal across folders'}
+            style={{ padding: '2px 8px', background: selectMode ? '#10202e' : 'transparent', border: `1px solid ${selectMode ? '#3a5a7a' : '#3a3a3a'}`, borderRadius: '3px', color: selectMode ? '#7ab3d4' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            {selectMode ? '✓ Selecting' : 'Select'}
+          </button>
+        )}
         <div style={{ flex: 1 }} />
         <button onClick={openLibrary}
           style={{ padding: '2px 8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
@@ -1080,18 +1096,61 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
               const renderNpcCard = (npc: CampaignNpc) => {
               const sc = STATUS_COLORS[npc.status] ?? STATUS_COLORS.active
+              const isSelected = selectedIds.has(npc.id)
               return (
-                <div key={npc.id} onClick={() => onViewNpc ? onViewNpc(npc) : openEdit(npc)}
+                <div key={npc.id}
+                  onClick={() => {
+                    // In multi-select mode, clicking the card toggles
+                    // selection rather than opening the NPC. The header
+                    // toolbar's 'Select' button drives the mode.
+                    if (selectMode) {
+                      setSelectedIds(prev => {
+                        const next = new Set(prev)
+                        if (next.has(npc.id)) next.delete(npc.id); else next.add(npc.id)
+                        return next
+                      })
+                      return
+                    }
+                    if (onViewNpc) onViewNpc(npc); else openEdit(npc)
+                  }}
                   onDragOver={e => { if (dragId) { e.preventDefault(); setDragOverId(npc.id) } }}
                   onDragLeave={() => { if (dragOverId === npc.id) setDragOverId(null) }}
                   onDrop={() => handleNpcDrop(npc.id)}
-                  style={{ padding: '6px 8px', background: dragOverId === npc.id ? '#242424' : viewingNpcIds?.has(npc.id) ? '#1a1a2e' : '#1a1a1a', border: `1px solid ${dragOverId === npc.id ? '#7fc458' : viewingNpcIds?.has(npc.id) ? '#8b2e8b' : '#2e2e2e'}`, borderRadius: '3px', marginBottom: '4px', cursor: 'pointer', transition: 'background 0.15s', opacity: dragId === npc.id ? 0.4 : 1 }}
-                  onMouseEnter={e => { if (!dragId) e.currentTarget.style.background = '#242424' }}
-                  onMouseLeave={e => { if (!dragId && dragOverId !== npc.id) e.currentTarget.style.background = viewingNpcIds?.has(npc.id) ? '#1a1a2e' : '#1a1a1a' }}
+                  style={{
+                    padding: '6px 8px',
+                    background: dragOverId === npc.id ? '#242424'
+                      : isSelected ? '#10202e'
+                      : viewingNpcIds?.has(npc.id) ? '#1a1a2e'
+                      : '#1a1a1a',
+                    border: `1px solid ${
+                      dragOverId === npc.id ? '#7fc458'
+                      : isSelected ? '#7ab3d4'
+                      : viewingNpcIds?.has(npc.id) ? '#8b2e8b'
+                      : '#2e2e2e'
+                    }`,
+                    borderRadius: '3px',
+                    marginBottom: '4px',
+                    cursor: 'pointer',
+                    transition: 'background 0.15s',
+                    opacity: dragId === npc.id ? 0.4 : 1,
+                  }}
+                  onMouseEnter={e => { if (!dragId && !isSelected) e.currentTarget.style.background = '#242424' }}
+                  onMouseLeave={e => {
+                    if (dragId || dragOverId === npc.id) return
+                    e.currentTarget.style.background = isSelected ? '#10202e' : viewingNpcIds?.has(npc.id) ? '#1a1a2e' : '#1a1a1a'
+                  }}
                 >
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  {/* Left column: drag handle + delete */}
+                  {/* Left column: select checkbox (only in select mode)
+                      then drag handle + delete + clone + edit. The
+                      checkbox is visual-only — the whole card is
+                      already clickable in select mode. */}
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
+                    {selectMode && (
+                      <div style={{ width: 16, height: 16, borderRadius: 2, border: `1px solid ${isSelected ? '#7ab3d4' : '#3a3a3a'}`, background: isSelected ? '#10202e' : 'transparent', color: '#7ab3d4', fontSize: 13, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', userSelect: 'none' }}>
+                        {isSelected ? '✓' : ''}
+                      </div>
+                    )}
                     <div
                       draggable
                       onDragStart={e => { e.stopPropagation(); setDragId(npc.id) }}
@@ -1438,6 +1497,46 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
             })()
           )}
       </div>
+
+      {/* Multi-select action bar — sticks to the bottom of the roster
+          when selectMode is on and at least one NPC is selected. Hide
+          and Reveal call the same path the folder-level buttons use,
+          so the visibility flip + tactical-token sync goes through
+          the existing helpers. */}
+      {selectMode && selectedIds.size > 0 && (
+        <div style={{ position: 'sticky', bottom: 0, padding: '8px 10px', background: '#10202e', borderTop: '1px solid #3a5a7a', display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap', zIndex: 5 }}>
+          <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700 }}>
+            {selectedIds.size} selected
+          </span>
+          <div style={{ flex: 1 }} />
+          <button onClick={async () => {
+            const ids = Array.from(selectedIds)
+            setBulkBusy('hide')
+            await hideNpcsByIds(ids)
+            onTacticalRefresh?.()
+            setBulkBusy(null)
+            setSelectedIds(new Set())
+          }} disabled={bulkBusy !== null}
+            style={{ padding: '4px 12px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: bulkBusy ? 'wait' : 'pointer', opacity: bulkBusy ? 0.6 : 1 }}>
+            {bulkBusy === 'hide' ? '…' : 'Hide'}
+          </button>
+          <button onClick={async () => {
+            const ids = Array.from(selectedIds)
+            setBulkBusy('reveal')
+            await revealNpcsByIds(ids)
+            onTacticalRefresh?.()
+            setBulkBusy(null)
+            setSelectedIds(new Set())
+          }} disabled={bulkBusy !== null}
+            style={{ padding: '4px 12px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: bulkBusy ? 'wait' : 'pointer', opacity: bulkBusy ? 0.6 : 1 }}>
+            {bulkBusy === 'reveal' ? '…' : 'Reveal'}
+          </button>
+          <button onClick={() => setSelectedIds(new Set())} disabled={bulkBusy !== null}
+            style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: bulkBusy ? 'wait' : 'pointer' }}>
+            Clear
+          </button>
+        </div>
+      )}
 
       {/* Add/Edit NPC Modal */}
       {showForm && (
