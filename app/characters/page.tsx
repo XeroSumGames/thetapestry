@@ -92,8 +92,9 @@ export default function CharactersPage() {
               setCharacters(data ?? [])
             }
           }}
-            style={{ ...creationBtn('#2a2010', '#EF9F27', '#5a4a1b'), cursor: 'pointer' }}>
-            Test Character
+            style={{ ...creationBtn('#2a2010', '#EF9F27', '#5a4a1b'), cursor: 'pointer' }}
+            title="Spawn a quick fully-built test character (Thriver only)">
+            Test
           </button>
         )}
       </div>
