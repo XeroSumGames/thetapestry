@@ -1370,9 +1370,22 @@ export default function TablePage() {
   }, [pendingRoll, selectedEntry, showEndSessionModal])
 
   async function handleStatUpdate(stateId: string, field: string, value: number) {
-    await supabase.from('character_states').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', stateId)
-    // Update the entries in-place so the value persists immediately
+    // Optimistic flip first so the UI responds instantly. If the
+    // server write fails (RLS denial / network), we surface the error
+    // and force a reload of entries so the local state converges with
+    // the actual DB. Pre-fix the update was awaited but the error
+    // was ignored, leaving the UI showing the new value indefinitely
+    // even when the write hadn't landed.
     setEntries(prev => prev.map(e => e.stateId === stateId ? { ...e, liveState: { ...e.liveState, [field]: value } } : e))
+    const { error } = await supabase
+      .from('character_states')
+      .update({ [field]: value, updated_at: new Date().toISOString() })
+      .eq('id', stateId)
+    if (error) {
+      console.error('[handleStatUpdate] failed:', error.message)
+      alert(`Stat update failed: ${error.message}`)
+      void loadEntries(id)
+    }
   }
 
   // ── Initiative functions ──

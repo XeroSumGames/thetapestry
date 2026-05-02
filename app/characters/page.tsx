@@ -40,7 +40,15 @@ export default function CharactersPage() {
   async function handleDelete(id: string) {
     const char = characters.find(c => c.id === id)
     if (!confirm(`Are you sure you want to delete ${char?.name || 'this character'}? This cannot be undone.`)) return
-    await supabase.from('characters').delete().eq('id', id)
+    // Await the delete + check error before flipping local state. The
+    // pre-fix optimistic filter ran regardless of outcome, so an RLS
+    // denial or network blip left the row gone from the UI but still
+    // present on the server until reload.
+    const { error } = await supabase.from('characters').delete().eq('id', id)
+    if (error) {
+      alert(`Delete failed: ${error.message}`)
+      return
+    }
     setCharacters(prev => prev.filter(c => c.id !== id))
   }
 
