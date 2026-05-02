@@ -171,13 +171,18 @@ export default function CharactersPage() {
 }
 
 // Helper for the four-way creation-path picker at the top of the page.
+// Tight horizontal padding + whiteSpace:nowrap so the longest label
+// (BACKSTORY GENERATION) fits a 4-up flex row on a 720px column
+// without wrapping. Letter-spacing dropped from .06 → .04em for the
+// same reason — kept just enough to read as a uppercase nav button.
 function creationBtn(bg: string, fg: string, border: string): React.CSSProperties {
   return {
-    padding: '7px 18px', background: bg,
+    padding: '7px 10px', background: bg,
     border: `1px solid ${border}`, borderRadius: '3px',
     color: fg, fontSize: '13px',
-    fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em',
+    fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em',
     textTransform: 'uppercase', textDecoration: 'none',
     fontWeight: 700,
+    whiteSpace: 'nowrap',
   }
 }
