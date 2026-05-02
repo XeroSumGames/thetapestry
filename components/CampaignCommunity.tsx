@@ -5,6 +5,7 @@ import { getCachedAuth } from '../lib/auth-cache'
 import { appendProgressionEntry } from '../lib/progression-log'
 import { logEvent } from '../lib/events'
 import CommunityMoraleModal from './CommunityMoraleModal'
+import CommunityProxyRecruitModal from './CommunityProxyRecruitModal'
 import { type InventoryItem } from '../lib/inventory'
 import { EQUIPMENT } from '../lib/xse-schema'
 import { LABEL_STYLE_LG } from '../lib/style-helpers'
@@ -285,6 +286,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   // Phase C — Weekly Morale / Fed / Clothed check modal target.
   // Null = closed; uuid = run the modal for that community.
   const [moraleCommunityId, setMoraleCommunityId] = useState<string | null>(null)
+  // Phase B (NPC-proxy) — off-screen recruitment modal target. Same
+  // shape as moraleCommunityId; the leader NPC handles the roll.
+  const [proxyRecruitCommunityId, setProxyRecruitCommunityId] = useState<string | null>(null)
 
   // Step-down UI. Null = hidden; uuid = showing the successor-picker
   // panel for that community. Successor defaults to 'auto' (next
@@ -2172,6 +2176,17 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       style={{ padding: '8px 14px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                       Skip Week
                     </button>
+                    {/* NPC-proxy recruitment — disabled when there's
+                        no Leader NPC set (proxy rolls are by-the-leader
+                        by definition). Hover tooltip explains why. */}
+                    <button onClick={() => setProxyRecruitCommunityId(c.id)}
+                      disabled={!c.leader_npc_id}
+                      title={c.leader_npc_id
+                        ? 'Have the Leader NPC recruit a target NPC into this community — off-screen growth between sessions.'
+                        : 'Set a Leader NPC first — proxy recruitment uses the leader as the roller.'}
+                      style={{ padding: '8px 14px', background: c.leader_npc_id ? 'transparent' : '#111', border: `1px solid ${c.leader_npc_id ? '#7fc458' : '#3a3a3a'}`, borderRadius: '3px', color: c.leader_npc_id ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: c.leader_npc_id ? 'pointer' : 'not-allowed' }}>
+                      🤝 Recruit (Proxy)
+                    </button>
                     <button onClick={() => setMoraleCommunityId(c.id)}
                       style={{ padding: '8px 14px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                       Run Weekly Check
@@ -3078,6 +3093,24 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
             campaignId={campaignId}
             userId={myUserId}
             onComplete={() => { setMoraleCommunityId(null); load() }}
+          />
+        )
+      })()}
+
+      {/* Phase B (NPC-proxy) — off-screen recruitment modal. Same
+          pattern as the Morale modal: rendered once at top level,
+          opened by setProxyRecruitCommunityId(c.id) from the card. On
+          a successful recruit we reload to pick up the new member. */}
+      {proxyRecruitCommunityId && (() => {
+        const comm = communities.find(c => c.id === proxyRecruitCommunityId)
+        if (!comm) return null
+        return (
+          <CommunityProxyRecruitModal
+            community={comm}
+            campaignId={campaignId}
+            userId={myUserId}
+            onClose={() => setProxyRecruitCommunityId(null)}
+            onRecruited={() => { setProxyRecruitCommunityId(null); load() }}
           />
         )
       })()}
