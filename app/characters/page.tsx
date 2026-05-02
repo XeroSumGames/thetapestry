@@ -82,7 +82,7 @@ export default function CharactersPage() {
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
         <a href='/characters/new' style={creationBtn('#c0392b', '#fff', '#c0392b')}>Backstory Generation</a>
         <a href='/characters/quick' style={creationBtn('#1a3a5c', '#7ab3d4', '#7ab3d4')}>Quick Character</a>
-        <a href='/characters/random' style={creationBtn('#2a2010', '#EF9F27', '#5a4a1b')}>Random Character</a>
+        <a href='/characters/random' style={creationBtn('#2a2010', '#EF9F27', '#5a4a1b')} title="Roll up a random survivor — great for NPCs or table emergencies">Random</a>
         <a href='/characters/paradigms' style={creationBtn('#1a2a3a', '#cce0f5', '#3a3a3a')}>Paradigm</a>
         {isThriver && (
           <button onClick={async () => {
@@ -105,7 +105,7 @@ export default function CharactersPage() {
           <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <a href='/characters/new' style={creationBtn('#c0392b', '#fff', '#c0392b')}>Backstory Generation</a>
             <a href='/characters/quick' style={creationBtn('#1a3a5c', '#7ab3d4', '#7ab3d4')}>Quick Character</a>
-            <a href='/characters/random' style={creationBtn('#2a2010', '#EF9F27', '#5a4a1b')}>Random Character</a>
+            <a href='/characters/random' style={creationBtn('#2a2010', '#EF9F27', '#5a4a1b')} title="Roll up a random survivor — great for NPCs or table emergencies">Random</a>
             <a href='/characters/paradigms' style={creationBtn('#1a2a3a', '#cce0f5', '#3a3a3a')}>Paradigm</a>
           </div>
         </div>
