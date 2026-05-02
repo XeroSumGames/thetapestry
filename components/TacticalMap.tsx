@@ -62,6 +62,12 @@ interface Scene {
   show_grid?: boolean | null
   grid_color?: string | null
   grid_opacity?: number | null
+  // GM-painted fog. Sparse map keyed by "x,y" (cell coords) — only
+  // fogged cells stored, missing key = clear. Players see fogged
+  // cells as opaque black + tokens inside fog are hidden from their
+  // render. GM sees fog at reduced opacity. Phase 1 of the vision
+  // system; sql/tactical-scenes-fog-state.sql.
+  fog_state?: Record<string, boolean> | null
 }
 
 interface Props {
@@ -167,6 +173,21 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const [gridOpacity, setGridOpacity] = useState(0.4)
   const [spaceHeld, setSpaceHeld] = useState(false)
   const [cellPx, setCellPx] = useState(35)
+  // GM-painted fog editor state. fogEditMode null = play mode (fog is
+  // a render-only display). 'paint' = drag to fog cells; 'erase' =
+  // drag to clear cells. fogPainting = pointer is down + dragging.
+  // Persisted to tactical_scenes.fog_state on a debounced write so
+  // continuous-drag doesn't hammer the DB.
+  const [fogEditMode, setFogEditMode] = useState<'paint' | 'erase' | null>(null)
+  const fogPaintingRef = useRef(false)
+  const fogPendingSaveRef = useRef<number | null>(null)
+  // Local mirror — the canonical fog state lives on `scene.fog_state`
+  // but during a drag we update this immediately and persist on a
+  // debounce; reconcile back to scene state when the realtime row
+  // update lands.
+  const [fogLocal, setFogLocal] = useState<Record<string, boolean>>({})
+  const fogLocalRef = useRef<Record<string, boolean>>({})
+  useEffect(() => { fogLocalRef.current = fogLocal }, [fogLocal])
   const [resizing, setResizing] = useState<{ corner: string; startX: number; startY: number; startZoom: number } | null>(null)
   const mapDrawRef = useRef<{ x: number; y: number; w: number; h: number }>({ x: 0, y: 0, w: 0, h: 0 })
   const tokensRef = useRef<Token[]>([])
@@ -181,6 +202,36 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // Keep refs in sync for canvas drawing
   useEffect(() => { tokensRef.current = tokens }, [tokens])
   useEffect(() => { sceneRef.current = scene }, [scene])
+
+  // Reconcile fog state from the scene row → local mirror. We don't
+  // touch fogLocal during a drag (would get clobbered by realtime
+  // echoes); we DO refresh from the row when the drag is idle so a
+  // GM popout / second tab can land changes here.
+  useEffect(() => {
+    if (fogPaintingRef.current) return
+    if (!scene) return
+    const incoming = (scene.fog_state ?? {}) as Record<string, boolean>
+    setFogLocal(incoming)
+  }, [scene?.id, scene?.fog_state])
+
+  // Debounced fog persist. Called from paint/erase mouse handlers; we
+  // batch up to 300ms of drag activity into one DB update so a smooth
+  // mouse drag doesn't fire 60 writes per second.
+  function scheduleFogPersist() {
+    if (!scene || !isGM) return
+    const sceneId = scene.id
+    if (fogPendingSaveRef.current != null) {
+      window.clearTimeout(fogPendingSaveRef.current)
+    }
+    fogPendingSaveRef.current = window.setTimeout(async () => {
+      fogPendingSaveRef.current = null
+      const payload = fogLocalRef.current
+      // Strip any keys whose value is false so the column stays sparse.
+      const sparse: Record<string, boolean> = {}
+      for (const k of Object.keys(payload)) if (payload[k]) sparse[k] = true
+      await supabase.from('tactical_scenes').update({ fog_state: sparse }).eq('id', sceneId)
+    }, 300)
+  }
 
   // Load scenes
   // Tracks the last scene whose saved cellPx / imgScale we applied to
@@ -364,7 +415,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   // Redraw on token/scene changes
   // campaignNpcs/entries are in the dep list so HP damage repaints the pips immediately — missing them meant tokens stayed stale until some other dependency (click, zoom, move) forced a redraw.
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
@@ -747,11 +798,55 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       }
     }
 
+    // GM-painted fog overlay. Players see full opacity (cells are
+    // hidden); GM sees a dimmer overlay so they can still inspect what
+    // they've fogged. Drawn before tokens so token portraits go on
+    // top for the GM (we'll separately suppress player-side tokens
+    // sitting in fog below).
+    const fogMap = fogLocalRef.current
+    const fogKeys = Object.keys(fogMap)
+    if (fogKeys.length > 0) {
+      const cellW = gridW / s.grid_cols
+      const cellH = gridH / s.grid_rows
+      ctx.save()
+      ctx.fillStyle = isGM ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.92)'
+      for (const k of fogKeys) {
+        if (!fogMap[k]) continue
+        const [gxStr, gyStr] = k.split(',')
+        const gx = parseInt(gxStr, 10)
+        const gy = parseInt(gyStr, 10)
+        if (Number.isNaN(gx) || Number.isNaN(gy)) continue
+        ctx.fillRect(offsetX + gx * cellW, offsetY + gy * cellH, cellW, cellH)
+      }
+      // Edit-mode hint: outline fogged cells so the GM can see the
+      // patch boundaries clearly while painting.
+      if (isGM && fogEditMode) {
+        ctx.strokeStyle = 'rgba(196,167,240,0.5)'
+        ctx.lineWidth = 1
+        for (const k of fogKeys) {
+          if (!fogMap[k]) continue
+          const [gxStr, gyStr] = k.split(',')
+          const gx = parseInt(gxStr, 10)
+          const gy = parseInt(gyStr, 10)
+          if (Number.isNaN(gx) || Number.isNaN(gy)) continue
+          ctx.strokeRect(offsetX + gx * cellW + 0.5, offsetY + gy * cellH + 0.5, cellW - 1, cellH - 1)
+        }
+      }
+      ctx.restore()
+    }
+
     // Tokens. Sort so objects render first (bottom), then NPCs, then PCs
     // on top — canvas is painter's-algorithm, last draw wins. Prevents a
     // barrel or crate from covering a player token when they share a
     // neighboring cell. Stable within each tier via index fallback.
-    const toks = [...tokensRef.current].sort((a, b) => {
+    const toks = [...tokensRef.current]
+      // Player-side fog suppression: a token sitting in a fogged cell
+      // is invisible to non-GM viewers. GM sees everything (their
+      // overlay is only 35% opacity above). For multi-cell tokens we
+      // check the token's anchor cell — close enough for v1; LoS-aware
+      // hiding is Phase 3.
+      .filter(t => isGM || !fogMap[`${t.grid_x},${t.grid_y}`])
+      .sort((a, b) => {
       const tier = (t: any) => t.token_type === 'object' ? 0 : t.token_type === 'npc' ? 1 : 2
       return tier(a) - tier(b)
     })
@@ -1167,6 +1262,26 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   function handleMouseDown(e: React.MouseEvent) {
+    // Fog edit mode — paint or erase the cell under the cursor and
+    // start tracking drag so handleMouseMove fills cells along the
+    // drag path. Checked BEFORE every other mode so the GM can paint
+    // fog without worrying about fall-through to token clicks.
+    if (fogEditMode && isGM && e.button === 0) {
+      const pos = getGridPos(e)
+      if (pos) {
+        fogPaintingRef.current = true
+        const key = `${pos.gx},${pos.gy}`
+        setFogLocal(prev => {
+          const next = { ...prev }
+          if (fogEditMode === 'paint') next[key] = true
+          else delete next[key]
+          fogLocalRef.current = next
+          return next
+        })
+        scheduleFogPersist()
+      }
+      return
+    }
     // Throw-to-cell — click a valid cell to drop the grenade there.
     // Checked BEFORE moveMode because a GM/player in throwMode never
     // wants to accidentally fall through to move-click semantics.
@@ -1346,6 +1461,27 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   function handleMouseMove(e: React.MouseEvent) {
+    // Fog drag — extend the paint/erase from mousedown along the
+    // cursor path. We touch each unique cell at most once per drag
+    // so re-entering a cell mid-drag doesn't undo the operation.
+    if (fogEditMode && fogPaintingRef.current && isGM) {
+      const pos = getGridPos(e)
+      if (pos) {
+        const key = `${pos.gx},${pos.gy}`
+        setFogLocal(prev => {
+          const has = !!prev[key]
+          if (fogEditMode === 'paint' && has) return prev
+          if (fogEditMode === 'erase' && !has) return prev
+          const next = { ...prev }
+          if (fogEditMode === 'paint') next[key] = true
+          else delete next[key]
+          fogLocalRef.current = next
+          return next
+        })
+        scheduleFogPersist()
+      }
+      return
+    }
     // Update blast preview hover cell first so it tracks even while
     // the player is panning / dragging in the rare overlap case.
     updateThrowHover(e)
@@ -1414,6 +1550,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   function handleMouseUp(e: React.MouseEvent) {
+    // End a fog paint drag. The last cell already got persisted on
+    // the trailing scheduleFogPersist() of handleMouseMove; just
+    // flip the in-flight ref off.
+    if (fogPaintingRef.current) {
+      fogPaintingRef.current = false
+      return
+    }
     if (resizing) {
       setResizing(null)
       return
@@ -1732,6 +1875,61 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             style={{ width: '60px', accentColor: '#7ab3d4', cursor: 'pointer' }} />
           <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>100%</span>
         </div>
+
+        {/* GM Fog editor — top left. Compact when collapsed (just the
+            toggle button); expands into paint/erase + bulk controls
+            when in edit mode. Hidden entirely from players. */}
+        {isGM && scene && (
+          <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {!fogEditMode && (
+              <button onClick={() => setFogEditMode('paint')}
+                title="Paint fog over cells the players shouldn't see. Drag to fog regions, switch to erase to clear."
+                style={{ padding: '4px 10px', background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#c4a7f0', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                🌫️ Edit Fog
+              </button>
+            )}
+            {fogEditMode && (
+              <>
+                <button onClick={() => setFogEditMode('paint')}
+                  title="Drag to fog cells"
+                  style={{ padding: '4px 10px', background: fogEditMode === 'paint' ? '#2a1a3e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'paint' ? '#c4a7f0' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'paint' ? '#c4a7f0' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                  Paint
+                </button>
+                <button onClick={() => setFogEditMode('erase')}
+                  title="Drag to clear fog"
+                  style={{ padding: '4px 10px', background: fogEditMode === 'erase' ? '#2a1a3e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'erase' ? '#c4a7f0' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'erase' ? '#c4a7f0' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                  Erase
+                </button>
+                <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
+                <button onClick={() => {
+                    if (!scene) return
+                    const all: Record<string, boolean> = {}
+                    for (let x = 0; x < scene.grid_cols; x++) {
+                      for (let y = 0; y < scene.grid_rows; y++) all[`${x},${y}`] = true
+                    }
+                    setFogLocal(all); fogLocalRef.current = all; scheduleFogPersist()
+                  }}
+                  title="Fog the whole scene"
+                  style={{ padding: '4px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Fog All
+                </button>
+                <button onClick={() => {
+                    setFogLocal({}); fogLocalRef.current = {}; scheduleFogPersist()
+                  }}
+                  title="Clear all fog"
+                  style={{ padding: '4px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Clear All
+                </button>
+                <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
+                <button onClick={() => setFogEditMode(null)}
+                  title="Exit fog editing — players see fog as-painted"
+                  style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                  Done
+                </button>
+              </>
+            )}
+          </div>
+        )}
         <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'auto', contain: 'layout paint', overscrollBehavior: 'contain' }}>
         <canvas ref={canvasRef}
           onMouseDown={handleMouseDown}
