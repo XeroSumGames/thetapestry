@@ -82,7 +82,13 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
                   onMouseEnter={e => e.currentTarget.style.borderColor = '#c0392b'}
                   onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.url_56} alt="" width={72} height={72} style={{ display: 'block', width: '100%', height: '72px', objectFit: 'cover' }} />
+                  {/* Use url_256 (the high-res source) at 72px display
+                      so the picker downscales sharply instead of
+                      upscaling url_56 into a blurry mess. The 56px
+                      thumb was sized for a smaller historical grid;
+                      grid cells are 72px now and url_56 is below
+                      Retina density even on desktop. */}
+                  <img src={p.url_256} alt="" width={72} height={72} loading="lazy" style={{ display: 'block', width: '100%', height: '72px', objectFit: 'cover' }} />
                 </button>
               ))}
             </div>
