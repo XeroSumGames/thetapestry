@@ -574,6 +574,7 @@ export default function ModerationPage() {
             : 'LFG'
           return (
             <button key={s} onClick={() => setSection(s)} style={{
+              flex: 1,
               padding: '7px 10px',
               border: `1px solid ${borderColor}`,
               background: isActive ? '#2a1210' : (hasPending ? '#0f1a0f' : '#242424'),
@@ -582,7 +583,7 @@ export default function ModerationPage() {
               fontSize: '13px', fontFamily: 'Carlito, sans-serif',
               letterSpacing: '.04em', textTransform: 'uppercase',
               whiteSpace: 'nowrap',
-              display: 'flex', alignItems: 'center', gap: '6px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
             }}>
               <span>{label}</span>
               {hasPending && (
