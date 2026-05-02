@@ -74,16 +74,16 @@ export default function CharactersPage() {
         </div>
       </div>
 
-      {/* Creation-path picker — own row beneath the header so the
-          surface stays uncrowded and the four flows are scannable.
-          Same color codes as the sidebar's Survivors section. Test
-          Character (Thriver-only) sits at the end of the row so the
-          creation flow is the visual primary. */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-        <a href='/characters/new' style={creationBtn('#c0392b', '#fff', '#c0392b')}>Backstory Generation</a>
-        <a href='/characters/quick' style={creationBtn('#1a3a5c', '#7ab3d4', '#7ab3d4')}>Quick Character</a>
-        <a href='/characters/random' style={creationBtn('#2a2010', '#EF9F27', '#5a4a1b')} title="Roll up a random survivor — great for NPCs or table emergencies">Random</a>
-        <a href='/characters/paradigms' style={creationBtn('#1a2a3a', '#cce0f5', '#3a3a3a')}>Paradigm</a>
+      {/* Creation-path picker — own row beneath the header. Each
+          button stretches to share the row width evenly so the strip
+          aligns with the 720px character-sheet column below.
+          flex:1 + textAlign:center on the per-button style. Test
+          Character (Thriver-only) sits at the end. */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem' }}>
+        <a href='/characters/new' style={{ ...creationBtn('#c0392b', '#fff', '#c0392b'), flex: 1, textAlign: 'center' }}>Backstory Generation</a>
+        <a href='/characters/quick' style={{ ...creationBtn('#1a3a5c', '#7ab3d4', '#7ab3d4'), flex: 1, textAlign: 'center' }}>Quick Character</a>
+        <a href='/characters/random' style={{ ...creationBtn('#2a2010', '#EF9F27', '#5a4a1b'), flex: 1, textAlign: 'center' }} title="Roll up a random survivor — great for NPCs or table emergencies">Random</a>
+        <a href='/characters/paradigms' style={{ ...creationBtn('#1a2a3a', '#cce0f5', '#3a3a3a'), flex: 1, textAlign: 'center' }}>Paradigm</a>
         {isThriver && (
           <button onClick={async () => {
             const result = await createTestCharacter(supabase)
@@ -92,7 +92,7 @@ export default function CharactersPage() {
               setCharacters(data ?? [])
             }
           }}
-            style={{ ...creationBtn('#2a2010', '#EF9F27', '#5a4a1b'), cursor: 'pointer' }}
+            style={{ ...creationBtn('#2a2010', '#EF9F27', '#5a4a1b'), flex: 1, textAlign: 'center', cursor: 'pointer' }}
             title="Spawn a quick fully-built test character (Thriver only)">
             Test
           </button>
