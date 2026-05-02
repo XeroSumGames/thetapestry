@@ -7,6 +7,7 @@ import VehicleCard, { Vehicle } from '../../components/VehicleCard'
 import { classifyRoll } from '../../lib/community-logic'
 import { getWeaponByName } from '../../lib/weapons'
 import { type InventoryItem, normalizeInventoryItem } from '../../lib/inventory'
+import { ModalBackdrop } from '../../lib/style-helpers'
 import { EQUIPMENT } from '../../lib/xse-schema'
 
 // Eligible driver / brewer — a campaign PC or campaign NPC. Stats are
@@ -756,8 +757,8 @@ export default function VehiclePage() {
           : o === 'Failure' ? '#EF9F27'
           : '#c0392b'
         return (
-          <div onClick={() => setCheck(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-            <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: `1px solid ${accent}`, borderLeft: `3px solid ${accent}`, borderRadius: '4px', padding: '1.25rem', width: '420px', maxWidth: '92vw' }}>
+          <ModalBackdrop onClose={() => setCheck(null)} zIndex={10001} opacity={0.92} padding="1rem">
+            <div style={{ background: '#1a1a1a', border: `1px solid ${accent}`, borderLeft: `3px solid ${accent}`, borderRadius: '4px', padding: '1.25rem', width: '420px', maxWidth: '92vw' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '4px' }}>
                 <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: accent }}>{verb}</div>
                 <button onClick={() => setCheck(null)} style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '18px', cursor: 'pointer' }}>✕</button>
@@ -881,7 +882,7 @@ export default function VehiclePage() {
                 </button>
               </div>
             </div>
-          </div>
+          </ModalBackdrop>
         )
       })()}
 

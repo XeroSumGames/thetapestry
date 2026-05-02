@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import { ModalBackdrop } from '../lib/style-helpers'
 
 interface Props {
   show: boolean
@@ -11,8 +12,8 @@ export default function GhostWall({ show, onClose, message }: Props) {
   if (!show) return null
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10002, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '2px solid #c0392b', borderRadius: '4px', padding: '2rem', width: '380px', textAlign: 'center' }}>
+    <ModalBackdrop onClose={onClose} zIndex={10002} opacity={0.85} padding="1rem">
+      <div style={{ background: '#1a1a1a', border: '2px solid #c0392b', borderRadius: '4px', padding: '2rem', width: '380px', textAlign: 'center' }}>
         <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Ghost — You Don't Exist</div>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>Become a Survivor</div>
         <div style={{ fontSize: '14px', color: '#d4cfc9', marginBottom: '1.5rem', lineHeight: 1.5 }}>
@@ -30,6 +31,6 @@ export default function GhostWall({ show, onClose, message }: Props) {
           </button>
         </div>
       </div>
-    </div>
+    </ModalBackdrop>
   )
 }

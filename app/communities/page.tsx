@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
 import Link from 'next/link'
+import { ModalBackdrop, Z_INDEX } from '../../lib/style-helpers'
 import {
   type CommunityEventRow,
   eventIcon,
@@ -536,9 +537,8 @@ export default function CommunitiesIndexPage() {
           row. The community's leader still has to approve before the PC
           goes active. */}
       {showInvite && (
-        <div onClick={() => !inviting && setShowInvite(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()}
+        <ModalBackdrop onClose={() => !inviting && setShowInvite(false)} zIndex={Z_INDEX.criticalModal} opacity={0.88} padding="1rem">
+          <div
             style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '460px' }}>
             <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Invite to Community</div>
             <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>Bring a PC aboard</div>
@@ -602,14 +602,13 @@ export default function CommunitiesIndexPage() {
               </button>
             </div>
           </div>
-        </div>
+        </ModalBackdrop>
       )}
 
       {/* Create Community modal */}
       {showCreate && (
-        <div onClick={() => !creating && setShowCreate(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()}
+        <ModalBackdrop onClose={() => !creating && setShowCreate(false)} zIndex={Z_INDEX.criticalModal} opacity={0.88} padding="1rem">
+          <div
             style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '440px' }}>
             <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>New Community</div>
             <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>Found a group of survivors</div>
@@ -673,7 +672,7 @@ export default function CommunitiesIndexPage() {
               </button>
             </div>
           </div>
-        </div>
+        </ModalBackdrop>
       )}
     </div>
   )

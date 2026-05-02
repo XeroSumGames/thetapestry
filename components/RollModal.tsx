@@ -20,6 +20,7 @@
 // is permanent, no rerolls).
 
 import React from 'react'
+import { ModalBackdrop } from '../lib/style-helpers'
 
 export interface RollResult {
   die1: number
@@ -141,10 +142,9 @@ export default function RollModal(props: RollModalProps) {
   const canRerollBoth = !!onRerollBoth && !insightSpentPre && !result?.insightUsed && insightAvail
 
   return (
-    <div onClick={result ? undefined : onClose}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 11000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', fontFamily: 'Barlow, sans-serif' }}>
-      <div onClick={e => e.stopPropagation()}
-        style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', maxWidth: '460px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+    <ModalBackdrop onClose={result ? undefined : onClose} zIndex={11000} opacity={0.85} padding="1rem">
+      <div
+        style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', maxWidth: '460px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', fontFamily: 'Barlow, sans-serif' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px', marginBottom: '6px' }}>
@@ -321,6 +321,6 @@ export default function RollModal(props: RollModalProps) {
           </>
         )}
       </div>
-    </div>
+    </ModalBackdrop>
   )
 }

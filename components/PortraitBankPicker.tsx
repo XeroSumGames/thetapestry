@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
+import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 
 interface PortraitRow {
   id: string
@@ -34,8 +35,8 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
   }, [filter, supabase])
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10002, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '700px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
+    <ModalBackdrop onClose={onClose} zIndex={10002} opacity={0.85} padding="2rem">
+      <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '700px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <div style={{ fontFamily: '"Carlito", sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c0392b' }}>Portrait Bank</div>
           <button onClick={onClose} style={{ background: 'transparent', border: '1px solid #3a3a3a', color: '#d4cfc9', padding: '4px 10px', fontSize: '13px', fontFamily: '"Carlito", sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px' }}>Close</button>
@@ -88,6 +89,6 @@ export default function PortraitBankPicker({ initialGender = 'all', onPick, onCl
           )}
         </div>
       </div>
-    </div>
+    </ModalBackdrop>
   )
 }

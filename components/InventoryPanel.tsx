@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { EQUIPMENT, EquipmentItem } from '../lib/xse-schema'
 import { ALL_WEAPONS, getWeaponByName } from '../lib/weapons'
 import { computeEncumbrance, BASE_ENC_LIMIT } from '../lib/encumbrance'
+import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 
 // Combined inventory catalog — SRD equipment + all weapons.
 // Weapons are normalized into the EquipmentItem shape (name/enc/rarity/notes)
@@ -169,8 +170,8 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
   )
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '460px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
+    <ModalBackdrop onClose={onClose} zIndex={Z_INDEX.criticalModal} opacity={0.9} padding="1rem">
+      <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '460px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
@@ -365,6 +366,6 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
           Close
         </button>
       </div>
-    </div>
+    </ModalBackdrop>
   )
 }

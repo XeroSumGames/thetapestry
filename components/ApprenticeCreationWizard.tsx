@@ -43,6 +43,7 @@ import { appendProgressionEntry } from '../lib/progression-log'
 import { PROFESSIONS, type ProfessionDefinition, type AttributeName, SKILLS, type SkillValue } from '../lib/xse-schema'
 import { skillStepUp } from '../lib/xse-engine'
 import ProfessionPicker from './ProfessionPicker'
+import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 
 type Step = 'identity' | 'profession' | 'rapid' | 'skills' | 'confirm'
 
@@ -322,13 +323,8 @@ export default function ApprenticeCreationWizard({
 
   // ── Render ────────────────────────────────────────────────────────
   return (
-    <div onClick={!saving ? onClose : undefined}
-      style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
-        zIndex: 10100, display: 'flex', alignItems: 'center',
-        justifyContent: 'center', padding: '20px',
-      }}>
-      <div onClick={e => e.stopPropagation()}
+    <ModalBackdrop onClose={!saving ? onClose : undefined} zIndex={Z_INDEX.criticalModalOver} opacity={0.85} padding="20px">
+      <div
         style={{
           background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px',
           width: '720px', maxWidth: '100%', maxHeight: 'calc(100vh - 40px)',
@@ -644,6 +640,6 @@ export default function ApprenticeCreationWizard({
           )}
         </div>
       </div>
-    </div>
+    </ModalBackdrop>
   )
 }

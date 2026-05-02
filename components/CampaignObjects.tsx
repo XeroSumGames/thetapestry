@@ -5,7 +5,7 @@ import { getCachedAuth } from '../lib/auth-cache'
 import { ALL_WEAPONS } from '../lib/weapons'
 import { EQUIPMENT } from '../lib/xse-schema'
 import ObjectImageCropper from './ObjectImageCropper'
-import { LABEL_STYLE_TIGHT } from '../lib/style-helpers'
+import { LABEL_STYLE_TIGHT, ModalBackdrop } from '../lib/style-helpers'
 
 const OBJECT_ICONS = [
   { value: 'car', emoji: '🚗', label: 'Car' },
@@ -558,8 +558,8 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
 
       {/* Loot modal */}
       {lootingObj && entries && (
-        <div onClick={() => setLootingObj(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10002, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '380px', maxWidth: '92vw' }}>
+        <ModalBackdrop onClose={() => setLootingObj(null)} zIndex={10002} opacity={0.85}>
+          <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '380px', maxWidth: '92vw' }}>
             <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>🎒 Loot from {lootingObj.name}</div>
             {lootingObj.contents.length === 0 ? (
               <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', marginBottom: '10px' }}>Nothing left inside.</div>
@@ -697,13 +697,13 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
               <button onClick={() => { setLootingObj(null); setLootItemPick({}) }} style={{ ...chipBtn, flex: 1 }}>{lootingObj.contents.length === 0 ? 'Done' : 'Cancel'}</button>
             </div>
           </div>
-        </div>
+        </ModalBackdrop>
       )}
 
       {/* Edit modal */}
       {editingObj && (
-        <div onClick={() => setEditingObj(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10002, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '280px' }}>
+        <ModalBackdrop onClose={() => setEditingObj(null)} zIndex={10002} opacity={0.85}>
+          <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '280px' }}>
             <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>Edit Object</div>
             <div style={{ marginBottom: '8px' }}>
               <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Name</div>
@@ -888,7 +888,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 style={{ ...chipBtn, flex: 1 }}>Cancel</button>
             </div>
           </div>
-        </div>
+        </ModalBackdrop>
       )}
 
       {/* Image crop modal — appears when a file is selected via Upload */}

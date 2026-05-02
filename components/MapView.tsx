@@ -7,7 +7,7 @@ import { logFirstEvent } from '../lib/events'
 import { PIN_CATEGORIES, getCategoryEmoji as sharedGetCategoryEmoji } from '../lib/pin-categories'
 import QuickAddModal from './QuickAddModal'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
-import { LABEL_STYLE, LABEL_STYLE_LG, LABEL_STYLE_TIGHT } from '../lib/style-helpers'
+import { LABEL_STYLE, LABEL_STYLE_LG, LABEL_STYLE_TIGHT, ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 
 type PinTier = 'landmark' | 'location' | 'event' | 'personal'
 
@@ -1100,9 +1100,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       {linkTarget && (() => {
         const eligible = myPublishedCommunities.filter(wc => wc.id !== linkTarget.worldCommunityId)
         return (
-          <div onClick={() => !linkSubmitting && setLinkTarget(null)}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, padding: '20px' }}>
-            <div onClick={e => e.stopPropagation()}
+          <ModalBackdrop onClose={() => !linkSubmitting && setLinkTarget(null)} zIndex={Z_INDEX.modalNested} opacity={0.75} padding="20px">
+            <div
               style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '520px', maxWidth: '100%', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
@@ -1156,7 +1155,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                 </button>
               </div>
             </div>
-          </div>
+          </ModalBackdrop>
         )
       })()}
 
@@ -1170,9 +1169,8 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       {encounterTarget && (() => {
         const eligible = myGmCampaigns.filter(c => c.id !== encounterTarget.sourceCampaignId)
         return (
-          <div onClick={() => !encounterSubmitting && setEncounterTarget(null)}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, padding: '20px' }}>
-            <div onClick={e => e.stopPropagation()}
+          <ModalBackdrop onClose={() => !encounterSubmitting && setEncounterTarget(null)} zIndex={Z_INDEX.modalNested} opacity={0.75} padding="20px">
+            <div
               style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '520px', maxWidth: '100%', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: '17px', fontWeight: 700, color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
@@ -1210,7 +1208,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                 </button>
               </div>
             </div>
-          </div>
+          </ModalBackdrop>
         )
       })()}
 

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { CampaignNpc, getNpcRingColor } from './NpcRoster'
 import { createClient } from '../lib/supabase-browser'
+import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 
 interface LootItem {
   name: string
@@ -401,9 +402,8 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
           atomically decrements the NPC's inventory + appends to the
           looter's PC inventory + writes a roll_log audit row. */}
       {showLoot && (
-        <div onClick={() => { setShowLoot(false); setLootError(null) }}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()}
+        <ModalBackdrop onClose={() => { setShowLoot(false); setLootError(null) }} zIndex={Z_INDEX.criticalModal} opacity={0.85} padding="1rem">
+          <div
             style={{ background: '#1a1a1a', border: '1px solid #c0392b', borderRadius: '4px', padding: '1.25rem', width: '380px', maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
             <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Search Remains</div>
             <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '17px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>{npc.name}</div>
@@ -449,7 +449,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
               Close
             </button>
           </div>
-        </div>
+        </ModalBackdrop>
       )}
     </div>
   )

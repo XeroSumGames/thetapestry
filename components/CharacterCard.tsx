@@ -1,5 +1,6 @@
 'use client'
 import { memo, useState, useEffect, useRef } from 'react'
+import { ModalBackdrop } from '../lib/style-helpers'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase-browser'
 import { getCachedAuth } from '../lib/auth-cache'
@@ -940,8 +941,8 @@ function CharacterCardImpl({
       )}
 
       {showRestModal && localState && (
-        <div onClick={() => setShowRestModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
+        <ModalBackdrop onClose={() => setShowRestModal(false)} zIndex={10001} opacity={0.9} padding="1rem">
+          <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
             <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>Rest & Heal</div>
             <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1rem' }}>How much time has passed resting?</div>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
@@ -993,7 +994,7 @@ function CharacterCardImpl({
                 style={{ flex: 2, padding: '8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Apply Healing</button>
             </div>
           </div>
-        </div>
+        </ModalBackdrop>
       )}
 
       {/* Hidden print sheet */}

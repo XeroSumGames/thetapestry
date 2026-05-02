@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { ModalBackdrop } from '../lib/style-helpers'
 
 interface Props {
   file: File
@@ -176,8 +177,8 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
   }
 
   return (
-    <div onClick={onCancel} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 10003, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', maxWidth: '500px' }}>
+    <ModalBackdrop onClose={onCancel} zIndex={10003} opacity={0.92} padding="1rem">
+      <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', maxWidth: '500px' }}>
         <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Crop Image</div>
         <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>Drag the box to move, drag the corner to resize. Crop to any shape — wide trucks, tall walls, square crates.</div>
 
@@ -226,6 +227,6 @@ export default function ObjectImageCropper({ file, onCancel, onCrop, uploadError
           </button>
         </div>
       </div>
-    </div>
+    </ModalBackdrop>
   )
 }

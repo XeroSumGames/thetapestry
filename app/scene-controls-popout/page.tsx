@@ -27,6 +27,7 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { createSceneControlsBus, type SceneControlsBus } from '../../lib/scene-controls-bus'
+import { ModalBackdrop, Z_INDEX } from '../../lib/style-helpers'
 
 interface Scene {
   id: string
@@ -470,9 +471,8 @@ export default function SceneControlsPopoutPage() {
       {/* In-app confirmation overlay — replaces native confirm() which
           gets clipped by the narrow popout window width. */}
       {confirming && (
-        <div onClick={() => setConfirming(null)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 10 }}>
-          <div onClick={e => e.stopPropagation()}
+        <ModalBackdrop onClose={() => setConfirming(null)} zIndex={Z_INDEX.dropdown} opacity={0.85} padding={10}>
+          <div
             style={{ background: '#1a1a1a', border: '1px solid #c0392b', borderRadius: 4, padding: 14, width: '100%', maxWidth: 240, textAlign: 'center' }}>
             <div style={{ color: '#f5f2ee', fontSize: 14, marginBottom: 10, fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
               {confirming === 'map'
@@ -493,7 +493,7 @@ export default function SceneControlsPopoutPage() {
               </button>
             </div>
           </div>
-        </div>
+        </ModalBackdrop>
       )}
     </div>
   )

@@ -29,6 +29,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { SKILLS, type AttributeName, type SkillValue } from '../lib/xse-schema'
+import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 import { skillRaiseCost, skillNextLevel, rapidRaiseCost, isLv4Step } from '../lib/cdp-costs'
 import { appendProgressionEntry } from '../lib/progression-log'
 import { getCachedAuth } from '../lib/auth-cache'
@@ -375,9 +376,8 @@ export default function CharacterEvolution({
   }, [skillMap])
 
   return (
-    <div onClick={!pending && !saving ? onClose : undefined}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-      <div onClick={e => e.stopPropagation()}
+    <ModalBackdrop onClose={!pending && !saving ? onClose : undefined} zIndex={Z_INDEX.criticalModalOver} opacity={0.85} padding="20px">
+      <div
         style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '720px', maxWidth: '100%', maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Header */}
@@ -537,9 +537,8 @@ export default function CharacterEvolution({
           is clicked. Lv 4 steps require a narrative; everything else
           is a single-tap confirm. */}
       {pending && (
-        <div onClick={() => !saving && setPending(null)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 10110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div onClick={e => e.stopPropagation()}
+        <ModalBackdrop onClose={() => !saving && setPending(null)} zIndex={10110} opacity={0.7} padding="20px">
+          <div
             style={{ background: '#1a1a1a', border: `1px solid ${pending.needsNarrative ? '#EF9F27' : '#5a2e5a'}`, borderRadius: '4px', width: '480px', maxWidth: '100%', padding: '18px' }}>
             <div style={{ fontSize: '13px', color: pending.needsNarrative ? '#EF9F27' : '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>
               {pending.needsNarrative ? '⭐ Lv 4 — Fill In The Gaps' : 'Confirm Spend'}
@@ -580,8 +579,8 @@ export default function CharacterEvolution({
               </button>
             </div>
           </div>
-        </div>
+        </ModalBackdrop>
       )}
-    </div>
+    </ModalBackdrop>
   )
 }

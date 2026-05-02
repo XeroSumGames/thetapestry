@@ -7,6 +7,7 @@ import { resizeImage } from '../lib/image-utils'
 import { MELEE_WEAPONS, RANGED_WEAPONS, EXPLOSIVE_WEAPONS, HEAVY_WEAPONS, getWeaponByName } from '../lib/weapons'
 import PortraitBankPicker from './PortraitBankPicker'
 import { openPopout } from '../lib/popout'
+import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 
 function parseSkillText(text: string): SkillEntry[] {
   if (!text.trim()) return []
@@ -1440,8 +1441,8 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
       {/* Add/Edit NPC Modal */}
       {showForm && (
-        <div onClick={() => setShowForm(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '560px', maxWidth: '92vw', maxHeight: '90vh', overflowY: 'auto' }}>
+        <ModalBackdrop onClose={() => setShowForm(false)} zIndex={Z_INDEX.criticalModal} opacity={0.9} padding="1rem">
+          <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '560px', maxWidth: '92vw', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
               <span style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif' }}>
                 {editingId ? 'Edit NPC' : 'Add NPC'}
@@ -1843,13 +1844,13 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               </button>
             </div>
           </div>
-        </div>
+        </ModalBackdrop>
       )}
 
       {/* Add to Combat picker */}
       {showCombatPicker && (
-        <div onClick={() => setShowCombatPicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '360px', maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
+        <ModalBackdrop onClose={() => setShowCombatPicker(false)} zIndex={Z_INDEX.criticalModal} opacity={0.9} padding="1rem">
+          <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '360px', maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
             <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Add to Combat</div>
             <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>Select NPCs</div>
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
@@ -1878,13 +1879,13 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               </button>
             </div>
           </div>
-        </div>
+        </ModalBackdrop>
       )}
 
       {/* Browse Library modal */}
       {showLibrary && (
-        <div onClick={() => setShowLibrary(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '500px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+        <ModalBackdrop onClose={() => setShowLibrary(false)} zIndex={Z_INDEX.criticalModal} opacity={0.9} padding="1rem">
+          <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '500px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
             <div style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>World NPC Library</div>
             <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '1rem' }}>Browse &amp; Import</div>
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
@@ -1920,7 +1921,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
             </div>
             <button onClick={() => setShowLibrary(false)} style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Close</button>
           </div>
-        </div>
+        </ModalBackdrop>
       )}
     </>
   )
