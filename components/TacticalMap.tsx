@@ -189,9 +189,15 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // drag to clear cells. fogPainting = pointer is down + dragging.
   // Persisted to tactical_scenes.fog_state on a debounced write so
   // continuous-drag doesn't hammer the DB.
-  const [fogEditMode, setFogEditMode] = useState<'paint' | 'erase' | null>(null)
+  const [fogEditMode, setFogEditMode] = useState<'paint' | 'erase' | 'rect' | null>(null)
   const fogPaintingRef = useRef(false)
   const fogPendingSaveRef = useRef<number | null>(null)
+  // Rectangle marquee for the 'rect' fog tool. Both corners are
+  // captured in cell coords. While dragging, the canvas draws a
+  // preview overlay; on mouseup, every cell inside the bounds gets
+  // flipped into fog_state at once.
+  const [fogRectStart, setFogRectStart] = useState<{ gx: number; gy: number } | null>(null)
+  const [fogRectEnd, setFogRectEnd] = useState<{ gx: number; gy: number } | null>(null)
   // Local mirror — the canonical fog state lives on `scene.fog_state`
   // but during a drag we update this immediately and persist on a
   // debounce; reconcile back to scene state when the realtime row
@@ -426,7 +432,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   // Redraw on token/scene changes
   // campaignNpcs/entries are in the dep list so HP damage repaints the pips immediately — missing them meant tokens stayed stale until some other dependency (click, zoom, move) forced a redraw.
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode, fogRectStart, fogRectEnd])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
@@ -1290,6 +1296,31 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       }
     }
 
+    // Rectangle marquee preview — draws while the GM is dragging
+    // the Rect fog tool. On mouseup the rectangle is committed to
+    // fog_state and the preview clears.
+    if (fogEditMode === 'rect' && fogRectStart && fogRectEnd) {
+      const cellW = (s.grid_cols * cellSize) / s.grid_cols
+      const cellH = (s.grid_rows * cellSize) / s.grid_rows
+      const x1 = Math.min(fogRectStart.gx, fogRectEnd.gx)
+      const x2 = Math.max(fogRectStart.gx, fogRectEnd.gx)
+      const y1 = Math.min(fogRectStart.gy, fogRectEnd.gy)
+      const y2 = Math.max(fogRectStart.gy, fogRectEnd.gy)
+      const rx = offsetX + x1 * cellW
+      const ry = offsetY + y1 * cellH
+      const rw = (x2 - x1 + 1) * cellW
+      const rh = (y2 - y1 + 1) * cellH
+      ctx.save()
+      ctx.fillStyle = 'rgba(196,167,240,0.18)'
+      ctx.fillRect(rx, ry, rw, rh)
+      ctx.strokeStyle = 'rgba(196,167,240,0.85)'
+      ctx.lineWidth = 1.5
+      ctx.setLineDash([6, 4])
+      ctx.strokeRect(rx + 0.5, ry + 0.5, rw - 1, rh - 1)
+      ctx.setLineDash([])
+      ctx.restore()
+    }
+
     ctx.restore() // undo zoom scale
 
     // Continue animation loop if tokens are still moving
@@ -1350,15 +1381,24 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const pos = getGridPos(e)
       if (pos) {
         fogPaintingRef.current = true
-        const key = `${pos.gx},${pos.gy}`
-        setFogLocal(prev => {
-          const next = { ...prev }
-          if (fogEditMode === 'paint') next[key] = true
-          else delete next[key]
-          fogLocalRef.current = next
-          return next
-        })
-        scheduleFogPersist()
+        if (fogEditMode === 'rect') {
+          // Defer the state mutation to mouseup — during the drag
+          // we only render a preview overlay so the GM can pick the
+          // bounds. Capturing both corners now means a single-click
+          // (no drag) still fogs the one cell on release.
+          setFogRectStart(pos)
+          setFogRectEnd(pos)
+        } else {
+          const key = `${pos.gx},${pos.gy}`
+          setFogLocal(prev => {
+            const next = { ...prev }
+            if (fogEditMode === 'paint') next[key] = true
+            else delete next[key]
+            fogLocalRef.current = next
+            return next
+          })
+          scheduleFogPersist()
+        }
       }
       return
     }
@@ -1579,9 +1619,17 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // Fog drag — extend the paint/erase from mousedown along the
     // cursor path. We touch each unique cell at most once per drag
     // so re-entering a cell mid-drag doesn't undo the operation.
+    // Rect mode just updates the preview end cell; commit happens
+    // on mouseup.
     if (fogEditMode && fogPaintingRef.current && isGM) {
       const pos = getGridPos(e)
       if (pos) {
+        if (fogEditMode === 'rect') {
+          if (!fogRectEnd || fogRectEnd.gx !== pos.gx || fogRectEnd.gy !== pos.gy) {
+            setFogRectEnd(pos)
+          }
+          return
+        }
         const key = `${pos.gx},${pos.gy}`
         setFogLocal(prev => {
           const has = !!prev[key]
@@ -1667,9 +1715,27 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   function handleMouseUp(e: React.MouseEvent) {
     // End a fog paint drag. The last cell already got persisted on
     // the trailing scheduleFogPersist() of handleMouseMove; just
-    // flip the in-flight ref off.
+    // flip the in-flight ref off. Rect mode commits the rectangle
+    // bounds here as one bulk write.
     if (fogPaintingRef.current) {
       fogPaintingRef.current = false
+      if (fogEditMode === 'rect' && fogRectStart && fogRectEnd) {
+        const x1 = Math.min(fogRectStart.gx, fogRectEnd.gx)
+        const x2 = Math.max(fogRectStart.gx, fogRectEnd.gx)
+        const y1 = Math.min(fogRectStart.gy, fogRectEnd.gy)
+        const y2 = Math.max(fogRectStart.gy, fogRectEnd.gy)
+        setFogLocal(prev => {
+          const next = { ...prev }
+          for (let x = x1; x <= x2; x++) {
+            for (let y = y1; y <= y2; y++) next[`${x},${y}`] = true
+          }
+          fogLocalRef.current = next
+          return next
+        })
+        scheduleFogPersist()
+        setFogRectStart(null)
+        setFogRectEnd(null)
+      }
       return
     }
     if (resizing) {
@@ -2019,12 +2085,17 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             {fogEditMode && (
               <>
                 <button onClick={() => setFogEditMode('paint')}
-                  title="Drag to fog cells"
+                  title="Drag to fog cells one at a time"
                   style={{ padding: '4px 10px', background: fogEditMode === 'paint' ? '#2a1a3e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'paint' ? '#c4a7f0' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'paint' ? '#c4a7f0' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   Paint
                 </button>
+                <button onClick={() => setFogEditMode('rect')}
+                  title="Drag a rectangle to fog every cell inside on release"
+                  style={{ padding: '4px 10px', background: fogEditMode === 'rect' ? '#2a1a3e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'rect' ? '#c4a7f0' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'rect' ? '#c4a7f0' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                  Rect
+                </button>
                 <button onClick={() => setFogEditMode('erase')}
-                  title="Drag to clear fog"
+                  title="Drag to clear fog cells one at a time"
                   style={{ padding: '4px 10px', background: fogEditMode === 'erase' ? '#2a1a3e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'erase' ? '#c4a7f0' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'erase' ? '#c4a7f0' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   Erase
                 </button>
