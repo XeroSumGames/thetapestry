@@ -185,3 +185,115 @@ export function CloseButton({ onClick, title = 'Close', tone = 'muted', children
     </button>
   )
 }
+
+// ── Button ────────────────────────────────────────────────────────────
+// The 438+ inline action-button styles across the codebase mostly fall
+// into the same handful of tone+size combos. Extracting one component
+// with a tone/size prop pair lets new code adopt cleanly without
+// inventing yet another color palette per call site.
+//
+// Tones (background / color / border are picked together — these aren't
+// named after meaning, they're named after visual feel):
+//   primary   — red, white text. Default CTA (Save, Submit, Apply Selected).
+//   secondary — grey, neutral text. Default for Cancel / Close / passive.
+//   confirm   — green. Apply, Yes, OK on a destructive prompt.
+//   warning   — amber. Caution flows (overwrites, force, paid spend).
+//   info      — blue. Informational / non-destructive next steps.
+//   magic     — purple. Module / Apprentice / Schism / world-feature flows.
+//   danger    — red text on dark red. Delete row, remove, destructive
+//                undoable actions (NOT primary CTA — use 'primary' for that).
+//
+// Sizes shape padding + fontSize. Color/tone is independent of size.
+//
+// `disabled` and `busy` both fall back to disabled+dimmed; `busy`
+// additionally hints `cursor: wait` so async-submitting buttons read
+// differently from invalid-form buttons. Pass `style` for one-offs
+// (flex: 1, marginTop, custom width — the helper merges yours last).
+//
+// The helper deliberately doesn't bake in hover handlers — the
+// codebase doesn't use JS hover effects for action buttons (color +
+// cursor change is the affordance), and adding a baseline hover here
+// would silently shift the look across every adopted site.
+
+export type ButtonTone =
+  | 'primary'
+  | 'secondary'
+  | 'confirm'
+  | 'warning'
+  | 'info'
+  | 'magic'
+  | 'danger'
+
+export type ButtonSize = 'sm' | 'md' | 'lg'
+
+const BUTTON_TONES: Record<ButtonTone, { bg: string; color: string; border: string }> = {
+  primary:   { bg: '#c0392b', color: '#ffffff', border: '#c0392b' },
+  secondary: { bg: '#242424', color: '#d4cfc9', border: '#3a3a3a' },
+  confirm:   { bg: '#1a2e10', color: '#7fc458', border: '#2d5a1b' },
+  warning:   { bg: '#2a2010', color: '#EF9F27', border: '#5a4a1b' },
+  info:      { bg: '#0f1a2e', color: '#7ab3d4', border: '#1a3a5c' },
+  magic:     { bg: '#2a102a', color: '#d48bd4', border: '#5a2e5a' },
+  danger:    { bg: '#2a1210', color: '#f5a89a', border: '#c0392b' },
+}
+
+const BUTTON_SIZES: Record<ButtonSize, CSSProperties> = {
+  sm: { padding: '4px 10px', fontSize: '13px' },
+  md: { padding: '8px 12px', fontSize: '13px' },
+  lg: { padding: '10px 18px', fontSize: '14px' },
+}
+
+export interface ButtonProps {
+  tone?: ButtonTone
+  size?: ButtonSize
+  disabled?: boolean
+  /** Like disabled but also hints `cursor: wait` so an async-pending
+   *  button reads differently from a constraint-blocked one. */
+  busy?: boolean
+  type?: 'button' | 'submit' | 'reset'
+  title?: string
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
+  /** One-off overrides (flex: 1, custom width, marginTop, etc.). Merged
+   *  last so caller wins. */
+  style?: CSSProperties
+  children: ReactNode
+}
+
+export function Button({
+  tone = 'secondary',
+  size = 'md',
+  disabled,
+  busy,
+  type = 'button',
+  title,
+  onClick,
+  style,
+  children,
+}: ButtonProps) {
+  const t = BUTTON_TONES[tone]
+  const s = BUTTON_SIZES[size]
+  const inactive = disabled || busy
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={inactive}
+      title={title}
+      style={{
+        ...s,
+        background: t.bg,
+        color: t.color,
+        border: `1px solid ${t.border}`,
+        borderRadius: '3px',
+        fontFamily: 'Carlito, sans-serif',
+        letterSpacing: '.06em',
+        textTransform: 'uppercase',
+        fontWeight: 600,
+        cursor: busy ? 'wait' : inactive ? 'not-allowed' : 'pointer',
+        opacity: inactive ? 0.5 : 1,
+        ...style,
+      }}
+    >
+      {children}
+    </button>
+  )
+}

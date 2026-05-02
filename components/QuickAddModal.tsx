@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { appendProgressionEntry } from '../lib/progression-log'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
-import { LABEL_STYLE, ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
+import { LABEL_STYLE, ModalBackdrop, Z_INDEX, Button } from '../lib/style-helpers'
 
 export interface QuickAddModalProps {
   mode: 'campaign' | 'world'
@@ -635,10 +635,9 @@ export default function QuickAddModal({
           )}
         </div>
 
-        <button onClick={onClose}
-          style={{ marginTop: '1.25rem', width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+        <Button tone="secondary" size="lg" style={{ marginTop: '1.25rem', width: '100%', letterSpacing: '.08em' }} onClick={onClose}>
           Done
-        </button>
+        </Button>
       </div>
     </ModalBackdrop>
   )

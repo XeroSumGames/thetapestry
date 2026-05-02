@@ -43,7 +43,7 @@ import { appendProgressionEntry } from '../lib/progression-log'
 import { PROFESSIONS, type ProfessionDefinition, type AttributeName, SKILLS, type SkillValue } from '../lib/xse-schema'
 import { skillStepUp } from '../lib/xse-engine'
 import ProfessionPicker from './ProfessionPicker'
-import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
+import { ModalBackdrop, Z_INDEX, Button } from '../lib/style-helpers'
 
 type Step = 'identity' | 'profession' | 'rapid' | 'skills' | 'confirm'
 
@@ -603,40 +603,29 @@ export default function ApprenticeCreationWizard({
           </button>
 
           {step !== 'confirm' && (
-            <button onClick={() => {
-              if (step === 'identity' && canContinueFromIdentity) setStep('profession')
-              else if (step === 'profession' && canContinueFromProfession) setStep('rapid')
-              else if (step === 'rapid' && canContinueFromRapid) setStep('skills')
-              else if (step === 'skills' && canContinueFromSkills) setStep('confirm')
-            }}
+            <Button
+              tone="magic"
+              size="lg"
               disabled={
                 (step === 'identity' && !canContinueFromIdentity) ||
                 (step === 'profession' && !canContinueFromProfession) ||
                 (step === 'rapid' && !canContinueFromRapid) ||
                 (step === 'skills' && !canContinueFromSkills)
               }
-              style={{
-                padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a',
-                borderRadius: '3px', color: '#d48bd4', fontSize: '14px',
-                fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
-                fontWeight: 600,
-                cursor: 'pointer', opacity: 1,
+              onClick={() => {
+                if (step === 'identity' && canContinueFromIdentity) setStep('profession')
+                else if (step === 'profession' && canContinueFromProfession) setStep('rapid')
+                else if (step === 'rapid' && canContinueFromRapid) setStep('skills')
+                else if (step === 'skills' && canContinueFromSkills) setStep('confirm')
               }}>
               Continue →
-            </button>
+            </Button>
           )}
 
           {step === 'confirm' && (
-            <button onClick={handleSave} disabled={saving}
-              style={{
-                padding: '8px 18px', background: '#1a2e10', border: '1px solid #2d5a1b',
-                borderRadius: '3px', color: '#7fc458', fontSize: '14px',
-                fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
-                fontWeight: 700,
-                cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.5 : 1,
-              }}>
+            <Button tone="confirm" size="lg" busy={saving} onClick={handleSave}>
               {saving ? 'Saving…' : '✓ Save Apprentice'}
-            </button>
+            </Button>
           )}
         </div>
       </div>

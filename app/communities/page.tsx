@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
 import Link from 'next/link'
-import { ModalBackdrop, Z_INDEX } from '../../lib/style-helpers'
+import { ModalBackdrop, Z_INDEX, Button } from '../../lib/style-helpers'
 import {
   type CommunityEventRow,
   eventIcon,
@@ -592,14 +592,12 @@ export default function CommunitiesIndexPage() {
             )}
 
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => !inviting && setShowInvite(false)} disabled={inviting}
-                style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: inviting ? 'not-allowed' : 'pointer' }}>
+              <Button tone="secondary" size="lg" disabled={inviting} style={{ flex: 1 }} onClick={() => !inviting && setShowInvite(false)}>
                 Close
-              </button>
-              <button onClick={handleInvite} disabled={inviting || !inviteCommId || !inviteCharId}
-                style={{ flex: 2, padding: '10px', background: inviteCommId && inviteCharId ? '#c0392b' : '#111', border: `1px solid ${inviteCommId && inviteCharId ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', color: inviteCommId && inviteCharId ? '#fff' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: inviting || !inviteCommId || !inviteCharId ? 'not-allowed' : 'pointer' }}>
+              </Button>
+              <Button tone="primary" size="lg" busy={inviting} disabled={!inviteCommId || !inviteCharId} style={{ flex: 2 }} onClick={handleInvite}>
                 {inviting ? 'Sending…' : '🤝 Send Invite'}
-              </button>
+              </Button>
             </div>
           </div>
         </ModalBackdrop>
@@ -662,14 +660,12 @@ export default function CommunitiesIndexPage() {
             )}
 
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => !creating && setShowCreate(false)} disabled={creating}
-                style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: creating ? 'not-allowed' : 'pointer' }}>
+              <Button tone="secondary" size="lg" disabled={creating} style={{ flex: 1 }} onClick={() => !creating && setShowCreate(false)}>
                 Cancel
-              </button>
-              <button onClick={handleCreate} disabled={creating || !newCampaignId || !newName.trim()}
-                style={{ flex: 2, padding: '10px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: creating || !newCampaignId || !newName.trim() ? 'not-allowed' : 'pointer', opacity: creating || !newCampaignId || !newName.trim() ? 0.6 : 1 }}>
+              </Button>
+              <Button tone="primary" size="lg" busy={creating} disabled={!newCampaignId || !newName.trim()} style={{ flex: 2 }} onClick={handleCreate}>
                 {creating ? 'Creating…' : 'Create Community'}
-              </button>
+              </Button>
             </div>
           </div>
         </ModalBackdrop>
