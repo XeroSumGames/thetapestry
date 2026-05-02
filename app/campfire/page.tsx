@@ -9,6 +9,8 @@ import Forums2Page from './forums2/page'
 import WarStoriesPage from './war-stories/page'
 import TimestampPage from './timestamp/page'
 import { FEATURED_SETTING_SLUGS, settingLabel, settingAccent } from '../../lib/campfire-settings'
+import { createClient } from '../../lib/supabase-browser'
+import { listAvailableModules, type ModuleListing } from '../../lib/modules'
 
 // /campfire — two-mode hub.
 //
@@ -96,9 +98,48 @@ const EXPLORE: ExploreCard[] = [
   { href: '/campfire?tab=homebrew',    glyph: '🛠️', label: 'Homebrew',          accent: '#1a4a6b', description: 'Custom rules, house variants, fan content.', badge: 'soon' },
 ]
 
+// Picks the single best module to feature on the portal. Ranks by:
+//   1) listed visibility (private/unlisted skipped — they're not for
+//      discovery)
+//   2) explicit curation via sort_order (lower = higher priority,
+//      NULL deprioritized)
+//   3) highest avg_rating among modules with at least 1 review
+//   4) most subscribers as final tiebreaker
+// Returns null when no module qualifies — the portal then renders no
+// Featured row (graceful empty).
+function pickFeatured(list: ModuleListing[]): ModuleListing | null {
+  const listed = list.filter(m => m.visibility === 'listed')
+  if (listed.length === 0) return null
+  const ranked = [...listed].sort((a, b) => {
+    const aSort = a.sort_order ?? Number.MAX_SAFE_INTEGER
+    const bSort = b.sort_order ?? Number.MAX_SAFE_INTEGER
+    if (aSort !== bSort) return aSort - bSort
+    const aHas = (a.rating_count ?? 0) > 0
+    const bHas = (b.rating_count ?? 0) > 0
+    if (aHas && !bHas) return -1
+    if (!aHas && bHas) return 1
+    if ((b.avg_rating ?? 0) !== (a.avg_rating ?? 0)) return (b.avg_rating ?? 0) - (a.avg_rating ?? 0)
+    return (b.subscriber_count ?? 0) - (a.subscriber_count ?? 0)
+  })
+  return ranked[0] ?? null
+}
+
 function CampfirePortal() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const supabase = createClient()
+  // Featured module — null while loading, then either a ModuleListing
+  // or null (empty state). Rendered between Setting Hubs and Explore.
+  const [featured, setFeatured] = useState<ModuleListing | null>(null)
+  const [featuredLoaded, setFeaturedLoaded] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    listAvailableModules(supabase)
+      .then(list => { if (!cancelled) { setFeatured(pickFeatured(list)); setFeaturedLoaded(true) } })
+      .catch(() => { if (!cancelled) { setFeatured(null); setFeaturedLoaded(true) } })
+    return () => { cancelled = true }
+  }, [supabase])
 
   const settingParam = searchParams.get('setting') ?? ''
   function handleSettingChange(value: string) {
@@ -181,6 +222,57 @@ function CampfirePortal() {
             })}
           </div>
         </div>
+
+        {/* Featured Module — single hero card driving people into
+            the marketplace. Hidden when no listed modules exist (the
+            ranker returns null). The card mirrors the ⭐ chip + cover
+            treatment from /rumors so it's recognizably-the-same
+            content surface presented as a featured hero. */}
+        {featuredLoaded && featured && (
+          <div style={{ marginBottom: '2.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '12px', borderBottom: '1px solid #2e2e2e', paddingBottom: '8px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+                Featured Module
+              </div>
+              <Link href="/rumors" style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', textDecoration: 'none' }}>
+                Browse all →
+              </Link>
+            </div>
+            <Link href={`/rumors/${featured.id}`}
+              style={{ display: 'block', textDecoration: 'none', color: 'inherit',
+                background: featured.cover_image_url ? `url(${featured.cover_image_url}) center/cover` : 'linear-gradient(135deg, #1a1a1a 0%, #2a1a3e 100%)',
+                border: '1px solid #5a2e5a', borderLeft: '4px solid #8b5cf6', borderRadius: '4px',
+                minHeight: '180px', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(15,15,15,0.92) 0%, rgba(15,15,15,0.55) 60%, rgba(15,15,15,0.25) 100%)' }} />
+              <div style={{ position: 'relative', padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', minHeight: '180px' }}>
+                <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#c4a7f0', marginBottom: '6px' }}>
+                  📦 Rumor Module
+                </div>
+                <div style={{ fontFamily: 'Distemper, Carlito, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1, marginBottom: '6px' }}>
+                  {featured.name}
+                </div>
+                {featured.tagline && (
+                  <div style={{ fontSize: '15px', color: '#cce0f5', lineHeight: 1.5, marginBottom: '10px', maxWidth: '720px' }}>
+                    {featured.tagline}
+                  </div>
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  {(featured.rating_count ?? 0) > 0 && (
+                    <span style={{ padding: '3px 10px', background: 'rgba(42,32,16,0.85)', border: '1px solid #5a4a1b', borderRadius: '3px', fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                      ⭐ {(featured.avg_rating ?? 0).toFixed(1)} <span style={{ opacity: 0.7 }}>({featured.rating_count})</span>
+                    </span>
+                  )}
+                  <span style={{ padding: '3px 10px', background: 'rgba(26,46,16,0.85)', border: '1px solid #2d5a1b', borderRadius: '3px', fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                    📥 {featured.subscriber_count ?? 0}
+                  </span>
+                  <span style={{ marginLeft: 'auto', fontSize: '13px', letterSpacing: '.1em', textTransform: 'uppercase', color: '#c4a7f0', fontWeight: 700 }}>
+                    Open module →
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </div>
+        )}
 
         <div>
           <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px', borderBottom: '1px solid #2e2e2e', paddingBottom: '8px' }}>

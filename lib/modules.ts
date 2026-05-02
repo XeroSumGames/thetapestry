@@ -118,6 +118,11 @@ export interface ModuleListing {
   // sql/modules-subscriber-count.sql. Surfaced as the "downloads"
   // number on the marketplace card.
   subscriber_count: number | null
+  // Ratings aggregate — maintained by trigger in
+  // sql/modules-phase-c-reviews.sql. avg_rating is 0 when no reviews;
+  // rating_count is 0 → don't render the chip on cards.
+  avg_rating: number | null
+  rating_count: number | null
   latest_version?: {
     id: string
     version: string
@@ -190,7 +195,7 @@ export async function listAvailableModules(
   // column — retry without it instead of falling all the way through
   // to the empty-state path. The marketplace card just shows "📥 0"
   // for every module until the migration runs + the trigger backfills.
-  const fullSelect = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count, latest_version:module_versions!modules_latest_version_id_fkey(id, version, published_at)'
+  const fullSelect = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count, avg_rating, rating_count, latest_version:module_versions!modules_latest_version_id_fkey(id, version, published_at)'
   const liteSelect = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, latest_version:module_versions!modules_latest_version_id_fkey(id, version, published_at)'
   let { data, error } = await supabase
     .from('modules')
@@ -232,7 +237,7 @@ async function listAvailableModulesFallback(
 ): Promise<ModuleListing[]> {
   // Same migration-tolerant pattern as listAvailableModules: try with
   // subscriber_count, retry without it if the column doesn't exist.
-  const fullCols = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count'
+  const fullCols = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order, subscriber_count, avg_rating, rating_count'
   const liteCols = 'id, name, tagline, description, cover_image_url, parent_setting, author_user_id, visibility, latest_version_id, sort_order'
   let { data: modules, error } = await supabase
     .from('modules')
@@ -1340,4 +1345,92 @@ export async function archiveModule(
   }
 
   return { archived: true, subscriberCount }
+}
+
+// ── Module reviews ──────────────────────────────────────────────────
+// Surfaced on /rumors/[id] under version history. RLS allows insert
+// only when the caller has an active module_subscriptions row for the
+// module — the policy is in sql/modules-phase-c-reviews.sql.
+
+export interface ModuleReview {
+  id: string
+  module_id: string
+  user_id: string
+  rating: number
+  body: string | null
+  created_at: string
+  updated_at: string
+  author_username?: string | null
+}
+
+export async function listModuleReviews(
+  supabase: SupabaseClient,
+  moduleId: string,
+): Promise<ModuleReview[]> {
+  const { data, error } = await supabase
+    .from('module_reviews')
+    .select('id, module_id, user_id, rating, body, created_at, updated_at')
+    .eq('module_id', moduleId)
+    .order('created_at', { ascending: false })
+  if (error || !data) return []
+  // Hydrate author usernames in one batched profiles fetch.
+  const userIds = Array.from(new Set(data.map(r => r.user_id)))
+  if (userIds.length === 0) return data as ModuleReview[]
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, username')
+    .in('id', userIds)
+  const nameMap: Record<string, string> = {}
+  for (const p of (profiles ?? []) as { id: string; username: string | null }[]) {
+    nameMap[p.id] = p.username ?? 'unknown'
+  }
+  return data.map(r => ({ ...r, author_username: nameMap[r.user_id] ?? null })) as ModuleReview[]
+}
+
+// Returns true if the current user has at least one active subscription
+// to this module (i.e. they're a subscriber GM and may rate it).
+// Looked up by joining module_subscriptions → campaigns on gm_user_id.
+export async function isModuleSubscriber(
+  supabase: SupabaseClient,
+  moduleId: string,
+): Promise<boolean> {
+  const { user } = await getCachedAuth()
+  if (!user) return false
+  const { data } = await supabase
+    .from('module_subscriptions')
+    .select('campaign_id, campaigns!inner(gm_user_id)')
+    .eq('module_id', moduleId)
+    .eq('status', 'active')
+    .eq('campaigns.gm_user_id', user.id)
+    .limit(1)
+  return !!(data && data.length > 0)
+}
+
+export async function upsertModuleReview(
+  supabase: SupabaseClient,
+  moduleId: string,
+  rating: number,
+  body: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  const { user } = await getCachedAuth()
+  if (!user) return { ok: false, error: 'Sign in to leave a review.' }
+  if (rating < 1 || rating > 5) return { ok: false, error: 'Rating must be 1-5.' }
+  const { error } = await supabase
+    .from('module_reviews')
+    .upsert(
+      { module_id: moduleId, user_id: user.id, rating, body: body?.trim() || null },
+      { onConflict: 'module_id,user_id' },
+    )
+  if (error) return { ok: false, error: error.message }
+  void logEvent('module_reviewed', { module_id: moduleId, rating })
+  return { ok: true }
+}
+
+export async function deleteModuleReview(
+  supabase: SupabaseClient,
+  reviewId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase.from('module_reviews').delete().eq('id', reviewId)
+  if (error) return { ok: false, error: error.message }
+  return { ok: true }
 }

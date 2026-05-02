@@ -22,11 +22,12 @@ const SETTING_LABELS: Record<string, string> = {
   empty: 'Empty',
 }
 
-type SortKey = 'featured' | 'newest' | 'subs' | 'az' | 'za'
+type SortKey = 'featured' | 'newest' | 'subs' | 'rated' | 'az' | 'za'
 const SORT_LABELS: Record<SortKey, string> = {
   featured: 'Featured',
   newest: 'Newest',
   subs: 'Most subscribed',
+  rated: 'Highest rated',
   az: 'A–Z',
   za: 'Z–A',
 }
@@ -120,6 +121,16 @@ export default function ModuleMarketplacePage() {
       sorted.sort((a, b) => (b.latest_version?.published_at ?? '').localeCompare(a.latest_version?.published_at ?? ''))
     } else if (sortBy === 'subs') {
       sorted.sort((a, b) => (b.subscriber_count ?? 0) - (a.subscriber_count ?? 0))
+    } else if (sortBy === 'rated') {
+      // Highest rated first; modules with no reviews (count=0) sink to
+      // the bottom regardless of avg so we don't elevate phantom 0-stars.
+      sorted.sort((a, b) => {
+        const aHas = (a.rating_count ?? 0) > 0
+        const bHas = (b.rating_count ?? 0) > 0
+        if (aHas && !bHas) return -1
+        if (!aHas && bHas) return 1
+        return (b.avg_rating ?? 0) - (a.avg_rating ?? 0)
+      })
     } else if (sortBy === 'az') {
       sorted.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
     } else if (sortBy === 'za') {
@@ -334,13 +345,30 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
                 🔒 Private
               </span>
             )}
+            {/* Rating chip — only shown when at least one review
+                exists so we don't litter cards with phantom 0-stars on
+                fresh modules. Maintained denormalized on
+                modules.avg_rating + modules.rating_count via the
+                trigger in sql/modules-phase-c-reviews.sql. */}
+            {(m.rating_count ?? 0) > 0 && (
+              <span style={{
+                marginLeft: 'auto',
+                padding: '2px 8px', background: '#2a2010', border: '1px solid #5a4a1b',
+                borderRadius: '3px', fontSize: '13px', color: '#EF9F27',
+                fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
+                display: 'inline-flex', alignItems: 'center', gap: '4px',
+              }}
+                title={`Average rating across ${m.rating_count} review${m.rating_count === 1 ? '' : 's'}`}>
+                ⭐ {(m.avg_rating ?? 0).toFixed(1)} <span style={{ opacity: 0.7, marginLeft: '2px' }}>({m.rating_count})</span>
+              </span>
+            )}
             {/* Subscriber count chip — shown on every card; reads
                 "0 downloads" for fresh modules so the chip is always
                 visible (helps players gauge popularity at a glance).
                 Maintained denormalized on modules.subscriber_count via
                 the trigger in sql/modules-subscriber-count.sql. */}
             <span style={{
-              marginLeft: 'auto',
+              marginLeft: (m.rating_count ?? 0) > 0 ? 0 : 'auto',
               padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b',
               borderRadius: '3px', fontSize: '13px', color: '#7fc458',
               fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase',
