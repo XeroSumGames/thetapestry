@@ -6,6 +6,7 @@ import { appendProgressionEntry } from '../lib/progression-log'
 import CommunityMoraleModal from './CommunityMoraleModal'
 import { type InventoryItem } from '../lib/inventory'
 import { EQUIPMENT } from '../lib/xse-schema'
+import { LABEL_STYLE_LG } from '../lib/style-helpers'
 import {
   logSchism,
   logMigration,
@@ -1714,15 +1715,15 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
       {showCreate && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div>
-            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Name</div>
+            <div style={{ ...LABEL_STYLE_LG, marginBottom: '2px' }}>Name</div>
             <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. The Mongrels" style={inp} />
           </div>
           <div>
-            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Description</div>
+            <div style={{ ...LABEL_STYLE_LG, marginBottom: '2px' }}>Description</div>
             <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} rows={2} style={{ ...inp, resize: 'vertical' }} />
           </div>
           <div>
-            <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '2px' }}>Homestead pin (optional)</div>
+            <div style={{ ...LABEL_STYLE_LG, marginBottom: '2px' }}>Homestead pin (optional)</div>
             <select value={newHomestead} onChange={e => setNewHomestead(e.target.value)} style={{ ...inp, appearance: 'none' }}>
               <option value="">— None —</option>
               {pins.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -2404,7 +2405,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     assigned labor. The "Re-balance" button triggers
                     the quota-aware allocator manually. */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ flex: 1, fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Role Coverage</div>
+                  <div style={{ flex: 1, ...LABEL_STYLE_LG }}>Role Coverage</div>
                   <button onClick={() => handleRebalance(c.id)}
                     style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
                     title="Auto-sort NPCs by skill to hit role minimums">
@@ -2450,7 +2451,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     <div style={{ background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px', marginTop: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                         <span style={{ fontSize: '15px' }}>📦</span>
-                        <span style={{ flex: 1, fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Stockpile</span>
+                        <span style={{ flex: 1, ...LABEL_STYLE_LG }}>Stockpile</span>
                         <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
                           {stockpile.length === 0 ? 'empty' : `${stockpile.length} items · ${totalEnc} enc`}
                         </span>
@@ -2677,7 +2678,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 {/* Add member */}
                 {(availableNpcs.length > 0 || availableChars.length > 0) && (
                   <div style={{ padding: '14px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
-                    <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '10px', fontWeight: 600 }}>Add Member</div>
+                    <div style={{ ...LABEL_STYLE_LG, marginBottom: '10px', fontWeight: 600 }}>Add Member</div>
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                       <select value={addKind} onChange={e => { setAddKind(e.target.value as 'npc' | 'pc'); setAddSubjectId('') }}
                         style={{ padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
@@ -2798,7 +2799,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   Each picked survivor becomes a migration request to the chosen community. The receiving GM accepts (the survivor narratively joins them) or declines (the survivor's fate stays open). Picking 5 survivors sends 5 separate requests so the receiver can pick and choose.
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Target community</div>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Target community</div>
                   <select value={migrationTargetId} onChange={e => setMigrationTargetId(e.target.value)}
                     style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
                     <option value="">— pick a community —</option>
@@ -2808,7 +2809,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   </select>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '6px' }}>
                     Survivors to offer ({migrationPickedIds.size} / {survivors.length})
                   </div>
                   <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px' }}>
@@ -2825,7 +2826,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Narrative (optional)</div>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Narrative (optional)</div>
                   <textarea value={migrationNarrative}
                     placeholder="e.g. They survived the raid that broke us. They carry our last stockpile of antibiotics — please honor what's left of us."
                     onChange={e => setMigrationNarrative(e.target.value)}
@@ -2883,13 +2884,13 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   Pick the breakaway faction's members. They leave with reason "schism" and join a new community in this campaign. The original keeps everyone else and its history (Morale roll log, week counter, consecutive failures).
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Breakaway name</div>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Breakaway name</div>
                   <input value={schismName}
                     onChange={e => setSchismName(e.target.value)}
                     style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Description (optional)</div>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Description (optional)</div>
                   <textarea value={schismDescription}
                     placeholder="Why did they leave? What do they believe?"
                     onChange={e => setSchismDescription(e.target.value)}
@@ -2897,7 +2898,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Breakaway Homestead pin (optional)</div>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Breakaway Homestead pin (optional)</div>
                   <select value={schismHomesteadPinId} onChange={e => setSchismHomesteadPinId(e.target.value)}
                     style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
                     <option value="">— None (set later) —</option>
@@ -2905,7 +2906,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   </select>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '6px' }}>
                     Members joining the breakaway ({schismPickedIds.size} / {mems.length})
                   </div>
                   <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px' }}>
@@ -2994,7 +2995,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 </div>
 
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Faction / flavor label (optional)</div>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Faction / flavor label (optional)</div>
                   <input value={publishFactionLabel}
                     placeholder="e.g. Reformed Church, Mercantile, Mongrels, Scholars"
                     onChange={e => setPublishFactionLabel(e.target.value)}
@@ -3054,7 +3055,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   Assigned NPCs are off doing a PC-directed task and don't count toward the labor minimums. Pick who's directing them and what they're doing.
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Directed by</div>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Directed by</div>
                   <select value={assignmentPcDraft}
                     onChange={e => setAssignmentPcDraft(e.target.value)}
                     style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
@@ -3066,7 +3067,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   </select>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Task</div>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Task</div>
                   <input autoFocus value={assignmentTaskDraft}
                     placeholder="e.g. Scouting the Belvedere's warehouse"
                     onChange={e => setAssignmentTaskDraft(e.target.value)}

@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { appendProgressionEntry } from '../lib/progression-log'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
+import { LABEL_STYLE } from '../lib/style-helpers'
 
 export interface QuickAddModalProps {
   mode: 'campaign' | 'world'
@@ -389,19 +390,19 @@ export default function QuickAddModal({
             <div style={{ fontSize: '13px', color: '#7ab3d4', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>📍 Drop a Pin</div>
 
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Title</div>
+              <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Title</div>
               <input value={pinName} onChange={e => setPinName(e.target.value)} placeholder="e.g. Abandoned hospital"
                 style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
             </div>
 
             <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Lat</div>
+                <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Lat</div>
                 <input value={pinLat} onChange={e => setPinLat(e.target.value)} placeholder="40.4406"
                   style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Lng</div>
+                <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Lng</div>
                 <input value={pinLng} onChange={e => setPinLng(e.target.value)} placeholder="-79.9959"
                   style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
               </div>
@@ -411,7 +412,7 @@ export default function QuickAddModal({
                 when the player picks a result. Sits between the
                 Lat/Lng row and Category per user spec. */}
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Address Search (optional)</div>
+              <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Address Search (optional)</div>
               <form onSubmit={e => { e.preventDefault(); handleAddressSearch() }}
                 style={{ display: 'flex', gap: '6px' }}>
                 <input value={addrQuery} onChange={e => setAddrQuery(e.target.value)}
@@ -437,7 +438,7 @@ export default function QuickAddModal({
             </div>
 
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Category</div>
+              <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Category</div>
               <select value={pinCategory} onChange={e => setPinCategory(e.target.value)}
                 style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                 {categories.map(c => <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>)}
@@ -445,13 +446,13 @@ export default function QuickAddModal({
             </div>
 
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Notes (optional)</div>
+              <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Notes (optional)</div>
               <textarea value={pinNotes} onChange={e => setPinNotes(e.target.value)} rows={2}
                 style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
             </div>
 
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Attachments (optional)</div>
+              <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Attachments (optional)</div>
               <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: pinAttachments.length > 0 ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
                 {pinAttachments.length > 0 ? `${pinAttachments.length} file${pinAttachments.length > 1 ? 's' : ''} selected` : 'Click to attach files'}
                 <input type="file" multiple onChange={e => { if (e.target.files) setPinAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />
@@ -522,7 +523,7 @@ export default function QuickAddModal({
               {commMode === 'join' && existingCommunities.length > 0 && (
                 <>
                   <div style={{ marginBottom: '8px' }}>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Community</div>
+                    <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Community</div>
                     <select value={commJoinId} onChange={e => setCommJoinId(e.target.value)}
                       style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                       <option value="">— pick a community —</option>
@@ -559,19 +560,19 @@ export default function QuickAddModal({
               {commMode === 'start' && (
               <>
               <div style={{ marginBottom: '8px' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Name</div>
+                <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Name</div>
                 <input value={commName} onChange={e => setCommName(e.target.value)} placeholder="e.g. The Greenhouse"
                   style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
               </div>
 
               <div style={{ marginBottom: '8px' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Description (optional)</div>
+                <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Description (optional)</div>
                 <textarea value={commDesc} onChange={e => setCommDesc(e.target.value)} rows={2}
                   style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
               </div>
 
               <div style={{ marginBottom: '8px' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Homestead pin (optional)</div>
+                <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Homestead pin (optional)</div>
                 <select value={commHomestead} onChange={e => setCommHomestead(e.target.value)}
                   style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                   <option value="">— none —</option>
@@ -609,7 +610,7 @@ export default function QuickAddModal({
               </label>
 
               <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Attachments (optional)</div>
+                <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Attachments (optional)</div>
                 <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: commAttachments.length > 0 ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
                   {commAttachments.length > 0 ? `${commAttachments.length} file${commAttachments.length > 1 ? 's' : ''} selected` : 'Click to attach files'}
                   <input type="file" multiple onChange={e => { if (e.target.files) setCommAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />

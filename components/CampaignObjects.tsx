@@ -5,6 +5,7 @@ import { getCachedAuth } from '../lib/auth-cache'
 import { ALL_WEAPONS } from '../lib/weapons'
 import { EQUIPMENT } from '../lib/xse-schema'
 import ObjectImageCropper from './ObjectImageCropper'
+import { LABEL_STYLE_TIGHT } from '../lib/style-helpers'
 
 const OBJECT_ICONS = [
   { value: 'car', emoji: '🚗', label: 'Car' },
@@ -333,7 +334,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
           <input value={addName} onChange={e => setAddName(e.target.value)} placeholder="Object name..."
             style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', marginBottom: '6px' }} />
 
-          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Icon</div>
+          <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '4px' }}>Icon</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '3px', marginBottom: '6px' }}>
             {OBJECT_ICONS.map(icon => (
               <button key={icon.value} onClick={() => { setAddIcon(icon.value); setAddCustomUrl(null) }}
@@ -641,7 +642,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 when the GM doesn't need granularity. */}
             {lootingObj.contents.length > 0 && (
               <>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Or Loot All to</div>
+                <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '4px' }}>Or Loot All to</div>
                 <select value={lootCharId} onChange={e => setLootCharId(e.target.value)}
                   style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none', marginBottom: '10px' }}>
                   <option value="">Select character...</option>
@@ -705,7 +706,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
           <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '280px' }}>
             <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>Edit Object</div>
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Name</div>
+              <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Name</div>
               <input value={editName} onChange={e => setEditName(e.target.value)}
                 style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
             </div>
@@ -720,7 +721,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
               Indestructible (decorative only — not attackable)
             </label>
             <div style={{ marginBottom: '10px' }}>
-              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Image</div>
+              <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Image</div>
               <label style={{ display: 'block', padding: '6px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', textAlign: 'center', cursor: 'pointer', marginBottom: '4px' }}>
                 {uploading ? 'Uploading...' : 'Upload new image'}
                 <input key={`edit-${fileInputKey}`} type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'edit' }); e.target.value = '' }} />
@@ -746,7 +747,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             {/* Destroyed image — optional alt portrait shown when WP hits 0 */}
             <div style={{ marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Destroyed image (optional)</div>
+                <div style={{ ...LABEL_STYLE_TIGHT }}>Destroyed image (optional)</div>
                 {editingObj.destroyed_portrait_url && (
                   <button onClick={async () => {
                     await supabase.from('scene_tokens').update({ destroyed_portrait_url: null }).eq('id', editingObj.id)
@@ -769,7 +770,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             {/* Properties */}
             <div style={{ marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Properties</div>
+                <div style={{ ...LABEL_STYLE_TIGHT }}>Properties</div>
                 <button onClick={() => setEditProps(prev => [...prev, { key: '', value: '', revealed: false }])}
                   style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', padding: '1px 6px', cursor: 'pointer' }}>+ Add</button>
               </div>
@@ -796,7 +797,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             {/* Contents — lootable items */}
             <div style={{ marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Contents (Lootable)</div>
+                <div style={{ ...LABEL_STYLE_TIGHT }}>Contents (Lootable)</div>
               </div>
               {editContents.map((item, i) => (
                 <div key={i} style={{ display: 'flex', gap: '3px', marginBottom: '3px', alignItems: 'center' }}>
@@ -838,7 +839,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 around without GM intervention. */}
             <div style={{ marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Controlled By</span>
+                <span style={{ ...LABEL_STYLE_TIGHT }}>Controlled By</span>
                 <span style={{ fontSize: '13px', color: '#5a5550' }}>{editControllers.length === 0 ? 'GM only' : `${editControllers.length} PC${editControllers.length === 1 ? '' : 's'}`}</span>
               </div>
               {campaignPcs.length === 0 ? (

@@ -7,6 +7,7 @@ import { logFirstEvent } from '../lib/events'
 import { PIN_CATEGORIES, getCategoryEmoji as sharedGetCategoryEmoji } from '../lib/pin-categories'
 import QuickAddModal from './QuickAddModal'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
+import { LABEL_STYLE, LABEL_STYLE_LG, LABEL_STYLE_TIGHT } from '../lib/style-helpers'
 
 type PinTier = 'landmark' | 'location' | 'event' | 'personal'
 
@@ -1115,14 +1116,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   Both GMs must agree before this link goes live on the world map. The other community's GM will get a notification with your one-line context — they accept or decline.
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>From your community</div>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>From your community</div>
                   <select value={linkFromId} onChange={e => setLinkFromId(e.target.value)}
                     style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
                     {eligible.map(wc => <option key={wc.id} value={wc.id}>{wc.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Link type</div>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Link type</div>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     {([
                       { v: 'trade' as const, label: '💱 Trade', color: '#7fc458', desc: 'Goods + supplies flow' },
@@ -1138,7 +1139,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Narrative (optional)</div>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Narrative (optional)</div>
                   <textarea value={linkNarrative}
                     placeholder="e.g. Weekly trade caravans run between us — clean water for medicine."
                     onChange={e => setLinkNarrative(e.target.value)}
@@ -1185,14 +1186,14 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   Flag that your PCs ran into <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{encounterTarget.name}</span> in your campaign. The source GM gets a notification with your one-line narrative; they can accept (canon on both tables) or decline (didn't fit theirs).
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Encountering campaign</div>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Encountering campaign</div>
                   <select value={encounterCampaignId} onChange={e => setEncounterCampaignId(e.target.value)}
                     style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
                     {eligible.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>What happened (optional)</div>
+                  <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>What happened (optional)</div>
                   <textarea value={encounterNarrative}
                     placeholder="e.g. We traded medical supplies for ammunition while sheltering from a Distemper surge."
                     onChange={e => setEncounterNarrative(e.target.value)}
@@ -1251,7 +1252,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   style={{ padding: '2px 6px', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '14px', cursor: 'pointer', lineHeight: 1, marginRight: '4px' }}
                   onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
                   onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>✕</button>
-                <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Pins</span>
+                <span style={{ ...LABEL_STYLE_TIGHT }}>Pins</span>
                 <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{displayedPins.length} total</span>
               </div>
               <input value={pinSearch} onChange={e => setPinSearch(e.target.value)} placeholder="Search pins..."

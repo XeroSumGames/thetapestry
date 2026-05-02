@@ -5,6 +5,7 @@ import { getCachedAuth } from '../lib/auth-cache'
 import { PIN_CATEGORIES, getCategoryEmoji, getCategoryLabel } from '../lib/pin-categories'
 import { openPopout } from '../lib/popout'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
+import { LABEL_STYLE_TIGHT } from '../lib/style-helpers'
 
 interface CampaignPin {
   id: string
@@ -251,7 +252,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                       (lib/pin-categories.ts). Click an icon to set the
                       category; the selected one outlines red. */}
                   <div style={{ marginBottom: '4px' }}>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>
+                    <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>
                       Category — {getCategoryLabel(editCategory)}
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: '2px' }}>
@@ -289,12 +290,12 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                   </label>
                   <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Latitude</div>
+                      <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Latitude</div>
                       <input value={editLat} onChange={e => setEditLat(e.target.value)} placeholder="Lat"
                         style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'monospace', boxSizing: 'border-box' }} />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Longitude</div>
+                      <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Longitude</div>
                       <input value={editLng} onChange={e => setEditLng(e.target.value)} placeholder="Lng"
                         style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'monospace', boxSizing: 'border-box' }} />
                     </div>
@@ -308,7 +309,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                   {/* Tactical Map link */}
                   {isGM && scenes.length > 0 && (
                     <div style={{ marginBottom: '4px' }}>
-                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Tactical Map</div>
+                      <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Tactical Map</div>
                       <select value={editSceneId ?? ''} onChange={e => setEditSceneId(e.target.value || null)}
                         style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
                         <option value="">— None —</option>
@@ -318,7 +319,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                   )}
                   {/* Sort order — explicit number that decides list position */}
                   <div style={{ marginBottom: '4px', width: '90px' }}>
-                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Order</div>
+                    <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Order</div>
                     <input value={editSortOrder} onChange={e => setEditSortOrder(e.target.value)} type="number" min="1" placeholder="#"
                       style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', textAlign: 'center' }} />
                   </div>
@@ -427,7 +428,7 @@ function AddressSearchRow({ onPick }: { onPick: (lat: number, lng: number) => vo
   }
   return (
     <div style={{ marginBottom: '4px' }}>
-      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>Address search</div>
+      <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Address search</div>
       <div style={{ display: 'flex', gap: '4px' }}>
         <input value={q}
           onChange={e => setQ(e.target.value)}
