@@ -7,6 +7,7 @@ import CommunityMoraleModal from './CommunityMoraleModal'
 import { type InventoryItem } from '../lib/inventory'
 import { EQUIPMENT } from '../lib/xse-schema'
 import { LABEL_STYLE_LG } from '../lib/style-helpers'
+import type { Community, Member, Role, RecruitmentType } from '../lib/types/community'
 import {
   logSchism,
   logMigration,
@@ -24,47 +25,9 @@ import {
 // Recruitment Checks (Phase B) + Morale (Phase C) come later; this is
 // manual management only.
 
-type Role = 'gatherer' | 'maintainer' | 'safety' | 'unassigned' | 'assigned'
-type RecruitmentType = 'cohort' | 'conscript' | 'convert' | 'apprentice' | 'founder' | 'member'
-
-interface Community {
-  id: string
-  campaign_id: string
-  name: string
-  description: string | null
-  homestead_pin_id: string | null
-  status: 'forming' | 'active' | 'dissolved'
-  leader_npc_id: string | null
-  leader_user_id: string | null
-  consecutive_failures: number
-  week_number: number
-  world_visibility: 'private' | 'published'
-}
-
-interface Member {
-  id: string
-  community_id: string
-  npc_id: string | null
-  character_id: string | null
-  role: Role
-  recruitment_type: RecruitmentType
-  apprentice_of_character_id: string | null
-  joined_at: string | null
-  left_at: string | null
-  status: 'pending' | 'active' | 'removed'
-  invited_by_user_id: string | null
-  // Phase D Apprentice task delegation — freeform "current task" the
-  // GM (eventually also the master PC) can set on an Apprentice NPC
-  // or an Assigned NPC. Null = idle. Column added via
-  // sql/community-members-add-current-task.sql.
-  current_task: string | null
-  // "Assigned" role mission linkage — character_id of the PC directing
-  // this NPC's off-screen work. Only meaningful when role='assigned';
-  // cleared automatically when the role changes back. Column added via
-  // sql/community-members-add-assignment-pc.sql. FK with ON DELETE
-  // SET NULL so a deleted PC silently clears the assignment.
-  assignment_pc_id: string | null
-}
+// Community / Member / Role / RecruitmentType shapes live in
+// lib/types/community.ts (single source of truth, kept in sync with the
+// SQL migrations under sql/community-*.sql).
 
 interface NpcOption {
   id: string

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '../../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../../lib/auth-cache'
 import StoryActionBar from '../../../../components/StoryActionBar'
+import type { Community, Member } from '../../../../lib/types/community'
 
 // Phase D — Community Dashboard. Campaign-scoped full-screen GM view
 // into every Community in this campaign: Morale/Fed/Clothed history,
@@ -14,15 +15,7 @@ import StoryActionBar from '../../../../components/StoryActionBar'
 // via the inline block in CampaignCommunity + this page's "access
 // denied" branch). Route: /stories/[campaignId]/community.
 
-interface Community {
-  id: string
-  name: string
-  status: 'forming' | 'active' | 'dissolved'
-  week_number: number
-  consecutive_failures: number
-  created_at: string
-  dissolved_at: string | null
-}
+// Community / Member — pulled from lib/types/community.ts.
 interface MoraleRow {
   week_number: number
   outcome: string
@@ -39,13 +32,6 @@ interface ResourceRow {
   outcome: string
   total: number
   rolled_at: string
-}
-interface Member {
-  id: string
-  npc_id: string | null
-  character_id: string | null
-  role: 'gatherer' | 'maintainer' | 'safety' | 'unassigned' | 'assigned'
-  recruitment_type: 'cohort' | 'conscript' | 'convert' | 'apprentice' | 'founder' | 'member'
 }
 interface RecruitRow {
   damage_json: any

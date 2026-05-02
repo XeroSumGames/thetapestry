@@ -22,6 +22,7 @@ import {
   logMoraleOutcome,
   logDissolution,
 } from '../lib/community-events'
+import type { Community, Member } from '../lib/types/community'
 
 // Phase C — Weekly Morale Check modal. Single-button flow: GM fills in
 // ad-hoc CMods / adjusts A/S mods if needed, clicks "Run Weekly Check",
@@ -29,26 +30,8 @@ import {
 // Persistence is all-at-once on the Result stage's "Finalize" button so
 // a cancelled/closed modal leaves nothing partial in the DB.
 
-interface Community {
-  id: string
-  campaign_id: string
-  name: string
-  status: 'forming' | 'active' | 'dissolved'
-  leader_npc_id: string | null
-  leader_user_id: string | null
-  consecutive_failures: number
-  week_number: number
-}
-
-interface Member {
-  id: string
-  community_id: string
-  npc_id: string | null
-  character_id: string | null
-  role: 'gatherer' | 'maintainer' | 'safety' | 'unassigned' | 'assigned'
-  recruitment_type: 'cohort' | 'conscript' | 'convert' | 'apprentice' | 'founder' | 'member'
-  apprentice_of_character_id: string | null
-}
+// Community / Member shapes — single source of truth in lib/types/community.ts.
+// Pulled in from there rather than redefined here.
 
 interface Props {
   open: boolean
