@@ -236,7 +236,7 @@ export default function CampaignPage() {
       {!isGM && amKicked && (
         <div style={{ background: '#2a1210', border: '1px solid #c0392b', borderRadius: '4px', padding: '12px 14px', marginBottom: '12px', color: '#f5a89a', fontSize: '13px', lineHeight: 1.5 }}>
           <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5a89a', marginBottom: '4px' }}>Removed from Session</div>
-          You were removed from this session by the GM. You will not rejoin automatically — click <b>Rejoin Session</b> below when you are ready to return.
+          You were removed from this session by the GM. Click <b>Rejoin Session</b> below to return to the game.
         </div>
       )}
 
