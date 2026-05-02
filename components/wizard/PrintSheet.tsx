@@ -130,18 +130,31 @@ export default function PrintSheet({ state, liveState }: Props) {
         <div style={{ display: 'flex', flexWrap: 'wrap' }}>
           {SKILLS.map(sk => {
             const val = skills[sk.name]
-            const base = sk.vocational ? -3 : 0
-            const raised = val !== base
-            // Show the value as a grey hint inside a small fill-box; if
-            // the player hasn't invested (value matches the base), the
-            // box is just blank so they can write it themselves.
+            // 4 pips per skill = levels 1..4 (Beginner / Journeyman /
+            // Professional / Life's Work). Filled-pip count = current
+            // level. Pips fill in light grey to mark CDP-spent levels;
+            // the player darkens them in pen as they level up in play.
+            // Vocational skills also show a '-3' label to remind the
+            // player their base is Inept (-3) until they take their
+            // first level — at which point the skill jumps to +1 and
+            // pip 1 fills.
+            const fillCount = Math.max(0, Math.min(4, val))
             return (
               <div key={sk.name} style={{ width: '25%', display: 'flex', alignItems: 'center', padding: '1pt 3pt', fontSize: '6.5pt', gap: '3pt' }}>
                 <span style={{ flex: 1, color: '#000' }}>{sk.name}{sk.vocational ? '*' : ''}</span>
-                <div style={{ width: '20pt', height: '10pt', border: '0.5pt solid #000', borderRadius: '1pt', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {raised && (
-                    <span style={{ fontSize: '7pt', fontFamily: 'Carlito, sans-serif', color: HINT, lineHeight: 1 }}>{sgn(val)}</span>
-                  )}
+                {sk.vocational && (
+                  <span style={{ fontSize: '6pt', fontFamily: 'Carlito, sans-serif', color: val <= -3 ? '#000' : HINT, fontWeight: 700, lineHeight: 1 }}>
+                    -3
+                  </span>
+                )}
+                <div style={{ display: 'flex', gap: '0.5pt' }}>
+                  {[1, 2, 3, 4].map(level => (
+                    <div key={level} style={{
+                      width: '4pt', height: '4pt', borderRadius: '50%',
+                      border: '0.5pt solid #000',
+                      background: level <= fillCount ? HINT : 'transparent',
+                    }} />
+                  ))}
                 </div>
               </div>
             )
