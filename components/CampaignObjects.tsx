@@ -183,7 +183,8 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     }
 
     if (activeSceneId) {
-      // Scene is active — place directly.
+      // Scene is active — place directly. Doors auto-flag is_door so
+      // they block movement + click-to-toggle on the tactical map.
       await supabase.from('scene_tokens').insert({
         scene_id: activeSceneId,
         name: addName.trim(),
@@ -194,6 +195,8 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
         is_visible: true,
         wp_max: wpMax, wp_current: wpMax,
         properties: [], contents: [],
+        is_door: addIcon === 'door',
+        door_open: true,
       })
       onTokenChanged?.()
       loadObjects()
@@ -236,6 +239,8 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       wp_max: wpMax, wp_current: wpMax,
       properties: meta.properties ?? [],
       contents: meta.contents ?? [],
+      is_door: (meta.icon ?? 'crate') === 'door',
+      door_open: true,
     })
     onTokenChanged?.()
     loadObjects()

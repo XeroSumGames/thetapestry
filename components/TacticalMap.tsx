@@ -44,6 +44,11 @@ interface Token {
   wp_current: number | null
   scale: number
   rotation: number
+  // Phase 2 vision: door semantics for object tokens. When is_door
+  // is true, click-to-toggle door_open instead of select. Closed
+  // doors block movement INTO their cell. Visual: open=dashed; closed=solid + 🚪.
+  is_door?: boolean | null
+  door_open?: boolean | null
 }
 
 interface Scene {
@@ -992,24 +997,55 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           drawW = radius * 2
           drawH = radius * 2
         }
+        // Door visual differentiation: open doors get a dashed
+        // outline + low-opacity fill so you can see they're passable;
+        // closed doors get a solid red border + 🚪 chip so they read
+        // as "blocking." Drawn here for both portrait + emoji
+        // branches so custom door art and the default 🚪 emoji
+        // both pick up the styling.
+        const isDoor = !!t.is_door
+        const doorOpen = isDoor ? (t.door_open ?? true) : true
         if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
+          if (isDoor && doorOpen) ctx.globalAlpha = 0.5
           ctx.drawImage(portraitImg, cx - drawW / 2, cy - drawH / 2, drawW, drawH)
-          ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : '#EF9F27'
-          ctx.lineWidth = selectedToken === t.id ? 3 : 1.5
-          ctx.strokeRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
+          ctx.globalAlpha = 1
+          if (isDoor) {
+            ctx.strokeStyle = doorOpen ? 'rgba(127,196,88,0.8)' : '#c0392b'
+            ctx.lineWidth = doorOpen ? 1.5 : 3
+            if (doorOpen) ctx.setLineDash([5, 4])
+            ctx.strokeRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
+            ctx.setLineDash([])
+          } else {
+            ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : '#EF9F27'
+            ctx.lineWidth = selectedToken === t.id ? 3 : 1.5
+            ctx.strokeRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
+          }
         } else {
-          ctx.fillStyle = t.is_visible ? (t.color || '#EF9F27') : 'rgba(239,159,39,0.3)'
+          // Open-door fill is much subtler than a closed door so the
+          // visual immediately reads as "passable."
+          const fill = isDoor && doorOpen
+            ? 'rgba(127,196,88,0.18)'
+            : (t.is_visible ? (t.color || '#EF9F27') : 'rgba(239,159,39,0.3)')
+          ctx.fillStyle = fill
           ctx.fillRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
-          ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,0.6)'
-          ctx.lineWidth = selectedToken === t.id ? 3 : 1
-          ctx.strokeRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
+          if (isDoor) {
+            ctx.strokeStyle = doorOpen ? 'rgba(127,196,88,0.8)' : '#c0392b'
+            ctx.lineWidth = doorOpen ? 1.5 : 3
+            if (doorOpen) ctx.setLineDash([5, 4])
+            ctx.strokeRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
+            ctx.setLineDash([])
+          } else {
+            ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,0.6)'
+            ctx.lineWidth = selectedToken === t.id ? 3 : 1
+            ctx.strokeRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
+          }
           // Emoji or initials
           ctx.fillStyle = '#f5f2ee'
           ctx.font = `${Math.max(12, radius * 1.2)}px sans-serif`
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
           const initials = t.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
-          ctx.fillText(initials, cx, cy)
+          ctx.fillText(isDoor ? '🚪' : initials, cx, cy)
         }
       } else {
         // Circle token (PC/NPC)
@@ -1356,7 +1392,21 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         )
         if (moveTok) {
           const dist = Math.max(Math.abs(pos.gx - moveTok.grid_x), Math.abs(pos.gy - moveTok.grid_y))
-          const occupied = new Set(tokens.filter(t => t.id !== moveTok.id).map(t => `${t.grid_x},${t.grid_y}`))
+          // Open doors are passable — exclude them from the occupied
+          // set. Closed doors stay in `occupied` and additionally
+          // get a clearer reject below so we can surface "the door is
+          // closed" feedback rather than a silent no-op.
+          const occupied = new Set(
+            tokens
+              .filter(t => t.id !== moveTok.id)
+              .filter(t => !(t.is_door && t.door_open))
+              .map(t => `${t.grid_x},${t.grid_y}`)
+          )
+          const closedDoorAtDest = tokens.some(t => t.is_door && t.door_open === false && t.grid_x === pos.gx && t.grid_y === pos.gy)
+          if (closedDoorAtDest) {
+            alert('That door is closed. Open it first or pick a different destination.')
+            return
+          }
           if (dist > 0 && dist <= moveCells && !occupied.has(`${pos.gx},${pos.gy}`)) {
             // Animate and move
             const fromX = moveTok.grid_x * cellPx + cellPx / 2
@@ -1394,6 +1444,27 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (pos) {
       const tok = getTokenAt(pos.gx, pos.gy)
       if (tok) {
+        // Door click intercept. If the user is a player (no drag
+        // permission on this token), a click toggles open/closed
+        // immediately. The GM still falls through to the normal
+        // select+drag flow — handleMouseUp checks "drag with no
+        // move" on a door and toggles in that case so the GM has
+        // both move-the-door and click-to-toggle in one button.
+        if (tok.is_door) {
+          const isController = !!myCharacterId
+            && Array.isArray(tok.controlled_by_character_ids)
+            && tok.controlled_by_character_ids.includes(myCharacterId)
+          if (!isGM && !isController) {
+            // Pure click-to-toggle for players. Optimistic local
+            // update, then persist; no select / drag.
+            const nextOpen = !tok.door_open
+            setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, door_open: nextOpen } : t))
+            supabase.from('scene_tokens').update({ door_open: nextOpen }).eq('id', tok.id).then(() => {
+              tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+            })
+            return
+          }
+        }
         setSelectedToken(tok.id)
         onTokenSelect?.(tok)
         // Drag permission:
@@ -1581,6 +1652,19 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const tok = tokensRef.current.find(t => t.id === tokenId)
     const pos = getGridPos(e)
     const moved = pos && tok && (pos.gx !== tok.grid_x || pos.gy !== tok.grid_y)
+    // GM "drag" with zero movement on a door = a click → toggle.
+    // Drag with movement still proceeds through the normal reposition
+    // path below.
+    if (tok && tok.is_door && !moved) {
+      const nextOpen = !tok.door_open
+      setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, door_open: nextOpen } : t))
+      supabase.from('scene_tokens').update({ door_open: nextOpen }).eq('id', tok.id).then(() => {
+        tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+      })
+      setDragging(null)
+      dragPosRef.current = null
+      return
+    }
     // Distance gate for player drags (playtest #24): a player dragging their
     // own PC token is performing a Move action, capped at 1 move = ~10ft =
     // 3 cells at 3ft/cell (or ceil(10/cell_feet) for other grid scales). GMs
