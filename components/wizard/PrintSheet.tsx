@@ -138,19 +138,23 @@ export default function PrintSheet({ state, liveState }: Props) {
             // player their base is Inept (-3) until they take their
             // first level — at which point the skill jumps to +1 and
             // pip 1 fills.
+            //
+            // Layout: 3 columns (33% width) with name + pips sitting
+            // next to each other, left-aligned. Avoids the wasted
+            // whitespace the previous flex:1 push created at 4 cols.
             const fillCount = Math.max(0, Math.min(4, val))
             return (
-              <div key={sk.name} style={{ width: '25%', display: 'flex', alignItems: 'center', padding: '1pt 3pt', fontSize: '6.5pt', gap: '3pt' }}>
-                <span style={{ flex: 1, color: '#000' }}>{sk.name}{sk.vocational ? '*' : ''}</span>
+              <div key={sk.name} style={{ width: '33.33%', display: 'flex', alignItems: 'center', padding: '2pt 4pt', fontSize: '8pt', gap: '4pt' }}>
+                <span style={{ color: '#000', whiteSpace: 'nowrap' }}>{sk.name}{sk.vocational ? '*' : ''}</span>
                 {sk.vocational && (
-                  <span style={{ fontSize: '6pt', fontFamily: 'Carlito, sans-serif', color: val <= -3 ? '#000' : HINT, fontWeight: 700, lineHeight: 1 }}>
+                  <span style={{ fontSize: '7pt', fontFamily: 'Carlito, sans-serif', color: val <= -3 ? '#000' : HINT, fontWeight: 700, lineHeight: 1 }}>
                     -3
                   </span>
                 )}
-                <div style={{ display: 'flex', gap: '0.5pt' }}>
+                <div style={{ display: 'flex', gap: '1pt' }}>
                   {[1, 2, 3, 4].map(level => (
                     <div key={level} style={{
-                      width: '4pt', height: '4pt', borderRadius: '50%',
+                      width: '6pt', height: '6pt', borderRadius: '50%',
                       border: '0.5pt solid #000',
                       background: level <= fillCount ? HINT : 'transparent',
                     }} />
