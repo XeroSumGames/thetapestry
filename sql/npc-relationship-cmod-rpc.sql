@@ -27,6 +27,16 @@
 -- revealed/reveal_level untouched on existing rows; new rows still get
 -- revealed=false (the schema default).
 
+-- Older deployments pre-date the npc-relationships-schema.sql definition
+-- of `updated_at`. The schema file uses CREATE TABLE IF NOT EXISTS, which
+-- only protects the table — pre-existing tables keep their old column
+-- list and never gain the new column. The RPC writes to updated_at, so
+-- guarantee the column exists before defining the function. Idempotent:
+-- re-running this migration on a DB that already has the column is a
+-- no-op for both the column and the function definition.
+ALTER TABLE public.npc_relationships
+  ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+
 CREATE OR REPLACE FUNCTION public.bump_npc_relationship_cmod(
   p_npc_id        uuid,
   p_character_id  uuid,
