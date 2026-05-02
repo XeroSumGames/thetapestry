@@ -158,6 +158,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   const dragPosRef = useRef<{ px: number; py: number } | null>(null) // pixel position of dragged token (canvas coords)
   const dragRAFRef = useRef<number | null>(null)                     // rAF handle for drag-move redraws (playtest #28)
   const [selectedToken, setSelectedToken] = useState<string | null>(null)
+  // Multistory Path B — when set, the token-action panel renders a
+  // scene picker so the GM can shunt the token to another scene
+  // (e.g. PCs going upstairs in a multi-floor building). Initiative
+  // entries are campaign-scoped, so combat continuity is preserved
+  // automatically; only scene_tokens.scene_id needs to flip.
+  const [movingTokenToScene, setMovingTokenToScene] = useState<string | null>(null)
   const [showRangeOverlay, setShowRangeOverlay] = useState(true)
   const [showSetup, setShowSetup] = useState(false)
   const [setupName, setSetupName] = useState('Scene')
@@ -2110,6 +2116,53 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                     Edit
                   </button>
                 )}
+                {/* Multistory Path B — shunt this token to another
+                    scene. Hidden when there's only one scene in the
+                    campaign (no destination to pick). */}
+                {isGM && scenes.length > 1 && (
+                  <button onClick={() => setMovingTokenToScene(movingTokenToScene === tok.id ? null : tok.id)}
+                    title="Move this token to a different scene (multi-floor building, scene transition, etc.)"
+                    style={{ padding: '2px 6px', background: '#1a2e2e', border: '1px solid #2e5a5a', borderRadius: '2px', color: '#7adcd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    → Scene
+                  </button>
+                )}
+              </div>
+            )}
+            {movingTokenToScene === tok.id && (
+              <div style={{ marginTop: '6px', padding: '6px 8px', background: '#0f1f1f', border: '1px solid #2e5a5a', borderRadius: '3px' }}>
+                <div style={{ fontSize: '13px', color: '#7adcd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>
+                  Move to scene
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  {scenes.filter(s => s.id !== tok.scene_id).map(s => (
+                    <button key={s.id}
+                      onClick={async () => {
+                        // Reset grid_x/y to 1,1 in the new scene so the
+                        // token doesn't end up off-grid when scenes
+                        // have different dimensions. The GM can drag
+                        // it into position on the target scene.
+                        await supabase.from('scene_tokens')
+                          .update({ scene_id: s.id, grid_x: 1, grid_y: 1 })
+                          .eq('id', tok.id)
+                        setMovingTokenToScene(null)
+                        setSelectedToken(null)
+                        // Local mirror — strip from current scene
+                        // immediately so the GM sees the token gone
+                        // before realtime catches up.
+                        setTokens(prev => prev.filter(t => t.id !== tok.id))
+                        tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+                      }}
+                      style={{ textAlign: 'left', padding: '4px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#1a2e2e')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      {s.name}{s.is_active ? ' · active' : ''}
+                    </button>
+                  ))}
+                  <button onClick={() => setMovingTokenToScene(null)}
+                    style={{ marginTop: '2px', padding: '4px 8px', background: 'transparent', border: 'none', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    Cancel
+                  </button>
+                </div>
               </div>
             )}
             {(isGM || canRotate) && (
