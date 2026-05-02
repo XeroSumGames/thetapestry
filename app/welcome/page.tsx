@@ -144,6 +144,11 @@ export default function WelcomePage() {
             <div style={cardBody}>Roll up a survivor on the fly. Great for NPCs or table emergencies.</div>
             <Link href="/characters/random" style={cardLink}>Roll</Link>
           </div>
+          <div style={card}>
+            <div style={cardTitle}>Paradigms</div>
+            <div style={cardBody}>Pick from the 12 setting-specific Distemper templates. Pre-built RAPID, skills, and loadout — add a name + Motivation + Complication and you&apos;re playing.</div>
+            <Link href="/characters/paradigms" style={cardLink}>Pick One</Link>
+          </div>
         </div>
 
         {/* Quick reference — placeholder slot for cheat-sheets, FAQs, etc. */}

@@ -43,6 +43,12 @@ export default function Sidebar() {
   const [userRole, setUserRole] = useState<'survivor' | 'thriver' | null>(null)
   const [pendingCount, setPendingCount] = useState(0)
   const [onlineCount, setOnlineCount] = useState(0)
+  // Thriver-only roster of currently-online users. Surfaces as a hover
+  // popup over the "Survivors present: N" line so a Thriver can see WHO
+  // is on the platform at any moment, not just the count. Resolved from
+  // the global_presence channel's user_id keys → profiles.username.
+  const [presentUsernames, setPresentUsernames] = useState<string[]>([])
+  const [presenceHover, setPresenceHover] = useState(false)
   const presenceRef = useRef<any>(null)
   const router = useRouter()
   const supabase = createClient()
@@ -63,10 +69,23 @@ export default function Sidebar() {
       }
       setLoaded(true)
 
-      // Global presence — track who's online across the platform
+      // Global presence — track who's online across the platform.
+      // For Thrivers, also resolve the present user_ids → usernames so
+      // the hover popup can show the roster. Survivors only need the
+      // count, so we skip the username lookup for them.
+      const isThriver = profile.role === 'thriver'
       presenceRef.current = supabase.channel('global_presence', { config: { presence: { key: user.id } } })
-      presenceRef.current.on('presence', { event: 'sync' }, () => {
-        setOnlineCount(Object.keys(presenceRef.current.presenceState()).length)
+      presenceRef.current.on('presence', { event: 'sync' }, async () => {
+        const ids = Object.keys(presenceRef.current.presenceState())
+        setOnlineCount(ids.length)
+        if (isThriver && ids.length > 0) {
+          const { data: rows } = await supabase.from('profiles').select('id, username').in('id', ids)
+          // Stable sort so the popup doesn't re-shuffle on every sync.
+          const names = (rows ?? []).map((r: any) => r.username as string).sort((a: string, b: string) => a.localeCompare(b))
+          setPresentUsernames(names)
+        } else {
+          setPresentUsernames([])
+        }
       })
       presenceRef.current.subscribe(async (status: string) => {
         if (status === 'SUBSCRIBED') {
@@ -110,8 +129,25 @@ export default function Sidebar() {
           <div style={{ fontFamily: 'Distemper, sans-serif', fontSize: '18px', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1 }}>The Tapestry <span style={{ fontSize: '13px', color: '#f5f2ee' }}>v0.5</span></div>
         </Link>
         {onlineCount > 0 && (
-          <div style={{ fontSize: '14px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: '4px' }}>
+          <div
+            onMouseEnter={() => userRole === 'thriver' && setPresenceHover(true)}
+            onMouseLeave={() => setPresenceHover(false)}
+            style={{ position: 'relative', fontSize: '14px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: '4px', cursor: userRole === 'thriver' ? 'help' : 'default' }}>
             Survivors present: {onlineCount}
+            {/* Thriver-only roster popup. Anchored under the count line,
+                left-aligned with the sidebar so it doesn't clip. Survivors
+                see only the count — keeps presence-style anonymity for
+                non-Thriver viewers. */}
+            {presenceHover && userRole === 'thriver' && presentUsernames.length > 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '4px', minWidth: '180px', maxWidth: '240px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px', boxShadow: '0 4px 12px rgba(0,0,0,0.6)', zIndex: 1000, textAlign: 'left' }}>
+                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '4px' }}>Online now</div>
+                {presentUsernames.map(n => (
+                  <div key={n} style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', letterSpacing: 0, textTransform: 'none', padding: '1px 0' }}>
+                    · {n}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
