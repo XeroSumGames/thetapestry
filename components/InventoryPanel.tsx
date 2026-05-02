@@ -72,8 +72,19 @@ const RARITY_COLORS: Record<string, { color: string; bg: string; border: string 
   Rare: { color: '#EF9F27', bg: '#2a2010', border: '#5a4a1b' },
 }
 
+type InventorySortKey = 'manual' | 'name' | 'enc-desc' | 'rarity'
+
 export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSecondaryName, phyMod, canEdit, onUpdate, onClose, otherCharacters, onGiveTo, otherNpcs, onGiveToNpc, otherCommunities, onGiveToCommunity, otherVehicles, onGiveToVehicle }: Props) {
   const [search, setSearch] = useState('')
+  // Search-your-own-inventory: narrows the rendered list against item
+  // name + notes. Distinct from `search` (which filters the catalog
+  // when picking new items) so the player can have catalog open AND
+  // be searching their own stack at the same time.
+  const [ownSearch, setOwnSearch] = useState('')
+  // Display sort for the owned items list. 'manual' keeps insertion
+  // order (which is what you get with no sort applied) so a player
+  // who rearranged via give/take stays unsurprised.
+  const [ownSort, setOwnSort] = useState<InventorySortKey>('manual')
   const [showCatalog, setShowCatalog] = useState(false)
   const [showCustom, setShowCustom] = useState(false)
   const [customName, setCustomName] = useState('')
@@ -196,14 +207,55 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
           <span>Limit: {BASE_ENC_LIMIT} + PHY({phyMod}){backpackBonus > 0 ? ` + Pack(${backpackBonus})` : ''} = {encLimit}</span>
         </div>
 
-        {/* Item list */}
+        {/* Search + sort for your own inventory. Hidden until you
+            cross 6 items — under that, scrolling is fine and the
+            controls just take up space. */}
+        {inventory.length >= 6 && (
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
+            <input value={ownSearch} onChange={e => setOwnSearch(e.target.value)} placeholder="Filter your items…"
+              style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
+            <select value={ownSort} onChange={e => setOwnSort(e.target.value as InventorySortKey)}
+              title="Sort displayed items"
+              style={{ width: '120px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none', cursor: 'pointer' }}>
+              <option value="manual">Manual</option>
+              <option value="name">Name (A→Z)</option>
+              <option value="enc-desc">Enc (high→low)</option>
+              <option value="rarity">Rarity</option>
+            </select>
+          </div>
+        )}
+
+        {/* Item list — filtered + sorted view. Indices we hand to
+            removeItem/giveItem must point at the original `inventory`
+            array, not the filtered one, so we carry the original
+            index alongside the display row. */}
         <div style={{ flex: 1, overflowY: 'auto', marginBottom: '8px' }}>
           {inventory.length === 0 ? (
             <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
               No items
             </div>
           ) : (
-            inventory.map((item, idx) => {
+            (() => {
+              const RARITY_RANK: Record<string, number> = { Rare: 0, Uncommon: 1, Common: 2 }
+              const q = ownSearch.trim().toLowerCase()
+              const withIdx = inventory.map((item, idx) => ({ item, idx }))
+              const filtered = q
+                ? withIdx.filter(({ item }) =>
+                    item.name.toLowerCase().includes(q) ||
+                    (item.notes ?? '').toLowerCase().includes(q))
+                : withIdx
+              const sorted = [...filtered]
+              if (ownSort === 'name') sorted.sort((a, b) => a.item.name.localeCompare(b.item.name))
+              else if (ownSort === 'enc-desc') sorted.sort((a, b) => (b.item.enc * b.item.qty) - (a.item.enc * a.item.qty))
+              else if (ownSort === 'rarity') sorted.sort((a, b) => (RARITY_RANK[a.item.rarity] ?? 99) - (RARITY_RANK[b.item.rarity] ?? 99) || a.item.name.localeCompare(b.item.name))
+              if (sorted.length === 0) {
+                return (
+                  <div style={{ padding: '1.25rem 1rem', textAlign: 'center', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+                    No items match {`"${ownSearch}"`}
+                  </div>
+                )
+              }
+              return sorted.map(({ item, idx }) => {
               const rc = RARITY_COLORS[item.rarity] ?? RARITY_COLORS.Common
               return (
                 <div key={`${item.name}-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 6px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '3px' }}>
@@ -225,7 +277,8 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
                   )}
                 </div>
               )
-            })
+              })
+            })()
           )}
         </div>
 
