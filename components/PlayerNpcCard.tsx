@@ -442,6 +442,15 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
         <button onClick={onClose} style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.04em', cursor: 'pointer', flexShrink: 0 }}>Close</button>
       </div>
 
+      {/* Public description — GM-authored player-visible blurb on
+          campaign_npcs.public_description. Renders when the GM has
+          written one; absent until then so unset NPCs stay clean. */}
+      {(npc as any).public_description && (
+        <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #2e2e2e', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+          {(npc as any).public_description}
+        </div>
+      )}
+
       {/* Player NPC notes — private to the viewing PC. Saves on blur
           via upsert keyed on (character_id, npc_id). The GM doesn't
           see these; they have campaign_npcs.notes for their own

@@ -174,6 +174,10 @@ export interface CampaignNpc {
   dexterity: number
   skills: any
   notes: string | null
+  // Player-visible blurb — shown in PlayerNpcCard. Distinct from
+  // notes (GM-private bookkeeping). Authored in the NpcRoster edit
+  // form under 'Player-visible description'.
+  public_description: string | null
   npc_type: string | null
   disposition: 'friendly' | 'neutral' | 'hostile' | null
   recruitment_role: string | null
@@ -258,7 +262,7 @@ interface Props {
 const emptyForm = {
   name: '', portrait_url: null as string | null,
   reason: 0, acumen: 0, physicality: 0, influence: 0, dexterity: 0,
-  skillEntries: [] as SkillEntry[], notes: '', status: 'active',
+  skillEntries: [] as SkillEntry[], notes: '', public_description: '', status: 'active',
   npc_type: '' as string, disposition: '' as '' | 'friendly' | 'neutral' | 'hostile',
   motivation: '', complication: '', threeWords: ['', '', ''] as string[],
   weapon: null as any,
@@ -462,6 +466,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       dexterity: npc.dexterity,
       skillEntries: Array.isArray(npc.skills?.entries) ? npc.skills.entries : (typeof npc.skills?.text === 'string' ? parseSkillText(npc.skills.text) : []),
       notes: npc.notes ?? '',
+      public_description: npc.public_description ?? '',
       status: npc.status,
       npc_type: npc.npc_type ?? '',
       disposition: (npc.disposition ?? '') as '' | 'friendly' | 'neutral' | 'hostile',
@@ -510,6 +515,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       dexterity: form.dexterity,
       skills: { entries: form.skillEntries, text: form.skillEntries.map(s => `${s.name} ${s.level}`).join(', '), weapon: (form as any).weapon ?? null, weapon2: (form as any).weapon2 ?? null },
       notes: form.notes.trim() || null,
+      public_description: form.public_description.trim() || null,
       status: form.status,
       npc_type: form.npc_type || null,
       disposition: form.disposition || null,
@@ -1810,6 +1816,18 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                   placeholder="Or type new..."
                   style={{ width: '100px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
               </div>
+            </div>
+
+            {/* Player-visible description — shows on PlayerNpcCard
+                whenever this NPC's tile is opened by a PC. Distinct
+                from GM Notes (kept private below). Author one-liners
+                like 'Tall Black man, late 50s, badge on his belt.' */}
+            <div style={{ marginBottom: '8px' }}>
+              <div style={{ fontSize: '13px', color: '#7fc458', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Player-visible description <span style={{ color: '#7fc458', opacity: 0.6 }}>(public)</span></div>
+              <textarea value={form.public_description} onChange={e => setForm(f => ({ ...f, public_description: e.target.value }))}
+                placeholder="What players see on this NPC's card (after Show All / Reveal). Keep it short."
+                rows={2}
+                style={{ width: '100%', padding: '8px 10px', background: '#161e16', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.5 }} />
             </div>
 
             {/* Notes */}
