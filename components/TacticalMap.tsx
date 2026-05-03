@@ -1093,55 +1093,155 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           drawW = radius * 2
           drawH = radius * 2
         }
-        // Door visual differentiation: open doors get a dashed
-        // outline + low-opacity fill so you can see they're passable;
-        // closed doors get a solid red border + 🚪 chip so they read
-        // as "blocking." Drawn here for both portrait + emoji
-        // branches so custom door art and the default 🚪 emoji
-        // both pick up the styling.
+        // Object-kind visual decision tree. Doors win first (they
+        // have the most state — open/closed), then walls (always
+        // solid), then windows (always transparent + mullion), then
+        // generic objects fall through to the existing treatment.
+        // Drawn for both portrait + emoji branches so custom art on
+        // any of the three kinds picks up the right border treatment.
         const isDoor = !!t.is_door
         const doorOpen = isDoor ? (t.door_open ?? true) : true
+        const isWall = !isDoor && !!t.is_wall
+        const isWindow = !isDoor && !isWall && !!t.is_window
+        // Helper: draw a stone "brick" texture inside the rect by
+        // overlaying offset rectangles with subtle line work. Cheap,
+        // canvas-only, no external image needed. ctx is passed in so
+        // TS doesn't lose its non-null narrowing through the nested
+        // function scope.
+        function drawStoneFill(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+          const rows = Math.max(2, Math.round(h / 8))
+          const rowH = h / rows
+          c.save()
+          c.fillStyle = '#3a3530'
+          c.fillRect(x, y, w, h)
+          c.strokeStyle = 'rgba(0,0,0,0.45)'
+          c.lineWidth = 0.5
+          for (let r = 0; r < rows; r++) {
+            const ry = y + r * rowH
+            c.beginPath()
+            c.moveTo(x, ry)
+            c.lineTo(x + w, ry)
+            c.stroke()
+            // Stagger vertical seam every other row to suggest
+            // running-bond brickwork.
+            const seamX = x + (r % 2 === 0 ? w / 2 : w / 4)
+            c.beginPath()
+            c.moveTo(seamX, ry)
+            c.lineTo(seamX, ry + rowH)
+            c.stroke()
+            const seamX2 = x + (r % 2 === 0 ? 0 : 3 * w / 4)
+            if (seamX2 > x && seamX2 < x + w) {
+              c.beginPath()
+              c.moveTo(seamX2, ry)
+              c.lineTo(seamX2, ry + rowH)
+              c.stroke()
+            }
+          }
+          c.restore()
+        }
+        // Helper: draw a glass pane with a cross mullion. Used for
+        // windows and any future "transparent obstacle" type. The
+        // mullion makes the cell read as window even at small zoom.
+        function drawGlassFill(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+          c.save()
+          c.fillStyle = 'rgba(122,179,212,0.18)'
+          c.fillRect(x, y, w, h)
+          c.strokeStyle = 'rgba(122,179,212,0.7)'
+          c.lineWidth = 1.5
+          // Vertical + horizontal mullion through the center of the
+          // rect (suggests windowpane divisions).
+          c.beginPath()
+          c.moveTo(x + w / 2, y)
+          c.lineTo(x + w / 2, y + h)
+          c.moveTo(x, y + h / 2)
+          c.lineTo(x + w, y + h / 2)
+          c.stroke()
+          c.restore()
+        }
+        const rectX = cx - drawW / 2
+        const rectY = cy - drawH / 2
         if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
           if (isDoor && doorOpen) ctx.globalAlpha = 0.5
-          ctx.drawImage(portraitImg, cx - drawW / 2, cy - drawH / 2, drawW, drawH)
+          if (isWindow) ctx.globalAlpha = 0.55 // see-through
+          ctx.drawImage(portraitImg, rectX, rectY, drawW, drawH)
           ctx.globalAlpha = 1
           if (isDoor) {
             ctx.strokeStyle = doorOpen ? 'rgba(127,196,88,0.8)' : '#c0392b'
             ctx.lineWidth = doorOpen ? 1.5 : 3
             if (doorOpen) ctx.setLineDash([5, 4])
-            ctx.strokeRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
+            ctx.strokeRect(rectX, rectY, drawW, drawH)
             ctx.setLineDash([])
+          } else if (isWall) {
+            ctx.strokeStyle = '#6b5e50'
+            ctx.lineWidth = 3
+            ctx.strokeRect(rectX, rectY, drawW, drawH)
+          } else if (isWindow) {
+            ctx.strokeStyle = '#7ab3d4'
+            ctx.lineWidth = 2
+            ctx.strokeRect(rectX, rectY, drawW, drawH)
+            // Mullion cross laid over the portrait.
+            ctx.save()
+            ctx.strokeStyle = 'rgba(122,179,212,0.7)'
+            ctx.lineWidth = 1.5
+            ctx.beginPath()
+            ctx.moveTo(cx, rectY)
+            ctx.lineTo(cx, rectY + drawH)
+            ctx.moveTo(rectX, cy)
+            ctx.lineTo(rectX + drawW, cy)
+            ctx.stroke()
+            ctx.restore()
           } else {
             ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : '#EF9F27'
             ctx.lineWidth = selectedToken === t.id ? 3 : 1.5
-            ctx.strokeRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
+            ctx.strokeRect(rectX, rectY, drawW, drawH)
           }
         } else {
-          // Open-door fill is much subtler than a closed door so the
-          // visual immediately reads as "passable."
-          const fill = isDoor && doorOpen
-            ? 'rgba(127,196,88,0.18)'
-            : (t.is_visible ? (t.color || '#EF9F27') : 'rgba(239,159,39,0.3)')
-          ctx.fillStyle = fill
-          ctx.fillRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
-          if (isDoor) {
-            ctx.strokeStyle = doorOpen ? 'rgba(127,196,88,0.8)' : '#c0392b'
-            ctx.lineWidth = doorOpen ? 1.5 : 3
-            if (doorOpen) ctx.setLineDash([5, 4])
-            ctx.strokeRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
-            ctx.setLineDash([])
+          // Emoji-rendered objects. Walls get a stone-brick fill +
+          // dark border (no emoji — the texture is the visual);
+          // windows get the glass + mullion treatment; doors keep
+          // the existing open/closed colorway; everything else
+          // falls back to the generic object look.
+          if (isWall) {
+            drawStoneFill(ctx, rectX, rectY, drawW, drawH)
+            ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : '#6b5e50'
+            ctx.lineWidth = selectedToken === t.id ? 3 : 2
+            ctx.strokeRect(rectX, rectY, drawW, drawH)
+          } else if (isWindow) {
+            drawGlassFill(ctx, rectX, rectY, drawW, drawH)
+            ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : '#7ab3d4'
+            ctx.lineWidth = selectedToken === t.id ? 3 : 2
+            ctx.strokeRect(rectX, rectY, drawW, drawH)
           } else {
-            ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,0.6)'
-            ctx.lineWidth = selectedToken === t.id ? 3 : 1
-            ctx.strokeRect(cx - drawW / 2, cy - drawH / 2, drawW, drawH)
+            // Open-door fill is much subtler than a closed door so the
+            // visual immediately reads as "passable."
+            const fill = isDoor && doorOpen
+              ? 'rgba(127,196,88,0.18)'
+              : (t.is_visible ? (t.color || '#EF9F27') : 'rgba(239,159,39,0.3)')
+            ctx.fillStyle = fill
+            ctx.fillRect(rectX, rectY, drawW, drawH)
+            if (isDoor) {
+              ctx.strokeStyle = doorOpen ? 'rgba(127,196,88,0.8)' : '#c0392b'
+              ctx.lineWidth = doorOpen ? 1.5 : 3
+              if (doorOpen) ctx.setLineDash([5, 4])
+              ctx.strokeRect(rectX, rectY, drawW, drawH)
+              ctx.setLineDash([])
+            } else {
+              ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,0.6)'
+              ctx.lineWidth = selectedToken === t.id ? 3 : 1
+              ctx.strokeRect(rectX, rectY, drawW, drawH)
+            }
           }
-          // Emoji or initials
-          ctx.fillStyle = '#f5f2ee'
-          ctx.font = `${Math.max(12, radius * 1.2)}px sans-serif`
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          const initials = t.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
-          ctx.fillText(isDoor ? '🚪' : initials, cx, cy)
+          // Emoji or initials. Walls render their texture only — no
+          // emoji label — so the brickwork stays clean.
+          if (!isWall) {
+            ctx.fillStyle = '#f5f2ee'
+            ctx.font = `${Math.max(12, radius * 1.2)}px sans-serif`
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            const initials = t.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
+            const label = isDoor ? '🚪' : isWindow ? '🪟' : initials
+            ctx.fillText(label, cx, cy)
+          }
         }
       } else {
         // Circle token (PC/NPC)
