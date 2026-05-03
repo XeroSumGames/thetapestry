@@ -13,6 +13,7 @@ const OBJECT_ICONS = [
   { value: 'crate', emoji: '📦', label: 'Crate' },
   { value: 'barrel', emoji: '🛢️', label: 'Barrel' },
   { value: 'door', emoji: '🚪', label: 'Door' },
+  { value: 'window', emoji: '🪟', label: 'Window' },
   { value: 'wall', emoji: '🧱', label: 'Wall' },
   { value: 'fire', emoji: '🔥', label: 'Fire' },
   { value: 'tree', emoji: '🌲', label: 'Tree' },
@@ -183,8 +184,11 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     }
 
     if (activeSceneId) {
-      // Scene is active — place directly. Doors auto-flag is_door so
-      // they block movement + click-to-toggle on the tactical map.
+      // Scene is active — place directly. Doors auto-flag is_door
+      // (toggle to block sight + movement when closed). Walls flag
+      // is_wall (always block). Windows flag is_window (block
+      // movement, vision passes through). All other icons stay as
+      // pass-through decoration.
       await supabase.from('scene_tokens').insert({
         scene_id: activeSceneId,
         name: addName.trim(),
@@ -197,6 +201,8 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
         properties: [], contents: [],
         is_door: addIcon === 'door',
         door_open: true,
+        is_wall: addIcon === 'wall',
+        is_window: addIcon === 'window',
       })
       onTokenChanged?.()
       loadObjects()
@@ -241,6 +247,8 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       contents: meta.contents ?? [],
       is_door: (meta.icon ?? 'crate') === 'door',
       door_open: true,
+      is_wall: (meta.icon ?? 'crate') === 'wall',
+      is_window: (meta.icon ?? 'crate') === 'window',
     })
     onTokenChanged?.()
     loadObjects()

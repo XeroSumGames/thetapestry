@@ -49,6 +49,12 @@ interface Token {
   // doors block movement INTO their cell. Visual: open=dashed; closed=solid + 🚪.
   is_door?: boolean | null
   door_open?: boolean | null
+  // Walls + windows. Walls block movement + vision unconditionally.
+  // Windows block movement (you're not walking through glass) but
+  // vision passes through — a PC behind a window still illuminates
+  // fog beyond it.
+  is_wall?: boolean | null
+  is_window?: boolean | null
 }
 
 interface Scene {
@@ -830,6 +836,46 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const rawFog = fogLocalRef.current
     let fogMap = rawFog
     if (!fogEditMode && Object.keys(rawFog).length > 0) {
+      // Vision blockers — walls (always) + closed doors (when shut).
+      // Windows are explicitly NOT in here so a PC behind glass still
+      // illuminates the cells beyond. Cell-granular Bresenham line
+      // checks per candidate cell mean LoS is per-cell, not per-edge
+      // — good enough for v1; Phase 3 spec walls + raycasting later.
+      const visionBlockers = new Set<string>()
+      for (const tok of tokensRef.current) {
+        const blocks = !!tok.is_wall || (tok.is_door && tok.door_open === false)
+        if (!blocks) continue
+        const gw = tok.grid_w ?? 1
+        const gh = tok.grid_h ?? 1
+        for (let fx = 0; fx < gw; fx++) {
+          for (let fy = 0; fy < gh; fy++) {
+            visionBlockers.add(`${tok.grid_x + fx},${tok.grid_y + fy}`)
+          }
+        }
+      }
+      // Bresenham line walk from origin to target; returns true if any
+      // cell BETWEEN them (exclusive of both endpoints) is a blocker.
+      // The target cell itself stays visible so PCs see the wall/door
+      // that's blocking them ("you see the closed door" — fog stops
+      // at the blocker, not before).
+      function lineCrossesBlocker(x0: number, y0: number, x1: number, y1: number): boolean {
+        if (visionBlockers.size === 0) return false
+        if (x0 === x1 && y0 === y1) return false
+        let x = x0, y = y0
+        const dx = Math.abs(x1 - x0)
+        const dy = Math.abs(y1 - y0)
+        const sx = x0 < x1 ? 1 : -1
+        const sy = y0 < y1 ? 1 : -1
+        let err = dx - dy
+        for (let step = 0; step < dx + dy + 2; step++) {
+          const e2 = 2 * err
+          if (e2 > -dy) { err -= dy; x += sx }
+          if (e2 < dx) { err += dx; y += sy }
+          if (x === x1 && y === y1) return false
+          if (visionBlockers.has(`${x},${y}`)) return true
+        }
+        return false
+      }
       const visible = new Set<string>()
       for (const tok of tokensRef.current) {
         if (tok.token_type === 'object') continue
@@ -837,9 +883,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         const gw = tok.grid_w ?? 1
         const gh = tok.grid_h ?? 1
         const r = VISION_RADIUS_CELLS
-        // For multi-cell PCs (rare) we sweep from every footprint
-        // cell so an irregular party token still illuminates
-        // correctly. Single-cell PCs collapse to one origin.
         for (let fx = 0; fx < gw; fx++) {
           for (let fy = 0; fy < gh; fy++) {
             const ox = tok.grid_x + fx
@@ -847,7 +890,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             for (let dx = -r; dx <= r; dx++) {
               for (let dy = -r; dy <= r; dy++) {
                 if (Math.max(Math.abs(dx), Math.abs(dy)) > r) continue
-                visible.add(`${ox + dx},${oy + dy}`)
+                const tx = ox + dx
+                const ty = oy + dy
+                if (lineCrossesBlocker(ox, oy, tx, ty)) continue
+                visible.add(`${tx},${ty}`)
               }
             }
           }
