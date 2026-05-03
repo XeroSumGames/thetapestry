@@ -16,7 +16,10 @@
 //
 // Image URLs in the JSON are rewritten to relative paths under images/ so a
 // downstream consumer can read the kit offline.
-import JSZip from 'jszip'
+//
+// JSZip is loaded via dynamic import inside exportGmKit (~50KB) — it's only
+// needed when the GM clicks Export, so skip pulling it into any bundle that
+// merely touches this module.
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 interface ExportResult {
@@ -46,28 +49,37 @@ async function fetchAsBlob(url: string): Promise<Blob | null> {
 }
 
 export async function exportGmKit(supabase: SupabaseClient, campaignId: string): Promise<ExportResult> {
-  // 1. Pull every relevant table in parallel.
+  // Wave 1 — campaign + every directly-filterable table in parallel.
   const [
     { data: campaign, error: campErr },
     { data: pins },
     { data: npcs },
     { data: scenes },
-    { data: tokens },
     { data: notes },
   ] = await Promise.all([
     supabase.from('campaigns').select('*').eq('id', campaignId).single(),
     supabase.from('campaign_pins').select('*').eq('campaign_id', campaignId).order('sort_order', { ascending: true, nullsFirst: false }),
     supabase.from('campaign_npcs').select('*').eq('campaign_id', campaignId).order('sort_order', { ascending: true, nullsFirst: false }),
     supabase.from('tactical_scenes').select('*').eq('campaign_id', campaignId),
-    supabase.from('scene_tokens').select('*'),
     supabase.from('campaign_notes').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: true }),
   ])
   if (campErr || !campaign) return { ok: false, error: campErr?.message ?? 'Campaign not found' }
 
-  // Filter scene_tokens to only those whose scene belongs to this campaign.
-  const sceneIds = new Set((scenes ?? []).map((s: any) => s.id))
-  const scopedTokens = (tokens ?? []).filter((t: any) => sceneIds.has(t.scene_id))
+  // Wave 2 — scene_tokens scoped to THIS campaign's scenes only.
+  // Pre-fix this lived in Wave 1 as an UNFILTERED `select('*')`, so every
+  // GM Kit export streamed every other campaign's tokens across the wire
+  // and relied on RLS as the only real defense. Now we hold the filter
+  // server-side via .in('scene_id', sceneIds).
+  const sceneIds = (scenes ?? []).map((s: any) => s.id)
+  const { data: scopedTokensData } = sceneIds.length > 0
+    ? await supabase.from('scene_tokens').select('*').in('scene_id', sceneIds)
+    : { data: [] as any[] }
+  const scopedTokens = (scopedTokensData ?? []) as any[]
 
+  // Lazy-load JSZip — top-level import previously pulled ~50KB into any
+  // client bundle that imported this module even when nobody clicked
+  // Export. Dynamic import keeps that cost gated to actual exports.
+  const { default: JSZip } = await import('jszip')
   const zip = new JSZip()
   const images = zip.folder('images')!
   // Collect rewrites: original URL -> relative path inside zip
