@@ -417,14 +417,20 @@ export async function cloneModuleIntoCampaign(
     counts.npcs = inserted?.length ?? 0
   }
 
-  // 4. Scenes + their tokens. Each scene is inserted individually so
-  // we can keep the scene_id → tokens wiring straight. Token rows
-  // remap npc_id through npcMap; tokens without a match are still
-  // inserted (object tokens, PC tokens) with null npc_id.
+  // 4. Scenes + their tokens. Pre-fix this was a `for ... of` loop over
+  // scenes with one INSERT round-trip per scene + a nested INSERT for
+  // each scene's tokens — so 20 scenes meant 40 sequential round-trips.
+  // Now we do two batched INSERTs: one for all scenes, one for all
+  // tokens. Postgres preserves row order on `INSERT ... RETURNING` for
+  // multi-row inserts, so we correlate created scene ids back to the
+  // input array by index. NPC remap + null'd character_id semantics
+  // unchanged.
   // Lenient reader: tolerate the legacy campaign-snapshot wrapper
   // shape `{ scene: {...}, tokens: [] }` alongside the canonical flat
   // `ModuleSnapshotScene`. Scenes with no resolvable name skip + warn.
   if (snapshot.scenes && snapshot.scenes.length > 0) {
+    type Prepared = { rest: any; tokens: any[] | undefined }
+    const scenesPrepared: Prepared[] = []
     for (const sceneRaw of snapshot.scenes as any[]) {
       const flat = sceneRaw?.scene ? { ...sceneRaw.scene, tokens: sceneRaw.tokens } : sceneRaw
       const { tokens, _external_id: _unused, ...rest } = flat
@@ -432,7 +438,11 @@ export async function cloneModuleIntoCampaign(
         console.warn('[cloneModuleIntoCampaign] scene has no name — skipping:', sceneRaw)
         continue
       }
-      const sceneRow = {
+      scenesPrepared.push({ rest, tokens })
+    }
+
+    if (scenesPrepared.length > 0) {
+      const sceneRows = scenesPrepared.map(({ rest }) => ({
         campaign_id: campaignId,
         name: rest.name,
         grid_cols: rest.grid_cols ?? 20,
@@ -445,41 +455,50 @@ export async function cloneModuleIntoCampaign(
         is_active: false,
         source_module_id,
         source_module_version_id,
-      }
-      const { data: createdScene, error: sErr } = await supabase
+      }))
+      const { data: createdScenes, error: sErr } = await supabase
         .from('tactical_scenes')
-        .insert(sceneRow)
+        .insert(sceneRows)
         .select('id')
-        .single()
-      if (sErr || !createdScene) throw new Error(`scenes: ${sErr?.message ?? 'insert failed'}`)
-      counts.scenes += 1
+      if (sErr || !createdScenes) throw new Error(`scenes: ${sErr?.message ?? 'insert failed'}`)
+      counts.scenes += createdScenes.length
 
-      if (tokens && tokens.length > 0) {
-        const tokenRows = (tokens as any[]).map((t: any) => ({
-          scene_id: createdScene.id,
-          name: t.name ?? null,
-          token_type: t.token_type ?? 'object',
-          portrait_url: t.portrait_url ?? null,
-          grid_x: t.grid_x ?? null,
-          grid_y: t.grid_y ?? null,
-          color: t.color ?? null,
-          is_visible: t.is_visible ?? true,
-          wp_max: t.wp_max ?? null,
-          wp_current: t.wp_max ?? null,
-          destroyed_portrait_url: t.destroyed_portrait_url ?? null,
-          lootable: t.lootable ?? null,
-          // NPC-linked tokens remap; character-linked tokens never
-          // clone (PCs don't travel with modules).
-          npc_id: t._npc_external_id ? (npcMap[t._npc_external_id] ?? null) : null,
-          character_id: null,
-          source_module_id,
-          source_module_version_id,
-        }))
+      // Correlate each prepared scene with its newly-created id by
+      // array position, then fan tokens back out into one flat array.
+      const allTokens: any[] = []
+      for (let i = 0; i < scenesPrepared.length; i++) {
+        const { tokens } = scenesPrepared[i]
+        const sceneId = (createdScenes[i] as any).id
+        if (!tokens || tokens.length === 0) continue
+        for (const t of tokens as any[]) {
+          allTokens.push({
+            scene_id: sceneId,
+            name: t.name ?? null,
+            token_type: t.token_type ?? 'object',
+            portrait_url: t.portrait_url ?? null,
+            grid_x: t.grid_x ?? null,
+            grid_y: t.grid_y ?? null,
+            color: t.color ?? null,
+            is_visible: t.is_visible ?? true,
+            wp_max: t.wp_max ?? null,
+            wp_current: t.wp_max ?? null,
+            destroyed_portrait_url: t.destroyed_portrait_url ?? null,
+            lootable: t.lootable ?? null,
+            // NPC-linked tokens remap; character-linked tokens never
+            // clone (PCs don't travel with modules).
+            npc_id: t._npc_external_id ? (npcMap[t._npc_external_id] ?? null) : null,
+            character_id: null,
+            source_module_id,
+            source_module_version_id,
+          })
+        }
+      }
+      if (allTokens.length > 0) {
         const { error: tErr } = await supabase
           .from('scene_tokens')
-          .insert(tokenRows)
+          .insert(allTokens)
         if (tErr) throw new Error(`scene_tokens: ${tErr.message}`)
-        counts.tokens += tokenRows.length
+        counts.tokens = allTokens.length
       }
     }
   }
