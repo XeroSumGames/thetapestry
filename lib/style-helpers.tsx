@@ -95,11 +95,10 @@ export const LABEL_STYLE_TIGHT: CSSProperties = {
   letterSpacing: '.08em',
 }
 
-export const LABEL_STYLE_LG_TIGHT: CSSProperties = {
-  ...LABEL_BASE,
-  fontSize: '14px',
-  letterSpacing: '.08em',
-}
+// (Was: LABEL_STYLE_LG_TIGHT — 14px + .08em variant. Created defensively
+// during the initial label sweep but the codebase had no 14px+.08em call
+// sites to map onto, so it sat unused. Removed 2026-05-03; restore from
+// git history if a real call site shows up later.)
 
 // ── ModalBackdrop ─────────────────────────────────────────────────────
 // `position: fixed; inset: 0; background: rgba(0,0,0, X); flex-center`
