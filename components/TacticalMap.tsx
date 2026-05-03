@@ -1312,8 +1312,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         const rectX = cx - drawW / 2
         const rectY = cy - drawH / 2
         if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
+          // Open doors / open windows fade so they read as "passable."
+          // Closed windows still fade slightly (glass is see-through).
+          const windowOpen = isWindow && (t.door_open === true)
           if (isDoor && doorOpen) ctx.globalAlpha = 0.5
-          if (isWindow) ctx.globalAlpha = 0.55 // see-through
+          if (isWindow) ctx.globalAlpha = windowOpen ? 0.25 : 0.55
           ctx.drawImage(portraitImg, rectX, rectY, drawW, drawH)
           ctx.globalAlpha = 1
           if (isDoor) {
@@ -1358,10 +1361,19 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             ctx.lineWidth = selectedToken === t.id ? 3 : 2
             ctx.strokeRect(rectX, rectY, drawW, drawH)
           } else if (isWindow) {
-            drawGlassFill(ctx, rectX, rectY, drawW, drawH)
-            ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee' : '#7ab3d4'
-            ctx.lineWidth = selectedToken === t.id ? 3 : 2
+            // Closed window: glass fill + mullion + sky-blue border.
+            // Open window: no glass, dotted thin border, no mullion —
+            // tells the GM/player it's a passable opening.
+            const winOpen = t.door_open === true
+            if (!winOpen) {
+              drawGlassFill(ctx, rectX, rectY, drawW, drawH)
+            }
+            ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee'
+              : (winOpen ? 'rgba(122,179,212,0.5)' : '#7ab3d4')
+            ctx.lineWidth = selectedToken === t.id ? 3 : (winOpen ? 1.5 : 2)
+            if (winOpen) ctx.setLineDash([3, 4])
             ctx.strokeRect(rectX, rectY, drawW, drawH)
+            ctx.setLineDash([])
           } else {
             // Open-door fill is much subtler than a closed door so the
             // visual immediately reads as "passable."
@@ -1692,10 +1704,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             ctx.lineWidth = open ? 3 : 4
             ctx.setLineDash(open ? [6, 4] : [])
           } else {
-            // window
-            ctx.strokeStyle = '#7ab3d4'
-            ctx.lineWidth = 3
-            ctx.setLineDash([4, 3])
+            // window — closed (intact glass) renders sky-blue dashed;
+            // open (passable both ways) renders fainter + dotted so
+            // the GM/players see "this window is open" at a glance.
+            const winOpen = seg.door_open === true
+            ctx.strokeStyle = winOpen ? 'rgba(122,179,212,0.45)' : '#7ab3d4'
+            ctx.lineWidth = winOpen ? 1.5 : 3
+            ctx.setLineDash(winOpen ? [2, 4] : [4, 3])
           }
           ctx.beginPath()
           ctx.moveTo(x1, y1)
@@ -1823,6 +1838,64 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   function handleMouseDown(e: React.MouseEvent) {
+    // Alt + right-click anywhere → toggle the nearest door OR window
+    // (segment OR object token), regardless of edit mode. Universal
+    // gesture for "open/close that thing." Door state flips
+    // open/closed (existing behavior); window state flips
+    // closed-glass (movement blocked, vision passes) ↔ open-glass
+    // (passable both ways). Plain right-click + edit mode still
+    // means "delete nearest segment" — alt distinguishes the two.
+    if (e.button === 2 && e.altKey && canvasRef.current && scene) {
+      e.preventDefault()
+      const rect = canvasRef.current.getBoundingClientRect()
+      const cellSize = getCellSize()
+      const mxCells = (e.clientX - rect.left) / zoom / cellSize
+      const myCells = (e.clientY - rect.top) / zoom / cellSize
+      // 1) Try to find the nearest door/window SEGMENT within a half-
+      //    cell. Segments are the primary surface.
+      let bestSegId: string | null = null
+      let bestSegDist = 0.5
+      for (const w of wallsLocalRef.current) {
+        if (w.kind !== 'door' && w.kind !== 'window') continue
+        const dx = w.x2 - w.x1
+        const dy = w.y2 - w.y1
+        const len2 = dx * dx + dy * dy
+        if (len2 < 1e-6) continue
+        let t = ((mxCells - w.x1) * dx + (myCells - w.y1) * dy) / len2
+        t = Math.max(0, Math.min(1, t))
+        const px = w.x1 + t * dx
+        const py = w.y1 + t * dy
+        const d = Math.hypot(mxCells - px, myCells - py)
+        if (d < bestSegDist) { bestSegDist = d; bestSegId = w.id }
+      }
+      if (bestSegId) {
+        setWallsLocal(prev => {
+          const next = prev.map(w => w.id === bestSegId
+            ? { ...w, door_open: !(w.door_open ?? (w.kind === 'window' ? false : true)) }
+            : w)
+          wallsLocalRef.current = next
+          return next
+        })
+        scheduleWallsPersist()
+        return
+      }
+      // 2) Fall through to object TOKEN under the cursor — only doors
+      //    or windows. Toggle door_open the same way the existing
+      //    door-token click handler does.
+      const pos = getGridPos(e)
+      if (pos) {
+        const tok = getTokenAt(pos.gx, pos.gy)
+        if (tok && (tok.is_door || tok.is_window)) {
+          const nextOpen = !tok.door_open
+          setTokens(prev => prev.map(x => x.id === tok.id ? { ...x, door_open: nextOpen } : x))
+          supabase.from('scene_tokens').update({ door_open: nextOpen }).eq('id', tok.id).then(() => {
+            tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+          })
+          return
+        }
+      }
+      return
+    }
     // Right-click in any structure-edit mode → delete the segment
     // closest to the cursor (within ~half a cell). Lets the GM fix
     // mistakes without leaving the toolbar.
@@ -2042,7 +2115,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           const occupied = new Set(
             tokens
               .filter(t => t.id !== moveTok.id)
+              // Open doors and open windows pass through.
               .filter(t => !(t.is_door && t.door_open))
+              .filter(t => !(t.is_window && t.door_open))
               .map(t => `${t.grid_x},${t.grid_y}`)
           )
           const closedDoorAtDest = tokens.some(t => t.is_door && t.door_open === false && t.grid_x === pos.gx && t.grid_y === pos.gy)
@@ -2050,11 +2125,15 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             alert('That door is closed. Open it first or pick a different destination.')
             return
           }
-          // Wall/door/window SEGMENT crossing check. Walls + closed
-          // doors + windows all block movement (windows are glass —
-          // you don't walk through them). Open doors pass.
+          // Wall/door/window SEGMENT crossing check. Walls always block.
+          // Doors block when closed; open doors pass. Windows block
+          // when closed (intact glass); open windows (smashed/raised)
+          // pass both ways. Default-undefined door_open is treated as
+          // "closed" for windows so legacy segments stay blocking.
           const moveSegs = wallsLocalRef.current.filter(s =>
-            s.kind === 'wall' || s.kind === 'window' || (s.kind === 'door' && s.door_open === false)
+            s.kind === 'wall'
+            || (s.kind === 'door' && s.door_open === false)
+            || (s.kind === 'window' && s.door_open !== true)
           )
           if (moveSegs.length > 0) {
             const ax = moveTok.grid_x + 0.5, ay = moveTok.grid_y + 0.5
@@ -2784,10 +2863,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           onMouseUp={handleMouseUp}
           onDoubleClick={handleDoubleClick}
           onContextMenu={e => {
-            // Right-click in any structure-edit mode is the delete
-            // gesture for nearest segment — handled in handleMouseDown.
-            // Suppress the browser menu so the GM doesn't see the
-            // right-click options pop up over the map.
+            // Suppress the browser context menu when the right-click
+            // means something to us:
+            //   • Alt + right-click anywhere → toggle nearest
+            //     door/window (handled in handleMouseDown).
+            //   • Right-click in any structure-edit mode → delete
+            //     nearest segment.
+            if (e.altKey) { e.preventDefault(); return }
             if (fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window') {
               e.preventDefault()
             }

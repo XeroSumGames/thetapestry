@@ -200,7 +200,14 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
         wp_max: wpMax, wp_current: wpMax,
         properties: [], contents: [],
         is_door: addIcon === 'door',
-        door_open: true,
+        // Default state by kind:
+        //   • door   → open (you can walk through a placed door)
+        //   • window → closed (intact glass; vision passes, movement
+        //              blocked; alt-right-click to flip to "open glass"
+        //              that passes both)
+        //   • everything else: door_open is unused, just leave as the
+        //     column default.
+        door_open: addIcon === 'window' ? false : true,
         is_wall: addIcon === 'wall',
         is_window: addIcon === 'window',
       })
@@ -246,7 +253,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       properties: meta.properties ?? [],
       contents: meta.contents ?? [],
       is_door: (meta.icon ?? 'crate') === 'door',
-      door_open: true,
+      door_open: (meta.icon ?? 'crate') === 'window' ? false : true,
       is_wall: (meta.icon ?? 'crate') === 'wall',
       is_window: (meta.icon ?? 'crate') === 'window',
     })
