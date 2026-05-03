@@ -566,6 +566,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         .order('created_at', { ascending: false })
         .limit(200),
     ])
+    if (moraleRes.error) console.error('[community-dashboard] morale fetch:', moraleRes.error.message)
+    if (recruitRes.error) console.error('[community-dashboard] recruits fetch:', recruitRes.error.message)
     setDashboardMorale(prev => ({ ...prev, [communityId]: (moraleRes.data ?? []) as any }))
     const recruits: RecruitRow[] = []
     for (const row of (recruitRes.data ?? []) as any[]) {
@@ -618,6 +620,14 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         .not('character_id', 'is', null),
       supabase.from('campaign_pins').select('id, name, lat, lng').eq('campaign_id', campaignId).order('name'),
     ])
+    // Surface any partial failures so silent RLS denials / network
+    // blips don't read as "the campaign has no communities/NPCs/PCs/pins"
+    // — gracefully degrade to empty arrays for whichever path failed,
+    // but make the failure visible in the console.
+    if (comsRes.error) console.error('[CampaignCommunity] communities fetch:', comsRes.error.message)
+    if (npcsRes.error) console.error('[CampaignCommunity] npcs fetch:', npcsRes.error.message)
+    if (charsRes.error) console.error('[CampaignCommunity] members fetch:', charsRes.error.message)
+    if (pinsRes.error) console.error('[CampaignCommunity] pins fetch:', pinsRes.error.message)
     const coms = (comsRes.data ?? []) as Community[]
     setCommunities(coms)
     setNpcs((npcsRes.data ?? []) as NpcOption[])

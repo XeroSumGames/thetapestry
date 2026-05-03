@@ -81,7 +81,19 @@ export default function NewCampaignPage() {
       status: 'active',
     }).select().single()
     if (err) { setError(err.message); setSaving(false); return }
-    await supabase.from('campaign_members').insert({ campaign_id: data.id, user_id: user.id })
+    // Critical follow-up: insert the GM as a member of their own
+    // campaign. If this fails (RLS denial, network blip), the GM
+    // ends up as the campaign's gm_user_id without a membership row,
+    // which breaks features that key off campaign_members. Surface
+    // the error and bail rather than silently leaking a half-state.
+    const { error: memErr } = await supabase
+      .from('campaign_members')
+      .insert({ campaign_id: data.id, user_id: user.id })
+    if (memErr) {
+      setError(`Campaign created but membership failed: ${memErr.message}`)
+      setSaving(false)
+      return
+    }
 
     // Phase 5 Sprint 1 — module clone takes precedence over the
     // setting-seed pipeline. If the user picked a module, run the

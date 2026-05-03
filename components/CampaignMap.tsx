@@ -214,7 +214,12 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`)
       const data = await res.json()
       if (data[0]) mapInstanceRef.current?.flyTo([parseFloat(data[0].lat), parseFloat(data[0].lon)], 14)
-    } catch {}
+    } catch (err) {
+      // Silent fail keeps the map usable, but logging surfaces the
+      // root cause (rate-limit / network) when a user reports "search
+      // didn't find my city".
+      console.warn('[mapSearch] nominatim lookup failed:', err)
+    }
     setSearching(false)
   }
 
