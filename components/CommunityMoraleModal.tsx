@@ -580,6 +580,10 @@ export default function CommunityMoraleModal({
       ...(reallyDissolves ? { dissolved_at: now } : {}),
     }).eq('id', community.id)
 
+    if (reallyDissolves && community.homestead_pin_id) {
+      await supabase.from('campaign_pins').update({ revealed: false }).eq('id', community.homestead_pin_id)
+    }
+
     void logEvent('morale_check_run', {
       community_id: community.id,
       week: newWeek,
