@@ -55,6 +55,11 @@ interface Token {
   // fog beyond it.
   is_wall?: boolean | null
   is_window?: boolean | null
+  // Per-token vision radius (cells) — overrides the default 6 used
+  // by the fog punch-through. Lets a torch-bearing PC illuminate
+  // 8 cells, a sneaking scout 4, etc. NPC tokens can also carry a
+  // value for future Phase 3 NPC-vision work.
+  sight_radius_cells?: number | null
 }
 
 interface Scene {
@@ -234,7 +239,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // editor instead of two competing toolbars. Name kept as
   // `fogEditMode` to avoid churning every callsite — it's "scene
   // edit mode" in spirit now.
-  const [fogEditMode, setFogEditMode] = useState<'paint' | 'erase' | 'rect' | 'wall' | 'door' | 'window' | null>(null)
+  const [fogEditMode, setFogEditMode] = useState<'paint' | 'erase' | 'rect' | 'rect-erase' | 'wall' | 'door' | 'window' | null>(null)
   const fogPaintingRef = useRef(false)
   const fogPendingSaveRef = useRef<number | null>(null)
   // Rectangle marquee for the 'rect' fog tool. Both corners are
@@ -1025,7 +1030,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         if (!tok.character_id) continue
         const gw = tok.grid_w ?? 1
         const gh = tok.grid_h ?? 1
-        const r = VISION_RADIUS_CELLS
+        // Per-token override (column added in
+        // sql/scene-tokens-sight-radius.sql); falls back to the
+        // default constant for legacy rows.
+        const r = tok.sight_radius_cells ?? VISION_RADIUS_CELLS
         for (let fx = 0; fx < gw; fx++) {
           for (let fy = 0; fy < gh; fy++) {
             const ox = tok.grid_x + fx
@@ -1738,8 +1746,9 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
     // Rectangle marquee preview — draws while the GM is dragging
     // the Rect fog tool. On mouseup the rectangle is committed to
-    // fog_state and the preview clears.
-    if (fogEditMode === 'rect' && fogRectStart && fogRectEnd) {
+    // fog_state and the preview clears. Erase variant gets a red
+    // tint so the GM knows it'll subtract.
+    if ((fogEditMode === 'rect' || fogEditMode === 'rect-erase') && fogRectStart && fogRectEnd) {
       const cellW = (s.grid_cols * cellSize) / s.grid_cols
       const cellH = (s.grid_rows * cellSize) / s.grid_rows
       const x1 = Math.min(fogRectStart.gx, fogRectEnd.gx)
@@ -1750,10 +1759,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const ry = offsetY + y1 * cellH
       const rw = (x2 - x1 + 1) * cellW
       const rh = (y2 - y1 + 1) * cellH
+      const erase = fogEditMode === 'rect-erase'
       ctx.save()
-      ctx.fillStyle = 'rgba(196,167,240,0.18)'
+      ctx.fillStyle = erase ? 'rgba(192,57,43,0.18)' : 'rgba(196,167,240,0.18)'
       ctx.fillRect(rx, ry, rw, rh)
-      ctx.strokeStyle = 'rgba(196,167,240,0.85)'
+      ctx.strokeStyle = erase ? 'rgba(245,168,154,0.85)' : 'rgba(196,167,240,0.85)'
       ctx.lineWidth = 1.5
       ctx.setLineDash([6, 4])
       ctx.strokeRect(rx + 0.5, ry + 0.5, rw - 1, rh - 1)
@@ -1930,11 +1940,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const pos = getGridPos(e)
       if (pos) {
         fogPaintingRef.current = true
-        if (fogEditMode === 'rect') {
+        if (fogEditMode === 'rect' || fogEditMode === 'rect-erase') {
           // Defer the state mutation to mouseup — during the drag
           // we only render a preview overlay so the GM can pick the
           // bounds. Capturing both corners now means a single-click
-          // (no drag) still fogs the one cell on release.
+          // (no drag) still affects the one cell on release.
           setFogRectStart(pos)
           setFogRectEnd(pos)
         } else {
@@ -2208,7 +2218,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (fogEditMode && fogPaintingRef.current && isGM) {
       const pos = getGridPos(e)
       if (pos) {
-        if (fogEditMode === 'rect') {
+        if (fogEditMode === 'rect' || fogEditMode === 'rect-erase') {
           if (!fogRectEnd || fogRectEnd.gx !== pos.gx || fogRectEnd.gy !== pos.gy) {
             setFogRectEnd(pos)
           }
@@ -2303,15 +2313,20 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // bounds here as one bulk write.
     if (fogPaintingRef.current) {
       fogPaintingRef.current = false
-      if (fogEditMode === 'rect' && fogRectStart && fogRectEnd) {
+      if ((fogEditMode === 'rect' || fogEditMode === 'rect-erase') && fogRectStart && fogRectEnd) {
         const x1 = Math.min(fogRectStart.gx, fogRectEnd.gx)
         const x2 = Math.max(fogRectStart.gx, fogRectEnd.gx)
         const y1 = Math.min(fogRectStart.gy, fogRectEnd.gy)
         const y2 = Math.max(fogRectStart.gy, fogRectEnd.gy)
+        const erase = fogEditMode === 'rect-erase'
         setFogLocal(prev => {
           const next = { ...prev }
           for (let x = x1; x <= x2; x++) {
-            for (let y = y1; y <= y2; y++) next[`${x},${y}`] = true
+            for (let y = y1; y <= y2; y++) {
+              const k = `${x},${y}`
+              if (erase) delete next[k]
+              else next[k] = true
+            }
           }
           fogLocalRef.current = next
           return next
@@ -2678,6 +2693,11 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   style={{ padding: '4px 10px', background: fogEditMode === 'rect' ? '#2a1a3e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'rect' ? '#c4a7f0' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'rect' ? '#c4a7f0' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
                   Rect
                 </button>
+                <button onClick={() => setFogEditMode('rect-erase')}
+                  title="Drag a rectangle to clear every fogged cell inside on release"
+                  style={{ padding: '4px 10px', background: fogEditMode === 'rect-erase' ? '#2a1210' : '#1a1a1a', border: `1px solid ${fogEditMode === 'rect-erase' ? '#f5a89a' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'rect-erase' ? '#f5a89a' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                  Rect-Erase
+                </button>
                 <button onClick={() => setFogEditMode('erase')}
                   title="Drag to clear fog cells one at a time"
                   style={{ padding: '4px 10px', background: fogEditMode === 'erase' ? '#2a1a3e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'erase' ? '#c4a7f0' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'erase' ? '#c4a7f0' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
@@ -2992,6 +3012,25 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                         await supabase.from('scene_tokens').update({ grid_h: v }).eq('id', tok.id)
                       }}
                       style={{ width: '46px', padding: '2px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center' }} />
+                  </div>
+                )}
+                {/* Sight radius — only meaningful for PC tokens that
+                    actually project vision. Range 0-20 cells; 6 is
+                    the default (matches the legacy hardcoded value).
+                    GM-only edit; the column is read at draw time so
+                    a slider tweak immediately re-punches fog. */}
+                {isGM && tok.token_type !== 'object' && tok.character_id && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', width: '30px' }}>Sight</span>
+                    <input type="range" min={0} max={20} step={1} value={tok.sight_radius_cells ?? 6}
+                      onChange={async e => {
+                        const v = parseInt(e.target.value, 10)
+                        setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, sight_radius_cells: v } : t))
+                        await supabase.from('scene_tokens').update({ sight_radius_cells: v }).eq('id', tok.id)
+                      }}
+                      title={`Vision radius — ${tok.sight_radius_cells ?? 6} cells`}
+                      style={{ flex: 1, accentColor: '#7ab3d4', cursor: 'pointer' }} />
+                    <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', width: '28px', textAlign: 'right' }}>{tok.sight_radius_cells ?? 6}</span>
                   </div>
                 )}
               </div>
