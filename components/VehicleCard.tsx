@@ -48,6 +48,11 @@ export interface Vehicle {
     notes?: string
     shooter_character_id?: string | null
     shooter_kind?: 'pc' | 'npc' | null
+    // Tactical-map firing arc — degrees relative to the vehicle's
+    // forward direction + total cone opening. Optional; only used by
+    // the tactical map's arc overlay.
+    mount_angle?: number
+    arc_degrees?: number
   }[]
 }
 

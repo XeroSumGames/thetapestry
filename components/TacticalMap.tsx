@@ -132,7 +132,20 @@ interface Props {
   // Campaign vehicle data — used as a fallback for object tokens that
   // were placed without their wp_max/wp_current copied across (so the
   // selected-token panel still shows the correct stats by name match).
-  vehicles?: { name: string; wp_max?: number; wp_current?: number; speed?: number }[]
+  vehicles?: {
+    name: string
+    wp_max?: number
+    wp_current?: number
+    speed?: number
+    // Mounted weapons — only the fields TacticalMap reads to render
+    // firing arc cones. Full vehicle interface lives in
+    // components/VehicleCard.tsx; this is a narrowed contract.
+    mounted_weapons?: {
+      name: string
+      mount_angle?: number
+      arc_degrees?: number
+    }[]
+  }[]
   // Player-or-GM clicks Move on an object token in the in-map panel.
   // Parent owns the moveMode state + the speed × 30ft / acceleration
   // ramp logic, so we just hand off the tokenId.
@@ -184,6 +197,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // entries are campaign-scoped, so combat continuity is preserved
   // automatically; only scene_tokens.scene_id needs to flip.
   const [movingTokenToScene, setMovingTokenToScene] = useState<string | null>(null)
+  // Firing arc overlays — set of "tokenId:weaponIdx" strings the GM
+  // wants visualized on the map. Lets a vehicle's front-mounted M60
+  // (90° forward) render a translucent cone showing what the weapon
+  // can actually hit, accounting for token rotation. Toggle per
+  // weapon from the selected-token panel.
+  const [firingArcs, setFiringArcs] = useState<Set<string>>(new Set())
   const [showRangeOverlay, setShowRangeOverlay] = useState(true)
   const [showSetup, setShowSetup] = useState(false)
   const [setupName, setSetupName] = useState('Scene')
@@ -517,7 +536,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   // Redraw on token/scene changes
   // campaignNpcs/entries are in the dep list so HP damage repaints the pips immediately — missing them meant tokens stayed stale until some other dependency (click, zoom, move) forced a redraw.
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode, fogRectStart, fogRectEnd, wallsLocal, wallDrawStart, wallDrawHover])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode, fogRectStart, fogRectEnd, wallsLocal, wallDrawStart, wallDrawHover, firingArcs])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
@@ -1541,6 +1560,76 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       } else {
         hasActiveAnim = true
       }
+    }
+
+    // Vehicle mounted-weapon firing arcs. Each toggled arc renders a
+    // translucent cone from the token's center, oriented by the
+    // token's rotation + the weapon's mount_angle, opening to the
+    // weapon's arc_degrees, extending to the weapon's max range
+    // band. Drawn after tokens (so they overlay the vehicle without
+    // being hidden) and after the wall segment block above is drawn
+    // separately below — order: tokens → arcs → walls so doors etc.
+    // remain crisp on top of arc fills.
+    if (firingArcs.size > 0 && vehicles && vehicles.length > 0) {
+      const cellW = (s.grid_cols * cellSize) / s.grid_cols
+      const cellH = (s.grid_rows * cellSize) / s.grid_rows
+      ctx.save()
+      for (const tok of tokensRef.current) {
+        if (tok.token_type !== 'object') continue
+        const veh = vehicles.find(v => v.name === tok.name)
+        if (!veh || !veh.mounted_weapons || veh.mounted_weapons.length === 0) continue
+        for (let wi = 0; wi < veh.mounted_weapons.length; wi++) {
+          const key = `${tok.id}:${wi}`
+          if (!firingArcs.has(key)) continue
+          const w = veh.mounted_weapons[wi]
+          if (typeof w.mount_angle !== 'number' || typeof w.arc_degrees !== 'number') continue
+          // Origin at the token's footprint center.
+          const gw = tok.grid_w ?? 1
+          const gh = tok.grid_h ?? 1
+          const ox = offsetX + (tok.grid_x + gw / 2) * cellW
+          const oy = offsetY + (tok.grid_y + gh / 2) * cellH
+          // Weapon range → cone radius. Use the weapon definition's
+          // primary range band converted to feet, then to cells via
+          // scene cell_feet. Falls back to 20 cells when the weapon
+          // isn't in the catalog.
+          const wdef = getWeaponByName(w.name)
+          const ft = s.cell_feet ?? 3
+          const rangeFeet = wdef ? (RANGE_BAND_FEET[wdef.range] ?? 100) : 100
+          const radius = (rangeFeet / ft) * cellSize
+          // Token rotation in degrees + mount_angle in degrees, both
+          // measured clockwise from "up" (the screen's negative-Y).
+          // Convert to radians for canvas. Canvas 0° = +X (right), so
+          // we rotate by -90° (forward = up by default).
+          const tokenRot = tok.rotation ?? 0
+          const facingDeg = tokenRot + w.mount_angle - 90
+          const facingRad = facingDeg * Math.PI / 180
+          const halfArc = (w.arc_degrees / 2) * Math.PI / 180
+          // Wedge fill — purple-ish with low alpha so the underlying
+          // map stays readable. Border at full opacity to anchor the
+          // shape against busy backgrounds.
+          ctx.beginPath()
+          ctx.moveTo(ox, oy)
+          ctx.arc(ox, oy, radius, facingRad - halfArc, facingRad + halfArc)
+          ctx.closePath()
+          ctx.fillStyle = 'rgba(196,167,240,0.18)'
+          ctx.fill()
+          ctx.strokeStyle = 'rgba(196,167,240,0.85)'
+          ctx.lineWidth = 1.5
+          ctx.setLineDash([6, 4])
+          ctx.stroke()
+          ctx.setLineDash([])
+          // Label at the cone's far edge so the GM can tell which
+          // weapon's cone is which when multiple are toggled.
+          const labelX = ox + Math.cos(facingRad) * radius * 0.8
+          const labelY = oy + Math.sin(facingRad) * radius * 0.8
+          ctx.fillStyle = '#c4a7f0'
+          ctx.font = '13px Carlito, sans-serif'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(w.name, labelX, labelY)
+        }
+      }
+      ctx.restore()
     }
 
     // Wall / door / window segments. Drawn after tokens so they sit
@@ -2728,6 +2817,36 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                     Edit
                   </button>
                 )}
+                {/* Mounted-weapon firing arcs. Renders a per-weapon
+                    toggle button when this token's name matches a
+                    vehicle definition that has weapons with arc data
+                    set (mount_angle + arc_degrees). Click toggles a
+                    translucent cone overlay on the map. Multiple
+                    weapons can be on at once (turret + fixed). */}
+                {tok.token_type === 'object' && (() => {
+                  const veh = vehicles?.find(v => v.name === tok.name)
+                  const arcWeapons = (veh?.mounted_weapons ?? []).map((w: any, i: number) => ({ w, i }))
+                    .filter(({ w }: any) => typeof w.mount_angle === 'number' && typeof w.arc_degrees === 'number')
+                  if (arcWeapons.length === 0) return null
+                  return arcWeapons.map(({ w, i }: any) => {
+                    const key = `${tok.id}:${i}`
+                    const active = firingArcs.has(key)
+                    return (
+                      <button key={key} onClick={() => {
+                          setFiringArcs(prev => {
+                            const next = new Set(prev)
+                            if (next.has(key)) next.delete(key)
+                            else next.add(key)
+                            return next
+                          })
+                        }}
+                        title={`Toggle firing arc — ${w.arc_degrees}° at mount ${w.mount_angle}°`}
+                        style={{ padding: '2px 6px', background: active ? '#2a1a3e' : '#1a1a2e', border: `1px solid ${active ? '#c4a7f0' : '#2e2e5a'}`, borderRadius: '2px', color: active ? '#c4a7f0' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        🎯 {w.name}
+                      </button>
+                    )
+                  })
+                })()}
                 {/* Multistory Path B — shunt this token to another
                     scene. Hidden when there's only one scene in the
                     campaign (no destination to pick). */}

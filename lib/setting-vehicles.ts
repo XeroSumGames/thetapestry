@@ -41,7 +41,19 @@ export interface SeedVehicle {
   image_url?: string | null
   floorplan_url?: string | null
   has_still?: boolean
-  mounted_weapons?: { name: string; notes?: string }[]
+  mounted_weapons?: {
+    name: string
+    notes?: string
+    // Tactical-map firing arc visualization. mount_angle is the
+    // weapon's facing in degrees relative to the token's forward
+    // direction (0 = front, 90 = right, 180 = rear, 270 = left).
+    // arc_degrees is the total opening of the cone (90 means ±45°
+    // off mount_angle). When both are set, the GM can render a
+    // translucent firing cone on the tactical map to show what the
+    // weapon can hit. Omitting either disables the visualizer.
+    mount_angle?: number
+    arc_degrees?: number
+  }[]
   cargo: SeedVehicleCargo[]
 }
 
@@ -78,6 +90,8 @@ const MINNIE: SeedVehicle = {
     {
       name: 'M60 (Mounted)',
       notes: 'Mounted in the roof weapon nest between the AC units. Fires forward in a 90° arc only.',
+      mount_angle: 0,    // 0 = forward
+      arc_degrees: 90,   // ±45° off forward
     },
   ],
   // Enc values cataloged from lib/xse-schema.ts EQUIPMENT/weapons
