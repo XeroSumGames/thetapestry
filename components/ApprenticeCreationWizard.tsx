@@ -591,16 +591,20 @@ export default function ApprenticeCreationWizard({
 
         {/* Footer — Back / Continue / Save */}
         <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button onClick={() => {
-            if (step === 'identity') onClose()
-            else if (step === 'profession') setStep('identity')
-            else if (step === 'rapid') setStep('profession')
-            else if (step === 'skills') setStep('rapid')
-            else if (step === 'confirm') setStep('skills')
-          }} disabled={saving}
-            style={{ padding: '6px 14px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.4 : 1 }}>
+          <Button
+            tone="info"
+            variant="ghost"
+            disabled={saving}
+            style={{ padding: '6px 14px' }}
+            onClick={() => {
+              if (step === 'identity') onClose()
+              else if (step === 'profession') setStep('identity')
+              else if (step === 'rapid') setStep('profession')
+              else if (step === 'skills') setStep('rapid')
+              else if (step === 'confirm') setStep('skills')
+            }}>
             {step === 'identity' ? 'Cancel' : '← Back'}
-          </button>
+          </Button>
 
           {step !== 'confirm' && (
             <Button

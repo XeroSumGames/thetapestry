@@ -29,7 +29,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { SKILLS, type AttributeName, type SkillValue } from '../lib/xse-schema'
-import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
+import { ModalBackdrop, Z_INDEX, Button } from '../lib/style-helpers'
 import { skillRaiseCost, skillNextLevel, rapidRaiseCost, isLv4Step } from '../lib/cdp-costs'
 import { appendProgressionEntry } from '../lib/progression-log'
 import { getCachedAuth } from '../lib/auth-cache'
@@ -580,10 +580,9 @@ export default function CharacterEvolution({
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
-              <button onClick={() => setPending(null)} disabled={saving}
-                style={{ padding: '6px 14px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.4 : 1 }}>
+              <Button tone="info" variant="ghost" disabled={saving} style={{ padding: '6px 14px' }} onClick={() => setPending(null)}>
                 Cancel
-              </button>
+              </Button>
               <button onClick={commit} disabled={saving}
                 style={{ padding: '8px 18px', background: pending.needsNarrative ? '#2a2010' : '#1a2e10', border: `1px solid ${pending.needsNarrative ? '#5a4a1b' : '#2d5a1b'}`, borderRadius: '3px', color: pending.needsNarrative ? '#EF9F27' : '#7fc458', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.5 : 1 }}>
                 {saving ? 'Saving…' : '✓ Confirm'}

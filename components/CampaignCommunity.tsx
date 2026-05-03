@@ -2823,10 +2823,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 </div>
               </div>
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <button onClick={closeMigrationModal} disabled={migrationSubmitting}
-                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: migrationSubmitting ? 'not-allowed' : 'pointer', opacity: migrationSubmitting ? 0.4 : 1 }}>
+                <Button tone="info" variant="ghost" disabled={migrationSubmitting} style={{ padding: '6px 12px' }} onClick={closeMigrationModal}>
                   Cancel
-                </button>
+                </Button>
                 <Button tone="magic" size="lg" busy={migrationSubmitting} disabled={!migrationTargetId || migrationPickedIds.size === 0} onClick={handleMigration}>
                   {migrationSubmitting ? 'Sending…' : '📤 Send Offers'}
                 </Button>
@@ -2917,10 +2916,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 </div>
               </div>
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <button onClick={closeSchismModal} disabled={schismSubmitting}
-                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: schismSubmitting ? 'not-allowed' : 'pointer', opacity: schismSubmitting ? 0.4 : 1 }}>
+                <Button tone="info" variant="ghost" disabled={schismSubmitting} style={{ padding: '6px 12px' }} onClick={closeSchismModal}>
                   Cancel
-                </button>
+                </Button>
                 <Button tone="magic" size="lg" busy={schismSubmitting} disabled={schismPickedIds.size === 0 || !schismName.trim()} onClick={handleSchism}>
                   {schismSubmitting ? 'Splitting…' : '⛓ Confirm Schism'}
                 </Button>
@@ -2990,10 +2988,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 </div>
               </div>
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <button onClick={closePublishModal} disabled={publishing}
-                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: publishing ? 'not-allowed' : 'pointer', opacity: publishing ? 0.4 : 1 }}>
+                <Button tone="info" variant="ghost" disabled={publishing} style={{ padding: '6px 12px' }} onClick={closePublishModal}>
                   Cancel
-                </button>
+                </Button>
                 <Button tone="magic" size="lg" busy={publishing} onClick={handlePublish}>
                   {publishing ? 'Publishing…' : world ? 'Update Public Info' : '🌐 Publish'}
                 </Button>
@@ -3061,8 +3058,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                 </div>
               </div>
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <button onClick={handleCancelAssignment}
-                  style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
+                <Button tone="info" variant="ghost" style={{ padding: '6px 12px' }} onClick={handleCancelAssignment}>Cancel</Button>
                 <Button tone="confirm" size="lg" disabled={!assignmentPcDraft} onClick={handleSaveAssignment}>
                   Assign
                 </Button>

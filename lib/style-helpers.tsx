@@ -204,6 +204,12 @@ export function CloseButton({ onClick, title = 'Close', tone = 'muted', children
 //
 // Sizes shape padding + fontSize. Color/tone is independent of size.
 //
+// Variant: 'solid' (default) is the filled button. 'ghost' renders
+// transparent bg + colored border + colored text using each tone's
+// `chroma` (the most "characteristic" color of the tone). Most cancel
+// / back / dismiss buttons in the codebase are `tone="info"
+// variant="ghost"` (transparent + #7ab3d4 outline).
+//
 // `disabled` and `busy` both fall back to disabled+dimmed; `busy`
 // additionally hints `cursor: wait` so async-submitting buttons read
 // differently from invalid-form buttons. Pass `style` for one-offs
@@ -225,14 +231,21 @@ export type ButtonTone =
 
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
-const BUTTON_TONES: Record<ButtonTone, { bg: string; color: string; border: string }> = {
-  primary:   { bg: '#c0392b', color: '#ffffff', border: '#c0392b' },
-  secondary: { bg: '#242424', color: '#d4cfc9', border: '#3a3a3a' },
-  confirm:   { bg: '#1a2e10', color: '#7fc458', border: '#2d5a1b' },
-  warning:   { bg: '#2a2010', color: '#EF9F27', border: '#5a4a1b' },
-  info:      { bg: '#0f1a2e', color: '#7ab3d4', border: '#1a3a5c' },
-  magic:     { bg: '#2a102a', color: '#d48bd4', border: '#5a2e5a' },
-  danger:    { bg: '#2a1210', color: '#f5a89a', border: '#c0392b' },
+export type ButtonVariant = 'solid' | 'ghost'
+
+// `chroma` is the tone's signature color — used by the ghost variant
+// for both border and text. Solid uses bg/color/border directly.
+// Note that primary's chroma is its bg (red); for tones whose color
+// IS the signature (info / confirm / magic / warning), chroma is the
+// color attribute. Danger's chroma matches its border (#c0392b).
+const BUTTON_TONES: Record<ButtonTone, { bg: string; color: string; border: string; chroma: string }> = {
+  primary:   { bg: '#c0392b', color: '#ffffff', border: '#c0392b', chroma: '#c0392b' },
+  secondary: { bg: '#242424', color: '#d4cfc9', border: '#3a3a3a', chroma: '#d4cfc9' },
+  confirm:   { bg: '#1a2e10', color: '#7fc458', border: '#2d5a1b', chroma: '#7fc458' },
+  warning:   { bg: '#2a2010', color: '#EF9F27', border: '#5a4a1b', chroma: '#EF9F27' },
+  info:      { bg: '#0f1a2e', color: '#7ab3d4', border: '#1a3a5c', chroma: '#7ab3d4' },
+  magic:     { bg: '#2a102a', color: '#d48bd4', border: '#5a2e5a', chroma: '#d48bd4' },
+  danger:    { bg: '#2a1210', color: '#f5a89a', border: '#c0392b', chroma: '#c0392b' },
 }
 
 const BUTTON_SIZES: Record<ButtonSize, CSSProperties> = {
@@ -244,6 +257,11 @@ const BUTTON_SIZES: Record<ButtonSize, CSSProperties> = {
 export interface ButtonProps {
   tone?: ButtonTone
   size?: ButtonSize
+  /** 'solid' (default) = filled. 'ghost' = transparent + colored
+   *  outline using each tone's chroma. Cancel / Back / dismiss
+   *  buttons in this codebase are typically `tone="info"
+   *  variant="ghost"`. */
+  variant?: ButtonVariant
   disabled?: boolean
   /** Like disabled but also hints `cursor: wait` so an async-pending
    *  button reads differently from a constraint-blocked one. */
@@ -260,6 +278,7 @@ export interface ButtonProps {
 export function Button({
   tone = 'secondary',
   size = 'md',
+  variant = 'solid',
   disabled,
   busy,
   type = 'button',
@@ -271,6 +290,9 @@ export function Button({
   const t = BUTTON_TONES[tone]
   const s = BUTTON_SIZES[size]
   const inactive = disabled || busy
+  const palette = variant === 'ghost'
+    ? { bg: 'transparent', color: t.chroma, border: t.chroma }
+    : { bg: t.bg, color: t.color, border: t.border }
   return (
     <button
       type={type}
@@ -279,9 +301,9 @@ export function Button({
       title={title}
       style={{
         ...s,
-        background: t.bg,
-        color: t.color,
-        border: `1px solid ${t.border}`,
+        background: palette.bg,
+        color: palette.color,
+        border: `1px solid ${palette.border}`,
         borderRadius: '3px',
         fontFamily: 'Carlito, sans-serif',
         letterSpacing: '.06em',
