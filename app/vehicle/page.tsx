@@ -28,9 +28,26 @@ interface CrewMember {
 type CheckKind = 'driving' | 'brew' | 'attack'
 type BrewSkill = 'mechanic' | 'tinkerer'
 
+// Mirrors the table in components/TacticalMap.tsx — a weapon's primary
+// range band in feet. Used for the firing-arc target gate so an out-of-
+// range NPC chips ⛔ in the dropdown even if they're inside the cone.
+const RANGE_BAND_FEET: Record<string, number> = {
+  'Engaged': 5,
+  'Close': 30,
+  'Medium': 100,
+  'Long': 300,
+  'Distant': 600,
+}
+
 interface AttackTarget {
   id: string         // campaign_npcs.id
   name: string
+  // Tactical-map gating fields. When the weapon has firing-arc data
+  // (mount_angle + arc_degrees) we precompute whether each target
+  // sits inside the cone so the dropdown can chip ✓ / ✗ and the
+  // roll button can hard-block out-of-arc shots.
+  inArc?: boolean
+  outOfRange?: boolean
 }
 
 interface CheckState {
@@ -235,33 +252,106 @@ export default function VehiclePage() {
       // attack — Ranged Combat (DEX) check against the weapon. Pull
       // the NPCs currently on the active tactical scene as the target
       // dropdown so the GM can fire at someone who's actually there.
+      // Also fetch token coords for both the SHOOTER (this vehicle)
+      // and every TARGET so we can gate by firing arc + range when
+      // the weapon has mount_angle + arc_degrees set.
       let targets: AttackTarget[] = []
+      const weapon = vehicle.mounted_weapons?.[weaponIdx ?? 0]
+      const wDef = weapon ? getWeaponByName(weapon.name) : undefined
+      const hasArc = !!weapon && typeof weapon.mount_angle === 'number' && typeof weapon.arc_degrees === 'number'
       if (campaignId) {
         const { data: activeScene } = await supabase
           .from('tactical_scenes')
-          .select('id')
+          .select('id, cell_feet')
           .eq('campaign_id', campaignId)
           .eq('is_active', true)
           .maybeSingle()
         if (activeScene?.id) {
+          // One fetch for every visible token on the scene — cheaper
+          // than two filtered fetches and gives us the shooter row
+          // (matched by name) + all NPC targets (matched by npc_id).
           const { data: tokenRows } = await supabase
             .from('scene_tokens')
-            .select('npc_id')
+            .select('id, name, npc_id, grid_x, grid_y, grid_w, grid_h, rotation, token_type')
             .eq('scene_id', activeScene.id)
             .is('archived_at', null)
-            .not('npc_id', 'is', null)
-          const npcIds = Array.from(new Set(((tokenRows ?? []) as any[]).map(r => r.npc_id))).filter(Boolean)
+          const allTokens = (tokenRows ?? []) as any[]
+          const shooterTok = allTokens.find(t => t.token_type === 'object' && t.name === vehicle.name) ?? null
+          const cellFt = activeScene.cell_feet ?? 3
+          const npcTokens = allTokens.filter(t => t.npc_id != null)
+          const npcIds = Array.from(new Set(npcTokens.map(t => t.npc_id))).filter(Boolean)
+          let nameMap: Record<string, string> = {}
           if (npcIds.length > 0) {
             const { data: npcRows } = await supabase
               .from('campaign_npcs')
               .select('id, name')
               .in('id', npcIds)
-            targets = ((npcRows ?? []) as any[])
-              .map(n => ({ id: n.id as string, name: n.name as string }))
-              .sort((a, b) => a.name.localeCompare(b.name))
+            for (const n of (npcRows ?? []) as any[]) nameMap[n.id] = n.name
           }
+          // Build targets, annotating each with in-arc / in-range
+          // when the weapon has cone data. Without arc data, every
+          // target is implicitly in arc (no gate).
+          const built: AttackTarget[] = []
+          for (const t of npcTokens) {
+            const name = nameMap[t.npc_id]
+            if (!name) continue
+            let inArc = true
+            let outOfRange = false
+              if (hasArc && shooterTok) {
+                const sgw = shooterTok.grid_w ?? 1
+                const sgh = shooterTok.grid_h ?? 1
+                const sx = shooterTok.grid_x + sgw / 2
+                const sy = shooterTok.grid_y + sgh / 2
+                const tx = t.grid_x + (t.grid_w ?? 1) / 2
+                const ty = t.grid_y + (t.grid_h ?? 1) / 2
+                const dx = tx - sx
+                const dy = ty - sy
+                const distCells = Math.hypot(dx, dy)
+                // Range gate — weapon's primary range band in feet
+                // → cells. Falls back to 33 cells (~100ft) when the
+                // weapon isn't in the catalog.
+                const rangeFeet = wDef ? (RANGE_BAND_FEET[wDef.range] ?? 100) : 100
+                const rangeCells = rangeFeet / cellFt
+                outOfRange = distCells > rangeCells
+                // Angle gate — facing = token rotation + mount angle.
+                // Both expressed clockwise from "up". Canvas math
+                // already used 0° = right (+X) by subtracting 90°;
+                // here we measure relative angle in token-space and
+                // compare to the half-arc directly, so the offset
+                // doesn't matter as long as we're consistent.
+                const tokenRot = (shooterTok.rotation ?? 0) * Math.PI / 180
+                const mountRad = (weapon!.mount_angle! * Math.PI) / 180
+                // Forward-vector for the weapon: (sin, -cos) at 0°
+                // since 0° = up, then rotate by token rotation +
+                // mount_angle.
+                const facing = tokenRot + mountRad
+                const fx = Math.sin(facing)
+                const fy = -Math.cos(facing)
+                // Angle between the facing vector and the (target -
+                // shooter) vector via dot product / magnitudes.
+                const mag = Math.hypot(dx, dy)
+                if (mag < 1e-6) {
+                  inArc = true // target on top of shooter — degenerate; allow
+                } else {
+                  const cosAng = (fx * dx + fy * dy) / mag
+                  const angle = Math.acos(Math.max(-1, Math.min(1, cosAng)))
+                  const halfArc = (weapon!.arc_degrees! / 2) * Math.PI / 180
+                  inArc = angle <= halfArc
+                }
+              }
+            built.push({ id: t.npc_id as string, name, inArc, outOfRange })
+          }
+          built.sort((a, b) => a.name.localeCompare(b.name))
+          // De-dup if a name was on two tokens (two of the same NPC)
+          // — keep the first.
+          const seen = new Set<string>()
+          targets = built.filter(t => seen.has(t.id) ? false : (seen.add(t.id), true))
         }
       }
+      // Default the picked target to the first IN-ARC option so the
+      // GM doesn't have to manually skip past out-of-arc names. Falls
+      // back to the first target overall when nothing's in arc.
+      const defaultTarget = targets.find(t => t.inArc !== false && !t.outOfRange) ?? targets[0]
       setCheck({
         kind: 'attack', crewId: member.id,
         amod: member.dex,
@@ -270,7 +360,7 @@ export default function VehiclePage() {
         brewSkill: 'mechanic',
         weaponIndex: weaponIdx,
         targets,
-        targetNpcId: targets[0]?.id ?? undefined,
+        targetNpcId: defaultTarget?.id ?? undefined,
         rolling: false, result: null,
       })
     }
@@ -805,13 +895,48 @@ export default function VehiclePage() {
                       No NPCs on the active scene to target. Place some on the tactical map first.
                     </div>
                   ) : (
+                    <>
                     <select value={check.targetNpcId ?? ''}
                       onChange={e => setCheck({ ...check, targetNpcId: e.target.value || undefined })}
                       style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', boxSizing: 'border-box' }}>
-                      {check.targets!.map(t => (
-                        <option key={t.id} value={t.id}>{t.name}</option>
-                      ))}
+                      {check.targets!.map(t => {
+                        // Annotate the option with arc + range gates
+                        // when the weapon has cone data. ⛔ = blocked
+                        // (the roll button enforces this);
+                        // ⚠ Range = soft warn (still allowed but the
+                        // GM should know it's a long shot).
+                        const blocked = t.inArc === false
+                        const ofr = !!t.outOfRange
+                        const tag = blocked ? '⛔ Out of arc'
+                          : ofr ? '⚠ Out of range'
+                          : ''
+                        return (
+                          <option key={t.id} value={t.id} disabled={blocked}>
+                            {t.name}{tag ? ` — ${tag}` : ''}
+                          </option>
+                        )
+                      })}
                     </select>
+                    {check.targetNpcId && (() => {
+                      const picked = check.targets?.find(t => t.id === check.targetNpcId)
+                      if (!picked) return null
+                      if (picked.inArc === false) {
+                        return (
+                          <div style={{ marginTop: '6px', padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+                            ⛔ Outside this weapon&apos;s firing arc. Reposition the vehicle or pick a target in arc.
+                          </div>
+                        )
+                      }
+                      if (picked.outOfRange) {
+                        return (
+                          <div style={{ marginTop: '6px', padding: '6px 10px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+                            ⚠ Beyond this weapon&apos;s primary range band. Roll allowed but the GM may apply a Range CMod.
+                          </div>
+                        )
+                      }
+                      return null
+                    })()}
+                    </>
                   )}
                 </div>
               )}
@@ -899,7 +1024,12 @@ export default function VehiclePage() {
 
               {/* Actions */}
               <div style={{ display: 'flex', gap: '6px' }}>
-                <button onClick={rollCheck} disabled={check.rolling || !!check.result || (check.kind === 'attack' && !check.targetNpcId)}
+                <button onClick={rollCheck} disabled={
+                    check.rolling
+                    || !!check.result
+                    || (check.kind === 'attack' && !check.targetNpcId)
+                    || (check.kind === 'attack' && (check.targets?.find(t => t.id === check.targetNpcId)?.inArc === false))
+                  }
                   style={{ flex: 1, padding: '10px', background: accentBg, border: `1px solid ${accent}`, borderRadius: '3px', color: accent, fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, cursor: check.rolling ? 'wait' : (check.result ? 'default' : 'pointer'), opacity: check.result ? 0.5 : 1 }}>
                   {check.rolling ? 'Rolling...' : check.result ? 'Rolled' : `🎲 Roll ${verb}`}
                 </button>
