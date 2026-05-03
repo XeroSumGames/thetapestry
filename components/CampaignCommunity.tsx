@@ -8,7 +8,7 @@ import CommunityMoraleModal from './CommunityMoraleModal'
 import CommunityProxyRecruitModal from './CommunityProxyRecruitModal'
 import { type InventoryItem } from '../lib/inventory'
 import { EQUIPMENT } from '../lib/xse-schema'
-import { LABEL_STYLE_LG } from '../lib/style-helpers'
+import { LABEL_STYLE_LG, ModalBackdrop, Z_INDEX, Button } from '../lib/style-helpers'
 import type { Community, Member, Role, RecruitmentType } from '../lib/types/community'
 import {
   logSchism,
@@ -1708,10 +1708,9 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               {pins.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-          <button onClick={handleCreate} disabled={creating || !newName.trim()}
-            style={{ padding: '6px', background: '#c0392b', border: '1px solid #c0392b', borderRadius: '3px', color: '#fff', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', opacity: creating || !newName.trim() ? 0.5 : 1 }}>
+          <Button tone="primary" busy={creating} disabled={!newName.trim()} onClick={handleCreate} style={{ padding: '6px' }}>
             {creating ? 'Creating…' : 'Create'}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -2768,9 +2767,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         if (!original) return null
         const survivors = (dissolvedSurvivors[migrationCommunityId] ?? []).filter(m => m.npc_id)
         return (
-          <div onClick={closeMigrationModal}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2100, padding: '20px' }}>
-            <div onClick={e => e.stopPropagation()}
+          <ModalBackdrop onClose={closeMigrationModal} zIndex={2100} opacity={0.75} padding="20px">
+            <div
               style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '640px', maxWidth: '100%', maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
@@ -2829,13 +2827,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: migrationSubmitting ? 'not-allowed' : 'pointer', opacity: migrationSubmitting ? 0.4 : 1 }}>
                   Cancel
                 </button>
-                <button onClick={handleMigration} disabled={migrationSubmitting || !migrationTargetId || migrationPickedIds.size === 0}
-                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (migrationSubmitting || !migrationTargetId || migrationPickedIds.size === 0) ? 'not-allowed' : 'pointer', opacity: (migrationSubmitting || !migrationTargetId || migrationPickedIds.size === 0) ? 0.4 : 1, fontWeight: 600 }}>
+                <Button tone="magic" size="lg" busy={migrationSubmitting} disabled={!migrationTargetId || migrationPickedIds.size === 0} onClick={handleMigration}>
                   {migrationSubmitting ? 'Sending…' : '📤 Send Offers'}
-                </button>
+                </Button>
               </div>
             </div>
-          </div>
+          </ModalBackdrop>
         )
       })()}
 
@@ -2853,9 +2850,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         const remainingIsCommunity = remaining >= 13
         const breakawayIsCommunity = picked >= 13
         return (
-          <div onClick={closeSchismModal}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2100, padding: '20px' }}>
-            <div onClick={e => e.stopPropagation()}
+          <ModalBackdrop onClose={closeSchismModal} zIndex={2100} opacity={0.75} padding="20px">
+            <div
               style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '640px', maxWidth: '100%', maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
@@ -2925,13 +2921,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: schismSubmitting ? 'not-allowed' : 'pointer', opacity: schismSubmitting ? 0.4 : 1 }}>
                   Cancel
                 </button>
-                <button onClick={handleSchism} disabled={schismSubmitting || schismPickedIds.size === 0 || !schismName.trim()}
-                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: (schismSubmitting || schismPickedIds.size === 0 || !schismName.trim()) ? 'not-allowed' : 'pointer', opacity: (schismSubmitting || schismPickedIds.size === 0 || !schismName.trim()) ? 0.4 : 1, fontWeight: 600 }}>
+                <Button tone="magic" size="lg" busy={schismSubmitting} disabled={schismPickedIds.size === 0 || !schismName.trim()} onClick={handleSchism}>
                   {schismSubmitting ? 'Splitting…' : '⛓ Confirm Schism'}
-                </button>
+                </Button>
               </div>
             </div>
-          </div>
+          </ModalBackdrop>
         )
       })()}
 
@@ -2950,9 +2945,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
         const publicStatus = computePublicStatus(c)
         const homesteadPin = c.homestead_pin_id ? pins.find(p => p.id === c.homestead_pin_id) : null
         return (
-          <div onClick={closePublishModal}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
-            <div onClick={e => e.stopPropagation()}
+          <ModalBackdrop onClose={closePublishModal} zIndex={Z_INDEX.modal} opacity={0.75} padding="20px">
+            <div
               style={{ background: '#1a1a1a', border: '1px solid #5a2e5a', borderRadius: '4px', width: '580px', maxWidth: '100%', maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
@@ -3000,13 +2994,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: publishing ? 'not-allowed' : 'pointer', opacity: publishing ? 0.4 : 1 }}>
                   Cancel
                 </button>
-                <button onClick={handlePublish} disabled={publishing}
-                  style={{ padding: '8px 18px', background: '#2a102a', border: '1px solid #5a2e5a', borderRadius: '3px', color: '#d48bd4', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: publishing ? 'not-allowed' : 'pointer', opacity: publishing ? 0.4 : 1, fontWeight: 600 }}>
+                <Button tone="magic" size="lg" busy={publishing} onClick={handlePublish}>
                   {publishing ? 'Publishing…' : world ? 'Update Public Info' : '🌐 Publish'}
-                </button>
+                </Button>
               </div>
             </div>
-          </div>
+          </ModalBackdrop>
         )
       })()}
 
@@ -3029,9 +3022,8 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
           return aMem - bMem || a.name.localeCompare(b.name)
         })
         return (
-          <div onClick={handleCancelAssignment}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
-            <div onClick={e => e.stopPropagation()}
+          <ModalBackdrop onClose={handleCancelAssignment} zIndex={Z_INDEX.modal} opacity={0.75} padding="20px">
+            <div
               style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', width: '520px', maxWidth: '100%', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: '17px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
@@ -3071,14 +3063,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <button onClick={handleCancelAssignment}
                   style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
-                <button onClick={handleSaveAssignment}
-                  disabled={!assignmentPcDraft}
-                  style={{ padding: '8px 16px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: assignmentPcDraft ? 'pointer' : 'not-allowed', opacity: assignmentPcDraft ? 1 : 0.4, fontWeight: 600 }}>
+                <Button tone="confirm" size="lg" disabled={!assignmentPcDraft} onClick={handleSaveAssignment}>
                   Assign
-                </button>
+                </Button>
               </div>
             </div>
-          </div>
+          </ModalBackdrop>
         )
       })()}
 
