@@ -497,6 +497,33 @@ export default function VehiclePage() {
                       style={{ padding: '6px 14px', background: w.shooter_character_id ? '#2a1210' : '#242424', border: `1px solid ${w.shooter_character_id ? '#c0392b' : '#3a3a3a'}`, borderRadius: '3px', color: w.shooter_character_id ? '#f5a89a' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: w.shooter_character_id ? 'pointer' : 'not-allowed' }}>
                       🎯 Attack
                     </button>
+                    {/* Cross-window arc toggle. Broadcasts to the
+                        tactical map's tactical_${campaignId} channel
+                        — it listens for firing_arc_toggle and flips
+                        the cone overlay for every token whose name
+                        matches this vehicle. Disabled when the
+                        weapon has no arc data set (older seeds). */}
+                    {typeof w.mount_angle === 'number' && typeof w.arc_degrees === 'number' && (
+                      <button onClick={() => {
+                          if (!campaignId) return
+                          const ch = supabase.channel(`tactical_${campaignId}`)
+                          ch.subscribe(async (status: string) => {
+                            if (status !== 'SUBSCRIBED') return
+                            await ch.send({
+                              type: 'broadcast',
+                              event: 'firing_arc_toggle',
+                              payload: { vehicleName: vehicle.name, weaponIdx: i },
+                            })
+                            // Tear down right after — this popout
+                            // doesn't otherwise listen on this channel.
+                            await supabase.removeChannel(ch)
+                          })
+                        }}
+                        title="Toggle the firing-arc cone on the tactical map"
+                        style={{ padding: '6px 14px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                        🎯 Show Arc
+                      </button>
+                    )}
                   </div>
                 </div>
               )

@@ -435,6 +435,29 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         // open or closed.
         loadScenes()
       })
+      .on('broadcast', { event: 'firing_arc_toggle' }, (msg: any) => {
+        // Cross-window arc toggle. The /vehicle popout broadcasts
+        // { vehicleName, weaponIdx } when its 🎯 Show Arc button
+        // gets clicked; we resolve the vehicle name to all matching
+        // tokens on the active scene and flip each token+weapon
+        // entry in firingArcs. Same effect as clicking the in-map
+        // toggle, but it works from any window.
+        const p = msg?.payload ?? {}
+        const vehicleName: string | undefined = p.vehicleName
+        const weaponIdx: number | undefined = p.weaponIdx
+        if (!vehicleName || typeof weaponIdx !== 'number') return
+        setFiringArcs(prev => {
+          const next = new Set(prev)
+          for (const tok of tokensRef.current) {
+            if (tok.token_type !== 'object') continue
+            if (tok.name !== vehicleName) continue
+            const key = `${tok.id}:${weaponIdx}`
+            if (next.has(key)) next.delete(key)
+            else next.add(key)
+          }
+          return next
+        })
+      })
       .on('broadcast', { event: 'tactical_zoom' }, (msg: any) => {
         // GM zoom snaps players' view to match (playtest #27). Players
         // can still zoom locally afterwards — the sync only fires when
