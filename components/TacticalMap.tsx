@@ -79,6 +79,20 @@ interface Scene {
   // render. GM sees fog at reduced opacity. Phase 1 of the vision
   // system; sql/tactical-scenes-fog-state.sql.
   fog_state?: Record<string, boolean> | null
+  // Wall/door/window segments. Each segment lives on cell edges
+  // (drawn from intersection to intersection) so a wall is visually
+  // thin instead of occupying a whole cell. See sql/tactical-scenes-walls.sql.
+  walls?: WallSegment[] | null
+}
+
+interface WallSegment {
+  id: string
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  kind: 'wall' | 'door' | 'window'
+  door_open?: boolean   // only meaningful when kind === 'door'
 }
 
 interface Props {
@@ -195,7 +209,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // drag to clear cells. fogPainting = pointer is down + dragging.
   // Persisted to tactical_scenes.fog_state on a debounced write so
   // continuous-drag doesn't hammer the DB.
-  const [fogEditMode, setFogEditMode] = useState<'paint' | 'erase' | 'rect' | null>(null)
+  // The scene-edit mode picker that lives in the (formerly) "Edit Fog"
+  // toolbar. Fog tools (paint/erase/rect) and structure tools
+  // (wall/door/window) all live here so the GM has one consolidated
+  // editor instead of two competing toolbars. Name kept as
+  // `fogEditMode` to avoid churning every callsite — it's "scene
+  // edit mode" in spirit now.
+  const [fogEditMode, setFogEditMode] = useState<'paint' | 'erase' | 'rect' | 'wall' | 'door' | 'window' | null>(null)
   const fogPaintingRef = useRef(false)
   const fogPendingSaveRef = useRef<number | null>(null)
   // Rectangle marquee for the 'rect' fog tool. Both corners are
@@ -204,6 +224,16 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // flipped into fog_state at once.
   const [fogRectStart, setFogRectStart] = useState<{ gx: number; gy: number } | null>(null)
   const [fogRectEnd, setFogRectEnd] = useState<{ gx: number; gy: number } | null>(null)
+  // Segment authoring state. wallDrawStart = the first intersection
+  // the GM clicked; wallDrawHover = current cursor intersection for
+  // the live preview line. On second click we commit the segment;
+  // ESC clears the in-flight draw.
+  const [wallsLocal, setWallsLocal] = useState<WallSegment[]>([])
+  const wallsLocalRef = useRef<WallSegment[]>([])
+  useEffect(() => { wallsLocalRef.current = wallsLocal }, [wallsLocal])
+  const [wallDrawStart, setWallDrawStart] = useState<{ x: number; y: number } | null>(null)
+  const [wallDrawHover, setWallDrawHover] = useState<{ x: number; y: number } | null>(null)
+  const wallsPendingSaveRef = useRef<number | null>(null)
   // Local mirror — the canonical fog state lives on `scene.fog_state`
   // but during a drag we update this immediately and persist on a
   // debounce; reconcile back to scene state when the realtime row
@@ -236,6 +266,55 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const incoming = (scene.fog_state ?? {}) as Record<string, boolean>
     setFogLocal(incoming)
   }, [scene?.id, scene?.fog_state])
+
+  // Same reconcile for wall segments. Authoring is click-based (not
+  // drag), so there's no in-flight gate to worry about.
+  useEffect(() => {
+    if (!scene) return
+    const incoming = (scene.walls ?? []) as WallSegment[]
+    setWallsLocal(incoming)
+  }, [scene?.id, scene?.walls])
+
+  function scheduleWallsPersist() {
+    if (!scene || !isGM) return
+    const sceneId = scene.id
+    if (wallsPendingSaveRef.current != null) {
+      window.clearTimeout(wallsPendingSaveRef.current)
+    }
+    wallsPendingSaveRef.current = window.setTimeout(async () => {
+      wallsPendingSaveRef.current = null
+      await supabase.from('tactical_scenes').update({ walls: wallsLocalRef.current }).eq('id', sceneId)
+    }, 200)
+  }
+
+  // Snap mouse to the nearest cell intersection. Returns coordinates
+  // in cell units — (0,0) = top-left corner of cell (0,0). Used for
+  // wall/door/window segment authoring.
+  function getGridIntersection(e: React.MouseEvent): { x: number; y: number } | null {
+    if (!canvasRef.current || !scene) return null
+    const rect = canvasRef.current.getBoundingClientRect()
+    const cellSize = getCellSize()
+    const mx = (e.clientX - rect.left) / zoom
+    const my = (e.clientY - rect.top) / zoom
+    const x = Math.round(mx / cellSize)
+    const y = Math.round(my / cellSize)
+    if (x < 0 || x > scene.grid_cols || y < 0 || y > scene.grid_rows) return null
+    return { x, y }
+  }
+
+  // Cancel an in-flight wall draw on Escape. Useful when the GM
+  // started a segment and changed their mind.
+  useEffect(() => {
+    if (!wallDrawStart) return
+    function onKey(ev: KeyboardEvent) {
+      if (ev.key === 'Escape') {
+        setWallDrawStart(null)
+        setWallDrawHover(null)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [wallDrawStart])
 
   // Debounced fog persist. Called from paint/erase mouse handlers; we
   // batch up to 300ms of drag activity into one DB update so a smooth
@@ -438,7 +517,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   // Redraw on token/scene changes
   // campaignNpcs/entries are in the dep list so HP damage repaints the pips immediately — missing them meant tokens stayed stale until some other dependency (click, zoom, move) forced a redraw.
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode, fogRectStart, fogRectEnd])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode, fogRectStart, fogRectEnd, wallsLocal, wallDrawStart, wallDrawHover])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
@@ -836,12 +915,17 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const rawFog = fogLocalRef.current
     let fogMap = rawFog
     if (!fogEditMode && Object.keys(rawFog).length > 0) {
-      // Vision blockers — walls (always) + closed doors (when shut).
-      // Windows are explicitly NOT in here so a PC behind glass still
-      // illuminates the cells beyond. Cell-granular Bresenham line
-      // checks per candidate cell mean LoS is per-cell, not per-edge
-      // — good enough for v1; Phase 3 spec walls + raycasting later.
-      const visionBlockers = new Set<string>()
+      // Build the segment + cell-based blocker sets. Both authoring
+      // models coexist:
+      //   • Wall/door/window SEGMENTS (cell edges, thin) — preferred,
+      //     drawn via the toolbar's Wall/Door/Window tools.
+      //   • Wall/door/window OBJECTS (whole-cell tokens, legacy) —
+      //     still respected so existing scenes keep working.
+      const segs = wallsLocalRef.current
+      const visionSegs = segs.filter(s =>
+        s.kind === 'wall' || (s.kind === 'door' && s.door_open === false)
+      )
+      const cellBlockers = new Set<string>()
       for (const tok of tokensRef.current) {
         const blocks = !!tok.is_wall || (tok.is_door && tok.door_open === false)
         if (!blocks) continue
@@ -849,37 +933,54 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         const gh = tok.grid_h ?? 1
         for (let fx = 0; fx < gw; fx++) {
           for (let fy = 0; fy < gh; fy++) {
-            visionBlockers.add(`${tok.grid_x + fx},${tok.grid_y + fy}`)
+            cellBlockers.add(`${tok.grid_x + fx},${tok.grid_y + fy}`)
           }
         }
       }
-      // Bresenham line walk from origin to target; returns true if any
-      // cell BETWEEN them (exclusive of both endpoints) is a blocker.
-      // The target cell itself stays visible so PCs see the wall/door
-      // that's blocking them ("you see the closed door" — fog stops
-      // at the blocker, not before).
-      function lineCrossesBlocker(x0: number, y0: number, x1: number, y1: number): boolean {
-        if (visionBlockers.size === 0) return false
-        if (x0 === x1 && y0 === y1) return false
-        let x = x0, y = y0
-        const dx = Math.abs(x1 - x0)
-        const dy = Math.abs(y1 - y0)
-        const sx = x0 < x1 ? 1 : -1
-        const sy = y0 < y1 ? 1 : -1
+      // Standard "do two segments cross" test (proper intersection,
+      // touching endpoints don't count). Used for both segment LoS
+      // and segment-based movement validation.
+      function segmentsCross(ax: number, ay: number, bx: number, by: number, cx: number, cy: number, dx: number, dy: number): boolean {
+        const ccw = (px: number, py: number, qx: number, qy: number, rx: number, ry: number) =>
+          (qx - px) * (ry - py) - (qy - py) * (rx - px)
+        const d1 = ccw(cx, cy, dx, dy, ax, ay)
+        const d2 = ccw(cx, cy, dx, dy, bx, by)
+        const d3 = ccw(ax, ay, bx, by, cx, cy)
+        const d4 = ccw(ax, ay, bx, by, dx, dy)
+        return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))
+      }
+      // True when ANY vision-blocking thing (segment OR cell) sits on
+      // the line between origin cell center and candidate cell center.
+      function losBlocked(ox: number, oy: number, tx: number, ty: number): boolean {
+        if (ox === tx && oy === ty) return false
+        const ax = ox + 0.5, ay = oy + 0.5
+        const bx = tx + 0.5, by = ty + 0.5
+        // Segment check
+        for (const w of visionSegs) {
+          if (segmentsCross(ax, ay, bx, by, w.x1, w.y1, w.x2, w.y2)) return true
+        }
+        // Legacy cell-block check (Bresenham). Only walks if there's
+        // anything to potentially hit.
+        if (cellBlockers.size === 0) return false
+        let x = ox, y = oy
+        const dx = Math.abs(tx - ox)
+        const dy = Math.abs(ty - oy)
+        const sx = ox < tx ? 1 : -1
+        const sy = oy < ty ? 1 : -1
         let err = dx - dy
         for (let step = 0; step < dx + dy + 2; step++) {
           const e2 = 2 * err
           if (e2 > -dy) { err -= dy; x += sx }
           if (e2 < dx) { err += dx; y += sy }
-          if (x === x1 && y === y1) return false
-          if (visionBlockers.has(`${x},${y}`)) return true
+          if (x === tx && y === ty) return false
+          if (cellBlockers.has(`${x},${y}`)) return true
         }
         return false
       }
       const visible = new Set<string>()
       for (const tok of tokensRef.current) {
         if (tok.token_type === 'object') continue
-        if (!tok.character_id) continue // PC only — NPC vision = Phase 3 work
+        if (!tok.character_id) continue
         const gw = tok.grid_w ?? 1
         const gh = tok.grid_h ?? 1
         const r = VISION_RADIUS_CELLS
@@ -892,7 +993,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                 if (Math.max(Math.abs(dx), Math.abs(dy)) > r) continue
                 const tx = ox + dx
                 const ty = oy + dy
-                if (lineCrossesBlocker(ox, oy, tx, ty)) continue
+                if (losBlocked(ox, oy, tx, ty)) continue
                 visible.add(`${tx},${ty}`)
               }
             }
@@ -1442,6 +1543,87 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       }
     }
 
+    // Wall / door / window segments. Drawn after tokens so they sit
+    // on top of object portraits — important for doors that need to
+    // visually intersect a wall run. Color-coded by kind:
+    //   wall       → solid stone gray, 4px
+    //   door open  → dashed green, 3px
+    //   door closed→ solid red, 4px
+    //   window     → solid sky blue, 3px (with subtle dash)
+    {
+      const segments = wallsLocalRef.current
+      if (segments.length > 0) {
+        const cellW = (s.grid_cols * cellSize) / s.grid_cols
+        const cellH = (s.grid_rows * cellSize) / s.grid_rows
+        ctx.save()
+        ctx.lineCap = 'round'
+        for (const seg of segments) {
+          const x1 = offsetX + seg.x1 * cellW
+          const y1 = offsetY + seg.y1 * cellH
+          const x2 = offsetX + seg.x2 * cellW
+          const y2 = offsetY + seg.y2 * cellH
+          if (seg.kind === 'wall') {
+            ctx.strokeStyle = '#a08e75'
+            ctx.lineWidth = 4
+            ctx.setLineDash([])
+          } else if (seg.kind === 'door') {
+            const open = seg.door_open ?? true
+            ctx.strokeStyle = open ? '#7fc458' : '#c0392b'
+            ctx.lineWidth = open ? 3 : 4
+            ctx.setLineDash(open ? [6, 4] : [])
+          } else {
+            // window
+            ctx.strokeStyle = '#7ab3d4'
+            ctx.lineWidth = 3
+            ctx.setLineDash([4, 3])
+          }
+          ctx.beginPath()
+          ctx.moveTo(x1, y1)
+          ctx.lineTo(x2, y2)
+          ctx.stroke()
+        }
+        // Live preview of the in-flight segment.
+        if (wallDrawStart && wallDrawHover && (fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window')) {
+          const x1 = offsetX + wallDrawStart.x * cellW
+          const y1 = offsetY + wallDrawStart.y * cellH
+          const x2 = offsetX + wallDrawHover.x * cellW
+          const y2 = offsetY + wallDrawHover.y * cellH
+          ctx.strokeStyle = fogEditMode === 'wall' ? '#a08e75'
+            : fogEditMode === 'door' ? '#7fc458'
+            : '#7ab3d4'
+          ctx.globalAlpha = 0.55
+          ctx.lineWidth = 4
+          ctx.setLineDash([4, 4])
+          ctx.beginPath()
+          ctx.moveTo(x1, y1)
+          ctx.lineTo(x2, y2)
+          ctx.stroke()
+          ctx.globalAlpha = 1
+        }
+        // Endpoint markers when in a draw mode — small dots at each
+        // segment endpoint so the GM can see snap points.
+        if (fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window') {
+          ctx.setLineDash([])
+          ctx.fillStyle = 'rgba(196,167,240,0.85)'
+          for (const seg of segments) {
+            ;[[seg.x1, seg.y1], [seg.x2, seg.y2]].forEach(([x, y]) => {
+              ctx.beginPath()
+              ctx.arc(offsetX + x * cellW, offsetY + y * cellH, 3, 0, Math.PI * 2)
+              ctx.fill()
+            })
+          }
+          if (wallDrawStart) {
+            ctx.fillStyle = '#c4a7f0'
+            ctx.beginPath()
+            ctx.arc(offsetX + wallDrawStart.x * cellW, offsetY + wallDrawStart.y * cellH, 5, 0, Math.PI * 2)
+            ctx.fill()
+          }
+        }
+        ctx.setLineDash([])
+        ctx.restore()
+      }
+    }
+
     // Rectangle marquee preview — draws while the GM is dragging
     // the Rect fog tool. On mouseup the rectangle is committed to
     // fog_state and the preview clears.
@@ -1519,6 +1701,115 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   function handleMouseDown(e: React.MouseEvent) {
+    // Right-click in any structure-edit mode → delete the segment
+    // closest to the cursor (within ~half a cell). Lets the GM fix
+    // mistakes without leaving the toolbar.
+    if (fogEditMode && isGM && e.button === 2 && (fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window')) {
+      e.preventDefault()
+      if (!canvasRef.current || !scene) return
+      const rect = canvasRef.current.getBoundingClientRect()
+      const cellSize = getCellSize()
+      const mx = (e.clientX - rect.left) / zoom / cellSize
+      const my = (e.clientY - rect.top) / zoom / cellSize
+      // Find nearest segment by point-to-segment distance.
+      let bestId: string | null = null
+      let bestDist = 0.5 // half-cell threshold
+      for (const w of wallsLocalRef.current) {
+        const dx = w.x2 - w.x1
+        const dy = w.y2 - w.y1
+        const len2 = dx * dx + dy * dy
+        if (len2 < 1e-6) continue
+        let t = ((mx - w.x1) * dx + (my - w.y1) * dy) / len2
+        t = Math.max(0, Math.min(1, t))
+        const px = w.x1 + t * dx
+        const py = w.y1 + t * dy
+        const d = Math.hypot(mx - px, my - py)
+        if (d < bestDist) { bestDist = d; bestId = w.id }
+      }
+      if (bestId) {
+        setWallsLocal(prev => {
+          const next = prev.filter(w => w.id !== bestId)
+          wallsLocalRef.current = next
+          return next
+        })
+        scheduleWallsPersist()
+      }
+      return
+    }
+    // Door SEGMENT click — toggle open/closed when not in any
+    // edit mode (gameplay interaction, not authoring). Detection
+    // is point-to-segment distance against door segments only.
+    if (!fogEditMode && e.button === 0 && wallsLocalRef.current.some(w => w.kind === 'door')) {
+      if (canvasRef.current && scene) {
+        const rect = canvasRef.current.getBoundingClientRect()
+        const cellSize = getCellSize()
+        const mx = (e.clientX - rect.left) / zoom / cellSize
+        const my = (e.clientY - rect.top) / zoom / cellSize
+        let bestId: string | null = null
+        let bestDist = 0.3 // tighter threshold so a normal click on a token doesn't accidentally toggle a nearby door
+        for (const w of wallsLocalRef.current) {
+          if (w.kind !== 'door') continue
+          const dx = w.x2 - w.x1
+          const dy = w.y2 - w.y1
+          const len2 = dx * dx + dy * dy
+          if (len2 < 1e-6) continue
+          let t = ((mx - w.x1) * dx + (my - w.y1) * dy) / len2
+          t = Math.max(0, Math.min(1, t))
+          const px = w.x1 + t * dx
+          const py = w.y1 + t * dy
+          const d = Math.hypot(mx - px, my - py)
+          if (d < bestDist) { bestDist = d; bestId = w.id }
+        }
+        if (bestId) {
+          setWallsLocal(prev => {
+            const next = prev.map(w => w.id === bestId ? { ...w, door_open: !(w.door_open ?? true) } : w)
+            wallsLocalRef.current = next
+            return next
+          })
+          scheduleWallsPersist()
+          return
+        }
+      }
+    }
+    // Wall/door/window segment authoring. First click = start point;
+    // second click = end point (commit). The preview line follows the
+    // cursor between clicks. ESC cancels (handled in the keydown
+    // effect above).
+    if (fogEditMode && isGM && e.button === 0 && (fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window')) {
+      const inter = getGridIntersection(e)
+      if (!inter) return
+      if (!wallDrawStart) {
+        setWallDrawStart(inter)
+        setWallDrawHover(inter)
+        return
+      }
+      // Second click — commit the segment if it's not zero-length.
+      if (inter.x === wallDrawStart.x && inter.y === wallDrawStart.y) {
+        // Same point — treat as cancel.
+        setWallDrawStart(null)
+        setWallDrawHover(null)
+        return
+      }
+      const newSeg: WallSegment = {
+        id: crypto.randomUUID(),
+        x1: wallDrawStart.x, y1: wallDrawStart.y,
+        x2: inter.x, y2: inter.y,
+        kind: fogEditMode,
+        door_open: fogEditMode === 'door' ? true : undefined,
+      }
+      setWallsLocal(prev => {
+        const next = [...prev, newSeg]
+        wallsLocalRef.current = next
+        return next
+      })
+      scheduleWallsPersist()
+      // Chain — pre-seed the next segment from the just-clicked
+      // endpoint so the GM can draw an L or run-of-walls without
+      // re-clicking. Press ESC or pick a different tool to stop.
+      setWallDrawStart(inter)
+      setWallDrawHover(inter)
+      return
+    }
     // Fog edit mode — paint or erase the cell under the cursor and
     // start tracking drag so handleMouseMove fills cells along the
     // drag path. Checked BEFORE every other mode so the GM can paint
@@ -1636,6 +1927,29 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           if (closedDoorAtDest) {
             alert('That door is closed. Open it first or pick a different destination.')
             return
+          }
+          // Wall/door/window SEGMENT crossing check. Walls + closed
+          // doors + windows all block movement (windows are glass —
+          // you don't walk through them). Open doors pass.
+          const moveSegs = wallsLocalRef.current.filter(s =>
+            s.kind === 'wall' || s.kind === 'window' || (s.kind === 'door' && s.door_open === false)
+          )
+          if (moveSegs.length > 0) {
+            const ax = moveTok.grid_x + 0.5, ay = moveTok.grid_y + 0.5
+            const bx = pos.gx + 0.5, by = pos.gy + 0.5
+            const ccw = (px: number, py: number, qx: number, qy: number, rx: number, ry: number) =>
+              (qx - px) * (ry - py) - (qy - py) * (rx - px)
+            const crosses = moveSegs.some(w => {
+              const d1 = ccw(w.x1, w.y1, w.x2, w.y2, ax, ay)
+              const d2 = ccw(w.x1, w.y1, w.x2, w.y2, bx, by)
+              const d3 = ccw(ax, ay, bx, by, w.x1, w.y1)
+              const d4 = ccw(ax, ay, bx, by, w.x2, w.y2)
+              return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))
+            })
+            if (crosses) {
+              alert('A wall or closed door blocks that path. Pick a destination on this side.')
+              return
+            }
           }
           if (dist > 0 && dist <= moveCells && !occupied.has(`${pos.gx},${pos.gy}`)) {
             // Animate and move
@@ -1762,6 +2076,18 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   function handleMouseMove(e: React.MouseEvent) {
+    // Wall draw preview — when a wallDrawStart exists, the moving
+    // cursor traces a live segment to the nearest intersection. Cheap
+    // state update; render is gated on wallDrawHover changes.
+    if (wallDrawStart && (fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window')) {
+      const inter = getGridIntersection(e)
+      if (inter && (!wallDrawHover || wallDrawHover.x !== inter.x || wallDrawHover.y !== inter.y)) {
+        setWallDrawHover(inter)
+      }
+      // Don't return — fall through is fine, but no other handler
+      // should fire while in segment mode.
+      return
+    }
     // Fog drag — extend the paint/erase from mousedown along the
     // cursor path. We touch each unique cell at most once per drag
     // so re-entering a cell mid-drag doesn't undo the operation.
@@ -2246,6 +2572,28 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   Erase
                 </button>
                 <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
+                {/* Structure tools — author thin wall/door/window
+                    segments on cell edges. Click two intersections to
+                    place a segment; segments chain (the second click
+                    becomes the next segment's start) so an L-shaped
+                    wall is two clicks. ESC or pick a different tool
+                    to stop. Right-click any segment to delete it. */}
+                <button onClick={() => { setFogEditMode('wall'); setWallDrawStart(null) }}
+                  title="Draw walls — click intersection-to-intersection. Right-click a segment to delete."
+                  style={{ padding: '4px 10px', background: fogEditMode === 'wall' ? '#2a2010' : '#1a1a1a', border: `1px solid ${fogEditMode === 'wall' ? '#a08e75' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'wall' ? '#a08e75' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                  🧱 Wall
+                </button>
+                <button onClick={() => { setFogEditMode('door'); setWallDrawStart(null) }}
+                  title="Draw doors. Players click them mid-game to open/close."
+                  style={{ padding: '4px 10px', background: fogEditMode === 'door' ? '#1a2e10' : '#1a1a1a', border: `1px solid ${fogEditMode === 'door' ? '#7fc458' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'door' ? '#7fc458' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                  🚪 Door
+                </button>
+                <button onClick={() => { setFogEditMode('window'); setWallDrawStart(null) }}
+                  title="Draw windows — block movement, vision passes through."
+                  style={{ padding: '4px 10px', background: fogEditMode === 'window' ? '#0f1a2e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'window' ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'window' ? '#7ab3d4' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                  🪟 Window
+                </button>
+                <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
                 <button onClick={() => {
                     if (!scene) return
                     const all: Record<string, boolean> = {}
@@ -2281,6 +2629,15 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onDoubleClick={handleDoubleClick}
+          onContextMenu={e => {
+            // Right-click in any structure-edit mode is the delete
+            // gesture for nearest segment — handled in handleMouseDown.
+            // Suppress the browser menu so the GM doesn't see the
+            // right-click options pop up over the map.
+            if (fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window') {
+              e.preventDefault()
+            }
+          }}
           onWheel={undefined}
           style={{
             display: 'block',
