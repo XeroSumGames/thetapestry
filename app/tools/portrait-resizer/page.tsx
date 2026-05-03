@@ -18,6 +18,20 @@ const subLabel: React.CSSProperties = { fontSize: '13px', color: '#cce0f5', font
 
 interface Circle { cx: number; cy: number; r: number } // in display coords
 
+// Each successful batch upload, kept around so the user can re-crop
+// any that auto-center missed. Holds the source File for re-processing
+// + the storage paths so re-uploads overwrite in place (same URL,
+// no counter bump, no new portrait_bank row).
+interface BatchEntry {
+  id: string
+  file: File
+  fileName: string
+  number: number
+  gender: Gender
+  paths: { p256: string; p56: string; p32: string }
+  previewUrl: string // ObjectURL — revoked when replaced or on unmount
+}
+
 export default function PortraitResizerPage() {
   const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -45,6 +59,14 @@ export default function PortraitResizerPage() {
   const [batchRunning, setBatchRunning] = useState(false)
   const [batchProgress, setBatchProgress] = useState<{ done: number; total: number; current: string }>({ done: 0, total: 0, current: '' })
   const [batchResults, setBatchResults] = useState<{ ok: number; failed: { name: string; error: string }[] }>({ ok: 0, failed: [] })
+  // Successful batch uploads — rendered as a thumbnail grid below the
+  // batch panel so the user can spot any that auto-center cropped
+  // poorly and re-do them via the single-image editor.
+  const [batchEntries, setBatchEntries] = useState<BatchEntry[]>([])
+  // When set, the single-image editor is in re-crop mode for this
+  // entry. Save writes back to entry.paths instead of incrementing
+  // the counter; metadata row stays put.
+  const [recropTarget, setRecropTarget] = useState<BatchEntry | null>(null)
   // Thriver-only gate. The tool uploads into the public portrait-bank
   // bucket + bumps platform-wide counters, so signed-in randos
   // shouldn't be able to add or replace official portraits.
@@ -216,6 +238,7 @@ export default function PortraitResizerPage() {
     setFileSizeKB(0)
     setError(null)
     setQuality(0.85)
+    setRecropTarget(null)
   }
 
   const nextNumber = counts[gender] + 1
@@ -298,6 +321,60 @@ export default function PortraitResizerPage() {
     setUploadStatus('success')
     setTimeout(() => setUploadStatus('idle'), 2500)
   }
+
+  // Re-crop an existing batch entry. Loads the original file into the
+  // editor + flips on re-crop mode so Save overwrites at the entry's
+  // storage paths instead of incrementing the counter.
+  function startRecrop(entry: BatchEntry) {
+    setRecropTarget(entry)
+    handleFile(entry.file)
+    // Scroll the editor into view — it renders far below the batch
+    // panel once an image is loaded.
+    setTimeout(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+    }, 50)
+  }
+
+  async function handleSaveRecrop() {
+    if (!recropTarget) return
+    setUploadStatus('uploading')
+    try {
+      const [b256, b56, b32] = await Promise.all([
+        renderCanvasAt(256), renderCanvasAt(56), renderCanvasAt(32),
+      ])
+      if (!b256 || !b56 || !b32) { setError('Failed to render one or more sizes.'); setUploadStatus('idle'); return }
+      const ups = await Promise.all([
+        supabase.storage.from('portrait-bank').upload(recropTarget.paths.p256, b256, { contentType: 'image/jpeg', upsert: true }),
+        supabase.storage.from('portrait-bank').upload(recropTarget.paths.p56, b56, { contentType: 'image/jpeg', upsert: true }),
+        supabase.storage.from('portrait-bank').upload(recropTarget.paths.p32, b32, { contentType: 'image/jpeg', upsert: true }),
+      ])
+      const upErr = ups.find(u => u.error)
+      if (upErr?.error) { setError(`Re-upload failed: ${upErr.error.message}`); setUploadStatus('idle'); return }
+      // Swap the thumbnail's ObjectURL — old one is no longer used.
+      const newPreview = URL.createObjectURL(b256)
+      setBatchEntries(prev => prev.map(e => {
+        if (e.id !== recropTarget.id) return e
+        URL.revokeObjectURL(e.previewUrl)
+        return { ...e, previewUrl: newPreview }
+      }))
+      setUploadStatus('success')
+      setTimeout(() => setUploadStatus('idle'), 2500)
+      // Close the editor + clear re-crop intent.
+      setRecropTarget(null)
+      reset()
+    } catch (err: any) {
+      setError(`Re-upload error: ${err?.message ?? 'unknown'}`); setUploadStatus('idle')
+    }
+  }
+
+  // Revoke any outstanding ObjectURLs on unmount so the browser can
+  // free the underlying Blobs.
+  useEffect(() => {
+    return () => {
+      batchEntries.forEach(e => URL.revokeObjectURL(e.previewUrl))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Render an image to a square JPEG blob using a centered, max-radius
   // circle crop. Used by the batch mode where there's no draggable
@@ -392,6 +469,19 @@ export default function PortraitResizerPage() {
         }
         results.ok++
         setCounts(prev => ({ ...prev, [gender]: n }))
+        // Stash the entry so it shows up in the re-crop grid. Use the
+        // 256 blob as the thumbnail source (cheap ObjectURL — revoked
+        // when the entry is re-cropped or the component unmounts).
+        const entry: BatchEntry = {
+          id: `${gender}-${n}`,
+          file,
+          fileName: file.name,
+          number: n,
+          gender,
+          paths: { p256: path256, p56: path56, p32: path32 },
+          previewUrl: URL.createObjectURL(b256),
+        }
+        setBatchEntries(prev => [...prev, entry])
       } catch (err: any) {
         results.failed.push({ name: file.name, error: err?.message ?? 'unknown' })
       }
@@ -445,6 +535,38 @@ export default function PortraitResizerPage() {
                 {batchResults.failed.map(f => `${f.name}: ${f.error}`).join('\n')}
               </pre>
             )}
+          </div>
+        )}
+
+        {/* Re-crop grid — every successful batch upload renders here so
+            the user can spot any auto-center misses and fix them. Click
+            Re-crop to load the source file into the editor below in
+            re-crop mode (Save overwrites the existing storage paths
+            instead of incrementing the counter). */}
+        {batchEntries.length > 0 && (
+          <div style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid #2e2e5a' }}>
+            <div style={{ ...subLabel, marginBottom: '8px' }}>Uploaded — click Re-crop to fix any that auto-center missed</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '10px' }}>
+              {batchEntries.map(entry => {
+                const active = recropTarget?.id === entry.id
+                return (
+                  <div key={entry.id}
+                    style={{ background: '#0a0a0a', border: `1px solid ${active ? '#c0392b' : '#2e2e2e'}`, borderRadius: '3px', padding: '6px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={entry.previewUrl} alt={entry.fileName}
+                      width={104} height={104}
+                      style={{ display: 'block', borderRadius: '50%', border: `2px solid ${active ? '#c0392b' : '#3a3a3a'}` }} />
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '108px' }}>
+                      NPC-{entry.gender === 'man' ? 'MAN' : 'WOMAN'}-{pad3(entry.number)}
+                    </div>
+                    <button type="button" onClick={() => startRecrop(entry)} disabled={batchRunning || uploadStatus === 'uploading'}
+                      style={{ ...btnSecondary, padding: '4px 10px', fontSize: '13px', width: '100%', cursor: batchRunning || uploadStatus === 'uploading' ? 'not-allowed' : 'pointer', opacity: batchRunning || uploadStatus === 'uploading' ? 0.5 : 1 }}>
+                      {active ? '✎ Editing…' : '✎ Re-crop'}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -617,7 +739,34 @@ export default function PortraitResizerPage() {
             </div>
           </div>
 
-          {/* Gender toggle + actions */}
+          {/* Re-crop banner — when the editor is in re-crop mode for a
+              batch entry, the gender toggle is suppressed (gender is
+              fixed by the entry) and the action button overwrites the
+              existing storage paths. */}
+          {recropTarget && (
+            <div style={{ ...panel, background: '#2a1210', border: '1px solid #c0392b' }}>
+              <div style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '8px' }}>
+                ✎ Re-crop mode — overwriting NPC-{recropTarget.gender === 'man' ? 'MAN' : 'WOMAN'}-{pad3(recropTarget.number)}
+              </div>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <button type="button" onClick={handleSaveRecrop} disabled={uploadStatus === 'uploading'}
+                  style={{ ...btnPrimary, opacity: uploadStatus === 'uploading' ? 0.6 : 1, cursor: uploadStatus === 'uploading' ? 'wait' : 'pointer' }}>
+                  {uploadStatus === 'uploading' ? '⏳ Saving…' : '💾 Save Crop (overwrite)'}
+                </button>
+                <button type="button" onClick={reset} style={btnSecondary}>Cancel</button>
+                {uploadStatus === 'success' && (
+                  <span style={{ color: '#7fc458', fontSize: '13px', fontFamily: '"Carlito", sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✓ Re-cropped</span>
+                )}
+              </div>
+              <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '8px' }}>
+                Save replaces the 256/56/32 px files at the same storage paths. URL stays identical, no new portrait_bank row, no counter bump.
+              </div>
+            </div>
+          )}
+
+          {/* Gender toggle + actions — hidden in re-crop mode (the
+              re-crop banner above owns the action surface). */}
+          {!recropTarget && (
           <div style={panel}>
             <div style={h2Style}>NPC Gender</div>
             <div style={{ display: 'flex', gap: '6px', marginBottom: '1rem' }}>
@@ -659,6 +808,7 @@ export default function PortraitResizerPage() {
               Each download uploads 256/56/32px versions to the shared portrait bank for random NPC assignment.
             </div>
           </div>
+          )}
         </>
       )}
 

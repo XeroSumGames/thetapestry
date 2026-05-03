@@ -43,8 +43,8 @@ Each of these I can open a file and start typing on right now.
 ### Verify post-launch (no engineering work pending)
 - **Funnel event instrumentation** — 11 events shipped (`2b694aa`): whisper_posted, community_created, module_published, recruit_attempted, morale_check_run, forum_thread_created, war_story_published, lfg_post_created, lfg_interest_pinged, npc_revealed, pin_revealed, character_evolved. Once production traffic warms, query `user_events` to confirm each fires + payload shape is useful. Pure playtesting, not work.
 
-### Need Xero design call
-- **Player-facing NPC card on Show All click** — when a GM hits "Show All" and an unintroduced NPC pops into the player's roster, what does the player see when they click it? Already shows portrait, name, type, status, First Impression CMod, Recruit button. Open question: do we add a `description` field, or a "Demand introduction" Recruit-style button, or something else? Has been blocked on this design call across multiple sessions.
+### ~~Need Xero design call~~ — RESOLVED 2026-05-03
+- ✅ **Player-facing NPC card on Show All click** — closed. `public_description` shipped (`abeae08`); "Demand introduction" killed by Xero ("a dumb fucking idea"); un-introduced display already handled; GM notes stay strictly GM-only. Card is fine as-is.
 
 ### King's Crossroads Mall content
 In progress (off this list).
