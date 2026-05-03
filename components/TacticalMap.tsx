@@ -2703,6 +2703,28 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   Clear All
                 </button>
                 <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
+                {/* Hint banner — shown only in structure-edit modes
+                    so the GM knows right-click + clear-walls exist
+                    without digging through tooltips. */}
+                {(fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window') && (
+                  <>
+                    <span title="Right-click any segment to delete it"
+                      style={{ padding: '4px 8px', background: 'transparent', border: '1px dashed #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                      ⌫ Right-click to delete
+                    </span>
+                    <button onClick={() => {
+                        if (!confirm('Clear EVERY wall, door, and window from this scene?')) return
+                        setWallsLocal([])
+                        wallsLocalRef.current = []
+                        scheduleWallsPersist()
+                      }}
+                      title="Wipe all wall/door/window segments on this scene"
+                      style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      Clear Walls
+                    </button>
+                    <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
+                  </>
+                )}
                 <button onClick={() => setFogEditMode(null)}
                   title="Exit fog editing — players see fog as-painted"
                   style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
