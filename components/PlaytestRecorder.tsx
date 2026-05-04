@@ -102,27 +102,34 @@ export default function PlaytestRecorder() {
     window.addEventListener('unhandledrejection', onRejection)
 
     // ── console.error / console.warn pass-through capture ────────────────
+    // Cap the deep-cloned snapshot of each arg at ~10 KB so a stray
+    // console.error(giantState) can't stall the main thread or balloon
+    // the buffer.
+    const MAX_ARG_BYTES = 10_000
+    const captureArg = (a: unknown): unknown => {
+      if (a instanceof Error) return { message: a.message, stack: a.stack?.slice(0, 1500) }
+      if (typeof a !== 'object' || a === null) return String(a)
+      try {
+        const json = JSON.stringify(a)
+        if (json.length > MAX_ARG_BYTES) {
+          return { _truncated: true, size: json.length, preview: json.slice(0, MAX_ARG_BYTES) + '…' }
+        }
+        return JSON.parse(json)
+      } catch {
+        return String(a)
+      }
+    }
     const origError = console.error
     const origWarn = console.warn
     console.error = function(...args: unknown[]) {
       try {
-        record('console-error', {
-          args: args.map(a => {
-            if (a instanceof Error) return { message: a.message, stack: a.stack?.slice(0, 1500) }
-            if (typeof a === 'object') { try { return JSON.parse(JSON.stringify(a)) } catch { return String(a) } }
-            return String(a)
-          }),
-          path: window.location.pathname,
-        })
+        record('console-error', { args: args.map(captureArg), path: window.location.pathname })
       } catch {}
       return origError.apply(console, args)
     }
     console.warn = function(...args: unknown[]) {
       try {
-        record('console-warn', {
-          args: args.map(a => typeof a === 'object' ? (() => { try { return JSON.parse(JSON.stringify(a)) } catch { return String(a) } })() : String(a)),
-          path: window.location.pathname,
-        })
+        record('console-warn', { args: args.map(captureArg), path: window.location.pathname })
       } catch {}
       return origWarn.apply(console, args)
     }

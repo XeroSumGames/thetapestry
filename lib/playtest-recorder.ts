@@ -8,6 +8,11 @@
 
 const MAX_EVENTS = 2000
 const STORAGE_KEY = 'tapestry_playtest_buffer'
+// Min ms between localStorage writes — protects against jank if something
+// throws/marks in a tight loop (each persist is a sync JSON.stringify of
+// up to 500 events).
+const PERSIST_THROTTLE_MS = 2000
+let lastPersistMs = 0
 
 export type PlaytestEvent = {
   t: string            // ISO timestamp
@@ -77,8 +82,13 @@ export function record(kind: PlaytestEvent['kind'], data: Record<string, unknown
   if (r.buffer.length > MAX_EVENTS) r.buffer.splice(0, r.buffer.length - MAX_EVENTS)
   // Persist to localStorage on errors and marks — cheap insurance against
   // refresh wiping the buffer right when something interesting happened.
+  // Throttled so a runaway error loop can't pin the main thread.
   if (kind === 'error' || kind === 'rejection' || kind === 'mark') {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(r.buffer.slice(-500))) } catch {}
+    const now = Date.now()
+    if (now - lastPersistMs >= PERSIST_THROTTLE_MS) {
+      lastPersistMs = now
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(r.buffer.slice(-500))) } catch {}
+    }
   }
 }
 
