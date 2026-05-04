@@ -310,6 +310,60 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     setWallsLocal(incoming)
   }, [scene?.id, scene?.walls])
 
+  // Split any wall segments that overlap a new door/window/wall
+  // segment on the same axis-aligned line. Returns the rewritten
+  // array of pre-existing walls (with overlapping pieces sliced
+  // out). The new segment itself is NOT included — caller appends.
+  // Diagonal walls aren't split for v1 (no rotated buildings yet).
+  function splitOverlappingSegments(existing: WallSegment[], inserted: WallSegment): WallSegment[] {
+    const result: WallSegment[] = []
+    const isHoriz = (s: WallSegment) => s.y1 === s.y2
+    const isVert  = (s: WallSegment) => s.x1 === s.x2
+    const insHoriz = isHoriz(inserted)
+    const insVert  = isVert(inserted)
+    if (!insHoriz && !insVert) return existing.slice() // diagonal — skip split
+    for (const w of existing) {
+      // Only walls auto-split. Doors and windows stay intact when a
+      // new segment is drawn over them — the GM can manually right-
+      // click delete those if they truly want to replace.
+      if (w.kind !== 'wall') { result.push(w); continue }
+      const wHoriz = isHoriz(w)
+      const wVert  = isVert(w)
+      // Same-axis check.
+      if (insHoriz && wHoriz && w.y1 === inserted.y1) {
+        const wMin = Math.min(w.x1, w.x2)
+        const wMax = Math.max(w.x1, w.x2)
+        const iMin = Math.min(inserted.x1, inserted.x2)
+        const iMax = Math.max(inserted.x1, inserted.x2)
+        if (iMax <= wMin || iMin >= wMax) { result.push(w); continue }
+        const y = w.y1
+        if (iMin > wMin) {
+          result.push({ id: crypto.randomUUID(), x1: wMin, y1: y, x2: iMin, y2: y, kind: 'wall' })
+        }
+        if (iMax < wMax) {
+          result.push({ id: crypto.randomUUID(), x1: iMax, y1: y, x2: wMax, y2: y, kind: 'wall' })
+        }
+        // (No else — wall is fully consumed by overlap; drop it.)
+      } else if (insVert && wVert && w.x1 === inserted.x1) {
+        const wMin = Math.min(w.y1, w.y2)
+        const wMax = Math.max(w.y1, w.y2)
+        const iMin = Math.min(inserted.y1, inserted.y2)
+        const iMax = Math.max(inserted.y1, inserted.y2)
+        if (iMax <= wMin || iMin >= wMax) { result.push(w); continue }
+        const x = w.x1
+        if (iMin > wMin) {
+          result.push({ id: crypto.randomUUID(), x1: x, y1: wMin, x2: x, y2: iMin, kind: 'wall' })
+        }
+        if (iMax < wMax) {
+          result.push({ id: crypto.randomUUID(), x1: x, y1: iMax, x2: x, y2: wMax, kind: 'wall' })
+        }
+      } else {
+        result.push(w)
+      }
+    }
+    return result
+  }
+
   function scheduleWallsPersist() {
     if (!scene || !isGM) return
     const sceneId = scene.id
@@ -2096,7 +2150,16 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           : undefined,
       }
       setWallsLocal(prev => {
-        const next = [...prev, newSeg]
+        // Auto-split: when a new segment overlaps an existing wall
+        // segment on the same axis-aligned line, the new segment
+        // "punches a hole" in the wall — split the wall into the
+        // pieces NOT under the new segment. Without this, a GM who
+        // draws a continuous wall and then drops a door onto it
+        // ends up with the wall AND the door coexisting at the
+        // door's position, so the wall keeps blocking movement +
+        // vision even though a door is "there."
+        const split = splitOverlappingSegments(prev, newSeg)
+        const next = [...split, newSeg]
         wallsLocalRef.current = next
         return next
       })
