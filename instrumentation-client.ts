@@ -1,11 +1,7 @@
-// Sentry — browser-side error capture. Loaded by Next.js automatically
-// because the file lives at project root with this exact name.
-// See sentry.server.config.ts + sentry.edge.config.ts for the other
-// runtimes; all three share the same DSN env var.
-//
-// DSN comes from NEXT_PUBLIC_SENTRY_DSN. When not set (local dev or
-// pre-account-creation), Sentry initializes as a no-op — no errors
-// thrown, no network traffic. Safe to ship without setting the env var.
+// Sentry — browser-side error capture. Modern @sentry/nextjs (v8+)
+// auto-loads this file (NOT sentry.client.config.ts, which was the
+// pre-v8 name). DSN comes from NEXT_PUBLIC_SENTRY_DSN; when not set
+// (local dev or pre-account-creation), this is a no-op.
 
 import * as Sentry from '@sentry/nextjs'
 
@@ -34,3 +30,8 @@ if (dsn) {
     ],
   })
 }
+
+// Required for Next.js 15+ — captures router transition spans. Even
+// with tracesSampleRate=0 this is a cheap no-op; keeping it future-
+// proofs the wiring if traces get turned on later.
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart
