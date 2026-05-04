@@ -1045,7 +1045,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const visible = new Set<string>()
       for (const tok of tokensRef.current) {
         if (tok.token_type === 'object') continue
-        if (!tok.character_id) continue
+        // Any non-object token illuminates as long as it's visible.
+        // Hidden NPCs (is_visible=false) explicitly don't, so a
+        // GM's stashed enemy doesn't reveal its location through the
+        // fog. PCs always have is_visible=true; revealed NPCs do too.
+        // (Was character_id-gated before — that incorrectly skipped
+        // NPC-allocated PC tokens, the GM-controlled-PC pattern, and
+        // any "PC token without a character_id link.")
+        if (tok.is_visible === false) continue
         const gw = tok.grid_w ?? 1
         const gh = tok.grid_h ?? 1
         // Per-token override (column added in
