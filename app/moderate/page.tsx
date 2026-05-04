@@ -53,7 +53,7 @@ const navLink: React.CSSProperties = {
 }
 
 export default function ModerationPage() {
-  const [section, setSection] = useState<'rumors' | 'users' | 'npcs' | 'communities' | 'modules' | 'forums' | 'warstories' | 'lfg'>('users')
+  const [section, setSection] = useState<'rumors' | 'users' | 'npcs' | 'communities' | 'modules' | 'forums' | 'warstories' | 'lfg' | 'bugs'>('users')
   const [pins, setPins] = useState<Pin[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending')
@@ -90,13 +90,15 @@ export default function ModerationPage() {
   // when there's something waiting. Users counts "new in last 7
   // days" (no moderation status concept there); rumors / npcs /
   // communities count actual pending rows.
-  const [pendingCounts, setPendingCounts] = useState<{ users: number; rumors: number; npcs: number; communities: number; modules: number; forums: number; warstories: number; lfg: number }>({ users: 0, rumors: 0, npcs: 0, communities: 0, modules: 0, forums: 0, warstories: 0, lfg: 0 })
+  const [pendingCounts, setPendingCounts] = useState<{ users: number; rumors: number; npcs: number; communities: number; modules: number; forums: number; warstories: number; lfg: number; bugs: number }>({ users: 0, rumors: 0, npcs: 0, communities: 0, modules: 0, forums: 0, warstories: 0, lfg: 0, bugs: 0 })
+  const [bugs, setBugs] = useState<any[]>([])
+  const [bugsLoading, setBugsLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
   async function loadPendingCounts() {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const [rumorsRes, npcsRes, commsRes, usersRes, modulesRes, forumsRes, warstoriesRes, lfgRes] = await Promise.all([
+    const [rumorsRes, npcsRes, commsRes, usersRes, modulesRes, forumsRes, warstoriesRes, lfgRes, bugsRes] = await Promise.all([
       supabase.from('map_pins').select('id', { count: 'exact', head: true }).eq('pin_type', 'rumor').eq('status', 'pending'),
       supabase.from('world_npcs').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('world_communities').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
@@ -105,6 +107,7 @@ export default function ModerationPage() {
       supabase.from('forum_threads').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
       supabase.from('war_stories').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
       supabase.from('lfg_posts').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
+      supabase.from('bug_reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
     ])
     setPendingCounts({
       rumors: rumorsRes.count ?? 0,
@@ -115,7 +118,25 @@ export default function ModerationPage() {
       forums: forumsRes.count ?? 0,
       warstories: warstoriesRes.count ?? 0,
       lfg: lfgRes.count ?? 0,
+      bugs: bugsRes.count ?? 0,
     })
+  }
+
+  async function loadBugs() {
+    setBugsLoading(true)
+    const { data } = await supabase
+      .from('bug_reports')
+      .select('id, reporter_id, reporter_email, reporter_name, page_url, description, user_agent, status, thriver_notes, created_at')
+      .order('created_at', { ascending: false })
+      .limit(100)
+    setBugs(data ?? [])
+    setBugsLoading(false)
+  }
+
+  async function setBugStatus(bugId: string, nextStatus: 'open' | 'triaged' | 'fixed' | 'wontfix') {
+    await supabase.from('bug_reports').update({ status: nextStatus }).eq('id', bugId)
+    setBugs(prev => prev.map(b => b.id === bugId ? { ...b, status: nextStatus } : b))
+    void loadPendingCounts()
   }
 
   useEffect(() => {
@@ -150,6 +171,7 @@ export default function ModerationPage() {
     if (section === 'forums') loadForumThreads()
     if (section === 'warstories') loadWarStories()
     if (section === 'lfg') loadLfgPosts()
+    if (section === 'bugs') loadBugs()
   }, [section, filter])
 
   async function loadWorldNpcs() {
@@ -558,7 +580,7 @@ export default function ModerationPage() {
           tab keeps its red accent so the user can tell where they
           are. Count badge appears next to the label. */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        {(['users', 'rumors', 'npcs', 'communities', 'modules', 'forums', 'warstories', 'lfg'] as const).map(s => {
+        {(['users', 'rumors', 'npcs', 'communities', 'modules', 'forums', 'warstories', 'lfg', 'bugs'] as const).map(s => {
           const count = pendingCounts[s]
           const hasPending = count > 0
           const isActive = section === s
@@ -571,6 +593,7 @@ export default function ModerationPage() {
             : s === 'modules' ? 'Modules'
             : s === 'forums' ? 'Forums'
             : s === 'warstories' ? 'War Stories'
+            : s === 'bugs' ? 'Bugs'
             : 'LFG'
           return (
             <button key={s} onClick={() => setSection(s)} style={{
@@ -1077,6 +1100,85 @@ export default function ModerationPage() {
             </>
           )}
         />
+      )}
+
+      {/* ── Bug reports (Tier A) ── */}
+      {section === 'bugs' && (
+        <div>
+          <div style={{ fontSize: '18px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '12px' }}>
+            🐛 Bug Reports
+          </div>
+          {bugsLoading ? (
+            <div style={{ padding: '20px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Loading…</div>
+          ) : bugs.length === 0 ? (
+            <div style={{ padding: '20px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>No bug reports yet.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {bugs.map((b: any) => {
+                const statusColor: Record<string, string> = {
+                  open: '#f5a89a',
+                  triaged: '#EF9F27',
+                  fixed: '#7fc458',
+                  wontfix: '#5a5550',
+                }
+                return (
+                  <div key={b.id} style={{
+                    padding: '12px 14px',
+                    background: '#1a1010',
+                    border: '1px solid #3a3a3a',
+                    borderLeft: `3px solid ${statusColor[b.status] ?? '#3a3a3a'}`,
+                    borderRadius: '3px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+                        {b.reporter_name ?? b.reporter_email ?? '(unknown)'}
+                      </span>
+                      <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                      <span style={{ fontSize: '13px', color: '#9aa5b0', fontFamily: 'Carlito, sans-serif' }}>
+                        {new Date(b.created_at).toLocaleString()}
+                      </span>
+                      <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
+                      <span style={{ fontSize: '13px', color: statusColor[b.status] ?? '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>
+                        {b.status}
+                      </span>
+                    </div>
+                    {b.page_url && (
+                      <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', marginBottom: '6px', wordBreak: 'break-all' }}>
+                        {b.page_url}
+                      </div>
+                    )}
+                    <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.5, fontFamily: 'Barlow, sans-serif', whiteSpace: 'pre-wrap', marginBottom: '8px', padding: '8px 10px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                      {b.description}
+                    </div>
+                    {b.user_agent && (
+                      <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', wordBreak: 'break-all' }}>
+                        UA: {b.user_agent}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      {(['open', 'triaged', 'fixed', 'wontfix'] as const).map(s => (
+                        <button key={s} onClick={() => setBugStatus(b.id, s)}
+                          disabled={b.status === s}
+                          style={{
+                            padding: '5px 10px',
+                            background: b.status === s ? '#0f1a0f' : 'transparent',
+                            border: `1px solid ${b.status === s ? '#2d5a1b' : '#3a3a3a'}`,
+                            borderRadius: '3px',
+                            color: b.status === s ? '#7fc458' : '#cce0f5',
+                            fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+                            letterSpacing: '.06em', textTransform: 'uppercase',
+                            cursor: b.status === s ? 'default' : 'pointer',
+                          }}>
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       )}
 
       </>)}

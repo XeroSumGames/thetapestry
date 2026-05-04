@@ -13,6 +13,7 @@ import VehicleCard, { Vehicle } from '../../../../components/VehicleCard'
 import RollModal, { type RollResult as SharedRollResult } from '../../../../components/RollModal'
 import NotificationBell from '../../../../components/NotificationBell'
 import MessagesBell from '../../../../components/MessagesBell'
+import BugReportButton from '../../../../components/BugReportButton'
 import HelpTooltip from '../../../../components/HelpTooltip'
 import InitiativeBar from '../../../../components/InitiativeBar'
 import { useChatPanel, ChatMessageRow, ChatMessageList, ChatComposer } from '../../../../components/TableChat'
@@ -6365,7 +6366,7 @@ export default function TablePage() {
         <div style={{ width: '260px', flexShrink: 0, borderRight: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', background: '#111', overflow: 'hidden' }}>
           <div style={{ padding: '6px 10px', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
             <div style={{ fontSize: '15px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.1em', textTransform: 'uppercase', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
-              <span style={{ color: '#c0392b' }}>{myUsername}{isGM ? ' (GM)' : ''}</span><MessagesBell /><NotificationBell />
+              <span style={{ color: '#c0392b' }}>{myUsername}{isGM ? ' (GM)' : ''}</span><MessagesBell /><NotificationBell /><BugReportButton />
             </div>
           </div>
           <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e', flexShrink: 0 }}>
