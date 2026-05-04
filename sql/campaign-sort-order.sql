@@ -39,3 +39,12 @@ UPDATE public.campaign_npcs n
 SET sort_order = ranked.rn
 FROM ranked
 WHERE n.id = ranked.id;
+
+-- ── 3. Refresh PostgREST schema cache ─────────────────────────
+-- Without this, the API layer keeps its old introspection that
+-- predates the column add and silently drops `sort_order` from
+-- write payloads. Symptom: client-side updates appear to succeed
+-- but the row reverts to its DB value on the next read. Cost a
+-- chunk of debugging time on 2026-05-04 — the migration was clean,
+-- but PostgREST didn't know the column existed.
+NOTIFY pgrst, 'reload schema';

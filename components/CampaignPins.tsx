@@ -94,6 +94,7 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
     const fromIdx = pins.findIndex(p => p.id === dragId)
     const toIdx = pins.findIndex(p => p.id === targetId)
     if (fromIdx < 0 || toIdx < 0) { setDragId(null); setDragOverId(null); return }
+    const previous = pins
     const next = [...pins]
     const [moved] = next.splice(fromIdx, 1)
     next.splice(toIdx, 0, moved)
@@ -102,9 +103,18 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
     setPins(renumbered)
     setDragId(null)
     setDragOverId(null)
-    await Promise.all(renumbered.map(p =>
+    const results = await Promise.all(renumbered.map(p =>
       supabase.from('campaign_pins').update({ sort_order: p.sort_order }).eq('id', p.id)
     ))
+    // Surface any persistence failures rather than letting the UI lie.
+    // If even one row failed, snap the visible order back to the DB's
+    // last-known state so the user knows their drag didn't stick.
+    const errors = results.map(r => (r as any).error).filter(Boolean)
+    if (errors.length > 0) {
+      console.error('[CampaignPins.handleDrop] update errors:', errors)
+      alert(`Couldn't save the new order: ${errors[0].message}`)
+      setPins(previous)
+    }
   }
 
   useEffect(() => { loadPins(); loadScenes() }, [campaignId])
@@ -164,9 +174,33 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
       tactical_scene_id: editSceneId || null,
       sort_order: sortVal != null && !Number.isNaN(sortVal) ? sortVal : null,
     }
-    await supabase.from('campaign_pins').update(update).eq('id', editingId)
+    // Capture .select() so we can verify the DB returned the new state.
+    // Pre-fix bug: this UPDATE was fire-and-forget — when PostgREST's
+    // schema cache hadn't picked up sort_order yet, the column was
+    // silently dropped from the payload and the row stayed unchanged,
+    // but the optimistic setPins below made the UI lie. After a refresh
+    // the row reverted to its DB value. Fail loudly on errors AND skip
+    // the optimistic update when the write didn't return the new row.
+    const { data: updatedRow, error } = await supabase
+      .from('campaign_pins')
+      .update(update)
+      .eq('id', editingId)
+      .select()
+      .maybeSingle()
+    if (error) {
+      console.error('[CampaignPins.saveEdit] update failed:', error)
+      alert(`Couldn't save pin: ${error.message}`)
+      return
+    }
+    if (!updatedRow) {
+      console.error('[CampaignPins.saveEdit] update returned no row — RLS likely blocked the UPDATE for this user.')
+      alert("Save didn't go through — your account may not have permission to edit this pin.")
+      return
+    }
     setPins(prev => {
-      const next = prev.map(p => p.id === editingId ? { ...p, ...update } : p)
+      // Trust the row the DB returned (it ran through any triggers /
+      // defaults), not the optimistic `update` payload.
+      const next = prev.map(p => p.id === editingId ? { ...p, ...(updatedRow as any) } : p)
       // Re-sort by sort_order so moving a pin updates its position immediately
       return [...next].sort((a, b) => {
         const ao = a.sort_order ?? 999999
