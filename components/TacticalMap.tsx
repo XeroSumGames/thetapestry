@@ -972,7 +972,17 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const VISION_RADIUS_CELLS = 30
     const rawFog = fogLocalRef.current
     let fogMap = rawFog
-    if (!fogEditMode && Object.keys(rawFog).length > 0) {
+    // PC tokens that fire vision. PC-only by spec — NPCs don't lift
+    // fog of war for players. is_visible=false (hidden NPC, but
+    // shouldn't apply to a PC anyway) is also excluded as a safety.
+    const pcVisionTokens = tokensRef.current.filter(t =>
+      t.token_type !== 'object'
+      && !!t.character_id
+      && t.is_visible !== false
+    )
+    const hasPCs = pcVisionTokens.length > 0
+    const hasPainted = Object.keys(rawFog).length > 0
+    if (!fogEditMode && (hasPCs || hasPainted)) {
       // Build the segment + cell-based blocker sets. Both authoring
       // models coexist:
       //   • Wall/door/window SEGMENTS (cell edges, thin) — preferred,
@@ -1043,16 +1053,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         return false
       }
       const visible = new Set<string>()
-      for (const tok of tokensRef.current) {
-        if (tok.token_type === 'object') continue
-        // Any non-object token illuminates as long as it's visible.
-        // Hidden NPCs (is_visible=false) explicitly don't, so a
-        // GM's stashed enemy doesn't reveal its location through the
-        // fog. PCs always have is_visible=true; revealed NPCs do too.
-        // (Was character_id-gated before — that incorrectly skipped
-        // NPC-allocated PC tokens, the GM-controlled-PC pattern, and
-        // any "PC token without a character_id link.")
-        if (tok.is_visible === false) continue
+      for (const tok of pcVisionTokens) {
         const gw = tok.grid_w ?? 1
         const gh = tok.grid_h ?? 1
         // Per-token override (column added in
@@ -1076,8 +1077,23 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         }
       }
       const effective: Record<string, boolean> = {}
+      // GM-painted fog: rendered when not currently in any PC's LoS.
+      // (A PC standing in painted-fog cells punches through it.)
       for (const k of Object.keys(rawFog)) {
         if (rawFog[k] && !visible.has(k)) effective[k] = true
+      }
+      // Auto-fog: when at least one PC is on the scene, every cell
+      // outside the PC LoS is also fogged. This is what makes
+      // "closing a door re-hides what was beyond" work without the
+      // GM painting fog there manually. Without PCs (e.g. GM staging
+      // tokens before play starts), fog is purely manual.
+      if (hasPCs) {
+        for (let x = 0; x < s.grid_cols; x++) {
+          for (let y = 0; y < s.grid_rows; y++) {
+            const k = `${x},${y}`
+            if (!visible.has(k)) effective[k] = true
+          }
+        }
       }
       fogMap = effective
     }
