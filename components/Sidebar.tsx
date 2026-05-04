@@ -40,6 +40,7 @@ import MessagesBell from './MessagesBell'
 
 export default function Sidebar() {
   const [username, setUsername] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<'survivor' | 'thriver' | null>(null)
   const [pendingCount, setPendingCount] = useState(0)
   const [onlineCount, setOnlineCount] = useState(0)
@@ -59,9 +60,10 @@ export default function Sidebar() {
     async function load() {
       const { user } = await getCachedAuth()
       if (!user) { setLoaded(true); return }
-      const { data: profile } = await supabase.from('profiles').select('username, role').eq('id', user.id).single()
+      const { data: profile } = await supabase.from('profiles').select('username, role, avatar_url').eq('id', user.id).single()
       if (!profile) { setLoaded(true); return }
       setUsername(profile.username)
+      setAvatarUrl((profile as any).avatar_url ?? null)
       setUserRole((profile.role as string).toLowerCase() as 'survivor' | 'thriver')
       if (profile.role === 'thriver') {
         const { count } = await supabase.from('map_pins').select('*', { count: 'exact', head: true }).eq('pin_type', 'rumor').eq('status', 'pending')
@@ -267,10 +269,34 @@ export default function Sidebar() {
             </Link>
           </>
         ) : (
-          <button onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
-            style={{ width: '100%', padding: '8px', background: 'none', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            Log Out
-          </button>
+          <>
+            {/* Account row — avatar + username, click to open
+                /account. Compact so the bottom of the sidebar
+                stays uncluttered. Avatar circle falls back to a
+                colored circle with the user's initial when no
+                avatar is set. */}
+            <Link href="/account"
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 4px', textDecoration: 'none', borderRadius: '3px', color: '#d4cfc9' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#1a1a1a' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent' }}>
+              <span style={{
+                width: '28px', height: '28px', borderRadius: '50%',
+                background: avatarUrl ? `url(${avatarUrl}) center/cover` : '#2a1a3e',
+                border: '1px solid #5a2e5a', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700,
+              }}>
+                {!avatarUrl && (username ? username[0].toUpperCase() : '?')}
+              </span>
+              <span style={{ flex: 1, fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {username || 'Account'}
+              </span>
+            </Link>
+            <button onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
+              style={{ width: '100%', padding: '8px', background: 'none', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              Log Out
+            </button>
+          </>
         )}
       </div>
 
