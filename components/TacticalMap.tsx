@@ -208,6 +208,17 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // can actually hit, accounting for token rotation. Toggle per
   // weapon from the selected-token panel.
   const [firingArcs, setFiringArcs] = useState<Set<string>>(new Set())
+  // Transient floating label after a door/window toggle. Coords are
+  // in CELL units (so it follows zoom + pan correctly via the same
+  // offsets the rest of the canvas uses). Auto-clears after ~1.6s.
+  const [toggleLabel, setToggleLabel] = useState<{ x: number; y: number; text: string; key: number } | null>(null)
+  function showToggleLabel(xCells: number, yCells: number, text: string) {
+    const key = Date.now()
+    setToggleLabel({ x: xCells, y: yCells, text, key })
+    window.setTimeout(() => {
+      setToggleLabel(prev => (prev && prev.key === key) ? null : prev)
+    }, 1600)
+  }
   const [showRangeOverlay, setShowRangeOverlay] = useState(true)
   const [showSetup, setShowSetup] = useState(false)
   const [setupName, setSetupName] = useState('Scene')
@@ -564,7 +575,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   // Redraw on token/scene changes
   // campaignNpcs/entries are in the dep list so HP damage repaints the pips immediately — missing them meant tokens stayed stale until some other dependency (click, zoom, move) forced a redraw.
-  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode, fogRectStart, fogRectEnd, wallsLocal, wallDrawStart, wallDrawHover, firingArcs])
+  useEffect(() => { draw() }, [tokens, scene, selectedToken, zoom, showGrid, gridColor, gridOpacity, imgScale, cellPx, moveMode, throwMode, throwHoverCell, showRangeOverlay, ping, dragging, campaignNpcs, entries, fogLocal, fogEditMode, fogRectStart, fogRectEnd, wallsLocal, wallDrawStart, wallDrawHover, firingArcs, toggleLabel])
 
   // Notify parent of token positions for range calculations
   useEffect(() => {
@@ -969,12 +980,19 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       //   • Wall/door/window OBJECTS (whole-cell tokens, legacy) —
       //     still respected so existing scenes keep working.
       const segs = wallsLocalRef.current
+      // Vision blockers: walls (always), closed doors, AND closed
+      // windows (blinds/drapes drawn). Open windows (default state)
+      // pass vision through the glass.
       const visionSegs = segs.filter(s =>
-        s.kind === 'wall' || (s.kind === 'door' && s.door_open === false)
+        s.kind === 'wall'
+        || (s.kind === 'door' && s.door_open === false)
+        || (s.kind === 'window' && s.door_open === false)
       )
       const cellBlockers = new Set<string>()
       for (const tok of tokensRef.current) {
-        const blocks = !!tok.is_wall || (tok.is_door && tok.door_open === false)
+        const blocks = !!tok.is_wall
+          || (tok.is_door && tok.door_open === false)
+          || (tok.is_window && tok.door_open === false)
         if (!blocks) continue
         const gw = tok.grid_w ?? 1
         const gh = tok.grid_h ?? 1
@@ -1314,13 +1332,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         const rectX = cx - drawW / 2
         const rectY = cy - drawH / 2
         if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
-          // Open doors / open windows fade so they read as "passable."
-          // Closed windows render almost entirely transparent — the
-          // glass is the see-through default. The frame border drawn
-          // below is what sells it as "window," not the fill.
-          const windowOpen = isWindow && (t.door_open === true)
+          // Open door fades so the cell beyond reads as passable.
+          // Open window (default) is barely-tinted — vision passes
+          // through clear glass. Closed window (blinds) renders at
+          // full opacity to look "covered" and visually telegraph
+          // that vision is blocked.
+          const windowOpen = isWindow && (t.door_open !== false)
           if (isDoor && doorOpen) ctx.globalAlpha = 0.5
-          if (isWindow) ctx.globalAlpha = windowOpen ? 0.18 : 0.3
+          if (isWindow) ctx.globalAlpha = windowOpen ? 0.3 : 0.95
           ctx.drawImage(portraitImg, rectX, rectY, drawW, drawH)
           ctx.globalAlpha = 1
           if (isDoor) {
@@ -1365,19 +1384,34 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             ctx.lineWidth = selectedToken === t.id ? 3 : 2
             ctx.strokeRect(rectX, rectY, drawW, drawH)
           } else if (isWindow) {
-            // Closed window: glass fill + mullion + sky-blue border.
-            // Open window: no glass, dotted thin border, no mullion —
-            // tells the GM/player it's a passable opening.
-            const winOpen = t.door_open === true
-            if (!winOpen) {
+            // OPEN window (default) = clear glass: barely-there blue
+            // tint + cross mullion + sky-blue frame. Vision passes.
+            // CLOSED window = blinds: solid muted-amber fill, no
+            // mullion (you can't see the glass through the blinds),
+            // amber border. Vision blocked.
+            const winOpen = t.door_open !== false
+            if (winOpen) {
               drawGlassFill(ctx, rectX, rectY, drawW, drawH)
+            } else {
+              ctx.fillStyle = '#3e3220'
+              ctx.fillRect(rectX, rectY, drawW, drawH)
+              // Horizontal slats — fast suggestion of blinds without
+              // a real texture.
+              ctx.strokeStyle = 'rgba(168,146,74,0.6)'
+              ctx.lineWidth = 1
+              const slats = Math.max(3, Math.round(drawH / 6))
+              for (let s = 1; s < slats; s++) {
+                const sy = rectY + (drawH * s) / slats
+                ctx.beginPath()
+                ctx.moveTo(rectX, sy)
+                ctx.lineTo(rectX + drawW, sy)
+                ctx.stroke()
+              }
             }
             ctx.strokeStyle = selectedToken === t.id ? '#f5f2ee'
-              : (winOpen ? 'rgba(122,179,212,0.5)' : '#7ab3d4')
-            ctx.lineWidth = selectedToken === t.id ? 3 : (winOpen ? 1.5 : 2)
-            if (winOpen) ctx.setLineDash([3, 4])
+              : (winOpen ? '#7ab3d4' : '#a8924a')
+            ctx.lineWidth = selectedToken === t.id ? 3 : (winOpen ? 2 : 3)
             ctx.strokeRect(rectX, rectY, drawW, drawH)
-            ctx.setLineDash([])
           } else {
             // Open-door fill is much subtler than a closed door so the
             // visual immediately reads as "passable."
@@ -1708,16 +1742,15 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             ctx.lineWidth = open ? 3 : 4
             ctx.setLineDash(open ? [6, 4] : [])
           } else {
-            // window — closed (intact glass) renders as a thin
-            // sky-blue dashed line that reads as "frame," not
-            // "barrier." Vision and the cells behind a window are
-            // fully see-through; the line is just a structural cue.
-            // Open (smashed/raised) renders even fainter dotted so
-            // the GM/players see "this window is open" at a glance.
-            const winOpen = seg.door_open === true
-            ctx.strokeStyle = winOpen ? 'rgba(122,179,212,0.4)' : 'rgba(122,179,212,0.85)'
-            ctx.lineWidth = winOpen ? 1.5 : 2
-            ctx.setLineDash(winOpen ? [2, 4] : [5, 3])
+            // window — OPEN (default) = thin sky-blue dashed line,
+            // reads as "see-through frame." CLOSED = blinds drawn,
+            // renders as a solid muted-amber line that visually
+            // "blocks" the view (matches the mechanical vision-block
+            // when closed).
+            const winOpen = seg.door_open !== false  // default = open
+            ctx.strokeStyle = winOpen ? 'rgba(122,179,212,0.85)' : '#a8924a'
+            ctx.lineWidth = winOpen ? 2 : 4
+            ctx.setLineDash(winOpen ? [5, 3] : [])
           }
           ctx.beginPath()
           ctx.moveTo(x1, y1)
@@ -1790,6 +1823,30 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       ctx.setLineDash([6, 4])
       ctx.strokeRect(rx + 0.5, ry + 0.5, rw - 1, rh - 1)
       ctx.setLineDash([])
+      ctx.restore()
+    }
+
+    // Transient toggle label — flashes "Door opened" / "Window
+    // closed" near the click point so the player gets explicit
+    // feedback on what just happened. Auto-clears via setTimeout.
+    if (toggleLabel) {
+      const cellW = (s.grid_cols * cellSize) / s.grid_cols
+      const cellH = (s.grid_rows * cellSize) / s.grid_rows
+      const lx = offsetX + toggleLabel.x * cellW
+      const ly = offsetY + toggleLabel.y * cellH
+      ctx.save()
+      ctx.font = 'bold 14px Carlito, sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      const tw = ctx.measureText(toggleLabel.text).width + 16
+      const th = 22
+      ctx.fillStyle = 'rgba(15,15,15,0.92)'
+      ctx.strokeStyle = '#c4a7f0'
+      ctx.lineWidth = 1.5
+      ctx.fillRect(lx - tw / 2, ly - th - 14, tw, th)
+      ctx.strokeRect(lx - tw / 2 + 0.5, ly - th - 14 + 0.5, tw - 1, th - 1)
+      ctx.fillStyle = '#f5f2ee'
+      ctx.fillText(toggleLabel.text, lx, ly - 14 - th / 2)
       ctx.restore()
     }
 
@@ -1938,19 +1995,19 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       }
       return
     }
-    // Door SEGMENT click — toggle open/closed when not in any
-    // edit mode (gameplay interaction, not authoring). Detection
-    // is point-to-segment distance against door segments only.
-    if (!fogEditMode && e.button === 0 && wallsLocalRef.current.some(w => w.kind === 'door')) {
+    // Door / window SEGMENT click — plain click toggles open/closed
+    // when not in any edit mode (gameplay interaction). Detection is
+    // point-to-segment distance against door + window segments.
+    if (!fogEditMode && e.button === 0 && wallsLocalRef.current.some(w => w.kind === 'door' || w.kind === 'window')) {
       if (canvasRef.current && scene) {
         const rect = canvasRef.current.getBoundingClientRect()
         const cellSize = getCellSize()
         const mx = (e.clientX - rect.left) / zoom / cellSize
         const my = (e.clientY - rect.top) / zoom / cellSize
-        let bestId: string | null = null
+        let bestSeg: WallSegment | null = null
         let bestDist = 0.3 // tighter threshold so a normal click on a token doesn't accidentally toggle a nearby door
         for (const w of wallsLocalRef.current) {
-          if (w.kind !== 'door') continue
+          if (w.kind !== 'door' && w.kind !== 'window') continue
           const dx = w.x2 - w.x1
           const dy = w.y2 - w.y1
           const len2 = dx * dx + dy * dy
@@ -1960,15 +2017,25 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           const px = w.x1 + t * dx
           const py = w.y1 + t * dy
           const d = Math.hypot(mx - px, my - py)
-          if (d < bestDist) { bestDist = d; bestId = w.id }
+          if (d < bestDist) { bestDist = d; bestSeg = w }
         }
-        if (bestId) {
+        if (bestSeg) {
+          // Per-kind default for door_open when undefined: doors
+          // default closed (false), windows default open (true).
+          const kindDefault = bestSeg.kind === 'door' ? false : true
+          const currentOpen = bestSeg.door_open ?? kindDefault
+          const nextOpen = !currentOpen
+          const targetId = bestSeg.id
           setWallsLocal(prev => {
-            const next = prev.map(w => w.id === bestId ? { ...w, door_open: !(w.door_open ?? true) } : w)
+            const next = prev.map(w => w.id === targetId ? { ...w, door_open: nextOpen } : w)
             wallsLocalRef.current = next
             return next
           })
           scheduleWallsPersist()
+          // Toast — render midpoint of the segment.
+          const midX = (bestSeg.x1 + bestSeg.x2) / 2
+          const midY = (bestSeg.y1 + bestSeg.y2) / 2
+          showToggleLabel(midX, midY, `${bestSeg.kind === 'door' ? 'Door' : 'Window'} ${nextOpen ? 'opened' : 'closed'}`)
           return
         }
       }
@@ -1997,7 +2064,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         x1: wallDrawStart.x, y1: wallDrawStart.y,
         x2: inter.x, y2: inter.y,
         kind: fogEditMode,
-        door_open: fogEditMode === 'door' ? true : undefined,
+        // door = closed by default (blocks vision + movement until
+        // opened); window = open by default (vision passes; glass
+        // always blocks movement; "closed" = blinds drawn = blocks
+        // vision). Wall has no toggle.
+        door_open: fogEditMode === 'door' ? false
+          : fogEditMode === 'window' ? true
+          : undefined,
       }
       setWallsLocal(prev => {
         const next = [...prev, newSeg]
@@ -2122,9 +2195,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           const occupied = new Set(
             tokens
               .filter(t => t.id !== moveTok.id)
-              // Open doors and open windows pass through.
+              // Open doors pass through. Windows ALWAYS block movement
+              // (glass is always there — toggle only affects vision via
+              // blinds, not movement). Walls always block.
               .filter(t => !(t.is_door && t.door_open))
-              .filter(t => !(t.is_window && t.door_open))
               .map(t => `${t.grid_x},${t.grid_y}`)
           )
           const closedDoorAtDest = tokens.some(t => t.is_door && t.door_open === false && t.grid_x === pos.gx && t.grid_y === pos.gy)
@@ -2133,14 +2207,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             return
           }
           // Wall/door/window SEGMENT crossing check. Walls always block.
-          // Doors block when closed; open doors pass. Windows block
-          // when closed (intact glass); open windows (smashed/raised)
-          // pass both ways. Default-undefined door_open is treated as
-          // "closed" for windows so legacy segments stay blocking.
+          // Doors block when closed; open doors pass. Windows ALWAYS
+          // block movement (glass is always there; the toggle only
+          // controls vision via blinds, not movement).
           const moveSegs = wallsLocalRef.current.filter(s =>
             s.kind === 'wall'
+            || s.kind === 'window'
             || (s.kind === 'door' && s.door_open === false)
-            || (s.kind === 'window' && s.door_open !== true)
           )
           if (moveSegs.length > 0) {
             const ax = moveTok.grid_x + 0.5, ay = moveTok.grid_y + 0.5
@@ -2196,24 +2269,25 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (pos) {
       const tok = getTokenAt(pos.gx, pos.gy)
       if (tok) {
-        // Door click intercept. If the user is a player (no drag
-        // permission on this token), a click toggles open/closed
-        // immediately. The GM still falls through to the normal
-        // select+drag flow — handleMouseUp checks "drag with no
-        // move" on a door and toggles in that case so the GM has
-        // both move-the-door and click-to-toggle in one button.
-        if (tok.is_door) {
+        // Door / window click intercept. Players (no drag permission
+        // on this token) toggle immediately. GMs fall through to the
+        // normal select+drag flow — handleMouseUp checks "drag with
+        // no move" on a door/window and toggles in that case, so the
+        // GM has move + click-to-toggle on one button.
+        if (tok.is_door || tok.is_window) {
           const isController = !!myCharacterId
             && Array.isArray(tok.controlled_by_character_ids)
             && tok.controlled_by_character_ids.includes(myCharacterId)
           if (!isGM && !isController) {
-            // Pure click-to-toggle for players. Optimistic local
-            // update, then persist; no select / drag.
             const nextOpen = !tok.door_open
             setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, door_open: nextOpen } : t))
             supabase.from('scene_tokens').update({ door_open: nextOpen }).eq('id', tok.id).then(() => {
               tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
             })
+            // Token center for the floating label.
+            const cx = tok.grid_x + (tok.grid_w ?? 1) / 2
+            const cy = tok.grid_y + (tok.grid_h ?? 1) / 2
+            showToggleLabel(cx, cy, `${tok.is_door ? 'Door' : 'Window'} ${nextOpen ? 'opened' : 'closed'}`)
             return
           }
         }
@@ -2447,15 +2521,18 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const tok = tokensRef.current.find(t => t.id === tokenId)
     const pos = getGridPos(e)
     const moved = pos && tok && (pos.gx !== tok.grid_x || pos.gy !== tok.grid_y)
-    // GM "drag" with zero movement on a door = a click → toggle.
-    // Drag with movement still proceeds through the normal reposition
-    // path below.
-    if (tok && tok.is_door && !moved) {
+    // GM "drag" with zero movement on a door OR window = a click →
+    // toggle. Drag with actual movement falls through to the normal
+    // reposition path.
+    if (tok && (tok.is_door || tok.is_window) && !moved) {
       const nextOpen = !tok.door_open
       setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, door_open: nextOpen } : t))
       supabase.from('scene_tokens').update({ door_open: nextOpen }).eq('id', tok.id).then(() => {
         tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
       })
+      const cx = tok.grid_x + (tok.grid_w ?? 1) / 2
+      const cy = tok.grid_y + (tok.grid_h ?? 1) / 2
+      showToggleLabel(cx, cy, `${tok.is_door ? 'Door' : 'Window'} ${nextOpen ? 'opened' : 'closed'}`)
       setDragging(null)
       dragPosRef.current = null
       return
