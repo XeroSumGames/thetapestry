@@ -99,9 +99,10 @@ The content engine that supersedes GM Kit v1. Spec lives at
 - **Phase F — GM Adventure Authoring Toolkit** — Story Arc form (4-question), NPC quick-build, Map quick-build, Handout quick-build, Encounter quick-build, route tables for travel arcs, Adventure preview (dry-run), Publish Adventure.
 
 ### Tactical map long-term lifts
-- Dynamic lighting + per-token visibility / fog of war.
-- Doors token type with `is_open` + movement/vision blocking.
-- Line of sight polygon vision masks per token.
+- ~~Dynamic lighting + per-token visibility / fog of war.~~ — Phase 1+2 shipped 2026-05-03 (painted fog, PC vision punch, walls/doors/windows segments).
+- ~~Doors token type with `is_open` + movement/vision blocking.~~ — shipped (commit `26aa122` + segment auto-split `b4a9d7b`).
+- Line of sight polygon vision masks per token. — Phase 3, deferred until painted-fog + segments see real play. Audit scheduled 2026-05-10 (`trig_016gpGjJqUwdnqZxoEuXMX3k`).
+- **Day/Night switch on the fog toolbar** — toggle scene between "day" (current behavior, full sight radius, ambient light) and "night" (dim/dark — PCs see only within a tighter "torch" radius, scene cells get a blue/dark tint, possibly per-PC darkvision overrides). Storage: `tactical_scenes.lighting_mode` (`'day'` default `| 'night'`). UI: button next to Edit Fog. Mechanics: when night, drop default vision to ~6 cells; allow per-token override via the existing slider. Visual: tint clear cells with a low-alpha blue overlay.
 
 ### Phase 6-11 Roadmap
 - **Phase 6 — Community & Retention** — LFG matching, session scheduling, The Gazette (auto-newsletter), between-session experience, subscriber tiers, Graffiti reactions.
