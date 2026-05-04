@@ -969,7 +969,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // time so the GM's authored fog_state stays untouched — the GM
     // edit-mode view still shows the raw layer for predictable
     // painting. Out of edit mode, the GM sees what the players see.
-    const VISION_RADIUS_CELLS = 6
+    const VISION_RADIUS_CELLS = 30
     const rawFog = fogLocalRef.current
     let fogMap = rawFog
     if (!fogEditMode && Object.keys(rawFog).length > 0) {
@@ -3188,15 +3188,15 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                 {isGM && tok.token_type !== 'object' && tok.character_id && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', width: '30px' }}>Sight</span>
-                    <input type="range" min={0} max={20} step={1} value={tok.sight_radius_cells ?? 6}
+                    <input type="range" min={0} max={50} step={1} value={tok.sight_radius_cells ?? 30}
                       onChange={async e => {
                         const v = parseInt(e.target.value, 10)
                         setTokens(prev => prev.map(t => t.id === tok.id ? { ...t, sight_radius_cells: v } : t))
                         await supabase.from('scene_tokens').update({ sight_radius_cells: v }).eq('id', tok.id)
                       }}
-                      title={`Vision radius — ${tok.sight_radius_cells ?? 6} cells`}
+                      title={`Vision radius — ${tok.sight_radius_cells ?? 30} cells`}
                       style={{ flex: 1, accentColor: '#7ab3d4', cursor: 'pointer' }} />
-                    <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', width: '28px', textAlign: 'right' }}>{tok.sight_radius_cells ?? 6}</span>
+                    <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', width: '28px', textAlign: 'right' }}>{tok.sight_radius_cells ?? 30}</span>
                   </div>
                 )}
               </div>
