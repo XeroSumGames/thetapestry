@@ -1291,14 +1291,16 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           c.restore()
         }
         // Helper: draw a glass pane with a cross mullion. Used for
-        // windows and any future "transparent obstacle" type. The
-        // mullion makes the cell read as window even at small zoom.
+        // windows and any future "transparent obstacle" type. Windows
+        // are see-through by default — the fill is barely-there blue
+        // tint so the cell content stays fully readable; the mullion
+        // is the structural cue that says "this is a window."
         function drawGlassFill(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
           c.save()
-          c.fillStyle = 'rgba(122,179,212,0.18)'
+          c.fillStyle = 'rgba(122,179,212,0.06)'
           c.fillRect(x, y, w, h)
-          c.strokeStyle = 'rgba(122,179,212,0.7)'
-          c.lineWidth = 1.5
+          c.strokeStyle = 'rgba(122,179,212,0.45)'
+          c.lineWidth = 1
           // Vertical + horizontal mullion through the center of the
           // rect (suggests windowpane divisions).
           c.beginPath()
@@ -1313,10 +1315,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         const rectY = cy - drawH / 2
         if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
           // Open doors / open windows fade so they read as "passable."
-          // Closed windows still fade slightly (glass is see-through).
+          // Closed windows render almost entirely transparent — the
+          // glass is the see-through default. The frame border drawn
+          // below is what sells it as "window," not the fill.
           const windowOpen = isWindow && (t.door_open === true)
           if (isDoor && doorOpen) ctx.globalAlpha = 0.5
-          if (isWindow) ctx.globalAlpha = windowOpen ? 0.25 : 0.55
+          if (isWindow) ctx.globalAlpha = windowOpen ? 0.18 : 0.3
           ctx.drawImage(portraitImg, rectX, rectY, drawW, drawH)
           ctx.globalAlpha = 1
           if (isDoor) {
@@ -1704,13 +1708,16 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             ctx.lineWidth = open ? 3 : 4
             ctx.setLineDash(open ? [6, 4] : [])
           } else {
-            // window — closed (intact glass) renders sky-blue dashed;
-            // open (passable both ways) renders fainter + dotted so
+            // window — closed (intact glass) renders as a thin
+            // sky-blue dashed line that reads as "frame," not
+            // "barrier." Vision and the cells behind a window are
+            // fully see-through; the line is just a structural cue.
+            // Open (smashed/raised) renders even fainter dotted so
             // the GM/players see "this window is open" at a glance.
             const winOpen = seg.door_open === true
-            ctx.strokeStyle = winOpen ? 'rgba(122,179,212,0.45)' : '#7ab3d4'
-            ctx.lineWidth = winOpen ? 1.5 : 3
-            ctx.setLineDash(winOpen ? [2, 4] : [4, 3])
+            ctx.strokeStyle = winOpen ? 'rgba(122,179,212,0.4)' : 'rgba(122,179,212,0.85)'
+            ctx.lineWidth = winOpen ? 1.5 : 2
+            ctx.setLineDash(winOpen ? [2, 4] : [5, 3])
           }
           ctx.beginPath()
           ctx.moveTo(x1, y1)
