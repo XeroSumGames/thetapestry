@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import LayoutShell from "../components/LayoutShell";
 import VisitLogger from "../components/VisitLogger";
+import PlaytestRecorder from "../components/PlaytestRecorder";
 
 // Site-wide defaults. Per-route layouts can override `title`, `description`,
 // `openGraph`, or `twitter`; everything else falls through here. The
@@ -120,6 +121,7 @@ export default function RootLayout({
       </head>
       <body style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0f0f0f', margin: 0, padding: 0, fontFamily: 'Barlow, sans-serif', fontSize: '15px' }}>
         <VisitLogger />
+        <PlaytestRecorder />
         <LayoutShell>{children}</LayoutShell>
       </body>
     </html>
