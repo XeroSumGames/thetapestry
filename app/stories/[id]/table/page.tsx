@@ -325,6 +325,15 @@ export default function TablePage() {
   const [initiativeOrder, setInitiativeOrder] = useState<InitiativeEntry[]>([])
   const [combatActive, setCombatActive] = useState(false)
   const [combatRound, setCombatRound] = useState(1)
+  // Multistory: per-entry off-scene tag for the initiative bar.
+  // Map from initiative entry id → scene name (or '' if same scene as
+  // active). Computed by joining initiative entries' character_id /
+  // npc_id against scene_tokens, then resolving scene_id → name.
+  // Populated by the useEffect below; refreshed when initiative or
+  // tokens change so a token shunted via "→ Scene" updates the tag
+  // without manual reload.
+  const [entrySceneTags, setEntrySceneTags] = useState<Record<string, string>>({})
+  const [tokenScenesRefreshKey, setTokenScenesRefreshKey] = useState(0)
   // Note: the Add-PC / Add-NPC / npcName UI state used to live here; it
   // moved into <InitiativeBar/> during the C2 extraction since nothing
   // outside the bar reads them. addNPC / addPCToCombat below take their
@@ -343,6 +352,73 @@ export default function TablePage() {
     if (typeof window === 'undefined') return
     localStorage.setItem(`tactical_map_view_${id}`, showTacticalMap ? '1' : '0')
   }, [showTacticalMap, id])
+
+  // Multistory cross-scene initiative tag. For each initiative entry,
+  // resolve its character_id / npc_id to a scene token and check
+  // whether that token is on the active scene. If not, surface the
+  // scene name as a chip on the initiative bar so combat continuity
+  // doesn't get confusing when PCs split across floors.
+  useEffect(() => {
+    if (initiativeOrder.length === 0) {
+      setEntrySceneTags({})
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      // Pull every scene + every visible token in this campaign in
+      // two cheap queries. Most campaigns have <20 scenes and <100
+      // tokens; well within a single round-trip's worth of payload.
+      const [{ data: scenes }, { data: toks }] = await Promise.all([
+        supabase.from('tactical_scenes').select('id, name, is_active').eq('campaign_id', id),
+        supabase.from('scene_tokens').select('scene_id, character_id, npc_id').is('archived_at', null),
+      ])
+      if (cancelled) return
+      const sceneNameById: Record<string, string> = {}
+      let activeSceneId: string | null = null
+      for (const s of (scenes ?? []) as any[]) {
+        sceneNameById[s.id] = s.name
+        if (s.is_active) activeSceneId = s.id
+      }
+      // Build character_id → scene_id and npc_id → scene_id lookups.
+      const charScene: Record<string, string> = {}
+      const npcScene: Record<string, string> = {}
+      for (const t of (toks ?? []) as any[]) {
+        if (t.character_id) charScene[t.character_id] = t.scene_id
+        if (t.npc_id) npcScene[t.npc_id] = t.scene_id
+      }
+      const tags: Record<string, string> = {}
+      for (const e of initiativeOrder) {
+        const sceneId = e.character_id ? charScene[e.character_id]
+          : e.npc_id ? npcScene[e.npc_id]
+          : null
+        if (!sceneId || sceneId === activeSceneId) continue
+        tags[e.id] = sceneNameById[sceneId] ?? 'Other scene'
+      }
+      setEntrySceneTags(tags)
+    })()
+    return () => { cancelled = true }
+  }, [initiativeOrder, id, supabase, tokenScenesRefreshKey])
+
+  // Bump tokenScenesRefreshKey when a token moves between scenes
+  // (the "→ Scene" button in TacticalMap mutates scene_tokens.scene_id
+  // and broadcasts token_changed; postgres_changes on scene_tokens
+  // catches the row update directly here). Cheap — just flips a
+  // counter that retriggers the scene-tags effect above.
+  useEffect(() => {
+    if (!id) return
+    const channel = supabase.channel(`init-scene-tags-${id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'scene_tokens' }, () => {
+        setTokenScenesRefreshKey(k => k + 1)
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'scene_tokens' }, () => {
+        setTokenScenesRefreshKey(k => k + 1)
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tactical_scenes', filter: `campaign_id=eq.${id}` }, () => {
+        setTokenScenesRefreshKey(k => k + 1)
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [id, supabase])
 
   // Mode-aware sidebar tab default. Campaign map → Pins ("where are
   // we"); Tactical/Combat → NPCs ("who's on the field"). The flip only
@@ -5692,6 +5768,7 @@ export default function TablePage() {
             campaignNpcs={campaignNpcs}
             userId={userId}
             isGM={isGM}
+            entrySceneTags={entrySceneTags}
             onNextTurn={nextTurn}
             onDefer={deferInitiative}
             onRemove={handleInitiativeBarRemove}
