@@ -344,9 +344,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // out). The new segment itself is NOT included — caller appends.
   // Diagonal walls aren't split for v1 (no rotated buildings yet).
   function splitOverlappingSegments(existing: WallSegment[], inserted: WallSegment): WallSegment[] {
+    // Tolerance for "same axis-aligned line" — float-precision
+    // segment authoring means y-coords might differ by a tiny
+    // fraction even when the GM clicked "the same wall." Anything
+    // within ~1px at typical zoom counts as coincident.
+    const EPS = 0.05
     const result: WallSegment[] = []
-    const isHoriz = (s: WallSegment) => s.y1 === s.y2
-    const isVert  = (s: WallSegment) => s.x1 === s.x2
+    const isHoriz = (s: WallSegment) => Math.abs(s.y1 - s.y2) < EPS
+    const isVert  = (s: WallSegment) => Math.abs(s.x1 - s.x2) < EPS
     const insHoriz = isHoriz(inserted)
     const insVert  = isVert(inserted)
     if (!insHoriz && !insVert) return existing.slice() // diagonal — skip split
@@ -358,7 +363,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const wHoriz = isHoriz(w)
       const wVert  = isVert(w)
       // Same-axis check.
-      if (insHoriz && wHoriz && w.y1 === inserted.y1) {
+      if (insHoriz && wHoriz && Math.abs(w.y1 - inserted.y1) < EPS) {
         const wMin = Math.min(w.x1, w.x2)
         const wMax = Math.max(w.x1, w.x2)
         const iMin = Math.min(inserted.x1, inserted.x2)
@@ -372,7 +377,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           result.push({ id: crypto.randomUUID(), x1: iMax, y1: y, x2: wMax, y2: y, kind: 'wall' })
         }
         // (No else — wall is fully consumed by overlap; drop it.)
-      } else if (insVert && wVert && w.x1 === inserted.x1) {
+      } else if (insVert && wVert && Math.abs(w.x1 - inserted.x1) < EPS) {
         const wMin = Math.min(w.y1, w.y2)
         const wMax = Math.max(w.y1, w.y2)
         const iMin = Math.min(inserted.y1, inserted.y2)
@@ -404,19 +409,45 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }, 200)
   }
 
-  // Snap mouse to the nearest cell intersection. Returns coordinates
-  // in cell units — (0,0) = top-left corner of cell (0,0). Used for
-  // wall/door/window segment authoring.
-  function getGridIntersection(e: React.MouseEvent): { x: number; y: number } | null {
+  // Free-form mouse → cell-units conversion for wall/door/window
+  // segment authoring. NOT rounded — segments now follow the cursor
+  // pixel-precise so the GM can trace organic building shapes that
+  // don't align to grid intersections. Doors and windows additionally
+  // snap to nearby walls (see snapPointToNearestWall) so the
+  // auto-split mechanic still works against arbitrary-angle walls.
+  function getSegmentEndpoint(e: React.MouseEvent): { x: number; y: number } | null {
     if (!canvasRef.current || !scene) return null
     const rect = canvasRef.current.getBoundingClientRect()
     const cellSize = getCellSize()
     const mx = (e.clientX - rect.left) / zoom
     const my = (e.clientY - rect.top) / zoom
-    const x = Math.round(mx / cellSize)
-    const y = Math.round(my / cellSize)
-    if (x < 0 || x > scene.grid_cols || y < 0 || y > scene.grid_rows) return null
+    const x = Math.max(0, Math.min(scene.grid_cols, mx / cellSize))
+    const y = Math.max(0, Math.min(scene.grid_rows, my / cellSize))
     return { x, y }
+  }
+
+  // Project a point onto the nearest WALL segment within `threshold`
+  // cells. Returns the projected point if a wall is close enough, or
+  // the original point otherwise. Used for door + window authoring
+  // so a click-near-wall lands ON the wall's line — guaranteeing the
+  // auto-split overlap check finds a match even with a fuzzy click.
+  function snapPointToNearestWall(p: { x: number; y: number }, threshold = 0.45): { x: number; y: number } {
+    let best: { x: number; y: number } | null = null
+    let bestDist = threshold
+    for (const w of wallsLocalRef.current) {
+      if (w.kind !== 'wall') continue
+      const dx = w.x2 - w.x1
+      const dy = w.y2 - w.y1
+      const len2 = dx * dx + dy * dy
+      if (len2 < 1e-6) continue
+      let t = ((p.x - w.x1) * dx + (p.y - w.y1) * dy) / len2
+      t = Math.max(0, Math.min(1, t))
+      const px = w.x1 + t * dx
+      const py = w.y1 + t * dy
+      const d = Math.hypot(p.x - px, p.y - py)
+      if (d < bestDist) { bestDist = d; best = { x: px, y: py } }
+    }
+    return best ?? p
   }
 
   // Cancel an in-flight wall draw on Escape. Useful when the GM
@@ -2167,8 +2198,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     // cursor between clicks. ESC cancels (handled in the keydown
     // effect above).
     if (fogEditMode && isGM && e.button === 0 && (fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window')) {
-      const inter = getGridIntersection(e)
-      if (!inter) return
+      const raw = getSegmentEndpoint(e)
+      if (!raw) return
+      // Doors + windows snap onto the nearest wall so they always
+      // land on a wall's line — auto-split has a clean coincidence
+      // to detect. Walls themselves stay free-form.
+      const inter = (fogEditMode === 'wall') ? raw : snapPointToNearestWall(raw)
       if (!wallDrawStart) {
         setWallDrawStart(inter)
         setWallDrawHover(inter)
@@ -2494,10 +2529,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
   function handleMouseMove(e: React.MouseEvent) {
     // Wall draw preview — when a wallDrawStart exists, the moving
-    // cursor traces a live segment to the nearest intersection. Cheap
-    // state update; render is gated on wallDrawHover changes.
+    // cursor traces a live segment to the cursor pos. Cheap state
+    // update; render is gated on wallDrawHover changes. Doors and
+    // windows snap to the nearest wall (matches commit-time
+    // behavior) so the preview line lies on the wall's path.
     if (wallDrawStart && (fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window')) {
-      const inter = getGridIntersection(e)
+      const raw = getSegmentEndpoint(e)
+      const inter = raw && (fogEditMode === 'wall' ? raw : snapPointToNearestWall(raw))
       if (inter && (!wallDrawHover || wallDrawHover.x !== inter.x || wallDrawHover.y !== inter.y)) {
         setWallDrawHover(inter)
       }
