@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import NotificationBell from './NotificationBell'
 import MessagesBell from './MessagesBell'
+import BugReportButton from './BugReportButton'
 
 // Left sidebar — restructured 2026-04-22 per user spec:
 //
@@ -188,6 +189,11 @@ export default function Sidebar() {
               <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
                 <span title="The Campfire — coming soon" style={{ fontSize: '16px', lineHeight: 1, display: 'flex', alignItems: 'center', cursor: 'default', opacity: 0.45, filter: 'grayscale(1)' }}>🔥</span>
               </div>
+              {/* Bug report — opens a modal where the user describes
+                  what broke. Insert into bug_reports fires the
+                  notify_bug_report trigger which emails Xero via the
+                  existing call_notify_thriver path. */}
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}><BugReportButton /></div>
             </div>
           </>
         )}
