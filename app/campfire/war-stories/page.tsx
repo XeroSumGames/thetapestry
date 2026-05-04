@@ -15,6 +15,7 @@ import {
 } from '../../../lib/campfire-settings'
 import ReactionButtons, { aggregateReactions, type ReactionAggregate } from '../../../components/ReactionButtons'
 import InlineRepliesPanel from '../../../components/InlineRepliesPanel'
+import AuthorBadge from '../../../components/AuthorBadge'
 
 // /campfire/war-stories — post memorable session moments, legendary rolls,
 // character beats. Cross-campaign feed: anyone signed in can read; authors
@@ -48,6 +49,7 @@ interface Story {
 
 interface StoryWithMeta extends Story {
   author_username: string
+  author_avatar_url: string | null
   campaign_name: string | null
 }
 
@@ -158,18 +160,20 @@ export default function WarStoriesPage() {
     const campaignIds = Array.from(new Set(list.map(s => s.campaign_id).filter((x): x is string => !!x)))
 
     const [profRes, campRes] = await Promise.all([
-      supabase.from('profiles').select('id, username').in('id', authorIds),
+      supabase.from('profiles').select('id, username, avatar_url').in('id', authorIds),
       campaignIds.length > 0
         ? supabase.from('campaigns').select('id, name').in('id', campaignIds)
         : Promise.resolve({ data: [] }),
     ])
     const nameMap = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.username]))
+    const avatarMap: Record<string, string | null> = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.avatar_url ?? null]))
     const campMap = Object.fromEntries((campRes.data ?? []).map((c: any) => [c.id, c.name]))
 
     setStories(list.map(s => ({
       ...s,
       attachments: Array.isArray(s.attachments) ? s.attachments : [],
       author_username: nameMap[s.author_user_id] ?? 'Unknown',
+      author_avatar_url: avatarMap[s.author_user_id] ?? null,
       campaign_name: s.campaign_id ? (campMap[s.campaign_id] ?? null) : null,
     })))
     // Reaction hydration — single batched fetch keyed by story ids so
@@ -216,17 +220,19 @@ export default function WarStoriesPage() {
     const authorIds = Array.from(new Set(list.map(s => s.author_user_id)))
     const campaignIds = Array.from(new Set(list.map(s => s.campaign_id).filter((x): x is string => !!x)))
     const [profRes, campRes] = await Promise.all([
-      supabase.from('profiles').select('id, username').in('id', authorIds),
+      supabase.from('profiles').select('id, username, avatar_url').in('id', authorIds),
       campaignIds.length > 0
         ? supabase.from('campaigns').select('id, name').in('id', campaignIds)
         : Promise.resolve({ data: [] }),
     ])
     const nameMap = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.username]))
+    const avatarMap: Record<string, string | null> = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.avatar_url ?? null]))
     const campMap = Object.fromEntries((campRes.data ?? []).map((c: any) => [c.id, c.name]))
     setStories(list.map(s => ({
       ...s,
       attachments: Array.isArray(s.attachments) ? s.attachments : [],
       author_username: nameMap[s.author_user_id] ?? 'Unknown',
+      author_avatar_url: avatarMap[s.author_user_id] ?? null,
       campaign_name: s.campaign_id ? (campMap[s.campaign_id] ?? null) : null,
     })))
     // Hydrate reactions for the search hits.
@@ -259,17 +265,19 @@ export default function WarStoriesPage() {
     const authorIds = Array.from(new Set(list.map(s => s.author_user_id)))
     const campaignIds = Array.from(new Set(list.map(s => s.campaign_id).filter((x): x is string => !!x)))
     const [profRes, campRes] = await Promise.all([
-      supabase.from('profiles').select('id, username').in('id', authorIds),
+      supabase.from('profiles').select('id, username, avatar_url').in('id', authorIds),
       campaignIds.length > 0
         ? supabase.from('campaigns').select('id, name').in('id', campaignIds)
         : Promise.resolve({ data: [] }),
     ])
     const nameMap = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.username]))
+    const avatarMap: Record<string, string | null> = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.avatar_url ?? null]))
     const campMap = Object.fromEntries((campRes.data ?? []).map((c: any) => [c.id, c.name]))
     setStories(prev => [...prev, ...list.map(s => ({
       ...s,
       attachments: Array.isArray(s.attachments) ? s.attachments : [],
       author_username: nameMap[s.author_user_id] ?? 'Unknown',
+      author_avatar_url: avatarMap[s.author_user_id] ?? null,
       campaign_name: s.campaign_id ? (campMap[s.campaign_id] ?? null) : null,
     }))])
     // Append reactions for the newly-loaded ids.
@@ -694,7 +702,8 @@ export default function WarStoriesPage() {
                   {s.title}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '13px', color: '#cce0f5' }}>by {s.author_username}</span>
+                  <span style={{ fontSize: '13px', color: '#cce0f5' }}>by</span>
+                  <AuthorBadge username={s.author_username} avatarUrl={s.author_avatar_url} size={18} />
                   <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
                   <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTimestamp(s.updated_at)}</span>
                   {s.campaign_name && (

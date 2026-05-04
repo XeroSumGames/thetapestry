@@ -14,6 +14,7 @@ import {
 } from '../../../lib/campfire-settings'
 import ReactionButtons, { aggregateReactions, type ReactionAggregate } from '../../../components/ReactionButtons'
 import InlineRepliesPanel from '../../../components/InlineRepliesPanel'
+import AuthorBadge from '../../../components/AuthorBadge'
 
 // /campfire/lfg — bulletin board for finding GMs and players. Cross-campaign
 // by design: this is the meta layer, not tied to any single story. Anyone
@@ -39,6 +40,7 @@ interface LfgPost {
 
 interface PostWithAuthor extends LfgPost {
   author_username: string
+  author_avatar_url: string | null
 }
 
 type Filter = 'all' | 'gm_seeking_players' | 'player_seeking_game'
@@ -269,9 +271,10 @@ export default function LfgPage() {
     const allUserIds = Array.from(new Set([...authorIds, ...interestUserIds]))
     const { data: profs } = await supabase
       .from('profiles')
-      .select('id, username')
+      .select('id, username, avatar_url')
       .in('id', allUserIds)
     const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
+    const avatarMap: Record<string, string | null> = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.avatar_url ?? null]))
 
     const myCurrentId = (await getCachedAuth()).user?.id ?? null
     const myInts = new Set<string>()
@@ -291,7 +294,7 @@ export default function LfgPage() {
     })
     setMyInterests(myInts)
     setInterestsByPost(byPost)
-    setPosts(list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown' })))
+    setPosts(list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown', author_avatar_url: avatarMap[p.author_user_id] ?? null })))
     // Reaction hydration for the visible posts.
     const ids = list.map(p => p.id)
     if (ids.length > 0) {
@@ -330,10 +333,11 @@ export default function LfgPage() {
     const authorIds = Array.from(new Set(list.map(p => p.author_user_id)))
     const { data: profs } = await supabase
       .from('profiles')
-      .select('id, username')
+      .select('id, username, avatar_url')
       .in('id', authorIds)
     const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
-    setPosts(list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown' })))
+    const avatarMap: Record<string, string | null> = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.avatar_url ?? null]))
+    setPosts(list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown', author_avatar_url: avatarMap[p.author_user_id] ?? null })))
     const ids = list.map(p => p.id)
     if (ids.length > 0) {
       const { data: reactRows } = await supabase
@@ -365,10 +369,11 @@ export default function LfgPage() {
     const authorIds = Array.from(new Set(list.map(p => p.author_user_id)))
     const { data: profs } = await supabase
       .from('profiles')
-      .select('id, username')
+      .select('id, username, avatar_url')
       .in('id', authorIds)
     const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
-    setPosts(prev => [...prev, ...list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown' }))])
+    const avatarMap: Record<string, string | null> = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.avatar_url ?? null]))
+    setPosts(prev => [...prev, ...list.map(p => ({ ...p, author_username: nameMap[p.author_user_id] ?? 'Unknown', author_avatar_url: avatarMap[p.author_user_id] ?? null }))])
     const ids = list.map(p => p.id)
     if (ids.length > 0) {
       const { data: reactRows } = await supabase
@@ -728,7 +733,8 @@ export default function LfgPage() {
                     {KIND_LABEL[p.kind]}
                   </span>
                   <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
-                  <span style={{ fontSize: '13px', color: '#cce0f5' }}>by {p.author_username}</span>
+                  <span style={{ fontSize: '13px', color: '#cce0f5' }}>by</span>
+                  <AuthorBadge username={p.author_username} avatarUrl={p.author_avatar_url} size={18} />
                   <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
                   <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTimestamp(p.updated_at)}</span>
                   {p.moderation_status === 'pending' && (

@@ -4,6 +4,7 @@ import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { logEvent } from '../../../lib/events'
 import { useRouter } from 'next/navigation'
+import AuthorBadge from '../../../components/AuthorBadge'
 import {
   composePickerOptions,
   SETTING_FILTER_CHIPS,
@@ -63,6 +64,7 @@ interface Thread {
 
 interface ThreadWithAuthor extends Thread {
   author_username: string
+  author_avatar_url: string | null
   campaign_name: string | null
 }
 
@@ -143,16 +145,18 @@ export default function ForumsIndexPage() {
     const authorIds = Array.from(new Set(list.map(t => t.author_user_id)))
     const campaignIds = Array.from(new Set(list.map(t => t.campaign_id).filter((x): x is string => !!x)))
     const [profRes, campRes] = await Promise.all([
-      supabase.from('profiles').select('id, username').in('id', authorIds),
+      supabase.from('profiles').select('id, username, avatar_url').in('id', authorIds),
       campaignIds.length > 0
         ? supabase.from('campaigns').select('id, name').in('id', campaignIds)
         : Promise.resolve({ data: [] as { id: string; name: string }[] }),
     ])
     const nameMap = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.username]))
+    const avatarMap: Record<string, string | null> = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.avatar_url ?? null]))
     const campMap = Object.fromEntries((campRes.data ?? []).map((c: any) => [c.id, c.name]))
     setThreads(list.map(t => ({
       ...t,
       author_username: nameMap[t.author_user_id] ?? 'Unknown',
+      author_avatar_url: avatarMap[t.author_user_id] ?? null,
       campaign_name: t.campaign_id ? (campMap[t.campaign_id] ?? null) : null,
     })))
     setLoading(false)
@@ -182,16 +186,18 @@ export default function ForumsIndexPage() {
     const authorIds = Array.from(new Set(list.map(t => t.author_user_id)))
     const campaignIds = Array.from(new Set(list.map(t => t.campaign_id).filter((x): x is string => !!x)))
     const [profRes, campRes] = await Promise.all([
-      supabase.from('profiles').select('id, username').in('id', authorIds),
+      supabase.from('profiles').select('id, username, avatar_url').in('id', authorIds),
       campaignIds.length > 0
         ? supabase.from('campaigns').select('id, name').in('id', campaignIds)
         : Promise.resolve({ data: [] as { id: string; name: string }[] }),
     ])
     const nameMap = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.username]))
+    const avatarMap: Record<string, string | null> = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.avatar_url ?? null]))
     const campMap = Object.fromEntries((campRes.data ?? []).map((c: any) => [c.id, c.name]))
     setThreads(list.map(t => ({
       ...t,
       author_username: nameMap[t.author_user_id] ?? 'Unknown',
+      author_avatar_url: avatarMap[t.author_user_id] ?? null,
       campaign_name: t.campaign_id ? (campMap[t.campaign_id] ?? null) : null,
     })))
     setSearching(false)
@@ -218,16 +224,18 @@ export default function ForumsIndexPage() {
     const authorIds = Array.from(new Set(list.map(t => t.author_user_id)))
     const campaignIds = Array.from(new Set(list.map(t => t.campaign_id).filter((x): x is string => !!x)))
     const [profRes, campRes] = await Promise.all([
-      supabase.from('profiles').select('id, username').in('id', authorIds),
+      supabase.from('profiles').select('id, username, avatar_url').in('id', authorIds),
       campaignIds.length > 0
         ? supabase.from('campaigns').select('id, name').in('id', campaignIds)
         : Promise.resolve({ data: [] as { id: string; name: string }[] }),
     ])
     const nameMap = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.username]))
+    const avatarMap: Record<string, string | null> = Object.fromEntries((profRes.data ?? []).map((p: any) => [p.id, p.avatar_url ?? null]))
     const campMap = Object.fromEntries((campRes.data ?? []).map((c: any) => [c.id, c.name]))
     setThreads(prev => [...prev, ...list.map(t => ({
       ...t,
       author_username: nameMap[t.author_user_id] ?? 'Unknown',
+      author_avatar_url: avatarMap[t.author_user_id] ?? null,
       campaign_name: t.campaign_id ? (campMap[t.campaign_id] ?? null) : null,
     }))])
     setLoadingMore(false)
@@ -599,7 +607,8 @@ export default function ForumsIndexPage() {
                         ✗ Rejected
                       </span>
                     )}
-                    <span style={{ fontSize: '13px', color: '#cce0f5' }}>· {t.author_username}</span>
+                    <span style={{ fontSize: '13px', color: '#cce0f5' }}>·</span>
+                    <AuthorBadge username={t.author_username} avatarUrl={t.author_avatar_url} size={18} />
                   </div>
                   <div style={{
                     fontFamily: 'Carlito, sans-serif',

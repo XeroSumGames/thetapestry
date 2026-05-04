@@ -12,6 +12,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { renderRichText } from '../lib/rich-text'
+import AuthorBadge from './AuthorBadge'
 
 interface ReplyRow {
   id: string
@@ -23,6 +24,7 @@ interface ReplyRow {
 
 interface ReplyWithAuthor extends ReplyRow {
   author_username: string
+  author_avatar_url: string | null
 }
 
 interface Props {
@@ -62,11 +64,16 @@ export default function InlineRepliesPanel({
       const ids = Array.from(new Set(list.map(r => r.author_user_id)))
       const { data: profs } = await supabase
         .from('profiles')
-        .select('id, username')
+        .select('id, username, avatar_url')
         .in('id', ids)
       const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
+      const avatarMap: Record<string, string | null> = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.avatar_url ?? null]))
       if (alive) {
-        setReplies(list.map(r => ({ ...r, author_username: nameMap[r.author_user_id] ?? 'Unknown' })))
+        setReplies(list.map(r => ({
+          ...r,
+          author_username: nameMap[r.author_user_id] ?? 'Unknown',
+          author_avatar_url: avatarMap[r.author_user_id] ?? null,
+        })))
         setLoading(false)
       }
     }
@@ -88,14 +95,15 @@ export default function InlineRepliesPanel({
       setPosting(false)
       return
     }
-    // Hydrate the new row's username from cache or single fetch.
+    // Hydrate the new row's username + avatar from a single fetch.
     const { data: prof } = await supabase
       .from('profiles')
-      .select('id, username')
+      .select('id, username, avatar_url')
       .eq('id', userId)
       .maybeSingle()
     const username = (prof as any)?.username ?? 'You'
-    setReplies(prev => [...prev, { ...(data as any), author_username: username }])
+    const avatar_url = (prof as any)?.avatar_url ?? null
+    setReplies(prev => [...prev, { ...(data as any), author_username: username, author_avatar_url: avatar_url }])
     setDraft('')
     onReplyCountChange?.(+1)
     setPosting(false)
@@ -131,10 +139,8 @@ export default function InlineRepliesPanel({
             const isMine = r.author_user_id === userId
             return (
               <div key={r.id} style={{ padding: '8px 10px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: `3px solid ${isMine ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: isMine ? '#7ab3d4' : '#cce0f5', fontWeight: 700, letterSpacing: '.04em' }}>
-                    {r.author_username}{isMine ? ' (you)' : ''}
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <AuthorBadge username={r.author_username + (isMine ? ' (you)' : '')} avatarUrl={r.author_avatar_url} size={18} emphasis />
                   <span style={{ fontSize: '13px', color: '#5a5550' }}>·</span>
                   <span style={{ fontSize: '13px', color: '#9aa5b0' }}>{fmt(r.created_at)}</span>
                   <div style={{ flex: 1 }} />
