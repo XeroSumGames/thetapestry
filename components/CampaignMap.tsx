@@ -90,6 +90,12 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   const clusterGroupRef = useRef<any>(null)
   const debounceRef = useRef<any>(null)
   const placingRef = useRef(false)
+  // Ping channel + active-ping markers. Alt+click anywhere on the
+  // campaign map drops a transient pulse and broadcasts it to every
+  // other viewer of this campaign — same UX as the tactical map. GM
+  // pings are orange; player pings are green.
+  const pingChannelRef = useRef<any>(null)
+  const pingMarkersRef = useRef<any[]>([])
   // Hold a ref to the latest onMapDoubleClick callback so the Leaflet
   // dblclick handler registered in the init effect can always call the
   // current parent version without re-subscribing.
@@ -114,6 +120,58 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
   // Keep ref in sync so the Leaflet click handler sees current state
   useEffect(() => { placingRef.current = placing }, [placing])
+
+  // Inject ping pulse keyframes ONCE (per browser tab). Two pulses
+  // over ~2.4s, then auto-removal of the marker. Same visual cadence
+  // as TacticalMap so players recognize the gesture across surfaces.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    if (document.getElementById('cm-ping-style')) return
+    const s = document.createElement('style')
+    s.id = 'cm-ping-style'
+    s.textContent = `
+@keyframes cm-ping-pulse {
+  0%   { transform: scale(0.3); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.cm-ping-ring {
+  width: 60px; height: 60px; border-radius: 50%;
+  border: 3px solid currentColor;
+  box-shadow: 0 0 12px currentColor;
+  animation: cm-ping-pulse 1.2s ease-out 2 both;
+  pointer-events: none;
+}
+.cm-ping-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+  position: absolute; left: 24px; top: 24px;
+  animation: cm-ping-pulse 1.2s ease-out 2 both;
+  pointer-events: none;
+}
+`
+    document.head.appendChild(s)
+  }, [])
+
+  // Drop a transient pulsing marker at (lat, lng) and clear it after
+  // the animation finishes. Keeping a list of active markers means we
+  // can wipe everything in the unmount-cleanup, which matters when the
+  // /table page re-mounts the map between scenes.
+  function dropPing(lat: number, lng: number, color: string) {
+    const L = (window as any).L
+    const map = mapInstanceRef.current
+    if (!L || !map) return
+    const html = `<div style="position:relative;width:60px;height:60px;color:${color};"><div class="cm-ping-ring"></div><div class="cm-ping-dot"></div></div>`
+    const icon = L.divIcon({ html, className: '', iconSize: [60, 60], iconAnchor: [30, 30] })
+    const marker = L.marker([lat, lng], { icon, interactive: false, keyboard: false, zIndexOffset: 9999 }).addTo(map)
+    pingMarkersRef.current.push(marker)
+    // 1.2s × 2 iterations = 2.4s total. Add a small buffer so the last
+    // frame of the second pulse renders before we yank the DOM node.
+    setTimeout(() => {
+      try { map.removeLayer(marker) } catch {}
+      pingMarkersRef.current = pingMarkersRef.current.filter(m => m !== marker)
+    }, 2600)
+  }
 
   async function loadPins(L?: any) {
     const [{ data: pinData }, { data: npcData }] = await Promise.all([
@@ -281,8 +339,18 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
       mapInstanceRef.current = map
 
-      // GM click-to-place handler
+      // Alt+click anywhere — drop a ping locally and broadcast it to
+      // every other viewer of this campaign. GM/player both can ping;
+      // color signals the role. Runs BEFORE the placing branch so an
+      // alt-click while in placing mode pings instead of opening the
+      // new-pin form.
       map.on('click', (e: any) => {
+        if (e?.originalEvent?.altKey) {
+          const color = isGM ? '#EF9F27' : '#7fc458'
+          dropPing(e.latlng.lat, e.latlng.lng, color)
+          pingChannelRef.current?.send({ type: 'broadcast', event: 'cm_ping', payload: { lat: e.latlng.lat, lng: e.latlng.lng, color } })
+          return
+        }
         if (!placingRef.current) return
         setNewPin({ lat: e.latlng.lat, lng: e.latlng.lng })
         setPinForm({ name: '', notes: '', category: 'location' })
@@ -304,8 +372,34 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       supabase.channel(`campaign_npcs_map_${campaignId}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_npcs', filter: `campaign_id=eq.${campaignId}` }, () => loadPins())
         .subscribe()
+
+      // Ping broadcast channel — receive only. The sender draws its
+      // own ping locally before the broadcast goes out (zero-latency
+      // self-feedback) so we don't echo it back here.
+      const pingCh = supabase.channel(`campaign_ping_${campaignId}`)
+        .on('broadcast', { event: 'cm_ping' }, (msg: any) => {
+          const p = msg?.payload ?? {}
+          const lat = typeof p.lat === 'number' ? p.lat : p.payload?.lat
+          const lng = typeof p.lng === 'number' ? p.lng : p.payload?.lng
+          const color = p.color ?? p.payload?.color ?? '#EF9F27'
+          if (typeof lat === 'number' && typeof lng === 'number') dropPing(lat, lng, color)
+        })
+        .subscribe()
+      pingChannelRef.current = pingCh
     }
     init()
+    return () => {
+      // Unmount cleanup: drop active pulses and unsubscribe the ping
+      // channel so /table doesn't accumulate channels when scenes flip.
+      const map = mapInstanceRef.current
+      pingMarkersRef.current.forEach(m => { try { map?.removeLayer(m) } catch {} })
+      pingMarkersRef.current = []
+      if (pingChannelRef.current) {
+        try { supabase.removeChannel(pingChannelRef.current) } catch {}
+        pingChannelRef.current = null
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campaignId])
 
   // Rebuild popups when the player's revealed-NPC set changes.
