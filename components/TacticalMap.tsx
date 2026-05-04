@@ -307,12 +307,36 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }, [scene?.id, scene?.fog_state])
 
   // Same reconcile for wall segments. Authoring is click-based (not
-  // drag), so there's no in-flight gate to worry about.
+  // drag), so there's no in-flight gate to worry about. We also run
+  // a one-shot cleanup pass: any wall segments that overlap a door
+  // or window get retroactively split, in case they were drawn
+  // before auto-split shipped. If cleanup actually changed anything,
+  // persist back to the DB so the next load is already clean.
   useEffect(() => {
     if (!scene) return
     const incoming = (scene.walls ?? []) as WallSegment[]
-    setWallsLocal(incoming)
-  }, [scene?.id, scene?.walls])
+    const cleaned = cleanupOverlappingWalls(incoming)
+    setWallsLocal(cleaned)
+    if (isGM && cleaned.length !== incoming.length) {
+      // Persist async — the local mirror is already correct.
+      wallsLocalRef.current = cleaned
+      scheduleWallsPersist()
+    }
+  }, [scene?.id, scene?.walls, isGM])
+
+  // Retroactive auto-split: when a scene loads, walk every door /
+  // window segment and slice any wall that overlaps it. Returns the
+  // new array (walls split + openings preserved). Idempotent — a
+  // second pass on already-clean data is a no-op.
+  function cleanupOverlappingWalls(all: WallSegment[]): WallSegment[] {
+    const openings = all.filter(w => w.kind === 'door' || w.kind === 'window')
+    if (openings.length === 0) return all
+    let walls = all.filter(w => w.kind === 'wall')
+    for (const o of openings) {
+      walls = splitOverlappingSegments(walls, o)
+    }
+    return [...walls, ...openings]
+  }
 
   // Split any wall segments that overlap a new door/window/wall
   // segment on the same axis-aligned line. Returns the rewritten
