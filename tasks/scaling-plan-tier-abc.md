@@ -57,7 +57,7 @@ Each item is sized + tagged with type:
 
 ### Operations
 - [ ] 🟨 **Cloudflare Turnstile account** — sign up, generate site keys (free). ~10 min.
-- [ ] 🟨 **Sentry integration** — sentry.io account, install `@sentry/nextjs`, paste DSN into env vars, deploy. Catches every uncaught error in the wild. ~30 min vendor + 30 min code = ~1 hour total. Free tier covers 5K errors/mo which is enough for Tier C.
+- [x] ✅ **Sentry integration** — shipped 2026-05-04. Account on `xero-sum-games` org / `thetapestry` project. Wizard-generated config (`instrumentation-client.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`, `instrumentation.ts`, `next.config.ts` wrapped with `withSentryConfig`). Both client + server error capture verified via `/sentry-example-page`. Tunnel route `/monitoring` bypasses ad-blockers. Source maps upload at build time via `SENTRY_AUTH_TOKEN` (org token, scopes auto-set: `org:ci`).
 - [ ] 🟨 **Status page** — Better Stack (~$0-30/mo) or Statuspage.io. ~30 min vendor setup. Pin to status.thetapestry.com (DNS CNAME) or similar.
 - [ ] 🟨 **Cost alarms** — Supabase project → settings → usage alerts at 75% of every quota. Vercel → settings → spending limit. ~30 min vendor.
 - [ ] 🟨 **Email deliverability** — finish the DNS records discussed earlier (Resend SPF + DKIM + DMARC). ~1 hour vendor + DNS propagation wait.

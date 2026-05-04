@@ -202,6 +202,15 @@ For the record. ~30 commits.
 | Hide homestead pin on community dissolution | `a6c3591` |
 | Re-crop after batch on portrait-resizer | `0e78f37` |
 
+### Tier A → C scaffolding (2026-05-04)
+| Item | Commit |
+|---|---|
+| Bug-report 🐛 button + email-alert trigger | `d649475` |
+| Privacy + Terms pages + account self-deletion | `db2d09b` |
+| Tier A foundations — invite codes + rate limits + suspension | `f1a3884` |
+| /moderate Bugs tab + Suspension UI + DistemperVerse sidebar link | `8cb294c` / `dcba8f2` |
+| Sentry wired (client + server + tunnel) — verified end-to-end | wizard-generated |
+
 ---
 
 ## ✅ JUST-SHIPPED — 2026-05-01 + 2026-05-02 push
