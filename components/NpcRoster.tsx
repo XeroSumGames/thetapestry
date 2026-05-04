@@ -406,6 +406,13 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       })
       setNpcs(sorted as CampaignNpc[])
       loadCommunityMap(sorted)
+      // CRITICAL: flip loading=false here. The else-branch's loadNpcs()
+      // does this at the end of its work, but the externalNpcs fast-path
+      // had no equivalent — so when the parent /table page fed in a
+      // populated campaignNpcs prop, the panel rendered "Loading..."
+      // forever even though `npcs` state was already filled. The GM's
+      // NPC roster looked broken because the loading gate hid the data.
+      setLoading(false)
     } else {
       loadNpcs()
     }
