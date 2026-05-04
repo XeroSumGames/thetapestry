@@ -7,6 +7,15 @@ import * as Sentry from '@sentry/nextjs'
 
 const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN
 
+// Diagnostic — temporarily logs whether this file is being picked up
+// by Next.js + whether the DSN env var made it into the bundle. If
+// you see "[Sentry] dsn=missing" in the console, the env var is
+// missing or scoped to the wrong environment. If you see nothing at
+// all, Next.js isn't loading instrumentation-client. Remove once
+// Sentry is verified working end-to-end.
+// eslint-disable-next-line no-console
+console.log('[Sentry] instrumentation-client.ts loaded; dsn=' + (dsn ? 'present' : 'MISSING'))
+
 if (dsn) {
   Sentry.init({
     dsn,
