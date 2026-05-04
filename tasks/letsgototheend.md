@@ -1,13 +1,19 @@
 # Let's Go To The End
 
-The complete remaining-work list as of 2026-05-02 (post-audit + echo
-prune). Launch-gate empty. Every item in this doc has the "can I
+The complete remaining-work list as of **2026-05-04** (post-tactical-
+vision push). Launch-gate empty. Every item in this doc has the "can I
 explain it / articulate why it matters / act on it without asking" test
 applied; items that fail are quarantined at the bottom in **❓ NOT
 SURE — needs investigation**.
 
 Inline code TODOs are minimal (3 hits, all non-blocking). All 11 SRD
 stub sections have been converted to hub-with-cards via SectionHub.
+
+**Recent shipping cadence:** 2026-05-01/02 was a 60-commit push closing
+all 5 launch-blockers + the SRD redesign. 2026-05-03/04 added the
+tactical-vision system Phase 1+2, multistory move-to-scene, vehicle
+firing arcs + target gate, /account page, and supporting polish. See
+the per-day shipped sections below.
 
 ---
 
@@ -33,12 +39,9 @@ Optional pre-launch hardening (no specific item is blocking):
 Each of these I can open a file and start typing on right now.
 
 ### Bounded — ~1 session each
-- **Parent/child pin structure** — schema column + UI nesting so a "rumor about the basement" can hang off "the abandoned warehouse" pin. Add `parent_pin_id` self-FK on `map_pins`; render indented children under their parent in the pin browser; add a parent picker on the pin form.
-- **Character photo base64 → Supabase Storage migration** — characters' `data.photoDataUrl` currently stores base64-encoded JPEGs inline in the row. One-shot migration: read all characters with a `data:` prefix, upload to a `character-portraits` bucket, replace the value with the public URL. Reduces row weight materially.
-- **Tools enhancements** — three sub-items, each a small chunk:
-  - Batch portrait resize on `/tools/portrait-resizer` (process N images instead of one).
-  - Manual crop control on the resizer (let the user adjust the crop circle).
-  - Auth gating audit on every `/tools/*` page (most gate via component-level Thriver check; one quick sweep to confirm the rest do).
+- ~~**Parent/child pin structure**~~ — shipped 2026-05-03 (`ed8423d`).
+- **Character photo base64 → Supabase Storage migration** — characters' `data.photoDataUrl` currently stores base64-encoded JPEGs inline in the row. One-shot migration: read all characters with a `data:` prefix, upload to a `character-portraits` bucket, replace the value with the public URL. Reduces row weight materially. (`/tools/migrate-character-photos` exists; per-row migration done as users use it. Mass-migrate background job not yet shipped.)
+- ~~**Tools enhancements** — batch portrait resize, manual crop, auth gating audit~~ — shipped 2026-05-02/03 (`0e78f37` for re-crop after batch).
 
 ### Verify post-launch (no engineering work pending)
 - **Funnel event instrumentation** — 11 events shipped (`2b694aa`): whisper_posted, community_created, module_published, recruit_attempted, morale_check_run, forum_thread_created, war_story_published, lfg_post_created, lfg_interest_pinged, npc_revealed, pin_revealed, character_evolved. Once production traffic warms, query `user_events` to confirm each fires + payload shape is useful. Pure playtesting, not work.
@@ -58,7 +61,7 @@ In progress (off this list).
 - **Lag on initiative** — needs a Xero solo repro before I can chase it. No specific symptom logged.
 - **Code audit deferrals** — table-page split (5,365 lines), debounce realtime callbacks, sequence guards on loadRolls/loadChat. High-risk pre-launch; defer until post-launch.
 - **GM Kit v1 image-bucket repointing** — paused 2026-04-19; Phase 5 Modules supersedes. Don't touch (memory: `project_modules_flagship.md`).
-- **Communities Phase B: NPC-proxy recruitment** — GM rolls on behalf of a Community's Leader NPC to recruit other NPCs (so a community grows itself off-screen while PCs are elsewhere). Activity Blocks Phase D is shipped (2026-04-23) so this is no longer dependency-blocked — just needs scoping + a small UI pass.
+- ~~**Communities Phase B: NPC-proxy recruitment**~~ — shipped 2026-05-02/03 (NPC-proxy recruitment + NPC inventory editing in GM roster).
 
 ### Backburner — don't touch unless trigger fires
 - **Campaign calendar** — triggers: forgotten Skip Week, world events not expiring, "X days passed" automation, encumbrance auto-tick. Build path documented in `tasks/backlog-2026-05-01.md` §6.
@@ -134,6 +137,65 @@ either find the missing context or have Xero kill them.
 - **Tactical map mouse-pan via drag** — long-term-fixes.md says it's broken (click-and-drag on empty cell doesn't pan when canvas overflows) with WASD/arrows as the workaround. The note "no fix path identified" means I literally don't know what to try first. Likely causes listed (canvas may not actually overflow at typical zoom; `contain:layout` paint interaction with `overflow:auto`; canvas needs explicit width/height styling) but no one has confirmed which is the actual cause. Pre-action step required: an investigation session with the dev tools open during the failure to verify which hypothesis matches reality — or Xero says "ship without it" since the workaround works.
 
 That's the only true echo. Everything else above either has a clear next-action or is parked with a documented reason (declined / waiting on copy / waiting on a list / trigger-gated / explicit non-goal).
+
+---
+
+## ✅ JUST-SHIPPED — 2026-05-03 + 2026-05-04 push (tactical vision + accounts)
+
+For the record. ~30 commits.
+
+### Tactical map vision system (Phase 1+2)
+| Item | Commit |
+|---|---|
+| GM-painted fog of war + Edit Fog toolbar | `e795c64` |
+| Doors as object tokens (is_door + door_open + click toggle) | `26aa122` |
+| Wall + window object tokens with vision-block semantics | `ad687f2` |
+| Wall + window visual treatments (brick / glass + mullion) | `9346da7` |
+| Edge-segment wall/door/window draw tool (Foundry-style) | `fe4711a` |
+| Visible "Clear Walls" + delete-hint affordance | `66e2ae1` |
+| Walls auto-split when doors/windows are drawn over them | `1403f2b` |
+| Retroactive auto-split at scene load (cleans pre-existing data) | `b4a9d7b` |
+| Free-form segment drawing + snap-to-wall for doors/windows | `5c5fb05` |
+| Rect-fog tool free-form (not grid-snapped) | `1e604b4` |
+| Rect-erase fog tool | `50c4899` |
+| PCs auto-punch sight radius through fog (vision system) | `fed8283` |
+| Per-token sight radius column + slider | `50c4899` |
+| Auto-fog cells outside any PC LoS (closed-door re-hides) | `29e7f25` |
+| PC-only vision lift (NPCs don't reveal for players) | `c07e156` |
+| Vision-blocker check uses LoS via wall + closed-door segments | `ad687f2` |
+| Default sight radius 6 → 30 cells | `588ce34` |
+| Door/window semantic reframe (door=closed default, window=open) | `597e569` |
+| Closed windows render as see-through frames | `7ebc88a` |
+| Alt+right-click toggles doors AND windows | `8dcb7fc` |
+
+### Multistory + vehicle combat
+| Item | Commit |
+|---|---|
+| Move tokens between scenes (multistory Path B) | `bb9ba5e` |
+| Cross-scene initiative tag (📍 Floor X chip) | `ee72913` |
+| Vehicle mounted-weapon firing arcs (cone visualizer) | `0922ed9` |
+| Firing-arc target validation gate on Attack rolls | `204dd20` |
+| 🎯 Show Arc button on /vehicle popout (cross-window broadcast) | `1594a84` |
+| Minnie M60 mount_angle/arc_degrees backfill | `66e2ae1` |
+
+### Account + content discovery
+| Item | Commit |
+|---|---|
+| /account page (avatar + identity + email + password) | `bf55a36` |
+| Sidebar avatar row → /account | `bf55a36` |
+| Account avatar propagation to Forums / War Stories / LFG / replies | `6cf33b7` |
+| Phase 5C module reviews + featured-on-Campfire | `b9ac828` |
+| ⭐ chip always shown on marketplace cards | `e77e610` |
+| Inventory search + sort within own items | `b09c48e` |
+
+### Map polish
+| Item | Commit |
+|---|---|
+| Parent/child pin structure (schema + UI nesting) | `ed8423d` |
+| NPC inventory editing in GM roster | `d9983fd` |
+| NPC-proxy recruitment (Communities Phase B closer) | `030e077` |
+| Hide homestead pin on community dissolution | `a6c3591` |
+| Re-crop after batch on portrait-resizer | `0e78f37` |
 
 ---
 
@@ -213,21 +275,23 @@ Katana, Discord `<t:UNIX:f>` renderer, inline timestamp tokens, destroyed-object
 | Bucket | Count |
 |---|---|
 | 🚨 Launch-blocking | 0 |
-| 🟡 Open pre-launch (bounded, can start now) | 3 |
-| 🟡 Bounded awaiting spec confirm (events) | 1 |
-| 🟡 Need design call | 1 |
-| 🟡 Content prep (waiting on author) | 2 |
-| ⏸ Deferred (with reasons) | 6 |
+| 🟡 Open pre-launch (bounded, can start now) | 1 (mass character-photo migration job) |
+| 🟡 Verify post-launch (no engineering work) | 1 (funnel events on live traffic) |
+| 🟡 Content prep (waiting on author) | 1 (King's Crossroads Mall) |
+| ⏸ Deferred (with reasons) | 5 |
 | ⏸ Backburner (trigger-gated) | 3 |
 | ⏸ Phase 4 explicit non-goals | 4 |
-| 🌱 Aspirational Phase 5+ | ~30+ |
+| 🌱 Aspirational Phase 5+ | ~25+ |
 | ❌ Discarded / closed | 2 |
 | ❓ Not sure — quarantined | 1 |
+| ✅ Shipped 2026-05-03 + 04 | ~30 commits |
 | ✅ Shipped 2026-05-01 + 02 | ~60 commits |
 
-**Audit cleanups vs. previous version of this doc:**
-- Re-labeled "Pin-image migration" → **Character photo migration** (pins already use Storage; characters store base64).
-- Moved **Embed videos** + **/firsttimers retention** to ❌ DISCARDED / CLOSED (both were already closed; were lingering on the open queue).
-- Un-blocked **Communities Phase B: NPC-proxy recruitment** — Activity Blocks Phase D shipped 2026-04-23 (per `tasks/spec-communities.md`).
-- Promoted **Funnel event instrumentation** out of "needs design" — substituted my synthesized 9-event list as the working spec; awaits Xero confirm but actionable.
-- Quarantined **Tactical map mouse-pan via drag** to ❓ NOT SURE — the only true "no fix path identified" item.
+**Audit cleanups in the 2026-05-04 update:**
+- Closed **Parent/child pin structure** (`ed8423d`).
+- Closed **Tools enhancements** (manual crop + batch + auth gating, `0e78f37`).
+- Closed **Communities Phase B NPC-proxy recruitment** (`030e077`).
+- Marked **Tactical map dynamic lighting / FoW** + **doors as object tokens** as shipped (Phase 1+2 of the vision system landed).
+- Added **Day/Night switch** as a pending polish item under tactical lifts.
+- Added a 1-week audit agent (`trig_016gpGjJqUwdnqZxoEuXMX3k`) firing 2026-05-10 to evaluate vision-system usage.
+- Recorded ~30 new commits under "Just-shipped 2026-05-03 + 04."
