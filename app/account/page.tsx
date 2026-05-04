@@ -376,6 +376,22 @@ export default function AccountPage() {
           </div>
         </div>
 
+        {/* Danger zone — account deletion. GDPR-style data deletion:
+            invokes the existing delete-user edge function (which now
+            permits self-delete). Wipes the user's profile, characters,
+            campaign memberships, owned campaigns, pins, notifications,
+            funnel events, etc. — see the function for the full list.
+            Requires typing the username to confirm. */}
+        <DangerZone profile={profile} />
+
+        {/* Privacy + terms link strip. Required for any platform that
+            collects user data. Kept compact so the page doesn't end
+            on a legal-feeling note. */}
+        <div style={{ marginTop: '1rem', paddingTop: '12px', borderTop: '1px solid #2e2e2e', textAlign: 'center', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
+          <Link href="/privacy" style={{ color: '#7ab3d4', textDecoration: 'none', marginRight: '14px' }}>Privacy Policy</Link>
+          <Link href="/terms" style={{ color: '#7ab3d4', textDecoration: 'none' }}>Terms of Service</Link>
+        </div>
+
         {/* Sign out — bottom of page, secondary action so it's not
             the dominant CTA. The sidebar Log Out is the everyday
             path; this duplicate is for users who landed here. */}
@@ -386,6 +402,135 @@ export default function AccountPage() {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ── Danger Zone ──────────────────────────────────────────────────
+// Account self-deletion. The button starts collapsed; expanding
+// surfaces a confirm-typing field so a misclick doesn't nuke a real
+// account. The actual delete invokes the delete-user edge function
+// (which now allows self-delete). On success, sign out + redirect
+// to /login.
+
+interface DangerZoneProps {
+  profile: ProfileRow | null
+}
+
+function DangerZone({ profile }: DangerZoneProps) {
+  const supabase = createClient()
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const [confirm, setConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState<string>('')
+
+  if (!profile) return null
+
+  const expectedConfirm = profile.username
+  const matches = confirm.trim() === expectedConfirm
+
+  async function handleDelete() {
+    if (!matches || deleting || !profile) return
+    setDeleting(true)
+    setError('')
+    try {
+      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-user`
+      const { data: sess } = await supabase.auth.getSession()
+      const token = sess.session?.access_token
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ user_id: profile.id, caller_id: profile.id }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || json.error) {
+        setError(json.error ?? `Delete failed (${res.status})`)
+        setDeleting(false)
+        return
+      }
+      // Sign out so the now-deleted session token isn't reused.
+      await supabase.auth.signOut()
+      router.push('/login?deleted=1')
+    } catch (err: any) {
+      setError(`Error: ${err?.message ?? 'unknown'}`)
+      setDeleting(false)
+    }
+  }
+
+  return (
+    <div style={{
+      background: '#1a1010', border: '1px solid #5a1f1f', borderLeft: '3px solid #c0392b',
+      borderRadius: '4px', padding: '20px 22px', marginBottom: '14px',
+    }}>
+      <div style={{
+        fontFamily: 'Carlito, sans-serif', fontSize: '15px', fontWeight: 700,
+        letterSpacing: '.12em', textTransform: 'uppercase', color: '#f5a89a', marginBottom: '8px',
+      }}>
+        ⚠ Danger Zone
+      </div>
+      <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.5, marginBottom: '12px' }}>
+        Delete your account and personally-identifying data. Characters, campaign memberships, pins, notifications, and funnel events are wiped. Campaigns you GM are deleted along with their content (warn your players first if this is shared).
+        Content entangled with other users (forum posts, modules others have subscribed to) is anonymized rather than deleted, so the platform doesn&apos;t break for everyone else.
+        <br /><br />
+        <strong>This cannot be undone.</strong>
+      </div>
+      {!open ? (
+        <button onClick={() => setOpen(true)}
+          style={{
+            padding: '8px 18px', background: 'transparent', border: '1px solid #c0392b',
+            borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+            letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer',
+          }}>
+          Delete my account…
+        </button>
+      ) : (
+        <div>
+          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '6px' }}>
+            Type your username <strong style={{ color: '#f5f2ee' }}>{expectedConfirm}</strong> to confirm.
+          </div>
+          <input value={confirm} onChange={e => setConfirm(e.target.value)}
+            disabled={deleting}
+            placeholder={expectedConfirm}
+            style={{
+              width: '100%', padding: '8px 10px', background: '#241010', border: '1px solid #5a1f1f',
+              borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif',
+              boxSizing: 'border-box', marginBottom: '10px',
+            }} />
+          {error && (
+            <div style={{ marginBottom: '8px', padding: '6px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5a89a' }}>
+              {error}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={handleDelete} disabled={!matches || deleting}
+              style={{
+                padding: '8px 18px',
+                background: matches && !deleting ? '#c0392b' : '#241010',
+                border: `1px solid ${matches && !deleting ? '#c0392b' : '#3a3a3a'}`,
+                borderRadius: '3px',
+                color: matches && !deleting ? '#fff' : '#5a5550',
+                fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+                letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700,
+                cursor: matches && !deleting ? 'pointer' : 'not-allowed',
+              }}>
+              {deleting ? 'Deleting…' : 'Permanently delete'}
+            </button>
+            <button onClick={() => { setOpen(false); setConfirm(''); setError('') }}
+              disabled={deleting}
+              style={{
+                padding: '8px 14px', background: 'transparent', border: '1px solid #3a3a3a',
+                borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+                letterSpacing: '.06em', textTransform: 'uppercase', cursor: deleting ? 'not-allowed' : 'pointer',
+              }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

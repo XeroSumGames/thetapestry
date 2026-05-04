@@ -43,6 +43,11 @@ Each of these I can open a file and start typing on right now.
 - **Character photo base64 → Supabase Storage migration** — characters' `data.photoDataUrl` currently stores base64-encoded JPEGs inline in the row. One-shot migration: read all characters with a `data:` prefix, upload to a `character-portraits` bucket, replace the value with the public URL. Reduces row weight materially. (`/tools/migrate-character-photos` exists; per-row migration done as users use it. Mass-migrate background job not yet shipped.)
 - ~~**Tools enhancements** — batch portrait resize, manual crop, auth gating audit~~ — shipped 2026-05-02/03 (`0e78f37` for re-crop after batch).
 
+### Pre-tester polish (added 2026-05-04)
+- **Cost containment alarm** — if 50 testers + content adds up faster than expected, the Supabase free-tier could blow before we notice. Set a Supabase project-level usage alert at 75% of any quota (rows, storage, edge fn invocations). Vercel side: similar bandwidth alarm. ~30 min of vendor-portal config; no code.
+- **Demo / sample campaign for first-time GMs** — first-time GM with no campaign sees an empty world. "Try the demo campaign" button on /stories/new that drops them into a pre-populated Mongrels or DZ campaign so they have something to play with immediately. Reuses the existing setting-seed system; just needs a new "demo seed" path that creates a fresh campaign + auto-enrolls the user as GM with the default content. ~2-3 hours.
+- **Beginners' guide links from /welcome** — the drafted `docs/beginners-guide.txt` is currently uncommitted on disk only. Commit it and surface chapter links from the /welcome page so testers have a real onboarding doc. Could be inline cards (one per chapter) or a single "Read the Beginners' Guide" CTA at the top. ~1-2 hours including the commit + page edit.
+
 ### Verify post-launch (no engineering work pending)
 - **Funnel event instrumentation** — 11 events shipped (`2b694aa`): whisper_posted, community_created, module_published, recruit_attempted, morale_check_run, forum_thread_created, war_story_published, lfg_post_created, lfg_interest_pinged, npc_revealed, pin_revealed, character_evolved. Once production traffic warms, query `user_events` to confirm each fires + payload shape is useful. Pure playtesting, not work.
 

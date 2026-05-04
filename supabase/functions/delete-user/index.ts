@@ -59,15 +59,17 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    // Verify caller is a Thriver
-    const { data: caller } = await supabase.from('profiles').select('role').eq('id', caller_id).single()
-    if (!caller || caller.role !== 'thriver') {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } })
-    }
-
-    // Prevent self-deletion
-    if (user_id === caller_id) {
-      return new Response(JSON.stringify({ error: 'Cannot delete yourself' }), { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } })
+    // Authorization. Two callers are allowed:
+    //   1. A Thriver deleting any other user (the original moderation flow).
+    //   2. A user deleting their OWN account (the /account "Danger Zone"
+    //      flow — required for GDPR-style data-deletion compliance).
+    // Anything else is rejected.
+    const isSelfDelete = user_id === caller_id
+    if (!isSelfDelete) {
+      const { data: caller } = await supabase.from('profiles').select('role').eq('id', caller_id).single()
+      if (!caller || caller.role !== 'thriver') {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } })
+      }
     }
 
     // ── Clean up dependent data before deleting the auth user ──
