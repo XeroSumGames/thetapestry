@@ -257,8 +257,12 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // captured in cell coords. While dragging, the canvas draws a
   // preview overlay; on mouseup, every cell inside the bounds gets
   // flipped into fog_state at once.
-  const [fogRectStart, setFogRectStart] = useState<{ gx: number; gy: number } | null>(null)
-  const [fogRectEnd, setFogRectEnd] = useState<{ gx: number; gy: number } | null>(null)
+  // Rect-fog corners. Float cell-units (NOT integer-floored) so the
+  // GM can drag a rectangle that doesn't snap to grid intersections.
+  // On mouseup we compute which integer cells the float rectangle
+  // overlaps and fog them in one batch.
+  const [fogRectStart, setFogRectStart] = useState<{ x: number; y: number } | null>(null)
+  const [fogRectEnd, setFogRectEnd] = useState<{ x: number; y: number } | null>(null)
   // Segment authoring state. wallDrawStart = the first intersection
   // the GM clicked; wallDrawHover = current cursor intersection for
   // the live preview line. On second click we commit the segment;
@@ -1883,14 +1887,15 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if ((fogEditMode === 'rect' || fogEditMode === 'rect-erase') && fogRectStart && fogRectEnd) {
       const cellW = (s.grid_cols * cellSize) / s.grid_cols
       const cellH = (s.grid_rows * cellSize) / s.grid_rows
-      const x1 = Math.min(fogRectStart.gx, fogRectEnd.gx)
-      const x2 = Math.max(fogRectStart.gx, fogRectEnd.gx)
-      const y1 = Math.min(fogRectStart.gy, fogRectEnd.gy)
-      const y2 = Math.max(fogRectStart.gy, fogRectEnd.gy)
-      const rx = offsetX + x1 * cellW
-      const ry = offsetY + y1 * cellH
-      const rw = (x2 - x1 + 1) * cellW
-      const rh = (y2 - y1 + 1) * cellH
+      // Float-coord marquee — pixel-precise box that doesn't snap.
+      const minX = Math.min(fogRectStart.x, fogRectEnd.x)
+      const maxX = Math.max(fogRectStart.x, fogRectEnd.x)
+      const minY = Math.min(fogRectStart.y, fogRectEnd.y)
+      const maxY = Math.max(fogRectStart.y, fogRectEnd.y)
+      const rx = offsetX + minX * cellW
+      const ry = offsetY + minY * cellH
+      const rw = Math.max(1, (maxX - minX) * cellW)
+      const rh = Math.max(1, (maxY - minY) * cellH)
       const erase = fogEditMode === 'rect-erase'
       ctx.save()
       ctx.fillStyle = erase ? 'rgba(192,57,43,0.18)' : 'rgba(196,167,240,0.18)'
@@ -1950,6 +1955,22 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     const gy = Math.floor((my - 0) / cellSize)
     if (gx < 0 || gx >= scene.grid_cols || gy < 0 || gy >= scene.grid_rows) return null
     return { gx, gy }
+  }
+
+  // Float-precision sub-cell mouse position. Used by the rect-fog
+  // tool so the GM can drag a rectangle that doesn't snap to grid
+  // intersections — gives a smooth marquee box. Out-of-bounds values
+  // are clamped to scene edges so a drag past the canvas edge stays
+  // on the map.
+  function getCellPosFloat(e: React.MouseEvent): { x: number; y: number } | null {
+    if (!canvasRef.current || !scene) return null
+    const rect = canvasRef.current.getBoundingClientRect()
+    const cellSize = getCellSize()
+    const mx = (e.clientX - rect.left) / zoom
+    const my = (e.clientY - rect.top) / zoom
+    const x = Math.max(0, Math.min(scene.grid_cols, mx / cellSize))
+    const y = Math.max(0, Math.min(scene.grid_rows, my / cellSize))
+    return { x, y }
   }
 
   function getTokenAt(gx: number, gy: number): Token | undefined {
@@ -2182,10 +2203,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         if (fogEditMode === 'rect' || fogEditMode === 'rect-erase') {
           // Defer the state mutation to mouseup — during the drag
           // we only render a preview overlay so the GM can pick the
-          // bounds. Capturing both corners now means a single-click
-          // (no drag) still affects the one cell on release.
-          setFogRectStart(pos)
-          setFogRectEnd(pos)
+          // bounds. Capture float (sub-cell) coords so the marquee
+          // box doesn't snap to grid intersections; a single-click
+          // with no drag still affects the one cell at the click.
+          const fpos = getCellPosFloat(e)
+          if (fpos) {
+            setFogRectStart(fpos)
+            setFogRectEnd(fpos)
+          }
         } else {
           const key = `${pos.gx},${pos.gy}`
           setFogLocal(prev => {
@@ -2465,8 +2490,10 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const pos = getGridPos(e)
       if (pos) {
         if (fogEditMode === 'rect' || fogEditMode === 'rect-erase') {
-          if (!fogRectEnd || fogRectEnd.gx !== pos.gx || fogRectEnd.gy !== pos.gy) {
-            setFogRectEnd(pos)
+          // Track float position for smooth marquee.
+          const fpos = getCellPosFloat(e)
+          if (fpos && (!fogRectEnd || fogRectEnd.x !== fpos.x || fogRectEnd.y !== fpos.y)) {
+            setFogRectEnd(fpos)
           }
           return
         }
@@ -2560,10 +2587,19 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (fogPaintingRef.current) {
       fogPaintingRef.current = false
       if ((fogEditMode === 'rect' || fogEditMode === 'rect-erase') && fogRectStart && fogRectEnd) {
-        const x1 = Math.min(fogRectStart.gx, fogRectEnd.gx)
-        const x2 = Math.max(fogRectStart.gx, fogRectEnd.gx)
-        const y1 = Math.min(fogRectStart.gy, fogRectEnd.gy)
-        const y2 = Math.max(fogRectStart.gy, fogRectEnd.gy)
+        const minX = Math.min(fogRectStart.x, fogRectEnd.x)
+        const maxX = Math.max(fogRectStart.x, fogRectEnd.x)
+        const minY = Math.min(fogRectStart.y, fogRectEnd.y)
+        const maxY = Math.max(fogRectStart.y, fogRectEnd.y)
+        // Cells overlapping the float rectangle (any-overlap rule).
+        // Cell (i,j) overlaps the rect [minX,maxX]×[minY,maxY] iff
+        //   i+1 > minX  AND  i < maxX  AND  j+1 > minY  AND  j < maxY
+        // For a zero-area click (start == end at integer), clamp so
+        // we still fog the cell at that point.
+        const x1 = Math.floor(minX)
+        const y1 = Math.floor(minY)
+        const x2 = Math.max(x1, Math.ceil(maxX) - 1)
+        const y2 = Math.max(y1, Math.ceil(maxY) - 1)
         const erase = fogEditMode === 'rect-erase'
         setFogLocal(prev => {
           const next = { ...prev }
