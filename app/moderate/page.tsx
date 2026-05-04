@@ -25,7 +25,12 @@ interface Profile {
   email: string
   role: string
   created_at: string
-  suspended: boolean
+  // Legacy boolean — pre-2026-05-04 schema had a `suspended` flag.
+  // The current column is `suspended_until` (timestamptz) which
+  // RLS predicates check; this stays optional for back-compat reads.
+  suspended?: boolean
+  suspended_until: string | null
+  suspended_reason: string | null
 }
 
 function actionBtn(borderColor: string, color: string): React.CSSProperties {
@@ -492,10 +497,26 @@ export default function ModerationPage() {
     setActing(null)
   }
 
-  async function handleSuspend(id: string, suspended: boolean) {
+  // durationDays = 0 means clear (unsuspend); -1 means permanent
+  // (set to year 2099); otherwise days from now.
+  async function handleSuspend(id: string, durationDays: number, reason?: string) {
     setActing(id)
-    await supabase.from('profiles').update({ suspended }).eq('id', id)
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, suspended } : u))
+    let suspended_until: string | null
+    if (durationDays === 0) {
+      suspended_until = null
+    } else if (durationDays < 0) {
+      suspended_until = '2099-12-31T00:00:00Z'
+    } else {
+      suspended_until = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString()
+    }
+    const patch: Record<string, any> = { suspended_until }
+    if (reason !== undefined) patch.suspended_reason = reason || null
+    const { error } = await supabase.from('profiles').update(patch).eq('id', id)
+    if (error) {
+      alert(`Suspension update failed: ${error.message}`)
+    } else {
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, suspended_until, suspended_reason: reason ?? u.suspended_reason } : u))
+    }
     setActing(null)
   }
 
@@ -740,11 +761,21 @@ export default function ModerationPage() {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap', justifyContent: 'flex-end', flexShrink: 0 }}>
-                  {u.suspended && (
-                    <span style={{ fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px', background: '#2a1a00', color: '#EF9F27', border: '1px solid #EF9F27' }}>
-                      Suspended
-                    </span>
-                  )}
+                  {(() => {
+                    // suspended_until in the future = currently suspended.
+                    // Past or null = clear. Renders a chip with the until-
+                    // date so a Thriver can see when it expires.
+                    const until = u.suspended_until ? new Date(u.suspended_until) : null
+                    const isSuspended = until && until.getTime() > Date.now()
+                    if (!isSuspended) return null
+                    const isPermanent = until!.getFullYear() >= 2099
+                    return (
+                      <span title={u.suspended_reason ?? undefined}
+                        style={{ fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px', background: '#2a1a00', color: '#EF9F27', border: '1px solid #EF9F27' }}>
+                        {isPermanent ? 'Suspended (perm)' : `Suspended → ${until!.toLocaleDateString()}`}
+                      </span>
+                    )
+                  })()}
                   <span style={{
                     fontSize: '13px', fontFamily: 'Carlito, sans-serif',
                     letterSpacing: '.08em', textTransform: 'uppercase',
@@ -767,10 +798,50 @@ export default function ModerationPage() {
                   <Link href={`/moderate/users/${u.id}/characters`} style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', textAlign: 'center' }}>
                     Characters
                   </Link>
-                  <button onClick={() => handleSuspend(u.id, !u.suspended)} disabled={acting === u.id}
-                    style={actionBtn(u.suspended ? '#2d5a1b' : '#5a3a00', u.suspended ? '#7fc458' : '#EF9F27')}>
-                    {u.suspended ? 'Unsuspend' : 'Suspend'}
-                  </button>
+                  {(() => {
+                    const until = u.suspended_until ? new Date(u.suspended_until) : null
+                    const isSuspended = until && until.getTime() > Date.now()
+                    if (isSuspended) {
+                      return (
+                        <button onClick={() => handleSuspend(u.id, 0)} disabled={acting === u.id}
+                          style={actionBtn('#2d5a1b', '#7fc458')}>
+                          Unsuspend
+                        </button>
+                      )
+                    }
+                    // Inline duration picker — user picks length, we
+                    // immediately apply. Default placeholder reads
+                    // "Suspend…" so the GM intent is clear.
+                    return (
+                      <select value="" disabled={acting === u.id}
+                        onChange={async e => {
+                          const v = e.target.value
+                          if (!v) return
+                          const reason = window.prompt('Reason for suspension (optional, shown to other Thrivers):', '') ?? undefined
+                          const days = v === 'perm' ? -1 : parseInt(v, 10)
+                          await handleSuspend(u.id, days, reason)
+                          e.target.value = ''
+                        }}
+                        style={{
+                          padding: '4px 6px',
+                          background: '#3a2a00',
+                          border: '1px solid #5a3a00',
+                          borderRadius: '3px',
+                          color: '#EF9F27',
+                          fontSize: '13px',
+                          fontFamily: 'Carlito, sans-serif',
+                          letterSpacing: '.06em',
+                          textTransform: 'uppercase',
+                          cursor: 'pointer',
+                        }}>
+                        <option value="">Suspend…</option>
+                        <option value="1">24 hours</option>
+                        <option value="7">7 days</option>
+                        <option value="30">30 days</option>
+                        <option value="perm">Permanent</option>
+                      </select>
+                    )
+                  })()}
                   <button onClick={() => handleDeleteUser(u.id)} disabled={acting === u.id} style={actionBtn('#7a1f16', '#f5a89a')}>
                     Delete
                   </button>
