@@ -88,6 +88,11 @@ interface Scene {
   // (drawn from intersection to intersection) so a wall is visually
   // thin instead of occupying a whole cell. See sql/tactical-scenes-walls.sql.
   walls?: WallSegment[] | null
+  // Day/Night toggle per scene. Day = unbounded sight, only limited
+  // by walls + closed doors (the "you can see for miles outdoors"
+  // rule). Night = per-token sight_radius_cells governs how far
+  // each PC can see (the "torch in the dark" rule). Default 'day'.
+  lighting_mode?: 'day' | 'night' | null
 }
 
 interface WallSegment {
@@ -1166,13 +1171,19 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         return false
       }
       const visible = new Set<string>()
+      // Day mode: unbounded sight (only walls block). We sweep a
+      // radius equal to the scene's diagonal so every cell is
+      // candidate-visible; LoS check then trims to wall-bounded
+      // visibility. Night mode: per-token sight_radius governs.
+      const isDay = (s.lighting_mode ?? 'day') === 'day'
+      const dayRadius = Math.max(s.grid_cols, s.grid_rows)
       for (const tok of pcVisionTokens) {
         const gw = tok.grid_w ?? 1
         const gh = tok.grid_h ?? 1
         // Per-token override (column added in
         // sql/scene-tokens-sight-radius.sql); falls back to the
         // default constant for legacy rows.
-        const r = tok.sight_radius_cells ?? VISION_RADIUS_CELLS
+        const r = isDay ? dayRadius : (tok.sight_radius_cells ?? VISION_RADIUS_CELLS)
         for (let fx = 0; fx < gw; fx++) {
           for (let fy = 0; fy < gh; fy++) {
             const ox = tok.grid_x + fx
@@ -3021,6 +3032,25 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             when in edit mode. Hidden entirely from players. */}
         {isGM && scene && (
           <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {/* Day / Night toggle — outdoor scenes default 'day' (PCs
+                see for miles, only walls block). Indoor/dark scenes
+                flip to 'night' (per-token sight_radius governs;
+                auto-fog kicks in beyond). Persists on
+                tactical_scenes.lighting_mode so all viewers update. */}
+            {(() => {
+              const isDay = (scene.lighting_mode ?? 'day') === 'day'
+              return (
+                <button onClick={async () => {
+                  const next = isDay ? 'night' : 'day'
+                  await supabase.from('tactical_scenes').update({ lighting_mode: next }).eq('id', scene.id)
+                  setScene(p => p ? { ...p, lighting_mode: next } : p)
+                }}
+                  title={isDay ? 'Day — sight unbounded, only walls block. Click to switch to Night.' : 'Night — per-token sight radius governs, auto-fog beyond. Click to switch to Day.'}
+                  style={{ padding: '4px 10px', background: isDay ? '#2a2010' : '#0f1a2e', border: `1px solid ${isDay ? '#EF9F27' : '#7ab3d4'}`, borderRadius: '3px', color: isDay ? '#EF9F27' : '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                  {isDay ? '🌞 Day' : '🌙 Night'}
+                </button>
+              )
+            })()}
             {!fogEditMode && (
               <button onClick={() => setFogEditMode('paint')}
                 title="Paint fog over cells the players shouldn't see. Drag to fog regions, switch to erase to clear."
