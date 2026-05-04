@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(node scripts/check-font-sizes.mjs *)",
+      "Bash(pdftotext *)",
+      "Bash(git fetch *)",
+      "Bash(awk *)"
+    ]
+  }
+}

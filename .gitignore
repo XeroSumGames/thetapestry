@@ -47,3 +47,6 @@ next-env.d.ts
 # from a stash if missing — they were last preserved in stash@{0}'s
 # untracked-files commit (ecd7cb2 on 2026-04-27).
 docs/Rules/
+
+# Sentry Config File
+.env.sentry-build-plugin

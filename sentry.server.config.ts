@@ -1,14 +1,13 @@
-// Sentry — server-side (Node) runtime. Captures errors from API
-// routes, server components, and middleware. Same DSN as the client.
+// This file configures the initialization of Sentry on the server.
+// The config you add here will be used whenever the server handles a request.
+// https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-import * as Sentry from '@sentry/nextjs'
+import * as Sentry from "@sentry/nextjs";
 
-const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN
+Sentry.init({
+  dsn: "https://15db6e222c63c57dbbf88464fb067958@o4511332957683712.ingest.us.sentry.io/4511332964237312",
 
-if (dsn) {
-  Sentry.init({
-    dsn,
-    tracesSampleRate: 0,
-    environment: process.env.VERCEL_ENV || process.env.NODE_ENV || 'development',
-  })
-}
+  // Enable sending user PII (Personally Identifiable Information)
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+});
