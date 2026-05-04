@@ -212,6 +212,14 @@ export default function Sidebar() {
       <Link href="/campfire" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Campfire</Link>
       <Link href="/rumors"   style={linkStyle('#8b5cf6')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rumors</Link>
       <Link href="/rules"    style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Rules</Link>
+      {/* External link out to the brand site. New tab + rel=noreferrer
+          since it leaves the app entirely. Same visual treatment as
+          the in-app links so the sidebar stays uniform. */}
+      <a href="https://www.distemperverse.com" target="_blank" rel="noreferrer"
+        style={linkStyle('#3a3a3a')}
+        onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
+        The DistemperVerse ↗
+      </a>
 
       {/* Phase 4C — setting hubs (DZ + Kings Crossroads) moved into
           /campfire 2026-05-01 per user spec; sidebar only shows the
