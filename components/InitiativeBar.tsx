@@ -17,7 +17,7 @@
 // Wrapped in React.memo so unchanged props don't re-render the bar
 // when the parent re-renders for an unrelated reason.
 
-import { memo, useState } from 'react'
+import { memo, useRef, useState } from 'react'
 
 // ── Types ──────────────────────────────────────────────────────
 // Mirror the InitiativeEntry / TableEntry shapes from the table page.
@@ -120,6 +120,21 @@ function InitiativeBarImpl({
   const [showAddPC, setShowAddPC] = useState(false)
   const [showAddNPC, setShowAddNPC] = useState(false)
   const [npcName, setNpcName] = useState('')
+  // Pin the + PC dropdown below the button via position:fixed. The
+  // bar's parent container has overflow-x: auto (so the initiative
+  // strip can scroll horizontally), which CLIPS any absolutely-
+  // positioned dropdown along Y too — that's why the picker was
+  // appearing "behind" the tactical map even at zIndex 100. Using
+  // position:fixed escapes the overflow context entirely; we measure
+  // the button's bounding rect on click and anchor the dropdown to
+  // viewport coords from there.
+  const addPCBtnRef = useRef<HTMLButtonElement | null>(null)
+  const [addPCAnchor, setAddPCAnchor] = useState<{ top: number; left: number } | null>(null)
+  function openAddPCMenu() {
+    const r = addPCBtnRef.current?.getBoundingClientRect()
+    if (r) setAddPCAnchor({ top: r.bottom + 4, left: r.left })
+    setShowAddPC(true)
+  }
 
   function compactName(name: string): string {
     const parts = name.trim().split(/\s+/)
@@ -350,27 +365,35 @@ function InitiativeBarImpl({
         {isGM && (
           <div style={{ display: 'flex', gap: '4px', flexShrink: 0, position: 'relative' }}>
             {addablePCs.length > 0 && (
-              !showAddPC ? (
-                <button onClick={() => setShowAddPC(true)}
-                  style={{ padding: '4px 10px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+              <>
+                <button ref={addPCBtnRef} onClick={openAddPCMenu}
+                  style={{ padding: '4px 10px', background: showAddPC ? '#0d1f08' : '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
                   title="Add a player to initiative mid-combat">
                   + PC
                 </button>
-              ) : (
-                <div style={{ position: 'absolute', top: '32px', left: 0, zIndex: 100, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '6px', minWidth: '160px', boxShadow: '0 4px 12px rgba(0,0,0,0.6)' }}>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Add PC to Combat</div>
-                  {addablePCs.map(e => (
-                    <button key={e.character.id} onClick={() => { onAddPCToCombat(e); setShowAddPC(false) }}
-                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginBottom: '3px' }}>
-                      {e.character.name}
-                    </button>
-                  ))}
-                  <button onClick={() => setShowAddPC(false)}
-                    style={{ display: 'block', width: '100%', padding: '3px 8px', background: 'none', border: '1px solid #2e2e2e', borderRadius: '2px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', marginTop: '2px' }}>
-                    Cancel
-                  </button>
-                </div>
-              )
+                {showAddPC && addPCAnchor && (
+                  <>
+                    {/* Click-away catcher fills the viewport BENEATH the
+                        dropdown so any click outside closes the menu.
+                        Same z-stack trick the player-portrait popovers use. */}
+                    <div onClick={() => setShowAddPC(false)}
+                      style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
+                    <div style={{ position: 'fixed', top: addPCAnchor.top, left: addPCAnchor.left, zIndex: 9999, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '6px', minWidth: '160px', boxShadow: '0 4px 12px rgba(0,0,0,0.6)' }}>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Add PC to Combat</div>
+                      {addablePCs.map(e => (
+                        <button key={e.character.id} onClick={() => { onAddPCToCombat(e); setShowAddPC(false) }}
+                          style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginBottom: '3px' }}>
+                          {e.character.name}
+                        </button>
+                      ))}
+                      <button onClick={() => setShowAddPC(false)}
+                        style={{ display: 'block', width: '100%', padding: '3px 8px', background: 'none', border: '1px solid #2e2e2e', borderRadius: '2px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', marginTop: '2px' }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                )}
+              </>
             )}
             {!showAddNPC ? (
               <button onClick={() => setShowAddNPC(true)}

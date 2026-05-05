@@ -1518,13 +1518,24 @@ export default function TablePage() {
       await ensureCharacterStates(id, rawMembers as any[])
     }
     // Filter out kicked players so they don't get re-added to initiative.
-    const { data: kickedStates } = await supabase
-      .from('character_states')
-      .select('user_id')
-      .eq('campaign_id', id)
-      .eq('kicked', true)
-    const kickedUserIds = new Set((kickedStates ?? []).map((k: any) => k.user_id))
-    const freshMembers = (rawMembers ?? []).filter((m: any) => !kickedUserIds.has(m.user_id))
+    // CRITICAL: scope by character_id, NOT just user_id. character_states
+    // has one row per (campaign, user, character) — if a player was once
+    // kicked while playing character A and then later rejoins with
+    // character B, the stale kicked=true row on A would otherwise poison
+    // B too. Pre-fix, that bit Shimmy Paint on 2026-05-04: TimTheLiar
+    // had been kicked on a previous PC, then made a new character, and
+    // combat-start kept silently excluding them.
+    const memberCharIds = (rawMembers ?? []).map((m: any) => m.character_id).filter(Boolean)
+    const { data: kickedStates } = memberCharIds.length > 0
+      ? await supabase
+          .from('character_states')
+          .select('user_id, character_id')
+          .eq('campaign_id', id)
+          .eq('kicked', true)
+          .in('character_id', memberCharIds)
+      : { data: [] }
+    const kickedCharIds = new Set((kickedStates ?? []).map((k: any) => k.character_id))
+    const freshMembers = (rawMembers ?? []).filter((m: any) => !kickedCharIds.has(m.character_id))
     const charIds = freshMembers.map((m: any) => m.character_id)
     const { data: freshChars } = charIds.length > 0
       ? await supabase.from('characters').select('id, name, data').in('id', charIds)
