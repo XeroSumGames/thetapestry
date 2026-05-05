@@ -290,18 +290,21 @@ export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whis
     let isWhisper = !!whisperTarget
     let messageBody = trimmed
 
-    // Dice roller — `/d <expr>` or `/dice <expr>`. Expression is
-    // NdM with optional +/- modifiers (e.g. `/d 1d6`, `/d 3d20+3-1`).
+    // Dice roller — `/r <expr>` or `/roll <expr>`. Expression is
+    // NdM with optional +/- modifiers (e.g. `/r 1d6`, `/r 3d20+3-1`).
     // Output replaces the chat body with a formatted result line and
     // rides through the normal send path (so it respects whisper
     // target — set whisper to GM first if you want a secret roll).
-    // Capped at 100 dice / 1000 sides as a safety guard.
-    const diceCmd = trimmed.match(/^\/d(?:ice)?\s+(.+)$/i)
+    // Capped at 100 dice / 1000 sides as a safety guard. Trigger was
+    // `/d` originally; flipped to `/r` per Xero on 2026-05-04 since
+    // `/d` collided with muscle memory from other tools that use it
+    // as a delete shortcut.
+    const diceCmd = trimmed.match(/^\/r(?:oll)?\s+(.+)$/i)
     if (diceCmd) {
       const expr = diceCmd[1].replace(/\s+/g, '')
       const m = expr.match(/^(\d+)d(\d+)((?:[+\-]\d+)*)$/i)
       if (!m) {
-        alert(`Bad dice expression: "${diceCmd[1]}"\n\nFormat: /d NdM[+/-K] — e.g. /d 1d6, /d 3d20+3+2-1, /d 1d100-2`)
+        alert(`Bad dice expression: "${diceCmd[1]}"\n\nFormat: /r NdM[+/-K] — e.g. /r 1d6, /r 3d20+3+2-1, /r 1d100-2`)
         return
       }
       const count = Math.min(100, Math.max(1, parseInt(m[1], 10)))

@@ -537,7 +537,14 @@ export function RollEntry({ r, expandedRollIds, toggleExpanded, simple }: RollEn
               </div>
             </>
           )}
-          {r.damage_json && (
+          {r.damage_json && (r.damage_json as any).targetName && (r.damage_json as any).totalWP != null && (
+            // Gate: only render the Damage box when this row actually
+            // carries attack-resolution data (targetName + totalWP).
+            // Vehicle driving / brew checks write damage_json with
+            // metadata-only payloads (vehicleId, fuelDelta, etc.) and
+            // no damage fields — pre-fix that lit up an empty
+            // "Damage → / = raw → WP / RP" line on every Driving check,
+            // which read like a phantom hit on nothing.
             <div style={{ marginTop: '6px', padding: '6px 8px', background: '#1a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: simple ? '13px' : '14px', fontFamily: 'Carlito, sans-serif', color: '#d4cfc9' }}>
               <span style={{ color: '#f5a89a', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', fontSize: '13px' }}>Damage → {(r.damage_json as any).targetName}</span>
               <div style={{ marginTop: '2px' }}>
