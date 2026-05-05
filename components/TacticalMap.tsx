@@ -2798,11 +2798,75 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     }
     setDragging(null)
     if (moved && !outOfRange) {
+      const dx = pos!.gx - tok!.grid_x
+      const dy = pos!.gy - tok!.grid_y
       setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, grid_x: pos!.gx, grid_y: pos!.gy } : t))
       supabase.from('scene_tokens').update({ grid_x: pos!.gx, grid_y: pos!.gy }).eq('id', tokenId).then(({ error }: any) => {
         if (error) console.warn('[TacticalMap] token move failed:', error)
         else tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
       })
+      // Vehicle passenger sync — when an object token whose name
+      // matches a campaign vehicle moves, every PC/NPC riding in one
+      // of its slots (driver / brewer / navigator / gunner /
+      // passenger_seats) has their own token dragged along by the
+      // same (dx, dy). Vehicles aren't a separate table; they live
+      // on campaigns.vehicles JSONB. Name-based matching mirrors the
+      // damage-sync pattern (commit c35770e) — fragile if two
+      // vehicles share a name in one campaign, but that's a rare
+      // edge case and the alternative (scene_tokens.vehicle_id FK)
+      // is a bigger schema change. Fire-and-forget; if no vehicle
+      // matches the name, .find returns undefined and we no-op.
+      if (tok && tok.token_type === 'object' && (dx !== 0 || dy !== 0)) {
+        void (async () => {
+          const { data: camp } = await supabase
+            .from('campaigns')
+            .select('vehicles')
+            .eq('id', campaignId)
+            .maybeSingle()
+          const list = ((camp as any)?.vehicles ?? []) as any[]
+          const veh = list.find(v => v?.name === tok!.name)
+          if (!veh) return
+          // Collect every linked PC/NPC id across all slot kinds.
+          const charIds: string[] = []
+          const npcIds: string[] = []
+          const push = (id: string | null | undefined, kind: string | null | undefined) => {
+            if (!id) return
+            if (kind === 'pc') charIds.push(id)
+            else if (kind === 'npc') npcIds.push(id)
+          }
+          push(veh.driver_character_id, veh.driver_kind)
+          push(veh.brewer_character_id, veh.brewer_kind)
+          push(veh.navigator_character_id, veh.navigator_kind)
+          for (const w of (veh.mounted_weapons ?? [])) {
+            push(w?.shooter_character_id, w?.shooter_kind)
+          }
+          for (const s of (veh.passenger_seats ?? [])) {
+            if (s) push(s.character_id, s.kind)
+          }
+          if (charIds.length === 0 && npcIds.length === 0) return
+          // Find the matching tokens in this scene. The tokensRef has
+          // the freshest version (the setTokens for the vehicle just
+          // committed; React batched but the ref is updated already).
+          const passengerToks = tokensRef.current.filter(t => {
+            if (t.id === tokenId) return false  // don't double-move the vehicle itself
+            if (t.character_id && charIds.includes(t.character_id)) return true
+            if (t.npc_id && npcIds.includes(t.npc_id)) return true
+            return false
+          })
+          if (passengerToks.length === 0) return
+          // Move locally first for snappy feel, then persist.
+          setTokens(prev => prev.map(t => {
+            const isPassenger = passengerToks.some(p => p.id === t.id)
+            return isPassenger ? { ...t, grid_x: t.grid_x + dx, grid_y: t.grid_y + dy } : t
+          }))
+          await Promise.all(passengerToks.map(p =>
+            supabase.from('scene_tokens')
+              .update({ grid_x: p.grid_x + dx, grid_y: p.grid_y + dy })
+              .eq('id', p.id)
+          ))
+          tacticalChannelRef.current?.send({ type: 'broadcast', event: 'token_moved', payload: {} })
+        })()
+      }
       // Player drag in combat costs 1 action. Parent handles the DB write
       // via consumeAction (no log entry — drag movement is self-evident from
       // the token animation on the map).

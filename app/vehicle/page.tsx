@@ -193,14 +193,31 @@ export default function VehiclePage() {
     await supabase.from('campaigns').update({ vehicles }).eq('id', campaignId)
   }
 
-  // Persist driver / brewer assignment back to the vehicle row.
-  async function setCrewAssignment(slot: 'driver' | 'brewer', crewId: string) {
+  // Persist driver / brewer / navigator assignment back to the vehicle.
+  async function setCrewAssignment(slot: 'driver' | 'brewer' | 'navigator', crewId: string) {
     if (!vehicle) return
     const member = crew.find(c => c.id === crewId)
-    const patch: Partial<Vehicle> = slot === 'driver'
-      ? { driver_character_id: crewId || null, driver_kind: member?.kind ?? null }
-      : { brewer_character_id: crewId || null, brewer_kind: member?.kind ?? null }
+    const patch: Partial<Vehicle> =
+      slot === 'driver'    ? { driver_character_id: crewId || null, driver_kind: member?.kind ?? null }
+    : slot === 'brewer'    ? { brewer_character_id: crewId || null, brewer_kind: member?.kind ?? null }
+    : /* navigator */        { navigator_character_id: crewId || null, navigator_kind: member?.kind ?? null }
     await updateVehicle({ ...vehicle, ...patch })
+  }
+
+  // Persist a passenger-slot assignment. Slots are a fixed-length 6
+  // array; null = empty seat. Writing slot N replaces only that
+  // entry, leaves the others untouched. Used by the Passenger Seats
+  // section on the popout.
+  async function setPassengerSlot(slotIndex: number, crewId: string) {
+    if (!vehicle) return
+    const seats = (vehicle.passenger_seats ?? Array(6).fill(null)).slice()
+    // Pad to 6 if a legacy vehicle row was written with fewer entries.
+    while (seats.length < 6) seats.push(null)
+    const member = crew.find(c => c.id === crewId)
+    seats[slotIndex] = crewId && member
+      ? { character_id: crewId, kind: member.kind }
+      : null
+    await updateVehicle({ ...vehicle, passenger_seats: seats as any })
   }
 
   // Persist the shooter assignment for a specific mounted weapon.
@@ -645,6 +662,74 @@ export default function VehiclePage() {
       {/* Mounted Weapons — fitted weapons (sniper nest, MG, etc.).
           Each entry has its own Shooter dropdown so different crew
           members can man different stations. */}
+      {/* Passenger Seats — Navigator + 6 numbered slots. When the
+          vehicle's tactical-map token moves, every PC/NPC in any of
+          these slots (plus driver/brewer/gunners) has their token
+          dragged along by the same delta. Stickiness is name-based
+          (vehicle.name → matching scene_tokens row), see TacticalMap
+          handleMouseUp. */}
+      <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Passenger Seats</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          {/* Navigator — single slot */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ ...lbl, marginBottom: 0, flexShrink: 0, width: '88px' }}>Navigator</span>
+            <select value={vehicle.navigator_character_id ?? ''}
+              onChange={e => setCrewAssignment('navigator', e.target.value)}
+              disabled={!canEdit}
+              style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
+              <option value="">— Empty —</option>
+              {crew.filter(c => c.kind === 'pc').length > 0 && (
+                <optgroup label="Player Characters">
+                  {crew.filter(c => c.kind === 'pc').map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </optgroup>
+              )}
+              {crew.filter(c => c.kind === 'npc').length > 0 && (
+                <optgroup label="NPCs">
+                  {crew.filter(c => c.kind === 'npc').map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+          </div>
+          {/* 6 numbered passenger slots */}
+          {Array.from({ length: 6 }).map((_, i) => {
+            const seat = (vehicle.passenger_seats ?? [])[i] ?? null
+            return (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ ...lbl, marginBottom: 0, flexShrink: 0, width: '88px' }}>Seat {i + 1}</span>
+                <select value={seat?.character_id ?? ''}
+                  onChange={e => setPassengerSlot(i, e.target.value)}
+                  disabled={!canEdit}
+                  style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>
+                  <option value="">— Empty —</option>
+                  {crew.filter(c => c.kind === 'pc').length > 0 && (
+                    <optgroup label="Player Characters">
+                      {crew.filter(c => c.kind === 'pc').map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {crew.filter(c => c.kind === 'npc').length > 0 && (
+                    <optgroup label="NPCs">
+                      {crew.filter(c => c.kind === 'npc').map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+              </div>
+            )
+          })}
+        </div>
+        <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic', marginTop: '6px' }}>
+          When this vehicle's token moves on the tactical map, everyone seated here moves with it.
+        </div>
+      </div>
+
       {(vehicle.mounted_weapons?.length ?? 0) > 0 && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px', marginBottom: '16px' }}>
           <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px', borderBottom: '1px solid #2e2e2e', paddingBottom: '4px' }}>Mounted Weapons</div>

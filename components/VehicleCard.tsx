@@ -35,6 +35,17 @@ export interface Vehicle {
   // Only meaningful when has_still is true.
   brewer_character_id?: string | null
   brewer_kind?: 'pc' | 'npc' | null
+  // Navigator / shotgun seat. Single slot. Same shape as driver/brewer
+  // (id + kind). Used by the tactical-map move-sync — when the
+  // vehicle's token moves, every PC/NPC riding it (driver + navigator
+  // + gunners + passengers) gets dragged along by the same delta.
+  navigator_character_id?: string | null
+  navigator_kind?: 'pc' | 'npc' | null
+  // Up to 6 passenger slots. Each is { character_id, kind } or null.
+  // Fixed length so the popout renders 6 rows even when half are
+  // empty. Order is presentational — slot 0 = first row, etc. — and
+  // does NOT correspond to any in-world physical seat ordering.
+  passenger_seats?: Array<{ character_id: string; kind: 'pc' | 'npc' } | null>
   // Whether this vehicle has an integrated still that produces fuel via
   // a brew check. Minnie has one; almost no other vehicle does.
   has_still?: boolean
