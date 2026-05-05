@@ -175,17 +175,24 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
       <div style={{ marginBottom: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
           <span style={lbl}>Fuel Reserves</span>
-          <span style={{ fontSize: '13px', color: '#EF9F27', fontWeight: 700, fontFamily: 'Carlito, sans-serif' }}>{v.fuel_current}/{v.fuel_max} days</span>
+          <span style={{ fontSize: '13px', color: '#EF9F27', fontWeight: 700, fontFamily: 'Carlito, sans-serif' }}>
+            {Number.isInteger(v.fuel_current) ? v.fuel_current : v.fuel_current.toFixed(1)}/{v.fuel_max} days
+          </span>
           {canEdit && (
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '2px' }}>
-              <button onClick={() => update({ fuel_current: Math.max(0, v.fuel_current - 1) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }}>-</button>
-              <button onClick={() => update({ fuel_current: Math.min(v.fuel_max, v.fuel_current + 1) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7fc458', fontSize: '13px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }}>+</button>
+              <button onClick={() => update({ fuel_current: Math.max(0, +(v.fuel_current - 0.5).toFixed(1)) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }} title="Subtract half a day">-½</button>
+              <button onClick={() => update({ fuel_current: Math.min(v.fuel_max, +(v.fuel_current + 0.5).toFixed(1)) })} style={{ background: 'none', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#7fc458', fontSize: '13px', cursor: 'pointer', padding: '0 4px', lineHeight: 1.4 }} title="Add half a day">+½</button>
             </div>
           )}
         </div>
+        {/* Pips render at half-day granularity — fuel_max * 2 pips, each
+            represents 0.5 days. Pip i is filled when fuel_current >= the
+            day-mark this pip represents (i.e. (i+1) * 0.5). Old behavior
+            was 1 pip per day, which masked half-day fuel transactions
+            (e.g. half-day driving stints, partial brew yields). */}
         <div style={{ display: 'flex', gap: '2px' }}>
-          {Array.from({ length: v.fuel_max }).map((_, i) => (
-            <div key={i} style={{ flex: 1, height: '8px', borderRadius: '2px', background: i < v.fuel_current ? '#EF9F27' : '#242424', border: '1px solid #3a3a3a' }} />
+          {Array.from({ length: v.fuel_max * 2 }).map((_, i) => (
+            <div key={i} style={{ flex: 1, height: '8px', borderRadius: '2px', background: v.fuel_current >= (i + 1) * 0.5 ? '#EF9F27' : '#242424', border: '1px solid #3a3a3a' }} />
           ))}
         </div>
       </div>

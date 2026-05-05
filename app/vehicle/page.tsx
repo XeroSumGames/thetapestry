@@ -787,21 +787,27 @@ export default function VehiclePage() {
             </div>
           </div>
 
-          {/* Fuel */}
+          {/* Fuel — pips render at half-day granularity (fuel_max * 2
+              pips, each = 0.5 days). Manual buttons step by ±0.5; the
+              brew flow continues to grant +1 day per success. */}
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
               <span style={lbl}>Fuel Reserves</span>
-              <span style={{ fontSize: '18px', color: '#EF9F27', fontWeight: 700, fontFamily: 'Carlito, sans-serif' }}>{vehicle.fuel_current} / {vehicle.fuel_max} days</span>
+              <span style={{ fontSize: '18px', color: '#EF9F27', fontWeight: 700, fontFamily: 'Carlito, sans-serif' }}>
+                {Number.isInteger(vehicle.fuel_current) ? vehicle.fuel_current : vehicle.fuel_current.toFixed(1)} / {vehicle.fuel_max} days
+              </span>
               {canEdit && (
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
-                  <button onClick={() => updateVehicle({ ...vehicle, fuel_current: Math.max(0, vehicle.fuel_current - 1) })} style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>-1</button>
-                  <button onClick={() => updateVehicle({ ...vehicle, fuel_current: Math.min(vehicle.fuel_max, vehicle.fuel_current + 1) })} style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>+1</button>
+                  <button onClick={() => updateVehicle({ ...vehicle, fuel_current: Math.max(0, +(vehicle.fuel_current - 0.5).toFixed(1)) })} title="Subtract half a day"
+                    style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>-½</button>
+                  <button onClick={() => updateVehicle({ ...vehicle, fuel_current: Math.min(vehicle.fuel_max, +(vehicle.fuel_current + 0.5).toFixed(1)) })} title="Add half a day"
+                    style={{ padding: '2px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>+½</button>
                 </div>
               )}
             </div>
             <div style={{ display: 'flex', gap: '4px' }}>
-              {Array.from({ length: vehicle.fuel_max }).map((_, i) => (
-                <div key={i} style={{ flex: 1, height: '14px', borderRadius: '3px', background: i < vehicle.fuel_current ? '#EF9F27' : '#242424', border: '1px solid #3a3a3a' }} />
+              {Array.from({ length: vehicle.fuel_max * 2 }).map((_, i) => (
+                <div key={i} style={{ flex: 1, height: '14px', borderRadius: '3px', background: vehicle.fuel_current >= (i + 1) * 0.5 ? '#EF9F27' : '#242424', border: '1px solid #3a3a3a' }} />
               ))}
             </div>
           </div>
