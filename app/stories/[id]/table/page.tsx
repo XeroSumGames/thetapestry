@@ -3185,6 +3185,30 @@ export default function TablePage() {
     setShowSpecialCheck(null)
   }
 
+  // Skip the PC-picker modal for single-eligible-PC checks. The picker
+  // is "Pick which PC is rolling" — useless when there's exactly one
+  // candidate (the player path: their own PC) or when a solo-test GM
+  // has only one PC in the campaign. Keep the modal for the multi-PC
+  // GM case where the choice is real. Pre-fix UX hit: every Perception
+  // / Gut Instinct roll cost the player one redundant click on a
+  // 1-button picker. Reported tonight (2026-05-04 playtest BUG-1).
+  function startSpecialCheckPerception() {
+    const visible = entries.filter(e => isGM || e.userId === userId)
+    if (visible.length === 1) {
+      triggerPerceptionCheck(visible[0].character.name)
+      return
+    }
+    setShowSpecialCheck('perception' as any)
+  }
+  function startSpecialCheckGut() {
+    const visible = entries.filter(e => isGM || e.userId === userId)
+    if (visible.length === 1) {
+      triggerGutInstinct(visible[0].character.name)
+      return
+    }
+    setShowSpecialCheck('gut' as any)
+  }
+
   function triggerGutInstinct(characterName: string) {
     const charEntry = entries.find(e => e.character.name === characterName)
     if (!charEntry) return
@@ -5662,8 +5686,8 @@ export default function TablePage() {
           'checks',
           'Checks',
           [
-            { label: 'Perception', onClick: () => setShowSpecialCheck('perception' as any) },
-            { label: 'Gut Instinct', onClick: () => setShowSpecialCheck('gut' as any) },
+            { label: 'Perception', onClick: () => startSpecialCheckPerception() },
+            { label: 'Gut Instinct', onClick: () => startSpecialCheckGut() },
             { label: 'First Impression', onClick: () => setShowSpecialCheck('first_impression' as any) },
             { label: 'Recruit', onClick: () => openRecruitModal() },
             { label: 'Group Check', onClick: () => setShowSpecialCheck('group' as any) },
