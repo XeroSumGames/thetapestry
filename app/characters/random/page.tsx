@@ -9,7 +9,7 @@ import {
   rollComplication, rollMotivation
 } from '../../../lib/xse-engine'
 import {
-  PARADIGMS, MELEE_WEAPONS, RANGED_WEAPONS, EQUIPMENT,
+  PARADIGMS, PROFESSIONS, MELEE_WEAPONS, RANGED_WEAPONS, EQUIPMENT,
   AttributeName
 } from '../../../lib/xse-schema'
 
@@ -130,6 +130,43 @@ export default function RandomCharacterPage() {
         const found = Object.keys(skillDeltas).find(k => k === skillName)
         if (!found) skillDeltas[skillName] = entry.level
       }
+
+      // Profession-skill floor (Xero spec, 2026-05-05): every random
+      // character should have meaningful skill in their profession.
+      // Distribute 10 points across the profession's 5 canonical
+      // skills with min 1 each and max 3 each (so 5 baseline + 5
+      // random extra, no skill exceeding 3). Then merge with the
+      // paradigm's existing levels via max() — paradigm flavor wins
+      // when it specified higher levels, profession floor wins when
+      // the paradigm under-allocated. Pre-fix a Medic paradigm could
+      // ship a random character with Medicine* untouched if the
+      // paradigm's roll didn't seed it; now Medic always rolls 10
+      // points across Manipulation / Medicine* / Psychology* /
+      // Research / Sleight of Hand.
+      const profession = PROFESSIONS.find(p => p.name === paradigm.profession)
+      if (profession) {
+        const profSkills = profession.skills
+        // Start each at level 1 — guarantees min coverage.
+        const profDist: Record<string, number> = {}
+        for (const s of profSkills) profDist[s] = 1
+        // 5 baseline points spent; 5 random points remaining. Each
+        // additional point can go on any skill currently below 3.
+        let remaining = 10 - profSkills.length
+        while (remaining > 0) {
+          const eligible = profSkills.filter(s => profDist[s] < 3)
+          if (eligible.length === 0) break
+          const pickSkill = eligible[Math.floor(Math.random() * eligible.length)]
+          profDist[pickSkill] += 1
+          remaining -= 1
+        }
+        // Merge: paradigm value wins if higher, profession-floor wins
+        // if paradigm gave less. Doesn't push any skill past its
+        // paradigm cap if the paradigm itself exceeded 3.
+        for (const s of profSkills) {
+          skillDeltas[s] = Math.max(skillDeltas[s] ?? 0, profDist[s])
+        }
+      }
+
       state.steps[4] = { ...state.steps[4], skillDeltas }
 
       // Complication + motivation
