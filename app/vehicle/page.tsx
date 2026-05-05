@@ -869,15 +869,15 @@ export default function VehiclePage() {
             </div>
             {showAddCargo && (
               <div style={{ marginTop: '8px', padding: '8px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
-                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', position: 'relative' }}>
                   <input value={addName} onChange={e => {
                     setAddName(e.target.value)
-                    // Auto-fill enc from EQUIPMENT catalog when the name
-                    // matches exactly. Falls through if it's a custom item
-                    // — the user can still set enc manually.
+                    // Exact-match autofill kept as a backstop for users
+                    // who prefer typing the full name + Enter. The new
+                    // dropdown below also writes enc when clicked.
                     const match = EQUIPMENT.find(eq => eq.name.toLowerCase() === e.target.value.trim().toLowerCase())
                     if (match) setAddEnc(String(match.enc))
-                  }} placeholder="Item name (catalog matches autofill enc)"
+                  }} placeholder="Type to search catalog…"
                     autoFocus style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
                   <input value={addQty} onChange={e => setAddQty(e.target.value)} type="number" min="1" placeholder="Qty"
                     style={{ width: '50px', padding: '5px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
@@ -885,6 +885,49 @@ export default function VehiclePage() {
                     title="Encumbrance per item — counts toward the vehicle's capacity"
                     style={{ width: '52px', padding: '5px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
                 </div>
+                {/* Live catalog autocomplete — filters EQUIPMENT by
+                    case-insensitive name OR notes substring as the user
+                    types. Clicking a row fills name + enc + sensible
+                    default notes so the GM doesn't have to know exact
+                    spellings. Stays hidden until the user has typed at
+                    least one character; renders nothing on no-match so
+                    custom items can still be added by clicking Add Item
+                    without picking from the list. */}
+                {addName.trim().length > 0 && (() => {
+                  const q = addName.trim().toLowerCase()
+                  const matches = EQUIPMENT
+                    .filter(eq => eq.name.toLowerCase().includes(q) || (eq.notes ?? '').toLowerCase().includes(q))
+                    .slice(0, 8)
+                  if (matches.length === 0) return null
+                  // Don't show the dropdown when the typed text is an
+                  // exact match — the autofill above already handled it
+                  // and the dropdown becomes noise.
+                  if (matches.length === 1 && matches[0].name.toLowerCase() === q) return null
+                  return (
+                    <div style={{ marginBottom: '6px', maxHeight: '180px', overflowY: 'auto', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px' }}>
+                      {matches.map(eq => (
+                        <div key={eq.name}
+                          onClick={() => {
+                            setAddName(eq.name)
+                            setAddEnc(String(eq.enc))
+                            // Pre-fill notes only if the user hasn't
+                            // already typed something custom there. The
+                            // catalog notes are usually a tier hint
+                            // ("Common", "300 rounds standard") that the
+                            // GM may want to keep or replace.
+                            if (!addNotes.trim() && eq.notes) setAddNotes(eq.notes)
+                          }}
+                          style={{ padding: '5px 8px', cursor: 'pointer', borderBottom: '1px solid #2e2e2e', display: 'flex', alignItems: 'center', gap: '8px' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                          <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>{eq.name}</span>
+                          <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>Enc {eq.enc}</span>
+                          <span style={{ fontSize: '13px', color: eq.rarity === 'Rare' ? '#c4a7f0' : eq.rarity === 'Uncommon' ? '#7ab3d4' : '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{eq.rarity}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
                 <input value={addNotes} onChange={e => setAddNotes(e.target.value)} placeholder="Notes (e.g. 300 rounds each)"
                   style={{ width: '100%', padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', marginBottom: '6px' }} />
                 <button onClick={() => {
