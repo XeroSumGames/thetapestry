@@ -17,7 +17,8 @@
 // Wrapped in React.memo so unchanged props don't re-render the bar
 // when the parent re-renders for an unrelated reason.
 
-import { memo, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 // ── Types ──────────────────────────────────────────────────────
 // Mirror the InitiativeEntry / TableEntry shapes from the table page.
@@ -120,14 +121,11 @@ function InitiativeBarImpl({
   const [showAddPC, setShowAddPC] = useState(false)
   const [showAddNPC, setShowAddNPC] = useState(false)
   const [npcName, setNpcName] = useState('')
-  // Pin the + PC dropdown below the button via position:fixed. The
-  // bar's parent container has overflow-x: auto (so the initiative
-  // strip can scroll horizontally), which CLIPS any absolutely-
-  // positioned dropdown along Y too — that's why the picker was
-  // appearing "behind" the tactical map even at zIndex 100. Using
-  // position:fixed escapes the overflow context entirely; we measure
-  // the button's bounding rect on click and anchor the dropdown to
-  // viewport coords from there.
+  // Pin the + PC dropdown below the button. Rendered into a portal at
+  // document.body so it escapes BOTH the bar's overflow-x:auto clip AND
+  // any ancestor stacking contexts (transform / filter / contain on a
+  // parent traps position:fixed inside, which was still happening even
+  // after the position:fixed switch — this is the bulletproof escape).
   const addPCBtnRef = useRef<HTMLButtonElement | null>(null)
   const [addPCAnchor, setAddPCAnchor] = useState<{ top: number; left: number } | null>(null)
   function openAddPCMenu() {
@@ -135,6 +133,21 @@ function InitiativeBarImpl({
     if (r) setAddPCAnchor({ top: r.bottom + 4, left: r.left })
     setShowAddPC(true)
   }
+  // Re-position the dropdown if the user scrolls or the window resizes
+  // while it's open — keeps it pinned to the button instead of drifting.
+  useEffect(() => {
+    if (!showAddPC) return
+    const reposition = () => {
+      const r = addPCBtnRef.current?.getBoundingClientRect()
+      if (r) setAddPCAnchor({ top: r.bottom + 4, left: r.left })
+    }
+    window.addEventListener('scroll', reposition, true)
+    window.addEventListener('resize', reposition)
+    return () => {
+      window.removeEventListener('scroll', reposition, true)
+      window.removeEventListener('resize', reposition)
+    }
+  }, [showAddPC])
 
   function compactName(name: string): string {
     const parts = name.trim().split(/\s+/)
@@ -371,14 +384,13 @@ function InitiativeBarImpl({
                   title="Add a player to initiative mid-combat">
                   + PC
                 </button>
-                {showAddPC && addPCAnchor && (
+                {showAddPC && addPCAnchor && typeof document !== 'undefined' && createPortal(
                   <>
                     {/* Click-away catcher fills the viewport BENEATH the
-                        dropdown so any click outside closes the menu.
-                        Same z-stack trick the player-portrait popovers use. */}
+                        dropdown so any click outside closes the menu. */}
                     <div onClick={() => setShowAddPC(false)}
-                      style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
-                    <div style={{ position: 'fixed', top: addPCAnchor.top, left: addPCAnchor.left, zIndex: 9999, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '6px', minWidth: '160px', boxShadow: '0 4px 12px rgba(0,0,0,0.6)' }}>
+                      style={{ position: 'fixed', inset: 0, zIndex: 99998 }} />
+                    <div style={{ position: 'fixed', top: addPCAnchor.top, left: addPCAnchor.left, zIndex: 99999, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '6px', minWidth: '160px', boxShadow: '0 4px 12px rgba(0,0,0,0.6)' }}>
                       <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Add PC to Combat</div>
                       {addablePCs.map(e => (
                         <button key={e.character.id} onClick={() => { onAddPCToCombat(e); setShowAddPC(false) }}
@@ -391,7 +403,8 @@ function InitiativeBarImpl({
                         Cancel
                       </button>
                     </div>
-                  </>
+                  </>,
+                  document.body,
                 )}
               </>
             )}
