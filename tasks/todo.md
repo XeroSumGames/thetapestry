@@ -1,5 +1,35 @@
 # Tapestry — To Do & Backlog
 
+## ✅ Shipped 2026-05-05 verification sweep
+
+- [x] **Mounted-weapon attacks consume an action** — commit `62a2a27 fix(combat): mounted-weapon attacks consume actions`. Mounted weapons now properly decrement actions_remaining.
+- [x] **Tighten RLS on campaign-tagged threads + War Stories** — commit `e1a0a60 fix(rls): tighten Campfire SELECT to campaign members on tagged content`, migration `sql/campfire-rls-tighten-campaign-scope.sql`. Covers forum_threads, forum_replies, forum_thread_reactions, war_stories, war_story_replies, war_story_reactions.
+- [x] **Backfill old LFG freetext settings** — commit `751ed10 fix(lfg): backfill legacy freetext setting values to canonical slugs`, migration `sql/lfg-setting-backfill.sql`. Legacy freetext setting values normalized to canonical slugs.
+- [x] **Empty-adventure module clone fails on null pin name** — `lib/modules.ts:324` defensive coalesce skips pin rows with no name/title (`console.warn('[cloneModuleIntoCampaign] pin row has no name/title — skipping:', p)`).
+- [x] **Print sheet missing data (Relationships/CMod, Lasting Wounds/Notes, Tracking)** — commits `2e04ef4 feat(print): populate Print Sheet for existing characters` and `a979af2 fix(print): trim header, hand-fill RAPID + skills`. Verified at `components/wizard/PrintSheet.tsx:105,247-283`.
+- [x] **Player NPC notes + first impressions** — commit `ed7b147 feat(npc): private player notes per-PC inside PlayerNpcCard` (UI), commit `5e3dd01` (skip-the-picker), table at `sql/player-npc-notes.sql` (commit `bdab202`).
+- [x] **Remove Insight Dice cap** — raised to 10 in `components/CharacterCard.tsx:605-607` (was hardcoded to 9). Cap is `>= 10` / `< 10` now.
+- [x] **Insight Die spend — track on roll_log** — commit `f9b59dc feat(roll-log): track Insight Die spend kind for full extended-log fidelity`, migration `sql/roll-log-insight-used.sql` adds the `insight_used` column.
+- [x] **Re-seed an existing campaign with a setting's content** — commit `7a0e5cb feat(tools): /tools/reseed-campaign — idempotent setting re-seed` and `5c8cb3f`. Path `app/tools/reseed-campaign/page.tsx`.
+- [x] **Destroyed-object portrait swap** — `components/TacticalMap.tsx:1373-1392`, migration `sql/scene-tokens-destroyed-portrait.sql`. Optional `destroyed_portrait_url` swaps on token death.
+- [x] **Tapestry-side `<t:UNIX:format>` renderer** — commit `855a10c feat(rich-text): HammerTime <t:UNIX> renderer + URL linkifier`, `lib/rich-text.tsx`. Used across GmNotes / InlineRepliesPanel / PlayerNotes / ProgressionLog / TableChat.
+- [x] **Hide-NPCs multi-select bar** — commit `5ce5e97 feat(npc-roster): multi-select bar for cross-folder bulk Hide/Reveal`. Cross-folder bulk Hide/Reveal lives on the NPC roster.
+- [x] **Portrait bank — Supabase Storage upload** — `app/tools/portrait-resizer/page.tsx:305,463` inserts into `portrait_bank`; bucket per `sql/character-portraits-bucket.sql`.
+- [x] **Auth gating on `/tools/*`** — commit `b0f59ee feat(tools): auth-gating audit + batch portrait resizer`. Each tool gates by isThriver/role.
+- [x] **4E Notifications UI for LFG interest pings** — `components/NotificationBell.tsx:454-456` handles `type === 'lfg_interest'` with deep-link, trigger in `sql/lfg-interests.sql`.
+- [x] **Reactions + comments on Campfire posts** — `components/ReactionButtons.tsx` + `components/InlineRepliesPanel.tsx`. Phase 4E.
+- [x] **Campaign creation — "Run in District Zero" pre-populates setting content** — commit `3ba25a8` Phase 4C, `app/stories/new/page.tsx:34-211` accepts `?setting=<slug>`.
+- [x] **Per-community Campfire feed (Communities Phase E)** — commit `9725b09 feat(communities): Phase 4D — per-community Campfire feed`, `components/CampaignCommunity.tsx:233-689`.
+- [x] **`/modules` → `/rumors` marketplace browse + search + filters** — commit `6625a07 feat(modules): Phase C marketplace`. `app/rumors/page.tsx`.
+- [x] **`/modules/[id]` detail page — version history + reviews** — commit `b9ac828`. `app/rumors/[id]/page.tsx`. Reviews via `sql/modules-phase-c-reviews.sql`.
+- [x] **Listed-module Thriver moderation queue** — `app/moderate/page.tsx:111` queries modules for `moderation_status='pending'`/`visibility='listed'`.
+- [x] **Module cover image upload + featured-module surface on dashboard** — `app/rumors/[id]/edit/page.tsx`, `app/campfire/page.tsx:230-260`, bucket `sql/module-covers-bucket.sql`.
+- [x] **Migrate character photos from base64 → Supabase Storage** — commit `2c49873 fix(picker): sharpen library portraits + ship character-photo migration tool`. Tool at `app/tools/migrate-character-photos/page.tsx`.
+- [x] **Tier C2 — extract initiative bar into its own component** — commit `f712691 refactor(C2)`. `components/InitiativeBar.tsx`.
+- [x] **4E Inline `<t:UNIX:f>` token rendering** — same renderer as HammerTime above. Already in use across Campfire reply panels.
+
+---
+
 ## ✅ Shipped 2026-05-01 (XSE SRD web reference + GM Notes drag-to-reorder)
 
 **XSE SRD as a public web reference (`/rules/*`):**
@@ -103,8 +133,6 @@
 - [ ] Full-text search across Forums / War Stories / LFG
 - [ ] Reactions on War Stories + LFG (persist Forums B votes; extend pattern)
 - [ ] Comment threading on War Stories + LFG (Forums has it; others flat)
-- [ ] Notifications UI for LFG interest pings (rows exist, no read/dismiss view)
-- [ ] Inline `<t:UNIX:f>` token rendering in body text
 - [ ] Formal `campaign_invitations` accept/reject flow (replaces DM-with-link)
 - [ ] LFG filters by setting + schedule
 
@@ -216,10 +244,9 @@
 
 ## 🎯 From 2026-04-29 chat — roll-log clarity + modal unification + new-campaign bug
 
-- [ ] **Empty-adventure module clone fails on null pin name.** Creating a new Empty (Chased-content) campaign currently throws `Campaign created but module clone failed: pins: null value in column "name" of relation "campaign_pins" violates not-null constraint`. Lives in `cloneModuleIntoCampaign` in `lib/modules.ts` — one pin row in the Empty/Chased module snapshot is missing `name`. Likely either (a) clone mapper expects `title` while DB column is `name` (or vice versa), or (b) the Thriver migration tool that published the Empty setting captured one source pin with `name: null`. Fix shape: defensive coalesce on the mapper + audit the published Empty module's snapshot for the offending row. Repro: `/stories/new` → Empty setting → Save. Recovery in the meantime: delete the half-seeded campaign.
 - [ ] **Gut Instinct results presentation needs rework.** Tied to "how info is shared in roll logs" — current Gut Instinct rolls land in the standard roll modal + roll_log feed, but the *result framing* doesn't communicate what the player learned (or didn't) clearly. Needs design discussion: what's the canonical surface for "your gut says X" — narrative card in the feed? An overlay on the rolling PC's sheet? GM-only insight delivered via DM? This is about player comprehension, not mechanics — the formula (`Perception + Psychology/Streetwise/Tactics`) is fine.
 - [ ] **First Impression → straight to roll modal.** Today First Impression has a separate pre-roll picker (target NPC + skill). Xero wants clicking First Impression on a revealed NPC card to **skip the picker** and dump straight into the main Attack Roll modal pre-populated with `INF + Manipulation/Streetwise/Psychology` and the NPC pre-targeted. Save: ~3-4 clicks per use. Same "roll-log clarity" theme as Gut Instinct.
-- [ ] **Modal unification — Attack Roll modal is the gold standard.** Xero locked the canonical: every roll modal across the app should match the Attack Roll modal's shape (roll breakdown, target dropdown, CMod input, Insight Dice pre-roll + post-roll reroll). Modals to normalize: Stress Check, Breaking Point, Lasting Wound, Recruit, Stabilize, Distract, Coordinate, Group Check, Gut Instinct, First Impression. Likely needs a shared `<RollModal>` shell with slots for skill-specific bits (target type, outcome surface). High-value but invasive; scope as a multi-commit refactor before starting.
+- [ ] **Modal unification — remaining modals to normalize.** Normalize Stabilize, Distract, Coordinate, Group Check, Gut Instinct, First Impression to match the `<RollModal>` shape (Recruit + Stress/Breaking/Lasting/Wound passes already shipped).
 
 ## 🎯 From 2026-04-27 Mongrels playtest (Xero's batch handoff)
 
@@ -235,7 +262,7 @@ Xero captured the following items mid-/post-playtest. Bugs first, then UX, then 
 - [ ] **Lag on initiative — needs solo validation.** User will playtest alone with multiple combatants and confirm the perceived lag on turn advance. Earlier work shipped batched fetches in `nextTurn` (see [PLAYTEST_TODO.md:81](tasks/PLAYTEST_TODO.md:81) #32) but a long initiative chain may still feel slow. Look for: sequential awaits in `nextTurn` that aren't yet in `Promise.all`, missed indexes on initiative_order, the postgres_changes subscription firing extra unnecessary `loadInitiative()` rounds. Don't action until Xero confirms the symptom on his own machine.
 
 ### Bugs (visibility / permissions)
-- [ ] **Hide NPCs — visibility data layer ✓, but reveal UX needs streamlining.** Shipped 2026-04-28 as `6da94e5` + `sql/campaign-npcs-hidden-from-players.sql`: `hidden_from_players` boolean column, replacement SELECT RLS, AFTER INSERT triggers on `scene_tokens` and `initiative_order` to auto-reveal on place / start-combat. Xero confirmed 2026-04-29 the data layer works as designed — but the reveal/hide flow has too many clicks during a live game. Three reveal paths today: (a) Place on Map button on a per-NPC roster row, (b) Fight (Add to Combat) button, (c) per-row Show button via NpcRoster.quickReveal. For a typical "ambush of 5 NPCs reveals as combat starts" the GM is clicking N+ times. Streamline ideas to discuss: a folder-level "Reveal all in this folder" button (NpcRoster already supports folder ops); a "Reveal selected" multi-select bar; making Start Combat's NPC picker auto-reveal everyone selected; or a single "Reveal entire campaign roster" panic button for sessions where hidden-by-default isn't worth the friction. Don't pick one without discussing — the right cut depends on how the GM workflow looks at the table.
+- [ ] **Hide NPCs — folder-level reveal + panic button.** Folder-level 'Reveal all in this folder' button + panic-button 'reveal entire roster' (multi-select bar + auto-reveal-on-Start-Combat already shipped).
 
 ### Rules / mechanics gaps
 - [x] **Crossbow + bow should require a Reload / Ready Weapon between shots.** Shipped 2026-04-28 (earlier) as `03de984` — Attack button disabled when `ammoCurrent <= 0` on clip-tracked ranged weapons.
@@ -254,18 +281,14 @@ Xero captured the following items mid-/post-playtest. Bugs first, then UX, then 
 ## 🎯 Next up (post-combat sprint)
 - [x] **NPC inventory — primary & secondary weapons should count toward encumbrance.** Shipped 2026-04-28 as `e6199bc` — NpcCard was passing empty strings to InventoryPanel for the weapon names; now pulls them off `npc.skills.weapon.weaponName` / `npc.skills.weapon2.weaponName`. InventoryPanel + computeEncumbrance were already correct, just being fed nulls.
 - [x] **Player-side loot — Search Remains button on the NPC popout.** Shipped 2026-04-29 as `11ddf77` — `PlayerNpcCard` shows "🎒 Search Remains" when `displayStatus !== 'active'`; new SECURITY DEFINER RPC `loot_npc_item` does atomic transfer + audit row in roll_log. SQL: `sql/loot-npc-item-rpc.sql`.
-- [ ] **Insight Die spend — track on roll_log for full extended-log fidelity.** Shipped 2026-04-27 a partial callout: extended log shows "🎲 Insight Die spent — pre-rolled 3d6 (kept all three)" when `die2 > 6` (the 3d6 path packs d2+d3 into die2; sum > 6 is unambiguous). Two gaps: (1) 3d6 rolls where d2+d3 ≤ 6 (~17% of cases) escape detection, (2) the `+3 CMod` Insight Die spend can't be distinguished from organic CMod at all. Long-term fix: add an `insight_used text` column to `roll_log` (NULL / '3d6' / '+3cmod'), populate from `executeRoll` (and reroll path), surface in the extended-log card. Migration is non-destructive (NULL default), code path needs to thread `insightUsed` arg through `saveRollToLog`. (Parked 2026-04-27 mid-playtest; ship the schema + reliable detection after the session.)
 - [x] **Stale realtime subscriptions — table tab needs manual refresh after backgrounding.** Shipped 2026-04-28 as `607342d` — visibilitychange listener on the table page + useChatPanel + useRollsFeed re-runs the load functions on hidden→visible. State refetch only in v1; channel rebuild deferred until/if state-only proves insufficient (supabase-js handles socket reconnection internally on health checks). Testplan: tasks/realtime-visibility-refetch-testplan.md. Also covered later by useRollsFeed extraction (B2.2) which carries the same handler.
 - [x] **SRD wording sweep — replace user-visible "SRD" with "the rules"** — shipped 2026-04-28 as `84027d4`. 8 user-visible hits swapped: CommunityMoraleModal leader-not-set banner + 4 tooltips, CampaignCommunity Assigned-NPCs hint + Re-balance Roles tooltip, stories/[id]/community quota-tick tooltip. gm-screen `XSE SRD v1.1` header left as a system-version banner pending Xero's call. Code comments referencing SRD as a source remain (authoring notes).
 - [ ] **King's Crossing Mall — tactical scenes** — author battle maps for the mall complex (motel courtyard, Costco interior, gas station, Belvedere's etc.) and wire into `SETTING_SCENES.kings_crossing_mall` in `lib/setting-scenes.ts` using the same filter-from-CHASED_SCENES pattern as the pins + NPCs.
 - [ ] **King's Crossing Mall — handouts** — port any in-world broadcasts, journal pages, or ham-radio transcripts that fit the persistent mall setting into `SETTING_HANDOUTS.kings_crossing_mall` in `lib/setting-handouts.ts`. Mirror the filter-from-CHASED_HANDOUTS approach.
-- [ ] **Re-seed an existing campaign with a setting's content** — currently seeding fires once at campaign creation, so any campaign created before a setting's pins/NPCs land has nothing. Build a Thriver/GM tool (`/tools/reseed-campaign?id=…`) that re-runs `SETTING_PINS` / `SETTING_NPCS` / `SETTING_SCENES` / `SETTING_HANDOUTS` against an existing campaign id, with name-collision skipping so it's idempotent. Until this lands, the workaround is "create a new campaign" or hand-write SQL.
 - [x] **Community leader "step down" mechanism** — shipped 2026-04-23. PC leader or GM sees a "Step Down" button next to the Leader dropdown; picker offers Auto (next founder → longest-tenured), Leave Leaderless, or any specific member. `handleRemoveMember` now auto-promotes the same way when the outgoing member was the leader, so leaving the community also triggers succession.
 - [x] **"Assigned" role — mission/task linkage** — shipped 2026-04-23. Schema: `assignment_pc_id uuid` on community_members (FK to characters, ON DELETE SET NULL) + reuses `current_task` from the Apprentice migration. UI: picking "Assigned" on the role dropdown opens a modal for director PC + task text; save writes all three fields in one update; cancel leaves the role unchanged. Display: assigned rows mirror Apprentice rows — `<NPC> ⇐ <PC>` name + "Task: <text>" line with GM-edit ✎. Flipping role OUT of 'assigned' auto-clears assignment_pc_id + current_task. PC-deletion silently clears via FK. SQL: `sql/community-members-add-assignment-pc.sql`.
-- [ ] **Destroyed-object portrait swap** — object tokens with WP should optionally carry a `destroyed_portrait_url`; when the token hits 0 WP, the canvas renders that image instead of the intact one. Falls back to the current shatter-crack overlay if no destroyed art exists. Upload UX lives on the object add/edit form in NpcRoster → Objects.
 - [ ] **CMod Stack reusable component** — user loved the itemized CMod Stack on the Recruit modal; extract into `<CmodStack>` and use in Grapple, First Impression, main Attack modals.
 - [ ] **GM force-push view to players** — when the GM switches view (campaign world map ↔ tactical map, or scene A ↔ scene B), they should be able to push that view change to every connected player so everyone follows along automatically. Today there's `tactical_shared` / `tactical_unshared` broadcasts on `init_${id}` that toggle the tactical-map pane on the player side, but no general "switch to scene X" or "switch to campaign view" push. Likely shape: extend the `tactical_shared` broadcast (or add a new `view_changed` event) carrying `{ view: 'campaign' | 'tactical', sceneId?: string }`; player TacticalMap activates the matching scene + opens/closes the pane to match. GM side: a "Sync to players" toggle (or always-on) + auto-fire on scene-switch in TacticalMap setup.
-- [ ] **Tapestry-side `<t:UNIX:format>` renderer** — the Timestamps tool at `/campfire/timestamp` outputs Discord-style `<t:UNIX:format>` tokens that work natively on Discord. To make them auto-localize on Tapestry posts (LFG, Forums, War Stories, Messages, Notes), build a small content-renderer utility that detects the token pattern and replaces it with a `<time>` element formatted in the viewer's local timezone. Hook it into every surface that displays user-typed content. Format codes are `t / T / d / D / f / F / R` per Discord spec — replicate the same `Intl.DateTimeFormat` options used in the generator's preview column for consistency.
 - [ ] **Character Evolution / CDP Calculator** — post-creation character growth tool. Characters earn CDP (Character Development Points) over time (per-session awards, session arcs, milestones) and spend them to raise RAPID attributes, raise/acquire skills, take Traits, etc. Today the character creation funnel (`/characters/new` Backstory, `/characters/quick`, `/characters/random`) handles the CDP spend at character-creation time only; there's no surface for spending earned CDP afterward. Build a `/characters/[id]/evolve` (or modal on the character sheet) that: (1) shows the character's current CDP balance from `data.cdp` (already tracked), (2) lists buyable upgrades per the rules — attribute raises (cost = current value × multiplier), skill raises (cost = next-level cost), new trait picks (cost depends on tier), (3) previews the cost before commit, (4) applies the spend in one transaction (decrement `data.cdp`, write the changes, append a `roll_log` entry with `outcome='evolution'` so the table feed surfaces it). Reuse the wizard's CDP cost tables — they're already in `lib/xse-engine.ts` / wizard step components; extract into a shared helper if needed. Player-facing tool, GM doesn't need to approve (CDP is GM-awarded already, spend is the player's call). Audit log entry covers the GM oversight surface.
 - [ ] **GM Tools → Restore to Full Health is slow** — clicking RESTORE on the multi-target Restore modal (with 11+ targets selected — PCs + NPCs + Objects) takes "FOREVER" per Xero's 2026-04-29 playtest. The handler likely fires N sequential UPDATEs (one per target — character_states for PCs, campaign_npcs for NPCs, scene_tokens for Objects) and awaits each. With 11 targets that's 11 round-trips serialised. Fix shape: batch the UPDATEs by table — one UPDATE per table with `.in('id', ids)` for each kind, run all three concurrently via Promise.all. Same RLS guarantees, ~10× fewer round-trips. Probably lives in `app/stories/[id]/table/page.tsx` near the GM Tools restore handler — search for the Restore modal callback. Add a "Restoring…" disabled state + spinner on the button so the GM gets feedback during the await.
 - [x] **Restore from snapshot auto-launches into that snapshot** — shipped 2026-04-29 as `7c26a9d` — `CampaignSnapshots.tsx` now `window.location.href`'s to `/stories/<id>/table` after a successful restore so the GM lands directly on the scene.
@@ -293,7 +316,7 @@ When picking this back up:
 **Status:** DB-level done, UI deferred. Xero's `profiles.role = 'Thriver'` + the policies in `sql/thriver-godmode-policies.sql` + `sql/campaign-pins-rls-thriver-bypass.sql` give superuser access at the database layer. The UI still hides admin affordances (add/edit/delete/scene-setup/session-control) behind `isGM` checks, so Thrivers can only see those buttons on campaigns they actually GM. Pilot (commit fd5db34) widened 3 components (NpcRoster / TacticalMap / CampaignCommunity) but was rolled back — user wants to hold until the whole surface is done in one pass.
 
 When picking this back up:
-- [ ] UI sweep: every `isGM && <button ...>` in the app widens to `(isGM || isThriver) && <button ...>`. Candidates:
+- [ ] UI sweep: widen `isGM &&` UI gates to `(isGM || isThriver)` in CampaignCommunity, CampaignObjects (lines ~350,463,481,493,526), VehicleCard, NpcRoster, character sheet edits for non-owned PCs. DB layer already shipped via `sql/thriver-godmode-policies.sql`. Candidates:
   - Table page header: Start/End Session, Start/End Combat, Tactical Map toggle, Share Map, GM Tools dropdown
   - NpcRoster (add/edit/delete NPCs, folders, objects, place-on-map)
   - TacticalMap (scene picker, setup, token placement)
@@ -370,7 +393,6 @@ When picking this back up:
 ## 🔴 Bugs (Fix First)
 - [x] Print character sheet renders blank
 - [x] Distemper font not applying on mobile navbar
-- [ ] Print sheet missing data — Relationships/CMod, Lasting Wounds/Notes, Tracking (Insight/CDP) not populated from character data
 - [x] Combat actions bar not visible to Survivor-role players — fixed with user_id match
 - [x] Initiative breakdown not appearing in Logs tab — startCombat/nextTurn/broadcast handlers now call loadRolls()
 - [x] Players show as "Unknown" — initiative now fetches fresh character data from DB
@@ -424,7 +446,6 @@ When picking this back up:
 - [x] Player bar reorders so each viewer sees their own character next to GM portrait
 - [x] Open NpcCard refreshes when underlying NPC HP changes
 - [ ] **Player-facing NPC card on Show All click** — clicking a revealed NPC in the player's NPCs tab opens a read-only card (currently opens the same editable view as GM). Design question: should the player card just show Name, First Impression role, and description? Or more?
-- [ ] **Player NPC notes + first impressions** — clicking an NPC name in the player's Assets NPCs tab should open a space where the player can write personal notes about that NPC, and show their First Impression results
 - [x] **Insight Dice pre-roll CMod** — confirmed +3 CMod (per SRD)
 - [x] **Insight Dice sequential reroll** — `f2e708f` `spent` boolean → `insightUsed: 'pre' | 'die1' | 'die2' | 'both' | null`. After rerolling one die, only the OTHER die's button remains; second spend locks the panel. Pre-roll 3d6 still locks post-roll rerolls.
 - [x] **Whisper chat** — click a player's portrait → private whisper between you two (GM + other players do not see it). Chat tab auto-switches when a whisper arrives addressed to you. Purple styling distinguishes whispers from group chat.
@@ -666,7 +687,7 @@ When picking this back up:
 - [x] LOW: Portrait cache capped at 100 entries (LRU)
 - [ ] DEFERRED: Split table page (5,365 lines) into subcomponents — high risk before game
 - [ ] DEFERRED: Debounce realtime callbacks — works fine, optimization only
-- [ ] DEFERRED: Sequence guards on loadRolls/loadChat — low impact
+- [ ] DEFERRED: Add seq guards to loadRolls / loadChat (loadEntries already has `loadEntriesSeqRef` at `app/stories/[id]/table/page.tsx:227-228`)
 
 ### Combat Audit (2026-04-20)
 - [x] CRITICAL: Winded mechanic — activateUpdate() now used at all activation points (was hardcoded actions_remaining: 2)
@@ -855,19 +876,17 @@ When picking this back up:
 - [ ] Promotion flow — campaign post → setting feed → global feed, Thriver approval at each level
 - [ ] World Events — Thriver-authored announcements that shape the living world, permanently pinned
 - [ ] War Stories — players post memorable moments from sessions, visible on campaign and setting feeds
-- [ ] Reactions and comments on Campfire posts
 - [ ] Filtering by setting, date, post type
-- [ ] Featured items — Thriver can promote any post to featured status
+- [ ] Featured items — Thriver promote-to-featured for forum threads + war stories (module featured already shipped)
 - [ ] LFG posts — GMs and players post availability, setting preference, playstyle, experience level
 
 ### District Zero
 - [ ] District Zero setting page — canonical hub for the setting
-- [ ] Canon layer — immutable pins set by Thriver only
+- [ ] Canon layer — District Zero-specific canon scope/UX (generic `is_canon` badge already shipped via commit `748013c`)
 - [ ] Community layer — approved player Rumors visible to all District Zero campaigns
 - [ ] District Zero Campfire feed — setting-scoped posts
-- [ ] District Zero timeline — chronological history of events in the setting
+- [ ] District Zero timeline — chronological visualization page surfacing world-event timeline pins (timeline category + sort_order migration already shipped)
 - [ ] Timeline sort_order management — UI for Thrivers to reorder timeline pins (drag-and-drop or number field), GMs can set sort_order on campaign-scoped world_event pins. Currently hardcoded via SQL.
-- [ ] Campaign creation option — Run in District Zero pre-populates setting content
 
 ### Tactical Map
 - [x] Canvas-based tactical map replaces campaign map during combat
@@ -1000,7 +1019,6 @@ Communities become first-class entities in the Distemperverse. Every published c
 - [x] Schism — large communities split; `handleSchism` in `CampaignCommunity.tsx` + `sql/community-members-add-schism-reason.sql` widens left_reason CHECK
 - [x] Leader permissions — non-GM PC leader can publish own community (`sql/world-communities-leader-permissions.sql`)
 - [ ] **World Event CMod propagation** — Distemper Timeline pins in a region apply temporary CMods to all published communities in that region. No code path yet; needs a regional bounding-box query + `morale_check` modifier slot wired to active world events.
-- [ ] **Per-community Campfire feed** — gated on Phase 4 (Campfire) shipping. Once Campfire exists, each `world_communities` row gets its own feed showing weekly Morale outcomes, recruitments, schisms, dissolutions.
 - [ ] **Community subscription for players** — no `community_subscriptions` table or follow UI. Lets players follow a published community across sessions; surfaces updates in their feed.
 - [ ] **Campaign-creation wizard "Start inside/around an existing published community"** — `/stories/new` currently picks Custom / Setting / Module; needs a fourth option that seeds the new campaign adjacent to a published community (autopopulates Homestead pin + invites the new GM into the encounter handshake).
 
@@ -1038,11 +1056,7 @@ Communities become first-class entities in the Distemperverse. Every published c
 - [x] Archived modules hidden from campaign-creation picker
 
 ### Phase C — Marketplace
-- [ ] `/modules` browse + search + filters (setting, tags, rating, subscriber count)
-- [ ] `/modules/[id]` detail page with version history, reviews
-- [ ] Listed-module Thriver moderation queue
-- [ ] Cover image upload, featured-module surface on dashboard
-- [ ] Play stats per module (subscriber count, session count, avg player count)
+- [ ] Play stats per module — track actuals (session count + avg player count). subscriber_count already shipped; session_count_estimate is author-edited not actuals.
 
 ### Phase D — Monetization + tiers
 - [ ] Free / Paid / Premium module pricing
@@ -1116,7 +1130,7 @@ The current authoring path is "run a campaign for months, then click Publish Mod
 ---
 
 ## 🔵 Phase 9 — Maturity
-- [ ] Rules reference — full XSE SRD v1.1 searchable and browsable within The Tapestry
+- [ ] Rules reference — surface in-app search across the SRD content (SRD copy is structurally complete; `/rules/*` pages just need search UI)
 - [ ] Contextual rules links — from character sheet and dice roller to relevant SRD sections
 - [x] GM quick-reference panel — pop-out /gm-screen with outcomes, CMod, range bands, combat actions, healing, skills→attrs
 - [ ] Mobile optimization pass — dashboard, map, character wizard, table view all responsive
@@ -1148,13 +1162,10 @@ The current authoring path is "run a campaign for months, then click Publish Mod
 ### Future enhancements for the tools suite
 - [ ] **Batch mode** — multi-file upload, process and download as zip
 - [ ] **Manual crop control** — drag-to-select crop area instead of auto center-crop (useful for off-center subjects)
-- [ ] **Upload to Supabase Storage** — shared portrait bank across campaigns; random assignment during NPC creation
-- [ ] **Auth gating** — currently `/tools/*` is public; may want to restrict to signed-in Survivors
 - [ ] **More tools** — handout generator, token template maker, roll table randomizer
 
 ## 📝 Technical Debt
 - [x] Auto-resize uploaded photos to 256x256
-- [ ] Migrate character photos from base64 to Supabase Storage (low priority — already compressed to 256x256 JPEG)
 - [ ] Embed Distemper videos on landing page
 - [x] Welcome page dual-mode
 - [x] Thriver Console
@@ -1323,6 +1334,5 @@ The current authoring path is "run a campaign for months, then click Publish Mod
 
 ## 🎯 From 2026-04-28 chat (Welcome page + Messages bell session)
 
-- [ ] **`/firsttimers` auto-redirects to `/dashboard` for already-onboarded users — backburner.** When a returning user (with `profiles.onboarded = true`) hits `/firsttimers`, the page silently redirects to `/dashboard` ([app/firsttimers/page.tsx:30](app/firsttimers/page.tsx:30)). Xero noticed this and wants it parked — the page is meant to be visitable as a reference / re-onboarding surface, not a one-time gate. Likely fix: drop the auto-redirect and instead show a small banner "You've already seen this — back to your [Dashboard]" with a link, or make the redirect opt-in via `?firsttime=1`. Do NOT touch until Xero gives the go-ahead.
 - [x] **Run `sql/messages-realtime-publication.sql` on prod database** — applied 2026-04-28; Xero confirmed chat in `/messages` now refreshes live without reload. Adds `public.messages` and `public.conversation_participants` to the `supabase_realtime` publication and sets `REPLICA IDENTITY FULL` on `conversation_participants` so the bell's `user_id=eq.<uid>` filter survives UPDATE payloads.
 - [ ] **Welcome page → Quick Reference card content TBD.** [app/welcome/page.tsx](app/welcome/page.tsx) has a `Quick Reference` placeholder card. Needs cheat-sheet content per Xero's direction: CDP, WP/RP, Stress, Inspiration, links into the SRD/CRB. Wait for Xero to specify what to surface first, then wire it in.
