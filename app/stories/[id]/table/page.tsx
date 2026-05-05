@@ -3185,27 +3185,44 @@ export default function TablePage() {
     setShowSpecialCheck(null)
   }
 
-  // Skip the PC-picker modal for single-eligible-PC checks. The picker
-  // is "Pick which PC is rolling" — useless when there's exactly one
-  // candidate (the player path: their own PC) or when a solo-test GM
-  // has only one PC in the campaign. Keep the modal for the multi-PC
-  // GM case where the choice is real. Pre-fix UX hit: every Perception
-  // / Gut Instinct roll cost the player one redundant click on a
-  // 1-button picker. Reported tonight (2026-05-04 playtest BUG-1).
-  function startSpecialCheckPerception() {
+  // Skip the PC-picker modal for special checks when the answer is
+  // unambiguous. Two short-circuits, in priority order:
+  //
+  //   1. Single eligible PC. Player path (sees only own PC) and
+  //      solo-test GM (one PC seeded). Picker would be a 1-button
+  //      modal — pure overhead.
+  //   2. Combat is active AND a PC has the turn. The 99% case the
+  //      GM hits during a fight: "the active PC just spotted
+  //      something — give me a Perception". Auto-pick the active
+  //      combatant; GM keeps the picker for the rare "I want a
+  //      different PC to roll" case via the menu (just call
+  //      setShowSpecialCheck directly if needed — but in practice
+  //      the active-PC autopick is what they want).
+  //
+  // Multi-PC GM out-of-combat (or NPC's turn) still gets the picker
+  // — there's a real choice to make there. Reported in last night's
+  // playtest (2026-05-04 BUG-1: "Perception check has a redundant
+  // first modal — should go straight to the roll modal").
+  function shortCircuitForSpecialCheck(): { name: string } | null {
     const visible = entries.filter(e => isGM || e.userId === userId)
-    if (visible.length === 1) {
-      triggerPerceptionCheck(visible[0].character.name)
-      return
+    if (visible.length === 1) return { name: visible[0].character.name }
+    if (isGM && combatActive) {
+      const active = initiativeOrder.find(ie => ie.is_active && !ie.is_npc)
+      if (active && active.character_id) {
+        const tgt = visible.find(e => e.character.id === active.character_id)
+        if (tgt) return { name: tgt.character.name }
+      }
     }
+    return null
+  }
+  function startSpecialCheckPerception() {
+    const sc = shortCircuitForSpecialCheck()
+    if (sc) { triggerPerceptionCheck(sc.name); return }
     setShowSpecialCheck('perception' as any)
   }
   function startSpecialCheckGut() {
-    const visible = entries.filter(e => isGM || e.userId === userId)
-    if (visible.length === 1) {
-      triggerGutInstinct(visible[0].character.name)
-      return
-    }
+    const sc = shortCircuitForSpecialCheck()
+    if (sc) { triggerGutInstinct(sc.name); return }
     setShowSpecialCheck('gut' as any)
   }
 
