@@ -1319,14 +1319,18 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         return
       }
 
-      // Active combatant glow
+      // Active combatant glow — pure white. Pre-fix this used the
+      // friendly-disposition green (#7fc458), which was indistinguishable
+      // from a friendly NPC's own border color and confused the GM about
+      // who actually had the turn. White is the only ring that doesn't
+      // collide with any disposition / faction color.
       const isActive = activeEntry && (
         (t.character_id && activeEntry.character_id === t.character_id) ||
         (t.npc_id && activeEntry.npc_id === t.npc_id) ||
         (t.name === activeEntry.character_name)
       )
       if (isActive) {
-        ctx.shadowColor = '#7fc458'
+        ctx.shadowColor = '#ffffff'
         ctx.shadowBlur = 12
       }
 
@@ -1604,13 +1608,13 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.arc(cx, cy, radius, 0, Math.PI * 2)
           // Brighten the stored disposition color at render time so
           // legacy tokens get the vivid palette without a DB rewrite.
-          ctx.strokeStyle = isActive ? '#7fc458' : selectedToken === t.id ? '#f5f2ee' : vividTokenBorder(t.color)
+          ctx.strokeStyle = isActive ? '#ffffff' : selectedToken === t.id ? '#f5f2ee' : vividTokenBorder(t.color)
           ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 2
           ctx.stroke()
         } else {
           ctx.fillStyle = t.is_visible ? vividTokenBorder(t.color) : 'rgba(192,57,43,0.3)'
           ctx.fill()
-          ctx.strokeStyle = isActive ? '#7fc458' : selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,1)'
+          ctx.strokeStyle = isActive ? '#ffffff' : selectedToken === t.id ? '#f5f2ee' : 'rgba(255,255,255,1)'
           ctx.lineWidth = isActive || selectedToken === t.id ? 3 : 1.5
           ctx.stroke()
           ctx.fillStyle = '#f5f2ee'
@@ -1739,14 +1743,18 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           const badgeR = Math.max(8, radius * 0.35)
           const bx = cx - radius * 0.7
           const by = cy - radius * 0.7
+          // Active turn = white badge with dark text; inactive = dark
+          // badge with light text. White can't be confused with any
+          // disposition color (the previous green had that problem).
+          const badgeActive = initiativeOrder[initIdx].is_active
           ctx.beginPath()
           ctx.arc(bx, by, badgeR, 0, Math.PI * 2)
-          ctx.fillStyle = initiativeOrder[initIdx].is_active ? '#7fc458' : '#242424'
+          ctx.fillStyle = badgeActive ? '#ffffff' : '#242424'
           ctx.fill()
           ctx.strokeStyle = '#f5f2ee'
           ctx.lineWidth = 1
           ctx.stroke()
-          ctx.fillStyle = '#f5f2ee'
+          ctx.fillStyle = badgeActive ? '#0f0f0f' : '#f5f2ee'
           ctx.font = `bold ${Math.max(8, badgeR * 1.2)}px Carlito`
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
