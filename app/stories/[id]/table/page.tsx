@@ -1209,6 +1209,15 @@ export default function TablePage() {
         .on('broadcast', { event: 'tactical_unshared' }, () => { setTacticalShared(false); setShowTacticalMap(false) })
         .on('broadcast', { event: 'token_changed' }, () => { setTokenRefreshKey(k => k + 1) })
         .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id); rollsFeed.refetch() })
+        .on('broadcast', { event: 'turn_advance_requested' }, async () => {
+          // A remote page (e.g. /vehicle popout firing a mounted weapon)
+          // decremented an action and hit 0. We own the nextTurn state
+          // here, so run the full advance flow on its behalf. nextTurn
+          // already bails on empty initiative order, so it's safe to
+          // call unconditionally. BUG-3 from the 2026-05-04 playtest fix.
+          await nextTurn()
+          await loadInitiative(id)
+        })
         .on('broadcast', { event: 'logs_cleared' }, () => {
           // GM started/ended a session — clear local chat + roll state, then
           // refetch from DB so every client converges to the post-clear state.

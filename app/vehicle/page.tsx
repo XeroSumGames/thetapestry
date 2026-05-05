@@ -7,6 +7,7 @@ import VehicleCard, { Vehicle } from '../../components/VehicleCard'
 import { classifyRoll } from '../../lib/community-logic'
 import { getWeaponByName } from '../../lib/weapons'
 import { rollDamage, calculateDamage } from '../../lib/damage'
+import { decrementInitiativeAction } from '../../lib/initiative-actions'
 import { type InventoryItem, normalizeInventoryItem } from '../../lib/inventory'
 import { ModalBackdrop } from '../../lib/style-helpers'
 import { EQUIPMENT } from '../../lib/xse-schema'
@@ -514,6 +515,35 @@ export default function VehiclePage() {
     if (newFuel !== vehicle.fuel_current) {
       await updateVehicle({ ...vehicle, fuel_current: newFuel })
     }
+
+    // Consume an action on the active initiative entry. Only attacks cost
+    // an action — driving and brew checks are passive vehicle operations
+    // outside the combat-action economy. (BUG-3 from 2026-05-04 playtest:
+    // Enya fired Minnie's M60 mounted weapon and her actions_remaining
+    // never decremented because the table page's consumeAction() lives
+    // inside the table component and is unreachable from this popout.)
+    //
+    // Done after the roll_log insert so the player sees the attack land
+    // even if the decrement fails (e.g. RLS on initiative_order). If
+    // newRemaining hits 0, broadcast turn_advance_requested on the
+    // table's initiative channel — the table page listens and runs
+    // its full nextTurn() flow, which is too stateful to extract.
+    if (check.kind === 'attack') {
+      const dec = await decrementInitiativeAction(supabase, {
+        campaignId,
+        userId: myUserId,
+        actionLabel: undefined, // the roll_log entry above already covers this action's narrative
+      })
+      if (dec.ok && dec.reachedZero) {
+        try {
+          const ch = supabase.channel(`initiative_${campaignId}`)
+          await ch.subscribe()
+          await ch.send({ type: 'broadcast', event: 'turn_advance_requested', payload: { entryId: dec.entry?.id } })
+          await supabase.removeChannel(ch)
+        } catch { /* swallow — the GM can advance manually */ }
+      }
+    }
+
     setCheck({ ...check, rolling: false, result: { die1, die2, total, outcome } })
   }
 
