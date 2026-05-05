@@ -4442,6 +4442,34 @@ export default function TablePage() {
           alert(`Damage to "${targetObject.name}" was silently rejected by RLS — the token's WP did not update, so it won't show as destroyed and any loot inside won't drop.\n\nRun sql/scene-tokens-player-update-objects.sql in Supabase to allow players to damage object tokens in scenes they're part of.\n\nUntil then, players attacking barrels/crates will see damage in the log but the object stays full-health.`)
         }
         setMapTokens(prev => prev.map(t => t.id === targetObject.id ? { ...t, wp_current: newWP } : t))
+        // If this object token corresponds to a campaign vehicle (matched
+        // by name within campaigns.vehicles JSONB), sync that vehicle's
+        // wp_current so the /vehicle popout sheet reflects damage taken
+        // on the map. Map and sheet were previously two disconnected
+        // sources of truth — Minnie would soak hits on the canvas but
+        // her sheet still showed full WP.
+        //
+        // Vehicles aren't a separate table; they're a JSONB array on
+        // campaigns.vehicles, so the sync is "fetch array → mutate the
+        // matched entry → write array back". The /vehicle popout has a
+        // postgres_changes subscription on campaigns UPDATE so the live
+        // sheet refreshes automatically without close/reopen.
+        void (async () => {
+          const { data: camp } = await supabase
+            .from('campaigns')
+            .select('vehicles')
+            .eq('id', id)
+            .maybeSingle()
+          const list = ((camp as any)?.vehicles ?? []) as any[]
+          const idx = list.findIndex(v => v?.name === targetObject.name)
+          if (idx < 0) return
+          const next = list.map((v, i) => i === idx ? { ...v, wp_current: newWP } : v)
+          const { error: vehErr } = await supabase
+            .from('campaigns')
+            .update({ vehicles: next })
+            .eq('id', id)
+          if (vehErr) console.warn('[damage] vehicle sync error:', vehErr.message)
+        })()
 
         // Auto-loot: when object is destroyed, give its contents to the attacker (PC or NPC)
         if (newWP === 0 && curWP > 0) {
