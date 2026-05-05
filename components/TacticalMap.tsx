@@ -2048,15 +2048,45 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   }
 
   function getTokenAt(gx: number, gy: number): Token | undefined {
-    // Multi-cell objects cover (grid_x, grid_y) through (+gw-1, +gh-1).
-    // Clicking ANY cell in that footprint selects the token. PCs/NPCs
-    // (gw=gh=1) collapse to the original exact-cell match.
-    return tokens.find(t => {
+    // First pass: exact-cell rect match. Multi-cell objects cover
+    // (grid_x, grid_y) through (+gw-1, +gh-1). Standard PCs/NPCs at
+    // 1x1 collapse to the original exact-cell match. This pass wins
+    // first so a small PC standing on a vehicle's cell still grabs
+    // when clicked exactly on that cell.
+    const exact = tokens.find(t => {
       if (!(t.is_visible || isGM)) return false
       const gw = t.grid_w ?? 1
       const gh = t.grid_h ?? 1
       return gx >= t.grid_x && gx < t.grid_x + gw && gy >= t.grid_y && gy < t.grid_y + gh
     })
+    if (exact) return exact
+
+    // Second pass: visual-scale fallback. A token with scale > 1
+    // renders a circle of `cellSize * 0.4 * scale` pixels — i.e.
+    // `0.4 * scale` cells radius — but its grid footprint stays at
+    // grid_w × grid_h. Without this pass, a vehicle scaled up to
+    // look the right size on the canvas (e.g. Minnie at scale ~4)
+    // is only grabbable from the single anchor cell, even though the
+    // portrait visually covers a 3×3 area. Hit-test against the
+    // rendered radius and pick the smallest matching token so a tiny
+    // PC near the vehicle's edge still wins over the vehicle itself.
+    let best: { tok: Token; radius: number } | null = null
+    for (const t of tokens) {
+      if (!(t.is_visible || isGM)) continue
+      const scale = t.scale ?? 1
+      if (scale <= 1) continue
+      const gw = t.grid_w ?? 1
+      const gh = t.grid_h ?? 1
+      const cx = t.grid_x + gw / 2
+      const cy = t.grid_y + gh / 2
+      const visRadius = 0.4 * scale
+      const dx = (gx + 0.5) - cx
+      const dy = (gy + 0.5) - cy
+      if (Math.hypot(dx, dy) <= visRadius) {
+        if (!best || visRadius < best.radius) best = { tok: t, radius: visRadius }
+      }
+    }
+    return best?.tok
   }
 
   // Pan starts on mousedown. Move/up are handled by the React onMouseMove
