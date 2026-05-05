@@ -9823,7 +9823,32 @@ export default function TablePage() {
                       No NPCs visible on the map or in your sidebar. A GM needs to place an NPC or reveal one first.
                     </div>
                   ) : (
-                    <select value={firstImpressionNpcId} onChange={e => setFirstImpressionNpcId(e.target.value)}
+                    <select value={firstImpressionNpcId} onChange={e => {
+                      const npcId = e.target.value
+                      setFirstImpressionNpcId(npcId)
+                      // Auto-fire when there's a clear single PC choice —
+                      // skips the second click on the PC button below.
+                      // Same heuristic as Perception/Gut Instinct
+                      // (shortCircuitForSpecialCheck): single eligible PC,
+                      // or active combatant during combat. Otherwise fall
+                      // through to the PC button list. Reported tonight
+                      // as "First Impression goes to a redundant first
+                      // modal — should go to the standard roll modal".
+                      if (!npcId) return
+                      const visibleNow = entries.filter(en => isGM || en.userId === userId)
+                      let auto: typeof visibleNow[0] | undefined
+                      if (visibleNow.length === 1) auto = visibleNow[0]
+                      else if (isGM && combatActive) {
+                        const activeIE = initiativeOrder.find(ie => ie.is_active && !ie.is_npc)
+                        if (activeIE?.character_id) {
+                          auto = visibleNow.find(en => en.character.id === activeIE.character_id)
+                        }
+                      }
+                      const targetNpc = eligibleNpcs.find((n: any) => n.id === npcId)
+                      if (auto && targetNpc) {
+                        triggerFirstImpression(auto.character.name, targetNpc.id, targetNpc.name)
+                      }
+                    }}
                       style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                       <option value="">— pick an NPC —</option>
                       {eligibleNpcs.map((n: any) => (
@@ -9836,21 +9861,50 @@ export default function TablePage() {
                 {/* PC roller buttons — players only see their own PC(s);
                     GMs can roll for any PC (they orchestrate NPC reactions
                     and may need to fire a First Impression on a PC's
-                    behalf during an absent player's turn). */}
-                <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Rolling PC</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {entries.filter(e => isGM || e.userId === userId).map(e => {
-                    const ready = !!npcChosen
+                    behalf during an absent player's turn).
+                    Hidden when the NPC-picker auto-fire path will catch
+                    this — i.e. exactly one eligible PC OR (combat-active
+                    GM with a PC-active turn). Avoids visual redundancy. */}
+                {(() => {
+                  const visibleNow = entries.filter(en => isGM || en.userId === userId)
+                  const willAutoFireOnNpcPick =
+                    visibleNow.length === 1 ||
+                    (isGM && combatActive && initiativeOrder.find(ie => ie.is_active && !ie.is_npc && ie.character_id && visibleNow.some(en => en.character.id === ie.character_id)))
+                  if (willAutoFireOnNpcPick) {
+                    // Show a thin hint instead of the PC button list — the
+                    // moment they pick an NPC, the roll modal opens for
+                    // the auto-picked PC.
                     return (
-                      <button key={e.character.id}
-                        disabled={!ready}
-                        onClick={() => { if (npcChosen) triggerFirstImpression(e.character.name, npcChosen.id, npcChosen.name) }}
-                        style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), opacity: ready ? 1 : 0.4, cursor: ready ? 'pointer' : 'not-allowed' }}>
-                        {e.character.name} (INF {e.character.data?.rapid?.INF ?? 0})
-                      </button>
+                      <div style={{ fontSize: '13px', color: '#5a5550', fontStyle: 'italic', marginTop: '2px' }}>
+                        Picking an NPC above will roll for {visibleNow.length === 1
+                          ? visibleNow[0].character.name
+                          : (() => {
+                              const activeIE = initiativeOrder.find(ie => ie.is_active && !ie.is_npc)
+                              return visibleNow.find(en => en.character.id === activeIE?.character_id)?.character.name ?? 'the active PC'
+                            })()
+                        }.
+                      </div>
                     )
-                  })}
-                </div>
+                  }
+                  return (
+                    <>
+                      <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Rolling PC</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {visibleNow.map(e => {
+                          const ready = !!npcChosen
+                          return (
+                            <button key={e.character.id}
+                              disabled={!ready}
+                              onClick={() => { if (npcChosen) triggerFirstImpression(e.character.name, npcChosen.id, npcChosen.name) }}
+                              style={{ ...hdrBtn('#242424', '#d4cfc9', '#3a3a3a'), opacity: ready ? 1 : 0.4, cursor: ready ? 'pointer' : 'not-allowed' }}>
+                              {e.character.name} (INF {e.character.data?.rapid?.INF ?? 0})
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </>
+                  )
+                })()}
               </>
               )
             })()}
