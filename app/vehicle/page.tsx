@@ -113,6 +113,12 @@ export default function VehiclePage() {
           .select('id, name, reason, dexterity, skills, status, wp_current, death_countdown')
           .eq('campaign_id', campaignId),
       ])
+      // Surface partial failures. Pre-fix both .data fell through to
+      // empty arrays on RLS denial / network blip, rendering as "no
+      // crew" with no debug trail. Same defensive pattern as
+      // CampaignCommunity loaders.
+      if (memberRes.error) console.error('[vehicle] campaign_members fetch:', memberRes.error.message)
+      if (npcRes.error) console.error('[vehicle] campaign_npcs fetch:', npcRes.error.message)
 
       const pcs: CrewMember[] = ((memberRes.data ?? []) as any[])
         .map(r => r.characters as { id: string; name: string; data: any } | null)

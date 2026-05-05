@@ -50,16 +50,29 @@ export default function UserCharactersPage() {
   }, [userId])
 
   async function handleDelete(id: string) {
-    await supabase.from('characters').delete().eq('id', id)
+    // Error-check + bail before flipping state. The pre-fix optimistic
+    // filter ran regardless of outcome, so an RLS denial or network
+    // blip left the row gone from the moderator UI but still present
+    // on the server until reload. Mirrors the user-side fix that
+    // already shipped on /characters.
+    const { error } = await supabase.from('characters').delete().eq('id', id)
+    if (error) {
+      alert(`Delete failed: ${error.message}`)
+      return
+    }
     setCharacters(prev => prev.filter(c => c.id !== id))
   }
 
   async function handleDeleteAll() {
     if (!confirm(`Delete all ${characters.length} characters for ${username}? This cannot be undone.`)) return
     setDeletingAll(true)
-    await supabase.from('characters').delete().eq('user_id', userId)
-    setCharacters([])
+    const { error } = await supabase.from('characters').delete().eq('user_id', userId)
     setDeletingAll(false)
+    if (error) {
+      alert(`Bulk delete failed: ${error.message}`)
+      return
+    }
+    setCharacters([])
   }
 
   if (loading) return (
