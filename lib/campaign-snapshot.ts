@@ -9,6 +9,8 @@
 //   tactical_scenes
 //   scene_tokens (nested under their scene)
 //   campaign_notes
+//   campaigns.vehicles (JSONB array — fuel, WP, cargo, crew/passenger
+//                       seat assignments, mounted-weapon shooters)
 //   pregens (characters.data where type='pregen' on this campaign — see note below)
 //   character_states (optional, via includesCharacterStates flag)
 //
@@ -36,6 +38,12 @@ export interface CampaignSnapshot {
   pins: any[]
   scenes: { scene: any; tokens: any[] }[]
   notes: any[]
+  // campaigns.vehicles JSONB array — Minnie's fuel, WP, cargo, driver/
+  // navigator/passenger seats, mounted-weapon shooters. Pre-2026-05-05
+  // snapshots predate this field; restore tolerates `vehicles` being
+  // undefined and skips the vehicle write rather than nuking the
+  // current state.
+  vehicles?: any[]
   character_states?: any[]
 }
 
@@ -45,11 +53,12 @@ export async function captureCampaignSnapshot(
   campaignId: string,
   opts: { includesCharacterStates?: boolean } = {},
 ): Promise<CampaignSnapshot> {
-  const [npcsR, pinsR, scenesR, notesR, statesR] = await Promise.all([
+  const [npcsR, pinsR, scenesR, notesR, vehiclesR, statesR] = await Promise.all([
     supabase.from('campaign_npcs').select('*').eq('campaign_id', campaignId),
     supabase.from('campaign_pins').select('*').eq('campaign_id', campaignId),
     supabase.from('tactical_scenes').select('*').eq('campaign_id', campaignId),
     supabase.from('campaign_notes').select('*').eq('campaign_id', campaignId),
+    supabase.from('campaigns').select('vehicles').eq('id', campaignId).maybeSingle(),
     opts.includesCharacterStates
       ? supabase.from('character_states').select('*').eq('campaign_id', campaignId)
       : Promise.resolve({ data: null, error: null } as any),
@@ -58,6 +67,7 @@ export async function captureCampaignSnapshot(
   if (pinsR.error) throw new Error(`Pins: ${pinsR.error.message}`)
   if (scenesR.error) throw new Error(`Scenes: ${scenesR.error.message}`)
   if (notesR.error) throw new Error(`Notes: ${notesR.error.message}`)
+  if (vehiclesR.error) throw new Error(`Vehicles: ${vehiclesR.error.message}`)
   if (statesR.error) throw new Error(`Character states: ${statesR.error.message}`)
 
   const scenes = (scenesR.data ?? []) as any[]
@@ -80,6 +90,7 @@ export async function captureCampaignSnapshot(
     pins: (pinsR.data ?? []) as any[],
     scenes: scenes.map(s => ({ scene: s, tokens: tokensByScene[s.id] ?? [] })),
     notes: (notesR.data ?? []) as any[],
+    vehicles: ((vehiclesR.data as any)?.vehicles ?? []) as any[],
     character_states: opts.includesCharacterStates ? ((statesR.data ?? []) as any[]) : undefined,
   }
 }
@@ -152,7 +163,17 @@ export async function restoreCampaignSnapshot(
     }
   }
 
-  // 5. Character states (optional). Wipes + re-inserts the exact rows.
+  // 5. Vehicles — single UPDATE to campaigns.vehicles JSONB column.
+  //    Skipped (no overwrite) when the snapshot predates 2026-05-05
+  //    and lacks the field, so older snapshots don't nuke the GM's
+  //    current vehicle state. Empty array IS a write — that's how a
+  //    GM intentionally clears all vehicles via snapshot.
+  if (snap.vehicles !== undefined) {
+    const r = await supabase.from('campaigns').update({ vehicles: snap.vehicles }).eq('id', campaignId)
+    if (r.error) errors.push(`vehicles: ${r.error.message}`)
+  }
+
+  // 6. Character states (optional). Wipes + re-inserts the exact rows.
   if (snap.includes_character_states && snap.character_states) {
     const wipe = await supabase.from('character_states').delete().eq('campaign_id', campaignId)
     if (wipe.error) errors.push(`character_states wipe: ${wipe.error.message}`)
@@ -275,7 +296,28 @@ export async function cloneSnapshotIntoCampaign(
     }
   }
 
-  // 6) character_states intentionally skipped — they reference PCs owned
+  // 6) Vehicles — fresh ids, target campaign, all PC crew references
+  //    nulled. NPC references nulled too: while NPCs are remapped via
+  //    npcIdMap, vehicle slots store kind+id pairs and the safe path
+  //    is to null them and let the target GM re-assign. Cargo + fuel
+  //    + WP + mounted_weapons (sans shooter) carry through unchanged.
+  if (snap.vehicles && snap.vehicles.length > 0) {
+    const cloned = snap.vehicles.map((v: any) => ({
+      ...v,
+      id: newId(),
+      driver_character_id: null,    driver_kind: null,
+      brewer_character_id: null,    brewer_kind: null,
+      navigator_character_id: null, navigator_kind: null,
+      passenger_seats: Array.isArray(v.passenger_seats) ? v.passenger_seats.map(() => null) : v.passenger_seats,
+      mounted_weapons: Array.isArray(v.mounted_weapons)
+        ? v.mounted_weapons.map((w: any) => ({ ...w, shooter_character_id: null, shooter_kind: null }))
+        : v.mounted_weapons,
+    }))
+    const r = await supabase.from('campaigns').update({ vehicles: cloned }).eq('id', targetCampaignId)
+    if (r.error) errors.push(`vehicles: ${r.error.message}`)
+  }
+
+  // 7) character_states intentionally skipped — they reference PCs owned
   //    by specific users in the original campaign, not transferable to
   //    a new campaign with different members.
 
