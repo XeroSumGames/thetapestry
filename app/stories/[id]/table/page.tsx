@@ -367,26 +367,52 @@ export default function TablePage() {
     }
     let cancelled = false
     ;(async () => {
-      // Pull every scene + every visible token in this campaign in
-      // two cheap queries. Most campaigns have <20 scenes and <100
-      // tokens; well within a single round-trip's worth of payload.
-      const [{ data: scenes }, { data: toks }] = await Promise.all([
-        supabase.from('tactical_scenes').select('id, name, is_active').eq('campaign_id', id),
-        supabase.from('scene_tokens').select('scene_id, character_id, npc_id').is('archived_at', null),
-      ])
+      // Pull every scene in THIS campaign first so we can scope the
+      // token query to those ids only — pre-fix, the scene_tokens
+      // SELECT was unfiltered, so a PC's character_id resolved to
+      // whichever stale token row happened to be processed last
+      // (e.g. one left over from a prior scene like "Canyon Lake
+      // Marina"). That stale tag then lit up the cross-scene chip
+      // on every PC every session.
+      const { data: scenes } = await supabase
+        .from('tactical_scenes')
+        .select('id, name, is_active')
+        .eq('campaign_id', id)
       if (cancelled) return
       const sceneNameById: Record<string, string> = {}
       let activeSceneId: string | null = null
+      const sceneIds: string[] = []
       for (const s of (scenes ?? []) as any[]) {
         sceneNameById[s.id] = s.name
+        sceneIds.push(s.id)
         if (s.is_active) activeSceneId = s.id
       }
+      if (sceneIds.length === 0) { setEntrySceneTags({}); return }
+      const { data: toks } = await supabase
+        .from('scene_tokens')
+        .select('scene_id, character_id, npc_id')
+        .is('archived_at', null)
+        .in('scene_id', sceneIds)
+      if (cancelled) return
       // Build character_id → scene_id and npc_id → scene_id lookups.
+      // When a PC has tokens on multiple scenes (very common with
+      // multi-scene campaigns), PREFER the active scene — that way
+      // the cross-scene chip only shows when the token is genuinely
+      // off-stage. Pre-fix the last-write-wins behavior could pick
+      // the off-stage scene by accident and falsely tag the PC.
       const charScene: Record<string, string> = {}
       const npcScene: Record<string, string> = {}
       for (const t of (toks ?? []) as any[]) {
-        if (t.character_id) charScene[t.character_id] = t.scene_id
-        if (t.npc_id) npcScene[t.npc_id] = t.scene_id
+        if (t.character_id) {
+          if (!charScene[t.character_id] || t.scene_id === activeSceneId) {
+            charScene[t.character_id] = t.scene_id
+          }
+        }
+        if (t.npc_id) {
+          if (!npcScene[t.npc_id] || t.scene_id === activeSceneId) {
+            npcScene[t.npc_id] = t.scene_id
+          }
+        }
       }
       const tags: Record<string, string> = {}
       for (const e of initiativeOrder) {

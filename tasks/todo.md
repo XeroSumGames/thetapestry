@@ -210,6 +210,10 @@
   + object filter + auto-select pre-selected target + log line trim.
   Commits `c04650c`, `9218f86`, `2e15258`, `dea681d`, `931de35`.
 
+## 🎯 From 2026-05-04 Mongrels playtest
+
+- [ ] **Random character generation — Medic paradigm should grant First Aid.** Tonight a player rolled a random character with the Medic paradigm but the resulting character sheet had no First Aid skill. Per the SRD, Medic's paradigm-skill list includes First Aid (or whatever the canonical equivalent is — `lib/xse-schema.ts` `PARADIGMS` is the source of truth). Either (a) the random-character route doesn't honor paradigm-skill seeding, or (b) Medic's entry in the paradigm definitions is missing First Aid. Repro: `/characters/random`, generate until a Medic comes up, inspect the skills block.
+
 ## 🎯 From 2026-04-29 chat — roll-log clarity + modal unification + new-campaign bug
 
 - [ ] **Empty-adventure module clone fails on null pin name.** Creating a new Empty (Chased-content) campaign currently throws `Campaign created but module clone failed: pins: null value in column "name" of relation "campaign_pins" violates not-null constraint`. Lives in `cloneModuleIntoCampaign` in `lib/modules.ts` — one pin row in the Empty/Chased module snapshot is missing `name`. Likely either (a) clone mapper expects `title` while DB column is `name` (or vice versa), or (b) the Thriver migration tool that published the Empty setting captured one source pin with `name: null`. Fix shape: defensive coalesce on the mapper + audit the published Empty module's snapshot for the offending row. Repro: `/stories/new` → Empty setting → Save. Recovery in the meantime: delete the half-seeded campaign.
