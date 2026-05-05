@@ -2,7 +2,15 @@
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { getCachedAuth } from '../lib/auth-cache'
+import { createClient } from '../lib/supabase-browser'
 import { record, downloadDump, getRecorder } from '../lib/playtest-recorder'
+
+// Warns we never want in the dump — already filtered from the console by the
+// head script in app/layout.tsx, but our recorder runs upstream of that
+// filter so we need to mirror its rules. Keep this list tight and exact.
+const BENIGN_WARN_SUBSTRINGS = [
+  'Realtime send() is automatically falling back to REST API',
+]
 
 // Mounts once in app/layout.tsx. Initializes the global recorder state,
 // wires DOM listeners (click, error, rejection, console.error/warn),
@@ -55,13 +63,30 @@ export default function PlaytestRecorder() {
     // Resolve user identity in the background; events recorded before this
     // resolves still get logged, just without user info on those entries
     // (the dump's meta block updates once auth is known).
-    getCachedAuth().then(({ user }) => {
+    const applyUser = (user: { id: string; email?: string | null } | null) => {
       const r = getRecorder()
-      if (r && user) {
+      if (!r) return
+      if (user) {
         r.userId = user.id
         r.userEmail = user.email ?? null
+      } else {
+        r.userId = null
+        r.userEmail = null
       }
-    }).catch(() => {})
+    }
+    getCachedAuth().then(({ user }) => applyUser(user ?? null)).catch(() => {})
+
+    // Subscribe to auth-state changes so dumps after a fresh sign-in are
+    // tagged with the user — fixes the always-`anon` filename problem when
+    // the recorder mounts on /login before the user has signed in.
+    let authSub: { unsubscribe: () => void } | null = null
+    try {
+      const supabase = createClient()
+      const { data } = supabase.auth.onAuthStateChange((_event: string, session: { user?: { id: string; email?: string | null } | null } | null) => {
+        applyUser(session?.user ?? null)
+      })
+      authSub = data.subscription
+    } catch {}
 
     // ── Click capture (event delegation, capture phase, passive) ──────────
     const onClick = (e: MouseEvent) => {
@@ -129,7 +154,11 @@ export default function PlaytestRecorder() {
     }
     console.warn = function(...args: unknown[]) {
       try {
-        record('console-warn', { args: args.map(captureArg), path: window.location.pathname })
+        const isBenign = typeof args[0] === 'string' &&
+          BENIGN_WARN_SUBSTRINGS.some(s => (args[0] as string).indexOf(s) !== -1)
+        if (!isBenign) {
+          record('console-warn', { args: args.map(captureArg), path: window.location.pathname })
+        }
       } catch {}
       return origWarn.apply(console, args)
     }
