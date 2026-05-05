@@ -36,6 +36,7 @@ const CampaignObjects = dynamic(() => import('../../../../components/CampaignObj
 import type { CampaignNpc } from '../../../../components/NpcRoster'
 import { getCategoryEmoji } from '../../../../lib/pin-categories'
 import { computeEncumbrance } from '../../../../lib/encumbrance'
+import { defaultSpawnCell } from '../../../../lib/tactical-spawn'
 import { logEvent } from '../../../../lib/events'
 import { openPopout } from '../../../../lib/popout'
 import { renderRichText } from '../../../../lib/rich-text'
@@ -2439,8 +2440,9 @@ export default function TablePage() {
   }
 
   async function placeTokenOnMap(name: string, type: 'pc' | 'npc', characterId?: string, npcId?: string, portraitUrl?: string) {
-    const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
+    const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols, grid_rows').eq('campaign_id', id).eq('is_active', true).single()
     if (!activeScene) { alert('No active tactical scene. Create a scene first.'); return }
+    const spawn = defaultSpawnCell((activeScene as any).grid_cols ?? 20, (activeScene as any).grid_rows ?? 15)
     // Three-way toggle: live → archive (off-map, position preserved);
     // archived → un-archive (back on map at original cell);
     // no row → insert fresh at (0,0). Hard-delete used to be the off
@@ -2479,7 +2481,8 @@ export default function TablePage() {
     const tokenColor = type === 'pc'
       ? '#7ab3d4'
       : getNpcTokenBorderColor({ disposition: npcRow?.disposition, npc_type: (npcRow as any)?.npc_type })
-    // Place at top-left of the grid
+    // Spawn under the top-right zoom slider (defaultSpawnCell) so the
+    // top-left day/night/fog toolbar doesn't hide the new token.
     const { error: tokenErr } = await supabase.from('scene_tokens').insert({
       scene_id: activeScene.id,
       name,
@@ -2487,8 +2490,8 @@ export default function TablePage() {
       character_id: characterId || null,
       npc_id: npcId || null,
       portrait_url: portraitUrl || null,
-      grid_x: 0,
-      grid_y: 0,
+      grid_x: spawn.grid_x,
+      grid_y: spawn.grid_y,
       is_visible: type === 'pc' || (npcId ? revealedNpcIds.has(npcId) : true),
       color: tokenColor,
     })
@@ -7211,17 +7214,18 @@ export default function TablePage() {
                     // pin's markers without colliding on emoji name.
                     const { data: activeScene } = await supabase
                       .from('tactical_scenes')
-                      .select('id')
+                      .select('id, grid_cols, grid_rows')
                       .eq('campaign_id', id)
                       .eq('is_active', true)
                       .single()
                     if (!activeScene) { alert('No active tactical scene — open one from Map Setup first.'); return }
                     const emoji = getCategoryEmoji(pin.category)
+                    const pinSpawn = defaultSpawnCell((activeScene as any).grid_cols ?? 20, (activeScene as any).grid_rows ?? 15)
                     const { error } = await supabase.from('scene_tokens').insert({
                       scene_id: (activeScene as any).id,
                       name: emoji,
                       token_type: 'pin',
-                      grid_x: 1, grid_y: 1,
+                      grid_x: pinSpawn.grid_x, grid_y: pinSpawn.grid_y,
                       is_visible: true, color: '#7ab3d4',
                       campaign_pin_id: pin.id,
                     })
@@ -7269,12 +7273,12 @@ export default function TablePage() {
                   <CampaignObjects campaignId={id} isGM={isGM} tokenRefreshKey={tokenRefreshKey}
                     onTokenChanged={() => { setTokenRefreshKey(k => k + 1); initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} }) }}
                     onPlaceOnMap={async (name, portraitUrl, wpMax) => {
-                      const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', id).eq('is_active', true).single()
+                      const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols, grid_rows').eq('campaign_id', id).eq('is_active', true).single()
                       if (!activeScene) { alert('No active scene.'); return }
-                      const cols = (activeScene as any).grid_cols ?? 20
+                      const objSpawn = defaultSpawnCell((activeScene as any).grid_cols ?? 20, (activeScene as any).grid_rows ?? 15)
                       await supabase.from('scene_tokens').insert({
                         scene_id: activeScene.id, name, token_type: 'object',
-                        portrait_url: portraitUrl, grid_x: 1, grid_y: 1,
+                        portrait_url: portraitUrl, grid_x: objSpawn.grid_x, grid_y: objSpawn.grid_y,
                         is_visible: true, color: '#EF9F27',
                         wp_max: wpMax, wp_current: wpMax,
                       })
@@ -7317,12 +7321,21 @@ export default function TablePage() {
                       let candidate = `${baseName} (copy)`
                       let n = 2
                       while (taken.has(candidate)) candidate = `${baseName} (copy ${n++})`
+                      // Fetch the cloned scene's grid dimensions so the
+                      // copy spawns under the top-right zoom slider, not
+                      // under the top-left fog/lighting toolbar.
+                      const { data: cloneScene } = await supabase
+                        .from('tactical_scenes')
+                        .select('grid_cols, grid_rows')
+                        .eq('id', source.scene_id)
+                        .maybeSingle()
+                      const dupSpawn = defaultSpawnCell((cloneScene as any)?.grid_cols ?? 20, (cloneScene as any)?.grid_rows ?? 15)
                       const { error } = await supabase.from('scene_tokens').insert({
                         scene_id: source.scene_id,
                         name: candidate,
                         token_type: 'object',
                         portrait_url: source.portrait_url,
-                        grid_x: 1, grid_y: 1, // top-left per memory rule
+                        grid_x: dupSpawn.grid_x, grid_y: dupSpawn.grid_y,
                         is_visible: source.is_visible,
                         color: source.color,
                         wp_max: source.wp_max,

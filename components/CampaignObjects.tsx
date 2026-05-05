@@ -6,6 +6,7 @@ import { ALL_WEAPONS } from '../lib/weapons'
 import { EQUIPMENT } from '../lib/xse-schema'
 import ObjectImageCropper from './ObjectImageCropper'
 import { LABEL_STYLE_TIGHT, ModalBackdrop } from '../lib/style-helpers'
+import { defaultSpawnCell } from '../lib/tactical-spawn'
 
 const OBJECT_ICONS = [
   { value: 'car', emoji: '🚗', label: 'Car' },
@@ -78,6 +79,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   const [library, setLibrary] = useState<{ id: string; name: string; image_url: string; metadata?: any }[]>([])
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null)
   const [activeSceneCols, setActiveSceneGridCols] = useState<number>(20)
+  const [activeSceneRows, setActiveSceneGridRows] = useState<number>(15)
   const [showAdd, setShowAdd] = useState(false)
   const [addName, setAddName] = useState('')
   const [addIcon, setAddIcon] = useState('crate')
@@ -140,10 +142,11 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
   useEffect(() => { loadObjects(); loadLibrary() }, [campaignId, tokenRefreshKey])
 
   async function loadObjects() {
-    const { data: scenes } = await supabase.from('tactical_scenes').select('id, grid_cols').eq('campaign_id', campaignId).eq('is_active', true).limit(1)
+    const { data: scenes } = await supabase.from('tactical_scenes').select('id, grid_cols, grid_rows').eq('campaign_id', campaignId).eq('is_active', true).limit(1)
     if (!scenes || scenes.length === 0) { setObjects([]); setActiveSceneId(null); return }
     setActiveSceneId(scenes[0].id)
     setActiveSceneGridCols((scenes[0] as any).grid_cols ?? 20)
+    setActiveSceneGridRows((scenes[0] as any).grid_rows ?? 15)
     const { data } = await supabase.from('scene_tokens').select('*').eq('scene_id', scenes[0].id).eq('token_type', 'object').order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true })
     setObjects((data ?? []) as ObjectToken[])
   }
@@ -189,13 +192,14 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       // is_wall (always block). Windows flag is_window (block
       // movement, vision passes through). All other icons stay as
       // pass-through decoration.
+      const addSpawn = defaultSpawnCell(activeSceneCols, activeSceneRows)
       await supabase.from('scene_tokens').insert({
         scene_id: activeSceneId,
         name: addName.trim(),
         token_type: 'object',
         portrait_url: portraitUrl,
         color: addIcon,
-        grid_x: 1, grid_y: 1,
+        grid_x: addSpawn.grid_x, grid_y: addSpawn.grid_y,
         is_visible: true,
         wp_max: wpMax, wp_current: wpMax,
         properties: [], contents: [],
@@ -241,13 +245,14 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
     if (!activeSceneId || !lib.metadata) return
     const meta = lib.metadata
     const wpMax = meta.indestructible ? null : (meta.wp_max ?? 3)
+    const tplSpawn = defaultSpawnCell(activeSceneCols, activeSceneRows)
     await supabase.from('scene_tokens').insert({
       scene_id: activeSceneId,
       name: lib.name,
       token_type: 'object',
       portrait_url: lib.image_url || null,
       color: meta.icon ?? 'crate',
-      grid_x: 1, grid_y: 1,
+      grid_x: tplSpawn.grid_x, grid_y: tplSpawn.grid_y,
       is_visible: true,
       wp_max: wpMax, wp_current: wpMax,
       properties: meta.properties ?? [],
