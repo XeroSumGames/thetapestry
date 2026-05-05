@@ -96,6 +96,17 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // pings are orange; player pings are green.
   const pingChannelRef = useRef<any>(null)
   const pingMarkersRef = useRef<any[]>([])
+  // Measure tool — click to drop point A, click again for point B,
+  // shows total path distance + per-segment legs. Multi-click adds
+  // segments (polyline-style); button toggle or Esc clears.
+  const measureModeRef = useRef(false)
+  const measurePointsRef = useRef<Array<{ lat: number; lng: number }>>([])
+  const measureMarkersRef = useRef<any[]>([])
+  const measureLineRef = useRef<any>(null)
+  const measureLabelRef = useRef<any>(null)
+  const [measureMode, setMeasureMode] = useState(false)
+  const [measureDistanceText, setMeasureDistanceText] = useState<string>('')
+  useEffect(() => { measureModeRef.current = measureMode }, [measureMode])
   // Hold a ref to the latest onMapDoubleClick callback so the Leaflet
   // dblclick handler registered in the init effect can always call the
   // current parent version without re-subscribing.
@@ -120,6 +131,21 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
   // Keep ref in sync so the Leaflet click handler sees current state
   useEffect(() => { placingRef.current = placing }, [placing])
+
+  // Esc kills the measure tool — bail out of the multi-click flow
+  // without having to re-toggle the button. Only attached while the
+  // tool is active so we don't leak listeners or block other Esc UX.
+  useEffect(() => {
+    if (!measureMode) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        clearMeasure()
+        setMeasureMode(false)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [measureMode])
 
   // Inject ping pulse keyframes ONCE (per browser tab). Two pulses
   // over ~2.4s, then auto-removal of the marker. Same visual cadence
@@ -152,6 +178,83 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 `
     document.head.appendChild(s)
   }, [])
+
+  // ── Measure tool helpers ──────────────────────────────────────
+  // Haversine: great-circle distance between two lat/lng pairs in
+  // metres. Earth radius 6,371 km is the conventional spherical
+  // average — accurate to ~0.5% for terrestrial distances, which is
+  // fine for "how far apart are these pins" use cases.
+  function haversineMeters(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+    const R = 6371000
+    const toRad = (d: number) => (d * Math.PI) / 180
+    const dLat = toRad(b.lat - a.lat)
+    const dLng = toRad(b.lng - a.lng)
+    const lat1 = toRad(a.lat)
+    const lat2 = toRad(b.lat)
+    const x = Math.sin(dLat / 2) ** 2 + Math.sin(dLng / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2)
+    return 2 * R * Math.asin(Math.sqrt(x))
+  }
+  // Total distance along a polyline. Returns 0 for <2 points.
+  function totalMeters(points: Array<{ lat: number; lng: number }>): number {
+    let m = 0
+    for (let i = 1; i < points.length; i++) m += haversineMeters(points[i - 1], points[i])
+    return m
+  }
+  // "1.2 mi (1.9 km)" for >0.1 mi, "350 ft (107 m)" below that. Both
+  // units shown so US-centric and metric players read the same line.
+  function formatDistance(meters: number): string {
+    const miles = meters / 1609.344
+    if (miles >= 0.1) return `${miles.toFixed(2)} mi (${(meters / 1000).toFixed(2)} km)`
+    const feet = meters * 3.28084
+    return `${Math.round(feet)} ft (${Math.round(meters)} m)`
+  }
+  // Wipe every measure-tool layer + reset state. Used by the toggle
+  // button, Esc keypress, and unmount cleanup.
+  function clearMeasure() {
+    const map = mapInstanceRef.current
+    measureMarkersRef.current.forEach(m => { try { map?.removeLayer(m) } catch {} })
+    measureMarkersRef.current = []
+    if (measureLineRef.current) { try { map?.removeLayer(measureLineRef.current) } catch {} ; measureLineRef.current = null }
+    if (measureLabelRef.current) { try { map?.removeLayer(measureLabelRef.current) } catch {} ; measureLabelRef.current = null }
+    measurePointsRef.current = []
+    setMeasureDistanceText('')
+  }
+  // Append a click point and redraw markers + connecting polyline +
+  // distance label. Label sits at the latest segment's midpoint so it
+  // stays visible as the user adds segments.
+  function addMeasurePoint(lat: number, lng: number) {
+    const L = (window as any).L
+    const map = mapInstanceRef.current
+    if (!L || !map) return
+    measurePointsRef.current = [...measurePointsRef.current, { lat, lng }]
+    // Numbered dot marker for this point.
+    const i = measurePointsRef.current.length
+    const dotHtml = `<div style="width:18px;height:18px;border-radius:50%;background:#7ab3d4;border:2px solid #f5f2ee;box-shadow:0 0 6px rgba(122,179,212,.8);display:flex;align-items:center;justify-content:center;color:#0f1a2e;font-family:Carlito,sans-serif;font-size:13px;font-weight:700;">${i}</div>`
+    const dotIcon = L.divIcon({ html: dotHtml, className: '', iconSize: [18, 18], iconAnchor: [9, 9] })
+    const marker = L.marker([lat, lng], { icon: dotIcon, interactive: false, keyboard: false, zIndexOffset: 9000 }).addTo(map)
+    measureMarkersRef.current.push(marker)
+    // Polyline through every point so far.
+    if (measurePointsRef.current.length >= 2) {
+      const latlngs = measurePointsRef.current.map(p => [p.lat, p.lng]) as [number, number][]
+      if (measureLineRef.current) { try { map.removeLayer(measureLineRef.current) } catch {} }
+      measureLineRef.current = L.polyline(latlngs, { color: '#7ab3d4', weight: 3, opacity: 0.9, dashArray: '6,6' }).addTo(map)
+      // Distance label at midpoint of the FULL polyline's last leg —
+      // keeps the readout near the most recent click.
+      const mid = {
+        lat: (measurePointsRef.current[i - 1].lat + measurePointsRef.current[i - 2].lat) / 2,
+        lng: (measurePointsRef.current[i - 1].lng + measurePointsRef.current[i - 2].lng) / 2,
+      }
+      const total = totalMeters(measurePointsRef.current)
+      const text = formatDistance(total)
+      setMeasureDistanceText(text)
+      const labelHtml = `<div style="padding:3px 8px;background:rgba(15,15,15,0.92);border:1px solid #7ab3d4;border-radius:3px;color:#cce0f5;font-family:Carlito,sans-serif;font-size:13px;font-weight:600;letter-spacing:.04em;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.5);">${text}</div>`
+      const labelIcon = L.divIcon({ html: labelHtml, className: '', iconSize: [0, 0], iconAnchor: [0, 0] })
+      if (measureLabelRef.current) { try { map.removeLayer(measureLabelRef.current) } catch {} }
+      measureLabelRef.current = L.marker([mid.lat, mid.lng], { icon: labelIcon, interactive: false, keyboard: false, zIndexOffset: 9500 }).addTo(map)
+    } else {
+      setMeasureDistanceText('Click a second point to measure…')
+    }
+  }
 
   // Drop a transient pulsing marker at (lat, lng) and clear it after
   // the animation finishes. Keeping a list of active markers means we
@@ -345,6 +448,13 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       // alt-click while in placing mode pings instead of opening the
       // new-pin form.
       map.on('click', (e: any) => {
+        // Measure tool wins over everything else when active. Each
+        // click extends the polyline; toggle the button (or hit Esc)
+        // to clear and exit.
+        if (measureModeRef.current) {
+          addMeasurePoint(e.latlng.lat, e.latlng.lng)
+          return
+        }
         if (e?.originalEvent?.altKey) {
           const color = isGM ? '#EF9F27' : '#7fc458'
           dropPing(e.latlng.lat, e.latlng.lng, color)
@@ -394,6 +504,12 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       const map = mapInstanceRef.current
       pingMarkersRef.current.forEach(m => { try { map?.removeLayer(m) } catch {} })
       pingMarkersRef.current = []
+      // Wipe any measure-tool layers along with the ping markers.
+      measureMarkersRef.current.forEach(m => { try { map?.removeLayer(m) } catch {} })
+      measureMarkersRef.current = []
+      if (measureLineRef.current) { try { map?.removeLayer(measureLineRef.current) } catch {} ; measureLineRef.current = null }
+      if (measureLabelRef.current) { try { map?.removeLayer(measureLabelRef.current) } catch {} ; measureLabelRef.current = null }
+      measurePointsRef.current = []
       if (pingChannelRef.current) {
         try { supabase.removeChannel(pingChannelRef.current) } catch {}
         pingChannelRef.current = null
@@ -424,7 +540,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
 
   return (
     <div style={{ flex: 1, position: 'relative' }}>
-      <div ref={mapRef} style={{ width: '100%', height: '100%', cursor: placing ? 'crosshair' : '' }} />
+      <div ref={mapRef} style={{ width: '100%', height: '100%', cursor: (placing || measureMode) ? 'crosshair' : '' }} />
 
       {/* Search + layer switcher — single right column (matches MapView) */}
       <div style={{ position: 'absolute', top: '6px', right: '6px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
@@ -437,6 +553,27 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
             title={isGM ? 'Drop a pin on the campaign map' : 'Suggest a pin — GM will review and reveal it'}
             style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${placing ? '#2d5a1b' : '#3a3a3a'}`, background: placing ? '#1a2e10' : 'rgba(15,15,15,.85)', color: placing ? '#7fc458' : '#d4cfc9' }}>
             {placing ? '✕ Cancel' : isGM ? '+ Pin' : '+ Suggest Pin'}
+          </button>
+          {/* Measure tool — toggle on, click two (or more) points to
+              get total distance in mi/km. Esc or button-toggle clears.
+              Anyone (GM + player) can measure; it's a local-only tool
+              right now (no broadcast) so different viewers can run
+              their own measurements simultaneously. */}
+          <button type="button"
+            onClick={() => {
+              if (measureMode) {
+                clearMeasure()
+                setMeasureMode(false)
+              } else {
+                setMeasureMode(true)
+                setPlacing(false)
+                setNewPin(null)
+                setMeasureDistanceText('Click a point to start measuring…')
+              }
+            }}
+            title={measureMode ? 'Stop measuring (Esc)' : 'Click two points to measure distance'}
+            style={{ padding: '5px 10px', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '3px', border: `1px solid ${measureMode ? '#7ab3d4' : '#3a3a3a'}`, background: measureMode ? '#0f1a2e' : 'rgba(15,15,15,.85)', color: measureMode ? '#7ab3d4' : '#d4cfc9' }}>
+            {measureMode ? '✕ Stop' : '📏 Measure'}
           </button>
           <div style={{ position: 'relative' }}>
             <input value={searchQuery} onChange={e => {
@@ -485,6 +622,16 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       {placing && !newPin && (
         <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(26,46,16,0.95)', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' }}>
           Click on the map to place a pin
+        </div>
+      )}
+
+      {/* Measure mode banner — shows live total distance and a hint
+          for next click. Tucked above the placing banner spot so the
+          two never overlap (measure forces placing off anyway). */}
+      {measureMode && (
+        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span>📏 {measureDistanceText || 'Click a point to start measuring…'}</span>
+          <span style={{ color: '#7ab3d4', fontSize: '13px' }}>Esc to clear</span>
         </div>
       )}
 
