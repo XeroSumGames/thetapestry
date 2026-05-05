@@ -28,6 +28,13 @@ type RecorderState = {
   userEmail: string | null
   sessionId: string
   pathname: string
+  // Set by PlaytestRecorder once it has fetched playtest_recorder_config
+  // and matched it against the current user. Defaults to TRUE so events
+  // captured before the config fetch resolves aren't lost on tabs that
+  // turn out to be enabled. If the fetch resolves to "off for me",
+  // the buffer is wiped and `enabled` flips to false — record() drops
+  // any subsequent events on the floor.
+  enabled: boolean
 }
 
 declare global {
@@ -36,6 +43,21 @@ declare global {
     __tapestryMark?: (label: string, data?: Record<string, unknown>) => void
     __tapestryDump?: () => void
     __tapestryRecord?: (kind: PlaytestEvent['kind'], data: Record<string, unknown>) => void
+  }
+}
+
+// Called by PlaytestRecorder after fetching playtest_recorder_config and
+// deciding whether the current user is in scope. Wipes the buffer when
+// transitioning to disabled so the dump can't surface events captured
+// before the config check resolved.
+export function setEnabled(enabled: boolean) {
+  const r = getRecorder()
+  if (!r) return
+  if (r.enabled === enabled) return
+  r.enabled = enabled
+  if (!enabled) {
+    r.buffer.length = 0
+    try { localStorage.removeItem('tapestry_playtest_buffer') } catch {}
   }
 }
 
@@ -72,6 +94,7 @@ function redact(value: unknown, depth = 0): unknown {
 export function record(kind: PlaytestEvent['kind'], data: Record<string, unknown>) {
   const r = getRecorder()
   if (!r) return
+  if (!r.enabled) return
   const ev: PlaytestEvent = {
     t: new Date().toISOString(),
     ms: Date.now() - r.startedAt,

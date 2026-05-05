@@ -1,9 +1,9 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { getCachedAuth } from '../lib/auth-cache'
 import { createClient } from '../lib/supabase-browser'
-import { record, downloadDump, getRecorder } from '../lib/playtest-recorder'
+import { record, downloadDump, getRecorder, setEnabled } from '../lib/playtest-recorder'
 
 // Warns we never want in the dump — already filtered from the console by the
 // head script in app/layout.tsx, but our recorder runs upstream of that
@@ -40,6 +40,10 @@ function describeTarget(el: Element | null): Record<string, unknown> {
 export default function PlaytestRecorder() {
   const pathname = usePathname()
   const initRef = useRef(false)
+  // Mirrors the recorder's `enabled` flag so we can hide the corner dot
+  // when this tab is out-of-scope. Defaults to `null` ("config not yet
+  // resolved") so the dot is hidden during the brief fetch window.
+  const [enabledUI, setEnabledUI] = useState<boolean | null>(null)
 
   // One-time init: install the global state, listeners, console wrappers.
   useEffect(() => {
@@ -58,6 +62,7 @@ export default function PlaytestRecorder() {
       userEmail: null,
       sessionId,
       pathname: window.location.pathname,
+      enabled: true, // optimistic — flipped off below if config disagrees
     }
 
     // Resolve user identity in the background; events recorded before this
@@ -76,6 +81,43 @@ export default function PlaytestRecorder() {
     }
     getCachedAuth().then(({ user }) => applyUser(user ?? null)).catch(() => {})
 
+    // ── Recorder gate: fetch playtest_recorder_config and decide whether
+    //    this tab should record. Default is "on" until we hear back, so
+    //    no events are lost on tabs that turn out to be in-scope. If the
+    //    config says we're out-of-scope, setEnabled(false) wipes the
+    //    buffer and short-circuits all future record() calls.
+    //    Re-runs whenever auth state changes (sign-in / sign-out) since
+    //    target_user_ids matches by user.id.
+    const evaluateGate = async () => {
+      try {
+        const supabase = createClient()
+        const [{ data: cfg }, { user }] = await Promise.all([
+          supabase.from('playtest_recorder_config')
+            .select('enabled, target_user_ids')
+            .eq('id', 1)
+            .maybeSingle(),
+          getCachedAuth(),
+        ])
+        let resolved: boolean
+        if (!cfg || !cfg.enabled) {
+          resolved = false
+        } else {
+          const targets = (cfg.target_user_ids ?? []) as string[]
+          resolved = targets.length === 0
+            ? !!user                              // allowlist empty → all authed
+            : !!user && targets.includes(user.id) // allowlist → my id?
+        }
+        setEnabled(resolved)
+        setEnabledUI(resolved)
+      } catch {
+        // On any error fetching config, default to OFF — better to miss
+        // a few events than to record traffic the GM didn't intend.
+        setEnabled(false)
+        setEnabledUI(false)
+      }
+    }
+    evaluateGate()
+
     // Subscribe to auth-state changes so dumps after a fresh sign-in are
     // tagged with the user — fixes the always-`anon` filename problem when
     // the recorder mounts on /login before the user has signed in.
@@ -84,6 +126,9 @@ export default function PlaytestRecorder() {
       const supabase = createClient()
       const { data } = supabase.auth.onAuthStateChange((_event: string, session: { user?: { id: string; email?: string | null } | null } | null) => {
         applyUser(session?.user ?? null)
+        // Re-check the recorder gate — a user signing in might transition
+        // from "no-record" to "record for me" if they're on the allowlist.
+        evaluateGate()
       })
       authSub = data.subscription
     } catch {}
@@ -206,6 +251,13 @@ export default function PlaytestRecorder() {
     r.pathname = pathname
     record('route', { from: prev, to: pathname })
   }, [pathname])
+
+  // Don't render anything when the gate hasn't resolved yet, or when the
+  // recorder is gated off for this user. The listeners stay installed
+  // (they're cheap and harmless when record() short-circuits), but the
+  // dot is the visible UX signal — no point showing it if nothing's
+  // being captured.
+  if (enabledUI !== true) return null
 
   return (
     <div
