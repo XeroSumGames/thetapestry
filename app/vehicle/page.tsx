@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import VehicleCard, { Vehicle } from '../../components/VehicleCard'
 import { classifyRoll } from '../../lib/community-logic'
 import { getWeaponByName } from '../../lib/weapons'
+import { rollDamage, calculateDamage } from '../../lib/damage'
 import { type InventoryItem, normalizeInventoryItem } from '../../lib/inventory'
 import { ModalBackdrop } from '../../lib/style-helpers'
 import { EQUIPMENT } from '../../lib/xse-schema'
@@ -420,6 +421,70 @@ export default function VehiclePage() {
         : ''
     const label = `${verb} · ${vehicle.name} · ${member?.name ?? '—'} · ${skillLabel} · ${outcome}${fuelNote}`
 
+    // ── Damage resolution for mounted-weapon attacks ──
+    // Pre-fix this block didn't exist — the vehicle popup logged the
+    // attack roll but never rolled damage or applied it to the target.
+    // Symptom: "no damage to <target>" with the rolls feed showing an
+    // empty "= raw → WP / RP" line. Now mirrors the /table single-
+    // target damage path: roll the weapon's damage formula, apply the
+    // target's DEX AMod as defensive mod, mitigate by RP%, then update
+    // the target NPC's wp_current / rp_current. Burst trait is honored
+    // (Automatic Burst (N) → N damage rolls summed), matching player
+    // expectations for a mounted machine gun.
+    let damageJsonExtras: Record<string, any> = {}
+    if (
+      check.kind === 'attack' &&
+      weapon && weaponDef &&
+      check.targetNpcId &&
+      (outcome === 'Success' || outcome === 'Wild Success' || outcome === 'High Insight')
+    ) {
+      const traits = weaponDef.traits ?? []
+      // Automatic Burst (N) — find the trait, parse N, default 1 roll.
+      const burstTrait = traits.find(t => /^Automatic Burst/i.test(t))
+      const burstMatch = burstTrait?.match(/Automatic Burst\s*\((\d+)\)/i)
+      const rolls = burstMatch ? parseInt(burstMatch[1], 10) : 1
+      let totalBase = 0, totalDice = 0
+      let diceDesc = ''
+      for (let i = 0; i < rolls; i++) {
+        const dmg = rollDamage(weaponDef.damage, 0, false)
+        totalBase += dmg.base
+        totalDice += dmg.diceRoll
+        if (i === 0) diceDesc = dmg.diceDesc
+      }
+      const totalWP = totalBase + totalDice
+      // Pull the target NPC's current state so we can compute their
+      // DEX AMod (defensive mod for ranged) and apply the WP/RP delta.
+      const { data: tgtNpc } = await supabase
+        .from('campaign_npcs')
+        .select('id, dexterity, wp_current, rp_current, wp_max, rp_max')
+        .eq('id', check.targetNpcId)
+        .maybeSingle()
+      const targetDex = (tgtNpc as any)?.dexterity ?? 0
+      const { finalWP, finalRP, mitigated } = calculateDamage(totalWP, weaponDef.rpPercent, targetDex)
+      // Apply the damage. Clamp at 0 — going negative would let a
+      // future heal "uncritically" push the NPC back into combat at
+      // weird WP. Don't write wp_max/rp_max; this only mutates
+      // current pools.
+      if (tgtNpc) {
+        const newWp = Math.max(0, ((tgtNpc as any).wp_current ?? 0) - finalWP)
+        const newRp = Math.max(0, ((tgtNpc as any).rp_current ?? 0) - finalRP)
+        await supabase.from('campaign_npcs')
+          .update({ wp_current: newWp, rp_current: newRp })
+          .eq('id', check.targetNpcId)
+      }
+      damageJsonExtras = {
+        base: totalBase,
+        diceRoll: totalDice,
+        diceDesc: rolls > 1 ? `${rolls}x ${diceDesc}` : diceDesc,
+        phyBonus: 0,
+        totalWP,
+        finalWP,
+        finalRP,
+        mitigated,
+        bursts: rolls > 1 ? rolls : undefined,
+      }
+    }
+
     await supabase.from('roll_log').insert({
       campaign_id: campaignId,
       user_id: myUserId,
@@ -443,6 +508,7 @@ export default function VehiclePage() {
         weaponRpPercent: weaponDef?.rpPercent ?? null,
         targetNpcId: check.targetNpcId ?? null,
         targetName,
+        ...damageJsonExtras,
       },
     })
     if (newFuel !== vehicle.fuel_current) {
