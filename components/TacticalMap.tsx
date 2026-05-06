@@ -604,23 +604,6 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         if (active.cell_px) setCellPx(active.cell_px)
         if (active.img_scale) setImgScale(active.img_scale)
       }
-      // Diagnostic — temporarily logging the sync state inline as
-      // JSON so copy-paste captures every value without needing to
-      // expand the object in DevTools. Prefixed [TacticalMap.sync]
-      // so grep finds it. Remove after the discrepancy is resolved.
-      console.warn('[TacticalMap.sync] ' + JSON.stringify({
-        role: isGM ? 'GM' : 'PLAYER',
-        sceneId: active.id,
-        sceneName: active.name,
-        firstLoad: isFirstLoad,
-        db_cell_px: active.cell_px ?? null,
-        db_img_scale: active.img_scale ?? null,
-        applied_cell_px: (isFirstLoad || !isGM) && active.cell_px ? active.cell_px : '(skipped)',
-        applied_img_scale: (isFirstLoad || !isGM) && active.img_scale ? active.img_scale : '(skipped)',
-        local_cellPx_state: cellPx,
-        local_imgScale_state: imgScale,
-        local_zoom_state: zoom,
-      }))
       if (isFirstLoad) {
         setMapLocked(active.is_locked ?? false)
         // Grid render settings — persisted in tactical_scenes per
@@ -761,9 +744,22 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     img.crossOrigin = 'anonymous'
     img.onload = () => {
       bgImageRef.current = img
-      // If the scene has no saved img_scale yet (first time), pick a sensible default
-      // so the image fits the GM's container. GM can then Lock Map to persist.
-      if (isGM && (scene.img_scale == null || scene.img_scale === 1) && containerRef.current && img.naturalWidth > 0) {
+      // If the scene has no saved img_scale yet (first time), every
+      // viewer (GM AND players) picks a fit-to-container default
+      // locally. Pre-fix this was GM-only — the player kept
+      // img_scale=1 (raw natural pixels), which overflowed their
+      // container any time the natural image was wider than their
+      // viewport. Result: GM saw the whole scene, player saw a
+      // zoomed-in fragment of it. Reported tonight with the
+      // "Stansfield's Gas Station" GM/player screenshot pair (both
+      // had db_img_scale=1; the GM auto-fit locally, the player
+      // didn't, hence the visual divergence).
+      //
+      // Auto-fit is local-only — not persisted. Each viewer fits
+      // their own container width. GM manual adjustments via the
+      // popout still persist via the existing cellPx debounce path
+      // and override this auto-fit on subsequent loads.
+      if ((scene.img_scale == null || scene.img_scale === 1) && containerRef.current && img.naturalWidth > 0) {
         const cw = containerRef.current.clientWidth
         const fit = cw / img.naturalWidth
         // Only override if natural is much wider than container (avoid touching existing manual scales)
