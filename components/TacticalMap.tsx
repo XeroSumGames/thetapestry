@@ -256,6 +256,53 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // `fogEditMode` to avoid churning every callsite — it's "scene
   // edit mode" in spirit now.
   const [fogEditMode, setFogEditMode] = useState<'paint' | 'erase' | 'rect' | 'rect-erase' | 'wall' | 'door' | 'window' | null>(null)
+  // GM fog/lighting toolbar position. Defaults to top-left (8,8) but
+  // the GM can drag the ⠿ handle to reposition it — useful when the
+  // toolbar is covering content the GM needs to interact with (e.g. a
+  // token in the corner). Per-campaign localStorage so each GM's
+  // preferred placement persists across sessions.
+  const [fogBarPos, setFogBarPos] = useState<{ x: number; y: number }>(() => {
+    if (typeof window === 'undefined') return { x: 8, y: 8 }
+    try {
+      const saved = localStorage.getItem(`fog_bar_pos_${campaignId}`)
+      if (saved) {
+        const v = JSON.parse(saved)
+        if (typeof v?.x === 'number' && typeof v?.y === 'number') return v
+      }
+    } catch {}
+    return { x: 8, y: 8 }
+  })
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try { localStorage.setItem(`fog_bar_pos_${campaignId}`, JSON.stringify(fogBarPos)) } catch {}
+  }, [fogBarPos, campaignId])
+  const fogBarDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
+  function startFogBarDrag(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    fogBarDragRef.current = { startX: e.clientX, startY: e.clientY, origX: fogBarPos.x, origY: fogBarPos.y }
+    const onMove = (mv: MouseEvent) => {
+      if (!fogBarDragRef.current) return
+      const dx = mv.clientX - fogBarDragRef.current.startX
+      const dy = mv.clientY - fogBarDragRef.current.startY
+      // Clamp so the bar can't be dragged off-screen entirely. 0 left/
+      // top is the floor; right/bottom bounded by the parent container
+      // would require a measurement — leaving unbounded for now since
+      // there's no natural right edge in the canvas wrapper. Worst
+      // case the GM drags it off and resets via localStorage clear.
+      setFogBarPos({
+        x: Math.max(0, fogBarDragRef.current.origX + dx),
+        y: Math.max(0, fogBarDragRef.current.origY + dy),
+      })
+    }
+    const onUp = () => {
+      fogBarDragRef.current = null
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }
   const fogPaintingRef = useRef(false)
   const fogPendingSaveRef = useRef<number | null>(null)
   // Rectangle marquee for the 'rect' fog tool. Both corners are
@@ -3129,11 +3176,20 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>100%</span>
         </div>
 
-        {/* GM Fog editor — top left. Compact when collapsed (just the
+        {/* GM Fog editor — top left by default; draggable via the ⠿
+            handle on the left edge. Compact when collapsed (just the
             toggle button); expands into paint/erase + bulk controls
             when in edit mode. Hidden entirely from players. */}
         {isGM && scene && (
-          <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div style={{ position: 'absolute', top: `${fogBarPos.y}px`, left: `${fogBarPos.x}px`, zIndex: 10, background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {/* Drag handle. ⠿ braille dots are universal "grippy" UX
+                — same icon GmNotes / NpcRoster / CampaignPins all use
+                for drag-to-reorder. mousedown starts the drag, doc-
+                level listeners track move + up so the cursor doesn't
+                have to stay on the handle. */}
+            <div onMouseDown={startFogBarDrag}
+              title="Drag to reposition the fog/lighting toolbar"
+              style={{ cursor: 'move', color: '#5a5550', fontSize: '14px', lineHeight: 1, userSelect: 'none', padding: '0 4px', flexShrink: 0 }}>⠿</div>
             {/* Day / Night toggle — outdoor scenes default 'day' (PCs
                 see for miles, only walls block). Indoor/dark scenes
                 flip to 'night' (per-token sight_radius governs;
