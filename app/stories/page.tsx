@@ -29,6 +29,11 @@ export default function CampaignsPage() {
   // campaign_id → ISO string of latest activity. Used both for sort and
   // for the "Last Run" display label on each card.
   const [lastActivity, setLastActivity] = useState<Map<string, string>>(new Map())
+  // Campaigns where a session is currently in flight (sessions row with
+  // ended_at IS NULL). Used to surface a "Resume Active Session" banner
+  // at the top of the page so a player landing on /stories mid-session
+  // doesn't have to scroll to find the right campaign and click in.
+  const [activeSessionCampaignIds, setActiveSessionCampaignIds] = useState<Set<string>>(new Set())
   const router = useRouter()
   const supabase = createClient()
 
@@ -74,17 +79,28 @@ export default function CampaignsPage() {
       // above one you only created.
       const allIds = [...((gmRaw ?? []) as Campaign[]).map(c => c.id), ...playerRaw.map(c => c.id)]
       const lastPlayed = new Map<string, string>()
+      const activeNow = new Set<string>()
       if (allIds.length > 0) {
+        // Pull ended_at too so we can flag campaigns with a session
+        // currently in flight (started, never ended). Powers the
+        // "Resume Active Session" banner at the top — saves a player
+        // who logs in mid-game from scrolling to find the right
+        // campaign and clicking into it.
         const { data: sess } = await supabase
           .from('sessions')
-          .select('campaign_id, started_at')
+          .select('campaign_id, started_at, ended_at')
           .in('campaign_id', allIds)
-        for (const row of (sess ?? []) as { campaign_id: string; started_at: string | null }[]) {
-          if (!row.started_at) continue
-          const prev = lastPlayed.get(row.campaign_id)
-          if (!prev || row.started_at > prev) lastPlayed.set(row.campaign_id, row.started_at)
+        for (const row of (sess ?? []) as { campaign_id: string; started_at: string | null; ended_at: string | null }[]) {
+          if (row.started_at) {
+            const prev = lastPlayed.get(row.campaign_id)
+            if (!prev || row.started_at > prev) lastPlayed.set(row.campaign_id, row.started_at)
+          }
+          if (row.started_at && !row.ended_at) {
+            activeNow.add(row.campaign_id)
+          }
         }
       }
+      setActiveSessionCampaignIds(activeNow)
       // Merge campaign.last_accessed_at into the same map (taking the
       // later of the two). Cheap because we already have every campaign
       // in memory.
@@ -132,6 +148,44 @@ export default function CampaignsPage() {
           New Story
         </Link>
       </div>
+
+      {/* Active-session banner — shown when one or more campaigns the
+          user is in (as GM or player) has a session currently running.
+          One row per active campaign with a Resume button that
+          deep-links to /stories/[id]/table. Sits at the very top so a
+          mid-session login goes from "/login → /stories → click
+          campaign → Join Session → /table" (4 clicks) to "/login →
+          /stories → Resume" (2 clicks). */}
+      {(() => {
+        const allCampaigns = [...gmCampaigns, ...playerCampaigns]
+        const active = allCampaigns.filter(c => activeSessionCampaignIds.has(c.id))
+        if (active.length === 0) return null
+        return (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#7fc458', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '8px', fontFamily: 'Carlito, sans-serif' }}>
+              ⚡ Live Now
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {active.map(c => (
+                <div key={c.id} style={{ background: '#0d1f08', border: '1px solid #2d5a1b', borderLeft: '3px solid #7fc458', borderRadius: '4px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '17px', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#f5f2ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {c.name}
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                      Session in progress · {c.gm_user_id === userId ? 'You\'re GMing' : `GM: ${gmNames[c.gm_user_id] ?? '—'}`}
+                    </div>
+                  </div>
+                  <button onClick={() => router.push(`/stories/${c.id}/table`)}
+                    style={{ padding: '8px 18px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700, flexShrink: 0 }}>
+                    Resume →
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
 
       {gmCampaigns.length === 0 && playerCampaigns.length === 0 && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '3rem', textAlign: 'center' }}>
