@@ -1332,7 +1332,18 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
       const cellW = gridW / s.grid_cols
       const cellH = gridH / s.grid_rows
       ctx.save()
-      ctx.fillStyle = isGM ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.92)'
+      // Fog opacity:
+      //   • GM actively painting (fogEditMode truthy): light overlay
+      //     (0.35) so the GM can see the underlying map structure
+      //     while choosing what to fog.
+      //   • Everyone else (GM not painting + every player): fully
+      //     opaque black. Pre-fix this was `0.92` for players (8%
+      //     translucent — token shadows + structure still bled
+      //     through) and a permanent `0.35` for the GM whether or
+      //     not they were editing. Reported tonight as "the fog
+      //     isn't completely dark".
+      const fogOpaque = !(isGM && fogEditMode)
+      ctx.fillStyle = fogOpaque ? 'rgba(0,0,0,1)' : 'rgba(0,0,0,0.35)'
       for (const k of fogKeys) {
         if (!fogMap[k]) continue
         const [gxStr, gyStr] = k.split(',')
