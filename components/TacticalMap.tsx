@@ -255,7 +255,15 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
   // editor instead of two competing toolbars. Name kept as
   // `fogEditMode` to avoid churning every callsite — it's "scene
   // edit mode" in spirit now.
-  const [fogEditMode, setFogEditMode] = useState<'paint' | 'erase' | 'rect' | 'rect-erase' | 'wall' | 'door' | 'window' | null>(null)
+  const [fogEditMode, setFogEditMode] = useState<'paint' | 'erase' | 'rect' | 'rect-erase' | 'wall' | 'door' | 'window' | 'select' | null>(null)
+  // Selected segment id (set by clicking a wall/door/window in Select
+  // mode). Drives the highlight in the draw routine and the
+  // segment-info action panel that floats below the fog toolbar.
+  // Cleared automatically when the GM leaves Select mode.
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null)
+  const selectedSegmentIdRef = useRef<string | null>(null)
+  useEffect(() => { selectedSegmentIdRef.current = selectedSegmentId }, [selectedSegmentId])
+  useEffect(() => { if (fogEditMode !== 'select') setSelectedSegmentId(null) }, [fogEditMode])
   // GM fog/lighting toolbar position. Defaults to top-left (8,8) but
   // the GM can drag the ⠿ handle to reposition it — useful when the
   // toolbar is covering content the GM needs to interact with (e.g. a
@@ -2028,6 +2036,23 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           ctx.moveTo(x1, y1)
           ctx.lineTo(x2, y2)
           ctx.stroke()
+          // Selection highlight — bright white glow around the
+          // currently-selected segment so the GM can see exactly
+          // which one the action panel is acting on. Drawn AFTER
+          // the kind-specific stroke so it overlays cleanly.
+          if (selectedSegmentIdRef.current === seg.id) {
+            ctx.save()
+            ctx.strokeStyle = '#ffffff'
+            ctx.lineWidth = 6
+            ctx.setLineDash([])
+            ctx.shadowColor = '#ffffff'
+            ctx.shadowBlur = 10
+            ctx.beginPath()
+            ctx.moveTo(x1, y1)
+            ctx.lineTo(x2, y2)
+            ctx.stroke()
+            ctx.restore()
+          }
         }
         // Live preview of the in-flight segment.
         if (wallDrawStart && wallDrawHover && (fogEditMode === 'wall' || fogEditMode === 'door' || fogEditMode === 'window')) {
@@ -2277,6 +2302,34 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           return
         }
       }
+      return
+    }
+    // Select mode — left-click finds the nearest wall/door/window
+    // segment (any kind, within ~half a cell) and highlights it. The
+    // selected-segment action panel below the fog toolbar exposes
+    // delete + open/close + convert. Click empty space to deselect.
+    // Lives BEFORE the door/window plain-click toggle below so a
+    // click in Select mode doesn't also flip a door state.
+    if (fogEditMode === 'select' && isGM && e.button === 0 && canvasRef.current && scene) {
+      const rect = canvasRef.current.getBoundingClientRect()
+      const cellSize = getCellSize()
+      const mx = (e.clientX - rect.left) / zoom / cellSize
+      const my = (e.clientY - rect.top) / zoom / cellSize
+      let bestId: string | null = null
+      let bestDist = 0.5
+      for (const w of wallsLocalRef.current) {
+        const dx = w.x2 - w.x1
+        const dy = w.y2 - w.y1
+        const len2 = dx * dx + dy * dy
+        if (len2 < 1e-6) continue
+        let t = ((mx - w.x1) * dx + (my - w.y1) * dy) / len2
+        t = Math.max(0, Math.min(1, t))
+        const px = w.x1 + t * dx
+        const py = w.y1 + t * dy
+        const d = Math.hypot(mx - px, my - py)
+        if (d < bestDist) { bestDist = d; bestId = w.id }
+      }
+      setSelectedSegmentId(bestId)  // null when click is empty space → deselect
       return
     }
     // Right-click in any structure-edit mode → delete the segment
@@ -3319,6 +3372,17 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
                   Erase
                 </button>
                 <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
+                {/* Select cursor — click any wall/door/window segment
+                    to highlight it. The action panel below the toolbar
+                    exposes delete + open/close + kind conversion. Same
+                    half-cell hit threshold as the right-click delete
+                    so the gestures feel consistent. */}
+                <button onClick={() => setFogEditMode('select')}
+                  title="Click a wall/door/window to select it. Action panel below shows delete + open/close + convert."
+                  style={{ padding: '4px 10px', background: fogEditMode === 'select' ? '#1f1f2e' : '#1a1a1a', border: `1px solid ${fogEditMode === 'select' ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: fogEditMode === 'select' ? '#7ab3d4' : '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>
+                  ↖ Select
+                </button>
+                <span style={{ width: '1px', height: '20px', background: '#3a3a3a' }} />
                 {/* Structure tools — author thin wall/door/window
                     segments on cell edges. Click two intersections to
                     place a segment; segments chain (the second click
@@ -3392,6 +3456,80 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             )}
           </div>
         )}
+        {/* Selection action panel — appears below the fog toolbar
+            when Select mode is active AND a segment is selected.
+            Tracks the toolbar's drag position so the two move
+            together. Exposes the per-segment ops the right-click
+            delete + alt-right-click toggle gestures already cover,
+            but as visible buttons so the GM doesn't have to remember
+            modifier keys. */}
+        {isGM && fogEditMode === 'select' && selectedSegmentId && (() => {
+          const seg = wallsLocal.find(w => w.id === selectedSegmentId)
+          if (!seg) return null
+          const kindLabel = seg.kind === 'wall' ? '🧱 Wall'
+            : seg.kind === 'door' ? '🚪 Door'
+            : '🪟 Window'
+          // Per-kind default for door_open: doors default closed, windows default open
+          const kindDefault = seg.kind === 'door' ? false : true
+          const isOpen = seg.door_open ?? kindDefault
+          const stateLabel = seg.kind === 'wall' ? null : (isOpen ? 'open' : 'closed')
+          return (
+            <div style={{ position: 'absolute', top: `${fogBarPos.y + 48}px`, left: `${fogBarPos.x}px`, zIndex: 10, background: 'rgba(15,15,15,.95)', border: '1px solid #7ab3d4', borderRadius: '3px', padding: '6px 8px', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+              <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                Selected: {kindLabel}{stateLabel ? ` (${stateLabel})` : ''}
+              </span>
+              <span style={{ width: '1px', height: '18px', background: '#3a3a3a' }} />
+              {seg.kind !== 'wall' && (
+                <button onClick={() => {
+                  setWallsLocal(prev => {
+                    const next = prev.map(w => w.id === seg.id
+                      ? { ...w, door_open: !(w.door_open ?? (w.kind === 'window' ? true : false)) }
+                      : w)
+                    wallsLocalRef.current = next
+                    return next
+                  })
+                  scheduleWallsPersist()
+                }}
+                  style={{ padding: '3px 8px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  {isOpen ? 'Close' : 'Open'}
+                </button>
+              )}
+              {/* Convert kind — wall ↔ door ↔ window cycle. Each click
+                  steps to the next kind so the GM can fix a misplaced
+                  segment without delete + redraw. */}
+              <button onClick={() => {
+                const nextKind: WallSegment['kind'] = seg.kind === 'wall' ? 'door' : seg.kind === 'door' ? 'window' : 'wall'
+                setWallsLocal(prev => {
+                  const next = prev.map(w => w.id === seg.id ? { ...w, kind: nextKind, door_open: nextKind === 'wall' ? undefined : w.door_open } : w)
+                  wallsLocalRef.current = next
+                  return next
+                })
+                scheduleWallsPersist()
+              }}
+                title="Cycle kind: wall → door → window → wall"
+                style={{ padding: '3px 8px', background: '#1a1a1a', border: '1px solid #5a5550', borderRadius: '3px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                ↻ Convert
+              </button>
+              <button onClick={() => {
+                setWallsLocal(prev => {
+                  const next = prev.filter(w => w.id !== seg.id)
+                  wallsLocalRef.current = next
+                  return next
+                })
+                scheduleWallsPersist()
+                setSelectedSegmentId(null)
+              }}
+                style={{ padding: '3px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                ✕ Delete
+              </button>
+              <button onClick={() => setSelectedSegmentId(null)}
+                title="Deselect"
+                style={{ background: 'none', border: 'none', color: '#5a5550', fontSize: '14px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>
+                ✕
+              </button>
+            </div>
+          )
+        })()}
         <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'auto', contain: 'layout paint', overscrollBehavior: 'contain' }}>
         <canvas ref={canvasRef}
           onMouseDown={handleMouseDown}
