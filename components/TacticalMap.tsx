@@ -604,21 +604,23 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
         if (active.cell_px) setCellPx(active.cell_px)
         if (active.img_scale) setImgScale(active.img_scale)
       }
-      // Diagnostic — temporarily logging the sync state to debug a
-      // GM-vs-player view discrepancy report. Console messages
-      // prefixed [TacticalMap.sync] so a quick grep in DevTools
-      // surfaces them. Remove after the debug call lands.
-      console.warn('[TacticalMap.sync]', {
+      // Diagnostic — temporarily logging the sync state inline as
+      // JSON so copy-paste captures every value without needing to
+      // expand the object in DevTools. Prefixed [TacticalMap.sync]
+      // so grep finds it. Remove after the discrepancy is resolved.
+      console.warn('[TacticalMap.sync] ' + JSON.stringify({
         role: isGM ? 'GM' : 'PLAYER',
         sceneId: active.id,
         sceneName: active.name,
         firstLoad: isFirstLoad,
+        db_cell_px: active.cell_px ?? null,
+        db_img_scale: active.img_scale ?? null,
         applied_cell_px: (isFirstLoad || !isGM) && active.cell_px ? active.cell_px : '(skipped)',
         applied_img_scale: (isFirstLoad || !isGM) && active.img_scale ? active.img_scale : '(skipped)',
         local_cellPx_state: cellPx,
         local_imgScale_state: imgScale,
         local_zoom_state: zoom,
-      })
+      }))
       if (isFirstLoad) {
         setMapLocked(active.is_locked ?? false)
         // Grid render settings — persisted in tactical_scenes per
