@@ -281,10 +281,15 @@ export default function TablePage() {
   const stressWatchPrimedRef = useRef(false)
   const [myUsername, setMyUsername] = useState<string>('')
   const [isGM, setIsGM] = useState(false)
-  // Thriver = app-level admin role. Gets pin management parity with
-  // GMs (delete, edit with lat/lng + address search) so they can
-  // clean up / relocate pins across any campaign, not just their own.
+  // Thriver = app-level admin role. Gets full GM parity (godmode) so
+  // they can run / debug / repair any campaign, not just their own.
+  // RLS already lets Thrivers read+write everywhere — see
+  // sql/thriver-godmode-policies.sql. The UI matches by routing
+  // gmLike (= isGM || isThriver) anywhere `isGM` gates an editable
+  // affordance. Strict isGM is kept for label-only surfaces ("GM View",
+  // "GM Tools" menu name) where Thrivers should still read as themselves.
   const [isThriver, setIsThriver] = useState(false)
+  const gmLike = isGM || isThriver
   const [entries, setEntries] = useState<TableEntry[]>([])
   const [gmInfo, setGmInfo] = useState<GmInfo | null>(null)
   const [loading, setLoading] = useState(true)
@@ -7147,19 +7152,19 @@ export default function TablePage() {
             {((combatActive || showTacticalMap) ? ['npcs', 'assets', 'pins', 'notes'] as const : ['pins', 'npcs', 'assets', 'notes'] as const).map(tab => (
               <button key={tab} onClick={() => setGmTab(tab)}
                 style={{ flex: 1, padding: '8px 0', background: gmTab === tab ? '#1a1a1a' : 'transparent', border: 'none', borderBottom: gmTab === tab ? '2px solid #c0392b' : '2px solid transparent', color: gmTab === tab ? '#f5f2ee' : '#cce0f5', fontSize: '13px', fontWeight: 600, fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                {tab === 'pins' ? 'Pins' : tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : isGM ? 'GM Notes' : 'Notes'}
+                {tab === 'pins' ? 'Pins' : tab === 'npcs' ? 'NPCs' : tab === 'assets' ? 'Assets' : gmLike ? 'GM Notes' : 'Notes'}
               </button>
             ))}
           </div>
           <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            {gmTab === 'npcs' && isGM && (() => {
+            {gmTab === 'npcs' && gmLike && (() => {
               // Rotate initiative order so the currently-active combatant is first.
               const activeIdx = initiativeOrder.findIndex(e => e.is_active)
               const rotated = activeIdx >= 0
                 ? [...initiativeOrder.slice(activeIdx), ...initiativeOrder.slice(0, activeIdx)]
                 : initiativeOrder
               const initiativeNpcOrder = rotated.filter(e => e.npc_id).map(e => e.npc_id!)
-              return <NpcRoster campaignId={id} isGM={isGM} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}&gm=${isGM ? 1 : 0}`, `npc-${npc.id}`, { w: 571, h: 400 }) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} onPlaceFolderOnMap={(combatActive || showTacticalMap) ? (folderNpcs) => placeFolderOnMap(folderNpcs.map(n => ({ id: n.id, name: n.name, portrait_url: n.portrait_url, disposition: (n as any).disposition, npc_type: (n as any).npc_type }))) : undefined} onUnmapFolder={(combatActive || showTacticalMap) ? (folderNpcs) => unmapFolderFromMap(folderNpcs.map(n => ({ id: n.id }))) : undefined} onTacticalRefresh={async () => {
+              return <NpcRoster campaignId={id} isGM={gmLike} combatActive={combatActive} initiativeNpcIds={new Set(initiativeOrder.filter(e => e.npc_id).map(e => e.npc_id!))} initiativeNpcOrder={initiativeNpcOrder} onAddToCombat={addNpcsToCombat} pcEntries={entries.map(e => ({ characterId: e.character.id, characterName: e.character.name, userId: e.userId }))} onViewNpc={npc => { openPopout(`/npc-sheet?c=${id}&npc=${npc.id}&gm=${gmLike ? 1 : 0}`, `npc-${npc.id}`, { w: 571, h: 400 }) }} viewingNpcIds={new Set(viewingNpcs.map(n => n.id))} editNpcId={pendingEditNpcId} onEditStarted={() => setPendingEditNpcId(null)} externalNpcs={campaignNpcs} onPlaceOnMap={(combatActive || showTacticalMap) ? (npc) => placeTokenOnMap(npc.name, 'npc', undefined, npc.id, npc.portrait_url || undefined) : undefined} onRemoveFromMap={(combatActive || showTacticalMap) ? (npc) => removeTokenFromMap(npc.name) : undefined} onPlaceFolderOnMap={(combatActive || showTacticalMap) ? (folderNpcs) => placeFolderOnMap(folderNpcs.map(n => ({ id: n.id, name: n.name, portrait_url: n.portrait_url, disposition: (n as any).disposition, npc_type: (n as any).npc_type }))) : undefined} onUnmapFolder={(combatActive || showTacticalMap) ? (folderNpcs) => unmapFolderFromMap(folderNpcs.map(n => ({ id: n.id }))) : undefined} onTacticalRefresh={async () => {
               // Final-pass refresh after the GM toggles SHOW/HIDE on a
               // folder. revealNpcsByIds in NpcRoster updates is_visible
               // on scene_tokens but doesn't broadcast — without this
@@ -7181,7 +7186,7 @@ export default function TablePage() {
               initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
             }} />
             })()}
-            {gmTab === 'npcs' && !isGM && (() => {
+            {gmTab === 'npcs' && !gmLike && (() => {
               // Merge revealed NPCs with any NPCs currently in combat,
               // sorted in initiative order (active combatant first) — mirrors GM view.
               const revealedIds = new Set(revealedNpcs.map((n: any) => n.id))
@@ -7421,7 +7426,7 @@ export default function TablePage() {
                   <span style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', flex: 1 }}>Objects</span>
                 </div>
                 {assetsFolderState.has('objects') && (
-                  <CampaignObjects campaignId={id} isGM={isGM} tokenRefreshKey={tokenRefreshKey}
+                  <CampaignObjects campaignId={id} isGM={gmLike} tokenRefreshKey={tokenRefreshKey}
                     onTokenChanged={() => { setTokenRefreshKey(k => k + 1); initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} }) }}
                     onPlaceOnMap={async (name, portraitUrl, wpMax) => {
                       const { data: activeScene } = await supabase.from('tactical_scenes').select('id, grid_cols, grid_rows').eq('campaign_id', id).eq('is_active', true).single()
@@ -7525,7 +7530,7 @@ export default function TablePage() {
                                 given that the folder header already groups
                                 them. expandedVehicleId state retained for
                                 forward-compat (other surfaces may want it). */}
-                            <VehicleCard vehicle={v} campaignId={id} canEdit={true}
+                            <VehicleCard vehicle={v} campaignId={id} canEdit={gmLike}
                               onUpdate={async (updated: Vehicle) => {
                                 const newVehicles = vehicles.map(vv => vv.id === updated.id ? updated : vv)
                                 setVehicles(newVehicles)
@@ -7539,8 +7544,8 @@ export default function TablePage() {
                 )}
               </div>
             )}
-            {gmTab === 'notes' && isGM && <GmNotes campaignId={id} />}
-            {gmTab === 'notes' && !isGM && <PlayerNotes campaignId={id} />}
+            {gmTab === 'notes' && gmLike && <GmNotes campaignId={id} />}
+            {gmTab === 'notes' && !gmLike && <PlayerNotes campaignId={id} />}
           </div>
         </div>
 
@@ -9202,7 +9207,7 @@ export default function TablePage() {
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
               <CampaignCommunity
                 campaignId={id}
-                isGM={isGM}
+                isGM={gmLike}
                 initialMode={communityModalMode}
                 initialModeToken={communityModalToken}
                 onOpenTradeWithCommunity={myEntry ? (communityId) => setTradeTarget({ kind: 'community', id: communityId }) : undefined}

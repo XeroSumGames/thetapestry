@@ -74,10 +74,16 @@ Cross items off as you finish them. The full annotated audit lives in
 - [ ] In-app SRD search. SRD copy is structurally complete;
       /rules/* just needs a search UI.
 
-- [ ] Thriver godmode UI sweep. Widen `isGM &&` → `(isGM ||
-      isThriver)` in CampaignCommunity, CampaignObjects,
-      VehicleCard, NpcRoster, character-sheet edits for non-owned
-      PCs. (DB layer shipped.)
+- [~] Thriver godmode UI sweep — **4 of 5 surfaces done**. Table
+      page now passes `gmLike = isGM || isThriver` to NpcRoster,
+      CampaignCommunity, CampaignObjects, VehicleCard, plus the
+      shared NPC tab gate, the GM/Player Notes pane, and the
+      `gm=` flag on the NPC sheet popout URL. Side-effect bug fix:
+      VehicleCard `canEdit={true}` was permissive to anyone — now
+      `canEdit={gmLike}`, so players can no longer edit shared
+      vehicles (revert to `true` if that was intentional).
+      **Still open:** character-sheet edit affordance for
+      non-owned PCs (separate file, separate sweep).
 
 ---
 
