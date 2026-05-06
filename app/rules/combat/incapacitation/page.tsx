@@ -13,17 +13,17 @@ import { findSection } from '../../../../lib/rules/sections'
 export const metadata = { title: 'Incapacitation — XSE SRD §06' }
 
 const LASTING: Array<[number, string, string]> = [
-  [2, 'Lost Eye', '−1 ACU. Damaged'],
-  [3, 'Brain Injury', '−2 RSN'],
-  [4, 'Disfigurement', '−1 INF'],
-  [5, 'Spine Injury', '−1 movement. Reduced RP'],
-  [6, 'Wasted Limb', '−1 movement. Wound Points reduced'],
-  [7, 'Shocked', '−1 Initiative Mod'],
-  [8, 'Slowed', '−1 INIT'],
-  [9, 'Frail', '−1 PHY'],
-  [10, 'Hearing Loss', '−1 ACU'],
-  [11, 'Compound Injury', '−1 PHY and −1 ACU'],
-  [12, 'Severe Spine', '−2 DEX'],
+  [2, 'Lost Eye', '−1 on checks using Dexterity'],
+  [3, 'Brain Injury', '−2 Reason'],
+  [4, 'Diminished', '−1 Dexterity'],
+  [5, 'Shaken', '−1 Max. Resilience Points'],
+  [6, 'Weakened', '−1 Max. Wound Points'],
+  [7, 'Skittish', '−1 Initiative Modifier'],
+  [8, 'Scarring', '−1 Influence'],
+  [9, 'Fragile', '−1 Physicality'],
+  [10, 'Hearing Loss', '−1 Acumen'],
+  [11, 'Crippled', '−1 Perception & −1 Acumen'],
+  [12, 'Shell Shock', '−2 Dexterity'],
 ]
 
 export default function Page() {

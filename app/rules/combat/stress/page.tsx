@@ -13,17 +13,17 @@ import { findSection } from '../../../../lib/rules/sections'
 export const metadata = { title: 'Stress & Breaking Point — XSE SRD §06' }
 
 const BREAKING: Array<[number, string, string]> = [
-  [2, 'Catatonic', '−1 movement. Damaged'],
-  [3, 'Cold Fury', '−2 RSN'],
-  [4, 'Berserker Rage', '−1 DEX'],
-  [5, 'Despair', '−1 morale, lost RP'],
-  [6, 'Obsessed', '−1 morale. Wound Points reduced'],
-  [7, 'Panic Spiral', '−1 INIT'],
-  [8, 'Frozen', '−1 INF'],
-  [9, 'Reckless Abandon', '−1 PHY'],
-  [10, 'Self-Harm', '−1 ACU'],
-  [11, 'Self-Destructive Urge', '−1 PHY and −1 ACU'],
-  [12, 'Identity Off', '−2 DEX'],
+  [2, 'Catatonia', '−1 on Dexterity checks'],
+  [3, 'Compulsive Fixation', '−2 Reason'],
+  [4, 'Blind Rage', '−1 Dexterity'],
+  [5, 'Dissociation', '−1 Maximum RP'],
+  [6, 'Overwhelm', '−1 Max. Wound Points'],
+  [7, 'Panic Surge', '−1 Initiative Modifier'],
+  [8, 'Fatalism', '−1 Influence'],
+  [9, 'Reckless Abandon', '−1 Physicality'],
+  [10, 'Self-Harm', '−1 Acumen'],
+  [11, 'Self-Destructive Urges', '−1 Perception, −1 Acumen'],
+  [12, 'Irrational Outburst', '−2 Dexterity'],
 ]
 
 export default function Page() {
@@ -37,8 +37,8 @@ export default function Page() {
           <>
             Each character starts with a <Term>Stress Level</Term> of 0
             and a <Term>Breaking Point</Term> of 5. Brutal scenes push
-            Stress up; reaching the Breaking Point triggers a Lasting
-            Wound from Table 13.
+            Stress up; reaching the Breaking Point triggers a Breaking
+            Point reaction from Table 13.
           </>
         }
       />
