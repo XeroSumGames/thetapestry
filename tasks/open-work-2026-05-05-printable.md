@@ -63,8 +63,10 @@ Cross items off as you finish them. The full annotated audit lives in
 - [ ] Play stats per module. Track actuals — session count + avg
       player count. (Subscriber count shipped.)
 
-- [ ] Sequence guards on loadRolls / loadChat.
-      (loadEntries already has one.)
+- [x] ~~Sequence guards on loadRolls / loadChat.~~ **DONE** —
+      `refetchSeqRef` ports the loadEntries pattern to
+      `useRollsFeed.refetch` and `useChatPanel.refetch`. Stale
+      responses now drop instead of clobbering fresher state.
 
 - [ ] Tier C1. Snapshot RPC for table-page mount.
       (Parallelization shipped via 96a66b2.)
@@ -117,8 +119,12 @@ Cross items off as you finish them. The full annotated audit lives in
 
 - [ ] First Impression → straight to roll modal. Skip the picker.
 
-- [ ] GM Tools → Restore to Full Health is slow. 11 sequential
-      UPDATEs; batch by table with .in('id', ids) + Promise.all.
+- [x] ~~GM Tools → Restore to Full Health is slow.~~ **DONE** — already
+      uses `Promise.all([...npcUpdates, ...pcUpdates, ...objUpdates])`
+      with optimistic local patches (table page line 8881). Modal
+      closes immediately; refetches run in background. The "FOREVER"
+      perception was loadEntries blocking modal close, fixed
+      2026-05-05.
 
 - [ ] Character Evolution / CDP Calculator. Post-creation growth
       tool; spend earned CDP on attribute/skill/trait raises.

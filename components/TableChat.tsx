@@ -94,8 +94,16 @@ export function useChatPanel({ campaignId, userIdRef, setFeedTab, scrollFeedToBo
   setFeedTabRef.current = setFeedTab
   scrollFeedToBottomRef.current = scrollFeedToBottom
 
+  // Sequence guard — postgres_changes on chat_messages can fire in
+  // bursts (multi-line GM whispers, players typing back-and-forth).
+  // A slower earlier refetch can finish AFTER a faster later one and
+  // overwrite fresh messages with stale data. Same defense as
+  // loadEntries on the table page.
+  const refetchSeqRef = useRef(0)
+
   const refetch = useCallback(async () => {
     const uid = userIdRef.current
+    const seq = ++refetchSeqRef.current
     // Simple query; whisper privacy is RLS-enforced server-side.
     // Defense-in-depth: also filter client-side so a slow-propagating
     // RLS change can't briefly leak whispers into someone else's UI.
@@ -106,6 +114,10 @@ export function useChatPanel({ campaignId, userIdRef, setFeedTab, scrollFeedToBo
       .order('created_at', { ascending: false })
       .limit(100)
     if (error) { console.warn('[useChatPanel] fetch error:', error.message); return }
+    // Drop stale results — a newer refetch already won. Has to come
+    // after the await but before any setState so we don't clobber
+    // fresher data the later refetch already wrote.
+    if (seq !== refetchSeqRef.current) return
     const visible = (data ?? []).filter((m: any) => {
       if (!m.is_whisper) return true
       if (!uid) return false

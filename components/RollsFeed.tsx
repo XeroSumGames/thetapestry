@@ -106,6 +106,12 @@ export function useRollsFeed({ campaignId }: UseRollsFeedArgs): UseRollsFeedRetu
   const [expandedRollIds, setExpandedRollIds] = useState<Set<string>>(new Set())
   const rollFeedRef = useRef<HTMLDivElement | null>(null)
   const channelRef = useRef<any>(null)
+  // Sequence guard — realtime callbacks on roll_log can fire in tight
+  // bursts (a multi-roll combat round, or chained turn_changed +
+  // roll inserts). A slower earlier query can finish AFTER a faster
+  // later one and clobber fresh state with stale data. Same defense
+  // as loadEntries on the table page.
+  const refetchSeqRef = useRef(0)
 
   const scrollToBottom = useCallback(() => {
     rollFeedRef.current?.scrollTo(0, rollFeedRef.current.scrollHeight)
@@ -113,12 +119,15 @@ export function useRollsFeed({ campaignId }: UseRollsFeedArgs): UseRollsFeedRetu
 
   const refetch = useCallback(async () => {
     if (!campaignId) return
+    const seq = ++refetchSeqRef.current
     const { data } = await supabase
       .from('roll_log')
       .select('*')
       .eq('campaign_id', campaignId)
       .order('created_at', { ascending: false })
       .limit(50)
+    // Drop stale results — a newer refetch already won.
+    if (seq !== refetchSeqRef.current) return
     setRolls(((data ?? []) as RollEntry[]).reverse())
     setTimeout(() => scrollToBottom(), 50)
   }, [campaignId, supabase, scrollToBottom])
