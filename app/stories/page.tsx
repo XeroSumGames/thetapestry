@@ -43,6 +43,22 @@ export default function CampaignsPage() {
       if (!user) { setLoading(false); return }
       setUserId(user.id)
 
+      // Housekeeping: end any session that's been "started but not
+      // explicitly ended" for over 48 hours. Fire-and-forget — the
+      // SECURITY DEFINER RPC sets ended_at on the stale sessions
+      // and flips campaigns.session_status to idle. Doesn't touch
+      // roll_log / chat / initiative so a GM resuming a long-stale
+      // campaign still sees their residual state. See
+      // sql/auto-end-stale-sessions.sql.
+      void supabase.rpc('auto_end_stale_sessions', { stale_hours: 48 }).then(
+        ({ data, error }: { data: any; error: any }) => {
+          if (error) console.warn('[auto_end_stale_sessions] error:', error.message)
+          else if (typeof data === 'number' && data > 0) {
+            console.warn(`[auto_end_stale_sessions] ended ${data} stale session${data === 1 ? '' : 's'}`)
+          }
+        }
+      )
+
       // Pull both lists. Order coming back doesn't matter — we re-sort by
       // last-played below.
       const { data: gmRaw } = await supabase
