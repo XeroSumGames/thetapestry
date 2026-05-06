@@ -463,6 +463,12 @@ export default function TablePage() {
     })
   }, [combatActive, showTacticalMap])
   const [tacticalShared, setTacticalShared] = useState(false)
+  // Ref-mirror so the realtime broadcast handler at subscription time
+  // doesn't capture a stale `tacticalShared`. Used by the
+  // `scene_activated` listener to decide whether a GM scene switch
+  // should force-open the player's tactical pane.
+  const tacticalSharedRef = useRef(false)
+  useEffect(() => { tacticalSharedRef.current = tacticalShared }, [tacticalShared])
   const [tokenRefreshKey, setTokenRefreshKey] = useState(0)
   const [moveMode, setMoveMode] = useState<{ characterId?: string; npcId?: string; objectTokenId?: string; feet: number } | null>(null)
   const [mapTokens, setMapTokens] = useState<{ id: string; name: string; token_type: string; character_id: string | null; npc_id: string | null; grid_x: number; grid_y: number; wp_max: number | null; wp_current: number | null; controlled_by_character_ids?: string[] | null; rotation?: number }[]>([])
@@ -1208,6 +1214,18 @@ export default function TablePage() {
         .on('broadcast', { event: 'combat_started' }, () => { loadInitiative(id); rollsFeed.refetch() })
         .on('broadcast', { event: 'tactical_shared' }, (msg: any) => { setTacticalShared(msg.payload?.shared ?? false); setShowTacticalMap(msg.payload?.shared ?? false) })
         .on('broadcast', { event: 'tactical_unshared' }, () => { setTacticalShared(false); setShowTacticalMap(false) })
+        // GM force-push view: when a scene is activated AND the GM has
+        // tactical-sharing on, every player's pane opens (or re-opens)
+        // on the new scene so they automatically follow along. Without
+        // this, a player whose pane was closed during a prior scene
+        // wouldn't see the GM's switch — they'd only catch up if they
+        // re-opened the pane manually. Broadcast fires from the GM-side
+        // activateScene paths in TacticalMap, /scene-controls-popout,
+        // and the pin onOpenScene callback below.
+        .on('broadcast', { event: 'scene_activated' }, () => {
+          if (tacticalSharedRef.current) setShowTacticalMap(true)
+          setTokenRefreshKey(k => k + 1)
+        })
         .on('broadcast', { event: 'token_changed' }, () => { setTokenRefreshKey(k => k + 1) })
         .on('broadcast', { event: 'turn_changed' }, () => { loadInitiative(id); loadEntries(id); rollsFeed.refetch() })
         .on('broadcast', { event: 'turn_advance_requested' }, async () => {
@@ -7317,6 +7335,10 @@ export default function TablePage() {
                     await supabase.from('tactical_scenes').update({ is_active: true }).eq('id', sceneId)
                     setShowTacticalMap(true)
                     setTokenRefreshKey(k => k + 1)
+                    // Force-push the scene switch so every player whose
+                    // pane is open (or who has tacticalShared on) lands
+                    // on the new scene without a manual refresh.
+                    initChannelRef.current?.send({ type: 'broadcast', event: 'scene_activated', payload: { sceneId } })
                   }}
                   onPlaceOnTacticalMap={async (pin) => {
                     // Drop the pin onto the active scene as a minimal
