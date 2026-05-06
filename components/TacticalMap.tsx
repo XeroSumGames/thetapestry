@@ -584,10 +584,27 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
     if (active) {
       setScene(active)
       loadTokens(active.id)
-      // Apply saved visual settings ONLY on first load or scene switch.
-      if (lastSyncedSceneIdRef.current !== active.id) {
+      // GM path: apply saved visual settings ONLY on first load or
+      // scene switch. The lastSyncedSceneIdRef guard exists because
+      // the GM's popout writes cellPx/imgScale to DB after a 400ms
+      // debounce, which fires postgres_changes on the GM's main
+      // window TacticalMap. Without the guard, every popout nudge
+      // would re-run loadScenes and clobber the in-flight local
+      // values that arrived via the bus seconds earlier.
+      //
+      // Player path: ALWAYS apply cellPx/imgScale from DB. Players
+      // don't have a popout, can't make local changes, so there's
+      // nothing to clobber. Pre-fix bug — when the GM adjusted
+      // cellPx or imgScale via the popout, the player's view stayed
+      // at the original first-load values forever, producing
+      // dramatically different zoom/scale between GM and player
+      // (the "scene looks different on player side" report).
+      const isFirstLoad = lastSyncedSceneIdRef.current !== active.id
+      if (isFirstLoad || !isGM) {
         if (active.cell_px) setCellPx(active.cell_px)
         if (active.img_scale) setImgScale(active.img_scale)
+      }
+      if (isFirstLoad) {
         setMapLocked(active.is_locked ?? false)
         // Grid render settings — persisted in tactical_scenes per
         // sql/tactical-scenes-grid-persist.sql so a main-window
