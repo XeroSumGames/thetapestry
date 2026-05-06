@@ -504,6 +504,7 @@ export default function TablePage() {
   const [rosterNpcs, setRosterNpcs] = useState<any[]>([])
   const [showRestorePicker, setShowRestorePicker] = useState(false)
   const [restoreNpcIds, setRestoreNpcIds] = useState<Set<string>>(new Set())
+  const [restoring, setRestoring] = useState(false)
   // Snapshot of damaged destructible scene_tokens at the moment Restore opens.
   // We can't rely on mapTokens because it's only populated while TacticalMap
   // is mounted, so opening Restore from the campaign-map view silently lost
@@ -8752,7 +8753,8 @@ export default function TablePage() {
                 Cancel
               </button>
               <button onClick={async () => {
-                if (restoreNpcIds.size === 0) return
+                if (restoreNpcIds.size === 0 || restoring) return
+                setRestoring(true)
                 const selected = Array.from(restoreNpcIds)
                 const nowIso = new Date().toISOString()
                 // Build per-row UPDATEs — each row needs its own wp_max/rp_max
@@ -8762,6 +8764,17 @@ export default function TablePage() {
                 // parallelize the round-trips: 11 sequential awaits at 150ms
                 // RTT = ~1.6s; one Promise.all wave = ~150ms. Three table
                 // groups also run in parallel since they hit different tables.
+                //
+                // Perceived-speed fix (2026-05-05): apply optimistic local
+                // patches to campaignNpcs + entries + mapTokens BEFORE the
+                // Promise.all so the WP/RP bars fill in immediately. The GM
+                // sees instant feedback even if the DB round-trip is slow.
+                // Refetches now run in the background AFTER the modal closes
+                // — they were the actual "FOREVER" feel: loadEntries and the
+                // campaign_npcs full-select were blocking the modal close.
+                // Realtime subscriptions on the player side catch up the
+                // same way they would for any in-flight UPDATE.
+                const npcKeyToWpRp = new Map<string, { wp: number; rp: number }>()
                 const npcUpdates = selected
                   .filter(k => k.startsWith('npc:'))
                   .map(key => {
@@ -8769,14 +8782,17 @@ export default function TablePage() {
                     const npc = campaignNpcs.find((n: any) => n.id === npcId)
                     const wpMax = npc?.wp_max ?? (10 + (npc?.physicality ?? 0) + (npc?.dexterity ?? 0))
                     const rpMax = npc?.rp_max ?? (6 + (npc?.physicality ?? 0))
+                    npcKeyToWpRp.set(npcId, { wp: wpMax, rp: rpMax })
                     return supabase.from('campaign_npcs').update({ wp_current: wpMax, rp_current: rpMax, status: 'active', death_countdown: null, incap_rounds: null }).eq('id', npcId)
                   })
+                const pcKeyToWpRp = new Map<string, { wp: number; rp: number }>()
                 const pcUpdates = selected
                   .filter(k => k.startsWith('pc:'))
                   .map(key => {
                     const stateId = key.slice(3)
                     const entry = entries.find(e => e.stateId === stateId)
                     if (!entry) return null
+                    pcKeyToWpRp.set(stateId, { wp: entry.liveState.wp_max, rp: entry.liveState.rp_max })
                     return supabase.from('character_states').update({ wp_current: entry.liveState.wp_max, rp_current: entry.liveState.rp_max, death_countdown: null, incap_rounds: null, updated_at: nowIso }).eq('id', stateId)
                   })
                   .filter(Boolean) as ReturnType<typeof supabase.from>[]
@@ -8785,54 +8801,89 @@ export default function TablePage() {
                 // looted the crate before you destroyed and restored it, the
                 // contents stay gone. Reset is just "this token is intact
                 // again" so it can be destroyed a second time.
+                const objKeyToWp = new Map<string, number>()
                 const objUpdates = selected
                   .filter(k => k.startsWith('obj:'))
                   .map(key => {
                     const tokenId = key.slice(4)
-                    // Prefer the fresh snapshot (works on any view); fall back to
-                    // mapTokens for older callers still relying on it.
                     const snap = restoreObjects.find(t => t.id === tokenId)
                     const fromMap = mapTokens.find(t => t.id === tokenId)
                     const wpMax = snap?.wp_max ?? fromMap?.wp_max
                     if (wpMax == null) return null
+                    objKeyToWp.set(tokenId, wpMax)
                     return supabase.from('scene_tokens').update({ wp_current: wpMax }).eq('id', tokenId)
                   })
                   .filter(Boolean) as ReturnType<typeof supabase.from>[]
-                await Promise.all([...npcUpdates, ...pcUpdates, ...objUpdates])
-                // Refresh all data — fetch + loadEntries also parallelize (different tables, no shared rows)
-                const [{ data: freshNpcs }] = await Promise.all([
-                  supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
-                  loadEntries(id),
-                ])
-                if (freshNpcs) {
-                  setCampaignNpcs(freshNpcs)
-                  setRosterNpcs(freshNpcs.filter((n: any) => {
-                    if (n.status !== 'active') return false
-                    const wp = n.wp_current ?? n.wp_max ?? 10
-                    return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+
+                // Optimistic local patch — bars fill instantly even on slow
+                // connections.
+                if (npcKeyToWpRp.size > 0) {
+                  setCampaignNpcs(prev => prev.map((n: any) => {
+                    const v = npcKeyToWpRp.get(n.id)
+                    return v ? { ...n, wp_current: v.wp, rp_current: v.rp, status: 'active', death_countdown: null, incap_rounds: null } : n
                   }))
-                  setViewingNpcs(prev => prev.map(vn => {
-                    const fresh = freshNpcs.find((f: any) => f.id === vn.id)
-                    return fresh ? { ...fresh } as CampaignNpc : vn
+                  setRosterNpcs(prev => prev.map((n: any) => {
+                    const v = npcKeyToWpRp.get(n.id)
+                    return v ? { ...n, wp_current: v.wp, rp_current: v.rp, status: 'active', death_countdown: null, incap_rounds: null } : n
+                  }))
+                  setViewingNpcs(prev => prev.map((n: any) => {
+                    const v = npcKeyToWpRp.get(n.id)
+                    return v ? { ...n, wp_current: v.wp, rp_current: v.rp, status: 'active', death_countdown: null, incap_rounds: null } : n
                   }))
                 }
-                initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
-                // Optimistic local patch + refresh trigger for restored object tokens
-                const objKeys = selected.filter(k => k.startsWith('obj:'))
-                if (objKeys.length > 0) {
-                  const restoredIds = new Set(objKeys.map(k => k.slice(4)))
-                  setMapTokens(prev => prev.map(t =>
-                    restoredIds.has(t.id) && t.wp_max != null ? { ...t, wp_current: t.wp_max } : t
-                  ))
-                  setTokenRefreshKey(k => k + 1)
-                  initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+                if (objKeyToWp.size > 0) {
+                  setMapTokens(prev => prev.map(t => {
+                    const wpMax = objKeyToWp.get(t.id)
+                    return wpMax != null ? { ...t, wp_current: wpMax } : t
+                  }))
                 }
-                setShowRestorePicker(false)
-                setRestoreNpcIds(new Set())
+
+                // Close the modal immediately after the writes return —
+                // refetches happen in the background. If a write fails the
+                // realtime subscription will correct local state on the
+                // next round, and a console.error trail surfaces it.
+                try {
+                  const results = await Promise.all([...npcUpdates, ...pcUpdates, ...objUpdates])
+                  const errs = results.map((r: any) => r?.error).filter(Boolean)
+                  if (errs.length > 0) {
+                    console.error('[restore] some updates failed:', errs)
+                    alert(`${errs.length} update${errs.length === 1 ? '' : 's'} failed during restore. Check the console for details — affected entries may need a manual restore.`)
+                  }
+                } finally {
+                  setShowRestorePicker(false)
+                  setRestoreNpcIds(new Set())
+                  setRestoring(false)
+                }
+
+                // Background refetch + broadcast — runs after modal close so
+                // the GM doesn't wait on these.
+                ;(async () => {
+                  initChannelRef.current?.send({ type: 'broadcast', event: 'pc_damaged', payload: {} })
+                  if (objKeyToWp.size > 0) {
+                    setTokenRefreshKey(k => k + 1)
+                    initChannelRef.current?.send({ type: 'broadcast', event: 'token_changed', payload: {} })
+                  }
+                  const [{ data: freshNpcs }] = await Promise.all([
+                    supabase.from('campaign_npcs').select('*').eq('campaign_id', id),
+                    loadEntries(id),
+                  ])
+                  if (freshNpcs) {
+                    setCampaignNpcs(freshNpcs)
+                    setRosterNpcs(freshNpcs.filter((n: any) => {
+                      if (n.status !== 'active') return false
+                      const wp = n.wp_current ?? n.wp_max ?? 10
+                      return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0)
+                    }))
+                    setViewingNpcs(prev => prev.map(vn => {
+                      const fresh = freshNpcs.find((f: any) => f.id === vn.id)
+                      return fresh ? { ...fresh } as CampaignNpc : vn
+                    }))
+                  }
+                })()
               }}
-                disabled={restoreNpcIds.size === 0}
-                style={{ flex: 1, padding: '10px', background: restoreNpcIds.size > 0 ? '#1a2e10' : '#242424', border: `1px solid ${restoreNpcIds.size > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: restoreNpcIds.size > 0 ? '#7fc458' : '#3a3a3a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: restoreNpcIds.size > 0 ? 'pointer' : 'not-allowed' }}>
-                Restore {restoreNpcIds.size > 0 ? `(${restoreNpcIds.size})` : ''}
+                disabled={restoreNpcIds.size === 0 || restoring}
+                style={{ flex: 1, padding: '10px', background: restoreNpcIds.size > 0 && !restoring ? '#1a2e10' : '#242424', border: `1px solid ${restoreNpcIds.size > 0 && !restoring ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '3px', color: restoreNpcIds.size > 0 && !restoring ? '#7fc458' : '#3a3a3a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: restoreNpcIds.size > 0 && !restoring ? 'pointer' : 'not-allowed' }}>
+                {restoring ? 'Restoring…' : `Restore ${restoreNpcIds.size > 0 ? `(${restoreNpcIds.size})` : ''}`}
               </button>
             </div>
           </div>
