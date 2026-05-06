@@ -30,7 +30,7 @@ import {
   RANGED_WEAPONS,
   SKILL_LABELS,
   SKILLS,
-} from '../lib/xse-schema.ts'
+} from '../lib/xse-schema'
 
 // ----------------------------
 // Helpers
