@@ -1,0 +1,113 @@
+====================================================================
+ 6. THE TABLE AND SESSIONS
+====================================================================
+
+The TABLE is where actual play happens. Click "Launch" on your Story page to get there. The Table fills the whole screen — no sidebar.
+
+
+THE HEADER BAR
+--------------
+Across the top, left to right:
+
+  Campaign name and setting badge
+  Start Session / End Session       (GM)
+  Session number badge              (when active)
+  Tactical Map / Campaign Map toggle
+  Share Map                         (GM — pushes the tactical map to players)
+  Start Combat / End Combat         (GM, requires active session)
+  Checks ▾                          (Perception, Gut Instinct, First Impression, Group, Opposed, Recruit)
+  Community ▾                       (Chapter 9)
+  Dashboard
+  Share                             (copy invite link)
+  Overlay / Inline toggle           (character sheet display mode)
+  Restore                           (GM — heal everyone)
+  Sessions                          (history)
+  Back / Exit
+
+
+THE LEFT PANEL — LOGS AND CHAT
+------------------------------
+Three views, toggled at the top of the panel:
+
+  LOGS   — every dice roll, action, and combat event in chronological order, color-coded.
+  CHAT   — in-character messaging.
+  BOTH   — combined.
+
+Type a message and press Enter to send.
+
+
+THE CENTER — THE MAP
+--------------------
+Either the Campaign Map (with pins — Chapter 3) or the Tactical Map (the grid for combat — Chapter 7). Toggle between them with the header button. Players see whatever the GM has shared.
+
+Click a character or NPC token (or their entry in the left panel) to open their character sheet. INLINE mode renders the sheet in the center; OVERLAY mode floats it on top.
+
+[screenshot: Table view with header, logs panel, map, GM tabs]
+
+
+THE RIGHT PANEL
+---------------
+The GM sees:
+  NPCs          — full NPC roster (Chapter 10).
+  Assets        — campaign pins, drag to reorder.
+  GM Notes      — private notes, auto-saved.
+  Player Notes  — submissions from players.
+
+Players see:
+  NPCs          — only revealed NPCs.
+  Assets        — only revealed pins.
+  Notes         — your own session notes.
+
+
+STARTING A SESSION (GM)
+-----------------------
+Click "Start Session" in the header. The session counter ticks up and every player gets notified. Until a session is active, you can't roll dice or start combat.
+
+
+DICE ROLLING
+------------
+With a session active, click any attribute, skill, or weapon on a character sheet or NPC card to open the roll modal. The formula is:
+
+    2d6 + Attribute Modifier (AMod)
+        + Skill Modifier      (SMod)
+        + Conditional Mod     (CMod — situational)
+
+Pick a CMod from the dropdown (0 by default; the modal lists relevant ones based on your situation). Optionally spend an Insight Die. Click Roll.
+
+OUTCOMES (the standard XSE ladder):
+
+  1+1    Low Insight       Critical failure. +1 Insight Die. Weapons may jam.
+  0–3    Dire Failure      Very bad result.
+  4–8    Failure           Standard miss.
+  9–13   Success           Standard hit.
+  14+    Wild Success      Exceptional success.
+  6+6    High Insight      Critical success. +1 Insight Die.
+
+Both Low Insight (1+1) and High Insight (6+6) are matched-dice events — they grant an Insight Die in addition to the outcome.
+
+
+INSIGHT DICE
+------------
+Earned on Low or High Insight rolls. Stored on your character. PCs only — NPCs only have them if they're the Antagonist type.
+
+Spend one before any roll for ONE of:
+  - Roll 3d6 (keep best two) instead of 2d6.
+  - Add +3 to your CMod.
+
+You can also spend ALL of your Insight Dice at once to survive a mortal wound (Chapter 8).
+
+
+ENDING A SESSION (GM)
+---------------------
+Click "End Session." A modal opens for:
+
+  Session Summary       — what happened this session.
+  Next Session Notes    — what's queued for next time.
+  Cliffhanger           — the one-line tease.
+
+These get stored in your Story's Sessions history.
+
+
+SESSION HISTORY
+---------------
+"Sessions" in the header shows every session you've run, with summaries, cliffhangers, and roll counts.

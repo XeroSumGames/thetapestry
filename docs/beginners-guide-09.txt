@@ -1,0 +1,183 @@
+====================================================================
+ 9. CREATING A COMMUNITY
+====================================================================
+
+A COMMUNITY is a group of PCs and NPCs bound together as a household, settlement, band, or enclave. Communities are one of the flagship Distemper mechanics — they turn the people your party knows into a roster with morale, resources, roles, and weekly checks that shape the fiction between adventures.
+
+The full rules live in the Xero Sum Engine SRD §08 Communities. This chapter walks you through the platform UI.
+
+
+GROUP vs COMMUNITY — THE 13-MEMBER THRESHOLD
+--------------------------------------------
+Until a group has 13 combined members (PCs + NPCs), it's a GROUP — your adventuring party. Groups don't run weekly checks.
+
+At 13+ members it becomes a COMMUNITY and weekly mechanics unlock:
+  - Weekly Fed / Clothed / Morale checks.
+  - Role minimums for the labor pool.
+  - A leader who rolls Morale.
+  - Failure states: 25% / 50% / 75% departures, plus dissolution after three consecutive failures.
+
+If a Community drops back below 13 it reverts to a Group and weekly checks pause until it grows again.
+
+A status chip on the community header tells you which state you're in: green Community, amber Group, or red Dissolved.
+
+
+CREATING A COMMUNITY (GM)
+-------------------------
+On the Table, click Community ▾ in the header, then "New Community." Fill in:
+
+  - Name (required). Short and flavorful: "The Schoolers", "Greenhouse Collective", "Mongrels East".
+  - Description (optional). One or two sentences.
+  - Homestead pin (optional). Pick an existing campaign pin to root the community there.
+
+You're auto-enrolled as the founder and default Leader.
+
+
+ADDING AND REMOVING MEMBERS
+---------------------------
+The "Add Member" form (GM only) lets you add NPCs from your campaign roster or PCs from your player list. You pick:
+
+  - Subject kind: NPC or PC.
+  - The specific person.
+  - Their role: Gatherer / Maintainer / Safety / Unassigned / Assigned (see below).
+  - Their recruitment type: Member, Cohort, Conscript, Convert, or Founder.
+
+The mechanical way to bring NPCs in during play is the Recruitment Check (Chapter 10).
+
+Remove a member with the × button. Members are soft-removed (history preserved) with a reason: morale-departure, dissolution, manual, or killed.
+
+
+ROLES (NPCs ONLY)
+-----------------
+Every NPC member has one of five roles. PCs aren't counted toward role minimums — they're always PCs, not workers.
+
+  GATHERER     Hunting, foraging, farming, scavenging. Rolls the weekly Fed Check.
+  MAINTAINER   Repair, clothing, supplies, tools. Rolls the weekly Clothed Check.
+  SAFETY       Patrols and emergency services. Modifies Morale. Community leadership usually comes from here.
+  UNASSIGNED   Idle. Pulls down the labor pool if anything's understaffed.
+  ASSIGNED     Off doing a PC-directed mission. Doesn't count toward labor minimums. Always carries a directing PC and a task description.
+
+
+ROLE MINIMUMS (SRD §08)
+-----------------------
+The NPC labor pool (everyone whose role is NOT Assigned) has minimum fractions:
+
+  GATHERERS   ≥ 33%
+  MAINTAINERS ≥ 20%
+  SAFETY       5–10% (at least 1 if the pool is tiny)
+
+These directly drive the weekly Morale Check via the "Enough Hands" slot:
+  - All three minimums met → +1 to Morale.
+  - For each role below its minimum → −1 (capped at −3).
+
+Role bars on the community body show current vs. minimum counts. Green = OK. Red = understaffed. The "⚖ Re-balance Roles" button auto-assigns NPCs to roles based on their skills.
+
+
+THE LEADER
+----------
+One PC or NPC rolls the weekly Morale Check on the community's behalf. By default the founder is leader until somebody is explicitly set.
+
+Set the leader: in the community body, the "Leader" row has a dropdown listing every member.
+
+Stepping down: the GM (always) and the current PC leader (themselves) can abdicate via "Step Down." A successor picker opens with these options:
+  - AUTO — pick the next Founder, otherwise the longest-tenured active member.
+  - LEAVE LEADERLESS — clears the leader. Costs −1 on the "A Clear Voice" Morale slot every week.
+  - A specific member.
+
+If a Leader leaves entirely (removed, killed, role changed), a successor is auto-picked.
+
+
+THE WEEKLY CHECK
+----------------
+Once per in-game week, the GM clicks "Run Weekly Check." A modal fires three rolls in sequence:
+
+  1. FED CHECK     Gatherers roll for Rations.
+  2. CLOTHED CHECK Maintainers roll for Supplies.
+  3. MORALE CHECK  The Leader rolls.
+
+Fed and Clothed outcomes feed directly into the Morale modifier slots — a great Fed adds +1 or +2 to Morale; a famine drags it down by −2 or worse.
+
+
+THE MORALE MODIFIER SLOTS
+-------------------------
+Each Morale Check has six built-in slots plus a freeform GM slot:
+
+  1. FED                       Fed Check outcome (auto).
+  2. CLOTHED                   Clothed Check outcome (auto).
+  3. MOOD AROUND THE CAMPFIRE  Last week's Morale carry-over (auto).
+  4. ENOUGH HANDS              +1 if all role minimums met; -1 each group below (capped -3).
+  5. A CLEAR VOICE             0 with a leader, -1 if leaderless.
+  6. SOMEONE TO WATCH OVER ME  +1 if Safety ≥10% of pool, 0 if 5-10%, -1 below 5%.
+  7. ADDITIONAL                GM freeform — raids, miracles, weather, Distemper surges. Resets each modal open.
+
+Hover any slot label to read the SRD rule text in a tooltip. The GM can override any slot before rolling.
+
+
+MORALE OUTCOMES
+---------------
+    Roll        Outcome           Departures   Next Mood
+    -----------------------------------------------------
+    6+6         High Insight        none          +2
+    14+         Wild Success        none          +1
+    9–13        Success             none           0
+    4–8         Failure             25%           −1
+    0–3         Dire Failure        50%           −2
+    1+1         Low Insight         75%           −3
+
+Departures soft-remove NPCs (PCs are never auto-removed). Removal priority order:
+
+    Unassigned → Cohort → Convert → Conscript → Founder → Apprentice (last)
+
+Apprentices and Founders stay the longest when times get hard.
+
+Any success resets the consecutive-failure counter to 0. Any failure increments it by 1.
+
+
+DISSOLUTION ON THREE CONSECUTIVE FAILURES
+-----------------------------------------
+Three failed Morale Checks in a row collapses the community. At 2 of 3, the panel shows a red warning: "one more failure dissolves the community."
+
+If the third fail hits, the result panel offers two paths:
+
+  🙏 ATTEMPT RETENTION CHECK
+    A "fast-acting leader" rolls one immediate Morale Check using only the Mood slot. Success at any tier saves the community; consecutive_failures drops to 2 — one week of cushion. Failure proceeds with dissolution.
+
+  Finalize — Dissolve Community
+    Confirm. Community goes to Dissolved, every active member is soft-removed, and "Run Weekly Check" disappears.
+
+Dissolution is permanent. Make a new community if you want a similar story.
+
+
+SKIP WEEK
+---------
+"Skip Week" sits next to "Run Weekly Check." It bumps the week counter by 1 without rolling Fed / Clothed / Morale. Use it for narrative off-screen time. Mood carries over from the most recently rolled check, not the skipped one.
+
+
+THE COMMUNITY DASHBOARD (GM ONLY)
+---------------------------------
+A full-screen view at /stories/<id>/community, also reachable from Community ▾ → Dashboard. Per-community it shows:
+
+  - Header summary: status, week counter, consecutive failures, member count.
+  - Morale History — last 20 weeks with color-coded outcome badges and member deltas.
+  - Resource History — last 40 Fed / Clothed rolls.
+  - Current Role Distribution — bars vs. SRD minimum markers.
+  - Recruitment Stats — success rate by approach.
+  - Members by Recruitment Type — tile breakdown.
+
+Players can't access this page.
+
+
+THE AT-A-GLANCE BLOCK (PLAYER-FACING)
+-------------------------------------
+At the top of every expanded community panel, a small blue block summarizes the community for the viewer:
+
+  RECENT MORALE
+    Five colored letter chips for the last five weekly outcomes, oldest left, newest right. Hover a chip for the week and full outcome.
+
+  YOU
+    Your role in the community.
+    "Founder" tag if that's your recruitment type.
+    Your Apprentice (if any).
+    A list of NPCs you personally recruited.
+
+Everyone sees this block — it's how players keep track of "their" community without GM-only screens.

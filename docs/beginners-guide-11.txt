@@ -1,0 +1,56 @@
+====================================================================
+11. THE CAMPFIRE
+====================================================================
+
+The Campfire is the cross-Story community hub. Click "The Campfire" in the sidebar.
+
+It's a single page with tabs:
+
+  LOOKING FOR GROUP   (default tab)
+  FORUMS
+  WAR STORIES
+  TIMESTAMPS
+
+All require login but no campaign membership.
+
+
+LOOKING FOR GROUP
+-----------------
+A bulletin board for finding GMs and players.
+
+Post a listing as either:
+  - GM seeking players, or
+  - Player seeking game.
+
+Each post has a title, body, optional setting tag (campaign flavor), and an optional schedule note.
+
+Other people click "I'm Interested" to express interest. As the post author, you see a roster of who's interested and can DM them directly — or, if you're a GM, send them a Story invite. A Share button pushes the post to Reddit, Twitter, Facebook, or copies a direct link.
+
+You can edit and delete your own posts. You can't see other people's interest rosters.
+
+
+FORUMS
+------
+Threaded discussions organized by category — Lore, Rules, Session Recaps, General.
+
+  - Click "+ New Thread" to start one. Title and body.
+  - Click any thread to read it; reply at the bottom.
+  - Edit and delete your own posts.
+  - Threads sort by most-recent reply.
+
+Pinned threads (set by Thrivers) float to the top. Locked threads accept no new replies.
+
+
+WAR STORIES
+-----------
+A cross-Story feed for session highlights — the time the party blew up the wrong building, the time someone rolled double-6 on the Recruitment Check, etc.
+
+  - Title and body.
+  - Optional campaign tag so readers know which Story it came from.
+  - Attach images and PDFs.
+  - Edit and delete your own posts.
+
+
+TIMESTAMPS
+----------
+A utility tool for cross-timezone scheduling. Pick a date, time, and timezone — the page returns a Discord-compatible token (looks like `<t:1234567890:F>`). Paste it in Discord and it renders as the local time for every viewer. Six format options plus raw Unix seconds.

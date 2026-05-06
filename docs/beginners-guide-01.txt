@@ -1,0 +1,42 @@
+====================================================================
+ 1. NAVIGATING THE SITE
+====================================================================
+
+When you sign in you land on the World Map. The site has two parts: the LEFT SIDEBAR (always visible — the only navigation) and the MAIN AREA, where every page renders.
+
+[screenshot: full site with sidebar on left, map on right]
+
+
+THE SIDEBAR
+-----------
+At the top, a green "Survivors present: N" counter appears when other players are online.
+
+  USER PANEL
+    Your username and three icons:
+      - 📨  Messages
+      - 🔔  Notifications (red dot if anything is unread)
+      - 🔥  The Campfire shortcut
+
+  MAIN NAV (the main destinations)
+    A Guide to the Tapestry  — the welcome / onboarding page.
+    The World                — the global world map (Chapter 3).
+    My Survivors             — your characters (Chapter 4).
+    My Stories               — your campaigns (Chapter 5).
+    My Communities           — communities you're in (Chapter 9).
+    The Campfire             — community hub (Chapter 11).
+    Rumors                   — published adventure content (Chapter 12).
+
+  SURVIVORS — the four ways to make a character (Chapter 4):
+    Creating a Survivor      — tutorial page.
+    Backstory Generation     — a life-pathing method.
+    Quick Character          — a fast, truncated build.
+    Random Character         — produces an instant character.
+    Paradigms                — pick from 12 archetypes and then customize.
+
+  TOOLS (Admins only — internally referred to as Thrivers)
+    Moderation Queue, Resize Portraits, Rescale Tactical Scenes, Logs, Copy Map Position, Publish Module from Snapshot.
+
+
+THE MAIN AREA
+-------------
+Specific areas are covered in their own chapters. The sidebar is consistent across most pages. A few areas hide it to use the full screen, such as the Table page.

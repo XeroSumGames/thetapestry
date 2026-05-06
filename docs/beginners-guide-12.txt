@@ -1,0 +1,110 @@
+====================================================================
+12. RUMORS
+====================================================================
+
+A RUMOR is a published, reusable bundle of adventure content — NPCs, pins, tactical scenes, and handouts — that one GM has authored and made available for other GMs to drop into their own Stories. Think of it like an adventure pack, except authored entirely inside The Tapestry instead of through PDFs and prep notes.
+
+Rumors are how content travels between Stories. They let one GM build "The Mongrels' first month" or "the District Zero docks heist" once and ship it.
+
+Click "Rumors" in the sidebar to browse them. Some technical UI still says "modules" — the URL is /modules and the publish button reads "📦 Publish Module." Same thing.
+
+[screenshot: Rumors list with module cards]
+
+
+WHAT'S IN A RUMOR
+-----------------
+Each Rumor packages:
+  - NPCs (stats, portraits, skills, equipment).
+  - Map pins (campaign-map locations with notes).
+  - Tactical scenes (battle maps with grid and object tokens).
+  - Handouts (campaign notes with attachments).
+
+It does NOT package:
+  - Player characters — PCs stay with players.
+  - Per-session state (HP, combat round, etc.).
+  - Community rosters (yet).
+  - Session logs or roll history.
+
+Each publish creates an immutable VERSION (v1.0.0, v1.1.0, ...). Subscribers clone a version into their own Story; the clone is theirs to edit. When you publish a new version later, subscribed Stories see an "Update available" prompt.
+
+
+PUBLISHING A RUMOR (GM)
+-----------------------
+1. Build out a Story like normal — add NPCs, drop pins, build tactical scenes, write handouts. Whatever exists in the Story when you click Publish is what travels.
+   Tip: name your authoring Story something like "Mongrels — Source" so you know it's the authoring copy, not a play copy.
+
+2. On your Story page, click the purple "📦 Publish Module" button.
+
+3. Fill in the modal:
+   - Module Name      — prefilled from your Story name. Rename here if you want; this is what subscribers see.
+   - Tagline          — optional one-liner.
+   - Description      — optional paragraph.
+   - Visibility — three tiers:
+       🔒 PRIVATE   Only you can pick it. Skips moderation. Use for drafts.
+       🔗 UNLISTED  Anyone with the link can pick it. Skips moderation. Use for sharing with a co-GM.
+       🌐 LISTED    Public marketplace listing. A Thriver must approve it. Goes "pending" until then.
+   - Content — four checkboxes (Pins, NPCs, Tactical Scenes, Handouts) with live counts. Uncheck anything you don't want to ship — usually spoiler pins or WIP NPCs.
+
+4. Hit "📦 Publish v1.0.0." A few seconds later the button re-labels to "📦 Module v1.0.0" and your Rumor is live.
+
+
+USING A RUMOR (GM)
+------------------
+When creating a new Story (Chapter 5), the form has a section labeled "OR START FROM A MODULE" below the Setting picker. It lists every Rumor visible to you:
+
+  - Your own Rumors at any visibility.
+  - Anyone's LISTED + approved Rumors.
+  - UNLISTED Rumors you've been given a link to.
+
+Click a Rumor to select it (it highlights purple). Picking a Rumor clears any Setting you had — they're mutually exclusive.
+
+Fill in the rest of the form and create the Story. The Tapestry clones the Rumor's snapshot — every NPC, pin, scene, and handout — into your new Story with fresh IDs. The clone is yours: edit it freely.
+
+
+PUBLISHING A NEW VERSION
+------------------------
+After v1.0, the Publish button on your Story page reads "📦 Module v1.0.0." Click it to ship a new version.
+
+The wizard flips to "Publish New Version." Pick a SEMVER bump:
+
+  PATCH → v1.0.1   Silent fixes, typos, stat tweaks.
+  MINOR → v1.1.0   New content, backwards-compatible (default).
+  MAJOR → v2.0.0   Breaking — renamed scenes, removed NPCs.
+
+Write a CHANGELOG (free-form release notes — "added 3 NPCs to the south wing, rewrote the Costco handout"). Subscribers see this verbatim.
+
+Hit Publish. Every Story subscribed to your Rumor gets a bell notification.
+
+
+RECEIVING AN UPDATE (SUBSCRIBER GM)
+-----------------------------------
+Two ways you'll know a Rumor has updated:
+
+  - The notification bell fires:
+        📦 MODULE UPDATED
+        A new version of "<rumor name>" (v1.1.0) is available: <changelog>
+    Click to jump to the version history.
+
+  - On your Story page, a purple "📦 v1.1.0 ↑" button appears in the GM action row. Click it to see what changed.
+
+
+THE VERSION HISTORY PAGE
+------------------------
+Lists every published version, newest first. Each version card shows:
+
+  - Version number, published timestamp.
+  - Author's changelog (if any).
+  - One-line diff vs. the prior version ("+2 NPCs, -1 pin, 3 handouts updated").
+  - Subscriber count chip.
+
+Your currently-cloned version gets a purple "Your clone" chip. For now this page is read-only awareness; one-click "apply this update to my Story" is on the roadmap.
+
+
+RUMORS vs. RUMOR PINS — DON'T CONFUSE THEM
+------------------------------------------
+"Rumor" means two related things on The Tapestry. They're not the same:
+
+  - The sidebar "Rumors" link → published adventure content (this chapter).
+  - The "Rumor" pin category on the world map → a player-submitted location pending Thriver moderation (Chapters 2 and 3).
+
+The thematic overlap is intentional — Distemper survivors share rumors of places, dangers, and opportunities, and these rumors are the seeds of adventures. But the two systems are mechanically separate. The pin is a single point on a map; a published Rumor is a full adventure pack.

@@ -1,0 +1,56 @@
+====================================================================
+ 7. THE TACTICAL MAP
+====================================================================
+
+The Tactical Map is a grid-based canvas for combat positioning. Open it from the Table by clicking "Tactical Map" in the header.
+
+If your Story has no scenes yet, the Create Scene modal opens automatically. If scenes exist, the most recent one activates.
+
+Each scene has:
+  - A name and an optional background image.
+  - A grid (rows, columns, cell size in feet AND in pixels).
+  - Tokens (PCs, NPCs, and object tokens).
+
+[screenshot: tactical map with grid + tokens, GM controls visible]
+
+
+GM CONTROLS (LEFT PANEL)
+------------------------
+  Scene dropdown      — switch scenes or create a new one.
+  Scene Name          — editable.
+  Upload Map          — JPG or PNG background.
+  Place Tokens        — auto-place every initiative combatant on the grid.
+  Zoom +/-, %         — zoom in / out / reset.
+  Grid ON/OFF         — toggle the grid overlay.
+  Grid color          — White, Black, or Grey.
+  Grid opacity        — slider.
+  Cols / Rows         — +/- buttons or double-click to type.
+  Cell (ft)           — feet per cell (drives range bands).
+  Cell (px)           — pixels per cell.
+  Fit to Screen       — reset zoom and pan.
+  Lock / Unlock Map   — prevent accidental resizing.
+  Show / Hide Ranges  — color-coded range overlay around the selected token.
+  Delete Map          — remove the background.
+  Delete Scene        — permanent.
+
+
+TOKENS
+------
+Every token shows portrait or initials, name, a WP bar, and (in combat) an initiative badge.
+
+  - GM can drag any token. Players can drag only their own character's token.
+  - Click a token to select it. Selected tokens show range circles for Engaged, Move, and Weapon Range.
+  - Double-click a token to open its character sheet (PC) or NPC card.
+  - Right-click — or long-press on touch — for contextual actions during combat.
+
+
+ZOOM, PAN, AND PINGING
+----------------------
+  Zoom slider              25% to 400%.
+  Spacebar + drag          pan the view; cursor turns into a hand.
+  Double-click empty cell  ping. GM = orange pulse. Player = green pulse. Visible to everyone watching.
+
+
+SHARING
+-------
+"Share Map" in the Table header pushes the current tactical map to all players. Combat starts share it automatically.

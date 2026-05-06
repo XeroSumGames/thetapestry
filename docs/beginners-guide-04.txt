@@ -1,0 +1,97 @@
+====================================================================
+ 4. CREATING A CHARACTER
+====================================================================
+
+In Distemper a character is called a SURVIVOR. The Tapestry has four ways to make one, all listed under "Survivors" in the sidebar:
+
+  BACKSTORY GENERATION   life-pathing method, most authored.
+  PARADIGMS              pick a 1-click template, then tune.
+  QUICK CHARACTER        fast, truncated build.
+  RANDOM CHARACTER       1 click. Done.
+
+All four produce the same kind of character. They differ only in how much you author up front.
+
+
+WHAT'S IN A CHARACTER
+---------------------
+A few terms you'll see throughout:
+
+  RAPID — five core attributes: Reason, Acumen, Physicality, Influence, Dexterity. Range −2 to +5; newcomers usually end up with values from 0 to +3. Full descriptions live in the Xero Sum Engine SRD.
+
+  SKILLS — trained abilities like Melee Combat, Medicine, Tactics, etc. Each skill has a level 0-4. The SRD lists all skills.
+
+  CDP (Character Development Points) — your build budget. Spend CDP to raise RAPID attributes and skills.
+
+  MOTIVATION and COMPLICATION — narrative anchors. Why your character keeps going, and what's broken about them. Pick from a list or roll randomly.
+
+  WP (Wound Points) and RP (Resilience Points) — the two health tracks. WP is hard physical damage; RP is fatigue and bruises. WP at 0 = mortally wounded. RP at 0 = unconscious.
+
+  STRESS — a 5-pip track. Hitting pip 5 forces a Stress check. Stress is added when bad things happen, including hitting WP=0 or RP=0.
+
+  INSIGHT DICE — earned on extreme dice rolls (double 1s or double 6s). Spend one to roll 3d6 (keep best 2) instead of 2d6, OR add +3 to your roll's situational modifier.
+
+  WEAPONS — every character has a Primary and Secondary slot; one melee, one ranged is the usual pairing. Each weapon has damage, range, ammo, and a condition track.
+
+
+BACKSTORY GENERATION
+--------------------
+A life-pathing wizard. Walk your character through their life — childhood, education, hobbies, career, what they learned after the Dog Flu — and spend Character Development Points at each phase. The result is a deeply authored Survivor with rooted history.
+
+You'll close out by picking a Motivation and Complication, watching your secondary stats auto-calculate, choosing primary and secondary weapons plus equipment, and reviewing.
+
+[screenshot: backstory wizard mid-flight, progress dots visible]
+
+
+PARADIGMS
+---------
+A Paradigm is an archetype — a pre-built RAPID and skill loadout that the SRD ships with. There are 12, including Soldier, Doctor, and Mechanic. Pick one and the system creates a character seeded with that template, plus a rolled Motivation and Complication.
+
+You land on the Final Review step where you can rebalance attributes and skills before saving. Standard creation caps apply: no attribute or skill above +3.
+
+[screenshot: Paradigms picker grid]
+
+
+QUICK CHARACTER
+---------------
+A fast, truncated build. You get 5 Attribute CDP and 15 Skill CDP and spend everything at once, with an optional profession preset to start you off. Pick a Motivation and Complication, kit out, save.
+
+
+RANDOM CHARACTER
+----------------
+One click. The system rolls a complete character — name, attributes, skills, weapons, gear, motivation, complication, and a portrait — saves it automatically, and opens the edit page in case you want to tweak anything.
+
+
+MANAGING YOUR CHARACTERS
+------------------------
+"My Survivors" in the sidebar shows all your characters. Each card displays:
+
+  - Name, profession, three descriptive words.
+  - Motivation and Complication.
+  - Portrait (click to enlarge).
+  - RAPID attributes.
+  - Skills grid.
+  - Weapons (primary and secondary, with traits and ammo).
+  - Live trackers: WP, RP, Stress, Insight Dice, CDP, Morality.
+
+Edit any field. Print a sheet. Duplicate to copy a character. Delete is permanent (asks first).
+
+
+HEALTH TRACKERS
+---------------
+Click WP and RP circles to take or heal damage. Click Stress pips the same way. Insight Dice are earned automatically by your rolls; you spend them from the roll modal at the table.
+
+Reaching 0 WP starts a death countdown of 4 + Physicality rounds. A nearby ally has to roll Medicine to stabilize you (Chapter 8). If you have any Insight Dice, the system asks whether to spend them ALL to survive with 1 WP and 1 RP. That's a one-way ticket — only the player can make that choice.
+
+Reaching 0 RP makes you unconscious. Any time you reach 0 in either track, you also gain 1 Stress.
+
+
+WEAPONS
+-------
+Each weapon has:
+  - Skill used (Melee Combat, Ranged Combat, Athletics for explosives, Demolitions for placed charges).
+  - Damage formula.
+  - RP percentage (how much of the damage is RP vs. WP).
+  - Range band: Engaged 5 ft, Close 30 ft, Mid 100 ft, Far 200 ft+.
+  - Condition: Pristine +1, Used 0, Worn −1, Damaged −2, Broken (unusable).
+  - Ammo and reload clips (ranged weapons only).
+  - Weapon traits like Burst, Two-Handed, Loud.

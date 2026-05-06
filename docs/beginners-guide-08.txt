@@ -1,0 +1,97 @@
+====================================================================
+ 8. COMBAT
+====================================================================
+
+Combat is a structured mode you enter from the Table during an active session. The GM starts and ends it.
+
+
+STARTING COMBAT (GM)
+--------------------
+1. Click "Start Combat" in the Table header.
+2. Pick which NPCs are in this fight.
+3. Optionally choose a "Drop" character — they act first, alone, before the rest of the round.
+4. Every combatant rolls initiative: 2d6 + Acumen + Dexterity.
+5. The initiative bar appears below the header, sorted highest to lowest.
+6. The tactical map auto-shares to players.
+
+[screenshot: initiative bar with portraits + numbers]
+
+
+THE INITIATIVE BAR
+------------------
+Shows everyone in turn order — portrait, name, initiative roll — with a highlight on whoever's turn it is. The round counter sits next to the bar.
+
+The GM can click X on any combatant to remove them or skip their turn.
+
+
+TURNS AND ROUNDS
+----------------
+Every combatant gets 2 ACTIONS per turn. The active combatant's action bar appears below the initiative order. When both actions are spent (or the GM clicks Next Turn), play moves to the next combatant.
+
+When everyone has acted, a new round begins — initiative re-rolls and everyone gets 2 fresh actions.
+
+
+COMBAT ACTIONS
+--------------
+Most actions cost 1 action; exceptions are noted.
+
+  AIM                — +2 CMod on your next attack. Lost if you don't attack next.
+
+  ATTACK             — Roll your equipped weapon. Pick a target from the dropdown (filtered by range on the tactical map). Damage applies on a hit.
+
+  CHARGE (2 actions) — Pick a destination within 20 ft, move there, then make a melee or unarmed attack. Charging with a ranged weapon downgrades to unarmed.
+
+  COORDINATE         — Roll Tactics. On a hit, allies within Close range (30 ft) get +2 CMod against a chosen target.
+
+  DEFEND             — +2 defensive bonus against the next attack. Clears after one hit.
+
+  GRAPPLE            — Opposed check on an Engaged target (5 ft). Both sides roll 2d6 + Physicality + Unarmed Combat (defender can use Athletics if higher). Win = target is Grappled and takes 1 RP. Lose = you take 1 RP. Tie = nothing.
+                       A grappled character can only "Break Free" (another opposed check). The grappler can only "Release" (free action).
+
+  MOVE               — Cells within 10 ft highlight green. Click one to move there.
+
+  RAPID FIRE
+    (2 actions, ranged)  Two shots: first at -1 CMod, second at -3 CMod.
+
+  READY WEAPON       — Opens a sub-modal:
+                       Switch — swap primary and secondary.
+                       Reload — uses 1 reload clip to refill ammo.
+                       Unjam / Repair — roll Tinkerer, Weaponsmith, or the relevant combat skill to fix a Damaged or Broken weapon.
+
+  REPOSITION         — Free end-of-round positioning.
+
+  SPRINT (2 actions) — Move 30 ft (3x normal). Requires an Athletics check.
+
+  SUBDUE             — Non-lethal attack. Full RP damage, only 50% WP damage.
+
+  TAKE COVER         — +2 defensive bonus against ALL attacks this round. Once per round. Enables "Fire from Cover" (2 actions: shoot while keeping cover).
+
+  UNARMED            — Physicality + Unarmed Combat, 1d3 damage. Always available.
+
+  STABILIZE          — Appears when an ally within 20 ft is mortally wounded. Roll Medicine to stop their death countdown. Must be Engaged (5 ft) to actually do it.
+
+
+BLAST RADIUS
+------------
+Grenades, RPGs, and Molotovs apply damage automatically to every token near the blast center on the tactical map:
+
+  Engaged (5 ft)    full damage
+  Close (30 ft)     50% damage
+  Far (100 ft)      25% damage
+
+The attacker is excluded from splash. Damage details show in the roll log.
+
+
+MORTAL WOUNDS
+-------------
+When a character's WP hits 0:
+  - A death countdown starts (4 + Physicality rounds).
+  - If the character has any Insight Dice, a modal asks whether to trade ALL of them to survive with 1 WP and 1 RP. Only the player who owns the character can make that choice; the GM sees a read-only version.
+  - If nobody stabilizes them before the countdown expires, the character dies.
+
+Whenever a PC enters WP=0 or RP=0 — even if they're saved — they gain 1 Stress (capped at 5).
+
+
+ENDING COMBAT (GM)
+------------------
+Click "End Combat" in the header. Initiative clears. Grapple states release. Mortally wounded PCs gain +1 Stress (the "survived combat" pip).

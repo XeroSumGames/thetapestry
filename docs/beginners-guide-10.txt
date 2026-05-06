@@ -1,0 +1,117 @@
+====================================================================
+10. NPCs AND RECRUITMENT
+====================================================================
+
+NPCs are everyone in the world who isn't a PC. They're managed in the right-panel NPCs tab on the Table.
+
+
+CREATING AN NPC (GM)
+--------------------
+Click "+ Add NPC" to open the modal:
+
+  - Name.
+  - Type: Friendly, Goon, Foe, or Antagonist. Type sets baseline RAPID values.
+  - Portrait: portrait bank (red=enemy, green=ally, white=neutral), upload an image, or pick from the library.
+  - RAPID attributes (manually adjustable).
+  - Skills (add from a dropdown, set the level 0-4).
+  - Weapon — primary, all categories available.
+  - Secondary Weapon — Foe and Antagonist types only.
+  - Motivation and Complication — pick or roll.
+  - Three personality words.
+  - GM Notes — private, never shown to players.
+  - Status — Active, Dead, or Unknown.
+
+
+GENERATING AN NPC
+-----------------
+Click "Generate NPC" and pick a type. The system rolls a random NPC with appropriate stats, skills, weapons, personality, and a portrait. Edit afterward if you want.
+
+
+POPULATING A SCENE (GM)
+-----------------------
+The "Populate" tool (under GM Tools) bulk-generates a roster of NPCs along the SRD's recommended distribution: 1 Antagonist, 2 Foes, 3 Goons, 4 Friendlies. Useful for filling a community or seeding a hostile location.
+
+
+CLONING
+-------
+Click the + button on the left side of any NPC card to clone them. The clone gets an auto-numbered name (e.g. "Kincaid's Soldier #2") and appears just below the original.
+
+
+THE NPC CARD
+------------
+Each card on the roster shows: drag handle, Delete (×), Clone (+), name, status badge, Show / Hide button, Fight button (combat only), Map button (place / remove a token), portrait.
+
+Click the card to open the full NPC sheet:
+
+  - RAPID attributes (clickable for rolls during sessions).
+  - WP / RP dot trackers.
+  - Skills (clickable for rolls).
+  - Unarmed attack button.
+  - Weapon attack button.
+  - Equipment attacks.
+  - Stabilize button (when mortally wounded).
+  - Restore button (when dead — resets to full HP).
+  - Edit / Close buttons.
+  - Recruit button (during an active session — see below).
+
+
+REVEALING NPCs TO PLAYERS
+-------------------------
+Click "Show" on an NPC card to reveal them. Players see the NPC's name, portrait, and type. Click "Hide" to remove visibility. "Show All" / "Hide All" in the header toggles all at once.
+
+
+PUBLISHING TO THE WORLD LIBRARY
+-------------------------------
+From the NPC edit modal, click "Publish to World Library" to submit the NPC for inclusion in the shared library. Other GMs can import published NPCs into their Stories.
+
+
+RECRUITMENT
+-----------
+Recruitment is the mechanical way PCs bring NPCs into a Community during play. Open the Recruit modal three ways:
+
+  - NPC card → "Recruit" button (active session only).
+  - Community ▾ → Recruit.
+  - Checks ▾ → Recruit.
+
+The modal has three steps: pick an APPROACH and SKILL → roll → result.
+
+The roll is:
+
+    2d6 + AMod (Influence)
+        + SMod (your level in the chosen skill)
+        + CMod (First Impression + any other situational mods, including Insight Dice bonuses)
+
+
+THE THREE APPROACHES
+--------------------
+  COHORT     Shared interest or goal. The NPC joins until the next Morale Check, then re-evaluates.
+  CONSCRIPT  Coerced service. Requires a CREDIBLE THREAT — weapons drawn, leverage held, escape cut off. The modal blocks the roll until you confirm the threat is real.
+  CONVERT    Shared belief, ideology, or vision. The NPC joins as a probationary Convert; commits fully after surviving the next Morale Check.
+
+
+APPRENTICES (FOURTH OPTION, SPECIAL)
+------------------------------------
+A fourth recruitment type — APPRENTICE — is unlocked ONLY when your Recruitment Check rolls a Moment of High Insight (double-6). Wild Success (plain 14+) does not count.
+
+One Apprentice per PC, ever. They're a special bond:
+  - They come with a name, age, randomly chosen Motivations and Complications, and 3 words.
+  - They come with a setting-appropriate Profession and 1 CDP in each vocational skill.
+  - Players may spend 3 CDP on RAPID attributes.
+  - They may spend 5 CDP on skills.
+  - The player Fills In The Gaps about their background.
+  - Over one in-game month players can train the Apprentice in any one skill up to (your skill level − 1).
+  - Future CDP your character earns can be spent on the Apprentice instead.
+
+The Apprentice bond survives Morale-driven departures — they stay with you unless you die, dismiss them, or they're killed.
+
+In the community roster, Apprentice rows show a bond line:
+
+    JESS BROOKER ⇐ ADA MAREN     [Unassigned ▾]  ×
+      Task: Training with Ada in the garage   ✎ edit
+
+
+PRESSGANGING — THE CREDIBLE-THREAT GATE
+---------------------------------------
+The SRD says: "The PCs must present a credible threat for Conscription to work."
+
+When you pick Conscript on the Recruit modal, a red banner appears under the approach tiles. When you click Roll, a blocking confirm dialog asks you to acknowledge the credible threat. Cancel = no roll, no resources burned. Cohort and Convert never show this gate.

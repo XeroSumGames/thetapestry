@@ -151,6 +151,21 @@ export default function WelcomePage() {
           </div>
         </div>
 
+        {/* Beginners' Guide — twelve chapters covering navigation,
+            character creation, sessions, combat, communities, etc.
+            Source-of-truth lives in docs/beginners-guide-NN.txt; the
+            /welcome/guide route reads them at request time. */}
+        <div style={sectionHeading}>Beginners&apos; Guide</div>
+        <Link href="/welcome/guide" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <div style={{ ...card, marginBottom: '1rem', cursor: 'pointer' }}>
+            <div style={{ ...cardTitle, marginBottom: '4px' }}>📖 Twelve-Chapter Walkthrough</div>
+            <div style={cardBody}>
+              From your first login through running a community: navigation, characters, the world map, sessions, the tactical map, combat, communities, NPCs, the Campfire, and Rumors. Read straight through or jump to whatever you&apos;re stuck on.
+            </div>
+            <div style={{ ...cardLink, marginTop: '8px', display: 'inline-block' }}>Open the Guide →</div>
+          </div>
+        </Link>
+
         {/* Quick reference — placeholder slot for cheat-sheets, FAQs, etc. */}
         <div style={sectionHeading}>Quick Reference</div>
         <div style={{ ...card, marginBottom: '2.5rem' }}>

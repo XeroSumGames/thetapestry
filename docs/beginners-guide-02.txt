@@ -1,0 +1,76 @@
+====================================================================
+ 2. PINS, NOTIFICATIONS, AND ROLES (GM AND PLAYER)
+====================================================================
+
+
+PINS
+----
+A pin is a labeled point on a map. Pins exist in two places.
+
+WORLD-MAP PINS are placed on the global world map (Chapter 3) and become visible to everyone once approved — see "Moderation" below.
+
+CAMPAIGN-MAP PINS are placed inside a Story by the GM and only visible to that Story's players, and only when the GM has shown the pin. Pins are hidden by default.
+
+Every pin has:
+  - Title and notes
+  - One or more categories (changes the icon on the map)
+  - A latitude / longitude
+  - Optional uploaded images
+
+Pin categories — and their map icons:
+
+    Rumor (❓)         Location           Residence
+    Business           Church             Government
+    Transport          Hospital           Military
+    Person             Danger             Resource
+    Medical            Group              Animals
+    Community          Distemper Timeline Settlement
+
+The "Rumor" category is the special one — see "Moderation" below and Chapter 12.
+
+[screenshot: world map with various pin icons]
+
+
+MODERATION (WORLD-MAP PINS ONLY)
+--------------------------------
+When a Survivor places a pin on the world map, it goes into a moderation queue and shows on the map as a Rumor (❓) until a moderator reviews it. After review, they either approve it and it goes live with whatever category the submitter chose, or reject it and it goes back to the author.
+
+Admin-placed pins skip moderation and go live immediately. Campaign-map pins skip moderation entirely — they're private to the Story.
+
+
+NOTIFICATIONS
+-------------
+Click the bell icon in the user panel to open your notification list.
+
+You'll get a notification for things like:
+  - New Player joined your Story
+  - Player Left your Story
+  - Session Opened (your GM started a session)
+  - Module Updated (a Rumor you've subscribed to has a new version — see Chapter 12)
+  - Pin Approved or Rejected (your world-map pin was reviewed)
+  - New Survivor signed up (Admins only)
+  - Pin Submitted, awaiting moderation (Admins only)
+
+Click any notification to jump to it. Use "Mark all read" to clear the red dot, or "Delete all" to wipe the list.
+
+
+ROLES — INSIDE A STORY
+----------------------
+Every Story has exactly one GAME MASTER (GM) and any number of PLAYERS:
+
+  GAME MASTER (GM) — the person who created the Story. The GM:
+    - Creates and edits all NPCs, pins, tactical scenes, and handouts.
+    - Starts and ends sessions.
+    - Starts and ends combat.
+    - Decides what's revealed to players (NPCs and pins are hidden by default).
+    - Has full edit access to everything in the Story.
+    - Can launch the world map for other players.
+
+  PLAYER — anyone who has joined the Story. A player:
+    - Brings ONE of their characters to the table.
+    - Rolls dice for that character.
+    - Sees only revealed NPCs and pins.
+    - Can place tokens for their own character on the tactical map (but not anyone else's).
+    - Can submit notes to the GM.
+
+A player can be a GM in another Story at the same time — your role is per-Story, not per-account.

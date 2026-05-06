@@ -1,0 +1,45 @@
+====================================================================
+ 3. THE WORLD MAP
+====================================================================
+
+Two maps exist in The Tapestry: the global WORLD MAP and each Story's CAMPAIGN MAP. They use the same engine and most of the same controls.
+
+
+THE WORLD MAP — /map
+--------------------
+Click "The World" in the sidebar. You'll see an interactive map centered on North America — that's the world of Distemper.
+
+CONTROLS
+  - Pan: click and drag.
+  - Zoom: scroll wheel, or the +/− buttons.
+  - Search: top-right — type a place or address and click a suggestion to fly there.
+  - Map style: switch between Satellite, Topo, Street, Voyager, Humanitarian, Positron, or Dark from the buttons in the top-right.
+
+[screenshot: map with style toggle highlighted]
+
+PINS PANEL (right side; toggle with "Pins")
+  PUBLIC tab    — every approved world pin, organized into folders by category. Click a folder to expand. Click a pin to fly to it on the map and read its notes and images.
+  MY PINS tab   — pins you placed. Edit, delete, or toggle public/private.
+  CAMPAIGN tab  — pins from any Story you're in that the GM has revealed.
+
+The eye icon next to each category folder hides or shows that whole category on the map.
+
+PLACING A PIN
+  Click empty map space. A form opens — fill in title, notes, and one or more categories. Optionally upload images. Save.
+
+  As a Survivor, your pin goes to the moderation queue and shows as a Rumor (❓) until a Thriver reviews it (see Chapter 2). As a Thriver, it goes live immediately.
+
+
+THE CAMPAIGN MAP
+----------------
+Each Story has its own map, accessible from the Table (Chapter 6). The campaign map has the same controls as the world map, plus a few extra GM tools:
+
+  - Click empty map space to place a campaign pin (no moderation).
+  - Drag pins to reposition.
+  - Show / Hide a pin to control whether players see it.
+  - Link a pin to a tactical scene — players can then double-click the pin to open that scene (Chapter 7).
+  - Promote a pin to the world map; it goes to moderation as a Rumor for global visibility.
+
+Players see only revealed pins. Click any pin to read its notes and view its images.
+
+Map style and search work the same as on the world map. The GM picks the default map style and starting location when creating the Story.

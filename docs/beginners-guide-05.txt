@@ -1,0 +1,63 @@
+====================================================================
+ 5. CREATING A STORY
+====================================================================
+
+A STORY is your campaign — the whole ongoing thing. Inside one Story you can run encounters (single fights or scenes), adventures (multi-session arcs), or full campaigns (long-running storylines). The Tapestry doesn't enforce a hierarchy; the Story is the only formal container, and you organize the content inside it however you like.
+
+
+CREATING ONE (GM)
+-----------------
+Click "My Stories" in the sidebar, then "+ New Story." Fill in:
+
+  - Name (required).
+  - Description (optional).
+  - Setting — pick one:
+      Custom         — start blank.
+      District Zero  — pre-loaded with the District Zero sourcebook NPCs, locations, and pins.
+      Chased         — Delaware setting from the Chased magazine.
+      Mongrels       — the canonical demo campaign.
+  - Map style and starting location — the campaign map's default view.
+  - Or — start from a Rumor (Chapter 12) instead of a Setting.
+
+You become the Story's GM automatically. The Story gets an INVITE CODE / LINK; share that with your players.
+
+
+THE STORY PAGE
+--------------
+Lists everything about your Story:
+
+  Launch       — opens the Table (Chapter 6).
+  Edit         — change name, description, map style.
+  Clone        — copy the entire Story as a new one.
+  Share        — copies the invite link to your clipboard.
+  Sessions     — full session history.
+  Snapshots    — saved states you can roll back to.
+  Modules      — the Rumors / module subscription panel (Chapter 12).
+  📦 Publish   — publish this Story's content as a Rumor (Chapter 12).
+  Delete       — permanent (asks first).
+
+[screenshot: story landing page with action buttons]
+
+
+JOINING A STORY (PLAYER)
+------------------------
+The GM gives you an invite code or link. Click the link directly — the Join page opens, pick which of your characters to bring (Chapter 4), and confirm. Or paste the code at /stories/join.
+
+You appear on the GM's player roster immediately and the GM gets a notification.
+
+
+LEAVING
+-------
+On "My Stories," click "Leave" on any Story you're a player in. GMs can't leave their own Story; they delete it instead.
+
+
+ORGANIZING CONTENT
+------------------
+There's no "+ New Encounter" or "+ New Adventure" button. The Tapestry's content tools — NPCs, pins, tactical scenes, handouts — are flat inside a Story. Your encounters and adventures are groupings YOU keep track of. A typical pattern:
+
+  - One TACTICAL SCENE for an encounter (battle map and grid).
+  - Some NPCs to populate it.
+  - A campaign-map PIN where the encounter happens.
+  - A HANDOUT or two with details.
+
+Stack more of the same to build a multi-session arc. When you finish a Story, publish all the content as a Rumor (Chapter 12) so other GMs can run it.
