@@ -88,7 +88,7 @@ export default function BugReportButton() {
             <div style={{ fontSize: '13px', color: '#c0392b', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '4px' }}>
               🐛 Report a Bug
             </div>
-            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '12px', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '12px', lineHeight: 1.4 }}>
               What broke, what you expected, and anything else useful. We capture the page URL + your browser automatically.
             </div>
             <textarea value={draft} onChange={e => setDraft(e.target.value)}
@@ -97,9 +97,9 @@ export default function BugReportButton() {
               rows={6}
               style={{
                 width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px',
-                color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical',
+                color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical',
               }} />
-            <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
+            <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
               Page: {typeof window !== 'undefined' ? window.location.pathname : '(unknown)'}
             </div>
             {error && (

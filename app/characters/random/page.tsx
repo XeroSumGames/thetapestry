@@ -218,7 +218,7 @@ export default function RandomCharacterPage() {
   }, [])
 
   return (
-    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f0f', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f0f', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '12px' }}>
           Random Character

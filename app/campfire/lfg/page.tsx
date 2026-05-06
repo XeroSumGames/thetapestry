@@ -531,7 +531,7 @@ export default function LfgPage() {
   const inp: React.CSSProperties = {
     width: '100%', padding: '8px 10px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee',
-    fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box',
+    fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box',
   }
   const lbl: React.CSSProperties = {
     display: 'block', fontSize: '13px', color: '#cce0f5',
@@ -546,7 +546,7 @@ export default function LfgPage() {
   }
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Carlito, sans-serif' }}>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
@@ -604,7 +604,7 @@ export default function LfgPage() {
           </div>
           <div style={{ marginBottom: '10px' }}>
             <label style={lbl}>Pitch</label>
-            <textarea style={{ ...inp, minHeight: '110px', resize: 'vertical', fontFamily: 'Barlow, sans-serif' }} value={draft.body} onChange={e => setDraft(d => ({ ...d, body: e.target.value }))}
+            <textarea style={{ ...inp, minHeight: '110px', resize: 'vertical', fontFamily: 'Carlito, sans-serif' }} value={draft.body} onChange={e => setDraft(d => ({ ...d, body: e.target.value }))}
               placeholder={draft.kind === 'gm_seeking_players' ? 'Describe the campaign — tone, themes, what kind of players you want.' : 'Describe what you are looking for — playstyle, character ideas, schedule.'} />
           </div>
           <div style={{ marginBottom: '12px' }}>
@@ -657,7 +657,7 @@ export default function LfgPage() {
         style={{ display: 'flex', gap: '6px', marginBottom: '0.75rem', alignItems: 'center' }}>
         <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search LFG posts…"
-          style={{ flex: 1, padding: '8px 12px', background: '#1a1a1a', border: `1px solid ${searchActive ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+          style={{ flex: 1, padding: '8px 12px', background: '#1a1a1a', border: `1px solid ${searchActive ? '#7ab3d4' : '#3a3a3a'}`, borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} />
         <button type="submit" disabled={searching}
           style={{ padding: '8px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching ? 'wait' : 'pointer', fontWeight: 600 }}>
           {searching ? '…' : '🔍 Search'}
@@ -703,7 +703,7 @@ export default function LfgPage() {
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
           <input value={scheduleQuery} onChange={e => setScheduleQuery(e.target.value)}
             placeholder="Filter by schedule (e.g. Sundays, weekly)…"
-            style={{ width: '260px', padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+            style={{ width: '260px', padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} />
           {scheduleQuery && (
             <button onClick={() => setScheduleQuery('')}
               title="Clear schedule filter"

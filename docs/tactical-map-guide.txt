@@ -1,0 +1,209 @@
+TACTICAL MAP & FOG OF WAR — THE TAPESTRY'S BATTLE CANVAS
+========================================================
+V1.0 (Last updated: 2026-05-02)
+
+
+WHAT YOU'LL FIND HERE
+---------------------
+   1. Opening the Tactical Map
+   2. Creating a Scene
+   3. The Grid
+   4. Tokens — PCs, NPCs, and Objects
+   5. Walls, Doors, and Windows
+   6. Range and Movement
+   7. Pinging
+   8. Sharing the Scene
+   9. Multiple Scenes
+  10. Fog of War — Painting and Erasing
+  11. Player Vision — How Fog Reveals
+  12. Combat
+
+
+====================================================================
+ 1. OPENING THE TACTICAL MAP
+====================================================================
+
+From the Table, click "Tactical Map" in the header to swap from the Campaign Map.
+
+If your Story has no scenes yet, the Create Scene modal opens automatically. If scenes exist, the most recent one activates.
+
+
+====================================================================
+ 2. CREATING A SCENE
+====================================================================
+
+Click "Map Setup" in the Table header to open the scene controls in a separate window. New scenes start there too — there's a "+ New Scene" button at the top.
+
+Fill in:
+
+  - Name (required).
+  - Grid dimensions — 20 columns × 15 rows by default.
+  - Cell size in feet — 3 ft per cell by default. This drives every range calculation downstream.
+
+A new scene auto-activates and broadcasts to anyone watching the Table.
+
+
+====================================================================
+ 3. THE GRID
+====================================================================
+
+The grid is what positions everything: tokens, range circles, fog cells, line of sight.
+
+Cells use Chebyshev distance — the greater of the X and Y deltas. A diagonal step counts as 1, not 1.4. This matches the SRD's tabletop ranges.
+
+Columns are labeled A, B, C... and roll into AA past Z. Rows are numbered 1, 2, 3...
+
+SCENE CONTROLS (the "Map Setup" popout)
+  Scene dropdown   — switch between scenes or create a new one.
+  Background image — upload a JPG or PNG. Scale it with the four corner handles.
+  Cols / Rows      — adjust grid dimensions.
+  Cell (ft)        — feet per cell.
+  Cell (px)        — pixel size on screen.
+  Grid ON/OFF      — toggle the overlay.
+  Grid color       — White, Black, or Grey.
+  Grid opacity     — slider.
+  Lock / Unlock    — locks the background image so it can't be moved by accident.
+  Fit to Map       — zooms the view to fit the full scene.
+  Edit Fog 🌫️     — enters fog paint mode. See Chapter 10.
+
+The popout sits in its own window so you can keep it docked beside the main view while you work.
+
+
+====================================================================
+ 4. TOKENS — PCs, NPCs, AND OBJECTS
+====================================================================
+
+Three kinds of tokens live on the tactical map:
+
+  PC TOKENS
+    Round, blue border. The owning player drags their own; the GM can drag any. Each shows a portrait or initials, name, WP bar, and — in combat — an initiative badge.
+
+  NPC TOKENS
+    Round, red border. GM-only drag. Hidden from players by default until combat starts.
+
+  OBJECT TOKENS
+    Square, orange border. Multi-cell footprint for things like crates and vehicles. Three special object types — walls, doors, and windows — shape the battlefield (see next chapter).
+
+Click a token to select it and bring up range circles and an info panel. Double-click to open its character sheet (PC) or NPC card. Right-click — or long-press on touch — for contextual actions during combat.
+
+
+====================================================================
+ 5. WALLS, DOORS, AND WINDOWS
+====================================================================
+
+Three special object tokens shape both movement AND fog of war's line of sight.
+
+  WALLS    Stone-brick fill, brown border. Block movement and vision. Use them for building walls, cliff faces, barricades.
+
+  DOORS    Red border when closed, green dashed border when open. Block movement when closed. Block vision when closed; pass vision when open. Players click a door to toggle it.
+
+  WINDOWS  Glass fill with a cross mullion. Block movement (no walking through glass) but always pass vision. A PC behind a window sees through it, and fog clears beyond.
+
+Together these let you build sealed rooms, doorways your players have to commit to opening, and sight lines through glass — without writing line-of-sight rules into your prep notes.
+
+A token that tries to move into a closed door's cell gets a popup: "That door is closed. Open it first."
+
+
+====================================================================
+ 6. RANGE AND MOVEMENT
+====================================================================
+
+Selecting a token brings up three concentric range circles around it:
+
+  ENGAGED (5 ft)    Green. The melee radius. Required for grapples, melee attacks, and stabilizing a fallen ally.
+  MOVE (9 ft)       Blue. How far you can move on one Move action.
+  WEAPON RANGE      Red. The reach of your selected weapon — Engaged, Close (30 ft), Mid (100 ft), or Far (200+ ft).
+
+The GM sees these circles around every selected token. Players see them only around their own PC, so NPC weapon ranges aren't given away.
+
+Movement during combat costs 1 action and is bounded by your Move circle. Outside combat it's free — just drag the token wherever.
+
+
+====================================================================
+ 7. PINGING
+====================================================================
+
+Hold ALT and left-click any cell to drop a ping — a pulsing flash visible to everyone watching the scene.
+
+  GM ping      Orange.
+  Player ping  Green.
+
+Pings are the fastest way to point at a thing without typing in chat. They fade in about a second.
+
+
+====================================================================
+ 8. SHARING THE SCENE
+====================================================================
+
+Players see the tactical map only when the GM has shared it.
+
+Combat starts a share automatically. Outside combat, click "Share Map" in the Table header to push the current scene to everyone. Switching to a different scene auto-broadcasts the switch — players follow you through.
+
+
+====================================================================
+ 9. MULTIPLE SCENES
+====================================================================
+
+A Story can hold as many scenes as you want — one per encounter, one per floor of a building, one per rumor location. Switch between them with the Scene dropdown in the popout.
+
+Need a token to follow your party between scenes? Select the token, click "→ Scene," and pick the destination. The token resets to position (1,1) on arrival so it can't land off-map when grid dimensions differ.
+
+
+====================================================================
+ 10. FOG OF WAR — PAINTING AND ERASING
+====================================================================
+
+FOG OF WAR is a layer of darkness you, the GM, paint over the tactical map. Players see fogged cells as solid black — no terrain, no tokens, no labels behind them.
+
+When a PC walks close enough, the fog clears around them. When they walk away, it stays cleared — fog doesn't grow back behind a moving party. You repaint manually whenever you want.
+
+ENTERING EDIT MODE
+  Click "🌫️ Edit Fog" in the scene controls. The toolbar expands and the canvas switches to paint mode. While you author, fog renders at a lighter dimming so you can see the terrain beneath. Players still see it at full darkness.
+
+THREE TOOLS
+  PAINT      Click and drag to fog cells one at a time.
+  RECTANGLE  Click and drag to fog every cell inside a rectangle in one stroke.
+  ERASE      Click and drag to clear fog off cells.
+
+BULK ACTIONS
+  Fog All    Fogs the entire scene in one click.
+  Clear All  Clears all fog in one click.
+
+Click "Done" to exit edit mode.
+
+Fog stays painted across reloads, reconnects, and session boundaries. It clears only when you erase it.
+
+
+====================================================================
+ 11. PLAYER VISION — HOW FOG REVEALS
+====================================================================
+
+Each PC token clears 6 cells of fog around itself in every direction — a circle of light that travels with the player.
+
+That circle respects the world:
+
+  WALLS                       Block vision. Fog stays behind them.
+  CLOSED DOORS                Block vision. Fog stays behind them.
+  OPEN DOORS                  Pass vision.
+  WINDOWS                     Pass vision — PCs see through glass.
+  OTHER PCs / NPCs / objects  Don't block vision.
+
+A player watching the map sees:
+  - Everything outside the fog.
+  - Everything inside their own PCs' 6-cell circles, line-of-sight permitting.
+
+Tokens inside fog are completely hidden — no name, no portrait, no silhouette. As a PC moves close, the fog clears, and the tokens pop in.
+
+
+====================================================================
+ 12. COMBAT
+====================================================================
+
+Combat interacts with the tactical map and fog in a few specific ways:
+
+  - Starting combat auto-shares the current scene with all players.
+  - Hidden NPCs flip to visible when combat starts, so their initiative badges aren't anonymous.
+  - Movement during combat costs 1 action and is bounded by the Move circle.
+  - Fog of War does NOT auto-clear when combat ends. If you've painted fog around the encounter, your players will still walk through it on the way out — erase it manually if you want a clean exit.
+
+End combat from the Table header. Initiative clears, grapple states release, and players resume free token dragging.

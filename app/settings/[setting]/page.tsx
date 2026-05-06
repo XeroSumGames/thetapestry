@@ -210,14 +210,14 @@ export default function SettingHubPage() {
 
   if (!authChecked) {
     return (
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Barlow, sans-serif', color: '#cce0f5', fontSize: '13px' }}>
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Carlito, sans-serif', color: '#cce0f5', fontSize: '13px' }}>
         Loading…
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Carlito, sans-serif' }}>
 
       {/* Header — name, tagline, blurb, primary CTA. The accent color
           drives the underline + run-campaign button so each hub is

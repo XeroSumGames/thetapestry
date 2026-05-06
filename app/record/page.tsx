@@ -167,7 +167,7 @@ export default function RecorderConfigPage() {
   const totalSelected = selectedIds.size
 
   return (
-    <div style={{ background: '#0f0f0f', color: '#f5f2ee', minHeight: '100vh', fontFamily: 'Barlow, sans-serif', padding: '20px' }}>
+    <div style={{ background: '#0f0f0f', color: '#f5f2ee', minHeight: '100vh', fontFamily: 'Carlito, sans-serif', padding: '20px' }}>
       <div style={{ maxWidth: 920, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ borderBottom: '2px solid #c0392b', paddingBottom: 12, marginBottom: 16 }}>

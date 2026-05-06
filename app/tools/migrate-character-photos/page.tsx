@@ -142,13 +142,13 @@ export default function MigrateCharacterPhotosPage() {
 
   if (!authChecked) return null
   if (!isThriver) return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Barlow, sans-serif', color: '#cce0f5', textAlign: 'center' }}>
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#cce0f5', textAlign: 'center' }}>
       Thriver access only.
     </div>
   )
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>
       <div style={h1Style}>Migrate Character Photos</div>
 
       <div style={panel}>

@@ -46,7 +46,7 @@ export default function PrintSheet({ state, liveState }: Props) {
   const unarmedBonus = (rapid.PHY ?? 0) + (skills['Unarmed Combat'] ?? 0)
 
   return (
-    <div id="print-sheet-inner" style={{ fontFamily: 'Barlow, Arial, sans-serif', color: '#000', background: '#fff', width: '100%', fontSize: '8pt', padding: '8pt' }}>
+    <div id="print-sheet-inner" style={{ fontFamily: 'Carlito, Arial, sans-serif', color: '#000', background: '#fff', width: '100%', fontSize: '8pt', padding: '8pt' }}>
 
       {/* Header — name + demographics only. Distemper wordmark / URL
           and the Complication / Motivation / Personality sidebar were

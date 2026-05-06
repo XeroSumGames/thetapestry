@@ -146,7 +146,7 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
   if (loading) return <div style={{ color: '#cce0f5', fontSize: '13px' }}>Loading snapshots…</div>
 
   const lbl: React.CSSProperties = { display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif' }
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box' }
+  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', outline: 'none', boxSizing: 'border-box' }
 
   return (
     <div>
@@ -162,7 +162,7 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
         <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Arena act 1 pre-playtest" style={{ ...inp, marginBottom: '8px' }} />
         <label style={lbl}>Description (optional)</label>
         <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} rows={2} style={{ ...inp, marginBottom: '8px', resize: 'vertical' }} />
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '10px', cursor: 'pointer' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '10px', cursor: 'pointer' }}>
           <input type="checkbox" checked={includeStates} onChange={e => setIncludeStates(e.target.checked)} />
           <span>Also include party character states (WP, RP, stress, insight, morality). Leave off to preserve progression across resets.</span>
         </label>
@@ -210,7 +210,7 @@ export default function CampaignSnapshots({ campaignId, isGM }: { campaignId: st
             <div key={r.id} style={{ padding: '10px 12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{r.name}</div>
-                {r.description && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', fontFamily: 'Barlow, sans-serif' }}>{r.description}</div>}
+                {r.description && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>{r.description}</div>}
                 <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px', fontFamily: 'Carlito, sans-serif' }}>
                   {new Date(r.created_at).toLocaleString()} · {r.snapshot?.npcs?.length ?? 0} NPCs · {r.snapshot?.pins?.length ?? 0} pins · {r.snapshot?.scenes?.length ?? 0} scenes · {r.snapshot?.notes?.length ?? 0} notes
                   {r.includes_character_states && <span style={{ color: '#EF9F27', marginLeft: '6px' }}>+ party states</span>}

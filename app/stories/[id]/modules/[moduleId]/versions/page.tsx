@@ -94,13 +94,13 @@ export default function ModuleVersionsPage() {
   }
 
   if (loading) return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>
       Loading version history…
     </div>
   )
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
 
       {/* Masthead */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #8b5cf6', paddingBottom: '12px', marginBottom: '1.5rem' }}>
@@ -121,7 +121,7 @@ export default function ModuleVersionsPage() {
           && currentVersion && latestVersion
           && currentVersion.id !== latestVersion.id
         return (
-          <div style={{ padding: '10px 14px', marginBottom: '1.25rem', background: '#2a1a3e', border: '1px solid #5a2e5a', borderLeft: '3px solid #8b5cf6', borderRadius: '4px', fontFamily: 'Barlow, sans-serif' }}>
+          <div style={{ padding: '10px 14px', marginBottom: '1.25rem', background: '#2a1a3e', border: '1px solid #5a2e5a', borderLeft: '3px solid #8b5cf6', borderRadius: '4px', fontFamily: 'Carlito, sans-serif' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c4a7f0', marginBottom: '4px' }}>

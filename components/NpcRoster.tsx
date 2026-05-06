@@ -1057,7 +1057,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       {isGM && npcs.length > 3 && (
         <div style={{ padding: '4px 10px 6px' }}>
           <input value={npcSearch} onChange={e => setNpcSearch(e.target.value)} placeholder="Search NPCs..."
-            style={{ width: '100%', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box', marginBottom: '4px' }} />
+            style={{ width: '100%', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', boxSizing: 'border-box', marginBottom: '4px' }} />
           <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
             {['friendly', 'goon', 'foe', 'antagonist'].map(t => {
               const tc = TYPE_COLORS[t]
@@ -1681,7 +1681,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Name</div>
                 <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} autoFocus
-                  style={{ width: '100%', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                  style={{ width: '100%', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
               </div>
               <div style={{ width: '130px', flexShrink: 0 }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Type</div>
@@ -1756,7 +1756,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                   <input value={item.name}
                     onChange={e => setForm(f => ({ ...f, inventoryEntries: f.inventoryEntries.map((it, j) => j === i ? { ...it, name: e.target.value } : it) }))}
                     placeholder="Item name"
-                    style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+                    style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} />
                   <input type="number" min={1} value={item.qty}
                     onChange={e => setForm(f => ({ ...f, inventoryEntries: f.inventoryEntries.map((it, j) => j === i ? { ...it, qty: Math.max(1, parseInt(e.target.value, 10) || 1) } : it) }))}
                     title="Quantity"
@@ -1910,7 +1910,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                 </select>
                 <input value={form.folder} onChange={e => setForm(f => ({ ...f, folder: e.target.value }))}
                   placeholder="Or type new..."
-                  style={{ width: '100px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                  style={{ width: '100px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
               </div>
             </div>
 
@@ -1923,7 +1923,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               <textarea value={form.public_description} onChange={e => setForm(f => ({ ...f, public_description: e.target.value }))}
                 placeholder="What players see on this NPC's card (after Show All / Reveal). Keep it short."
                 rows={2}
-                style={{ width: '100%', padding: '8px 10px', background: '#161e16', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.5 }} />
+                style={{ width: '100%', padding: '8px 10px', background: '#161e16', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.5 }} />
             </div>
 
             {/* Notes */}
@@ -1932,7 +1932,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
               <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                 placeholder="Private notes — never shown to players"
                 rows={3}
-                style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.5 }} />
+                style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.5 }} />
             </div>
 
             {/* Relationships (edit only) */}
@@ -2012,7 +2012,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                     <textarea value={publishDesc} onChange={e => setPublishDesc(e.target.value)}
                       placeholder="Public description — what other GMs will see"
                       rows={2}
-                      style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', marginBottom: '6px' }} />
+                      style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', resize: 'vertical', boxSizing: 'border-box', marginBottom: '6px' }} />
                     <select value={publishSetting} onChange={e => setPublishSetting(e.target.value)}
                       style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', appearance: 'none', marginBottom: '8px' }}>
                       <option value="custom">Custom Setting</option>

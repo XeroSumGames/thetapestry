@@ -316,12 +316,12 @@ export default function NewCampaignPage() {
   const inp: React.CSSProperties = {
     width: '100%', padding: '9px 12px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px',
-    color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif',
+    color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif',
     boxSizing: 'border-box',
   }
 
   return (
-    <div style={{ maxWidth: '560px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '560px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
 
       <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
@@ -424,7 +424,7 @@ export default function NewCampaignPage() {
                       📦 {m.name}
                       {m.latest_version && <span style={{ opacity: 0.7, marginLeft: '8px', fontSize: '13px' }}>v{m.latest_version.version}</span>}
                     </div>
-                    {m.tagline && <div style={{ fontSize: '13px', opacity: 0.85, marginTop: '2px', fontFamily: 'Barlow, sans-serif', textTransform: 'none' }}>{m.tagline}</div>}
+                    {m.tagline && <div style={{ fontSize: '13px', opacity: 0.85, marginTop: '2px', fontFamily: 'Carlito, sans-serif', textTransform: 'none' }}>{m.tagline}</div>}
                   </button>
                 )
               })}
@@ -471,7 +471,7 @@ export default function NewCampaignPage() {
                       <span style={{ fontSize: '13px', color: statusColor, textTransform: 'uppercase', letterSpacing: '.06em' }}>{c.community_status}</span>
                       {c.faction_label && <span style={{ fontSize: '13px', color: '#EF9F27', textTransform: 'uppercase', letterSpacing: '.06em' }}>{c.faction_label}</span>}
                     </div>
-                    {c.description && <div style={{ fontSize: '13px', opacity: 0.85, marginTop: '2px', fontFamily: 'Barlow, sans-serif', textTransform: 'none', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.description}</div>}
+                    {c.description && <div style={{ fontSize: '13px', opacity: 0.85, marginTop: '2px', fontFamily: 'Carlito, sans-serif', textTransform: 'none', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.description}</div>}
                     <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '2px' }}>
                       {c.lat.toFixed(3)}, {c.lng.toFixed(3)}
                     </div>

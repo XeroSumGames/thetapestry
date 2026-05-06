@@ -99,7 +99,7 @@ export default function RescaleTacticalScenesPage() {
   const doneCount = rows.filter(r => r.status === 'done').length
 
   return (
-    <div style={{ fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
+    <div style={{ fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>
       <h1 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', letterSpacing: '.06em', textTransform: 'uppercase', color: '#c0392b', marginBottom: '0.25rem' }}>Rescale Tactical Scenes</h1>
       <p style={{ color: '#cce0f5', fontSize: '14px', marginBottom: '1rem' }}>
         One-time migration: convert legacy <code>img_scale</code> values (container-based) to the new natural-dimensions baseline.

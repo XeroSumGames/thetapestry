@@ -86,7 +86,7 @@ export default function RulesNav() {
   const anchorLinkBase: React.CSSProperties = {
     display: 'block',
     padding: '4px 14px 4px 28px',
-    fontFamily: 'Barlow, sans-serif',
+    fontFamily: 'Carlito, sans-serif',
     fontSize: '13px',
     color: '#cce0f5',
     textDecoration: 'none',

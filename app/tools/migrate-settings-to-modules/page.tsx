@@ -350,7 +350,7 @@ export default function MigrateSettingsPage() {
   }
 
   if (isThriver === null) {
-    return <div style={{ padding: '24px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>Checking…</div>
+    return <div style={{ padding: '24px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>Checking…</div>
   }
   if (!isThriver) {
     return (

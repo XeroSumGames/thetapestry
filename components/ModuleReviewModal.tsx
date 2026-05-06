@@ -320,7 +320,7 @@ export default function ModuleReviewModal({
           {flagsLoaded && diff.totals.removed > 0 && (
             <div>
               <div style={sectionLabel}>✘ Removed upstream ({diff.totals.removed})</div>
-              <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Barlow, sans-serif' }}>
+              <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '6px', fontFamily: 'Carlito, sans-serif' }}>
                 Check any you also want to delete from your campaign. Default: keep them — the author removed them from the module but you may have become attached.
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>

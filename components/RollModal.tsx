@@ -144,7 +144,7 @@ export default function RollModal(props: RollModalProps) {
   return (
     <ModalBackdrop onClose={result ? undefined : onClose} zIndex={11000} opacity={0.85} padding="1rem">
       <div
-        style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', maxWidth: '460px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', fontFamily: 'Barlow, sans-serif' }}>
+        style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', maxWidth: '460px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', fontFamily: 'Carlito, sans-serif' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px', marginBottom: '6px' }}>
@@ -198,7 +198,7 @@ export default function RollModal(props: RollModalProps) {
             </label>
             <input type="number" value={cmod}
               onChange={e => setCmod(parseInt(e.target.value || '0', 10))}
-              style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+              style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
           </div>
         )}
 

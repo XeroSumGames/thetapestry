@@ -5524,7 +5524,7 @@ export default function TablePage() {
   }
 
   if (loading || !campaign) return (
-    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow, sans-serif', color: '#cce0f5', background: '#0f0f0f' }}>
+    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Carlito, sans-serif', color: '#cce0f5', background: '#0f0f0f' }}>
       Loading The Table...
     </div>
   )
@@ -5608,7 +5608,7 @@ export default function TablePage() {
   const myInsightDice = myEntry?.liveState?.insight_dice ?? 0
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', fontFamily: 'Barlow, sans-serif', background: '#0f0f0f' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', fontFamily: 'Carlito, sans-serif', background: '#0f0f0f' }}>
 
       {/* Header */}
       <div style={{ borderBottom: '1px solid #c0392b', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, background: '#0f0f0f', position: 'relative', zIndex: 10001 }}>
@@ -6392,7 +6392,7 @@ export default function TablePage() {
                     <div onClick={() => setShowCoordinateModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
                         <div style={{ fontSize: '14px', color: '#c0392b', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Coordinate</div>
-                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5, marginBottom: '12px' }}>
+                        <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5, marginBottom: '12px' }}>
                           Select the enemy to coordinate against. On a successful Tactics* check, allies within Close range get +2 CMod when attacking that target.
                         </div>
                         <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Coordinate Against</div>
@@ -8230,7 +8230,7 @@ export default function TablePage() {
 
             {/* Add item */}
             <div style={{ display: 'flex', gap: '4px', marginBottom: '12px' }}>
-              <input id="loot-item-name" placeholder="Item name" style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+              <input id="loot-item-name" placeholder="Item name" style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} />
               <input id="loot-item-qty" type="number" min="1" defaultValue="1" placeholder="Qty" style={{ width: '45px', padding: '5px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
               <button onClick={() => {
                 const nameEl = document.getElementById('loot-item-name') as HTMLInputElement
@@ -8640,7 +8640,7 @@ export default function TablePage() {
             style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '480px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
             <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Reload</div>
             <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '0.5rem' }}>Restore from snapshot</div>
-            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.4, marginBottom: '12px' }}>
+            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4, marginBottom: '12px' }}>
               Pick a snapshot — its NPCs, pins, scenes, tactical tokens, and notes replace the current state. Initiative, roll log, and chat clear. Players at the table will see the reset.
             </div>
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '12px' }}>
@@ -8651,7 +8651,7 @@ export default function TablePage() {
                   <div key={s.id}
                     style={{ padding: '10px 12px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', marginBottom: '6px' }}>
                     <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>{s.name}</div>
-                    {s.description && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', fontFamily: 'Barlow, sans-serif' }}>{s.description}</div>}
+                    {s.description && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>{s.description}</div>}
                     <div style={{ fontSize: '13px', color: '#5a5550', marginTop: '4px', fontFamily: 'Carlito, sans-serif' }}>
                       {new Date(s.created_at).toLocaleString()}
                       {' · '}{(s.snapshot as any)?.npcs?.length ?? 0} NPCs
@@ -8941,7 +8941,7 @@ export default function TablePage() {
                   <div key={n.id} style={{ marginBottom: '8px', padding: '6px 8px', background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                     <div style={{ fontSize: '13px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '2px' }}>{n.character_name}</div>
                     {n.title && <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', marginBottom: '2px' }}>{n.title}</div>}
-                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.4, marginBottom: '6px' }}>{n.content}</div>
+                    <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.4, marginBottom: '6px' }}>{n.content}</div>
                     <button onClick={() => {
                       const titlePart = n.title ? ` — ${n.title}` : ''
                       const block = (sessionSummary.trim() ? '\n\n' : '') + `${n.character_name}${titlePart}: ${n.content}`
@@ -8964,7 +8964,7 @@ export default function TablePage() {
                 placeholder="Summarise the session — key events, decisions, outcomes."
                 autoFocus
                 rows={6}
-                style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
+                style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
               />
             </div>
 
@@ -8976,7 +8976,7 @@ export default function TablePage() {
                 onChange={e => setSessionCliffhanger(e.target.value)}
                 placeholder="What do you need to remember? What was the cliffhanger? Who had the last word?"
                 rows={3}
-                style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
+                style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
               />
             </div>
 
@@ -8988,7 +8988,7 @@ export default function TablePage() {
                 onChange={e => setNextSessionNotes(e.target.value)}
                 placeholder="Prep notes, loose threads, things to follow up on."
                 rows={4}
-                style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
+                style={{ width: '100%', padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
               />
             </div>
 
@@ -9153,7 +9153,7 @@ export default function TablePage() {
                   </optgroup>
                 )}
               </select>
-              {dropCharacter && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '4px', fontFamily: 'Barlow, sans-serif' }}>{dropCharacter} acts first with 1 action, then takes -2 CMod on initiative roll.</div>}
+              {dropCharacter && <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '4px', fontFamily: 'Carlito, sans-serif' }}>{dropCharacter} acts first with 1 action, then takes -2 CMod on initiative roll.</div>}
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => { setShowNpcPicker(false); setDropCharacter('') }} style={{ flex: 1, padding: '10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Cancel</button>
@@ -9854,7 +9854,7 @@ export default function TablePage() {
             {showSpecialCheck === 'perception' && (
               <>
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Perception Check</div>
-                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Uses Perception modifier (RSN + ACU)</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>Uses Perception modifier (RSN + ACU)</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {/* Players only see their own PC(s); GMs can roll Perception
                       for any PC (mirror First Impression pattern below). */}
@@ -9868,7 +9868,7 @@ export default function TablePage() {
             {showSpecialCheck === 'gut' && (
               <>
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Gut Instinct</div>
-                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Uses Perception + best of Psychology, Streetwise, Tactics</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>Uses Perception + best of Psychology, Streetwise, Tactics</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {/* Same player-self / GM-all filter as Perception + First Impression. */}
                   {entries.filter(e => isGM || e.userId === userId).map(e => (
@@ -9899,7 +9899,7 @@ export default function TablePage() {
               return (
               <>
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>First Impression</div>
-                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Uses Influence + best of Manipulation, Streetwise, Psychology. Result sets the Relationship CMod between the rolling PC and the target NPC — feeds future Recruitment / social checks.</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>Uses Influence + best of Manipulation, Streetwise, Psychology. Result sets the Relationship CMod between the rolling PC and the target NPC — feeds future Recruitment / social checks.</div>
 
                 {/* NPC target picker */}
                 <div style={{ marginBottom: '12px' }}>
@@ -9997,7 +9997,7 @@ export default function TablePage() {
             {showSpecialCheck === 'group' && (
               <>
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Group Check</div>
-                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Highest modifier leads. Others contribute their SMod. No Insight Dice.</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>Highest modifier leads. Others contribute their SMod. No Insight Dice.</div>
                 <div style={{ marginBottom: '1rem' }}>
                   <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Skill</div>
                   <select value={groupCheckSkill} onChange={e => setGroupCheckSkill(e.target.value)}
@@ -10026,7 +10026,7 @@ export default function TablePage() {
             {showSpecialCheck === 'opposed' && (
               <>
                 <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Opposed Check</div>
-                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>Both sides roll until one succeeds and the other fails. Use standard skill rolls for each side.</div>
+                <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>Both sides roll until one succeeds and the other fails. Use standard skill rolls for each side.</div>
                 <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', textAlign: 'center', padding: '1rem' }}>
                   Have each participant roll their relevant skill check normally. Compare outcomes — first to get Success while opponent gets Failure wins.
                 </div>
@@ -10079,7 +10079,7 @@ export default function TablePage() {
                   <div style={{ marginBottom: '12px' }}>
                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Rolling PC</div>
                     <select value={recruitRollerId} onChange={e => setRecruitRollerId(e.target.value)}
-                      style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                      style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                       <option value="">— pick a PC —</option>
                       {entries.filter(e => isGM || e.userId === userId).map(e => (
                         <option key={e.character.id} value={e.character.id}>{e.character.name} (INF {e.character.data?.rapid?.INF ?? 0})</option>
@@ -10096,7 +10096,7 @@ export default function TablePage() {
                       </div>
                     ) : (
                       <select value={recruitNpcId} onChange={e => setRecruitNpcId(e.target.value)}
-                        style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                        style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                         <option value="">— pick an NPC —</option>
                         {eligibleNpcs.map((n: any) => {
                           const mem = npcCommunityMap[n.id]
@@ -10116,7 +10116,7 @@ export default function TablePage() {
                     <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '4px' }}>Community</div>
                     {hasAnyCommunity ? (
                       <select value={recruitCommunityId} onChange={e => setRecruitCommunityId(e.target.value)}
-                        style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                        style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                         <option value="">— pick a community —</option>
                         {recruitCommunityList.map(c => (
                           <option key={c.id} value={c.id}>{c.name} ({c.member_count} member{c.member_count === 1 ? '' : 's'})</option>
@@ -10124,7 +10124,7 @@ export default function TablePage() {
                         <option value="__new__">+ Found a new community</option>
                       </select>
                     ) : (
-                      <div style={{ padding: '8px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }}>
+                      <div style={{ padding: '8px 10px', background: '#0f1a0f', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
                         No communities yet — this recruit will found a new one.
                         {(() => { if (recruitCommunityId !== '__new__') setRecruitCommunityId('__new__'); return null })()}
                       </div>
@@ -10133,7 +10133,7 @@ export default function TablePage() {
                       <div style={{ marginTop: '8px', padding: '10px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                         <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '3px' }}>Name</div>
                         <input value={recruitNewCommunityName} onChange={e => setRecruitNewCommunityName(e.target.value)} placeholder="e.g. The Greenhouse"
-                          style={{ width: '100%', padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                          style={{ width: '100%', padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
                           <input type="checkbox" checked={recruitNewCommunityPublic} onChange={e => setRecruitNewCommunityPublic(e.target.checked)} />
                           Make this community public (discoverable via LFG — coming soon)
@@ -10161,7 +10161,7 @@ export default function TablePage() {
                         </button>
                       ))}
                     </div>
-                    <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
+                    <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
                       {recruitApproach === 'cohort' ? 'Shared interest or goal — joins until the next Morale Check.'
                         : recruitApproach === 'conscript' ? 'Coerced by credible threat — follows orders while coercion holds.'
                         : 'Shared belief or ideology — probationary through first Morale Check, then committed.'}
@@ -10172,7 +10172,7 @@ export default function TablePage() {
                         fires on submit; this banner just makes it
                         visible earlier. */}
                     {recruitApproach === 'conscript' && (
-                      <div style={{ marginTop: '8px', padding: '8px 10px', background: '#2a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5a89a', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                      <div style={{ marginTop: '8px', padding: '8px 10px', background: '#2a1010', border: '1px solid #c0392b', borderRadius: '3px', fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
                         ⚠ <span style={{ fontWeight: 700 }}>Pressgang.</span> This is pressure, not persuasion. The PC must have established a credible threat (weapons drawn, leverage held, escape cut off) before the roll. You'll be asked to confirm on submit.
                       </div>
                     )}
@@ -10224,7 +10224,7 @@ export default function TablePage() {
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span>GM adjustment</span>
                         <input type="number" value={recruitGmCmod} onChange={e => setRecruitGmCmod(parseInt(e.target.value, 10) || 0)}
-                          style={{ width: '60px', padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'right' }} />
+                          style={{ width: '60px', padding: '2px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'right' }} />
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #2e2e5a', marginTop: '4px', paddingTop: '4px', fontWeight: 700 }}>
                         <span>TOTAL CMOD</span>
@@ -10330,7 +10330,7 @@ export default function TablePage() {
                 {outcome}
               </div>
               {/* Joined/failed card */}
-              <div style={{ padding: '12px', background: recruitResult.inserted ? '#0f1a0f' : '#2a1210', border: `1px solid ${recruitResult.inserted ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', marginBottom: '1rem', lineHeight: 1.4 }}>
+              <div style={{ padding: '12px', background: recruitResult.inserted ? '#0f1a0f' : '#2a1210', border: `1px solid ${recruitResult.inserted ? '#2d5a1b' : '#c0392b'}`, borderRadius: '3px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', lineHeight: 1.4 }}>
                 {recruitResult.inserted ? (
                   <>
                     <strong>{recruitResult.npcName}</strong> joined <strong>{recruitResult.communityName}</strong>
@@ -10650,14 +10650,14 @@ export default function TablePage() {
             <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#c0392b', marginBottom: '8px' }}>
               Mortal Injury
             </div>
-            <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', marginBottom: '6px' }}>
+            <div style={{ fontSize: '15px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>
               <strong>{insightSavePrompt.targetName}</strong> is mortally wounded!
             </div>
             {isMyPC ? (
               /* Player's own PC — they choose */
               insightSavePrompt.insightDice > 0 ? (
                 <>
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1.5rem' }}>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '1.5rem' }}>
                     Trade ALL Insight Dice to survive with 1 WP and 1 RP?
                     <br /><span style={{ fontSize: '13px', color: '#7fc458' }}>({insightSavePrompt.insightDice} Insight {insightSavePrompt.insightDice === 1 ? 'Die' : 'Dice'} will be lost)</span>
                   </div>
@@ -10674,7 +10674,7 @@ export default function TablePage() {
                 </>
               ) : (
                 <>
-                  <div style={{ fontSize: '14px', color: '#f5a89a', fontFamily: 'Barlow, sans-serif', marginBottom: '1.5rem' }}>
+                  <div style={{ fontSize: '14px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', marginBottom: '1.5rem' }}>
                     No Insight Dice available to trade. {insightSavePrompt.targetName} will die if not stabilized.
                   </div>
                   <button onClick={() => { setInsightSavePrompt(null); initChannelRef.current?.send({ type: 'broadcast', event: 'pc_mortal_wound_resolved', payload: {} }) }}
@@ -10686,7 +10686,7 @@ export default function TablePage() {
             ) : (
               /* GM or other player — read-only view */
               <>
-                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '1.5rem' }}>
                   {insightSavePrompt.insightDice > 0
                     ? `Waiting for ${insightSavePrompt.targetName}'s player to decide whether to trade ${insightSavePrompt.insightDice} Insight ${insightSavePrompt.insightDice === 1 ? 'Die' : 'Dice'}...`
                     : `${insightSavePrompt.targetName} has no Insight Dice. Waiting for player to acknowledge...`}

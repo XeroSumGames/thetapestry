@@ -494,7 +494,7 @@ export default function PortraitResizerPage() {
 
   if (!authChecked) return null
   if (!isThriver) return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Barlow, sans-serif', color: '#cce0f5', textAlign: 'center' }}>
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#cce0f5', textAlign: 'center' }}>
       Thriver access only.
     </div>
   )
@@ -502,7 +502,7 @@ export default function PortraitResizerPage() {
   return (
     <div>
       <h1 style={h1Style}>Portrait Resizer</h1>
-      <div style={{ color: '#cce0f5', fontSize: '14px', marginBottom: '1.5rem', fontFamily: 'Barlow, sans-serif' }}>
+      <div style={{ color: '#cce0f5', fontSize: '14px', marginBottom: '1.5rem', fontFamily: 'Carlito, sans-serif' }}>
         Drop any image and export it as a 256×256 JPEG — ready for the NPC portrait bank.
         Drag the circle to choose what gets captured, or resize it to zoom.
       </div>
@@ -514,13 +514,13 @@ export default function PortraitResizerPage() {
           image needs a custom crop. */}
       <div style={{ ...panel, background: '#1a1a2e', border: '1px solid #2e2e5a' }}>
         <div style={h2Style}>Batch Upload (auto-center crop)</div>
-        <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px', fontFamily: 'Barlow, sans-serif' }}>
+        <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '8px', fontFamily: 'Carlito, sans-serif' }}>
           Pick multiple images at once. Each is auto-cropped to a centered max-radius circle, rendered at 256/56/32 px, and uploaded as <strong style={{ color: '#7ab3d4' }}>{gender === 'man' ? 'Male' : 'Female'}</strong> portraits in sequence. Switch the gender pill below before starting.
         </div>
         <input
           type="file" accept="image/*" multiple disabled={batchRunning}
           onChange={e => { const files = e.target.files; if (files && files.length > 0) handleBatch(files); e.target.value = '' }}
-          style={{ fontFamily: 'Barlow, sans-serif', fontSize: '13px', color: '#d4cfc9' }}
+          style={{ fontFamily: 'Carlito, sans-serif', fontSize: '13px', color: '#d4cfc9' }}
         />
         {batchRunning && (
           <div style={{ marginTop: '8px', fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>

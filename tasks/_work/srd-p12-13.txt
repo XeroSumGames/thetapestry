@@ -1,0 +1,139 @@
+F (4-8): The NPC has no interest in joining. If the        M C  C                                                   Any leader wishing to unite or retain fragments of a  S (9-13): 0 CMod on the next M C.
+players can F   G as to how they are taking                                                                         dissolving community will need to make an immediate
+a different approach, they may aempt another               S,  M                                                    M C as part of this aempt, using the result           F (4-8): -1 CMod on the next M C.
+R C to win the NPC over.                                                                                            of the preceding M C as the M
+                                                           For each week that passes in the game, a community       A  C CMod.                                            D F (0-3): -2 CMod on the next M
+D F (0-3): The NPC becomes wary and will                   must make a successful M  to ensure they                                                                       C.
+aempt to distance themselves from the player.              maintain the cohesion required to stay together.         M A M :
+                                                                                                                                                                          M  L I (1+1): -3 CMod on the next
+M  L I (1+1): The NPC is so                                M  are made at the beginning of the                      A M  is 26 + AM + SM                                  M C.
+unwilling to join that they might become hosle or          week. The outcome of the check might potenally               + CM  M
+violent.                                                   outline the steps leadership will need to take in order  A  C, F, C, E                                         F  C:
+                                                           to ensure the connued well-being of the community.       H, A C V, and S  W O
+A                                                                                                                   M modifiers.                                          These CMods from the F and C checks can
+                                                           A worksheet to make tracking                                                                                   range from -3 to +2 (see G and M
+If a player gets a W S or M  H                               easier is available for download at                    M C O                                                 below).
+I on a R C, they may recruit                               XSG./SRD.
+the NPC as their A.                                                                                                 S (9-13): Morale remains steady. There is 0           E H:
+                                                           M C                                                      CMod for the next M C.
+It is also possible for a player to seek out a specific                                                                                                                   Communies without enough members acng as
+NPC and make a deliberate R aempt.                         Whether it is an NPC or PC, it is assumed that there is  W S (14+): Morale stays strong or improves.           G, M, or S suffer a -1 CMod
+                                                           an acknowledged and recognized community leader          There is a +1 CMod on the next M C.                   for each group that is short, up to a maximum CMod
+Once recruited, an A can undertake tasks                   who will make the check using any AMods or SMods                                                               of -3.
+and acvies on behalf of or act as the proxy for a          that might be appropriate.                               M  H I (6+6): Belief in leadership
+player character.                                                                                                   and the community itself is high. There is a +2 CMod  A C V:
+                                                           If there are a group of characters who are viewed as     on the next M C.
+Once recruited, the player should give the A               leaders in equal standing, they may make a G                                                                   There is no CMod applied if there is a clear leadership
+a name (if they don't already have one), roll 2d6 on       C.                                                       F (4-8): Morale is slipping. Unless they are          but a -1 CMod if there is no clear leadership.
+both the M and C tables, and                                                                                        stopped, 25% of the community will leave in the next
+then work with the GM to F   G on the                      Each M C has six modifiers that are related              week. There is a -1 CMod to the following M           Someone To Watch Over Me:
+A' background.                                             to the tasks, acvies, and roles required to ensure a     C.
+                                                           community has everything they need to survive - F,                                                             There is a -1 CMod if less than 5% of the community
+The player has 3 CDP to spend on raising the RAPID         C, M A  C, E                                             D F (0-3): The morale of the community                are assigned to S dues.
+Range Aributes of the A (see C                             H, A C V, and S  W O                                     collapses. There are major consequences with 50% of
+D P on page xx).                                           M. See M C M on page xx.                                 the community leaving in the next week. There is -2   There is a +1 CMod if there are 10% of more of the
+                                                                                                                    CMod on the next M C.                                 community are assigned to S dues.
+They should pick a seng appropriate P for                  Two of these modifiers - F and C - are
+them (see T 8: P  V S                                      derived from their own checks made prior to the          M  L I (1+1): There is infighng,                      A CM:
+on page xx) and get 5 CDP to spend on raising their        M C (See C S on page                                     riong, outbreaks of anger or violence for the
+skills.                                                    xx). The other modifiers require no dice check but are   following week with 75% of the community leaving.     Throughout the course of gameplay, there might be
+                                                           as a result of the organizaonal structure and health     There is a -3 CMod on the next M C.                   incidents that impact the Community that are not
+Over the course of one month of game me, the               of the community.                                                                                              reflected above. It is up to the Game Master and the
+player can train their A in any single skill                                                                        M C M:                                                players to F   G and quanfy this impact on
+that the player has, to one level lower than the player.   Failed M C will result in members leaving,                                                                     the M .
+This means if the player has level 3 in a skill, they can  further impacng the morale of the community in           M A  C:
+train their A to level 2.                                  future checks.                                                                                                 C S
+                                                                                                                    This modifier is applied as a result of the previous
+If a character receives Character Development Points       Aer three consecuve failures, a community will           Morale check. if there was no previous Morale check,  In order for a community to funcon, a certain
+as part of game progression, the player may choose to      have degraded to the point of immediately and            0 CMod is applied.                                    number of members must be dedicated to specific
+spend them on their A. See C                               irreconcilably falling apart and dissolving. Fast acng                                                         tasks.
+E on page xx.                                              leaders may retain remnants of the group or specific     M  H I (6+6): +2 CMod on the next
+                                                           members.                                                 M C.                                                  G
+A player character can only have one A at
+any me.                                                                                                             W S (14+): +1 CMod on the next M                      33% of any group (rounded down) must be
+                                                                                                                    C.                                                    G. They are responsible for hunng, foraging,
+                                                                                                                                                                          farming, fishing, scavenging, or any other acvity that
+                                                                                                                                                                          brings in food and water for members of the
+                                                                                                                                                                          community in the form of R.
+
+                                                           22                                                                                                             23
+This group is responsible for the F C. The           M  H I (6+6): Buildings and                              T 1: O           T 2: A M (AM)
+possible results of a F C are:                       equipment are in perfect working order. A project or
+                                                     improvement goes well. There is +2 CMod to the next      0-3     D F      2       D
+S (9-13): Baseline Raon needs are met. No            M C.
+CMod to the F C.                                                                                              4-8     F        1       W
+                                                     F (4-8): Minor breakdowns occur, or there is a
+W S (14+): There are enough R to                     deficit in required S. A -1 CMod is applied to           9-13    S        0       A
+create a surplus. There is a -1 CMod on the next     the next M C.
+M C.                                                                                                          14+     W S      +1      G
+                                                     D F (0-3): Connued breakdowns of buildings,
+M  H I (6+6): Enough luxury items                    systems or equipment that impact the community.          1+1   M  L I     +2      S
+are found to provide a boot to the mood of the       There is a -2 CMod on the next M C.
+community. There is +2 CMod on the next M                                                                     6+6   M  H I     +3      E
+C.                                                   M  L I (1+1): There is damage or
+                                                     breakdown of crical infrastructure, buildings,                            +4      H P
+F (4-8): There is a shorall in R leading to          systems, or equipment that directly impact the
+only 1 meal a day. There is a -1 CMod on the next    community. There is a 3 CMod on the next M                                +5      S
+M C.                                                 C.
+                                                                                                              T 3: S M (SM)    T 4: C M (CM)
+D F (0-3): Community members are                     S
+connuously hungry, somemes going days between                                                                 3             I  5   D T F
+R. There is a -2 CMod on the next M                  5-10% of any community is required for policing,
+C.                                                   patrol, firefighng, and other emergency services that    0       U        4       I
+                                                     keep the members safe. This group is also made up of
+M  L I (1+1): There is an addional                   Community leadership.                                    +1      B        3       H
+complicaon, such as food contaminaon or famine
+onset giving a -3 CMod on the next M C.              There is no weekly S check, but not having               +2      J        2       D
+                                                     enough members providing security and safety incurs
+M                                                    a -1 S  W O M CMod on the                                +3      P        1       C
+                                                     Morale check.
+20% of any group (rounded down) are required to be                                                            +4      L' W     0       A
+M.                                                   If there are enough people in each category, there is a
+                                                     +1 E H CMod on the M C.                                                   +1      S
+Not only do they collect the requisite S needed
+such as clothing, tools, or baeries, but they also   If there are not enough people in each category, there                    +2      S F
+repair and maintain buildings, equipment, and        is -1 E H CMod on the M C.
+vehicles to ensure everything remains in a funconal                                                                            +3      E
+condion.                                             P L A
+                                                                                                                               +4      T
+This group is responsible for the C C. The           Unless explicitly stated, it is assumed that the F and
+possible results of a C C are:                       C checks are being performed by NPCs who are                              +5  D I
+                                                     somewhat proficient.
+S (9-13): All systems, buildings, and equipment                                                               T 5: S S                        10 WP + P + D AM      APPENDIX A: TABLES
+are adequately maintained. 0 CMod on the next        Players may choose to spend their me contribung to                                                6 RP + P AM
+M C.                                                 these tasks and can use appropriate AMods or SMods              W P
+                                                     if they can F I T G as to how they contributed                 R P      A ' D AM   R D M
+W S (14+): Buildings and equipment are                                                                          R D M.       A ' P AM   M D M
+adequately repaired, maintained, and even improved.                                                              M D M.
+This gives a +1 CMod on the next M C.                                                                              I M                               A + D AM
+                                                                                                                                                6 E + P AM
+                                                                                                                      E
+                                                                                                                        P                             R + A AM
+                                                                                                                         M                    C    M  3
+
+                                                                                                                     S M                              R + A AM
+
+                                                                                                              T 6: C           T 7: M
+
+                                                                                                              2       A        2       A
+
+                                                                                                              3       B        3       B
+
+                                                                                                              4       C  H     4       F S
+
+                                                                                                              5       C P      5       H
+
+                                                                                                              6       D        6       M A
+
+                                                                                                              7       D S      7       P
+
+                                                                                                              8       F O      8       P
+
+                                                                                                              9       F        9       R
+
+                                                                                                              10            L  10      R
+
+                                                                                                              11      O D      11      S A
+
+                                                     24                                                       12      P E      12      T A
+

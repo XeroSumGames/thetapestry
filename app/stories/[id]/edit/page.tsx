@@ -19,7 +19,7 @@ const MAP_STYLES = [
 ]
 
 const lbl: React.CSSProperties = { display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif' }
-const inp: React.CSSProperties = { width: '100%', padding: '10px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box' }
+const inp: React.CSSProperties = { width: '100%', padding: '10px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '15px', fontFamily: 'Carlito, sans-serif', outline: 'none', boxSizing: 'border-box' }
 
 export default function EditCampaignPage() {
   const supabase = createClient()
@@ -82,11 +82,11 @@ export default function EditCampaignPage() {
   }
 
   if (loading) return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '2rem 1rem', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif' }}>Loading...</div>
+    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '2rem 1rem', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>Loading...</div>
   )
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
       <StoryActionBar campaignId={id} />
       {/* Sub-page label — small, below the canonical campaign name. */}
       <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '1.25rem' }}>

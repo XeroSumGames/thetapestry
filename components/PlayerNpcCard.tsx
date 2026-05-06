@@ -446,7 +446,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
           campaign_npcs.public_description. Renders when the GM has
           written one; absent until then so unset NPCs stay clean. */}
       {(npc as any).public_description && (
-        <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #2e2e2e', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+        <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #2e2e2e', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
           {(npc as any).public_description}
         </div>
       )}
@@ -475,7 +475,7 @@ export default function PlayerNpcCard({ npc, onClose, viewingCharacterId, onRecr
             style={{
               width: '100%', resize: 'vertical', boxSizing: 'border-box',
               padding: '6px 8px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px',
-              color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5,
+              color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5,
             }}
           />
         </div>

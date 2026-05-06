@@ -3260,7 +3260,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
               <div style={{ marginBottom: '1rem' }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Name</div>
                 <input value={setupName} onChange={e => setSetupName(e.target.value)}
-                  style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                  style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button onClick={() => setShowSetup(false)}
@@ -3803,7 +3803,7 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Name</div>
               <input value={setupName} onChange={e => setSetupName(e.target.value)}
-                style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setShowSetup(false)}

@@ -168,7 +168,7 @@ export default function ModuleMarketplacePage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search modules…"
-          style={{ flex: '1 1 240px', padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }}
+          style={{ flex: '1 1 240px', padding: '8px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }}
         />
         <select
           value={sortBy}
@@ -200,7 +200,7 @@ export default function ModuleMarketplacePage() {
           <div style={{ fontSize: '14px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
             {search ? 'No modules match that search' : 'No modules yet'}
           </div>
-          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
             {search
               ? 'Clear the search to see all available modules.'
               : <>Be the first to publish — open any campaign&apos;s edit page and click <strong>Publish as Module</strong>, or upload an exported snapshot at <Link href="/rumors/import" style={{ color: '#c4a7f0' }}>/rumors/import</Link>.</>}
@@ -323,7 +323,7 @@ function ModuleCard({ module: m, canDelete, canEdit, deleting, onDelete }: { mod
           </div>
 
           {m.tagline && (
-            <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
               {m.tagline}
             </div>
           )}

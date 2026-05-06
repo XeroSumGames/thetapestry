@@ -1,0 +1,178 @@
+{
+  "meta": {
+    "dumped_at": "2026-05-04T21:35:39.834Z",
+    "started_at": "2026-05-04T21:31:58.787Z",
+    "duration_ms": 221047,
+    "session_id": "496812f8-df49-48f6-9a6d-8eee89731be0",
+    "user_id": null,
+    "user_email": null,
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+    "viewport": {
+      "w": 1920,
+      "h": 945
+    },
+    "pathname": "/dashboard",
+    "event_count": 10,
+    "app_version": "playtest-2026-05-04"
+  },
+  "events": [
+    {
+      "t": "2026-05-04T21:31:58.787Z",
+      "ms": 0,
+      "kind": "route",
+      "data": {
+        "from": "/login",
+        "to": "/login"
+      }
+    },
+    {
+      "t": "2026-05-04T21:31:59.078Z",
+      "ms": 291,
+      "kind": "console-error",
+      "data": {
+        "args": [
+          {
+            "message": "Invalid Refresh Token: Refresh Token Not Found",
+            "stack": "AuthApiError: Invalid Refresh Token: Refresh Token Not Found\n    at handleError (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:909:11)\n    at async _handleRequest (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:959:9)\n    at async _request (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:939:18)\n    at async http://localhost:3000/_next/sta…(+196 chars)"
+          }
+        ],
+        "path": "/login"
+      }
+    },
+    {
+      "t": "2026-05-04T21:32:00.761Z",
+      "ms": 1974,
+      "kind": "click",
+      "data": {
+        "tag": "input",
+        "id": null,
+        "cls": null,
+        "aria": null,
+        "role": null,
+        "text": null,
+        "button_text": null,
+        "link_href": null,
+        "x": 992,
+        "y": 516,
+        "button": 0,
+        "path": "/login"
+      }
+    },
+    {
+      "t": "2026-05-04T21:32:08.777Z",
+      "ms": 9990,
+      "kind": "click",
+      "data": {
+        "tag": "button",
+        "id": null,
+        "cls": null,
+        "aria": null,
+        "role": null,
+        "text": "Log In",
+        "button_text": "Log In",
+        "link_href": null,
+        "x": 0,
+        "y": 0,
+        "button": 0,
+        "path": "/login"
+      }
+    },
+    {
+      "t": "2026-05-04T21:32:08.977Z",
+      "ms": 10190,
+      "kind": "console-error",
+      "data": {
+        "args": [
+          "[Login] auth error:",
+          "Invalid login credentials"
+        ],
+        "path": "/login"
+      }
+    },
+    {
+      "t": "2026-05-04T21:32:10.171Z",
+      "ms": 11384,
+      "kind": "click",
+      "data": {
+        "tag": "input",
+        "id": null,
+        "cls": null,
+        "aria": null,
+        "role": null,
+        "text": null,
+        "button_text": null,
+        "link_href": null,
+        "x": 995,
+        "y": 511,
+        "button": 0,
+        "path": "/login"
+      }
+    },
+    {
+      "t": "2026-05-04T21:32:10.319Z",
+      "ms": 11532,
+      "kind": "click",
+      "data": {
+        "tag": "input",
+        "id": null,
+        "cls": null,
+        "aria": null,
+        "role": null,
+        "text": null,
+        "button_text": null,
+        "link_href": null,
+        "x": 995,
+        "y": 511,
+        "button": 0,
+        "path": "/login"
+      }
+    },
+    {
+      "t": "2026-05-04T21:32:12.644Z",
+      "ms": 13857,
+      "kind": "click",
+      "data": {
+        "tag": "button",
+        "id": null,
+        "cls": null,
+        "aria": null,
+        "role": null,
+        "text": "Log In",
+        "button_text": "Log In",
+        "link_href": null,
+        "x": 0,
+        "y": 0,
+        "button": 0,
+        "path": "/login"
+      }
+    },
+    {
+      "t": "2026-05-04T21:32:13.089Z",
+      "ms": 14302,
+      "kind": "route",
+      "data": {
+        "from": "/login",
+        "to": "/dashboard"
+      }
+    },
+    {
+      "t": "2026-05-04T21:32:57.348Z",
+      "ms": 58561,
+      "kind": "click",
+      "data": {
+        "tag": "div",
+        "id": null,
+        "cls": null,
+        "aria": null,
+        "role": null,
+        "text": "▼🌍Distemper Timeline16👁First Reports — Eastern EuropeChechnya — First State of",
+        "button_text": null,
+        "link_href": null,
+        "x": 1911,
+        "y": 934,
+        "button": 0,
+        "path": "/dashboard"
+      }
+    }
+  ]
+}

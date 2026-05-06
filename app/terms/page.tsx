@@ -29,7 +29,7 @@ export default function TermsPage() {
           <div style={{ fontFamily: 'Distemper, Carlito, sans-serif', fontSize: '32px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1, marginBottom: '6px' }}>
             The deal we&apos;re asking you to agree to
           </div>
-          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+          <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
             Beta-period plain-language version. Last updated 2026-05-04.
           </div>
         </div>

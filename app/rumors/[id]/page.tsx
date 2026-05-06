@@ -314,7 +314,7 @@ export default function ModuleDetailPage() {
       </div>
 
       {mod.tagline && (
-        <p style={{ margin: '0 0 14px', fontSize: '17px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', fontStyle: 'italic', lineHeight: 1.5 }}>
+        <p style={{ margin: '0 0 14px', fontSize: '17px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic', lineHeight: 1.5 }}>
           {mod.tagline}
         </p>
       )}
@@ -330,7 +330,7 @@ export default function ModuleDetailPage() {
           <div style={{ fontSize: '13px', color: '#c4a7f0', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '8px' }}>
             About this module
           </div>
-          <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap', fontFamily: 'Barlow, sans-serif' }}>
+          <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, whiteSpace: 'pre-wrap', fontFamily: 'Carlito, sans-serif' }}>
             {mod.description}
           </div>
         </div>
@@ -376,7 +376,7 @@ export default function ModuleDetailPage() {
                   onChange={e => setDraftBody(e.target.value)}
                   placeholder="What worked, what didn't, who's it for? (optional)"
                   rows={3}
-                  style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical', marginBottom: '8px' }} />
+                  style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical', marginBottom: '8px' }} />
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <button type="button" onClick={handleSubmitReview} disabled={savingReview || draftRating < 1}
                     style={{ padding: '7px 14px', background: draftRating > 0 ? '#1a1a2e' : '#111', border: `1px solid ${draftRating > 0 ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: draftRating > 0 ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: draftRating > 0 && !savingReview ? 'pointer' : 'not-allowed', fontWeight: 600 }}>
@@ -399,7 +399,7 @@ export default function ModuleDetailPage() {
             {reviews === null ? (
               <div style={{ fontSize: '13px', color: '#5a5550' }}>Loading…</div>
             ) : reviews.length === 0 ? (
-              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
+              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
                 No reviews yet. {canReview ? 'Be the first.' : 'Subscribers can leave reviews — pick a campaign with this module to write one.'}
               </div>
             ) : (
@@ -416,7 +416,7 @@ export default function ModuleDetailPage() {
                       </span>
                     </div>
                     {r.body && (
-                      <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, fontFamily: 'Barlow, sans-serif', whiteSpace: 'pre-wrap' }}>
+                      <div style={{ fontSize: '13px', color: '#d4cfc9', lineHeight: 1.5, fontFamily: 'Carlito, sans-serif', whiteSpace: 'pre-wrap' }}>
                         {r.body}
                       </div>
                     )}
@@ -455,7 +455,7 @@ export default function ModuleDetailPage() {
                   </span>
                 </div>
                 {v.changelog && (
-                  <div style={{ marginTop: '6px', fontSize: '13px', color: '#d4cfc9', whiteSpace: 'pre-wrap', fontFamily: 'Barlow, sans-serif' }}>
+                  <div style={{ marginTop: '6px', fontSize: '13px', color: '#d4cfc9', whiteSpace: 'pre-wrap', fontFamily: 'Carlito, sans-serif' }}>
                     {v.changelog}
                   </div>
                 )}

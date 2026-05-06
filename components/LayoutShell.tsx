@@ -34,7 +34,7 @@ function MobileBanner() {
   return (
     <div style={{
       padding: '16px 20px', background: '#2a1210', borderBottom: '1px solid #c0392b',
-      fontSize: '16px', color: '#f5a89a', fontFamily: 'Barlow, sans-serif', textAlign: 'center',
+      fontSize: '16px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', textAlign: 'center',
       position: 'relative',
     }}>
       The Tapestry is best experienced on a desktop or tablet.
@@ -174,7 +174,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
   if (suspended) {
     return (
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f0f', fontFamily: 'Barlow, sans-serif' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f0f', fontFamily: 'Carlito, sans-serif' }}>
         <div style={{ maxWidth: '480px', textAlign: 'center', padding: '2rem' }}>
           <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '48px', fontWeight: 700, color: '#c0392b', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '1rem' }}>
             Suspended

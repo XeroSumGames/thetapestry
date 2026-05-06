@@ -107,7 +107,7 @@ export default function RootLayout({
         ` }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400;1,700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
         {/* Distemper.ttf preload removed 2026-04-28 — the font is only
             used in the sidebar's "The Tapestry v0.5" branding, which
             renders AFTER LayoutShell's auth check resolves. On cold
@@ -119,7 +119,7 @@ export default function RootLayout({
             tradeoff is a brief FOUT on the branding text only on the
             very first cold load. */}
       </head>
-      <body style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0f0f0f', margin: 0, padding: 0, fontFamily: 'Barlow, sans-serif', fontSize: '15px' }}>
+      <body style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0f0f0f', margin: 0, padding: 0, fontFamily: 'Carlito, sans-serif', fontSize: '15px' }}>
         <VisitLogger />
         <PlaytestRecorder />
         <LayoutShell>{children}</LayoutShell>

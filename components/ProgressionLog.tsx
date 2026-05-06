@@ -92,7 +92,7 @@ export default function ProgressionLog({ characterId, log, canEdit, onUpdate, co
           <input value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="What happened..."
             autoFocus
             onKeyDown={e => { if (e.key === 'Enter') addNote() }}
-            style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+            style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} />
           <button onClick={addNote} disabled={!noteText.trim()}
             style={{ padding: '4px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: noteText.trim() ? 'pointer' : 'not-allowed' }}>Add</button>
         </div>

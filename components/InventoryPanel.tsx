@@ -213,7 +213,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
         {inventory.length >= 6 && (
           <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
             <input value={ownSearch} onChange={e => setOwnSearch(e.target.value)} placeholder="Filter your items…"
-              style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
+              style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
             <select value={ownSort} onChange={e => setOwnSort(e.target.value as InventorySortKey)}
               title="Sort displayed items"
               style={{ width: '120px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none', cursor: 'pointer' }}>
@@ -365,7 +365,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
           <div style={{ marginBottom: '8px', maxHeight: '200px', display: 'flex', flexDirection: 'column' }}>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search equipment..."
               autoFocus
-              style={{ width: '100%', padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box', marginBottom: '4px' }} />
+              style={{ width: '100%', padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', boxSizing: 'border-box', marginBottom: '4px' }} />
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {filteredCatalog.map(item => {
                 const rc = RARITY_COLORS[item.rarity] ?? RARITY_COLORS.Common
@@ -394,7 +394,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
           <div style={{ marginBottom: '8px', padding: '8px', background: '#111', border: '1px solid #5a4a1b', borderRadius: '3px' }}>
             <input value={customName} onChange={e => setCustomName(e.target.value)} placeholder="Item name"
               autoFocus
-              style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box', marginBottom: '4px' }} />
+              style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', boxSizing: 'border-box', marginBottom: '4px' }} />
             <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
               <div style={{ width: '60px' }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>ENC</div>
@@ -404,7 +404,7 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase' }}>Notes</div>
                 <input value={customNotes} onChange={e => setCustomNotes(e.target.value)} placeholder="Effect or description"
-                  style={{ width: '100%', padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                  style={{ width: '100%', padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
               </div>
             </div>
             <button onClick={addCustomItem} disabled={!customName.trim()}

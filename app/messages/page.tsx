@@ -320,7 +320,7 @@ export default function MessagesPage() {
   const activeOther = activeConv ? otherParticipants(activeConv) : []
 
   return (
-    <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden', fontFamily: 'Barlow, sans-serif', background: '#0f0f0f' }}>
+    <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden', fontFamily: 'Carlito, sans-serif', background: '#0f0f0f' }}>
 
       {/* ── Left: conversation list ─────────────────────────── */}
       <div style={{ ...panelBase, width: '280px', flexShrink: 0 }}>
@@ -345,7 +345,7 @@ export default function MessagesPage() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search by username…"
-              style={{ width: '100%', padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '6px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }}
             />
             {searchResults.length > 0 && (
               <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -476,7 +476,7 @@ export default function MessagesPage() {
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
                 placeholder="Send a message… (Enter to send)"
                 maxLength={2000}
-                style={{ flex: 1, padding: '9px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '20px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', outline: 'none' }}
+                style={{ flex: 1, padding: '9px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '20px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', outline: 'none' }}
               />
               <button onClick={handleSend} disabled={!body.trim() || sending}
                 style={{ padding: '9px 18px', background: body.trim() ? '#8b5cf6' : '#242424', border: `1px solid ${body.trim() ? '#8b5cf6' : '#3a3a3a'}`, borderRadius: '20px', color: body.trim() ? '#fff' : '#4d7a35', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: body.trim() ? 'pointer' : 'default', transition: 'all .15s', flexShrink: 0 }}>

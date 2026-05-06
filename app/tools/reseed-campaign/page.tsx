@@ -99,7 +99,7 @@ export default function ReseedCampaignPage() {
 
   if (!authChecked) return null
   if (!isThriver) return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Barlow, sans-serif', color: '#cce0f5', textAlign: 'center' }}>
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#cce0f5', textAlign: 'center' }}>
       Thriver access only.
     </div>
   )
@@ -109,7 +109,7 @@ export default function ReseedCampaignPage() {
     : 0
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>
       <div style={h1Style}>Reseed Campaign</div>
       <div style={panel}>
         <div style={{ ...subLabel, marginBottom: '8px' }}>Campaign</div>
@@ -194,7 +194,7 @@ function ItemList({ title, items }: { title: string; items: string[] }) {
       </div>
       <div style={{ background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px 10px', maxHeight: '160px', overflowY: 'auto' }}>
         {items.map((name, i) => (
-          <div key={i} style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', padding: '2px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div key={i} style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', padding: '2px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             · {name}
           </div>
         ))}

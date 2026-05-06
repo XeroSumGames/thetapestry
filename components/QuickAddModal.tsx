@@ -403,7 +403,7 @@ export default function QuickAddModal({
       <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: hideCommunity ? '440px' : '760px', maxHeight: '88vh', overflowY: 'auto' }}>
         <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Quick Add</div>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>{title}</div>
-        <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1.25rem', fontFamily: 'Barlow, sans-serif' }}>{subtitle}</div>
+        <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1.25rem', fontFamily: 'Carlito, sans-serif' }}>{subtitle}</div>
 
         <div style={{ display: 'grid', gridTemplateColumns: hideCommunity ? '1fr' : '1fr 1fr', gap: '16px' }}>
           {/* ── Drop a Pin ───────────────────────────────────── */}
@@ -413,19 +413,19 @@ export default function QuickAddModal({
             <div style={{ marginBottom: '8px' }}>
               <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Title</div>
               <input value={pinName} onChange={e => setPinName(e.target.value)} placeholder="e.g. Abandoned hospital"
-                style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
             </div>
 
             <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
               <div style={{ flex: 1 }}>
                 <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Lat</div>
                 <input value={pinLat} onChange={e => setPinLat(e.target.value)} placeholder="40.4406"
-                  style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                  style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Lng</div>
                 <input value={pinLng} onChange={e => setPinLng(e.target.value)} placeholder="-79.9959"
-                  style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                  style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
               </div>
             </div>
 
@@ -438,7 +438,7 @@ export default function QuickAddModal({
                 style={{ display: 'flex', gap: '6px' }}>
                 <input value={addrQuery} onChange={e => setAddrQuery(e.target.value)}
                   placeholder="e.g. Broken Arrow, OK"
-                  style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                  style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
                 <button type="submit" disabled={!addrQuery.trim() || addrSearching}
                   style={{ padding: '7px 14px', background: addrQuery.trim() ? '#1a1a2e' : '#111', border: `1px solid ${addrQuery.trim() ? '#2e2e5a' : '#2e2e2e'}`, borderRadius: '3px', color: addrQuery.trim() ? '#7ab3d4' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: addrQuery.trim() && !addrSearching ? 'pointer' : 'not-allowed' }}>
                   {addrSearching ? '…' : 'Go'}
@@ -448,7 +448,7 @@ export default function QuickAddModal({
                 <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px', maxHeight: '180px', overflowY: 'auto', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                   {addrResults.map((r, i) => (
                     <button key={i} type="button" onClick={() => pickAddressResult(r)}
-                      style={{ textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: '#cce0f5', fontSize: '13px', fontFamily: 'Barlow, sans-serif', cursor: 'pointer', lineHeight: 1.3 }}
+                      style={{ textAlign: 'left', padding: '6px 8px', background: 'transparent', border: 'none', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', lineHeight: 1.3 }}
                       onMouseEnter={e => (e.currentTarget.style.background = '#1a1a2e')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       {r.display_name}
@@ -484,17 +484,17 @@ export default function QuickAddModal({
             <div style={{ marginBottom: '12px' }}>
               <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Notes (optional)</div>
               <textarea value={pinNotes} onChange={e => setPinNotes(e.target.value)} rows={2}
-                style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
+                style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
             </div>
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Attachments (optional)</div>
-              <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: pinAttachments.length > 0 ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
+              <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: pinAttachments.length > 0 ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
                 {pinAttachments.length > 0 ? `${pinAttachments.length} file${pinAttachments.length > 1 ? 's' : ''} selected` : 'Click to attach files'}
                 <input type="file" multiple onChange={e => { if (e.target.files) setPinAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />
               </label>
               {pinAttachments.length > 0 && (
-                <div style={{ marginTop: '4px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
+                <div style={{ marginTop: '4px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
                   {pinAttachments.map((f, i) => <div key={i}>{f.name}</div>)}
                 </div>
               )}
@@ -510,7 +510,7 @@ export default function QuickAddModal({
                   <span style={{ display: 'block', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>
                     Make this pin public
                   </span>
-                  <span style={{ display: 'block', marginTop: '2px', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', lineHeight: 1.3 }}>
+                  <span style={{ display: 'block', marginTop: '2px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', lineHeight: 1.3 }}>
                     {userRole === 'thriver'
                       ? 'Auto-approved for Thrivers. Visible to all players as a Rumor.'
                       : 'Goes to the Thriver queue. If approved, becomes a Rumor visible to all players.'}
@@ -598,13 +598,13 @@ export default function QuickAddModal({
               <div style={{ marginBottom: '8px' }}>
                 <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Name</div>
                 <input value={commName} onChange={e => setCommName(e.target.value)} placeholder="e.g. The Greenhouse"
-                  style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                  style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
               </div>
 
               <div style={{ marginBottom: '8px' }}>
                 <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Description (optional)</div>
                 <textarea value={commDesc} onChange={e => setCommDesc(e.target.value)} rows={2}
-                  style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
+                  style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
               </div>
 
               <div style={{ marginBottom: '8px' }}>
@@ -636,7 +636,7 @@ export default function QuickAddModal({
                   })()}
                 </select>
                 {pinList.length === 0 && (
-                  <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>Drop a pin on the left first to tie a homestead to it. Tag it as <strong style={{ color: '#7ab3d4' }}>🏡 Homestead</strong> for easy selection.</div>
+                  <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>Drop a pin on the left first to tie a homestead to it. Tag it as <strong style={{ color: '#7ab3d4' }}>🏡 Homestead</strong> for easy selection.</div>
                 )}
               </div>
 
@@ -647,12 +647,12 @@ export default function QuickAddModal({
 
               <div style={{ marginBottom: '12px' }}>
                 <div style={{ ...LABEL_STYLE, marginBottom: '3px' }}>Attachments (optional)</div>
-                <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: commAttachments.length > 0 ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
+                <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: commAttachments.length > 0 ? '#7fc458' : '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
                   {commAttachments.length > 0 ? `${commAttachments.length} file${commAttachments.length > 1 ? 's' : ''} selected` : 'Click to attach files'}
                   <input type="file" multiple onChange={e => { if (e.target.files) setCommAttachments(Array.from(e.target.files)) }} style={{ display: 'none' }} />
                 </label>
                 {commAttachments.length > 0 && (
-                  <div style={{ marginTop: '4px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
+                  <div style={{ marginTop: '4px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
                     {commAttachments.map((f, i) => <div key={i}>{f.name}</div>)}
                   </div>
                 )}

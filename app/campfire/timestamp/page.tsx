@@ -135,7 +135,7 @@ export default function TimestampPage() {
   const inp: React.CSSProperties = {
     width: '100%', padding: '8px 10px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee',
-    fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box',
+    fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box',
   }
   const lbl: React.CSSProperties = {
     display: 'block', fontSize: '13px', color: '#cce0f5',
@@ -148,7 +148,7 @@ export default function TimestampPage() {
   }
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Carlito, sans-serif' }}>
 
       {/* Header */}
       <div style={{ marginBottom: '1.5rem' }}>

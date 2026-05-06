@@ -124,7 +124,7 @@ export default function StepFour({ state, onChange }: Props) {
       <div style={{ marginBottom: '10px' }}>
         <label style={lbl}>Choose a profession — vocation skills highlighted (recommendation only)</label>
         <select
-          style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }}
+          style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }}
           value={stepData.profession ?? ''}
           onChange={e => updateStep({ profession: e.target.value })}>
           <option value="">— select —</option>
@@ -159,7 +159,7 @@ export default function StepFour({ state, onChange }: Props) {
       </div>
 
       <input
-        style={{ width: '100%', marginBottom: '7px', fontSize: '13px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 10px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }}
+        style={{ width: '100%', marginBottom: '7px', fontSize: '13px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 10px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }}
         placeholder="Filter skills..."
         value={skillFilter}
         onChange={e => setSkillFilter(e.target.value)} />
@@ -206,7 +206,7 @@ export default function StepFour({ state, onChange }: Props) {
       {/* Backstory note */}
       <div style={sh}>Backstory note</div>
       <textarea
-        style={{ width: '100%', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 10px', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', minHeight: '60px', resize: 'vertical', lineHeight: 1.5, boxSizing: 'border-box' }}
+        style={{ width: '100%', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 10px', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', minHeight: '60px', resize: 'vertical', lineHeight: 1.5, boxSizing: 'border-box' }}
         value={stepData.note ?? ''}
         onChange={e => updateStep({ note: e.target.value })}
         placeholder="1–2 sentences: what did they do for work before the Dog Flu?" />

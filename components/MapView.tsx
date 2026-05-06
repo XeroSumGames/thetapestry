@@ -701,7 +701,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
       // marker.
       const marker = leaflet.marker([pin.lat, pin.lng], { icon })
         .bindPopup(`
-          <div style="font-family:Barlow,sans-serif;min-width:220px;max-width:300px">
+          <div style="font-family:Carlito,sans-serif;min-width:220px;max-width:300px">
             <div style="font-weight:700;font-size:15px;margin-bottom:4px">${emoji} ${pin.title}</div>
             ${pin.notes ? `<div style="font-size:13px;color:#555;margin-bottom:6px;line-height:1.4">${pin.notes}</div>` : ''}
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
@@ -818,7 +818,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         // the membership check before opening the modal. Cleaner than
         // try-to-be-clever-here.
         const popupHtml = `
-          <div style="font-family:Barlow,sans-serif;min-width:240px;max-width:320px">
+          <div style="font-family:Carlito,sans-serif;min-width:240px;max-width:320px">
             <div style="font-weight:700;font-size:15px;margin-bottom:4px;color:#1a1a1a">🌐 ${escapedName}</div>
             ${row.description ? `<div style="font-size:13px;color:#555;margin-bottom:6px;line-height:1.4">${escapedDesc}</div>` : ''}
             <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">
@@ -885,7 +885,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
         })
         const escapedNarr = (link.narrative || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         polyline.bindTooltip(
-          `<div style="font-family:Barlow,sans-serif"><strong style="text-transform:uppercase;color:${color}">${link.link_type}</strong>${link.narrative ? `<br/><span style="font-size:13px">${escapedNarr}</span>` : ''}</div>`,
+          `<div style="font-family:Carlito,sans-serif"><strong style="text-transform:uppercase;color:${color}">${link.link_type}</strong>${link.narrative ? `<br/><span style="font-size:13px">${escapedNarr}</span>` : ''}</div>`,
           { sticky: true }
         )
         polyline.addTo(mapInst)
@@ -1163,7 +1163,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
   }, [userId])
 
   const lbl: React.CSSProperties = { display: 'block', fontSize: '13px', color: '#f5f2ee', letterSpacing: '.05em', textTransform: 'uppercase', marginBottom: '4px' }
-  const inp: React.CSSProperties = { width: '100%', padding: '7px 9px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }
+  const inp: React.CSSProperties = { width: '100%', padding: '7px 9px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
@@ -1188,13 +1188,13 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
               </div>
               <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
                   Both GMs must agree before this link goes live on the world map. The other community's GM will get a notification with your one-line context — they accept or decline.
                 </div>
                 <div>
                   <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>From your community</div>
                   <select value={linkFromId} onChange={e => setLinkFromId(e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                     {eligible.map(wc => <option key={wc.id} value={wc.id}>{wc.name}</option>)}
                   </select>
                 </div>
@@ -1209,7 +1209,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                       <button key={opt.v} onClick={() => setLinkType(opt.v)}
                         style={{ flex: 1, padding: '10px 8px', background: linkType === opt.v ? `${opt.color}22` : '#242424', border: `1px solid ${linkType === opt.v ? opt.color : '#3a3a3a'}`, borderRadius: '3px', color: linkType === opt.v ? opt.color : '#cce0f5', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: linkType === opt.v ? 700 : 400, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                         <span>{opt.label}</span>
-                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', textTransform: 'none', letterSpacing: 0 }}>{opt.desc}</span>
+                        <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', textTransform: 'none', letterSpacing: 0 }}>{opt.desc}</span>
                       </button>
                     ))}
                   </div>
@@ -1220,7 +1220,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                     placeholder="e.g. Weekly trade caravans run between us — clean water for medicine."
                     onChange={e => setLinkNarrative(e.target.value)}
                     rows={3}
-                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
                 </div>
               </div>
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1257,13 +1257,13 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                   style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
               </div>
               <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
                   Flag that your PCs ran into <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{encounterTarget.name}</span> in your campaign. The source GM gets a notification with your one-line narrative; they can accept (canon on both tables) or decline (didn't fit theirs).
                 </div>
                 <div>
                   <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Encountering campaign</div>
                   <select value={encounterCampaignId} onChange={e => setEncounterCampaignId(e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                     {eligible.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
@@ -1273,7 +1273,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                     placeholder="e.g. We traded medical supplies for ammunition while sheltering from a Distemper surge."
                     onChange={e => setEncounterNarrative(e.target.value)}
                     rows={3}
-                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
                 </div>
               </div>
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1331,10 +1331,10 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                 <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{displayedPins.length} total</span>
               </div>
               <input value={pinSearch} onChange={e => setPinSearch(e.target.value)} placeholder="Search pins..."
-                style={{ width: '100%', padding: '5px 8px', marginBottom: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
+                style={{ width: '100%', padding: '5px 8px', marginBottom: '6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
               {!userId && (
                 <div onClick={() => { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('tapestry-ghost-wall')) }}
-                  style={{ marginBottom: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', cursor: 'pointer', fontStyle: 'italic' }}>
+                  style={{ marginBottom: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', fontStyle: 'italic' }}>
                   Sign up to add your own story to this world.
                 </div>
               )}
@@ -1363,7 +1363,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                       onChange={e => setWhisperDraft(e.target.value.slice(0, 500))}
                       placeholder="Whisper into the dark... (max 500 chars)"
                       rows={3}
-                      style={{ width: '100%', padding: '6px 8px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5, resize: 'vertical', boxSizing: 'border-box' }} />
+                      style={{ width: '100%', padding: '6px 8px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5, resize: 'vertical', boxSizing: 'border-box' }} />
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
                       <span style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>{whisperDraft.length}/500</span>
                       <button onClick={postWhisper} disabled={postingWhisper || !whisperDraft.trim()}
@@ -1388,7 +1388,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                               {(() => { const ms = Date.now() - new Date(w.created_at).getTime(); const m = Math.floor(ms / 60000); if (m < 1) return 'just now'; if (m < 60) return `${m}m`; const h = Math.floor(m / 60); if (h < 24) return `${h}h`; const d = Math.floor(h / 24); return `${d}d` })()}
                             </span>
                           </div>
-                          <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                          <div style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                             {w.content}
                           </div>
                         </div>
@@ -1737,7 +1737,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
         {/* Pins toggle button is rendered inside the search bar row below */}
         {!embedded && showHeader && (
-          <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'rgba(15,15,15,.85)', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px 14px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'rgba(15,15,15,.85)', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '6px 14px', fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', pointerEvents: 'none' }}>
             Click anywhere on the map to place a pin
           </div>
         )}
@@ -1762,7 +1762,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
                       } catch { setSuggestions([]) }
                     }, 300)
                   } else { setSuggestions([]) }
-                }} placeholder="Search address..." style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', width: '175px', outline: 'none' }} />
+                }} placeholder="Search address..." style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', width: '175px', outline: 'none' }} />
                 {suggestions.length > 0 && (
                   <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '0 0 3px 3px', maxHeight: '200px', overflowY: 'auto', zIndex: 1001 }}>
                     {suggestions.map((s, i) => (
@@ -1983,7 +1983,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     )}
     {/* New file upload */}
     <div style={{ marginBottom: '12px' }}>
-      <label style={{ display: 'block', padding: '8px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
+      <label style={{ display: 'block', padding: '8px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', cursor: 'pointer' }}>
         {editAttachments.length > 0 ? <span style={{ color: '#7fc458' }}>{editAttachments.length} file{editAttachments.length > 1 ? 's' : ''} to upload</span> : '+ Add files'}
         <input type="file" multiple hidden onChange={e => { if (e.target.files) setEditAttachments(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = '' }} />
       </label>

@@ -35,7 +35,7 @@ export default function CharacterViewPage() {
   }, [id])
 
   if (loading) return (
-    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f0f', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f0f', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
       Loading...
     </div>
   )
@@ -47,7 +47,7 @@ export default function CharacterViewPage() {
   function sgn(v: number) { return v > 0 ? `+${v}` : String(v) }
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         {d.photoDataUrl && (

@@ -145,7 +145,7 @@ export default function Sidebar() {
               <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '4px', minWidth: '180px', maxWidth: '240px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px 10px', boxShadow: '0 4px 12px rgba(0,0,0,0.6)', zIndex: 1000, textAlign: 'left' }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '4px' }}>Online now</div>
                 {presentUsernames.map(n => (
-                  <div key={n} style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', letterSpacing: 0, textTransform: 'none', padding: '1px 0' }}>
+                  <div key={n} style={{ fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: 0, textTransform: 'none', padding: '1px 0' }}>
                     · {n}
                   </div>
                 ))}

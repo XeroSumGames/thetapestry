@@ -56,7 +56,7 @@ export default function WelcomePage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f0f', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', overflowY: 'auto' }}>
+    <div style={{ minHeight: '100vh', background: '#0f0f0f', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', overflowY: 'auto' }}>
 
       {/* Hero */}
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '3.5rem 1.5rem 2rem', textAlign: 'center' }}>

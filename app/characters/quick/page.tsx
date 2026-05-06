@@ -269,7 +269,7 @@ export default function QuickCharacterPage() {
               <span style={{ fontSize: '13px', fontWeight: 600, color: skillCDPSpent >= SKILL_BUDGET ? '#f5a89a' : '#f5f2ee' }}>{SKILL_BUDGET - skillCDPSpent} left</span>
             </div>
             <input
-              style={{ width: '100%', marginBottom: '7px', fontSize: '13px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 10px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }}
+              style={{ width: '100%', marginBottom: '7px', fontSize: '13px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 10px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }}
               placeholder="Filter skills..."
               value={skillFilter}
               onChange={e => setSkillFilter(e.target.value)} />

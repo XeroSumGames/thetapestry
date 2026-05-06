@@ -256,7 +256,7 @@ const shellStyle: React.CSSProperties = {
   color: '#f5f2ee',
   minHeight: '100vh',
   padding: '20px 24px',
-  fontFamily: 'Barlow, sans-serif',
+  fontFamily: 'Carlito, sans-serif',
 }
 
 const cardTitleStyle: React.CSSProperties = {

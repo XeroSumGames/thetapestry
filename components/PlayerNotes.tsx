@@ -122,7 +122,7 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
   const inp: React.CSSProperties = {
     width: '100%', padding: '8px 10px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px',
-    color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif',
+    color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif',
     boxSizing: 'border-box',
   }
 
@@ -171,7 +171,7 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
                     style={{ marginTop: '10px', padding: '4px 10px', background: '#2a102a', border: '1px solid #8b2e8b', borderRadius: '3px', color: '#d48bd4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
                     Popout
                   </button>
-                  <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: '1.5', margin: '10px 0' }}>
+                  <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: '1.5', margin: '10px 0' }}>
                     {n.content}
                   </pre>
                   {n.attachments.length > 0 && (
@@ -214,7 +214,7 @@ export default function PlayerNotes({ campaignId }: { campaignId: string }) {
                   Delete
                 </button>
               </div>
-              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: '1.5', margin: '0' }}>
+              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: '1.5', margin: '0' }}>
                 {renderRichText(n.content, { linkify: true })}
               </pre>
             </div>

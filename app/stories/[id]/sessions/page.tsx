@@ -125,11 +125,11 @@ export default function SessionHistoryPage() {
   }
 
   if (loading) return (
-    <div style={{ padding: '2rem', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>Loading sessions...</div>
+    <div style={{ padding: '2rem', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>Loading sessions...</div>
   )
 
   return (
-    <div style={{ padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
       <StoryActionBar campaignId={id} />
       {/* Sub-page label — small, below the canonical campaign name. */}
       <div style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>

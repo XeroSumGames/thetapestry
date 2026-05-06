@@ -228,7 +228,7 @@ export default function ModulePublishModal({
   const inp: React.CSSProperties = {
     width: '100%', padding: '9px 12px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px',
-    color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif',
+    color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif',
     boxSizing: 'border-box',
   }
 
@@ -313,7 +313,7 @@ export default function ModulePublishModal({
                 </button>
               ))}
             </div>
-            <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '6px', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+            <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '6px', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
               {visibility === 'private' && 'Only you can pick this module when creating a campaign.'}
               {visibility === 'unlisted' && 'Anyone with the module link can subscribe, but it doesn\'t appear in any marketplace.'}
               {visibility === 'listed' && 'Will appear in the public marketplace after Thriver approval.'}
@@ -328,16 +328,16 @@ export default function ModulePublishModal({
             <div>
               <label style={lbl}>From snapshot file</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px 12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
                   📍 Pins<span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{counts?.pins ?? 0}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
                   🧑 NPCs<span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{counts?.npcs ?? 0}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
                   🗺 Tactical scenes<span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{counts ? `${counts.scenes} / ${counts.tokens} tokens` : '0'}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>
                   📄 Handouts<span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{counts?.handouts ?? 0}</span>
                 </div>
               </div>
@@ -349,19 +349,19 @@ export default function ModulePublishModal({
             <div>
               <label style={lbl}>Include in snapshot</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '10px 12px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Barlow, sans-serif' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
                   <input type="checkbox" checked={includePins} onChange={e => setIncludePins(e.target.checked)} />
                   📍 Pins{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{includePins ? counts.pins : 0}</span>}
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Barlow, sans-serif' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
                   <input type="checkbox" checked={includeNpcs} onChange={e => setIncludeNpcs(e.target.checked)} />
                   🧑 NPCs{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{includeNpcs ? counts.npcs : 0}</span>}
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Barlow, sans-serif' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
                   <input type="checkbox" checked={includeScenes} onChange={e => setIncludeScenes(e.target.checked)} />
                   🗺 Tactical scenes{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{includeScenes ? `${counts.scenes} / ${counts.tokens} tokens` : 0}</span>}
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Barlow, sans-serif' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#d4cfc9', cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
                   <input type="checkbox" checked={includeHandouts} onChange={e => setIncludeHandouts(e.target.checked)} />
                   📄 Handouts{counts !== null && <span style={{ color: '#cce0f5', marginLeft: 'auto', fontFamily: 'Carlito, sans-serif' }}>{includeHandouts ? counts.handouts : 0}</span>}
                 </label>

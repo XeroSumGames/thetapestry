@@ -62,7 +62,7 @@ export default function StorySnapshotsPage() {
   }, [id, router, supabase])
 
   if (loading) {
-    return <div style={{ padding: '24px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>Loading…</div>
+    return <div style={{ padding: '24px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>Loading…</div>
   }
   if (accessDenied || !campaign) {
     return (
@@ -75,7 +75,7 @@ export default function StorySnapshotsPage() {
   }
 
   return (
-    <div style={{ maxWidth: '780px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#d4cfc9' }}>
+    <div style={{ maxWidth: '780px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif', color: '#d4cfc9' }}>
       <StoryActionBar campaignId={id} />
       {/* Sub-page label — small, below the canonical campaign name. */}
       <div style={{ fontSize: '13px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '1.25rem' }}>

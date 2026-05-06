@@ -272,7 +272,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '20px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '4px' }}>
           🤝 Recruit (NPC Proxy)
         </div>
-        <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1.25rem', fontFamily: 'Barlow, sans-serif', lineHeight: 1.4 }}>
+        <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1.25rem', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
           The community&apos;s Leader NPC handles the roll. Use this for off-screen growth between sessions, or when no PC is available to recruit at the table.
         </div>
 
@@ -283,7 +283,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
         )}
 
         {loadError && (
-          <div style={{ padding: '10px 14px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', marginBottom: '12px', fontFamily: 'Barlow, sans-serif' }}>
+          <div style={{ padding: '10px 14px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', marginBottom: '12px', fontFamily: 'Carlito, sans-serif' }}>
             {loadError}
           </div>
         )}
@@ -331,7 +331,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
                   </button>
                 ))}
               </div>
-              <div style={{ marginTop: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.4 }}>
+              <div style={{ marginTop: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
                 {approach === 'cohort' && 'Shared interest or goal — joins until the next Morale Check.'}
                 {approach === 'conscript' && 'Pressgang — coercive recruitment under credible threat. Requires confirmation.'}
                 {approach === 'convert' && 'Lasting buy-in — joins fully and stays through Morale checks.'}
@@ -407,7 +407,7 @@ export default function CommunityProxyRecruitModal({ community, campaignId, user
                 {result.cmod !== 0 && <> + {result.cmod >= 0 ? '+' : ''}{result.cmod} CMod</>}
                 {' '} = <strong>{result.total}</strong>
               </div>
-              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
                 {result.inserted
                   ? `${result.targetName} joins ${community.name} as a ${result.approachLabel}. Logged to the campaign feed.`
                   : `${result.leaderName} couldn't bring ${result.targetName} in. Logged to the campaign feed; try again next week.`}

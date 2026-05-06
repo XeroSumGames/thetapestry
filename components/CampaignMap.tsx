@@ -587,7 +587,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
                 }, 300)
               } else { setSuggestions([]) }
             }} placeholder="Search address..."
-              style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', width: '175px', outline: 'none' }} />
+              style={{ padding: '5px 10px', background: 'rgba(15,15,15,.85)', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', width: '175px', outline: 'none' }} />
             {suggestions.length > 0 && (
               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '0 0 3px 3px', maxHeight: '200px', overflowY: 'auto', zIndex: 1001 }}>
                 {suggestions.map((s, i) => (
@@ -654,17 +654,17 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
             onKeyDown={e => { if (e.key === 'Enter' && pinForm.name.trim()) savePin() }}
             placeholder="Pin name..."
             autoFocus
-            style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', marginBottom: '6px', boxSizing: 'border-box' }} />
+            style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', marginBottom: '6px', boxSizing: 'border-box' }} />
           <input value={pinForm.notes} onChange={e => setPinForm(f => ({ ...f, notes: e.target.value }))}
             placeholder="Notes (optional)..."
-            style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', marginBottom: '6px', boxSizing: 'border-box' }} />
+            style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', marginBottom: '6px', boxSizing: 'border-box' }} />
           <select value={pinForm.category} onChange={e => setPinForm(f => ({ ...f, category: e.target.value }))}
-            style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', marginBottom: '8px', boxSizing: 'border-box' }}>
+            style={{ width: '100%', padding: '6px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', marginBottom: '8px', boxSizing: 'border-box' }}>
             {PIN_CATEGORIES.map(c => (
               <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>
             ))}
           </select>
-          <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#666', fontSize: '13px', fontFamily: 'Barlow, sans-serif', textAlign: 'center', cursor: 'pointer', marginBottom: '8px' }}>
+          <label style={{ display: 'block', padding: '10px', background: '#242424', border: '1px dashed #3a3a3a', borderRadius: '3px', color: '#666', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textAlign: 'center', cursor: 'pointer', marginBottom: '8px' }}>
             {attachments.length > 0 ? (
               <span style={{ color: '#7fc458' }}>{attachments.length} file{attachments.length > 1 ? 's' : ''} selected</span>
             ) : (
@@ -682,7 +682,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               {saving ? '...' : 'Save Pin'}
             </button>
           </div>
-          <div style={{ fontSize: '13px', color: '#666', marginTop: '6px', fontFamily: 'Barlow, sans-serif' }}>
+          <div style={{ fontSize: '13px', color: '#666', marginTop: '6px', fontFamily: 'Carlito, sans-serif' }}>
             Pin will be hidden from players until revealed in Assets.
           </div>
         </div>

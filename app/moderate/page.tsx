@@ -566,7 +566,7 @@ export default function ModerationPage() {
   }
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
 
       {/* Masthead */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
@@ -1227,7 +1227,7 @@ export default function ModerationPage() {
                         {b.page_url}
                       </div>
                     )}
-                    <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.5, fontFamily: 'Barlow, sans-serif', whiteSpace: 'pre-wrap', marginBottom: '8px', padding: '8px 10px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
+                    <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.5, fontFamily: 'Carlito, sans-serif', whiteSpace: 'pre-wrap', marginBottom: '8px', padding: '8px 10px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                       {b.description}
                     </div>
                     {b.user_agent && (

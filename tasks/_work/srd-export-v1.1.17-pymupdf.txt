@@ -1,0 +1,4395 @@
+
+========== SRD PHYSICAL PAGE 1 ==========
+
+S R	
+ D
+XERO SUM ENGINE SRD V1.1 | “D
+ R !
+XERO SUM ENGINE
+F
+ X
+ S G!
+
+
+========== SRD PHYSICAL PAGE 2 ==========
+
+3
+ 1.1.17 | P	
+: Matt, Jon, Lindy, Tim the Liar, ZeroTheory
+T	 : Michele, Jack, & Ellie for letting me get this song out of 
+my head, and to Matt & Jon for being constant collaborators
+CHANGE&LOG:
+1.0 | X
+ S E* C
+
+1.1 | D
+ R !
++++.X
+SS,.   +++.X
+SG!.   +++.D
+V
+.
+TABLE OF CONTENTS
+XERO SUM ENGINE SRD v1.1
+01. Overview 
+3
+Introduc	on .................................................................................... 3
+Key Features of XSE ........................................................................ 3
+Dice & Naming Conven	ons ........................................................... 3
+02. Core Mechanics 
+4
+Modifiers ........................................................................................ 4
+Insight Dice ..................................................................................... 5
+Filling In The Gaps .......................................................................... 6
+Making The Case ............................................................................ 6
+A+ribute Checks ............................................................................. 6
+Group Checks ................................................................................. 6
+Opposed Checks ............................................................................. 6
+Percep	on Checks .......................................................................... 6
+First Impressions ............................................................................ 6
+Gut Ins	ncts ................................................................................... 7
+03. Character Overview 
+7
+RAPID Range A+ributes .................................................................. 7
+Skills ................................................................................................ 7
+Secondary Stats .............................................................................. 8
+Fleshing A Character Out ................................................................ 8
+04. Character Crea?on 
+9
+Backstory Genera	on ..................................................................... 9
+Paradigms & Pregens .................................................................... 11
+Character Evolu	on ...................................................................... 11
+05. Skills 
+12
+06. Combat 
+14
+Combat Rounds ............................................................................ 14
+Range ............................................................................................ 14
+Damage ........................................................................................ 16
+Incapacita	on ............................................................................... 16
+Stress & Breaking Point ................................................................ 17
+07. Weapons & Equipment 
+18
+08. Communi?es 
+21
+Recruitment .................................................................................. 21
+Morale Checks & Community Structure, and Modifiers ............... 22
+Morale Check Modifiers: Mood Around the Campfire: ................ 23
+Appendix A: Tables 
+25
+Appendix B: Skills 
+29
+Appendix C: Weapons & Equipment 
+31
+Appendix D: Paradigms 
+33
+XERO SUM ENGINE SRD v1.1
+I
+,
+The X
+ S E* (XSE) is a tabletop roleplaying 
+game framework designed for 2–6 players, with robust 
+core mechanics that can be applied to most genres or 
+se:ngs, whilst remaining lightweight enough to keep 
+the story at the center of the ac	on. 
+One player takes on the role of the G! M!
+ (or 
+GM) and acts as both referee and storyteller, and 
+everyone else is a P !
+ CS!
+!
+ (or PC) within 
+the unfolding story. 
+The rules, skills, and equipment included in this SRD 
+do not cover more fantas	cal elements, such as magic 
+or psionics. This SRD will be updated as new rules are 
+play-tested and refined.
+This document outlines the C R
+ T 
+M
+!  R  added with the XSE SRD U1.1. 
+A worksheet to make tracking community resources 
+and morale easier is available for download at 
+X
+SG!..
+K F!
+ 	 XSE
+R?@ABCD
+XSE is a good fit for games with grounded storylines, 
+par	cularly those in the survival, noir, espionage, 
+western, war, low fantasy, or hard sci-fi genres. The 
+focus is on ordinary people in extraordinary situa	ons 
+and while the ac	ons of the characters might be 
+heroic, they are not super-heroes, gods, wizards, or 
+chosen ones.
+Combat in the Xero Sum Engine is brutal, unforgiving, 
+and can have las	ng consequences for characters. 
+Players should never enter combat lightly and should 
+ac	vely seek alterna	ves. Combat is not the only 
+threat to characters, and starva	on, sickness, or dying 
+of exposure are a possibility, and falling from a 
+window can be lethal. 
+To ensure their long-term survival, players will need to 
+focus on problem solving, diplomacy, and the use of 
+social skills. 
+F@CG P@H?I 
+The Xero Sum Engine u	lizes a simple d6 game 
+mechanic that can intui	vely facilitate any challenge 
+or task resolu	on with ease. 
+XSE priori	zes realism and momentum over needlessly 
+complex rules to keep the narra	ve at the center of 
+the game.
+SGJKL DKBM?N 
+Collabora	ve storytelling fuels the Xero Sum Engine, 
+and it provides players with various tools to drive the 
+narra	ve. These tools include I*S D, F  *  
+S G!, M!X* TS C!, F
+ I
+, and 
+G  rules, as well as rules for R
+
+and C Y ,*. 
+D T N!* CU 
+2,6: Most checks in the XSE SRD use 2 six-sided dice, 
+adding the scores together to get a final tally. 
+Z,6: When mul	ple dice are required for a dice check, 
+it is wri+en in the format xd6, such as 3d6 or 4d6. The 
+final score is determined by adding together all the 
+dice. 
+,3: Rolling a six-sided dice and halving the result 
+(rounding up), for a result of 1-3.
+G! M!
+: The player who takes on the role of 
+facilitator, storyteller, and referee, the Game Master 
+defines the environment, populates the world and 
+propels the story forward.
+PC: A player character (also referred to just as a 
+character) is the personifica	on of the player in the 
+story.
+NPC: Non-player characters (NPCs) are other 
+characters that the players interact with and are 
+brought to life by the Game Master.
+D CSX: Also called Dice Rolls, a Dice Check is the 
+basic mechanic for seeing if something a character 
+does is successful and involves rolling two 6-sided dice 
+and totally up the sum of both dice.
+M,	
+: Each Dice Check can be posi	vely or 
+nega	vely affected by modifiers that are 	ed to 
+a+ributes, skills, and condi	ons.
+01. OVERVIEW
+
+
+========== SRD PHYSICAL PAGE 3 ==========
+
+4
+5
+D CSX T O
+If a player or non-player character does something 
+that will affect the storyline (such as using a skill or 
+making an a+ack) they must make a D CSX or 
+D R   to clearly define the outcome.
+M!X* ! D CSX involves 
+  * + 6-,, 
+, (wri+en as 2,6), adding or subtrac	ng M,	
+
+for X  , !
+Y, and ,, and tallying 
+the final score.
+Although a total of 9 or above is a S, there are 
+grada	ons of success and failure, as laid out in T!Y  
+1: O.
+DBK? F@BARK? (0-3) 
+If the final total aTer all modifiers are applied is 3 
+ 
+ , the check was a D
+ F! 
+. 
+This means that the character is not only unsuccessful 
+at the task or ac	on but there is an addi	onal setback 
+or consequence. 
+For example, a failed safe-cracking a+empt irreparably 
+jams the lock, preven	ng further a+empts. 
+F@BARK? (4-8)
+On a score of 4  8, the ac	on or task F! . 
+This means a+emp	ng to pick the lock on a safe is 
+unsuccessful.
+SRHH?CC (9-13)
+On a score of 9  13, the ac	on or task is S	 . 
+This means that a+emp	ng to pick the lock on a safe 
+succeeds.
+WBAI SRHH?CC (14+)
+If the final total aTer all modifiers are applied is 14 
+ 
+S*S
+, the check was a W , S. 
+This means that the character was not only successful 
+in the task or ac	on, but there is an addi	onal posi	ve 
+result that benefits them. 
+For example, the safe not only opens but the 
+characters find something unexpected of value hidden 
+inside.
+MJD?NGC JV INCBWXG (6+6 JK 1+1) 
+When characters perform excep	onally well or 
+disastrously badly, it is possible that they have a 
+M 	 I*S and gain a deeper understanding 
+of exactly why they succeeded or failed. 
+A double one is a M 	 L+ I*S, which 
+counts as a D
+ F! 
+ and a double six is ! 
+M 	 H*S I*S, which counts as a W , 
+S.
+In addi	on, the character receives an I*S D on a 
+M 	 L+ or H*S I*S. See I*S D.
+I*S D cannot be used to re-roll dice in a 
+M 	 L+ I*S.
+M,	
+
+Dice checks are influenced by up to three modifiers - 
+A
+Y ,	
+ (AM,), SX   ,	
+ 
+(SM,), and C,!  ,	
+ (CM,). 
+These modifiers are cumula	ve and are all applied to 
+the result of the 2d6 roll and affect the final score. 
+AGGKBZRG? MJIBVB?KC (AMJIC)
+Each character has five a+ributes - R!, A, 
+PS! , I	 , DZ
+, referred to as the 
+RAPID R!* A
+Y.
+These a+ributes range from -2 (DS,) to +4 
+(H! P!X). Animals and machines can have 
+a+ributes that can go up to +5 (S
+S!), as 
+detailed in T!Y  2: A
+Y M,	
+.
+02. CORE MECHANICS
+0-3
+DBK? F@BARK?
+4-8
+F@BARK?
+9-13
+SRHH?CC
+14+
+WBAI SRHH?CC
+1+1
+MJD?NG JV LJ\ INCBWXG
+6+6
+MJD?NG JV HBWX INCBWXG
+T!Y  1: O
+^2
+DBDBNBCX?I
+^1
+W?@_
+0
+AM?K@W?
++1
+GJJI
++2
+SGKJNW
++3
+E`H?aGBJN@A
++4
+HRD@N P?@_
++5
+SRa?KXRD@N
+T!Y  2: A
+Y M,	
+ (AM,)
+This number is the A
+Y M,	
+ (or AM,) 
+that applies to any dice check using that a+ribute. For 
+example, using Reason to solve a puzzle or Physicality 
+to break open a door).
+S_BAA MJIBVB?KC (SMJIC)
+Each character has a variety of skills that range from -3 
+(I) to +4 (L	' W
+X) based on their exper	se, 
+as detailed in T!Y  3: SX   M,	
+. 
+This number is the SX   M,	
+ (or SM,) that 
+applies to any dice check using that skill. 
+Each skill is linked to an a+ribute, such as Physicality 
+being linked to Unarmed Combat. As modifiers are 
+cumula	ve, a dice check oTen includes both AM,
+and SM,.
+CJNIBGBJN@A MJIBVB?KC (CMJIC)
+There are any number of external, unplanned and 
+unan	cipated factors that can influence a dice check. 
+These variables are represented by C,!  
+M,	
+ (or CM,) which are added or subtracted 
+from dice checks. CMods range from -5 (D,  
+F! 
+) to +5 (DU I
+U), as detailed in 
+T!Y  4: C,!  M,	
+.
+CMods are applied either at the discre	on of the 
+Game Master or at the request of a player (see 
+M!X* TS C! below). 
+CMods can be wide-ranging to reflect the variety of 
+situa	onal elements that make up any given moment 
+and are a powerful narra	ve tool for the Game 
+Master.
+I*S D
+I*S D allow players to directly affect and 
+influence the narra	ve. 
+Characters get 2 I*S D upon crea	on and 
+receive an addi	onal I*S D each 	me they get 
+a M 	 I*S - double ones, or double sixes 
+(see M 	 H*S !, L+ I*S on page 4).
+Game Masters and players can use I*S D in any 
+way they agree upon, but common uses are:
+A,,* ! ,  S   prior to making a dice 
+check, for a 3,6 SX.
+Adding a +3 C,!  M,	
+ (CM,) to the 
+dice check before rolling the dice.
+ATer a dice check, a player can 
+U  
+ YS 
+
+*!  , and replace them with an I*S D, 
+which are then rolled fresh and added to the total.
+Players can ZS!* I*S D for a *  
+	 
+^
+, ^,  , or anything they can 
+successfully M!X TS C! for.
+Game Masters may allow players to spend an I*S 
+D to introduce a  !Y  !
+
+!U !,U!!*, 
+such as trying the handle again and realizing the door 
+is unlocked aTer all, so long as the player can M!X
+TS C! for it.
+Players can 
+
+,
+ !   S
+ I*S D to 
+recover 1 Wound Point and 1 Resilience Point per dice 
+and save their character from D*. Players cannot 
+choose how many dice to use in this method, it costs 
+all of their available I*S D.
+Once a player uses an I*S D, they surrender it 
+back to the Game Master. 
+I*S D cannot be used to re-roll dice in a 
+M 	 L+ I*S.
+I*S D cannot transfer between characters.
+I*S D carry over from session to session. 
+^3
+IN?aG
+0
+UNGK@BN?I
++1
+B?WBNN?K
++2
+JJRKN?LD@N
++3
+PKJV?CCBJN@A
++4
+LBV?’C WJK_
+T!Y  3: SX   M,	
+ (SM,)
+^5
+DJJD?I TJ F@BARK?
+^4
+IDaKJZ@ZA?
+^3
+H@KI
+^2
+DBVVBHRAG
+^1
+CX@AA?NWBNW
+0
+AM?K@W?
++1
+SBDaA?
++2
+SGK@BWXG FJK\@KI
++3
+E@CL
++4
+TKBMB@A
++5
+DBMBN? ING?KM?NGBJN
+T!Y  4: C,!  M,	
+ (CM,)
+
+
+========== SRD PHYSICAL PAGE 4 ==========
+
+6
+7
+M 	 L+ I*S (1+1): They make a terrible 
+impression and come across as threatening or hos	le 
+and receive a -3 CM, on all future interac	ons as 
+well as an I*S D.
+G I
+Characters can make G I SX when they 
+first meet NPCs to see what kind of impression they 
+get from this person. They can also make a G 
+I SX during an interac	on with an NPC to 
+see how much the players feel they can trust them.
+G I checks use the Percep	on Modifier, 
+although a character can subs	tute for an appropriate 
+skill, such as PS **, S
++, or T!*.
+S (9-13): The player gets some insight into how 
+trustworthy they believe the NPC to be.
+W , S (14+) 
+ M 	 H*S I*S 
+(6+6): The player feels like they understand the NPCs 
+mo	va	ons.
+F! 
+ (4-8): The player gets no good read on the 
+NPC’s trustworthiness.
+D
+ F! 
+ (0-3) 
+ M 	 L+ I*S (1+1):
+The player takes everything the NPC says at face value.
+A P !
+ CS!
+!
+, also referred to as a PC or 
+character, is a player’s representa	on or avatar in the 
+game world, func	oning as their eyes, ears, hands, 
+and mouth. 
+In game terms, a character is composed of physical 
+and mental a+ributes, skills, and secondary sta	s	cs 
+derived from those a+ributes and skills.
+RAPID R!* A
+Y
+Each character has five a+ributes - R!, A, 
+PS! , I	  and DZ
+ - referred to as 
+RAPID R!* A
+Y. 
+A+ributes start at 0 (AU
+!*) but range from -2 
+(DS,) up to +4 (H! P!X). A+ributes for 
+animals and machines can go up to +5 (S
+S!).
+RAPID R!* A
+Y are wri+en in the format 
+R!-A-PS! -I	 -DZ
+, 
+so a character with all 0 (AU
+!*) a+ributes would 
+have a RAPID Range of 00000.
+R?@CJN: 
+The ability to process data, think cri	cally, and make 
+logical assump	ons.
+AHRD?N:
+The mixture of ins	nct and cunning required for good 
+situa	onal awareness.
+PXLCBH@ABGL: 
+A measure of athle	cism, condi	oning, discipline, and 
+self-control. 
+INVAR?NH?: 
+A combina	on of charisma, charm, or a+rac	veness.
+D?`G?KBGL: 
+A reflec	on of agility, reflexes, and hand-eye 
+coordina	on. 
+A character's RAPID R!* !
+Y is also their 
+A
+Y M,	
+ (AM,), which applies to any 
+dice check that involves that a+ribute. 
+SX  
+Characters have a variety of skills based on their life 
+experiences. Most skills range from 0 (U
+!,) to 
++4 (L	' W
+X), although several skills are voca	onal 
+and start at -3 (I).
+03. CHARACTER OVERVIEW
+^2
+DBDBNBCX?I
+^1
+W?@_
+0
+AM?K@W?
++1
+GJJI
++2
+SGKJNW
++3
+E`H?aGBJN@A
++4
+HRD@N P?@_
++5
+SRa?KXRD@N
+T!Y  2: A
+Y M,	
+ (AM,)
+^3
+IN?aG
+0
+UNGK@BN?I
++1
+B?WBNN?K
++2
+JJRKN?LD@N
++3
+PKJV?CCBJN@A
++4
+LBV?’C WJK_
+T!Y  3: SX   M,	
+ (SM,)
+F  * I TS G!
+F  * I S G! directly involves the group with 
+world building and stage se:ng. 
+The Game Master should prompt players to provide 
+addi	onal detail, context, or flavor by F  *  TS 
+G! during gameplay about what their character is 
+seeing or experiencing. 
+M!X* TS C!
+Similar to F  *  S G!, a character can also 
+M!X TS C! and offer further context on how their 
+ac	ons are shaping the outcome of a dice check. 
+If the Game Master agrees that what they are 
+proposing makes narra	ve sense, they might add a 
+CMod to the dice check.
+A
+Y CSX
+Players can use a character's RAPID Range a+ributes 
+for checks that do not require a specific skill, such as 
+R?@CJN for aRffA?-CJAMBNW or PXLCBH@ABGL for @KD-
+\K?CGABNW. 
+In these situa	ons, only the relevant AMod applies to 
+any dice check.
+G
+ CSX
+Mul	ple players a+emp	ng to undertake the same 
+task can work together to increase their chances of 
+success. 
+To take part in a G
+ CSX, everyone must be 
+using the same a+ribute or skill (even if they have 0). 
+The player with the highest relevant AMod or SMod 
+makes the check and apply any AMods or SMods from 
+the other characters taking part in the G
+ CSX.
+Players cannot use Insight Dice as part of a G
+
+CSX, but if the outcome of the dice check is a 
+M 	 I*S, all members taking part will 
+receive an I*S D. 
+G
+ CSX are at Game Master discre	on and 
+must make logical sense within the narra	ve.
+O, CSX
+Characters who are directly compe	ng against one 
+another make O, SX to determine the 
+outcome, both a+emp	ng to get the upper hand un	l 
+there is a clear winner and loser, such as during an 
+arm-wrestling contest.
+The outcome of an O, SX is determined by 
+the first side to get a S, W , S, or a 
+Moment of High Insight, while the other side 
+simultaneously gets a F! 
+, D
+ F! 
+, or 
+M 	 L+ I*S. 
+If characters get the same outcome on an O,
+SX, the results are negated, and players con	nue 
+making dice checks un	l either a clear winner and 
+loser emerges, or one side changes their strategy.
+P
+ CSX
+If a player wants to know if their character has picked 
+up on unspoken queues or is aware of subtle details, 
+they may perform a P
+ SX, using the 
+Secondary Stat P
+ (see page 8) as a modifier. 
+The GM will help them F    S G!.
+F
+ I
+
+When encountering an NPC for the first 	me, the 
+character can make a F
+ I
+ check to 
+influence how they are perceived.
+A F
+ I
+ dice check uses Influence and 
+any appropriate skill, such as Manipula	on, 
+Streetwise, or Psychology*. 
+The result of this check influences future interac	ons 
+with that NPC and the player should note this 
+R !S CM, on their character sheet. 
+S (9-13): The NPC has no strong feelings toward 
+the player and there is a 0 CM, to future 
+interac	ons.
+W , S (14+): The player makes a favorable 
+impression and receives a +1 CM, on future 
+interac	ons. 
+M 	 H*S I*S (6+6): The player makes a 
+favorable impression and receives a +2 CM, on 
+future interac	ons as well as an I*S D.
+F! 
+ (4-8): The player makes a bad impression and 
+gets a -1 CM, to all future interac	ons.
+D
+ F! 
+ (0-3): They make a terrible impression 
+and come across as threatening or hos	le and receive 
+a -2 CM, on all future interac	ons.
+
+
+========== SRD PHYSICAL PAGE 5 ==========
+
+These words can serve as a roleplaying anchor and 
+guide how a character reacts to people and situa	ons 
+during the course of the game.
+Specific words like !  !*, 
+X , or 
+tend to be more useful than broad or generic ones 
+such as *, or , but anything that helps 	e a 
+player to their character is acceptable. 
+These three words can be shared with other players, 
+kept secret, or woven into gameplay by the GM.
+CJDaABH@GBJNC h MJGBM@GBJNC
+Character have both a C ! and MU!
+that drive them and serve as narra	ve tools. 
+Players can choose from those listed on T!Y  6 T 7
+or roll 2d6 for random C ! T 
+MU!.
+These can be openly shared or woven into the 
+narra	ve.
+Players can choose one of three methods to provide 
+them with a character to play - B!X
+ 
+G
+!, customizing a P!
+!,*, or picking a 
+P
+*
+!, CS!
+!
+ (P
+*). 
+B!X
+ G
+!
+To develop their character, players get 20 CS!
+!
+ 
+DU  P (CDP) to allocate during 
+different periods of a character’s life and flesh out how 
+they became who they are.
+At no point during B!X
+ G
+! may a 
+character raise an a+ribute beyond 3 (EZ! ) or 
+a skill beyond 3 (P
+	! ).
+Players should write 1-2 sentences about what 
+happened to their character during each step and how 
+it affected them so that, when combined, these 
+sentences capture their backstory. 
+SG?a X?KJ: WXJ AK? GX?L?
+Players should define as much of their character 
+concept as possible before a game starts, including 
+basic details such as name, age, height, and weight.
+They should also pick 3 thema	c words that describe 
+this character. 
+SG?a ON?: WX?K? TX?L GK?\ Ua
+This covers the first 10-15 years of a character's life. 
+Players spend 1 CDP on raising a RAPID Range 
+a+ribute from 0 (U
+!,) to 1 (G,).
+They also get 2 CDP to spend on skills. They may spend 
+both points on raising any 1 skill from 0 (U
+!,)
+to +2 (J
+!) or any 2 skills from 0 
+(U
+!,) to +1 (B*
+). 
+If they take a skill marked with an asterisk (such as 
+Mechanic* or Medicine*), this moves the skill from -3 
+(I) to +1 (B*
+).
+SG?a T\J: WX@G TX?L L?@KN?I
+This step covers the educa	onal stage of a character's 
+life, and players spend 1 CDP on raising a RAPID Range 
+a+ribute and 3 CDP on skills. 
+They may not raise a skill above +2 (J
+!)
+during this step.
+T!Y  7: MU!
+2
+AHHRDRA@G?
+3
+BRBAI
+4
+FBNI S@V?GL
+5
+H?IJNBCD
+6
+M@_? AD?NIC
+7
+PK?@HX
+8
+PKJG?HG
+9
+R?RNBG?
+10
+R?M?NW?
+11
+SG@L AABM?
+12
+T@_? AIM@NG@W?
+T!Y  6: C !
+2
+AIIBHGBJN
+3
+B?GK@L?I
+4
+CJI? JV HJNJK
+5
+CKBDBN@A P@CG
+6
+D@K?I?MBA
+7
+D@K_ S?HK?G
+8
+F@DBAL OZABW@GBJN
+9
+F@DJRC
+10
+LJCC
+11
+ORGCG@NIBNW D?ZG
+12
+P?KCJN@A EN?DL
+04. CHARACTER CREATION
+8
+9
+This skill level is also called SX  M,	
+ (or SM,), 
+and players add it to any dice check using that skill.
+Each skill is associated with an a+ribute, such as the 
+B!
+
+ skill being 	ed to the I	  !
+Y or 
+U!
+, CY! skill being 	ed to the PS! 
+!
+Y. Dice checks use both AM, and SM,. 
+Certain skills require specific, oTen voca	onal training. 
+These start at -3 (I) instead of 0 (U
+!,) and 
+are marked with an asterisk, such as PS **.
+When a character has 1 level in that skill, they advance 
+from -3 (I) to +1 (B*
+).
+S,!
+ S!
+PCs have a series of S,!
+ S! that are 
+derived from their a+ributes and skills and affect 
+combat, social interac	ons, or influence the narra	ve.
+WJRNI PJBNGC
+W, P (WP) reflect how much damage a 
+character can take before they become M
+!  
+W,, and D. 
+Characters start with 10 + PS!  AM, + 
+DZ
+ AM, W, P.
+R?CBAB?NH? PJBNGC
+R  P (RP) are a measure of how much 
+damage or stress it takes to I!!! a character.
+Characters start with 6 + PS!  AM,
+R  P.
+D?V?NCBM? MJIBVB?KC
+D	U M,	
+ (DM) lower the chance of 
+ge:ng hit and mi	gate any damage that is dealt. 
+A characters’ M  D	 is equal to their 
+PS!  AM,, and their R!*, D	 is 
+equal to their DZ
+ AM,.
+INBGB@GBM? MJIBVB?K
+I!U M,	
+ (INIT) are added to ini	a	ve 
+checks to determine the order in which par	cipants 
+act during combat.
+I!U M,	
+ are the sum of a character’s 
+A + DZ
+ AM,.
+ENHRDZK@NH?
+EY
+! (ENC) is how much weight a character 
+can carry before needing to stop and rest or drop 
+something. 
+Encumbrance starts at 6 + PS!  AM,.
+P?KH?aGBJN
+P
+ (PER) reflects how well a character picks 
+up on subtle	es and how tuned in they are to their 
+environment. 
+The P
+ modifier is the sum of a character’s 
+R! + A AM,.
+SGK?CC MJIBVB?K
+Each character has a B
+!X* P. Their S
+
+starts at 0 and culminates at 5.
+F S* A CS!
+!
+ O
+TXK?? WJKIC
+Players should choose three words that define the PC’s 
+core behaviors or personality traits. 
+T!Y  5: S,!
+ S!
+WJRNI PJBNGC
+10 WP + PXLCBH@ABGL + D?`G?KBGL AMJI
+R?CBAB?NH? PJBNGC
+6 RP + PXLCBH@ABGL AMJI
+R@NW?I D?V?NCBM? MJI.
+A HX@K@HG?KC' D?`G?KBGL AMJI BC GX?BK R@NW?I D?V?NCBM? MJIBVB?K
+M?A?? D?V?NCBM? MJI.
+A HX@K@HG?KC' PXLCBH@ABGL AMJI BC GX?BK M?A?? D?V?NCBM? MJIBVB?K
+INBGB@GBM? MJIBVB?K
+AHRD?N + D?`G?KBGL AMJIC
+ENHRDZK@NH?
+6 ENHRDZK@NH? + PXLCBH@ABGL AMJI
+P?KH?aGBJN
+R?@CJN + AHRD?N AMJIC
+MJK@ABGL
+CX@K@HG?KC CG@KG \BGX @ MJK@ABGL JV 3
+SGK?CC MJIBVB?K
+R?@CJN + AHRD?N AMJIC
+
+
+========== SRD PHYSICAL PAGE 6 ==========
+
+SG?a TXK??: WX@G TX?L LB_? TJ DJ
+This reflects skills learned when doing the things that 
+their characters do in their spare 	me. Players get 1 
+CDP to spend on raising a RAPID Range a+ribute and 3 
+CDP on skills.
+They may not raise skills above +2 (J
+!)
+during this step. 
+SG?a FJRK: HJ\ TX?L M@_? MJN?L
+This step reflects what a character does for work or to 
+make money, and what this has taught them.
+During this step, players get 2 CDP to spend on raising 
+RAPID Range a+ributes and 4 CDP to spend on raising 
+skills. 
+Players can raise a+ributes to +3 (EZ! ) and 
+skills to +3 (P
+	! ) during this step.
+XSE has a set of P
+	 that combine 
+thema	cally similar voca	onal skills. Players can either 
+choose a P
+	 and spend CDP on the skills 
+associated with that profession or simply spend the 
+CDP on skills they feel best match their character 
+concept. 
+Games built on this SRD may have custom 
+P
+	 to match the se:ng.
+SG?a FBM?: WX@G M@_?C TX?D TX?D
+During this step, players get 3 CDP to spend on skills to 
+round out and finalize their character concept. 
+They cannot raise a+ributes beyond +3 (EZ! )
+or skills beyond +3 (P
+	! ) during this step.
+SG?a SB`: WX@G DKBM?C TX?D?
+Players should choose both a C ! and 
+MU! that drives them, or they can roll 2d6 and 
+consult T!Y  6: C ! and T!Y  7: 
+MU!.
+T!Y  6: C !
+2
+AIIBHGBJN
+3
+B?GK@L?I
+4
+CJI? JV HJNJK
+5
+CKBDBN@A P@CG
+6
+D@K?I?MBA
+7
+D@K_ S?HK?G
+8
+F@DBAL OZABW@GBJN
+9
+F@DJRC
+10
+LJCC
+11
+ORGCG@NIBNW D?ZG
+12
+P?KCJN@A EN?DL
+T!Y  7: MU!
+2
+AHHRDRA@G?
+3
+BRBAI
+4
+FBNI S@V?GL
+5
+H?IJNBCD
+6
+M@_? AD?NIC
+7
+PK?@HX
+8
+PKJG?HG
+9
+R?RNBG?
+10
+R?M?NW?
+11
+SG@L AABM?
+12
+T@_? AIM@NG@W?
+10
+11
+SG?a S?M?N: S?HJNI@KL SG@GC
+Characters all have a series of S,!
+ S!
+that affect gameplay and are derived from their 
+a+ributes. Consult T!Y  5: S,!
+ S! for 
+details.
+SG?a EBWXG: WX@G TX?L H@M?
+Characters start with both a primary and secondary 
+weapon picked from T!Y  16 -19 (see 07. W! 
+T E^ on page xx). 
+Each weapon comes with 1d3 reloads of ammuni	on. 
+Characters also get 1 item from T!Y  20: E^
+on page xx and an incidental item that has no combat 
+value but provides some use or helps flesh out their 
+personality. 
+SG?a NBN?: FBN@A FA@MJK
+Players should review their character and add or 
+tweak any details before the game begins. Does this 
+character match the concept you had in mind? Do the 
+three descrip	ve words s	ll make sense?
+P!
+!,* T P
+*
+PARADIGMS
+P!
+!,* are intended to facilitate streamlined 
+gameplay by providing familiar tropes or role instead 
+of using the B!X
+ G
+! method. 
+P!
+!,* come with a+ributes and skills predefined 
+and a player only needs to pick a name, Mo	va	on, 
+Complica	on, 3 Words, weapons and equipment in 
+order to start playing.
+P!
+!,* from the D
+ and D !, se:ng 
+are included in A,Z D: P!
+!,* on page xx.
+P!
+!,* are se:ng specific and available for 
+download at X
+SG!./P!
+!,*.
+PK?W?NC
+Going one step further than a P!
+!,*, a 
+P
+*
+!, CS!
+!
+ (or P
+*) comes fully 
+ready to play, with their name, a+ributes, skills, 
+Mo	va	ons, Complica	ons, 3 Words, weapons, 
+equipment, and backstory defined. 
+Players need only take a moment to read over the 
+character sheet before star	ng to play. 
+P
+* are available for download at 
+X
+SG!./P!
+!,*.
+CS!
+!
+ EU 
+At the end of each game session, the Game Master 
+has the discre	on to award 2 
+ 
+ CDP that the 
+players can spend on improving their characters’ 
+a+ributes or skills. 
+L!
+* ! + X   requires the investment of 1 
+Skill CDP to get to level 1.
+R!* ! Z* X   requires paying CDP 
+corresponding to the total of the current level and the 
+level the skill is being raised to. Therefore, taking a skill 
+from level 1 to 2 requires 3 CDP, from 2 to 3 requires 5 
+CDP, and from 3 to 4 requires 7 CDP. 
+I
+!* ! RAPID R!* !
+Y costs 3x the 
+CDP per level being raised. This means that raising an 
+a+ribute from 1 to 2 requires 6 CDP, from 2 to 3 
+requires 9 CDP, and from 3 to 4 requires 12 CDP.
+A!,
+F@KDBNW, G?N?K@A KNJ\A?IW?, M?IBHBN?*, PCLHXJAJWL*, R?C?@KHX, T@HGBHC*, SRKMBM@A
+D
+U
+ANBD@A H@NIABNW, DKBMBNW, M?HX@NBH*, N@MBW@GBJN, SH@M?NWBNW, SA?BWXG JV H@NI, TBN_?K?K
+E
+
+
+ B@KG?K, G?N?K@A KNJ\A?IW?, INCaBK@GBJN, M@NBaRA@GBJN, PCLHXJAJWL*, SA?BWXG JV H@NI, TBN_?K?K
+L!+ E	
+
+AGXA?GBHC, SRKMBM@A, INGBDBI@GBJN, M@NBaRA@GBJN, R@NW?I CJDZ@G, SG?@AGX, T@HGBHC*
+MS!
+AGXA?GBHC, B@KG?K, D?DJABGBJNC*, G?N?K@A KNJ\A?IW?, M?HX@NBH*, SH@M?NWBNW, TBN_?K?K
+M,
+AGXA?GBHC, G?N?K@A KNJ\A?IW?, INCaBK@GBJN, M?IBHBN?*, PCLHXJAJWL*, R?C?@KHX, SA?BWXG JV H@NI
+M !
+
+AGXA?GBHC, D?DJABGBJNC*, R@NW?I CJDZ@G, SG?@AGX, SRKMBM@A, T@HGBHC*, UN@KD?I CJDZ@G
+O,
+!
+ANBD@A H@NIABNW, F@KDBNW, M?A?? CJDZ@G, N@MBW@GBJN, R@NW?I CJDZ@G, SG?@AGX, SRKMBM@A
+O !+
+INGBDBI@GBJN, M@NBaRA@GBJN, PCLHXJAJWL*, R@NW?I CJDZ@G, SA?BWXG JV H@NI, SG?@AGX, UN@KD?I CJDZ@G
+P
+	
+
+AGXA?GBHC, B@KG?K, INCaBK@GBJN, M@NBaRA@GBJN, PCLHXJAJWL*, SA?BWXG JV H@NI, SG?@AGX
+P !
+B@KG?K, G?N?K@A KNJ\A?IW?, INCaBK@GBJN, INGBDBI@GBJN, M@NBaRA@GBJN, PCLHXJAJWL*, T@HGBHC*
+T
+!,
+B@KG?K, G?N?K@A KNJ\A?IW?, INCaBK@GBJN, M@NBaRA@GBJN, SH@M?NWBNW, SA?BWXG JV H@NI, TBN_?K?K
+T!Y  8: P
+	 T SX  
+T!Y  5: S,!
+ S!
+W, P
+10 WP + PXLCBH@ABGL + D?`G?KBGL AMJI
+R  P
+6 RP + PXLCBH@ABGL AMJI
+R!*, D	U M,.
+A HX@K@HG?KC' D?`G?KBGL AMJI BC GX?BK R@NW?I D?V?NCBM? MJIBVB?K
+M  D	U M,.
+A HX@K@HG?KC' PXLCBH@ABGL AMJI BC GX?BK M?A?? D?V?NCBM? MJIBVB?K
+I!U M,	
+AHRD?N + D?`G?KBGL AMJIC
+EY
+!
+6 ENHRDZK@NH? + PXLCBH@ABGL AMJI
+P
+
+R?@CJN + AHRD?N AMJIC
+M
+! 
+CX@K@HG?KC CG@KG \BGX @ MJK@ABGL JV 3
+S
+ M,	
+R?@CJN + AHRD?N AMJIC
+
+
+========== SRD PHYSICAL PAGE 7 ==========
+
+Skills reflect the experience and exper	se characters 
+have picked up along the way, based upon their life 
+experiences. 
+Certain skills require specific, oTen voca	onal training. 
+These start at -3 (I) instead of 0 (U
+!,) and 
+are marked with an asterisk, such as PS ** or 
+T!*.
+When a character has 1 level in that skill, they advance 
+from -3 (I) to +1 (B*
+).
+Levels in skills are called SX  M,	
+ (or SM,), 
+and players add SMods to dice checks using that skill.
+Each skill is associated with an a+ribute, such as the 
+B!
+
+ skill being 	ed to the I	  !
+Y or 
+U!
+, CY! skill being 	ed to the PS! 
+!
+Y. Dice checks use both AM, and SM,.
+05. SKILLS
+12
+13
+T!Y  9: SX  
+SX  
+AGGKBZRG?
+D?CHKBaGBJN
+A!  H!, *
+INVAR?NH?
+UNI?KCG@NIBNW XJ\ GJ \JK_ \BGX @NBD@AC, VKJD Z@CBH 
+JZ?IB?NH? GJ X?KI D@N@W?D?NG
+A
+!
+R?@CJN
+Sa@H? M?CC?A Ja?K@GBJNC, BNHARIBNW @CGKJW@GBJN, jRDa 
+Ja?K@GBJNC, EVA/f?KJ-G aKJH?IRK?C, @NI C@V?GL aKJGJHJAC
+ AS 
+PXLCBH@ABGL
+FBGN?CC, @WBABGL, CG@DBN@, @NI HJJKIBN@GBJN, BNHARIBNW 
+HABDZBNW, jRDaBNW, C\BDDBNW, @NI JM?KHJDBNW JZCG@HA?C
+ B!
+
+AHRD?N
+AKK@NWBNW I?@AC, ?NGBHBNW ZRL?KC, @aaK@BCBNW WJJIC, X@WWABNW 
+VJK GX? Z?CG JRGHJD?, @NI HAJCBNW I?@AC
+C
+
+R?@CJN
+D??a RNI?KCG@NIBNW JV IBWBG@A CLCG?DC @NI @KHXBG?HGRK?, 
+HJM?KBNW GKJRZA?CXJJGBNW GJ HJIBNW, X@H_BNW, @NI CLCG?D 
+HJNGKJA
+ D * 
+PXLCBH@ABGL
+TX? D@NRV@HGRK? @NI RC? JV ?`aAJCBM?C, K@NWBNW VKJD 
+BDaKJMBC?I HX@KW?C GJ aK?HBCBJN DBABG@KL I?DJABGBJNC
+ D
+U*
+D?`G?KBGL
+DKBM? @NL M?XBHA? \BGX HJNVBI?NH? @NI VBN?CC?, GXBC @AAJ\C VJK 
+K?H_A?CC D@N?RM?KC \BGXJRG \K?H_BNW
+E
+!
+INVAR?NH?
+TX? HX@KBCD@ @NI G@A?NG GJ H@aGBM@G? @N @RIB?NH? GXKJRWX 
+DRCBH, CJNW, @HGBNW, HJD?IL, CGJKLG?AABNW, JK JGX?K VJKD JV 
+a?KVJKD@NH?
+ F!
+*
+AHRD?N
+KNJ\BNW XJ\ GJ WKJ\ HKJaC JK K@BC? ABM?CGJH_ @G CH@A? GJ 
+CRCG@BN A@KW? WKJRaC JV a?JaA?
+G!Y *
+AHRD?N
+TX? RNI?KCG@NIBNW JV RNI?KALBNW D?HX@NBHC Z?XBNI W@D?C JV 
+HX@NH?, KBC_, @NI K?\@KI, @NI GX? HJNVBI?NH? JV _NJ\BNW 
+\X?N GJ Z?G JK VJAI
+H!U W!*
+PXLCBH@ABGL
+TX? Ja?K@GBJN JV HJDaA?`, A@KW?-CH@A? Z@GGA?VB?AI \?@aJNC 
+AB_? D@HXBN? WRNC, A@RNHX?KC, @NI @KGBAA?KL
+ I
+!
+INVAR?NH?
+B?BNW @ZA? GJ ZJJCG GX? DJK@A? JV BNIBMBIR@AC JK WKJRaC JK 
+DJGBM@G? GX?D Z?XBNI @ CX@K?I MBCBJN JK Z?AB?V 
+LX-PX**
+AHRD?N
+BLa@CCBNW AJH_C @NI C?HRKBGL I?MBH?C GJ Ja?N GX?D \BGXJRG 
+_?LC JK HJI?C
+M! !
+INVAR?NH?
+G?GGBNW JGX?KC GJ GXBN_, Z?AB?M?, JK @HG BN \@LC GX@G GX?L D@L 
+NJG X@M? JGX?K\BC? IJN?
+ MS!*
+R?@CJN
+DB@WNJC?, K?a@BK, D@BNG@BN, JK ZRBAI HJDaA?` D@HXBN?C, GJJAC, 
+M?XBHA?C, @NI CLCG?DC
+SX  
+AGGKBZRG?
+D?CHKBaGBJN
+ M,*
+R?@CJN
+PKJMBIBNW VBKCG @BI, IB@WNJCBC, GK?@GD?NG, ?D?KW?NHL 
+CG@ZBABf@GBJN @NI @IM@NH?I D?IBH@A H@K? GJ GX? BNjRK?I JK BAA
+M  CY! 
+PXLCBH@ABGL
+TK@BNBNW \BGX D?A?? \?@aJNC GJ BDaKJM? HAJC?-mR@KG?KC 
+aK?HBCBJN, @HHRK@HL @NI I@D@W?
+ N!U*! 
+AHRD?N
+INN@G?AL @ZA? GJ IBCH?KN IBK?HGBJNC, K?D?DZ?K KJRG?C, @NI 
+aAJG @HHRK@G? HJRKC?C
+P 
+D?`G?KBGL
+S@V?AL Ja?K@G? @BKHK@VG JK Ca@H?HK@VG, BNHARIBNW G@_?JVV, 
+A@NIBNW, @NI Z@CBH VABWXG aKJH?IRK?C
+ PS ** 
+INVAR?NH?
+L?M?K@WBNW @N RNI?KCG@NIBNW JV XRD@N Z?X@MBJK GJ 
+BNVAR?NH?, aK?IBHG, ?`aAJBG, JK D@NBaRA@G? JRGHJD?C
+R!*, CY!
+D?`G?KBGL
+AHHRK@G?AL @NI C@V?AL RCBNW aKJj?HGBA? \?@aJNC, K@NWBNW 
+VKJD GXKJ\N JZj?HGC GJ CNBa?K KBVA?C 
+ R!
+S
+R?@CJN
+B?BNW @ZA? GJ ?VVBHB?NGAL JKW@NBf?, IBCGBAA, @NI @ZCJKZ 
+BNVJKD@GBJN GJ mRBH_AL Z?HJD? \?AA BNVJKD?I JN @NL CRZj?HG
+S!U**
+AHRD?N
+FBNIBNW @NI ?M@AR@GBNW DBCC?I, XBII?N, JK IBCH@KI?I BG?DC 
+GX@G CGBAA X@M? RC? VJK CRKMBM@A JK GK@I?
+S*
+R?@CJN
+PK@HGBH@A @aaABH@GBJN JV CHB?NGBVBH aKBNHBaA?C K?A@GBNW GJ 
+K?C?@KHX, ?`a?KBD?NGC, @NI BNNJM@GBJNC
+S *S 	 H!, 
+D?`G?KBGL
+W?AA aK@HGBH?I BN a?KVJKDBNW CA?BWXG-JV-X@NI GKBH_C, a@ADBNW, 
+aBH_aJH_?GBNW, HJNH?@AD?NG, @NI HK?@GBNW CRZGA? IBM?KCBJNC
+S	 K+ ,*
+R?@CJN
+KNJ\A?IW? @ZJRG GX? XBCGJKL, A@LJRG, @NI C?HK?GC JV @ Ca?HBVBH 
+@K?@, HJDDRNBGL, a?KCJN, JK IBCHBaABN?, CRHX @C A@\
+S! S
+PXLCBH@ABGL
+KNJ\BNW XJ\ GJ DJM? @NI GJ CGBH_ GJ GX? CX@IJ\C \XBA? 
+@MJBIBNW Z?BNW I?G?HG?I
+S
++
+AHRD?N
+INCGBNHGBM?AL Z?BNW @ZA? GJ N@MBW@G? RKZ@N ?NMBKJND?NGC, K?@I 
+CBGR@GBJNC VJK I@NW?K, @NI BI?NGBVL RNI?K\JKAI K?CJRKH?C
+S
+UU! 
+AHRD?N
+TX? N@GRK@A BNHABN@GBJN @NI @ZBABGL GJ D@_? CJD?GXBNW JRG JV 
+NJGXBNW, VB` C??DBNWAL RNVB`@ZA? GXBNWC, JK GJ 
+G@_? CJD?GXBNW GX@G \JK_C @NI D@_? BG \JK_ Z?GG?K
+T!* 
+R?@CJN
+TX? @aaABH@GBJN JV Z@GGA?VB?AI JK BNG?Ka?KCJN@A CGK@G?WB?C BN 
+JKI?K GJ W@BN @ CBGR@GBJN@A @IM@NG@W? JK Raa?K X@NI
+TX
+
+D?`G?KBGL
+B?BNW @I?aG @G VB`BNW, DJIBVLBNW, JK BDaKJMBNW D@HXBN?C, 
+W?@K, JK \?@aJNC @C \?AA @C GX? @ZBABGL GJ BDaKJMBC? 
+BNM?NGBJNC
+U!
+, CY! 
+PXLCBH@ABGL
+KNJ\A?IW? @NI aK@HGBH? JV WK@aaABNW, VBCG VBWXG, Z@K? VBCGC JK 
+D@KGB@A @KGC, @NI ZJIL HJNGKJA
+W!S*
+D?`G?KBGL
+CK@VGBNW, K?a@BKBNW, @NI DJIBVLBNW \?@aJNC GJ ?NCRK? 
+K?AB@ZBABGL @NI ?VV?HGBM?N?CC
+
+
+========== SRD PHYSICAL PAGE 8 ==========
+
+14
+15
+CY! R,
+Combat is divided into 
+, that last approximately 
+3-6 ,. Each round is comprised of three phases 
+- I!U, A, R .
+INBGB@GBM?
+I!U determines the order in which combatants 
+act. 
+Each par	cipant makes an I!U CSX by rolling 
+2ds6 and adding the I!U M,	
+ from their 
+Secondary Stats. 
+The character with the highest I!U score goes 
+first and then combat proceeds in decreasing order to 
+the character with the lowest score. 
+In the event of a draw, PCs always beat NPCs. PCs with 
+the same I!U score act simultaneously.
+Characters may choose to ,	
+ S
+ 
+ un	l later 
+in the combat round. 
+AHGBJNC
+Each par	cipant gets 2 CY! A per round. 
+They may choose to take the same ac	on twice or take 
+two different ac	ons. 
+See T!Y  10: CY! A on page xx.
+R?CJARGBJN
+The R  phase of the CY! R, allows 
+for delayed effects from ac	ons and weapons, such as 
+grenades or R*. 
+Once each character has taken both of their ac	ons 
+and aTer any delayed effects are resolved, the round 
+concludes, and the next one begins with a fresh 
+I!U check.
+G?GGBNW TX? DKJa
+Before combat starts, one character (including NPCs) 
+can preemp	vely G S D
+ and take a single 
+combat ac	on before anyone else rolls for ini	a	ve. 
+Only one character can G TS D
+. If mul	ple 
+characters a+empt it, the one with the highest 
+combined Dexterity and Acumen AMods wins. 
+If there is no clear winner, no one G TS D
+ and 
+combat moves directly to the I!U phase. 
+Any character who G TS D
+ automa	cally 
+incurs a -2 CMod on their next I!U R  .
+R!*
+Rather than having fixed distances that require 
+measurement, each character’s posi	on to another is 
+rela	ve. 
+There are five R!* B!, - E*!*,, C , 
+M,, L* and D!. 
+Each band has a value that ranges from 1 to 5, as laid 
+out on T!Y  11: R!* B!,.
+Moving between bands takes the same number of 
+combat rounds as the sum of the bands being 
+covered. This means it takes:
+3 R, to move from E*!*, to C 
+6 
+, to move from E*!*, to M,
+10 
+, to move from E*!*, to L*
+15 
+, to move from E*!*, to D!
+ENW@W?I
+Close enough to wrestle, E*!*, combat gives a +1 
+CM,  M  !!X and a -1  R!*, !!X. 
+All Unarmed combat takes place at E*!*, range.
+CAJC?
+If you can s	ll see the whites of your opponent’s eyes, 
+then combat is at C  range. Melee combat at C 
+range suffers a -1 CM, penalty. 
+C  range is ideal for pistols, although any type of 
+Ranged Weapon gets a +1 CM, to an a+ack. 
+06. COMBAT
+1 ENW@W?I +1 CMJI GJ M?A?? @GG@H_C @NI @ -
+1 GJ R@NW?I @GG@H_C
+2
+CAJC?
+M?A?? HJDZ@G CRVV?KC @ -1 CMJI 
+a?N@AGL. R@NW?I @GG@H_C W?G @ +1 
+R@NW? CMJI
+3 M?IBRD NJ DJIBVB?KC
+4
+LJNW
+-5 CMJI GJ @NL aBCGJA CXJG ZRG @ 
++1 CMJI GJ @ RBVA? CXJG
+5 DBCG@NG
+ONAL @ HRNGBNW RBVA? JK @ SNBa?K’C 
+RBVA? H@N CGKB_? VKJD GXBC K@NW?
+T!Y  11: R!*
+ABD
++2 CMJI GJ GX? N?`G AGG@H_ JN GX?BK G@KW?G. TX? HX@K@HG?K'C N?`G @HGBJN DRCG 
+Z? @N AGG@H_, JK GX? ABD BC AJCG
+AGG@H_
+AN @GG@H_ RCBNW UN@KD?I, R@NW?I JK M?A?? CJDZ@G. IV GXBC BC RC?I VJK ZJGX 
+@HGBJNC @W@BNCG GX? C@D? G@KW?G, GX?K? BC @ +1 CMJI GJ GX? C?HJNI RC?, @C GX? 
+VBKCG @GG@H_ X?Aa?I GX?D N@KKJ\ BN JN GX?BK G@KW?G
+CX@KW?
+TXBC RC?C ZJGX @HGBJNC ZRG @AAJ\C @ HX@K@HG?K GJ DJM? G\BH? @NI ?NI GX?BK 
+@HGBJN \BGX ?BGX?K @ M?A?? JK @N UN@KD?I CJDZ@G AGG@H_
+CJJKIBN@G?
+IV @ HX@K@HG?K H@N C?? GX? G@KW?G @NI D@_?C @ SRHH?CCVRA T@HGBHC* HX?H_, @NL 
+HX@K@HG?K \BGXBN CAJC? K@NW? JV GX? HX@K@HG?K D@_BNW GX? HX?H_ W?GC @ +2 
+ZJNRC \X?N @GG@H_BNW GX@G G@KW?G. ON @ WBAI SRHH?CC, GXBC H@KKB?C JM?K GJ GX? 
+N?`G KJRNI @C @ +1 CMJI
+CJM?K FBK?
+E@HX a?KCJN/WKJRa G@KW?G?I K?mRBK?C @ C?a@K@G? AGG@H_. SRHH?CCVRA AGG@H_C 
+WBM? -2 CMJI GJ GX? G@KW?G'C N?`G @HGBJN, C_BAA, JK @GGKBZRG? HX?H_
+D?V?NI
+TXBC @HGBJN @IIC +2 GJ GX? HX@K@HG?K'C D?V?NCBM? MJIBVB?KC VJK GX? N?`G 
+BNHJDBNW @GG@H_. TXBC IJ?C NJG H@KKL JM?K BNGJ GX? N?`G KJRNI
+DBH? CX?H_
+AN @HGBJN H@N Z? RC?I GJ D@_? @N @GGKBZRG? JK C_BAA HX?H_
+DBCGK@HG
+A SRHH?CCVRA INGBDBI@GBJN, PCLHXJAJWL* JK T@HGBHC* HX?H_ DBCGK@HGC @ G@KW?G 
+\XJ GX?N AJC?C GX?BK N?`G CJDZ@G AHGBJN. ON @ WBAI SRHH?CC, GX?L AJC? ZJGX 
+CJDZ@G AHGBJNC
+FBK? VKJD CJM?K
+FBK? FKJD CJM?K @AAJ\C HX@K@HG?KC \XJ X@M? aK?MBJRCAL T@_?N CJM?K GJ RC? 
+ZJGX @HGBJNC GJ HJD? JRG JV HJM?K, VBK? GX?BK \?@aJN, @NI K?GRKN GJ HJM?K 
+\BGXJRG AJCBNW @NL D?V?NCBM? MJIBVB?K JN BNHJDBNW @GG@H_C
+GK@aaABNW
+A HX@K@HG?K H@N D@_? @N OaaJC?I CX?H_ (C?? OaaJC?I CX?H_C JN a@W? 7) 
+RCBNW UN@KD?I CJDZ@G GJ aBN @N ?N?DL BN aA@H?
+INCaBK?
+ON @ CRHH?CCVRA INCaBK@GBJN HX?H_, @ G@KW?G @G CAJC? K@NW? W@BNC @N @IIBGBJN@A 
+CJDZ@G AHGBJN GXBC KJRNI. A HX@K@HG?K H@N JNAL Z? INCaBK?I JNH? a?K KJRNI
+MJM?
+PA@L?KC H@N HX@NW? R@NW? Z@NIC (C?? R@NW? JN a@W? 17)
+R@aBI FBK?
+A HX@K@HG?K H@N D@_? G\J CXJGC a?K KJRNI. TX? VBKCG JN? CRVV?KC @ -1 CMJI, 
+GX? C?HJNI X@C @ -3 CMJI. IV @ HX@K@HG?K RC?C GXBC VJK ZJGX CJDZ@G AHGBJNC, 
+GX?L CRVV?K @ -2 CMJI @NI -4 CMJI GJ GXJC? @GG@H_C
+R?@IL W?@aJNC
+A \?@aJN DRCG Z? R?@IB?I Z?VJK? BG H@N Z? RC?I. TXBC @HGBJN DRCG @ACJ Z? G@_?N 
+GJ K?AJ@I @ \?@aJN JK BV @ \?@aJN Z?HJD?C j@DD?I
+R?aJCBGBJN
+TXBC @HGBJN G@_?C aA@H? @G GX? ?NI JV @ KJRNI BN GX? R?CJARGBJN aX@C?, 
+@AAJ\BNW @ HX@K@HG?K GJ W?G CBGR@G?I VJK GX? VJAAJ\BNW KJRNI
+SaKBNG
+SaKBNG RC?C ZJGX @HGBJNC GJ HJM?K 3 GBD?C GX? NJKD@A @DJRNG JV WKJRNI BN @ 
+CBNWA? DJM?. IV GX? HX@K@HG?K V@BAC GJ D@_? @ CRHH?CCVRA AGXA?GBHC HX?H_ @G GX? 
+?NI JV GX? KJRNI, GX?L \BAA Z?HJD? \BNI?I @NI AJC? @ CJDZ@G AHGBJN BN GX? 
+N?`G KJRNI
+SRZIR?
+WX?N @GG?DaGBNW GJ SRZIR? @NJGX?K HX@K@HG?K, VRAA R?CBAB?NH? PJBNG I@D@W? 
+BC IJN? ZRG WJRNI PJBNG I@D@W? BC I?@AG @G 50% (C?? D@D@W? JN a@W? 18). C@N 
+JNAL Z? RC?I \BGX UN@KD?I JK M?A?? @GG@H_C
+T@_? CJM?K
+T@_BNW CJM?K WBM?C @ +2 D?V?NCBM? MJIBVB?K VJK @AA @GG@H_C GX@G G@_? aA@H? 
+@W@BNCG GX@G HX@K@HG?K IRKBNW GX@G HJDZ@G KJRNI
+T!Y  10: CY! A
+
+
+========== SRD PHYSICAL PAGE 9 ==========
+
+16
+17
+Once S!Y b,, the character remains I!!!,
+for 1,6 
+, - PS!  AM,, with a minimum 
+of 1 round. They will then recover consciousness and 
+have 1 WP and 1 RP. 
+D?@GX
+Mortally Wounded characters who are not Stabilized 
+with Die withing 4 + Physicality AMod rounds. 
+The only op	on to prevent death is to 
+!,  !   	 ! 
+S!
+!
+’ I*S D. The PC remains alive with 1 
+WP and 1 RP.
+H?@ABNW
+Injured characters who were not M
+!   W,,
+will S!  at 1 WP 
+ ,! if they are res	ng.
+If the character was M
+!   W,,, they heal at 
+1 WP 	
+ !S + ,! they are res	ng.
+If the character is R* and undertaking no ac	vity, 
+they 
+U
+ RP ! S 
+! 	 1 
+ S
+.
+L@CGBNW WJRNIC
+A character who is M
+!   W,, must make a 
+successful Physicality check to avoid taking 1 D!!*.
+If they fail the check, they should roll 2d6 and suffer 
+the corresponding injury listed on T!Y  12: L!* 
+W,.
+As the name suggests, these wounds are permanent 
+and cannot be healed.
+S
+ T B
+!X* P
+Each character starts with a S
+ LU  of 0. 
+When faced with extreme stress or emo	onal trauma 
+(as determined by the Game Master or narra	ve 
+context), PCs must make a check using their S
+
+M,	
+, which is calculated by adding their R! 
++ A AM,. 
+If they fail this check, their S
+ LU  goes up by 1.
+If a character’s S
+ LU  reaches 5, they hit their 
+B
+!X* P. 
+The player rolls 2d6 and consults T!Y  13: B
+!X* 
+P to determine their character’s reac	on. This 
+ ! 	
+ 1,6 S
+ and, once the reac	on is 
+resolved, their S
+ LU  resets to 0. 
+Characters can reduce their S
+ LU  by 1 by 
+spending at least 8 uninterrupted in-game hours free 
+from combat, interpersonal conflict, or environmental 
+threat, while doing something they enjoy (such as 
+fishing).
+TABLE 13: BREAKING POINT
+2
+C@G@GJNB@
+-1 JN D?`G?KBGL HX?H_C 
+3
+CJDaRACBM? FB`@GBJN
+-2 R?@CJN
+4
+BABNI R@W?
+-1 D?`G?KBGL
+5
+DBCCJHB@GBJN
+-1 M@`BDRD RP
+6
+OM?K\X?AD
+-1 M@`. WJRNI PJBNGC
+7
+P@NBH SRKW?
+-1 INBGB@GBM? MJIBVB?K
+8
+F@G@ABCD
+-1 INVAR?NH?
+9
+R?H_A?CC AZ@NIJN
+-1 PXLCBH@ABGL
+10
+S?AV-H@KD
+-1 AHRD?N
+11 S?AV-D?CGKRHGBM? UKW?C
+-1 P?K -1 AHR
+12 IKK@GBJN@A ORGZRKCG
+-2 D?`G?KBGL
+M?IBRD
+At M, range, there are no modifiers to any 
+a+ack, and it is perfect for carbines or a bow. It is far 
+enough that a pistol shot would be wasted without 
+taking aim, but s	ll close enough to throw a grenade. 
+LJNW
+Too far for an accurate pistol shot but perfect for rifles, 
+being at  * range gives a -5 CM, to any pistol shot 
+but a +1 CM, to a rifle shot. 
+DBCG@NG
+The distance between the characters is so great that 
+they require radio equipment to communicate and 
+may struggle to see each other clearly. To hit from 
+D! range requires either a hun	ng rifle with a 
+scope or a sniper's rifle. 
+D!!*
+W?@aJN D@D@W?
+Each a+ack deals two types of damage - W, 
+P (WP) damage and R  P (RP)
+damage. 
+Weapons inflict both a consistent and a random 
+amount of damage, expressed as 5+1,6.
+For most ranged and slashing weapons, RP ,!!*  
+50% 	 S WP ,!!*, rounded down. 
+A+acks that inflict concussive damage or blunt force 
+trauma (such as fists, batons, or grenades) may do the 
+same amount of RP damage as WP damage. T!Y  
+16-19 or page xx show which weapons inflict 100% 
+Resilience Point damage.
+When using Melee Weapons or Unarmed Combat, the 
+user adds their Physicality AMod to the damage done. 
+This would be expressed in the format 4+1,6 + 
+PS!  AM,.
+For any character figh	ng with just their fists, the 
+damage done is 1,3 + PS!  AM, + U!
+, 
+CY! SM,. 
+SRZCBCG?NH? D@D@W? 
+A character can go without food and water for one day 
+without harm, but aTer that, they will lose 1 RP per 
+day from SY D!!*. 
+If a character drops to 0 RP from SY 
+D!!*, they are too weak to move and S		
+ 1 WP 
+
+ ,!. They will need another character to tend to 
+and feed them un	l they heal enough to look aTer 
+themselves, otherwise they D. 
+A character with a regular food and water supply will 
+heal at a rate of 1 WP and 1 RP per day.
+F@AABNW D@D@W? 
+Characters suffer 3 WP & RP damage for each 10’ that 
+they 	!  . 
+DKJ\NBNW 
+Characters can hold their breath in water for 6 + 
+PS!  AM, rounds. 
+For each subsequent round, they must make a 
+successful Physicality check or suffer 3 WP !, 3 RP 
+,!!* !S 
+,. 
+If a character's Resilience or Wound Points reach 0 
+because of D
++*, they will die unless another 
+character saves them.
+I!!!
+Once a character's R  P !
+ 
+,,  
+0, they will experience I!!! for 4 
+, -
+PS!  AM, (with a minimum of 1 round). 
+The character regains consciousness with 1 RP and 
+recovers 1 addi	onal RP per round if they are not in 
+combat. 
+M
+!  W, T D*
+If a character's Wound Points reach 0, they become 
+M
+!   W,,. They will D in 4 + PS!  
+AM, rounds unless they are S!Y b,. 
+SG@ZBABfBNW 
+If a character becomes M
+!   W,,, someone 
+must S!Y b them with a Successful Medicine* check, 
+or by achieving a Wild Success with a Reason check.
+TABLE 12: LASTING WOUNDS
+2
+LJCG EL?
+-1 JN HX?H_C RCBNW D?`G?KBGL
+3
+BK@BN INjRKL
+-2 R?@CJN
+4
+DBDBNBCX?I
+-1 D?`G?KBGL
+5
+SX@_?N
+-1 M@`. R?CBAB?NH? PJBNGC
+6
+W?@_?N?I
+-1 M@`. WJRNI PJBNGC
+7
+S_BGGBCX
+-1 INBGB@GBM? MJIBVB?K
+8
+SH@KKBNW
+-1 INVAR?NH?
+9
+FK@WBA?
+-1 PXLCBH@ABGL
+10 H?@KBNW LJCC
+-1 AHRD?N
+11
+CKBaaA?I
+-1 P?KH?aGBJN h -1 AHRD?N
+12
+SX?AA SXJH_
+-2 D?`G?KBGL
+
+
+========== SRD PHYSICAL PAGE 10 ==========
+
+18
+19
+Each character starts the game with both a P
+!
+
+and S,!
+ +! from T!Y  16-19. 
+Any weapon that requires ammuni	on starts with 1d3 
+reloads. 
+They also begin with one piece of equipment from 
+T!Y  20: E^, and an Incidental item that 
+does not contribute to combat but adds some in-game 
+benefit or helps develop the character, such as a map 
+or a pocketknife. 
+If players do not write items on their character sheet, 
+they do not have those items in the game. 
+07. WEAPONS & EQUIPMENT
+N!
+S_BAA
+R@NW?
+R@KBGL
+D@D@W?
+RP
+?NH
+TK@BGC
+B!Y!   B!
+M?A??
+ENW@W?I
+CJDDJN
+4+1I6
+100%
+1
+-
+B
+! KX 
+UN@KD?I
+ENW@W?I
+UNHJDDJN
++1
+100%
+0
+-
+B  +S
+AGXA?GBHC
+CAJC?
+UNHJDDJN
+1+1I3
+100%
+1
+UN\B?AIL (2)
+C Y
+M?A??
+ENW@W?I
+CJDDJN
+5+1I6
+100%
+2
+CRDZ?KCJD? (1)
+F
+ AZ
+M?A??
+CAJC?
+UNHJDDJN
+3+2I3
+50%
+1
+-
+H!S
+M?A??
+ENW@W?I
+CJDDJN
+3+1I3
+50%
+1
+-
+H* K	
+M?A??
+ENW@W?I
+CJDDJN
+2+2I3
+50%
+1
+UN\B?AIL (1)
+KS K	
+M?A??
+ENW@W?I
+CJDDJN
+2+1I3
+50%
+1
+-
+M!S
+M?A??
+CAJC?
+UNHJDDJN
+3+2I3
+50%
+1
+UN\B?AIL (2)
+M!XS	 C Y
+M?A??
+ENW@W?I
+CJDDJN
+3+1I3
+100%
+1
+-
+S ,*S!
+M?A??
+ENW@W?I
+UNHJDDJN
+3+3I3
+100%
+2
+CRDZ?KCJD? (2)
+S!
+M?A??
+CAJC?
+UNHJDDJN
+2+2I6
+50%
+1
+CRDZ?KCJD? (2)
+S!		
+M?A??
+CAJC?
+CJDDJN
+2+2I3
+100%
+1
+UN\B?AIL (1)
+S+
+,
+M?A??
+ENW@W?I
+UNHJDDJN
+3+3I3
+50%
+1
+-
+T!!  B!
+M?A??
+ENW@W?I
+UNHJDDJN
+4+2I3
+100%
+1
+-
+T!
+M?A??
+ENW@W?I
+UNHJDDJN
+2
+400%
+1
+SGRNN?I
+W, AZ
+M?A??
+CAJC?
+UNHJDDJN
+5+1I3
+50%
+1
+CRDZ?KCJD? (1)
+T!Y  16: M  W!
+N!
+S_BAA
+R@NW?
+R@KBGL
+D@D@W?
+RP
+ENC
+ADDJ
+CABa
+TK@BGC
+A! R	 
+R@NW?I
+LJNW
+UNHJDDJN
+5+2I6
+50%
+2
+UNHJDDJN
+30
+ARGJD@GBH BRKCG (3)
+B !X P+,
+ R	 
+R@NW?I
+LJNW
+UNHJDDJN
+5+1I6
+50%
+2
+UNHJDDJN
+1
+-
+B+
+R@NW?I
+M?IBRD
+CJDDJN
+4+1I6
+50%
+1
+CJDDJN
+1
+TK@H_BNW
+C!
+Y
+R@NW?I
+M?IBRD
+UNHJDDJN
+5+1I6
+50%
+1
+UNHJDDJN
+30
+ARGJD@GBH BRKCG
+C, B+
+R@NW?I
+LJNW
+CJDDJN
+4+2I3
+50%
+2
+CJDDJN
+1
+TK@H_BNW
+C
+Y+
+R@NW?I
+M?IBRD
+UNHJDDJN
+4+1I6
+50%
+2
+UNHJDDJN
+1
+UN\B?AIL (1)
+H!U P 
+R@NW?I
+CAJC?
+CJDDJN
+3+2I3
+50%
+1
+UNHJDDJN
+9
+-
+H* R	 
+R@NW?I
+LJNW
+CJDDJN
+5+1I6
+50%
+2
+UNHJDDJN
+12
+-
+L*S P 
+R@NW?I
+CAJC?
+CJDDJN
+3+1I6
+50%
+1
+CJDDJN
+6
+-
+SS* (P-A)
+R@NW?I
+M?IBRD
+CJDDJN
+5+2I6
+50%
+2
+CJDDJN
+5
+CAJC? Ua
+SS* (S!+,-O		)
+R@NW?I
+CAJC?
+UNHJDDJN
+2+3I6
+50%
+2
+CJDDJN
+2
+CAJC? Ua
+S *S
+R@NW?I
+CAJC?
+CJDDJN
+1+1I3
+100%
+0
+CJDDJN
+1
+TK@H_BNW
+S
+' R	 
+R@NW?I
+DBCG@NG
+R@K?
+2+3I6
+50%
+2
+UNHJDDJN
+10
+-
+T!Y  17: R!*, W!
+N!
+S_BAA
+R@NW?
+R@KBGL
+D@D.
+RP
+ENC
+CABa
+TK@BGC
+G
+!,
+AGXA?GBHC
+CAJC?
+UNHJDDJN
+2+2I6
+100%
+1
+1
+TK@H_BNW; BA@CG R@IBRC
+SX-G
+!,
+AGXA?GBHC
+CAJC?
+UNHJDDJN
+-
+-
+1
+1
+SGRNN?I
+F !S-B!* G
+!,
+AGXA?GBHC
+CAJC?
+UNHJDDJN
+-
+-
+1
+1
+SGRNN?I
+M
+!
+D?DJABGBJNC*
+DBCG@NG
+R@K?
+5+2I6
+100%
+2
+1
+BA@CG R@IBRC
+RX L!S
+D?DJABGBJNC*
+DBCG@NG
+R@K?
+3+3I6
+100%
+2
+1
+BA@CG R@IBRC
+T!Y  18: EZ U W!
+N!
+S_BAA
+R@NW?
+R@KBGL
+D@D@W?
+RP
+ENC
+CABa
+TK@BGC
+F !-TS
++
+D?DJABGBJNC*
+CAJC?
+R@K?
+3+2I6
+50%
+2
+30
+BRKNBNW (3)
+M U CX! 
+AGXA?GBHC
+CAJC?
+UNHJDDJN
+1+1I3
+50%
+2
+1
+TK@H_BNW; BRKNBNW (1)
+T
+!^ b
+ G
+R@NW?I
+M?IBRD
+R@K?
+0
+50%
+1
+1
+SGRNN?I
+T!Y  19: S!  W!
+N!
+R@KBGL
+ENC
+NJG?C JK TK@BGC
+A* 
+' S
+UNHJDDJN
+1
++2 GJ FBCXBNW @GG?DaGC
+B!X!X
+CJDDJN
+0
++2 ENHRDZK@NH?
+B! S
+UU!  K
+CJDDJN
+2
+T?NG, SA??aBNW B@W
+B  R!
+ K
+CJDDJN
+0
+-
+B  C
+
+CJDDJN
+1
+-
+B !
+
+CJDDJN
+1
++1 P?KH?aGBJN CX?H_ \X?N @G LJNW JK DBCG@NG R@NW?
+C!
+CJDDJN
+0
+-
+C Y* G!
+UNHJDDJN
+1
+INHARI?C KJa?C, H@K@ZBN?KC, @NI X@KN?CC?C. C@N Z? RC?I GJ CH@ABNW ZRBAIBNWC.
+C!
+CJDDJN
+0
++1 N@MBW@GBJN CX?H_C
+C
++Y!
+CJDDJN
+1
+-
+D
+' B!*
+UNHJDDJN
+1
++2 GJ @NL M?IBHBN?* HX?H_; X?@AC 1+2I3 JM?K @ 24 XJRK a?KBJI
+F
+-!
+* K
+CJDDJN
+0
+-
+F
+ A, K
+CJDDJN
+1
++1 GJ @NL M?IBHBN?* HX?H_; X?@AC 1+1I3 JM?K @ 24 XJRK a?KBJI
+FS* K
+CJDDJN
+1
++1 GJ FBCXBNW @GG?DaGC
+F !
+
+UNHJDDJN
+1
+-
+F !SY!*
+UNHJDDJN
+1
+CX@K@HG?KC @G CAJC? DRCG D@_? @ PXLCBH@ABGL HX?H_ JK Z? SGRNN?I(3)
+F !S *S
+UNHJDDJN
+1
+-
+G
+! * HX
+UNHJDDJN
+1
++1 GJ AGXA?GBHC HX?H_C \X?N HABDZBNW
+H!,		
+UNHJDDJN
+1
+-
+I! C!
+!
+UNHJDDJN
+1
+6 CX@KW?C, +1 M@NBaRA@GBJN \X?N RC?I JN a?JaA? BN aBHGRK?C
+H
+S T 
+UNHJDDJN
+1
+-
+L!
+
+CJDDJN
+1
+-
+L,!X
+UNHJDDJN
+1
+-
+M !
+ B!X!X
+UNHJDDJN
+0
++2 ENHRDZK@NH?
+M  
+CJDDJN
+1
++1 TBN_?KBNW JK M?HX@NBH* HX?H_
+N*S V G** 
+UNHJDDJN
+1
+AAAJ\C GX? \?@K?K GJ C?? HA?@KAL @G NBWXG
+R!, S!
+CJDDJN
+1
+-
+R!, F !
+
+CJDDJN
+1
+-
+R
+CJDDJN
+1
+-
+SSU 
+CJDDJN
+1
+-
+SX G
+!,
+UNHJDDJN
+1
+CX@K@HG?KC @G CAJC? K@NW? DRCG D@_? @ PHY HX?H_ JK SGRNN?I (3)
+S
+UU!  K
+UNHJDDJN
+2
+W@G?KaKJJV T?NG, SA??aBNW B@W, FBK?-CG@KGBNW KBG, 3 I@LC JV K@GBJNC 
+S!,!
+, LXX
+UNHJDDJN
+0
++1 GJ LJH_-PBH_BNW HX?H_C
+C
+!  LXX
+R@K?
+0
++3 GJ LJH_-PBH_BNW HX?H_C
+H* T
+!
+CJDDJN
+1
+-
+T X
+CJDDJN
+1
++1 M?HX@NBHC* HX?H_
+W! X-T! X
+UNHJDDJN
+1
+R@NW? JV 20 DBA?C
+W!
+ F 
+! 
+S
+UNHJDDJN
+1
+-
+W! T X
+UNHJDDJN
+1
+R?mRBK?I VJK W?@aJNC D@BNG?N@NH? @NI K?a@BKC
+W
+X!' T X
+UNHJDDJN
+1
++2 M?HX@NBHC* HX?H_
+T!Y  20: E^
+
+
+========== SRD PHYSICAL PAGE 11 ==========
+
+20
+21
+CJNIBGBJN h Ua_??a
+Items are all in one of 5 C, ! - P
+, 
+U,, W
+, D!!*,, or B
+X. 
+Regular usage will cause no change of condi	on but if 
+an item is subjected to heavy, sustained, prolonged, or 
+rough use, it will require an UX SX. 
+An UX SX uses MS!*, TX
+
+, or a 
+weapon related skill, such as R!*, CY!, M  
+CY!, H!U W!, D *, or 
+W!S*.
+S (9-13): There is no change to the item’s 
+condi	on.
+W , S (14+): The condi	on of the item is 
+raised by 1 level, to a maximum of U,.
+M 	 H*S I*S (6+6): The condi	on of the 
+item is raised by 2 levels, to a maximum of U,.
+F! 
+ (4-8): The condi	on of the item is reduced by 
+1 level.
+DBK? F@BARK? (0-3): The item breaks immediately.
+M 	 L+ I*S (1+1): The item breaks 
+immediately, doing 1 WP damage to the character.
+TK@BGC
+Certain weapons and pieces of equipment have 
+T
+!. Items can have mul	ple T
+!.
+These traits are A! B
+, B ! R!,, 
+B
+*, C -U, CY
+, S,, 
+T
+!X*, and U+ , (see T!Y  15: I T
+!). 
+Some traits have a number in parenthesis, such as 
+A! B
+ (3). The number is how many 
+rounds or charges the item uses.
+TABLE 14: ITEM CONDITION
+P
+ TX? BG?D BC BN a?KV?HG \JK_BNW JKI?K. 
++1 CMJI \X?N RC?I
+U,
+TX? BG?D BC BN WJJI \JK_BNW JKI?K.
+W
+
+TX? BG?D \JK_C ZRG K?mRBK?C H@K?. 
+-1 CMJI \X?N RC?I
+D!!*,
+TX? BG?D BC NJG \JK_BNW aKJa?KAL. 
+-2 CMJI \X?N RC?I
+B
+X
+TX? BG?D H@NNJG Z? RC?I RNA?CC 
+K?a@BK?I Z@H_ GJ D@D@W?I
+A! 
+B
+
+TX? \?@aJN H@N VBK? DRAGBaA? KJRNIC CBDRAG@N?JRCAL, @NI @N @GG@H_ BC D@I? @W@BNCG 
+@NL HX@K@HG?K \XJ BC @G ENW@W?I R@NW? GJ GX? G@KW?G. TX? GK@BGC ABCG GX? NRDZ?K JV 
+KJRNIC @ ZRKCG G@_?C, CRHX @C ARGJD@GBH BRKCG (3), \XBHX RC?C 3 KJRNIC.
+B ! R!,
+WX?N GXBC I?GJN@G?C, BG H@RC?C I@D@W? \BGXBN @ H?KG@BN @K?@. CX@K@HG?KC @G 
+ENW@W?I K@NW? G@_? FRAA I@D@W?. CX@K@HG?KC @G CAJC? K@NW? G@_? 50% JV GX? 
+I@D@W?.
+B
+*
+B?CBI?C GX? BNBGB@A I@D@W? I?@AG, @NLJN? XBG ZL GXBC \?@aJN \BAA CRVV?K @N 
+@IIBGBJN@A (X) WP/RP a?K KJRNI VJK I3 KJRNIC
+C -U
+TXBC \?@aJN XBGC BNIBCHKBDBN@G?AL, @NI @NLJN? @G ENW@W?I R@NW? JV GX? G@KW?G 
+CRCG@BNC 50% JV GX? I@D@W? GJ GX? G@KW?G
+CY
+
+TXBC \?@aJN BC ZBW @NI X?@ML, @NI GX? HX@K@HG?K K?mRBK?C @ PXLCBH@ABGL JV (X) BN 
+JKI?K GJ RC? BG JK GX?L BNHRK @N -X CMJI. TXBC D?@NC CRDZ?KCJD? (2) K?mRBK?C 
+@ PXLCBH@ABGL JV 2 JK BG BNHRKC @ -2 CMJI
+S,
+AAGXJRWX GXBC I?@AC NJ WJRNI PJBNG I@D@W?, JN @ WBAI SRHH?CC JK MJD?NG JV 
+HBWX INCBWXG, GX? G@KW?G BC INH@a@HBG@G?I VJK 1I6 - PHY MJI KJRNIC, \BGX @ 
+DBNBDRD JV 1 KJRNI
+T
+!X*
+WX?N aA@L?KC R?@IL TX?BK W?@aJN Z?VJK? @N @GG@H_ GX?L @ACJ GK@H_ GX?BK 
+G@KW?G. TX? R?@IL W?@aJN @HGBJN WK@NGC GX?D @ +1 ABD JN GX?BK N?`G AGG@H_
+U+ ,
+TXBC \?@aJN K?mRBK?C @ A?M?A JV VBN?CC? GJ Z? RC?I HJKK?HGAL, @NI GX? HX@K@HG?K 
+DRCG X@M? @ D?`G?KBGL JV (X) JK BNHRK @ -X MJI \X?N RCBNW. TXBC D?@NC 
+UN\B?AIL (2) K?mRBK?C @ D?`G?KBGL JV 2 JK GX?L BNHRK @ -2 CMJI
+TABLE 15: ITEM TRAITS
+C
+Player characters working together are a G
+. 
+Players can recruit NPCs to their G
+ via a 
+R
+ CSX. 
+If a G
+ grows to a combined total of 13 or more 
+PCs and NPCs, it becomes a C. 
+C require regular M
+!  CSX to 
+ensure they have the cohesion to remain together. 
+M
+!  CSX are usually required weekly, but the 
+exact cadence is up to the GM and the campaign being 
+played.
+Groups do not require M
+!  CSX.
+R
+
+R?HKRBGD?NG CX?H_C
+While the 
+
+ CSX mechanic remains the 
+same, depending on how the player F    S G!, 
+NPCs are R
+, into one of three different roles - 
+CS
+, C
+, or CU
+.
+A R
+ CSX uses a skill that appropriately 
+aligns with the approach the PCs are taking, such as 
+B!
+
+, PS **, or T!*. 
+R
+ CSX can be influenced by the F
+
+I
+ a player made on them (see F
+
+I
+ on page xx). 
+No ma+er how NPCs are being recruited, each 
+C must make a M
+!  CSX regularly to 
+ensure it remains cohesive. 
+CJXJKGC
+These NPCs have a shared interest or goal in common 
+with the PC that is furthered by working together.
+SRHH?CC (9-13): The NPC joins un	l the next 
+community M
+!  CSX.
+W , S (14+): The NPC becomes a CS
+
+immediately.
+M 	 H*S I*S (6+6): Not only does the 
+NPC join but the PC may choose to take them as an 
+A
+ (see below).
+F! 
+ (4-8): The NPC does not join. A R
+
+CSX may only be a+empted again if circumstances 
+change.
+DBK? F@BARK? (0-3): The NPC has no interest in joining 
+the PCs.
+M 	 L+ I*S (1+1): The NPC is alienated 
+or offended by the a+empt. It is possible that there is 
+some escala	on or tension that could include a violent 
+rejec	on of the offer.
+CJNCHKBaGC
+These NPCs are forced into service through coercion, 
+threats, or leverage. The PCs must present a credible 
+threat for C
+ to work.
+S (9-13): The NPC is C
+, under duress. 
+They will follow orders, regardless of individual 
+feelings, un	l the next M
+!  CSX.
+W , S (14+): The NPC joins willingly and 
+becomes a commi+ed and loyal follower.
+M 	 H*S I*S (6+6): Not only does the 
+NPC join but the PC may choose to take them as an 
+A
+ (see below).
+F! 
+ (4-8): The NPC may appear to comply but will 
+a+empt to escape at the first opportunity.
+DBK? F@BARK? (0-3): The NPC steadfastly refuses to join.
+M 	 L+ I*S (1+1): The NPC is so 
+unwilling to join that they might become hos	le or 
+violent.
+CJNM?KGC
+These NPCs are recruited through a shared belief, 
+ideology. Whether they are being promised answers, 
+direc	on, or security, they ul	mately join because 
+they believe in the message or vision presented by the 
+PC.
+S (9-13): NPC joins as a CU
+ but will wait 
+to see the outcome of the first M
+!  CSX before 
+really commi:ng.
+W , S (14+): The NPC becomes a commi+ed 
+believer and follower.
+M 	 H*S I*S (6+6): Not only does the 
+NPC join but the PC may choose to take them as an 
+A
+ (see below).
+08. COMMUNITIES
+
+
+========== SRD PHYSICAL PAGE 12 ==========
+
+22
+23
+F! 
+ (4-8): The NPC has no interest in joining. If the 
+players can F    S G! as to how they are taking 
+a different approach, they may a+empt another 
+R
+ CSX to win the NPC over. 
+DBK? F@BARK? (0-3): The NPC becomes wary and will 
+a+empt to distance themselves from the player.
+M 	 L+ I*S (1+1): The NPC is so 
+unwilling to join that they might become hos	le or 
+violent.
+AaaK?NGBH?C
+If a player gets a W , S or M 	 H*S
+I*S on a R
+ CSX, they may recruit 
+the NPC as their A
+. 
+It is also possible for a player to seek out a specific 
+NPC and make a deliberate R
+ a+empt. 
+Once recruited, an A
+ can undertake tasks 
+and ac	vi	es on behalf of or act as the proxy for a 
+player character. 
+Once recruited, the player should give the A
+
+a name (if they don’t already have one), roll 2d6 on 
+both the MU! and C ! tables, and 
+then work with the GM to F    S G! on the 
+A
+’ background.
+The player has 3 CDP to spend on raising the RAPID 
+Range A+ributes of the A
+ (see CS!
+!
+ 
+DU  P on page xx).
+They should pick a se:ng appropriate P
+	 for 
+them (see T!Y  8: P
+	 T V!!  SX  
+on page xx) and get 5 CDP to spend on raising their 
+skills.
+Over the course of one month of game 	me, the 
+player can train their A
+ in any single skill 
+that the player has, to one level lower than the player. 
+This means if the player has level 3 in a skill, they can 
+train their A
+ to level 2. 
+If a character receives Character Development Points 
+as part of game progression, the player may choose to 
+spend them on their A
+. See CS!
+!
+EU  on page xx.
+A player character can only have one A
+ at 
+any 	me. 
+M
+!  CSX T C 
+S
+
+, !, M,	
+
+For each week that passes in the game, a community 
+must make a successful M
+!  SX to ensure they 
+maintain the cohesion required to stay together. 
+M
+!  SX are made at the beginning of the 
+week. The outcome of the check might poten	ally 
+outline the steps leadership will need to take in order 
+to ensure the con	nued well-being of the community. 
+A worksheet to make tracking  
+
+ 
+!, 
+!  easier is available for download at 
+X
+SG!./SRD.
+MJK@A? CX?H_C
+Whether it is an NPC or PC, it is assumed that there is 
+an acknowledged and recognized community leader 
+who will make the check using any AMods or SMods 
+that might be appropriate.
+If there are a group of characters who are viewed as 
+leaders in equal standing, they may make a G
+ 
+CSX. 
+Each M
+!  CSX has six modifiers that are related 
+to the tasks, ac	vi	es, and roles required to ensure a 
+community has everything they need to survive - F,, 
+C S,, M, A
+, S C!	
+, E*S 
+H!,, A C !
+ V, and S  W!S OU
+ 
+M. See M
+!  CSX M,	
+ on page xx.
+Two of these modifiers - F, and C S, - are 
+derived from their own checks made prior to the 
+M
+!  CSX (See C S
+
+ on page 
+xx). The other modifiers require no dice check but are 
+as a result of the organiza	onal structure and health 
+of the community.
+Failed M
+!  CSX will result in members leaving, 
+further impac	ng the morale of the community in 
+future checks.
+ATer three consecu	ve failures, a community will 
+have degraded to the point of immediately and 
+irreconcilably falling apart and dissolving. Fast ac	ng 
+leaders may retain remnants of the group or specific 
+members.
+Any leader wishing to unite or retain fragments of a 
+dissolving community will need to make an immediate 
+M
+!  CSX as part of this a+empt, using the result 
+of the preceding M
+!  CSX as the M, 
+A
+, S C!	
+ CMod. 
+M@_BNW A MJK@A? HX?H_: 
+A M
+!  SX is 2,6 + AM, + SM, 	 S 
+S!
+!
+ !X* S SX + CM, 	
+ M, 
+A
+, S C!	
+, F,, C S,, E*S 
+H!,, A C !
+ V, and S  W!S OU
+ 
+M modifiers.
+MJK@A? CX?H_ ORGHJD?C
+S (9-13): Morale remains steady. There is 0 
+CMod for the next M
+!  CSX.
+W , S (14+): Morale stays strong or improves. 
+There is a +1 CMod on the next M
+!  CSX.
+M 	 H*S I*S (6+6): Belief in leadership 
+and the community itself is high. There is a +2 CMod 
+on the next M
+!  CSX.
+F! 
+ (4-8): Morale is slipping. Unless they are 
+stopped, 25% of the community will leave in the next 
+week. There is a -1 CMod to the following M
+!  
+CSX. 
+DBK? F@BARK? (0-3): The morale of the community 
+collapses. There are major consequences with 50% of 
+the community leaving in the next week. There is -2 
+CMod on the next M
+!  CSX.
+M 	 L+ I*S (1+1): There is infigh	ng, 
+rio	ng, outbreaks of anger or violence for the 
+following week with 75% of the community leaving. 
+There is a -3 CMod on the next M
+!  CSX.
+M
+!  CSX M,	
+:
+MJJI AKJRNI GX? C@DaVBK?: 
+This modifier is applied as a result of the previous 
+Morale check. if there was no previous Morale check, 
+0 CMod is applied. 
+M 	 H*S I*S (6+6): +2 CMod on the next 
+M
+!  CSX.
+W , S (14+): +1 CMod on the next M
+!  
+CSX.
+S (9-13): 0 CMod on the next M
+!  CSX.
+F! 
+ (4-8): -1 CMod on the next M
+!  CSX.
+DBK? F@BARK? (0-3): -2 CMod on the next M
+!  
+CSX.
+M 	 L+ I*S (1+1): -3 CMod on the next 
+M
+!  CSX.
+F?I h CAJGX?I:
+These CMods from the F, and C S, checks can 
+range from -3 to +2 (see G!S
+
+ and M!!
+
+below).
+ENJRWX H@NIC:
+Communi	es without enough members ac	ng as 
+G!S
+
+, M!!
+, or S!	 suffer a -1 CMod 
+for each group that is short, up to a maximum CMod 
+of -3.
+A CA?@K VJBH?:
+There is no CMod applied if there is a clear leadership 
+but a -1 CMod if there is no clear leadership.
+Someone To Watch Over Me: 
+There is a -1 CMod if less than 5% of the community 
+are assigned to S!	 du	es. 
+There is a +1 CMod if there are 10% of more of the 
+community are assigned to S!	 du	es.
+AIIBGBJN@A CMJIC: 
+Throughout the course of gameplay, there might be 
+incidents that impact the Community that are not 
+reflected above. It is up to the Game Master and the 
+players to F    S G! and quan	fy this impact on 
+the M
+!  SX. 
+CJDDRNBGL SGKRHGRK?
+In order for a community to func	on, a certain 
+number of members must be dedicated to specific 
+tasks. 
+G@GX?K?KC
+33% of any group (rounded down) must be 
+G!S
+
+. They are responsible for hun	ng, foraging, 
+farming, fishing, scavenging, or any other ac	vity that 
+brings in food and water for members of the 
+community in the form of R!. 
+
+
+========== SRD PHYSICAL PAGE 13 ==========
+
+24
+This group is responsible for the F, CSX. The 
+possible results of a F, CSX are:
+S (9-13): Baseline Ra	on needs are met. No 
+CMod to the F, CSX.
+W , S (14+): There are enough R! to 
+create a surplus. There is a -1 CMod on the next 
+M
+!  CSX. 
+M 	 H*S I*S (6+6): Enough luxury items 
+are found to provide a boot to the mood of the 
+community. There is +2 CMod on the next M
+! 
+CSX. 
+F! 
+ (4-8): There is a shorqall in R! leading to 
+only 1 meal a day. There is a -1 CMod on the next 
+M
+!  CSX.
+DBK? F@BARK? (0-3): Community members are 
+con	nuously hungry, some	mes going days between 
+R!. There is a -2 CMod on the next M
+! 
+CSX.
+M 	 L+ I*S (1+1): There is an addi	onal 
+complica	on, such as food contamina	on or famine 
+onset giving a -3 CMod on the next M
+!  CSX.
+M@BNG@BN?KC
+20% of any group (rounded down) are required to be 
+M!!
+. 
+Not only do they collect the requisite S  needed 
+such as clothing, tools, or ba+eries, but they also 
+repair and maintain buildings, equipment, and 
+vehicles to ensure everything remains in a func	onal 
+condi	on. 
+This group is responsible for the C S, CSX. The 
+possible results of a C S, CSX are:
+S (9-13): All systems, buildings, and equipment 
+are adequately maintained. 0 CMod on the next 
+M
+!  CSX.
+W , S (14+): Buildings and equipment are 
+adequately repaired, maintained, and even improved. 
+This gives a +1 CMod on the next M
+!  CSX.
+M 	 H*S I*S (6+6): Buildings and 
+equipment are in perfect working order. A project or 
+improvement goes well. There is +2 CMod to the next 
+M
+!  CSX.
+F! 
+ (4-8): Minor breakdowns occur, or there is a 
+deficit in required S . A -1 CMod is applied to 
+the next M
+!  CSX.
+DBK? F@BARK? (0-3): Con	nued breakdowns of buildings, 
+systems or equipment that impact the community. 
+There is a -2 CMod on the next M
+!  CSX.
+M 	 L+ I*S (1+1): There is damage or 
+breakdown of cri	cal infrastructure, buildings, 
+systems, or equipment that directly impact the 
+community. There is a 3 CMod on the next M
+! 
+CSX.
+S@V?GL
+5-10% of any community is required for policing, 
+patrol, firefigh	ng, and other emergency services that 
+keep the members safe. This group is also made up of 
+Community leadership. 
+There is no weekly S!	 check, but not having 
+enough members providing security and safety incurs 
+a -1 S  W!S OU
+ M CMod on the 
+Morale check.
+If there are enough people in each category, there is a 
++1 E*S H!, CMod on the M
+!  CSX.
+If there are not enough people in each category, there 
+is -1 E*S H!, CMod on the M
+!  CSX.
+PA@L?K L?I AHGBMBGB?C
+Unless explicitly stated, it is assumed that the F, and 
+C S, checks are being performed by NPCs who are 
+somewhat proficient. 
+Players may choose to spend their 	me contribu	ng to 
+these tasks and can use appropriate AMods or SMods 
+if they can F  I TS G! as to how they contributed
+0-3
+DBK? F@BARK?
+4-8
+F@BARK?
+9-13
+SRHH?CC
+14+
+WBAI SRHH?CC
+1+1
+MJD?NG JV LJ\ INCBWXG
+6+6
+MJD?NG JV HBWX INCBWXG
+T!Y  1: O
+APPENDIX A: TABLES
+^2
+DBDBNBCX?I
+^1
+W?@_
+0
+AM?K@W?
++1
+GJJI
++2
+SGKJNW
++3
+E`H?aGBJN@A
++4
+HRD@N P?@_
++5
+SRa?KXRD@N
+T!Y  2: A
+Y M,	
+ (AM,)
+^3
+IN?aG
+0
+UNGK@BN?I
++1
+B?WBNN?K
++2
+JJRKN?LD@N
++3
+PKJV?CCBJN@A
++4
+LBV?’C WJK_
+T!Y  3: SX   M,	
+ (SM,)
+^5
+DJJD?I TJ F@BARK?
+^4
+IDaKJZ@ZA?
+^3
+H@KI
+^2
+DBVVBHRAG
+^1
+CX@AA?NWBNW
+0
+AM?K@W?
++1
+SBDaA?
++2
+SGK@BWXG FJK\@KI
++3
+E@CL
++4
+TKBMB@A
++5
+DBMBN? ING?KM?NGBJN
+T!Y  4: C,!  M,	
+ (CM,)
+T!Y  7: MU!
+2
+AHHRDRA@G?
+3
+BRBAI
+4
+FBNI S@V?GL
+5
+H?IJNBCD
+6
+M@_? AD?NIC
+7
+PK?@HX
+8
+PKJG?HG
+9
+R?RNBG?
+10
+R?M?NW?
+11
+SG@L AABM?
+12
+T@_? AIM@NG@W?
+T!Y  6: C !
+2
+AIIBHGBJN
+3
+B?GK@L?I
+4
+CJI? JV HJNJK
+5
+CKBDBN@A P@CG
+6
+D@K?I?MBA
+7
+D@K_ S?HK?G
+8
+F@DBAL OZABW@GBJN
+9
+F@DJRC
+10
+LJCC
+11
+ORGCG@NIBNW D?ZG
+12
+P?KCJN@A EN?DL
+T!Y  5: S,!
+ S!
+WJRNI PJBNGC
+10 WP + PXLCBH@ABGL + D?`G?KBGL AMJI
+R?CBAB?NH? PJBNGC
+6 RP + PXLCBH@ABGL AMJI
+R@NW?I D?V?NCBM? MJI.
+A HX@K@HG?KC' D?`G?KBGL AMJI BC GX?BK R@NW?I D?V?NCBM? MJIBVB?K
+M?A?? D?V?NCBM? MJI.
+A HX@K@HG?KC' PXLCBH@ABGL AMJI BC GX?BK M?A?? D?V?NCBM? MJIBVB?K
+INBGB@GBM? MJIBVB?K
+AHRD?N + D?`G?KBGL AMJIC
+ENHRDZK@NH?
+6 ENHRDZK@NH? + PXLCBH@ABGL AMJI
+P?KH?aGBJN
+R?@CJN + AHRD?N AMJIC
+MJK@ABGL
+CX@K@HG?KC CG@KG \BGX @ MJK@ABGL JV 3
+SGK?CC MJIBVB?K
+R?@CJN + AHRD?N AMJIC
+
+
+========== SRD PHYSICAL PAGE 14 ==========
+
+A!,
+F@KDBNW, G?N?K@A KNJ\A?IW?, M?IBHBN?*, PCLHXJAJWL*, R?C?@KHX, T@HGBHC*, SRKMBM@A
+D
+U
+ANBD@A H@NIABNW, DKBMBNW, M?HX@NBH*, N@MBW@GBJN, SH@M?NWBNW, SA?BWXG JV H@NI, TBN_?K?K
+E
+
+
+ B@KG?K, G?N?K@A KNJ\A?IW?, INCaBK@GBJN, M@NBaRA@GBJN, PCLHXJAJWL*, SA?BWXG JV H@NI, TBN_?K?K
+L!+ E	
+
+AGXA?GBHC, SRKMBM@A, INGBDBI@GBJN, M@NBaRA@GBJN, R@NW?I CJDZ@G, SG?@AGX, T@HGBHC*
+MS!
+AGXA?GBHC, B@KG?K, D?DJABGBJNC*, G?N?K@A KNJ\A?IW?, M?HX@NBH*, SH@M?NWBNW, TBN_?K?K
+M,
+AGXA?GBHC, G?N?K@A KNJ\A?IW?, INCaBK@GBJN, M?IBHBN?*, PCLHXJAJWL*, R?C?@KHX, SA?BWXG JV H@NI
+M !
+
+AGXA?GBHC, D?DJABGBJNC*, R@NW?I CJDZ@G, SG?@AGX, SRKMBM@A, T@HGBHC*, UN@KD?I CJDZ@G
+O,
+!
+ANBD@A H@NIABNW, F@KDBNW, M?A?? CJDZ@G, N@MBW@GBJN, R@NW?I CJDZ@G, SG?@AGX, SRKMBM@A
+O !+
+INGBDBI@GBJN, M@NBaRA@GBJN, PCLHXJAJWL*, R@NW?I CJDZ@G, SA?BWXG JV H@NI, SG?@AGX, UN@KD?I CJDZ@G
+P
+	
+
+AGXA?GBHC, B@KG?K, INCaBK@GBJN, M@NBaRA@GBJN, PCLHXJAJWL*, SA?BWXG JV H@NI, SG?@AGX
+P !
+B@KG?K, G?N?K@A KNJ\A?IW?, INCaBK@GBJN, INGBDBI@GBJN, M@NBaRA@GBJN, PCLHXJAJWL*, T@HGBHC*
+T
+!,
+B@KG?K, G?N?K@A KNJ\A?IW?, INCaBK@GBJN, M@NBaRA@GBJN, SH@M?NWBNW, SA?BWXG JV H@NI, TBN_?K?K
+T!Y  8: P
+	 T SX  
+ABD
++2 CMJI GJ GX? N?`G AGG@H_ JN GX?BK G@KW?G. TX? HX@K@HG?K'C N?`G @HGBJN DRCG 
+Z? @N AGG@H_, JK GX? ABD BC AJCG
+AGG@H_
+AN @GG@H_ RCBNW UN@KD?I, R@NW?I JK M?A?? CJDZ@G. IV GXBC BC RC?I VJK ZJGX 
+@HGBJNC @W@BNCG GX? C@D? G@KW?G, GX?K? BC @ +1 CMJI GJ GX? C?HJNI RC?, @C GX? 
+VBKCG @GG@H_ X?Aa?I GX?D N@KKJ\ BN JN GX?BK G@KW?G
+CX@KW?
+TXBC RC?C ZJGX @HGBJNC ZRG @AAJ\C @ HX@K@HG?K GJ DJM? G\BH? @NI ?NI GX?BK 
+@HGBJN \BGX ?BGX?K @ M?A?? JK @N UN@KD?I CJDZ@G AGG@H_
+CJJKIBN@G?
+IV @ HX@K@HG?K H@N C?? GX? G@KW?G @NI D@_?C @ SRHH?CCVRA T@HGBHC* HX?H_, @NL 
+HX@K@HG?K \BGXBN CAJC? K@NW? JV GX? HX@K@HG?K D@_BNW GX? HX?H_ W?GC @ +2 
+ZJNRC \X?N @GG@H_BNW GX@G G@KW?G. ON @ WBAI SRHH?CC, GXBC H@KKB?C JM?K GJ GX? 
+N?`G KJRNI @C @ +1 CMJI
+CJM?K FBK?
+E@HX a?KCJN/WKJRa G@KW?G?I K?mRBK?C @ C?a@K@G? AGG@H_. SRHH?CCVRA AGG@H_C 
+WBM? -2 CMJI GJ GX? G@KW?G'C N?`G @HGBJN, C_BAA, JK @GGKBZRG? HX?H_
+D?V?NI
+TXBC @HGBJN @IIC +2 GJ GX? HX@K@HG?K'C D?V?NCBM? MJIBVB?KC VJK GX? N?`G 
+BNHJDBNW @GG@H_. TXBC IJ?C NJG H@KKL JM?K BNGJ GX? N?`G KJRNI
+DBH? CX?H_
+AN @HGBJN H@N Z? RC?I GJ D@_? @N @GGKBZRG? JK C_BAA HX?H_
+DBCGK@HG
+A SRHH?CCVRA INGBDBI@GBJN, PCLHXJAJWL* JK T@HGBHC* HX?H_ DBCGK@HGC @ G@KW?G 
+\XJ GX?N AJC?C GX?BK N?`G CJDZ@G AHGBJN. ON @ WBAI SRHH?CC, GX?L AJC? ZJGX 
+CJDZ@G AHGBJNC
+FBK? VKJD CJM?K
+FBK? FKJD CJM?K @AAJ\C HX@K@HG?KC \XJ X@M? aK?MBJRCAL T@_?N CJM?K GJ RC? 
+ZJGX @HGBJNC GJ HJD? JRG JV HJM?K, VBK? GX?BK \?@aJN, @NI K?GRKN GJ HJM?K 
+\BGXJRG AJCBNW @NL D?V?NCBM? MJIBVB?K JN BNHJDBNW @GG@H_C
+GK@aaABNW
+A HX@K@HG?K H@N D@_? @N OaaJC?I CX?H_ (C?? OaaJC?I CX?H_C JN a@W? 7) 
+RCBNW UN@KD?I CJDZ@G GJ aBN @N ?N?DL BN aA@H?
+INCaBK?
+ON @ CRHH?CCVRA INCaBK@GBJN HX?H_, @ G@KW?G @G CAJC? K@NW? W@BNC @N @IIBGBJN@A 
+CJDZ@G AHGBJN GXBC KJRNI. A HX@K@HG?K H@N JNAL Z? INCaBK?I JNH? a?K KJRNI
+T!Y  10: CY! A
+MJM?
+PA@L?KC H@N HX@NW? R@NW? Z@NIC (C?? R@NW? JN a@W? 17)
+R@aBI FBK?
+A HX@K@HG?K H@N D@_? G\J CXJGC a?K KJRNI. TX? VBKCG JN? CRVV?KC @ -1 CMJI, 
+GX? C?HJNI X@C @ -3 CMJI. IV @ HX@K@HG?K RC?C GXBC VJK ZJGX CJDZ@G AHGBJNC, 
+GX?L CRVV?K @ -2 CMJI @NI -4 CMJI GJ GXJC? @GG@H_C
+R?@IL W?@aJNC
+A \?@aJN DRCG Z? R?@IB?I Z?VJK? BG H@N Z? RC?I. TXBC @HGBJN DRCG @ACJ Z? G@_?N 
+GJ K?AJ@I @ \?@aJN JK BV @ \?@aJN Z?HJD?C j@DD?I
+R?aJCBGBJN
+TXBC @HGBJN G@_?C aA@H? @G GX? ?NI JV @ KJRNI BN GX? R?CJARGBJN aX@C?, 
+@AAJ\BNW @ HX@K@HG?K GJ W?G CBGR@G?I VJK GX? VJAAJ\BNW KJRNI
+SaKBNG
+SaKBNG RC?C ZJGX @HGBJNC GJ HJM?K 3 GBD?C GX? NJKD@A @DJRNG JV WKJRNI BN @ 
+CBNWA? DJM?. IV GX? HX@K@HG?K V@BAC GJ D@_? @ CRHH?CCVRA AGXA?GBHC HX?H_ @G GX? 
+?NI JV GX? KJRNI, GX?L \BAA Z?HJD? \BNI?I @NI AJC? @ CJDZ@G AHGBJN BN GX? 
+N?`G KJRNI
+SRZIR?
+WX?N @GG?DaGBNW GJ SRZIR? @NJGX?K HX@K@HG?K, VRAA R?CBAB?NH? PJBNG I@D@W? 
+BC IJN? ZRG WJRNI PJBNG I@D@W? BC I?@AG @G 50% (C?? D@D@W? JN a@W? 18). C@N 
+JNAL Z? RC?I \BGX UN@KD?I JK M?A?? @GG@H_C
+T@_? CJM?K
+T@_BNW CJM?K WBM?C @ +2 D?V?NCBM? MJIBVB?K VJK @AA @GG@H_C GX@G G@_? aA@H? 
+@W@BNCG GX@G HX@K@HG?K IRKBNW GX@G HJDZ@G KJRNI
+T!Y  10: CY! A (.)
+TABLE 13: BREAKING POINT
+2
+C@G@GJNB@
+-1 JN D?`G?KBGL HX?H_C 
+3
+CJDaRACBM? FB`@GBJN
+-2 R?@CJN
+4
+BABNI R@W?
+-1 D?`G?KBGL
+5
+DBCCJHB@GBJN
+-1 M@`BDRD RP
+6
+OM?K\X?AD
+-1 M@`. WJRNI PJBNGC
+7
+P@NBH SRKW?
+-1 INBGB@GBM? MJIBVB?K
+8
+F@G@ABCD
+-1 INVAR?NH?
+9
+R?H_A?CC AZ@NIJN
+-1 PXLCBH@ABGL
+10
+S?AV-H@KD
+-1 AHRD?N
+11 S?AV-D?CGKRHGBM? UKW?C
+-1 P?K -1 AHR
+12 IKK@GBJN@A ORGZRKCG
+-2 D?`G?KBGL
+TABLE 12: LASTING WOUNDS
+2
+LJCG EL?
+-1 JN HX?H_C RCBNW D?`G?KBGL
+3
+BK@BN INjRKL
+-2 R?@CJN
+4
+DBDBNBCX?I
+-1 D?`G?KBGL
+5
+SX@_?N
+-1 M@`. R?CBAB?NH? PJBNGC
+6
+W?@_?N?I
+-1 M@`. WJRNI PJBNGC
+7
+S_BGGBCX
+-1 INBGB@GBM? MJIBVB?K
+8
+SH@KKBNW
+-1 INVAR?NH?
+9
+FK@WBA?
+-1 PXLCBH@ABGL
+10 H?@KBNW LJCC
+-1 AHRD?N
+11
+CKBaaA?I
+-1 P?KH?aGBJN h -1 AHRD?N
+12
+SX?AA SXJH_
+-2 D?`G?KBGL
+1 ENW@W?I +1 CMJI GJ M?A?? @GG@H_C @NI @ -
+1 GJ R@NW?I @GG@H_C
+2
+CAJC?
+M?A?? HJDZ@G CRVV?KC @ -1 CMJI 
+a?N@AGL. R@NW?I @GG@H_C W?G @ +1 
+R@NW? CMJI
+3 M?IBRD NJ DJIBVB?KC
+4
+LJNW
+-5 CMJI GJ @NL aBCGJA CXJG ZRG @ 
++1 CMJI GJ @ RBVA? CXJG
+5 DBCG@NG
+ONAL @ HRNGBNW RBVA? JK @ SNBa?K’C 
+RBVA? H@N CGKB_? VKJD GXBC K@NW?
+T!Y  11: R!*
+APPENDIX A: TABLES
+APPENDIX A: TABLES
+
+
+========== SRD PHYSICAL PAGE 15 ==========
+
+28
+29
+APPENDIX B: SKILLS
+A! 
+B
+
+TX? \?@aJN H@N VBK? DRAGBaA? KJRNIC CBDRAG@N?JRCAL, @NI @N @GG@H_ BC D@I? @W@BNCG 
+@NL HX@K@HG?K \XJ BC @G ENW@W?I R@NW? GJ GX? G@KW?G. TX? GK@BGC ABCG GX? NRDZ?K JV 
+KJRNIC @ ZRKCG G@_?C, CRHX @C ARGJD@GBH BRKCG (3), \XBHX RC?C 3 KJRNIC.
+B ! R!,
+WX?N GXBC I?GJN@G?C, BG H@RC?C I@D@W? \BGXBN @ H?KG@BN @K?@. CX@K@HG?KC @G 
+ENW@W?I K@NW? G@_? FRAA I@D@W?. CX@K@HG?KC @G CAJC? K@NW? G@_? 50% JV GX? 
+I@D@W?, @NI GXJC? @G CAJC? G@_? 25% JV GX? I@D@W?.
+B
+*
+B?CBI?C GX? BNBGB@A I@D@W? I?@AG, @NLJN? XBG ZL GXBC \?@aJN \BAA CRVV?K @N 
+@IIBGBJN@A (X) WP/RP a?K KJRNI VJK I3 KJRNIC
+C -U
+TXBC \?@aJN XBGC BNIBCHKBDBN@G?AL, @NI @NLJN? @G ENW@W?I R@NW? JV GX? G@KW?G 
+CRCG@BNC 50% JV GX? I@D@W? GJ GX? G@KW?G
+CY
+
+TXBC \?@aJN BC ZBW @NI X?@ML, @NI GX? HX@K@HG?K K?mRBK?C @ PXLCBH@ABGL JV (X) BN 
+JKI?K GJ RC? BG JK GX?L BNHRK @N -X CMJI. TXBC D?@NC CRDZ?KCJD? (2) K?mRBK?C 
+@ PXLCBH@ABGL JV 2 JK BG BNHRKC @ -2 CMJI
+S,
+AAGXJRWX GXBC I?@AC NJ WJRNI PJBNG I@D@W?, JN @ WBAI SRHH?CC JK MJD?NG JV 
+HBWX INCBWXG, GX? G@KW?G BC INH@a@HBG@G?I VJK 1I6 - PHY MJI KJRNIC, \BGX @ 
+DBNBDRD JV 1 KJRNI
+T
+!X*
+WX?N aA@L?KC R?@IL TX?BK W?@aJN Z?VJK? @N @GG@H_ GX?L @ACJ GK@H_ GX?BK 
+G@KW?G. TX? R?@IL W?@aJN @HGBJN WK@NGC GX?D @ +1 ABD JN GX?BK N?`G AGG@H_
+U+ ,
+TXBC \?@aJN K?mRBK?C @ A?M?A JV VBN?CC? GJ Z? RC?I HJKK?HGAL, @NI GX? HX@K@HG?K 
+DRCG X@M? @ D?`G?KBGL JV (X) JK BNHRK @ -X MJI \X?N RCBNW. TXBC D?@NC 
+UN\B?AIL (2) K?mRBK?C @ D?`G?KBGL JV 2 JK GX?L BNHRK @ -2 CMJI
+T!Y  15: I T
+!
+T!Y  14: I C,
+P
+ TX? BG?D BC BN a?KV?HG \JK_BNW JKI?K. 
++1 CMJI \X?N RC?I
+U,
+TX? BG?D BC BN WJJI \JK_BNW JKI?K.
+W
+
+TX? BG?D \JK_C ZRG K?mRBK?C H@K?. 
+-1 CMJI \X?N RC?I
+D!!*,
+TX? BG?D BC NJG \JK_BNW aKJa?KAL. 
+-2 CMJI \X?N RC?I
+B
+X
+TX? BG?D H@NNJG Z? RC?I RNA?CC 
+K?a@BK?I Z@H_ GJ D@D@W?I
+T!Y  9: SX  
+SX  
+AGGKBZRG?
+D?CHKBaGBJN
+A!  H!, *
+INVAR?NH?
+UNI?KCG@NIBNW XJ\ GJ \JK_ \BGX @NBD@AC, VKJD Z@CBH 
+JZ?IB?NH? GJ X?KI D@N@W?D?NG
+A
+!
+R?@CJN
+Sa@H? M?CC?A Ja?K@GBJNC, BNHARIBNW @CGKJW@GBJN, jRDa 
+Ja?K@GBJNC, EVA/f?KJ-G aKJH?IRK?C, @NI C@V?GL aKJGJHJAC
+ AS 
+PXLCBH@ABGL
+FBGN?CC, @WBABGL, CG@DBN@, @NI HJJKIBN@GBJN, BNHARIBNW 
+HABDZBNW, jRDaBNW, C\BDDBNW, @NI JM?KHJDBNW JZCG@HA?C
+ B!
+
+AHRD?N
+AKK@NWBNW I?@AC, ?NGBHBNW ZRL?KC, @aaK@BCBNW WJJIC, X@WWABNW 
+VJK GX? Z?CG JRGHJD?, @NI HAJCBNW I?@AC
+C
+
+R?@CJN
+D??a RNI?KCG@NIBNW JV IBWBG@A CLCG?DC @NI @KHXBG?HGRK?, 
+HJM?KBNW GKJRZA?CXJJGBNW GJ HJIBNW, X@H_BNW, @NI CLCG?D 
+HJNGKJA
+ D * 
+PXLCBH@ABGL
+TX? D@NRV@HGRK? @NI RC? JV ?`aAJCBM?C, K@NWBNW VKJD 
+BDaKJMBC?I HX@KW?C GJ aK?HBCBJN DBABG@KL I?DJABGBJNC
+ D
+U*
+D?`G?KBGL
+DKBM? @NL M?XBHA? \BGX HJNVBI?NH? @NI VBN?CC?, GXBC @AAJ\C VJK 
+K?H_A?CC D@N?RM?KC \BGXJRG \K?H_BNW
+E
+!
+INVAR?NH?
+TX? HX@KBCD@ @NI G@A?NG GJ H@aGBM@G? @N @RIB?NH? GXKJRWX 
+DRCBH, CJNW, @HGBNW, HJD?IL, CGJKLG?AABNW, JK JGX?K VJKD JV 
+a?KVJKD@NH?
+ F!
+*
+AHRD?N
+KNJ\BNW XJ\ GJ WKJ\ HKJaC JK K@BC? ABM?CGJH_ @G CH@A? GJ 
+CRCG@BN A@KW? WKJRaC JV a?JaA?
+G!Y *
+AHRD?N
+TX? RNI?KCG@NIBNW JV RNI?KALBNW D?HX@NBHC Z?XBNI W@D?C JV 
+HX@NH?, KBC_, @NI K?\@KI, @NI GX? HJNVBI?NH? JV _NJ\BNW 
+\X?N GJ Z?G JK VJAI
+H!U W!*
+PXLCBH@ABGL
+TX? Ja?K@GBJN JV HJDaA?`, A@KW?-CH@A? Z@GGA?VB?AI \?@aJNC 
+AB_? D@HXBN? WRNC, A@RNHX?KC, @NI @KGBAA?KL
+ I
+!
+INVAR?NH?
+B?BNW @ZA? GJ ZJJCG GX? DJK@A? JV BNIBMBIR@AC JK WKJRaC JK 
+DJGBM@G? GX?D Z?XBNI @ CX@K?I MBCBJN JK Z?AB?V 
+LX-PX**
+AHRD?N
+BLa@CCBNW AJH_C @NI C?HRKBGL I?MBH?C GJ Ja?N GX?D \BGXJRG 
+_?LC JK HJI?C
+M! !
+INVAR?NH?
+G?GGBNW JGX?KC GJ GXBN_, Z?AB?M?, JK @HG BN \@LC GX@G GX?L D@L 
+NJG X@M? JGX?K\BC? IJN?
+ MS!*
+R?@CJN
+DB@WNJC?, K?a@BK, D@BNG@BN, JK ZRBAI HJDaA?` D@HXBN?C, GJJAC, 
+M?XBHA?C, @NI CLCG?DC
+ M,*
+R?@CJN
+PKJMBIBNW VBKCG @BI, IB@WNJCBC, GK?@GD?NG, ?D?KW?NHL 
+CG@ZBABf@GBJN @NI @IM@NH?I D?IBH@A H@K? GJ GX? BNjRK?I JK BAA
+M  CY! 
+PXLCBH@ABGL
+TK@BNBNW \BGX D?A?? \?@aJNC GJ BDaKJM? HAJC?-mR@KG?KC 
+aK?HBCBJN, @HHRK@HL @NI I@D@W?
+ N!U*! 
+AHRD?N
+INN@G?AL @ZA? GJ IBCH?KN IBK?HGBJNC, K?D?DZ?K KJRG?C, @NI 
+aAJG @HHRK@G? HJRKC?C
+P 
+D?`G?KBGL
+S@V?AL Ja?K@G? @BKHK@VG JK Ca@H?HK@VG, BNHARIBNW G@_?JVV, 
+A@NIBNW, @NI Z@CBH VABWXG aKJH?IRK?C
+ PS ** 
+INVAR?NH?
+L?M?K@WBNW @N RNI?KCG@NIBNW JV XRD@N Z?X@MBJK GJ 
+BNVAR?NH?, aK?IBHG, ?`aAJBG, JK D@NBaRA@G? JRGHJD?C
+R!*, CY!
+D?`G?KBGL
+AHHRK@G?AL @NI C@V?AL RCBNW aKJj?HGBA? \?@aJNC, K@NWBNW 
+VKJD GXKJ\N JZj?HGC GJ CNBa?K KBVA?C 
+APPENDIX A: TABLES
+
+
+========== SRD PHYSICAL PAGE 16 ==========
+
+APPENDIX B: SKILLS
+30
+31
+SX  
+AGGKBZRG?
+D?CHKBaGBJN
+ R!
+S
+R?@CJN
+B?BNW @ZA? GJ ?VVBHB?NGAL JKW@NBf?, IBCGBAA, @NI @ZCJKZ 
+BNVJKD@GBJN GJ mRBH_AL Z?HJD? \?AA BNVJKD?I JN @NL CRZj?HG
+S!U**
+AHRD?N
+FBNIBNW @NI ?M@AR@GBNW DBCC?I, XBII?N, JK IBCH@KI?I BG?DC 
+GX@G CGBAA X@M? RC? VJK CRKMBM@A JK GK@I?
+S*
+R?@CJN
+PK@HGBH@A @aaABH@GBJN JV CHB?NGBVBH aKBNHBaA?C K?A@GBNW GJ 
+K?C?@KHX, ?`a?KBD?NGC, @NI BNNJM@GBJNC
+S *S 	 H!, 
+D?`G?KBGL
+W?AA aK@HGBH?I BN a?KVJKDBNW CA?BWXG-JV-X@NI GKBH_C, a@ADBNW, 
+aBH_aJH_?GBNW, HJNH?@AD?NG, @NI HK?@GBNW CRZGA? IBM?KCBJNC
+S	 K+ ,*
+R?@CJN
+KNJ\A?IW? @ZJRG GX? XBCGJKL, A@LJRG, @NI C?HK?GC JV @ Ca?HBVBH 
+@K?@, HJDDRNBGL, a?KCJN, JK IBCHBaABN? (CRHX @C A@\). TXBC 
+_NJ\A?IW? CXJRAI Z? K?HJKI?I JN GX?BK HX@K@HG?K CX??G.
+S! S
+PXLCBH@ABGL
+KNJ\BNW XJ\ GJ DJM? @NI GJ CGBH_ GJ GX? CX@IJ\C \XBA? 
+@MJBIBNW Z?BNW I?G?HG?I
+S
++
+AHRD?N
+INCGBNHGBM?AL Z?BNW @ZA? GJ N@MBW@G? RKZ@N ?NMBKJND?NGC, K?@I 
+CBGR@GBJNC VJK I@NW?K, @NI BI?NGBVL RNI?K\JKAI K?CJRKH?C
+S
+UU! 
+AHRD?N
+TX? N@GRK@A BNHABN@GBJN @NI @ZBABGL GJ D@_? CJD?GXBNW JRG JV 
+NJGXBNW, VB` C??DBNWAL RNVB`@ZA? GXBNWC, JK GJ 
+G@_? CJD?GXBNW GX@G \JK_C @NI D@_? BG \JK_ Z?GG?K
+T!* 
+R?@CJN
+TX? @aaABH@GBJN JV Z@GGA?VB?AI JK BNG?Ka?KCJN@A CGK@G?WB?C BN 
+JKI?K GJ W@BN @ CBGR@GBJN@A @IM@NG@W? JK Raa?K X@NI
+TX
+
+D?`G?KBGL
+B?BNW @I?aG @G VB`BNW, DJIBVLBNW, JK BDaKJMBNW D@HXBN?C, 
+W?@K, JK \?@aJNC @C \?AA @C GX? @ZBABGL GJ BDaKJMBC? 
+BNM?NGBJNC
+U!
+, CY! 
+PXLCBH@ABGL
+KNJ\A?IW? @NI aK@HGBH? JV WK@aaABNW, VBCG VBWXG, Z@K? VBCGC JK 
+D@KGB@A @KGC, @NI ZJIL HJNGKJA
+W!S*
+D?`G?KBGL
+CK@VGBNW, K?a@BKBNW, @NI DJIBVLBNW \?@aJNC GJ ?NCRK? 
+K?AB@ZBABGL @NI ?VV?HGBM?N?CC
+T!Y  9: SX   (C.)
+N!
+S_BAA
+R@NW?
+R@KBGL
+D@D@W?
+RP
+?NH
+TK@BGC
+B!Y!   B!
+M?A??
+ENW@W?I
+CJDDJN
+4+1I6
+100%
+1
+-
+B
+! KX 
+UN@KD?I
+ENW@W?I
+UNHJDDJN
++1
+100%
+0
+-
+B  +S
+AGXA?GBHC
+CAJC?
+UNHJDDJN
+1+1I3
+100%
+1
+UN\B?AIL (2)
+C Y
+M?A??
+ENW@W?I
+CJDDJN
+5+1I6
+100%
+2
+CRDZ?KCJD? (1)
+F
+ AZ
+M?A??
+CAJC?
+UNHJDDJN
+3+2I3
+50%
+1
+-
+H!S
+M?A??
+ENW@W?I
+CJDDJN
+3+1I3
+50%
+1
+-
+H* K	
+M?A??
+ENW@W?I
+CJDDJN
+2+2I3
+50%
+1
+UN\B?AIL (1)
+KS K	
+M?A??
+ENW@W?I
+CJDDJN
+2+1I3
+50%
+1
+-
+M!S
+M?A??
+CAJC?
+UNHJDDJN
+3+2I3
+50%
+1
+UN\B?AIL (2)
+M!XS	 C Y
+M?A??
+ENW@W?I
+CJDDJN
+3+1I3
+100%
+1
+-
+S ,*S!
+M?A??
+ENW@W?I
+UNHJDDJN
+3+3I3
+100%
+2
+CRDZ?KCJD? (2)
+S!
+M?A??
+CAJC?
+UNHJDDJN
+2+2I6
+50%
+1
+CRDZ?KCJD? (2)
+S!		
+M?A??
+CAJC?
+CJDDJN
+2+2I3
+100%
+1
+UN\B?AIL (1)
+S+
+,
+M?A??
+ENW@W?I
+UNHJDDJN
+3+3I3
+50%
+1
+-
+T!!  B!
+M?A??
+ENW@W?I
+UNHJDDJN
+4+2I3
+100%
+1
+-
+T!
+M?A??
+ENW@W?I
+UNHJDDJN
+2
+400%
+1
+SGRNN?I
+W, AZ
+M?A??
+CAJC?
+UNHJDDJN
+5+1I3
+50%
+1
+CRDZ?KCJD? (1)
+T!Y  16: M  W!
+N!
+S_BAA
+R@NW?
+R@KBGL
+D@D@W?
+RP
+ENC
+ADDJ
+CABa
+TK@BGC
+A! R	 
+R@NW?I
+LJNW
+UNHJDDJN
+5+2I6
+50%
+2
+UNHJDDJN
+30
+ARGJD@GBH BRKCG (3)
+B !X P+,
+ R	 
+R@NW?I
+LJNW
+UNHJDDJN
+5+1I6
+50%
+2
+UNHJDDJN
+1
+-
+B+
+R@NW?I
+M?IBRD
+CJDDJN
+4+1I6
+50%
+1
+CJDDJN
+1
+TK@H_BNW
+C!
+Y
+R@NW?I
+M?IBRD
+UNHJDDJN
+5+1I6
+50%
+1
+UNHJDDJN
+30
+ARGJD@GBH BRKCG
+C, B+
+R@NW?I
+LJNW
+CJDDJN
+4+2I3
+50%
+2
+CJDDJN
+1
+TK@H_BNW
+C
+Y+
+R@NW?I
+M?IBRD
+UNHJDDJN
+4+1I6
+50%
+2
+UNHJDDJN
+1
+UN\B?AIL (1)
+H!U P 
+R@NW?I
+CAJC?
+CJDDJN
+3+2I3
+50%
+1
+UNHJDDJN
+9
+-
+H* R	 
+R@NW?I
+LJNW
+CJDDJN
+5+1I6
+50%
+2
+UNHJDDJN
+12
+-
+L*S P 
+R@NW?I
+CAJC?
+CJDDJN
+3+1I6
+50%
+1
+CJDDJN
+6
+-
+SS* (P-A)
+R@NW?I
+M?IBRD
+CJDDJN
+5+2I6
+50%
+2
+CJDDJN
+5
+CAJC? Ua
+SS* (S!+,-O		)
+R@NW?I
+CAJC?
+UNHJDDJN
+2+3I6
+50%
+2
+CJDDJN
+2
+CAJC? Ua
+S *S
+R@NW?I
+CAJC?
+CJDDJN
+1+1I3
+100%
+0
+CJDDJN
+1
+TK@H_BNW
+S
+' R	 
+R@NW?I
+DBCG@NG
+R@K?
+2+3I6
+50%
+2
+UNHJDDJN
+10
+-
+T!Y  17: R!*, W!
+N!
+S_BAA
+R@NW?
+R@KBGL
+D@D.
+RP
+ENC
+CABa
+TK@BGC
+G
+!,
+AGXA?GBHC
+CAJC?
+UNHJDDJN
+2+2I6
+100%
+1
+1
+TK@H_BNW; BA@CG R@IBRC
+SX-G
+!,
+AGXA?GBHC
+CAJC?
+UNHJDDJN
+-
+-
+1
+1
+SGRNN?I
+F !S-B!* G
+!,
+AGXA?GBHC
+CAJC?
+UNHJDDJN
+-
+-
+1
+1
+SGRNN?I
+M
+!
+D?DJABGBJNC*
+DBCG@NG
+R@K?
+5+2I6
+100%
+2
+1
+BA@CG R@IBRC
+RX L!S
+D?DJABGBJNC*
+DBCG@NG
+R@K?
+3+3I6
+100%
+2
+1
+BA@CG R@IBRC
+T!Y  18: EZ U W!
+N!
+S_BAA
+R@NW?
+R@KBGL
+D@D@W?
+RP
+ENC
+CABa
+TK@BGC
+F !-TS
++
+D?DJABGBJNC*
+CAJC?
+R@K?
+3+2I6
+50%
+2
+30
+BRKNBNW (3)
+M U CX! 
+AGXA?GBHC
+CAJC?
+UNHJDDJN
+1+1I3
+50%
+2
+1
+TK@H_BNW; BRKNBNW (1)
+T
+!^ b
+ G
+R@NW?I
+M?IBRD
+R@K?
+0
+50%
+1
+1
+SGRNN?I
+T!Y  19: S!  W!
+APPENDIX C: WEAPONS & EQUIPMENT
+
+
+========== SRD PHYSICAL PAGE 17 ==========
+
+32
+SS  T!S
+ 31010
+WP 10 RP 6 DMM 0 DMR 0 
+I 2 E 6 P
+ 4 S
+ 4
+A!,:
+ENG?KG@BND?NG (INF) 2, 
+INCaBK@GBJN (INF) 2, M?IBHBN?* (RSN) 2, 
+R?C?@KHX (RSN) 2, AGXA?GBHC (PHY) 1, 
+B@KG?K (INF) 1, M@NBaRA@GBJN (INF) 1, 
+PCLHXJAJWL* (RSN) 1, 
+Sa?HBVBH KNJ\A?IW? (RSN)1, 
+SG?@AGX (PHY) 1, TBN_?K?K (DEX) 1
+BX
+ 02102
+WP 13 RP 7 DMM 1 DMR 2 
+I 4 E 7 P
+ 2 S
+ 2
+D
+U*:
+DKBMBNW (DEX) 2, B@KG?K (INF) 1, 
+D?DJABGBJNC* (PHY) 1, LJH_-PBH_BNW* 
+(ACU) 1, M@NBaRA@GBJN (INF) 1, 
+M?HX@NBH* (RSN) 1, M?A?? CJDZ@G (PHY) 1, 
+N@MBW@GBJN (RSN) 1, SH@M?NWBNW (ACU) 
+1, SG?@AGX (PHY) 1, SRKMBM@A (ACU) 1,
+T@HGBHC* (RSN) 1, TBN_?K?K (DEX) 1, 
+UN@KD?I CJDZ@G (PHY) 1
+B!
+ O+
+ 12110
+WP 11 RP 7 DMM 1 DMR 0 
+I 3 E 7 P
+ 3 S
+ 3
+E
+
+
+: 
+B@KG?K (INF) 2, M@NBaRA@GBJN (INF) 2, 
+AGXA?GBHC (PHY) 1, ENG?KG@BND?NG (INF) 1, 
+G@DZABNW (ACU) 1, INCaBK@GBJN (INF) 1, 
+M?IBHBN?* (RSN) 1, PCLHXJAJWL* (RSN) 1, 
+SH@M?NWBNW (ACU) 1, SA?BWXG JV H@NI (DEX) 1, 
+Sa?HBVBH KNJ\A?IW? (RSN) 1, TBN_?K?K 
+(DEX) 1, UN@KD?I CJDZ@G (PHY) 1
+R
+!  SS
+		 02021
+WP 11 RP 6 DMM 0 DMR 1 
+I 3 E 6 P
+ 2 S
+ 2
+L!+ E	
+:
+T@HGBHC* (RSN) 2, M@NBaRA@GBJN (INF) 2,
+ANBD@A H@NIABNW (INF) 1, B@KG?K (INF) 1, 
+INCaBK@GBJN (INF) 1, LJH_-PBH_BNW* 
+(ACU) 1, N@MBW@GBJN (RSN) 1, 
+PCLHXJAJWL* (RSN) 1, R@NW?I CJDZ@G 
+(DEX) 1, SH@M?NWBNW (ACU) 1, SA?BWXG 
+JV H@NI (DEX) 1,  SG?@AGX (PHY) 1, 
+UN@KD?I CJDZ@G (PHY) 1
+H R, MS! 11102
+WP 13 RP 7 DMM 1 DMR 2 
+I 4 E 7 P
+ 2 S
+ 2
+MS!:
+M?HX@NBH* (RSN) 3, B@KG?K (INF) 2, 
+D?DJABGBJNC* (PHY) 2, DKBMBNW (DEX) 1,
+LJH_-PBH_BNW* (ACU) 1, M?A?? CJDZ@G 
+(PHY) 1, N@MBW@GBJN (RSN) 1, 
+SH@M?NWBNW (ACU) 1, Sa?HBVBH 
+KNJ\A?IW? (RSN) 1, 
+TBN_?K?K (DEX) 2
+EMT 21011
+WP 11 RP 6 DMM 0 DMR 1 
+I 3 E 6 P
+ 3 S
+ 3
+M,: 
+AGXA?GBHC (PHY) 2, M?IBHBN?* (RSN) 2, 
+PCLHXJAJWL* (RSN) 2, DKBMBNW (DEX) 1, 
+INCaBK@GBJN (INF) 1, M@NBaRA@GBJN (INF) 1,
+N@MBW@GBJN (RSN) 1, R?C?@KHX (RSN) 1, 
+SH@M?NWBNW (ACU) 1, SA?BWXG JV H@NI 
+(DEX) 1, Sa?HBVBH KNJ\A?IW? (RSN) 1, 
+SGK??G\BC? (ACU) 1
+F!
+
+ 02201
+WP 13 RP 8 DMM 2 DMR 1 
+I 3 E 8 P
+ 2 S
+ 2
+O,
+!:
+F@KDBNW (ACU) 3, SH@M?NWBNW (ACU) 2, 
+SG?@AGX (PHY) 2, SRKMBM@A (ACU) 2, 
+ANBD@A H@NIABNW (INF) 1, AGXA?GBHC 
+(PHY) 1, N@MBW@GBJN (RSN) 1, R@NW?I 
+CJDZ@G (DEX) 1, TBN_?K?K (DEX) 1
+P C
+!  01112
+WP 13 RP 7 DMM 1 DMR 2 
+I 3 E 7 P
+ 1 S
+ 1
+O !+:
+LJH_-PBH_BNW* (ACU) 2, 
+M@NBaRA@GBJN (INF) 2, SH@M?NWBNW 
+(ACU) 2, SA?BWXG JV H@NI (DEX) 2, 
+SGK??G\BC? (ACU) 2, B@KG?K (INF) 1, 
+M?A?? CJDZ@G (PHY) 1, 
+SG?@AGX (PHY) 1, SRKMBM@A (ACU) 1, 
+UN@KD?I CJDZ@G (PHY) 1
+M
+!
+ 01202
+WP 14 RP 8 DMM 2 DMR 2 
+I 3 E 8 P
+ 1 S
+ 1
+M !
+:
+SRKMBM@A (ACU) 3, SG?@AGX (PHY) 2, 
+T@HGBHC* (RSN) 2, AGXA?GBHC (PHY) 1, 
+D?DJABGBJNC* (PHY) 1, H?@ML 
+W?@aJNC* (PHY) 1, M?A?? CJDZ@G 
+(PHY) 1, R@NW?I CJDZ@G (DEX) 1, 
+TBN_?K?K (DEX) 1, UN@KD?I CJDZ@G 
+(PHY) 1, W?@aJNCDBGX* (DEX) 1
+S!   T+ M!
+ 21020
+WP 10 RP 6 DMM 0 DMR 0 
+I 1 E 6 P
+ 3 S
+ 3
+P !:
+INCaBK@GBJN (INF) 3, M@NBaRA@GBJN 
+(INF) 3, PCLHXJAJWL* (RSN) 2, 
+SGK??G\BC? (ACU) 2, T@HGBHC* (RSN) 2, 
+B@KG?K (INF) 1, ENG?KG@BND?NG (INF) 1, 
+R?C?@KHX (RSN) 1
+F ! M!
+X T
+!,
+ 12020
+WP 10 RP 6 DMM 0 DMR 0
+I 3 E 6 P
+ 3 S
+ 3
+T
+!,
+:
+B@KG?K (INF) 3, M@NBaRA@GBJN (INF) 2, 
+ENG?KG@BND?NG (INF) 1, TBN_?K?K (DEX) 2,
+PCLHXJAJWL* (RSN) 1, R?C?@KHX (RSN) 1, 
+SH@M?NWBNW (ACU) 1, SA?BWXG JV H@NI 
+(DEX) 1, Sa?HBVBH KNJ\A?IW? (RSN) 1, 
+SG?@AGX (PHY) 1, SRKMBM@A (ACU) 1
+P
+!S
+ 11030
+WP 10 RP 6 DMM 0 DMR 0 
+I 2 E 6 P
+ 2 S
+ 2
+P
+	
+
+:
+INCaBK@GBJN (INF) 3, B@KG?K (INF) 2, 
+M@NBaRA@GBJN (INF) 2, PCLHXJAJWL* 
+(RSN) 2, ENG?KG@BND?NG (INF) 1, 
+R@NW?I CJDZ@G (DEX) 1, R?C?@KHX 
+(RSN) 1, Sa?HBVBH KNJ\A?IW? (RSN) 1, 
+SG?@AGX (PHY) 1, T@HGBHC* (RSN) 1
+D
+ P!
+!,*
+N!
+R@KBGL
+ENC
+NJG?C JK TK@BGC
+A* 
+' S
+UNHJDDJN
+1
++2 GJ FBCXBNW @GG?DaGC
+B!X!X
+CJDDJN
+0
++2 ENHRDZK@NH?
+B! S
+UU!  K
+CJDDJN
+2
+T?NG, SA??aBNW B@W
+B  R!
+ K
+CJDDJN
+0
+-
+B  C
+
+CJDDJN
+1
+-
+B !
+
+CJDDJN
+1
++1 P?KH?aGBJN CX?H_ \X?N @G LJNW JK DBCG@NG R@NW?
+C!
+CJDDJN
+0
+-
+C Y* G!
+UNHJDDJN
+1
+INHARI?C KJa?C, H@K@ZBN?KC, @NI X@KN?CC?C. C@N Z? RC?I GJ CH@ABNW ZRBAIBNWC.
+C!
+CJDDJN
+0
++1 N@MBW@GBJN CX?H_C
+C
++Y!
+CJDDJN
+1
+-
+D
+' B!*
+UNHJDDJN
+1
++2 GJ @NL M?IBHBN?* HX?H_; X?@AC 1+2I3 JM?K @ 24 XJRK a?KBJI
+F
+-!
+* K
+CJDDJN
+0
+-
+F
+ A, K
+CJDDJN
+1
++1 GJ @NL M?IBHBN?* HX?H_; X?@AC 1+1I3 JM?K @ 24 XJRK a?KBJI
+FS* K
+CJDDJN
+1
++1 GJ FBCXBNW @GG?DaGC
+F !
+
+UNHJDDJN
+1
+-
+F !SY!*
+UNHJDDJN
+1
+CX@K@HG?KC @G CAJC? DRCG D@_? @ PXLCBH@ABGL HX?H_ JK Z? SGRNN?I(3)
+F !S *S
+UNHJDDJN
+1
+-
+G
+! * HX
+UNHJDDJN
+1
++1 GJ AGXA?GBHC HX?H_C \X?N HABDZBNW
+H!,		
+UNHJDDJN
+1
+-
+I! C!
+!
+UNHJDDJN
+1
+6 CX@KW?C, +1 M@NBaRA@GBJN \X?N RC?I JN a?JaA? BN aBHGRK?C
+H
+S T 
+UNHJDDJN
+1
+-
+L!
+
+CJDDJN
+1
+-
+L,!X
+UNHJDDJN
+1
+-
+M !
+ B!X!X
+UNHJDDJN
+0
++2 ENHRDZK@NH?
+M  
+CJDDJN
+1
++1 TBN_?KBNW JK M?HX@NBH* HX?H_
+N*S V G** 
+UNHJDDJN
+1
+AAAJ\C GX? \?@K?K GJ C?? HA?@KAL @G NBWXG
+R!, S!
+CJDDJN
+1
+-
+R!, F !
+
+CJDDJN
+1
+-
+R
+CJDDJN
+1
+-
+SSU 
+CJDDJN
+1
+-
+SX G
+!,
+UNHJDDJN
+1
+CX@K@HG?KC @G CAJC? K@NW? DRCG D@_? @ PHY HX?H_ JK SGRNN?I (3)
+S
+UU!  K
+UNHJDDJN
+2
+W@G?KaKJJV T?NG, SA??aBNW B@W, FBK?-CG@KGBNW KBG, 3 I@LC JV K@GBJNC 
+S!,!
+, LXX
+UNHJDDJN
+0
++1 GJ LJH_-PBH_BNW HX?H_C
+C
+!  LXX
+R@K?
+0
++3 GJ LJH_-PBH_BNW HX?H_C
+H* T
+!
+CJDDJN
+1
+-
+T X
+CJDDJN
+1
++1 M?HX@NBHC* HX?H_
+W! X-T! X
+UNHJDDJN
+1
+R@NW? JV 20 DBA?C
+W!
+ F 
+! 
+S
+UNHJDDJN
+1
+-
+W! T X
+UNHJDDJN
+1
+R?mRBK?I VJK W?@aJNC D@BNG?N@NH? @NI K?a@BKC
+W
+X!' T X
+UNHJDDJN
+1
++2 M?HX@NBHC* HX?H_
+T!Y  20: E^
+APPENDIX C: WEAPONS & EQUIPMENT
+APPENDIX D: PARADIGMS
+
+
+========== SRD PHYSICAL PAGE 18 ==========
+
+34
+F  	
+ X S E	 v.
+R
+		/CM:
+E	
+:
+W 2:
+T:
+R	:
+C:
+T:
+WP:
+RP:
+E:
+C:
+A:
+W 1:
+T:
+R	:
+C:
+T:
+WP:
+RP:
+E:
+C:
+A:
+U:    1D3 + PHY + UNARMED COMBAT
+A	 H	 (INF)
+A
+
+	1 (RSN)
+A
+
+	1 (PHY)
+B
+ (INF)
+C
+ (RSN)
+D	
+	* (PHY)
+D	3	/P	
+ (DEX)
+E
+
+	
+ (INF)
+F	 (ACU)
+G5	 (ACU)
+H36 W* (PHY)
+I	
+	 (INF)
+L18-P	18	* (ACU)
+M	
+	 (INF)
+M1	1* (RSN)
+M	1	* (RSN)
+M C5
+ (PHY)
+N3	
+	 (RSN)
+P616* (RSN)
+R C5
+ (DEX)
+R1 (RSN)
+S13	 (ACU)
+S1	1* (RSN)
+S	
+ : H (DEX)
+S1	:	1 K (RSN)
+S
+
+ (PHY)
+S
+
+	 (ACU)
+S3	3 (ACU)
+T1
+	1* (RSN)
+T	8 (DEX)
+U C5
+ (PHY)
+W	
+* (DEX)
+N
+:
+S8	
+0
+0
+0
+0
+0
+-3
+0
+0
+0
+0
+-3
+0
+-3
+0
+-3
+-3
+0
+0
+-3
+0
+0
+0
+-3
+0
+0
+0
+0
+0
+-3
+0
+0
+-3
+9
+8
+7
+6
+5
+4
+3
+2
+1
+0
+CDP
+9
+8
+7
+6
+5
+4
+3
+2
+1
+0
+I	
+ D	1
+S16 S
+
+
+10 + P% + D'
+W 
+P	
+:
+R		1 
+P	
+:
+6 + P%
+R D:.
+M	:	:
+D' AM
+M D:.
+M	:	:
+P% AM
+I	
+	
+	3 
+M	:	:
+D' + A) AM
+E151:
+6 +PHY
+P1
+	: R + A) AM
+M	
+6:
+3
+S
+ 
+M	:	:
+R + A) AM
+L
+	 W < N
+:
+B8	 
+P	
+:
+1
+0
+2
+3
+4
+5
+REASON =RSN>
+ACUMEN =ACU>
+PHYSICALITY =PHY>
+INFLUENCE =INF>
+DEXTERITY =DEX>
+RAPID R
+N
+:
+C	1
+	:
+M
+	3
+	:
+W 1:
+W 2:
+W 3:
+H	
+:
+W	
+:
+P:	:
+G:
+N:
+P D
+	

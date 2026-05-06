@@ -390,7 +390,7 @@ export default function CommunitiesIndexPage() {
   const inp: React.CSSProperties = {
     width: '100%', padding: '7px 10px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee',
-    fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box',
+    fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box',
   }
   const lbl: React.CSSProperties = {
     fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif',
@@ -398,7 +398,7 @@ export default function CommunitiesIndexPage() {
   }
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
         <h1 style={{ fontFamily: 'Distemper, Carlito, sans-serif', fontSize: '30px', letterSpacing: '.06em', textTransform: 'uppercase', color: '#c0392b', margin: 0, lineHeight: 1.1 }}>My Communities</h1>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -542,14 +542,14 @@ export default function CommunitiesIndexPage() {
             style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '100%', maxWidth: '460px' }}>
             <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>Invite to Community</div>
             <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '18px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '6px' }}>Bring a PC aboard</div>
-            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Barlow, sans-serif' }}>
+            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif' }}>
               Invites create a pending membership. The community&apos;s leader still has to approve before the PC becomes active.
             </div>
 
             <div style={{ marginBottom: '10px' }}>
               <div style={{ ...lbl }}>Community</div>
               {rows.length === 0 ? (
-                <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }}>
+                <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
                   No communities yet. Create one first, then you can invite others.
                 </div>
               ) : (
@@ -567,7 +567,7 @@ export default function CommunitiesIndexPage() {
               <div style={{ marginBottom: '10px' }}>
                 <div style={{ ...lbl }}>Invite which PC?</div>
                 {inviteCandidates.length === 0 ? (
-                  <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }}>
+                  <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
                     Every PC in this campaign is already a member or pending.
                   </div>
                 ) : (
@@ -614,7 +614,7 @@ export default function CommunitiesIndexPage() {
             <div style={{ marginBottom: '10px' }}>
               <div style={lbl}>Campaign</div>
               {campaigns.length === 0 ? (
-                <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }}>
+                <div style={{ padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#5a5550', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
                   You&apos;re not in any campaigns yet.
                 </div>
               ) : (

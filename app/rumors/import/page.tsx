@@ -108,7 +108,7 @@ export default function ImportSnapshotPage() {
       </label>
 
       {error && (
-        <div style={{ padding: '10px 14px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Barlow, sans-serif', marginBottom: '12px' }}>
+        <div style={{ padding: '10px 14px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', marginBottom: '12px' }}>
           {error}
         </div>
       )}
@@ -129,7 +129,7 @@ export default function ImportSnapshotPage() {
           <div style={{ fontSize: '14px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px' }}>
             ✓ Module published — v{published.version}
           </div>
-          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '10px' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>
             The module is live and (if you set visibility to Listed) queued for Thriver review. It will appear in the Module picker on campaign creation as soon as it's approved.
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>

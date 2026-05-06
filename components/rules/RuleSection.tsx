@@ -139,7 +139,7 @@ export function TryIt({
   )
 }
 
-// Simple table primitive — Barlow body, Carlito uppercase headers.
+// Simple table primitive — Carlito body + uppercase headers.
 export function RuleTable({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ margin: '1rem 0', overflowX: 'auto' }}>
@@ -148,7 +148,7 @@ export function RuleTable({ children }: { children: React.ReactNode }) {
           width: '100%',
           borderCollapse: 'collapse',
           fontSize: 13,
-          fontFamily: 'Barlow, sans-serif',
+          fontFamily: 'Carlito, sans-serif',
           color: '#f5f2ee',
         }}
       >

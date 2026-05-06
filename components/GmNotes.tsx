@@ -213,7 +213,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
   const inp: React.CSSProperties = {
     width: '100%', padding: '8px 10px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px',
-    color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif',
+    color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif',
     boxSizing: 'border-box',
   }
 
@@ -253,7 +253,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
           {pendingFiles.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
               {pendingFiles.map((f, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name} <span style={{ color: '#5a5550' }}>({fmtSize(f.size)})</span></span>
                   <button onClick={() => setPendingFiles(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#c0392b', fontSize: '14px', cursor: 'pointer', padding: '0 4px' }}>×</button>
                 </div>
@@ -391,7 +391,7 @@ export default function GmNotes({ campaignId }: { campaignId: string }) {
                 </button>
               </div>
 
-              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: '1.5', margin: '0 0 10px' }}>
+              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: '1.5', margin: '0 0 10px' }}>
                 {renderRichText(n.content, { linkify: true })}
               </pre>
 

@@ -17,7 +17,7 @@ export default function Loading() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      fontFamily: 'Barlow, sans-serif',
+      fontFamily: 'Carlito, sans-serif',
       color: '#cce0f5',
       background: '#0f0f0f',
     }}>

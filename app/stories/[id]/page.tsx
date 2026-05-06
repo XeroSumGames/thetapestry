@@ -221,14 +221,14 @@ export default function CampaignPage() {
   }
 
   if (loading || !campaign) return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>Loading...</div>
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>Loading...</div>
   )
 
   const isGM = campaign.gm_user_id === userId
   const inviteLink = typeof window !== 'undefined' ? `${window.location.origin}/join/${campaign.invite_code}` : ''
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
 
       {/* Kicked banner above the action bar so the explanation reads
           before the Rejoin button. The banner-then-buttons order also
@@ -262,7 +262,7 @@ export default function CampaignPage() {
       <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
         <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>Invite Link</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ flex: 1, fontSize: '13px', color: '#7ab3d4', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', padding: '8px 10px', fontFamily: 'Barlow, sans-serif', wordBreak: 'break-all' }}>
+          <div style={{ flex: 1, fontSize: '13px', color: '#7ab3d4', background: '#0f2035', border: '1px solid #1a3a5c', borderRadius: '3px', padding: '8px 10px', fontFamily: 'Carlito, sans-serif', wordBreak: 'break-all' }}>
             {inviteLink}
           </div>
           <button onClick={copyInviteLink}
@@ -293,7 +293,7 @@ export default function CampaignPage() {
           ) : (
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <select value={selectedCharId} onChange={e => setSelectedCharId(e.target.value)}
-                style={{ flex: 1, padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif' }}>
+                style={{ flex: 1, padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif' }}>
                 <option value="">— Select a survivor —</option>
                 {myCharacters.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>

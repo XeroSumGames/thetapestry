@@ -234,7 +234,7 @@ export default function ModuleEditPage() {
   }
 
   if (loading) {
-    return <div style={{ padding: '24px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>Loading…</div>
+    return <div style={{ padding: '24px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>Loading…</div>
   }
   if (accessDenied) {
     return (
@@ -246,7 +246,7 @@ export default function ModuleEditPage() {
     )
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }
+  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }
   const lbl: React.CSSProperties = { display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 600, color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif' }
 
   return (
@@ -325,7 +325,7 @@ export default function ModuleEditPage() {
       </div>
       <div style={{ marginBottom: '14px' }}>
         <label style={lbl}>Description</label>
-        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={6} placeholder="Longer pitch for the public module page. Markdown not supported yet." style={{ ...inp, resize: 'vertical', fontFamily: 'Barlow, sans-serif' }} />
+        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={6} placeholder="Longer pitch for the public module page. Markdown not supported yet." style={{ ...inp, resize: 'vertical', fontFamily: 'Carlito, sans-serif' }} />
       </div>
       <div style={{ marginBottom: '14px' }}>
         <label style={lbl}>Content Tags</label>

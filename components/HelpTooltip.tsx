@@ -108,7 +108,7 @@ export default function HelpTooltip({ text, title, icon, iconStyle, anchorRight 
             boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
             color: '#f5f2ee',
             fontSize: '13px',
-            fontFamily: 'Barlow, sans-serif',
+            fontFamily: 'Carlito, sans-serif',
             lineHeight: 1.5,
             textAlign: 'left',
             cursor: 'default',

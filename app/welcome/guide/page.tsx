@@ -45,19 +45,19 @@ export default function BeginnersGuideTOC() {
     textTransform: 'uppercase', marginBottom: '4px',
   }
   const cardBody: React.CSSProperties = {
-    fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif',
+    fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif',
     lineHeight: 1.4,
   }
 
   return (
-    <div style={{ background: '#0f0f0f', minHeight: '100vh', padding: '2rem 1rem', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ background: '#0f0f0f', minHeight: '100vh', padding: '2rem 1rem', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ maxWidth: '780px', margin: '0 auto' }}>
         <Link href="/welcome" style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em', textDecoration: 'none' }}>← Welcome</Link>
 
         <h1 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '36px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#c0392b', marginTop: '0.5rem', marginBottom: '0.25rem' }}>
           Beginners' Guide
         </h1>
-        <p style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1.5rem' }}>
+        <p style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '1.5rem' }}>
           A walkthrough for new survivors and storytellers. Twelve chapters, each ~5–10 minutes. Read straight through, or jump to whatever you're stuck on.
         </p>
 

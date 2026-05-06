@@ -83,8 +83,8 @@ export default function CharacterSheetPage() {
     return () => { supabase.removeChannel(channel) }
   }, [campaignId, characterId])
 
-  if (loading) return <div style={{ background: '#0f0f0f', color: '#cce0f5', minHeight: '100vh', padding: '2rem', fontFamily: 'Barlow, sans-serif' }}>Loading...</div>
-  if (!character) return <div style={{ background: '#0f0f0f', color: '#f5a89a', minHeight: '100vh', padding: '2rem', fontFamily: 'Barlow, sans-serif' }}>Character not found.</div>
+  if (loading) return <div style={{ background: '#0f0f0f', color: '#cce0f5', minHeight: '100vh', padding: '2rem', fontFamily: 'Carlito, sans-serif' }}>Loading...</div>
+  if (!character) return <div style={{ background: '#0f0f0f', color: '#f5a89a', minHeight: '100vh', padding: '2rem', fontFamily: 'Carlito, sans-serif' }}>Character not found.</div>
 
   return (
     <div style={{ background: '#0f0f0f', minHeight: '100vh', padding: '16px' }}>
@@ -119,7 +119,7 @@ export default function CharacterSheetPage() {
         <textarea value={notes} onChange={e => setNotes(e.target.value)}
           placeholder="Keep track of what's happening..."
           rows={6}
-          style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }} />
+          style={{ width: '100%', padding: '8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }} />
         <button onClick={async () => {
           if (!character) return
           setNotesSaving(true)

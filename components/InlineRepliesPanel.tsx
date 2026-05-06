@@ -161,7 +161,7 @@ export default function InlineRepliesPanel({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingTop: '6px', borderTop: '1px dashed #2e2e2e' }}>
           <textarea value={draft} onChange={e => setDraft(e.target.value)}
             placeholder="Write a reply…"
-            style={{ width: '100%', minHeight: '60px', resize: 'vertical', padding: '6px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', lineHeight: 1.5 }} />
+            style={{ width: '100%', minHeight: '60px', resize: 'vertical', padding: '6px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', lineHeight: 1.5 }} />
           <div>
             <button onClick={handlePost} disabled={posting || !draft.trim()}
               style={{ padding: '6px 16px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: posting ? 'wait' : 'pointer', opacity: draft.trim() ? 1 : 0.5, fontWeight: 600 }}>

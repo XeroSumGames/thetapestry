@@ -367,7 +367,7 @@ function CampfireTabStrip() {
   const isFlexFillTab = activeTab === 'messages'
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, fontFamily: 'Barlow, sans-serif', background: '#0f0f0f' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, fontFamily: 'Carlito, sans-serif', background: '#0f0f0f' }}>
 
       <div style={{ padding: '1.25rem 1.5rem 0', borderBottom: '1px solid #2e2e2e' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>

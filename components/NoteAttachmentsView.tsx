@@ -46,7 +46,7 @@ export default function NoteAttachmentsView({ attachments, onDelete }: Props) {
                 style={{ display: 'block', width: '100%', maxHeight: '600px', objectFit: 'contain', cursor: 'zoom-in', background: '#000' }}
               />
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', borderTop: '1px solid #2e2e2e', background: '#1a1a1a' }}>
-                <span style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ flex: 1, fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {att.name} <span style={{ color: '#5a5550' }}>({fmtSize(att.size)})</span>
                 </span>
                 <a href={att.url} target="_blank" rel="noreferrer"
@@ -69,7 +69,7 @@ export default function NoteAttachmentsView({ attachments, onDelete }: Props) {
           {files.map(att => (
             <div key={att.path} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 8px', background: '#242424', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
               <a href={att.url} target="_blank" rel="noreferrer"
-                style={{ flex: 1, fontSize: '13px', color: '#7ab3d4', fontFamily: 'Barlow, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none' }}>
+                style={{ flex: 1, fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none' }}>
                 📄 {att.name} <span style={{ color: '#5a5550' }}>({fmtSize(att.size)})</span>
               </a>
               {onDelete && (

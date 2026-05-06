@@ -205,7 +205,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
       </div>
 
       <input
-        style={{ width: '100%', marginBottom: '7px', fontSize: '13px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 10px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }}
+        style={{ width: '100%', marginBottom: '7px', fontSize: '13px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 10px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }}
         placeholder="Filter skills..."
         value={skillFilter}
         onChange={e => setSkillFilter(e.target.value)} />
@@ -251,7 +251,7 @@ export default function StepAttr({ stepIndex, stepNumber, stepTitle, skillBudget
       {/* Backstory note */}
       <div style={sh}>Backstory note</div>
       <textarea
-        style={{ width: '100%', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 10px', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', minHeight: '60px', resize: 'vertical', lineHeight: 1.5, boxSizing: 'border-box' }}
+        style={{ width: '100%', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', padding: '8px 10px', fontSize: '14px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', minHeight: '60px', resize: 'vertical', lineHeight: 1.5, boxSizing: 'border-box' }}
         value={stepData.note ?? ''}
         onChange={e => updateStep({ note: e.target.value })}
         placeholder={placeholder} />

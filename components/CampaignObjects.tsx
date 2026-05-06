@@ -357,7 +357,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
       {showAdd && (
         <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '3px', padding: '8px', marginBottom: '6px' }}>
           <input value={addName} onChange={e => setAddName(e.target.value)} placeholder="Object name..."
-            style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', marginBottom: '6px' }} />
+            style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', marginBottom: '6px' }} />
 
           <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '4px' }}>Icon</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '3px', marginBottom: '6px' }}>
@@ -423,7 +423,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '13px', color: addIndestructible ? '#5a5550' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP {addIndestructible ? '(disabled)' : '(default 3)'}</div>
               <input value={addIndestructible ? '' : addWP} onChange={e => setAddWP(e.target.value)} placeholder="e.g. 3" disabled={addIndestructible}
-                style={{ width: '100%', padding: '4px 6px', background: addIndestructible ? '#1a1a1a' : '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: addIndestructible ? '#5a5550' : '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                style={{ width: '100%', padding: '4px 6px', background: addIndestructible ? '#1a1a1a' : '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: addIndestructible ? '#5a5550' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
             </div>
           </div>
           <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', cursor: 'pointer', fontSize: '13px', color: addIndestructible ? '#EF9F27' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
@@ -500,7 +500,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             {Array.isArray(obj.properties) && obj.properties.filter(p => isGM || p.revealed || destroyed).length > 0 && (
               <div style={{ paddingLeft: '24px' }}>
                 {obj.properties.filter(p => isGM || p.revealed || destroyed).map((p, i) => (
-                  <div key={i} style={{ fontSize: '13px', color: (p.revealed || destroyed) ? '#cce0f5' : '#5a5550', fontFamily: 'Barlow, sans-serif', lineHeight: 1.3 }}>
+                  <div key={i} style={{ fontSize: '13px', color: (p.revealed || destroyed) ? '#cce0f5' : '#5a5550', fontFamily: 'Carlito, sans-serif', lineHeight: 1.3 }}>
                     <span style={{ color: '#EF9F27' }}>{p.key}:</span> {p.value}{!p.revealed && !destroyed && isGM ? ' 🔒' : ''}
                   </div>
                 ))}
@@ -587,7 +587,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
           <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1rem', width: '380px', maxWidth: '92vw' }}>
             <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>🎒 Loot from {lootingObj.name}</div>
             {lootingObj.contents.length === 0 ? (
-              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', marginBottom: '10px' }}>Nothing left inside.</div>
+              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginBottom: '10px' }}>Nothing left inside.</div>
             ) : (
               <div style={{ marginBottom: '10px' }}>
                 {lootingObj.contents.map((item, i) => {
@@ -733,12 +733,12 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
             <div style={{ marginBottom: '8px' }}>
               <div style={{ ...LABEL_STYLE_TIGHT, marginBottom: '2px' }}>Name</div>
               <input value={editName} onChange={e => setEditName(e.target.value)}
-                style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
             </div>
             <div style={{ marginBottom: '4px' }}>
               <div style={{ fontSize: '13px', color: editIndestructible ? '#5a5550' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '2px' }}>WP {editIndestructible ? '(disabled)' : ''}</div>
               <input value={editIndestructible ? '' : editWP} onChange={e => setEditWP(e.target.value)} placeholder="e.g. 3" disabled={editIndestructible}
-                style={{ width: '100%', padding: '4px 6px', background: editIndestructible ? '#1a1a1a' : '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: editIndestructible ? '#5a5550' : '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                style={{ width: '100%', padding: '4px 6px', background: editIndestructible ? '#1a1a1a' : '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: editIndestructible ? '#5a5550' : '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
             </div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', cursor: 'pointer', fontSize: '13px', color: editIndestructible ? '#EF9F27' : '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
               <input type="checkbox" checked={editIndestructible} onChange={e => setEditIndestructible(e.target.checked)}
@@ -790,7 +790,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                   <input key={`destroyed-${fileInputKey}`} type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile({ file: f, target: 'edit-destroyed' }); e.target.value = '' }} />
                 </label>
               </div>
-              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif', fontStyle: 'italic', marginTop: '3px' }}>Shown on the tactical map when WP hits 0. Leave blank to keep the fade + shatter overlay.</div>
+              <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic', marginTop: '3px' }}>Shown on the tactical map when WP hits 0. Leave blank to keep the fade + shatter overlay.</div>
             </div>
             {/* Properties */}
             <div style={{ marginBottom: '10px' }}>
@@ -803,10 +803,10 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
                 <div key={i} style={{ display: 'flex', gap: '3px', marginBottom: '3px', alignItems: 'center' }}>
                   <input value={prop.key} onChange={e => setEditProps(prev => prev.map((p, j) => j === i ? { ...p, key: e.target.value } : p))}
                     placeholder="Key"
-                    style={{ width: '70px', padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                    style={{ width: '70px', padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
                   <input value={prop.value} onChange={e => setEditProps(prev => prev.map((p, j) => j === i ? { ...p, value: e.target.value } : p))}
                     placeholder="Value"
-                    style={{ flex: 1, padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                    style={{ flex: 1, padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
                   <button onClick={() => setEditProps(prev => prev.map((p, j) => j === i ? { ...p, revealed: !p.revealed } : p))}
                     title={prop.revealed ? 'Visible to players' : 'Hidden from players'}
                     style={{ background: 'none', border: 'none', fontSize: '13px', cursor: 'pointer', padding: '0 2px', color: prop.revealed ? '#7fc458' : '#5a5550' }}>
@@ -834,7 +834,7 @@ export default function CampaignObjects({ campaignId, isGM, onPlaceOnMap, onRemo
               ))}
               <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
                 <select value={contentPickerValue} onChange={e => setContentPickerValue(e.target.value)}
-                  style={{ flex: 1, padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                  style={{ flex: 1, padding: '3px 4px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                   <option value="">Add item...</option>
                   <optgroup label="Weapons">
                     {ALL_WEAPONS.map(w => <option key={w.name} value={`weapon:${w.name}`}>{w.name}</option>)}

@@ -201,12 +201,12 @@ export default function NewCampaignPage() {
   const inp: React.CSSProperties = {
     width: '100%', padding: '9px 12px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px',
-    color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif',
+    color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif',
     boxSizing: 'border-box',
   }
 
   return (
-    <div style={{ maxWidth: '560px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '560px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
 
       <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
@@ -257,7 +257,7 @@ export default function NewCampaignPage() {
                       📦 {m.name}
                       {m.latest_version && <span style={{ opacity: 0.7, marginLeft: '8px', fontSize: '13px' }}>v{m.latest_version.version}</span>}
                     </div>
-                    {m.tagline && <div style={{ fontSize: '13px', opacity: 0.85, marginTop: '2px', fontFamily: 'Barlow, sans-serif', textTransform: 'none' }}>{m.tagline}</div>}
+                    {m.tagline && <div style={{ fontSize: '13px', opacity: 0.85, marginTop: '2px', fontFamily: 'Carlito, sans-serif', textTransform: 'none' }}>{m.tagline}</div>}
                   </button>
                 )
               })}

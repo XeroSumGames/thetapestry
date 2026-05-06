@@ -1,0 +1,2140 @@
+          Game Design, Writing & Layout: Tony Bushell
+   Artwork: Nenad Cviticanin, Hernán González, Carlos Angeli
+
+               Photo Credits: Unsplash, Pixabay, Pexels
+
+                    Play-Testers & Other Helpers:
+Matt Rowe (GrumpyBattersby), Jonathon Canniff (GrumpsterFier),
+
+  Gary Johnson (ZeroTheory), Meenia, Jeff Garland, Corey Egan,
+   Gerd Ellsmore, Eoin O'Donnell, Eliot Savarese, Gordon Bissell,
+
+                     John Jessop & The Playtest Hub,
+                Quincy, Cam, Seth & The Order of Janus
+
+      Special Thanks: My wife & kids for letting me get this
+      song out of my head and Matt Rowe, my co-conspirator
+
+                            This PDF is best viewed with multiple pages
+Have you ever been watching a movie or TV show, or           Distemper is very much at the realistic end of the TTRPG
+reading a novel or comic-book, and found yourself            spectrum. In this world there are no zombies, no aliens, no
+thinking: "I wouldn't have done that. I would have done      vampires, and no mutants. There are no healing potions, no
+something different. Something better. Something             wizards, no orcs, elves, or goblins, and most definitely no
+smarter than that"?                                          dragons.
+
+This is your opportunity to test that theory.                There is just the gnawing cold, biting hunger and, scariest of
+                                                             all, the threat of other, desperate people who care more
+Distemper is a Tabletop Role-Playing Game (TTRPG)            about their own survival than they do about yours.
+wherein a group of 3-6 players collectively tell the story
+of survivors making their way in the aftermath of a          Distemper is a game for people that would prefer to explore
+virus that has obliterated most of humanity.                 a post-apocalyptic version of the world we inhabit today,
+                                                             rather than a castle filled with the undead.
+Alone, save for each other and a handful of dice, they
+are at the center of an unfolding narrative and together     This is a reality where players will have to track how many
+they will create an interactive, improvised, and             bullets they have and how much food and water is in their
+collaborative storyline.                                     backpack, and where it can take days or weeks to heal as a
+                                                             result of the brutally realistic and unforgiving combat system.
+The world they find themselves in is hard and fractured.     Ammunition is more meaningful than gold and finding a
+Each new day brings risks, threats, opportunities, and       cache of weapons could significantly change the course of
+terrors that the group of players must navigate to           the future for the group and their NPC followers.
+ensure their characters survive. And, if they can do
+that, perhaps they might even be able to figure out          Distemper is a game for people who are as interested in
+how to thrive.                                               negotiating as they are shooting, and for whom the idea of
+                                                             building a community, a religious sect or even a fledgling
+Unlike many traditional games, there are no winners or       army and seizing control of a region of territory is more
+losers in Distemper which unfolds cooperatively              compelling than slaying a dragon. It is for those to whom
+between the players and the Game Moderator, who acts         building a legacy in this version of today's world ultimately
+as the referee, or director. Together, the group define      has more long-term appeal than clearing out yet another
+the challenges and outcomes in order to tell a story         dungeon.
+that is exciting, enjoyable, fulfilling, memorable, and
+unique to that group.                                        The world of Distemper will appeal to fans of The Road,
+                                                             Black Summer & The Walking Dead (with no Walking Dead),
+With the exception of players and several 6-sided dice,      and anyone who enjoys post-apocalyptic, Dystopian worlds
+this quickstart provides everything a group needs to         where simply surviving is a struggle.
+start playing. It covers character creation, how to
+interpret dice rolls, how to make ability and skill checks,    More than just this Tabletop Roleplaying Game that you
+the basics of social interactions, and how to take part in     are reading, Distemper is also a series of comic-book
+combat.                                                        stories in which the stories provide an ongoing and
+                                                               constantly developing backdrop to the game.
+To accompany this guide and put those rules into
+practice, there is a quickstart adventure, Chased, which       Together, the stories told globally in the comic book
+guides a group through several encounters that will            combine with the stories told locally via the RPG to create
+teach them, on the fly, how to play and moderate the           the DistemperVerse, a shared repository of stories that
+game, as well as providing plot hooks to build a larger        are both told to and, perhaps more importantly, by the
+campaign from.                                                 players.
+
+For players wanting an even simpler experience, there is       GMs and their groups are encouraged to take elements
+a single-scene encounter called Empty that walks               from the comics to use in their own games or even as
+players through the very basics of dice checks, First          campaign settings, and they are encouraged to submit the
+Impressions, Gut Instincts, Negotiations and                   stories they collectively tell via our website and social
+finally Combat.                                                media so that these stories may be weaved into the
+                                                               developing tapestry of stories that go to make up the
+Many of the rules and concepts in this booklet are             ever-evolving gameworld.
+expanded on in greater depth in the Distemper Core
+Rulebook which is available for download, along with           Instructions on how to submit your own stories, can be
+both Empty and Chased, and a variety of other game             found at www.DistemperVerse.com.
+resources, from DistemperVerse.com.
+
+So, grab some friends, some scraps of paper, and a
+handful of dice as you prepare to tell some collaborative
+stories where your very survival is at stake in a dark,
+dangerous world in which every move may be your last.
+The BBC World Service runs the          Conspiracy theories catch the         With no explanation to the         Based on startling new data,   The spread of the virus intensifies
+first news story about H724.            world over, like gasoline-soaked      outside world, the Russian         the World Health Organization  and the infected die at an
+                                        wildfires.                            Federation closes all borders      announces that H724 has        exponential rate.
+This recently identified virus is                                             and restricts international and    mutated and is now believed
+initially believed to be a mutation of  The virus had been created in a       domestic travel.                   to be airborne.                Although nations are now forced to
+the common flu and has infected an      lab. This was a shadow cabal plot                                                                       act, it isn't until almost a month
+estimated 100 million people            to depopulate the world. This was     It makes no difference. Elvis      The mortality rate is revised  after WHO declared a pandemic
+worldwide - more than Tuberculosis      the rise of a new world order. Our    has already left the building and  upward to a staggering 7%      that all international commercial
+or HIV.                                 Alien overlords were finally here.    the virus is on the move.          and H724-B is officially       flights are suspended.
+                                                                                                                 declared as a pandemic.
+Further research reveals that the       This was The Rapture.                                                                                   The International Monetary Fund
+virus shares characteristics with                                                                                                               reports that a global recession is
+canine distemper, which is usually      Regardless of its origin, it quickly                                                                    inevitable, with multiple, vital
+only found in dogs.                     becomes obvious that this                                                                               supply chains already impacted.
+                                        widespread sickness has the
+Although H724 appears to be highly      potential to wreck the global                                                                           This rapidly leads to hyper-inflation
+contagious, it also seems to be         economy.                                                                                                across the globe, which in turn
+largely benign, with the most                                                                                                                   causes civil unrest on a scale that
+obvious symptom being a relentless                                                                                                              had previously been unimaginable.
+cough.
+                                                                                                                                                Widespread rioting and looting are
+People are reminded to practice                                                                                                                 rampant with authorities using
+good hygiene, to cover their mouths                                                                                                             increasing levels of force to
+when coughing or sneezing, and to                                                                                                               maintain order.
+avoid contact with those who
+appear sick.                                                                                                                                    The mass starvation only ever
+                                                                                                                                                seen in poorer nations would soon
+                                                                                                                                                hit every country on the planet.
+
+A British Reuters correspondent         An elderly man in Chile with a        The World Health Organization      Face masks become an increasingly       Despite the resources now being
+disappears shortly after breaking a     relentless cough dies while in the    announces that research indicates  common sight. Although there is no      thrown at medical research from
+story from within Chechnya, where       middle of a hacking fit.              that H724 has a mortality rate in  evidence that they help prevent         around the world, testing is still
+multiple provinces are dealing with                                           line with the seasonal flu.        transmission, there is also no          unreliable.
+a highly contagious virus that the      An autopsy confirms that in                                              evidence that they don't, and
+government seems to be                  addition to multiple underlying       They reiterate the need for good   manufacturers worldwide step up         Asymptomatic carriers remain
+struggling to control.                  comorbidities, he had all the         hygiene to prevent transmission.   production to meet demand.              undetectable and only the sick
+                                        symptoms of H724.                                                                                                test as being infected. This leads
+Multiple doctors who treated those                                                                               Despite multiple pandemics in years     health care professionals to
+affected with the virus were            It was noted than in his last                                            past, the aggressively rapid and        mistakenly clear people carrying
+rounded up and arrested, and the        moments, he lunged for the                                               virulent spread of the Distemper still  the virus, enabling its unchecked
+correspondent reported that no          medical staff in what they                                               takes most governments by               spread.
+one would even speculate why.           perceived as an aggressive and                                           surprise. Their responses are
+                                        hostile manner, although he                                              uniformly slow, disorganized, and
+Chechen officials initially deny the    lacked the vitality to actually do                                       ineffective.
+story while simultaneously using        anyone harm.
+the military to quarantine its three                                                                             Many authorities try to play the
+most heavily populated cities.          This was the first recorded death                                        sickness down as little more than a
+                                        attributed to the Distemper and,                                         seasonal flu or even a political hoax,
+Within days of the correspondent        for many, truly marked the                                               which further delays action.
+going missing, the entire country is    beginning of the Dog Flu
+in lock down.                           pandemic.
+With millions already dead         Within a week of beginning their      As additional data becomes              Stories emerge of the mass         With reliable rapid testing kits
+worldwide and untold millions      research, Berglund's team advises     available, the mortality rate           extermination of dogs and          now in production, South Korea
+more infected, a coalition of      WHO of a new mutation, H724-C,        of H724-C is again revised              pigeons and various other          conducts mandatory, nationwide
+scientists from 14 nations led by  which they now believe to be          upwards, this time to an                animals around the world.          screening.
+Dr. Alex Berglund, a renowned      zoonotic.                             bewildering 19%.
+Swedish epidemiologist, begins                                                                                   Various EU member states           The infected (along with any one
+researching the development of     There are clear indicators that dogs                                          secretly start culling herds of    even suspected of having been
+effective testing in hopes of      can transmit H724-C to humans                                                 livestock for reasons              exposed) are moved into
+slowing down the spread.           and the media quickly dub it the                                              unknown. Most countries have       "survival camps."
+                                   Dog Flu after reports of several                                              closed their borders in a futile
+                                   infected patients' pets exhibiting                                            attempt to slow the spread of      South Korean is quickly followed
+                                   similar symptoms.                                                             the infection.                     by many other countries, and
+                                                                                                                                                    survival camps appear around
+                                   Berglund's team note that the dogs                                                                               the globe.
+                                   become wildly aggressive at the
+                                   end, often attacking (and thereby
+                                   transmitting) the disease to their
+                                   owners and vets.
+
+Data provided by a                 Further testing shows pigeons         Panic sets in worldwide as people       Unable to cope with so many        Another wave of riots swell
+German research institute          might also be carriers of the         begin to question how much their        bodies, multiple countries dump    throughout Europe and North
+enables a breakthrough in          virus, and multiple countries         governments and leaders are             their dead into mass graves that   America as hordes of scared
+the development of rapid           began culls of both animals.          actually able to do to protect them in  are visible from space.            and starving people are pitted
+testing capabilities and                                                 the face of no known containment                                           against each other in a
+Berglund shares his                Many nations mandate their            method, let alone a vaccine.            Eventually there's no one left to  desperate struggle to stay
+cautious optimism at a             citizens voluntarily surrender                                                bury or even move the dead and     alive.
+press conference.                  all dogs for forced euthanasia.       It slowly starts to sink in for many    corpses line the streets the
+                                                                         that while their government can tax     world over.                        With so few active police,
+                                   It doesn't go well for either         them, when they really need help, it                                       many governments call in what
+                                   side.                                 can't protect them.                                                        remains of the military to quell
+                                                                                                                                                    disturbances.
+                                                                         This leads to a season of worldwide
+                                                                         riots that cause levels of destruction                                     With no one to clean up, the
+                                                                         through civil unrest that burn down                                        corpses are left where they
+                                                                         whole nations.                                                             fall, spreading disease.
+
+                                                                         There is nothing left to loot by this
+                                                                         point and people turn their anger to
+                                                                         destroying public buildings.
+The fabric of society    Eventually there's no one    The US is quickly followed  Protests had long ago         A pair of nuclear explosion in
+worldwide continues to   left to bury or even move    into Martial Law by most    given way to riots and        Finland create a localized
+inexorably unravel as    the dead and they begin to   of the EU, Canada, and      with diminishing              nuclear winter.
+summer progresses        line the streets.            Australia.                  manpower, governments
+and the Distemper kills                                                           became unable to              Although no one is ever sure
+more people than the     China begins what it calls   Governments the world       enforce Martial Law.          precisely what caused it, the
+Spanish Flu.             "Central Corpse Disposal."   over use what limited                                     event appears to trigger total
+                                                      forces they have left in a  This, in turn, signals the    societal breakdown in
+                         The fires can be reportedly  vain attempt to retain      end of any authorized         neighboring Sweden and
+                         seen from Taiwan.            order.                      rule in many countries,       within days of losing its
+                                                                                  as there are no officially    power-grid, the country is
+                                                                                  sanctioned forces still       plunged into darkness.
+                                                                                  available for civil control.
+                                                                                                                Soon there are multiple,
+                                                                                                                independent reports of
+                                                                                                                widespread brutality and
+                                                                                                                horror, in addition to
+                                                                                                                unconfirmed reports of
+                                                                                                                cannibalism.
+
+                                                                                                                This in turn drives further riots
+                                                                                                                throughout Europe as terrified
+                                                                                                                people demand desperate
+                                                                                                                action from paralyzed
+                                                                                                                governments who are
+                                                                                                                hanging on by their fingertips.
+
+With the death toll      The CDC convinces the US      Berglund's research team                                 Berglund's research
+constantly rising,       government to place Rhode     are no closer to any kind                                team are no closer to any
+healthcare services      Island, parts of California,  of breakthrough.                                         kind of breakthrough
+are overwhelmed and      and New York City under                                                                when the UK begins
+begin to break down.     quarantine.                   The UK begins human                                      human experimentation
+                                                       experimentation to test a                                to test a possible
+The virus is             The bridges that connect      possible vaccine and                                     vaccine.
+indiscriminate, and      Manhattan to the outside      although there is some
+many healthcare          world are destroyed, cutting  condemnation, it is                                      Although there is some
+workers succumb,         the residents off and         lukewarm and largely                                     condemnation, it is
+leading to a worldwide   leaving them to die.          symbolic.                                                lukewarm and largely
+shortage of anyone                                                                                              symbolic as the UN,
+qualified to help.       The blow-back from these      Within days, the UN,                                     W.H.O., and the FDA
+                         actions creates civil unrest  WHO, and the FDA                                         remove all drug research
+                         on a never before seen        remove all drug research                                 safeguards soon
+                         scale.                        safeguards.                                              thereafter.
+
+                         The government responds
+                         by implementing Martial
+                         Law across the United
+                         States.
+News reports are a             Normal life has ceased to exist  The rest of the world quickly  87% of the population of earth is  Even though the threat of the virus
+continual and horrific         anywhere.                        follows Europe into abject     gone and it is small consolation   seems to be passing and while coughs
+song of lament to this                                          chaos, as national and local   that anyone who was going to       and runny noses can still get people shot,
+inexorably unfolding           Nationwide lock-downs and food   governments fail across the    die is already dead.               things are leveling out.
+global catastrophe until       shortages led to uncontrollable  planet.
+eventually, little by little,  riots around the globe.                                         Just over one billion people       However, as wide-scale communications
+station by station,                                                                            remain alive, scattered, cold,     have long since broken down and with no
+country by country, the        With no one left to police or                                   hungry, and scared.                functioning central government to protect
+news reports stop.             provide order, many cities and                                                                     and provide for them, it is left to whoever
+                               provinces throughout the world                                  Ho, Ho, Ho, Humanity.              remains to rebuild.
+                               become "No Go" areas for anyone
+                               but the locals.                                                                                    People are on their own.
+
+                               Humanity begins a slow and                                                                         No one knows for sure what happened,
+                               painful descent back into                                                                          the state of the world, or who is left.
+                               aggressive tribalism.
+                                                                                                                                  All anyone knows with any certainty any
+Healthcare is nonexistent in most     Isolated in a facility in                                Barely 7 months after it           more is that they have to eat and stay
+parts of the world. Corpse disposal   Belgium, Berglund's                                      began, the Dog Flu has wiped       warm and will do whatever they need to
+has been replaced by ever-            research team have                                       out more than 50% of               do in order to make that happen.
+growing piles of burning corpses.     introduced synthetic genes                               humanity and what is left is
+                                      into H724 and believe they                               frightened, hungry, and            All anyone has left to rely on by this point
+Cities begin to catch fire and there  have line of sight to a                                  scattered.                         is themselves.
+are no emergency services left to     vaccine.
+respond.                                                                                       Centralized services are no        Humanity may have been saved but
+                                      However, it won't come fast                              longer being provided and,         civilization certainly hasn't been.
+                                      enough to stop Europe from                               one after another, things just
+                                      falling into anarchy as the                              stopped working.
+                                      last remaining governments
+                                      topple in quick succession.                              All anyone has left to rely on
+                                                                                               by this point is themselves.
+Distemper is set one year after the apex of the outbreak of      There are no central authorities left,
+H724 - also referred to as the Dog Flu or the Distemper -        no governments, no military, no
+a deadly and contagious form of canine distemper that killed     supply-chain, and next to no loyalty
+more than 6 billion people in less than a year.                  remains for anyone outside of your
+                                                                 family or clan.
+Nowhere and no one was safe. Those who hadn't been
+stricken down by the Distemper, who weren't killed in the        Enough people with enough weapons
+food riots that followed as society collapsed, who hadn't        can lay claim to anything - or
+starved in the ensuing famines or gotten themselves              anywhere - they feel entitled to,
+murdered for the scraps of food in their hands, are now          unless someone is willing to try and
+faced with figuring out their ongoing survival.                  stop them.
+
+The fear of the virus is still very real and strong enough to    In a splintered country where
+get people with a runny nose killed without warning, but         territorial maps are being rewritten at
+more immediate threats and priorities - like food, shelter, and  a whim, you are going to have to
+safety - have taken precedence.                                  navigate tribal lines and continually
+                                                                 shifting threats as you look for your
+Some elements of society are attempting to knit themselves       own place of safety. Or maybe you will
+back together whilst others are pulling at the frayed edges.     decide to just keep moving, dealing
+                                                                 with threats as they arise instead of
+Many cities - those that aren't still burning, at least - have   making yourself a sitting target.
+devolved into anarchic and chaotic hellholes, whilst others
+strive to shine as sanctuaries and beacons of hope, even if
+no one is really sure who they can trust any more.
+
+Everything anyone knew has changed and people are having
+to do ugly things to survive. As players, you will be faced
+with ethical choices that test your morality and have long-
+term impacts on gameplay.
+
+The Rule of Law has been replaced with the Rule of the Gun,
+and for each instance of people working together to fulfill the
+basic needs of food and safety, someone, somewhere, is
+plotting to take it away from them. If you have something of
+value, you need to be prepared to fight to keep it and if
+someone else has something that you want or need, then
+you may have some interesting choices to make.
+
+After all, when starvation is a very real prospect, people
+quickly reevaluate priorities.
+
+                                                                 Although parts of the electrical grid remain
+                                                                 intact, circuits and relays continue to fail,
+                                                                 leaving swaths of the country with no
+                                                                 power and no clean water. Staying warm
+                                                                 and dry is as important as staying fed and
+                                                                 you are going to face continual challenges
+                                                                 that range from other humans, to wildlife,
+                                                                 to the environment itself - and you will
+                                                                 need to solve them all to stay alive.
+
+                                                                 In addition - and possibly scariest of all -
+                                                                 with more than 60 million survivors in
+                                                                 North America alone, there are still many
+                                                                 human threats that you need to navigate.
+                                                                 These range from warlords seizing
+                                                                 territory, to religious zealots reveling in the
+                                                                 rapture of the end times, to bandits
+                                                                 looking to take whatever they can from
+                                                                 anyone that has something worth taking,
+                                                                 to cannibals looking to make you their next
+                                                                 meal.
+
+                                                                 Don't let them catch you slipping.
+                               Things are rotting and spoiling and whatever is left of
+                               any value is going to be gone soon - but you still need
+                               to eat and drink. Whether you decide to scavenge,
+                               forage, hunt, or farm, securing resources will be sure
+                               to bring you into conflict with someone else at some
+                               point.
+                               In addition to food, you will also need to make sure
+                               you have the equipment you will need to survive, such
+                               as a tent and sleeping bag - to say nothing of a supply
+                               of ammunition to ensure your safety.
+                               Some towns and cities are further along in their
+                               recovery than others and have started establishing
+                               trade-routes with like-minded settlements. A couple of
+                               roadside trading posts and taverns have even
+                               appeared in various parts of the country, and they are
+                               as heavily armed and defended as anything in this
+                               new world.
+                               You are going to have to decide if you are going to
+                               take your chances on your own, or if you are going to
+                               work with - and possibly even recruit - NPCs, to
+                               produce a continual supply of food for you and yours.
+
+The world everyone knew is gone, along with all
+the comforts and benefits that it had previously
+brought.
+Anyone who is still alive has likely had to do
+terrible things to survive, and anyone with half a
+brain knows it isn't going to get any easier, any
+time soon.
+You will have to decide who you are willing to
+trust, and just how far that trust will extend as
+you interact with desperate people.
+But, even in the dark there are sparks of hope.
+Places remain where people are trying to work
+together for a brighter future. If you find these
+communities then you may want to trade,
+socialize, or simply see what is on offer. Maybe
+you'll want to try and join them - if they'll allow
+it - and throw in your lot with a rebuilding effort.
+You may attempt to raid the place and see what
+you can steal. You might even try and take over.
+Whatever you choose, you will have to decide
+how you deal with the strangers you encounter
+and the consequences of the choices you make.
+And remember to keep your mask on.
+If a character is going to do something that will impact the
+narrative - such as using a skill, negotiating with an Non-
+Player Character, or fighting - it requires a dice check to
+determine whether it was a success or failure.
+
+Making a dice check involves rolling two six-sided dice
+(written as 2d6) and then adding or subtracting various
+modifiers. If the combined total is 9 or above, then the
+attempt was a Success.
+
+Higher and lower scores bring additional positive or negative
+outcomes. These gradations are Dire Failure, Failure,
+Success, Wild Success, and Moments of Low and High
+Insight, and are detailed on Table 1: Outcomes.
+
+                                      A Dire Failure means that in
+                                      addition to being unsuccessful
+                                      at the given task something else
+                                      goes wrong. Examples might be
+                                      their gun jamming, or the
+                                      pocket they are picking ripping
+                                      when removing the loot.
+
+                                      A Wild Success means that, in
+                                      addition to being successful at
+                                      the task, something else works
+                                      in the character's favor. This
+could be opening a safe and finding not only a map that the
+character was looking for, but also a small stash of
+ammunition that is the right caliber for the gun they have.
+
+A double-one is a Moment of Low Insight and a
+double-six is a Moment of High Insight, wherein the
+character did so astoundingly well or things went so terribly
+wrong that they learned a valuable lesson. Not only did the
+character effectively get a Dire Failure or a Wild Success,
+but they also received an Insight Dice that can be used to
+affect the outcome of future checks (See Moments of
+Insight & Insight Dice on page 10).
+
+Outside of combat, if a player gets a Failure on a dice
+check, they cannot make the same check again unless
+circumstances have changed significantly. For example, a
+player getting a Failure when trying to pick a lock wouldn't
+be able to try again unless he was using different tools.
+
+Note: Dice rolls should be reserved for checks that have a
+dramatic or narrative impact on the story. If there is no
+tension, drama, or clear outcome associated with a roll, the
+situation should be narrated instead.
+Each dice check can have up to 3 different Modifiers that are added or subtracted to the result
+of the 2d6 roll. These modifiers are for Attributes, Skills, and Conditions, each of which has a
+range of somewhere between -3 and +5.
+
+Dice rolls are expressed in the following format:
+
+2d6 +Attribute Modifier (AMod) +Skill Modifier (SMod) +Conditional Modifier (CMod)
+
+                                     Each character has five physical & mental attributes - Reason,
+                                     Acumen, Physicality, Influence and Dexterity (collectively
+                                     known as the RAPID Range). These innate qualities, capabilities
+                                     and strengths define how adept the character is at performing
+                                     certain actions or tasks.
+
+                                     The Attribute Modifiers are detailed in Table 2: RAPID Range
+                                     Mods.
+
+                                     The RAPID Range Attributes range from -2 (Lame) to +5
+                                     (Animalistic). This number is also their Attribute Modifier
+                                     (AMod) which is added to any dice roll involving that Attribute, such
+                                     as Physicality if breaking down a door, or Reason if solving a puzzle.
+
+                                     Distemper has a variety of skills with which characters may be
+                                     familiar. Training in these various skills, or the lack thereof, can
+                                     impact a dice check.
+
+                                     Skill Modifiers (SMods) range from -3 (Inept) to +4 (Life's
+                                     Work), as laid out on Table 3: Skill Modifiers.
+
+                                     SMods are applied to any dice check involving that skill, such as
+                                     using Ranged Combat when firing a pistol, or using Athletics
+                                     when scaling a wall.
+
+                                     SMods usually start at 0 (Untrained), although there are a
+number of skills that are complex enough to require extensive formal training or they start at -3
+(Inept) and automatically incur a -3 SMod. These are denoted with an asterisks when written,
+such as Surgery*, Mechanics* or Demolitions*. As soon as a character has 1 level in those skills,
+their SMod goes from -3 (Inept) to 1 (Beginner).
+
+Each skill is tied to an attribute (such as Sleight of Hand being tied to Dexterity) and Attribute
+Modifiers and Skill Modifiers are cumulative. This means means that someone with a
+Dexterity of 1 (and a corresponding +1 AMod) and Sleight of Hand 2 (a +2 SMod) gets a
+cumulative dice roll of 2d6 +1 +2.
+
+Although a lack of familiarity with a skill doesn't stop a character from attempting to use it, the
+GM may decide that what the character is doing is sufficiently challenging that it requires a -1
+CMod, such as when trying to scale a sheer wall in the rain, or trying to calm an animal while
+under fire, as described in Conditional Modifiers below.
+
+                                     Environmental, circumstantial or karmic influences can affect dice
+                                     checks and these Conditional Modifiers (CMods) are applied at the
+                                     discretion of the GM or at the request of a player (see Making The
+                                     Case on page 10).
+
+                                     Conditional Modifiers range from -5 (Doomed to Failure) to +5
+                                     (Divine Intervention), and are laid out on Table 4: Conditional
+                                     Modifiers.
+
+                                     Examples could range from a -2 CMod for heavy rain making a wall
+                                     harder to climb, to a +3 CMod for having a height advantage when
+                                     shooting at an unsuspecting enemy from behind.
+
+                                     Conditional Modifiers can chain for a cumulative effect. This means
+                                     that a character might get a +1 CMod from a specific weapon effect
+                                     in addition to a +2 CMod from their opponent being dazed after a
+                                     previous attack, and the player might even Make The Case for using
+                                     the darkness to their advantage for an additional +1 CMod.
+
+Whilst this would be expressed as: 2d6 + AMod + SMod +1 CMod +2 CMod +1 CMod
+
+In order to keep gameplay simple, GMs should try and summarize all CMods as one number. In the
+example given, this would be: 2d6 +AMod +SMod +4 CMod
+Each player starts the game with two Insight Dice and receives an additional Insight Dice
+each time they get a Moment of High or Low Insight (see Making A Dice Check on
+page 8). The exact application of an Insight Dice is between the player and GM, but
+common uses are:
+
+  · Adding an additional dice prior to making a check, for a 3d6 dice pool
+
+  · Traded in prior to a dice roll for a +3 Conditional Modifier (CMod)
+
+  · Re-rolling one or both of the original 2d6 dice rolled, at the cost of one Insight Dice
+    per dice re-rolled
+
+  · Used to `bend reality' by allowing a player to find an unexpected clue or have a missing
+    piece of required equipment (such as a rope to scale a wall or being informed of a
+    guard's routine by a drinking buddy)
+
+  · If a character would otherwise Die (see page 33), they may surrender all of their
+    Insight Dice in exchange for recovering 1 Wound Point and 1 Resilience Point for each
+    dice surrendered. Players cannot choose how many dice to use in this method, this
+    costs all of their available Insight Dice.
+
+Unspent dice carry over from session to session and should be recorded on the character
+sheet but once used, Insight Dice are immediately surrendered back to the GM.
+
+Although Insight Dice can be used by a player to perform an act that helps another player,
+they are non-transferable and cannot be given directly to another player.
+
+Chain Reactions: If a player using an Insight Dice gets a Moment of Insight (High or
+Low), this causes a Chain Reaction. The player receives two Insight Dice to add to their
+pool. They can choose to play immediately or bank them for later.
+
+Note: Although Insight Dice cannot be used with Group Checks (see Group Checks on
+page 11), if the group roll gets a Moment of Insight, each player taking part receives an
+Insight Dice.
+
+Much of the gameplay in Distemper is the group of        Conditional Modifiers (CMods) are a wild card that allow
+players collectively and collaborative telling a story.  various factors to influence a dice check. Groups are encouraged
+Filling in the Gaps is one of the primary tools the      to make suggestions that enhance the narrative and GMs are
+GM has to keep the narrative moving by having the        likewise encouraged to work these ideas into gameplay, assuming
+players share what they are seeing or doing.             they are congruent within the narrative and make good sense. In
+                                                         addition to having players Fill In The Gaps, players are
+By having players Fill in the Gaps, the GM can           encouraged to Make The Case for why they should be able to
+ensure the group are all involved in the scene being     do something that receives a CMod.
+played by prompting each member to help provide
+flavor and context.                                      For example, Making The Case may range from a group
+                                                         suggesting that as two of their companions are distracting a
+Players telling each other what they are                 guard, that the player flanking him would get a +1 CMod to their
+experiencing and how their character reacts to it is     next initiative check, to a character reasoning that because they
+the heart of the game and the GM should ensure all       grew up in East Texas that their native accent would encourage
+players throw in at least one detail during various      locals to listen to them. The GM may then agree that this is worth
+situations and interactions.                             a +1 CMod to any Influence-based checks.
+
+                                                         A GM always has the final say in whether Making The Case was
+                                                         successful and the CMod added.
+If a group of players are attempting to         There are times when characters might need to
+undertake a task where multiple characters      make an Opposing Check to quantify their
+can contribute, instead of having each of       response to the situation, such as two characters
+them make an individual check they may pool     having an arm-wrestling contest. Unlike most dice
+their abilities to make a Group Check.          checks in Distemper, Opposed Checks are
+                                                resolved on the total scores involved, rather than
+To make a Group Check, the player with the      on the gradation of Outcomes usually associated
+highest relevant individual attribute or skill  with a dice check.
+makes their roll. This player adds +1
+Conditional Modifier for each member of the     Both parties start with an Initiative check to see
+group participating. A group take also takes    who makes the first move (see Initiative on page
+any other group members' relevant attribute     32).
+and skill modifiers into account, although
+these AMods & SMods must be the same as         The initiative winner declares their action, Fills In
+the rolling character uses.                     The Gaps as to what they are doing, and makes a
+                                                check using the relevant attribute or skill.
+FOR EXAMPLE: Four players are attempting
+to find their way back to their base in the     The other party then makes an Opposed Check
+dark. The character who has the highest level   using an appropriate attribute or skill in response.
+of skill in Navigation (or Acumen, if no one
+has Navigation) would make the roll, adding     Whichever side gets the highest total score win the
+a +1 CMod for each member helping with the      Opposed Check.
+check. They would also add any AMods
+anyone taking part in the check has for         In the event of a draw, neither side won and,
+Acumen or SMods they have for Navigation.       depending on the nature of the check, it is likely
+                                                that these checks will continue until there is a clear
+This can lead to some potentially large rolls   winner.
+with a significantly higher likelihood of
+success, reflecting the combined effort of      Moments of Insight still apply, and a character
+many people.                                    who gets a Moment of Low Insight (a double
+                                                one) will automatically lose (unless their opponent
+While Insight Dice cannot be used with          also gets a Moment of Low Insight) and
+Group Checks, if the group gets a Moment        similarly, a character getting a Moment of High
+of High or Low Insight, each player taking      Insight (a double six) will automatically win,
+part receives an Insight Dice (See              unless their opponent gets the same dice roll. If
+Moments of Insight & Insight Dice on            both sides get a Moment of Insight, they go
+page 10).                                       back to Initiative rolls and start again.
+
+                                                FOR EXAMPLE: a player character and NPC are
+                                                engaged in an arm-wrestling contest. The player
+                                                character wins the initiative and both characters
+                                                make a Physicality check. The player gets a total
+                                                score of 12 while the NPC gets 8, so the character
+                                                is easily able to beat his opponent. Had both sides
+                                                gotten a score of 12 then neither side has the
+                                                advantage and Initiative is rolled again.
+
+                                                There may be times when different skills or
+                                                attributes are used on either side - such as one
+                                                character attempting to use their Influence or
+                                                Charm to win over another character who uses
+                                                their Acumen or Survival to see through the
+                                                attempt.
+
+                                                The GM always has final say on which skills are to
+                                                be used in the checks.
+A character acts as a player's eyes, mouth, feet, and hands within the game world. It is what gives them agency and is the
+mechanism by which players interact with other players, non-player characters (NPCs), and the world around them.
+
+Although in game terms they are little more than a collection of statistics and mechanics ­ how strong they are, or how
+well they can fire a weapon ­ a character is most importantly defined by the voice that a player gives to them, and it is
+vital that each players has a clear understanding of who their character is if they are to determine how they will act and
+react to various situations within the gameworld.
+
+Character creation is detailed on pages 14 to 21, but it can be helpful to understand how the various elements tie
+together before starting, and so each aspect of the character sheet is covered below.
+
+A blank Character Sheet can be found on pages 40-41 and is available for download from www.DistemperVerse.com
+
+This is where to record your character's name, their              INFLUENCE: A measure of how much charm, charisma,
+profession, and various details that have no substantive          or sheer physical beauty a character possesses, in
+impact on gameplay but can help provide some definition           addition to how well they are able to use that to their
+and background, such as your character's height, weight,          advantage. Characters with a high Influence are often
+gender, and age.                                                  able to convince, manipulate, or bend others to their will.
+
+Also in this section in a space to write the "3 words" that       DEXTERITY: Agility, reflexes and hand-eye coordination,
+were defined during character creation to sum up your             characters with a high Dexterity often tend to be good
+character's personality and outlook. See Step Xero: Who           at skills and activities that require being nimble, quick on
+Are They? on page 16 for more details.                            their feet, or having a high degree of fine motor skills.
+
+Each character has a Complication from their life before          Most Skill Modifiers start at 0 (Untrained) and go up
+the pandemic as well as a Motivation that serves to               to +4 (Life's Work) for a subject a character has
+drive their behaviors.                                            devoted many years of their life to studying and
+                                                                  perfecting, as laid out on Table 3: Skill Modifiers.
+Both the Complication & Motivation serve to help
+players understand what drives their character and how            There some skills that required such specialized training
+they would respond in given situations. See Step Six:             (such as Demolitions* or Surgery*), that characters
+What Drives Them on page 19 for details.                          without that training start at -3 (Inept). As soon as a
+                                                                  character gets 1 level, they go from -3 (Inept) to +1
+                                                                  (Beginner). These skills are denoted on the character
+
+Each character has a series of physical and mental
+attributes (collectively called the RAPID Range) that
+reflect their Reason, Acumen, Physicality, Influence
+and Dexterity. This RAPID Range influences how
+effective they are when undertaking tasks using those
+attributes.
+
+                               Although RAPID Range attributes
+                               start at -2 (Lame) and go to 5
+                               (Animalistic), 0 is Average, and
+                               is the starting value for all
+                               characters.
+
+                               Your character's RAPID Range
+                               attribute is also their Attribute
+                               Modifier (AMod) and is applied
+                               to any dice check using that
+                               attribute.
+
+                               These mods are outlined on Table
+                               2: Rapid Range.
+
+The RAPID Range attributes are:
+
+REASON: How smart, how quick, and how well educated
+a character is, in addition to how well they process and
+retain data. Characters with a high Reason tend to be
+good at skills that require an elevated degree of mental
+agility.
+
+ACUMEN: The midpoint between perception and
+cunning, Acumen affects a characters' ability to read a
+situation or person and defines how well they can turn
+things to their advantage. Characters with a high
+Acumen are very in tune with their surroundings and
+tend to rely on their instincts.
+
+PHYSICALITY: Not only a measure of how strong,
+tough, or athletic a character is, Physicality also
+represents how much self-control and will-power they are
+about to exert. Characters with a high Physicality are
+capable of amazing feats of strength and discipline.
+                                   sheet with an asterisks, such    Panic Threshold, their Breaking Point, and their
+                                   as Surgery*.                     Morality score.
+
+                                   Players should write in the      This section is also where to record how many Insight
+                                   number of levels in each skill   Dice and Character Development Points (CDP) the
+                                   next to the skill name for ease  character has. Each character starts with 2 Insight
+                                   of reference during play.        Dice (see Moments of Insight & Insight Dice on
+                                                                    page 10) and 0 Character Development Points
+                                   Each level in a Skill brings a   (CDP). Both of these are earned or awarded and then
+                                   corresponding +1 SMod to         spent at various points during the game, or the
+                                   any check involving that skill,  character's Evolution (see the Distemper Core
+                                   and so a character with          Rulebook for more details on Character Evolution).
+                                   Unarmed Combat 2 would
+write that on their sheet and receive +2 for any                    All characters start the game with a limited amount of
+Unarmed Combat checks.                                              weapons, ammunition, and equipment. Each of these
+                                                                    items should be recorded in this section and you should
+Each skill is associated with an attribute, such as Stealth         circle the correct Type, Range, & Condition of the
+with Dexterity. As AMods and SMods are cumulative, the              weapon for ease of reference. Each weapon section also
+associated attribute is written next to the skill name in           has an ammunition tracker that should be marked as
+parenthesis, such as Stealth (Dex).                                 ammo is consumed.
+
+For ease of reference, Skills are grouped on the                    Additionally, one weapons section records how much
+character sheet by type. These group are: Criminal,                 damage a character does with their bare Fists.
+Combat, Innate, Knowledge, Mechanic, Medicine,
+and Sway Skills.                                                    Additionally, this section has a Rations tracker. Each
+                                                                    character starts the game with two Rations (enough to
+Secondary Statistics are derived from the RAPID                     eat and drink for 2 days) and you should mark those on
+Range attributes as well as certain skills, all of which            this sheet, removing one at the end of each game day.
+are all explained in detail during the Character
+Creation stage.                                                     NOTE: If your character doesn't have an item listed on
+                                                                    their character sheet, they don't have it in the game.
+Secondary Stats either have a direct bearing on
+combat, such as Wound & Resilience Points,                          Whether this is a sketch, a photo, a stock image, a panel
+Initiative, and Defensive Modifiers, or they can have               from one of the comics, or even just a description, this is
+some other impact on gameplay, such as how much                     where to record how your character appears to others.
+weight the character can carry (Encumbrance), their
+
+                                                                    This section is to track the various details that help
+                                                                    develop the character. If the character was created via
+                                                                    the Backstory Generation process (see page 14) then
+                                                                    they should already have a story that was created as
+                                                                    they created their character, this should be recorded
+                                                                    here. If a player choose to simply spend CDP to build
+                                                                    the character they wanted, they should use their
+                                                                    imagination to Fill In The Gaps about their character's
+                                                                    background story.
+
+                                                                    Relationships between player characters and non-player
+                                                                    characters are important in Distemper, and players will
+                                                                    find themselves having different interactions with each
+                                                                    one. Some interactions are defined by First
+                                                                    Impressions and Gut Instincts (see page 30) and
+                                                                    may factor into Negotiations (see page 31). The
+                                                                    CMods influencing those interactions should be recorded
+                                                                    here, next to the NPC's name.
+
+                                                                    In addition to Weapons & Equipment, each character
+                                                                    starts the game with one Incidental Item to help
+                                                                    provide them with color and context, as well as a Basic
+                                                                    Survival Kit which contains a Sleeping Bag and a Tent,
+                                                                    that should all be recorded in this section.
+
+                                                                    Anything not recorded elsewhere on the sheet or any
+                                                                    other details that the player wishes to remember should
+                                                                    go into this section. This might include details like
+                                                                    whether your character is perpetually grumpy, if they are
+                                                                    searching for friends and family, or if they have a habit
+                                                                    of shuffling a deck of cards as they look for a sucker to
+                                                                    get into a game. Anything that helps you remember how
+                                                                    you are playing belongs here.
+The characters at the core of the stories told in Distemper are not action movie heroes
+with seemingly endless skills and proficiencies who are prepared for every eventuality,
+they are very much ordinary people navigating extraordinary circumstances.
+Distemper offers various ways to create a character, and the method you choose might
+depend on the clarity of vision you already have for your character, how much time you
+have to prepare, or perhaps if the GM has given you specific requirements for the story
+they want to tell. However, ultimately it is up to you as a player to define the character
+you want to play and use the method that best suits you.
+
+If you want to define each element of your character and watch them evolve over the
+course of their lives, the Backstory Generation process allows you to choose each
+individual detail and create exactly the character you want to play.
+Backstory Generation is a life-pathing process where players allocate 25 Character
+Development Points (CDP) towards customizing their character's attributes and
+skills. However, the Backstory Generation process goes beyond just increasing
+attributes or buying skills, and players are prompted to make note of specific details
+that help define and flesh out their lives before the Dog Flu. In doing so, characters will
+have a brief history that reflects the various stages of their lives, such as their
+upbringing, education, their hobbies, their jobs, and any influential people they met
+along the way. This helps establish a cohesive framework for who they were before the
+pandemic, and how they will react to situations presented in the game.
+To track the output of the Backstory Generation process, there is a character
+generator available from DistemperVerse.com/resources.
+
+If you prefer to quickly jump into the game without much preparation, you can choose
+from the dozen available Paradigms (see page 24). These allow you to play a specific
+and familiar type of character, such as a school teacher, a small town sheriff a biker, or a
+preacher. Simply add a name and a few other key details about your character, and you
+are ready to start playing.
+
+The quickest option is to simply choose one of the many pregenerated characters, or
+Pregens, available at DistemperVerse.com. These characters come fully defined,
+including their statistics, backstory, and equipment, allowing you to start playing without
+any additional work.
+An example character, Percy "Pesky" LaRue is created during this walk-through to
+illustrate the Backstory Generation process, and is available for download along with
+other Pregens from DistemperVerse.com/pregens.
+
+                        Experienced players who are already familiar with
+                        the Xero Sum Engine may choose to skip the first
+                        five steps of this process, with the GM's agreement.
+                        Instead, they should allocate 5 Character
+                        Development Points to raising their RAPID RANGE
+                        Attributes and 20 CDP to their Skills. They may not
+                        raise attributes beyond 3 (Exceptional) or skills
+                        beyond 3 (Professional).
+                        NOTE: It is still recommended that players Fill In
+                        The Gaps about their character's past, as this will
+                        provide a better understanding of their motivations
+                        and reactions in various situations.
+                 Who are you going to be? Define as much as you know of their
+            concept at this point and choose 3 words that describe your character.
+
+                                       SEE PAGE 16 FOR DETAILS
+
+  Spend 1 CDP raising a RAPID Range Attribute from 0 to 1 (or from -3 to 1). Spend 4
+CDP raising Skills from 0 to 1, or 1 to 2. Skills cannot be raised to level 3 during this step
+
+                                       SEE PAGE 16 FOR DETAILS
+
+    Spend 1 CDP to raise a RAPID Range attribute from 0 to 1, or 1 to 2. Spend 2 CDP
+  raising Skills from 0 to 1, or 1 to 2. Skills cannot be raised to level 3 during this step.
+
+                                       SEE PAGE 17 FOR DETAILS
+
+    Spend 1 CDP to raise a RAPID Range attribute from 0 to 1, or 1 to 2. Spend 4 CDP
+  raising Skills from 0 to 1, or 1 to 2. Skills cannot be raised to level 3 during this step.
+
+                                       SEE PAGE 17 FOR DETAILS
+
+    Spend 2 CDP on raising RAPID Range attributes from 0 to 3, and 7 CDP on raising
+   Skills from 0 to 3. Both attributes and skills can be raised from 2-3 during this step.
+
+                                       SEE PAGE 18 FOR DETAILS
+
+                               Spend 3 CDP on raising Skills from 0 to 3.
+                                       SEE PAGE 19 FOR DETAILS
+
+                    Choose a Complication and a Motivation for your character
+                        from Tables 4 & 5, or roll 2d6 for random elements.
+                                       SEE PAGE 19 FOR DETAILS
+
+              Work out their Wound Points, Resilience Points, Defense Modifiers,
+         Initiative Modifier, Encumbrance Limit, Panic Threshold and Breaking Point.
+
+                                      SEE PAGE 20 FOR DETAILS
+
+  Choose a Primary & Secondary weapon from tables 11-13. Weapons requiring ammo
+   start with 1d6. Players pick one piece of Equipment from table 14 and an Incidental
+    item from table 15. Each character starts with a Survival Kit and 2 days of rations.
+
+                                       SEE PAGE 21 FOR DETAILS
+
+      You should now have at least 1 sentence per step, and your background should
+          be fleshed out. Make a note of any additional details that help define the
+            character. Check that the 3 words you picked in step one are still valid.
+                                       SEE PAGE 21 FOR DETAILS
+                     Distemper gives you the flexibility of defining you character concept in different ways.
+
+                     Some may start by deciding who they want to be in the post-apocalyptic world, while others may
+                     come to their character concept organically through the Backstory Generation process.
+
+                     Regardless of when it's decided, you should be able to summarize you character to the group in
+                     just a few sentences before the game begins. The concept can be simple or complex, depending
+                     on you preference.
+
+                                              · Are you a shepherd or are you the hunter?
+
+                                              · Are you a leader trying to rally people behind an idea or are
+                                                you just trying to stay alive?
+
+Write down as much of your character          · Do you have the medical training that will keep the sick and
+concept as you have already define.             wounded alive or are you just extremely good at doing to
+                                                others before it is done to you?
+
+To illustrate your character's personality    · Are you a dark and malevolent soul in search of a kingdom
+and behaviors, choose three descriptive         or a wiser, older soul who still wants to see the good in
+words that define who they are. This            everyone?
+could be how they perceive themselves or
+                                              Each player can decide how much of this information you are going to
+how others perceive them. These three
+                                              share with the group (and what you want to keep to yourself) but
+words are intended to help guide your
+                                              having a good understanding of your characters' concept will help guide
+character's reactions and decisions in
+                                              your decisions when trying to decide how they would react to a given
+various situations.
+                                              situation or when role-playing as that character.
+Write the three 3 words under Personal
+Information on your character sheet.          Regardless of how much you have decided by this point, you should
+                                              choose 3 descriptive words that help you summarize who your character
+
+                     is. Are they stubborn? Angry? Compassionate? Perceptive? Whichever 3 words you come up with,
+
+                     write them on your character sheet.
+
+                     With a character concept as minimal as a streetwise petty criminal who has always
+                     survived by relying on his wits, the 3 descriptors for Pesky LaRue are: Shrewd,
+                     Manipulative, and Sneaky.
+
+                     The Where They Grew Up step typically covers the first 10-15 years of a character's life, during
+                     which many of their attitudes and outlooks are formed. It's important to consider how and where
+                     your character was raised and the impact it had on them as, while each character's childhood will
+                     be unique, considering these factors can help you shape your character's backstory and
+                     motivations.
+
+                     During the Backstory Generation process, reflecting on what your character learned during
+                     their early life is crucial.
+
+                     · Were you raised on a farm, developing a strong Physicality and understanding of
+                         the natural world, or were you raised by academically focused parents where
+                         Reason was valued above all else?
+
+                     · Were you a street urchin, relying on your Acumen and dexterity to survive, or did
+                         you grow up in a circus where their ability to Entertain and Charm others was
+                         crucial for survival?
+
+                                              Characters start with a RAPID Range of 00000 and you receive 1
+                                              Character Development Point (CDP) to add to any of their RAPID
+                                              Range attributes, which raises it from 0 (Average) to 1 (Good).
+
+To reflect what the character learned during  Additionally, you'll receive 2 CDP to spend on any of the skills listed on
+their early life, you get 1 Character         page 25. When purchasing levels in a skill during any step, each level
+Development Point to add to their any         costs 1 CDP per point. Putting 1 CDP into a skill that starts at -3
+RAPID Range attribute, raising it from 0      (Inept) takes it to 1 (Beginner).
+(Average) to 1 (Good).
+                                              NOTE: Skills cannot be raised beyond 2 (Journeyman) during this
+You also get 2 Character Development          step.
+Points to spend on any of the skills listed
+on page 25.                                   To help shape your character's backstory, make a note of where and
+                                              how they were raised and any defining events that may have influenced
+During this step of the Backstory             their formative years, summarizing it in 1-3 sentences.
+Generation process, buying 1 or 2 levels in
+a skill both cost 1 CDP per point.            Although born Percy LaRue, Pesky was given his nickname
+                                              since before he could walk. Raised on the east side of Chicago,
+                                              Pesky lived with his crack-addicted mother and younger
+                                              brother, Elias. At an early age he got as good at hiding the truth
+                                              as he was at shop-lifting food.
+
+Skills cannot be raised beyond 2              Pesky puts 1 Character Development Point into Acumen, and 1
+(Journeyman) during Step One.                 Character Development Point each into Manipulation and Sleight of
+                                              Hand, to get 1 (Beginner) in those two skills.
+This step covers what your character picked up over the years, how it shaped their outlook,
+their abilities, and how it prepared them for their adult lives.
+
+· Did you get your education from books in an academic institute where an eye
+    for detail was paramount to success?
+
+· Were you raised on a commune where you learned by doing, honing the
+    practical skills that came through experience, not reading?
+
+No matter where they learned their lessons, your characters' experiences during this
+education step of their life gives you 1 Character Development Point to spend
+increasing any RAPID Range attribute from 0 (Average) to 1 (Good), or from 1 (Good)
+to 2 (Strong).
+
+During this step you can allocate 1          You also get 4 Character Development Points to spend on raising
+Character Development Point                  skills. It costs 1 Character Development Point to raise a skill from
+towards raising any RAPID Range              0 (Untrained) to 1 (Beginner), or from 1 (Beginner) to 2
+attribute, as well as 4 Character            (Journeyman). Skills cannot be raised above 2 (Journeyman) during
+Development Points towards                   the What They Learned step.
+raising skills.
+                                             Make a note of how and where your character got their Education,
+It costs 1 CDP to raise a Skill from         summarizing in 1-3 sentences any specific lessons they learned or an
+0 (Untrained) to 1 (Beginner),               impactful figures that may have influenced, hindered, or mentored them
+or from 1 (Beginner) to                      during this period.
+2 (Journeyman).
+                                             Pesky dropped out of high school at 14 and spent the next few
+Skills cannot be raised above 2              years pocketing enough food for him and his family. Fat Fingered
+(Journeyman) during the What                 Frankie, a local hustler, took a liking to the young boy and
+They Learned step.                           helped him up his skills as a petty thief.
+
+                                             Pesky puts a Character Development Point into Dexterity to reflect the
+                                             number of times he needed to make a quick getaway and spends his 4
+                                             CDP on taking Sleight of Hand to 2 (Journeyman), and takes 1
+                                             (Beginner) in Athletics, Barter, and Navigation.
+
+This step is where you can add some additional depth to your character by thinking about how
+they spent their free time, and how that affected their skills and RAPID Range attributes.
+
+· Were you an avid rock climber, honing your Physicality and mental discipline?
+
+· Were you a bookworm, constantly learning new trivia and vital facts?
+
+                                             You get 1 Character Development Point to apply to raising a
+                                             RAPID Range attribute. During this step, attributes can be raised from
+                                             2 (Strong) to 3 (Exceptional).
+
+Add 1 Character Development Point to         You also get 4 Character Development Points to allocate to skills
+any RAPID Range Attribute. During this       that reflect your character's passions, interests, and hobbies - the
+step, you can raise an attribute from 2      things that really motivated them as a person before the outbreak.
+(Strong) to 3 (Exceptional).                 Skills cannot be raised above 2 (Journeyman) in this step.
+
+Allocate 4 CDP to the skills that reflect    Make a note in 1-3 sentences of what was it that made your character
+your characters' passions, interests, and    who they were before the pandemic - what did they do for fun? What
+hobbies.                                     were their hobbies? What made them tick?
+
+In this step, Skills cannot be raised above  As he grew, Pesky found he had a way with the ladies who
+2 (Journeyman).                              loved his `bad boy trying to be good' shtick almost as much as
+                                             their boyfriends hated it, and he often found his best defense
+                                             was the pool cue in his hands.
+
+Pesky puts 1 Character Development Point towards Influence, raising it to 1 (Good) and
+spends one of his 4 Character Development Points on getting another level in Manipulation to
+take it to 2 (Journeyman), and 3 points on getting 1 (Beginner) in Intimidation, Melee
+Combat, and Unarmed Combat
+
+After these steps, Pesky LaRue has gone from a RAPID Range of 00000 and no
+skills to a RAPID Range of 01011. He has the following Skills: Athletics 2, Barter 1,
+Intimidation 1, Manipulation 2, Melee Combat 1, Sleight of Hand 2, and Unarmed Combat 1
+During this step you define what it was that your character did for work - or, at least, how they made
+money - before the Dog Flu. There are 12 Professions listed below that reflect common occupations
+along with associated vocational skills.
+
+You receive 2 Character Development Points to spend on any RAPID Range attribute, which can
+be raised from 2 (Strong) to 3 (Exceptional) during this step.
+
+To represent the expertise and mastery that comes through the years your character has devoted to
+learning their craft, you get 7 Character Development Points to allocate to various skills. Skills can be
+raised from 2 (Journeyman) to 3 (Professional) during this step.
+
+The listed Professions and related skills are simply thematically appropriate suggestions and you're free
+to choose skills that better fit your character concept. If none of the listed Professions align with your
+vision, you can create a custom profession by allocating 7 CDP on the skills that match the idea you have
+in mind. You should still be prepared to Fill in the Gaps for the rest of the group about your character's
+background and how they got their skills.
+
+                                              The Professions are: Academic, Driver, Entrepreneur, Law
+                                              Enforcement, Mechanic, Medic, Military, Outdoorsman, Outlaw,
+                                              Performer, Politician, and Trader.
+
+Add 2 Character Development Points to         Make a note of what it was that they did to make money before the virus and
+any RAPID Range Attributes. You can           summarize in 1-2 sentences any defining events or interactions they may have
+raise them from 2 (Good) to 3                 had during this time in you life, particularly as it comes to helping explain
+(Exceptional) during this step.               their choice of skills and background.
+
+Choose a Profession and allocate 7 CDP        Although Pesky was able to avoid being sucked into a street gang,
+to any of the vocation skills. Skills can be  he never made it beyond being a petty criminal who had multiple
+raised from 2 (Journeyman) to 3               run-ins with the law. After the death of his mom, he felt increasingly
+(Professional) during this step.              responsible for his younger brother.
+
+If there is no Profession that matches        Pesky puts an additional Character Development Point into Acumen,
+your concept, allocate 7 CDP to skills of     raising it to 2 (Strong), and 1 point into Physicality raising it to 1 (Good).
+your choice and Fill In The Gaps as to        Choosing Outlaw as his Profession, he gets 7 CDP to spend on raising
+what they did.                                skills. He spends 2 points on both Lock-Picking* and Stealth, and then an
+                                              additional point in Intimidation, Manipulation, and Unarmed Combat.
+
+   Entertainment                                      Barter             Barter
+       Farming                                   Lock-Picking*   General Knowledge
+
+General Knowledge                                  Navigation         Inspiration
+  Pharmacology*                                    Scavenging        Manipulation
+    Psychology*                                                      Psychology*
+      Surgery*                                       Stealth       Sleight of Hand
+       Tactics*                                      Tinkerer
+                                                Vehicle Repair*         Tinkerer
+       Athletics
+       Hunting                                    Armorsmith*           First Aid
+    Intimidation                                      Barter     General Knowledge
+    Manipulation
+  Ranged Combat                               General Knowledge       Inspiration
+        Stealth                                    Scavenging        Manipulation
+       Tactics*                                      Tinkerer      Pharmacology*
+                                                                     Psychology*
+       Athletics                                Vehicle Repair*
+    Demolitions*                                Weaponsmith*           Surgery*
+
+       Hunting                                 Animal Handling        Intimidation
+  Ranged Combat                                      Farming         Lock-Picking*
+                                                     Hunting         Manipulation
+       Survival                                                       Psychology*
+       Tactics*                                  Melee Combat       Sleight of Hand
+ Unarmed Combat                                    Navigation
+                                                     Stealth             Stealth
+       Athletics                                     Survival     Unarmed Combat
+   Entertainment
+                                                      Barter             Barter
+     Inspiration                                 Entertainment   General Knowledge
+    Manipulation
+    Psychology*                                    Inspiration        Inspiration
+  Sleight of Hand                                 Intimidation       Manipulation
+                                                  Manipulation        Scavenging
+        Stealth                                   Psychology*      Sleight of Hand
+
+                                                     Tactics*           Tinkerer
+This new world is nothing but harsh lessons and struggles. Survivors have all had to pick up
+some new tricks in order to get by. In this step you detail what they have learned since
+civilization fell apart to cope with the challenges they face.
+
+· Have you developed an eye for spotting useful items among the trash?
+
+· Have you had to fight to stay alive, honing your boxing skills out of necessity?
+
+                              You get 3 Character Development Points to apply to spend on the skills that
+                              reflect what they have learned in order to stay alive. Skills can be raised from 2
+                              (Journeyman) to 3 (Professional).
+
+                              Make a note in 1-2 sentences of what was it that made your character who they
+                              were before the pandemic - what did they do for fun? What were their hobbies?
+
+During this step you get 3    Pesky has spent much of the last few months on the move. He has gotten
+Character Development         good at searching through empty houses, finding what others have
+Point to apply to any skills  missed, as learning how to survive off the land. Not everyone he has
+that your character has       encountered has appreciated his approach to communal property, and his
+picked up since the collapse  ability to defend himself has also improved.
+that have helped them stay
+alive.                        Pesky puts one Character Development Point towards getting 1 (Beginner) in
+                              Scavenging and Survival and then adds an additional point to Melee Combat, raising
+                              both to 2 (Journeyman).
+
+After these first five steps, Pesky LaRue has gone from a RAPID Range of 00000 and
+no skills to a RAPID Range of 02111 and the following skills: Manipulation 3, Athletics 2,
+Intimidation 2, Lock-Picking* 2, Melee Combat 2, Sleight of Hand 2, Stealth 2, Unarmed Combat 2, Barter
+1, Scavenging 1, and Survival 1.
+
+Before coming together as a group, each character has had their own experiences and drives
+that are captured in their Complications and Motivations. These elements help provide depth
+to a character's background as well as creating potential plot developments, to be determined by
+the GM.
+
+  · What is the dark secret you are hiding from others in their group?
+
+  · What is the obligation that is holding you back or driving you forward?
+
+  · Where are you trying to get to?
+
+  · Is there something you are trying to rediscover or rebuild?
+
+  · Are there NPCs who are involved?
+
+  · If you are focused on self-preservation, will you put yourself at risk for others?
+
+While only the GM needs to know your Complication and Motivation, you should have a good
+understanding of what happened and how that might impact gameplay, and you should make a
+note of any NPC names that may become relevant later.
+
+Pesky still feels BETRAYED by Marty Kaczynski, who he had partnered with early on
+as he tried to get out of Michigan when everything collapsed. They had agreed to
+work together to find some kind of food source or safety, but Marty had beaten
+him while he slept and stole his horse and supplies, leaving Pesky for dead. Pesky
+doesn't know if Marty is still alive or not, he just knows that he still dreams of what
+he'll do once he catches up to him and has an opportunity to take his REVENGE.
+
+Either choose a Complication and
+a Motivation for your character
+from Tables 4 & 5, or roll 2d6 for
+a random element to weave into
+your Backstory.
+Secondary Stats define certain aspects of a character and each has an impact on
+gameplay. Some Secondary Stats are combat related (how much damage a character
+can sustain before dying), some of them are more mechanical (how much weight can they
+carry before becoming exhausted), and others have a less direct and more tangential
+effect on the game, such as the point when a character freaks out.
+
+Wound Points (WP) determine how much damage a character can take before they
+become Mortally Wounded, and then Die.
+
+Resilience Points (RP) are a measure of how much damage it takes to Incapacitate a
+character.
+
+Defensive Modifiers (DM) affect not only the chance for a character to be hit but can
+also mitigate damage before affecting their WP/RP.
+
+Initiative determines the order in which a participant acts in combat, and a characters
+Initiative Modifier (Init) influences where they fall in that ranking.
+
+Encumbrance (ENC) is how much weight a character can carry before becoming
+Encumbered and needing to stop and rest or drop something.
+
+Panic Threshold (PT): During combat or particularly stressful situations, characters may
+lose Resilience Points and if they lose enough, they may Panic (see page 33).
+
+Breaking Point: Similar to Panic Threshold, each character has a Breaking Point
+before they have some kind of freak-out or psychotic episode. Breaking Point rules are
+covered in the Distemper Core Rulebook.
+
+Morality is a measure of how true a character is acting to their own ethical compass.
+Each character starts with a Morality value of 3, which can be affected over time. The
+Morality rules are covered in the Distemper Core Rulebook.
+
+Wound Points: As Pesky has both a Physicality & Dexterity of 1, he starts with
+10+1+1, or 12 WP.
+
+Resilience Points: With a Physicality 1, Pesky starts with 6+1, or 7 RP.
+
+Defensive Modifiers: With both a Physicality & Dexterity of 1, Pesky starts with
+a -1 Defense Modifier for both Melee and Ranged.
+
+Initiative Modifier: Pesky's Acumen of 2 and Dexterity of 1 means he starts
+with a 0+2+1 Initiative Modifier, or +3.
+
+Encumbrance: With a Physicality of 1, Pesky starts with an Encumbrance of
+6+1, or 7.
+
+Panic Threshold: Pesky's has 7 Resilience Points, making his Panic Threshold 3
+(50% of 7, rounded down).
+
+Breaking Point: With a Reason of 0 and Acumen of +2, Pesky gets a Breaking
+Point of 3+2, or 5.
+
+Morality: Like all characters, Pesky starts with a Morality of 3.
+
+Wound Points (WP): Characters start with 10 Wound Points + Physicality AMod +
+Dexterity AMod
+
+Resilience Points (RP): Each character starts with 6 Resilience Points + Physicality
+AMod
+
+Defensive Modifiers (DM): A characters' Melee Defensive Modifier is their
+Physicality AMod
+
+A characters' Ranged Defensive Modifier is their Dexterity AMod
+
+Initiative Modifier (Init): The sum of Acumen and Dexterity AMods is an
+Initiative Modifier which is added to initiative checks
+
+Encumbrance (ENC): Characters start with an Encumbrance value of 6 +
+Physicality AMod
+
+Panic Threshold (PT): Each character has a Panic Threshold that is half of their
+original Resilience Point total,rounded down
+
+Breaking Point: The Breaking Point for each character is 3 + Reason AMod +
+Acumen AMod
+
+Morality: Each character starts with a Morality of 3
+Each character picks a Primary and Secondary weapon from Tables 11-13 on pages
+28-29, and receives 1d6 of ammunition per weapon.
+
+Each character make take one piece of Equipment from Table 14 as well as an
+Incidental item from table 15 that provides no combat value but may otherwise be
+useful (such as eye glasses or a map of the area).
+
+Additionally, each character gets a Survival Kit consisting of a tent and sleeping bag,
+as well as 2 units of Rations, enough to last them 2 days.
+
+Make a note of everything your character has on their sheet and remember, if it isn't
+written on your character sheet, you don't have it in the game.
+
+Pick a Primary and Secondary weapon       Pesky, who has been in many pool hall
+from Tables 11-13. If the weapon          fights, found a baton in an abandoned
+requires ammo, you start with d6.         police car and felt that it was similar
+                                          enough to a broken pool cue to match
+Pick 1 item from Table 14: Equipment.     his fighting style. He also picked up a
+                                          shotgun and got 3 shells after rolling
+Pick an Incidental item from Table 15.    d6. He takes a set of Standard Lock-
+                                          Picks as his piece of Equipment and a
+                                          map of the area as his Incidental item.
+
+You start with a Survival Kit and 2 days
+rations.
+
+During the Backstory Generation process you were prompted to              Copy the sentences you wrote
+note down relevant facts about your character as you progressed           during the Backstory Generation
+through the various steps. By now, you should have a good idea of         process onto your character
+who your character was before the pandemic and who they have              sheet.
+become since.
+                                                                          Check that the three descriptors
+Transpose this information onto your character sheet, along with any      you chose in Step Xero still ring
+other relevant details that can aid you in role-playing as your           true, and make adjustments if
+character. This may include physical features, personality traits,        they don't.
+quirks, or personal beliefs.
+                                                                          Make any additional notes on
+Your character might gallows humor and find laughter in even the          your character sheet that will
+darkest moments, or maybe they are the brooding and silent type           help you remember who your
+who watches everything but says nothing. They could be still              character is.
+struggling to come to terms with the loss of their previous life, or
+they may have accepted this new, hazardous world and are
+committed to flourishing in it.
+
+Now is a perfect time to revisit the three words you picked to define
+your character in Step Xero. Do those words still match your
+character's personality now that you are done with the Backstory
+Generation process, or do you need to make changes?
+
+If you ever find yourself at a loss as to how to react to a situation or
+how to role-play as your character, refer back to the paragraph you
+have created and the three defining words to guide your actions.
+This is the character sheet for Pesky LaRue, the example character created during the Backstory Generation process,
+                 and is available for download and use in a game from DISTEMPERVERSE.COM/PREGENS
+Skills denote training or aptitude at performing certain tasks, like
+picking a lock or riding a horse and a character's familiarity and
+aptitude in that area will affect their dice checks. Each skill is tied to an
+attribute and the more naturally gifted a character is, the more
+competent they will be when using related skills.
+
+                     These Skill Modifiers (or SMods) range from -3
+                     (Inept) through to +4 (Life's Work) and are applied
+                     to all dice checks using that skill. Although starting
+                     characters are initially capped at +3 (Proficient), +4
+                     (Life's Work) can potentially be achieved over time
+                     as part of the character's Evolution.
+
+                     Characters start with the majority of their skills at 0
+                     (Untrained) and they can still use those skills but
+                     receive 0 SMod on the check. Additionally, the GM may
+                     even decide to apply a -1 CMod, due to the complexity
+                     of the check or other external factors.
+
+Certain skills require very specific training and anyone without that
+training are considered Inept and automatically incur a -3 SMod.
+These skills are denoted by an asterisks when written, such as Lock-
+Picking* and Surgery*. These start at -3 (Inept) but go to 1
+(Beginner) with the allocation of 1 Character Development Point.
+
+A full list of Skills can be found on the following page.
+
+For those wishing to just get into the thick of the action, there are 16
+Paradigms included that ,with a minimum of customization, can be
+played almost immediately.
+
+Paradigms represents a familiar trope, stereotype, or role within a
+group, and each comes predefined with the attributes and a skill set to
+match the concept. Each is detailed on pages 26-27, and Paradigm
+Character Sheets that can be customized are available at
+DistemperVerse.com.
+
+The Paradigms included are: Bar Owner, Beat Cop, Biker, EMT,
+Family Doctor, Farmer, Flea Market Trader, Hot Rod Mechanic,
+Mayor, Mercenary, Petty Criminal, Preacher, Rural Sheriff,
+School Teacher, Semi-Pro Athlete and Trucker.
+
+A player simply needs to pick a Paradigm, give them a name, choose
+a Complication and Motivation from Tables 4 & 5 (on page 19), and
+define their attitude to the world in 3 words to begin playing.
+
+Although each Paradigm already has their RAPID Range, skills and
+Secondary Stats defined, it is really when you define key elements of
+their personality - their name, age, Complication and Motivation,
+the 3 words that describe their character, even their Incidental Item -
+that you breathe life into your character. It is these elements that give
+you a sense of who you character is and how they will act.
+
+As an even quicker alternative to Paradigms, there are multiple
+Pregenerated Characters, or Pregens, available for download.
+These Pregens come with all of their RAPID Range Attributes, Skills,
+Complications, Motivations, and Secondary Stats defined, in addition to
+a semi-complete Backstory that provides an easy jump off pointing
+while still allowing plenty of room for customization.
+
+The library of Pregens available at distemperverse.com/pregens
+will be updated with the release of each adventure and sourcebook.
+    Bar Owner                              BEAT COP                                 BIKER
+       12020                                  01121                                 02102
+
+   WP 10 RP 6 DMM 0 DMR 0                 WP 12 RP 7 DMM 1 DMR 1                WP 13 RP 7 DMM 1 DMR 2
+     INIT 2 ENC 6 PT 3 BP 6                 INIT 2 ENC 7 PT 3 BP 4                INIT 4 ENC 7 PT 3 BP 5
+        Complication: Loss
+          Motivation: Build              Complication: Code of Honor          Complication: Personal Enemy
+                                               Motivation: Protect                 Motivation: Hedonism
+SKILLS: Manipulation 3, Barter 2,
+  Entertainment 2, Scavenging 2,           SKILLS: Hunting 2, Unarmed               SKILLS: Navigation 2,
+                                       Combat 2, Scavenging 2, Athletics 1,      Vehicle Repair* 2, Barter 1,
+Tinkerer 2, Athletics 1, First Aid 1,                                             Demolitions* 1, Hunting 1,
+General Knowledge 2, Inspiration         First Aid 1, General Knowledge 1,     Intimidation 2, Lock-Picking* 1,
+1, Psychology* 1, Sleight of Hand       Inspiration 1, Intimidation 1, Lock-  Manipulation 1, Melee Combat 1,
+ 1, Stealth 1, Unarmed Combat 1          Picking* 1, Manipulation 1, Melee     Ranged Combat 1, Scavenging
+                                       Combat 1, Navigation 1, Psychology*     1, Sleight of Hand 1, Stealth 1,
+      WEAPONS: Fists 1d3+1                                                     Survival 1, Unarmed Combat 1
+       Light Pistol [4] 3+1d6;            1, Ranged Combat 1, Stealth 1,
+            Hatchet 3+1d3;                   Survival 1, Weaponsmith*              WEAPONS: Fists 1d3+2
+                                                                               Sawed-Off Shotgun [5] 2+3d6;
+   EQUIPMENT: Walkie-Talkie;                 WEAPONS: Fists 1d3+3              Tactical Baton 2+1d3 (100%);
+Survival Kit (Tent, Sleeping Bag);           Heavy Pistol [5] 3+2d3;
+                                         Tactical Baton 2+1d3 (100%);               EQUIPMENT: Toolkit;
+                2 Rations;                                                    Survival Kit (Tent, Sleeping Bag);
+                                            EQUIPMENT: Handcuffs;
+                                       Survival Kit (Tent, Sleeping Bag);                    2 Rations;
+
+                                                       2 Rations;
+
+   FLEA MARKET                             HOT ROD
+      TRADER                              MECHANIC
+       12020
+                                              11102
+    WP 10 RP 6 DMM 0 DMR 0
+      INIT 2 ENC 6 PT 3 BP 6              WP 13 RP 7 DMM 1 DMR 2
+         Complication: Loss                 INIT 3 ENC 7 PT 3 BP 5
+      Motivation: Accumulate                   Complication: Loss
+                                                 Motivation: Build
+           SKILLS: Barter 3,
+   Manipulation 2, Scavenging 2,            SKILLS: Armorsmith* 1,
+Sleight of Hand 2, Entertainment 1,          Barter 1, Demolitions* 1,
+ First Aid 1, General Knowledge 1,     First Aid 1, General Knowledge 1,
+                                       Lock-Picking* 1, Melee Combat 2,
+     Psychology* 1, Research 1,         Navigation 1, Ranged Combat 1,
+  Stealth 1, Survival 1, Tinkerer 1,   Scavenging 2, Sleight of Hand 1,
+Vehicle Repair* 1, Weaponsmith* 1        Survival 1, Tinkerer 2, Vehicle
+                                           Repair* 3, Weaponsmith* 1
+        WEAPONS: Fists 1d3
+      Hammer 1+1d3 (100%);                  WEAPONS: Fists 1d3+1
+                                       Pump-Action Shotgun [3] 5+2d6;
+         Hunting Knife 2+2d3;
+                                               Baseball Bat 4+1d6;
+        EQUIPMENT: Toolkit;
+ Survival Kit (Tent, Sleeping Bag);           EQUIPMENT: Toolkit;
+                                       Survival Kit (Tent, Sleeping Bag);
+                2 Rations;
+                                                      2 Rations;
+
+PETTY CRIMINAL                             PREACHER                                 RURAL
+       01112                                   11030                               SHERIFF
+
+   WP 13 RP 7 DMM 1 DMR 2                  WP 10 RP 6 DMM 0 DMR 0                   02021
+     INIT 3 ENC 7 PT 3 BP 4                   INIT 1 ENC 6 PT 3 BP 6
+                                                                                WP 11 RP 6 DMM 0 DMR 1
+   Complication: Criminal Past            Complication: Code of Honor             INIT 3 ENC 6 PT 3 BP 5
+   Motivation: Take Advantage                    Motivation: Preach
+                                                                               Complication: Code of Honor
+SKILLS: Manipulation 3, Barter 2,         SKILLS: General Knowledge 3,                 Motivation: Build
+ Lock-Picking* 2, Sleight of Hand 2,       Inspiration 3, Manipulation 3,
+                                                                                   SKILLS: Intimidation 2,
+   Stealth 2, Unarmed Combat 2,               Psychology* 3, Barter 2,            Manipulation 2, Survival 2,
+      Athletics 1, Intimidation 1,           Intimidation 2, Research 1,         Animal Handling 1, Barter 1,
+                                          Scavenging 2, Entertainment 1,      General Knowledge 1, Hunting 1,
+Melee Combat 1, Ranged Combat 1,                                                Inspiration 1, Lock-Picking* 1,
+Scavenging 1, Survival 1, Tinkerer 1,              Sleight of Hand 1          Navigation 1, Ranged Combat 1,
+                                                                              Scavenging 1, Sleight of Hand 1,
+     WEAPONS: Fists 1d3+3                       WEAPONS: Fists 1d3             Stealth 1, Tactics* 1, Unarmed
+ Sawed-Off Shotgun [5] 2+3d6;          Makeshift Club (Bible) 1+1d3 (100%);      Combat 1, Weaponsmith* 1
+                                       Staff (Walking Stick) 2+2d3 (100%)
+    Brass Knuckles +1 WP/RP;                                                       WEAPONS: Fists 1d3+1
+  EQUIPMENT: Standard Lock-                EQUIPMENT: Loudspeaker;                  Heavy Pistol [5] 3+2d3;
+                                         Survival Kit (Tent, Sleeping Bag);          Hunting Knife 2+1d3;
+      picks; Survival Kit (Tent,
+     Sleeping Bag); 2 Rations;                          2 Rations;                EQUIPMENT: Handcuffs;
+                                                                              Survival Kit (Tent, Sleeping Bag);
+
+                                                                                             2 Rations;
+        EMT                             COSMETIC                                FARMER
+       21011                            SURGEON                                  01202
+
+  WP 11 RP 6 DMM 0 DMR 1                   31010                             WP 14 RP 8 DMM 2 DMR 2
+     INIT 2 ENC 6 PT 3 BP 6                                                    INIT 4 ENC 8 PT 4 BP 4
+                                       WP 10 RP 6 DMM 0 DMR 0                      Complication: Loss
+ Complication: Code of Honor             INIT 1 ENC 6 PT 3 BP 7                     Motivation: Build
+     Motivation: Find Safety
+                                      Complication: Code of Honor                    SKILLS: Farming 3,
+        SKILLS: First Aid 3,                 Motivation: Protect               Animal Handling 2, Hunting 2,
+Pharmacology* 2, Psychology* 2,
+                                          SKILLS: Manipulation 3,                   Stealth 2, Survival 2,
+     Scavenging 2, Athletics 1,     Surgery* 3, General Knowledge 2,                 Athletics 1, Barter 1,
+ Barter 1, General Knowledge 1,     Pharmacology* 2, Psychology* 2,          First Aid 1, General Knowledge 1,
+  Inspiration 1, Manipulation 1,    Tinkerer 2, Athletics 1, First Aid 1,    Navigation 1, Ranged Combat 1,
+ Navigation 1, Sleight of Hand 1,    Scavenging 1, Sleight of Hand 1,             Scavenging 1, Tinkerer 1,
+Stealth 1, Surgery* 1, Survival 1
+                                             Stealth 1, Survival 1                    Vehicle Repair* 1
+               Tinkerer 1
+                                            WEAPONS: Fists 1d3                  WEAPONS: Fists 1d3+2
+       WEAPONS: Fists 1d3                 Tranquilizer 0+Stunned;           Sawed-Off Shotgun [5] 5+2d6;
+ Makeshift Club 1+1d3 (100%);         Makeshift Club 1+1d3 (100%);
+                                                                                  Hunting Knife 2+2d3;
+           Taser 1 (100%);             EQUIPMENT: Doctor's Bag;
+                                    Survival Kit (Tent, Sleeping Bag);        EQUIPMENT: Angler's Kit;
+   EQUIPMENT: First Aid Kit;                                               Survival Kit (Tent, Sleeping Bag);
+Survival Kit (Tent, Sleeping Bag);                  2 Rations;
+                                                                                          2 Rations;
+               2 Rations;
+
+    MAYOR                            MERCENARY
+     12020
+                                          01202
+WP 10 RP 6 DMM 0 DMR 0
+  INIT 2 ENC 6 PT 3 BP 6             WP 14 RP 8 DMM 2 DMR 2
+   Complication: Famous
+       Motivation: Build                INIT 3 ENC 8 PT 4 BP 4
+                                      Complication: Dark Secret
+  SKILLS: Manipulation 3,
+    Inspiration 3, Barter 2,             Motivation: Stay Alive
+
+  Entertainment 2, General                 SKILLS: Athletics 2,
+Knowledge 2, Intimidation 2,          Hunting 2, Melee Combat 2,
+                                      Ranged Combat 2, Stealth 2,
+  Tactics* 2, Psychology* 2,
+      Stealth 1, Survival 1                Survival 2, Tactics* 2,
+                                           Unarmed Combat 2,
+                                       Demolitions* 1, First Aid 1,
+                                    Intimidation 1, Weaponsmith* 1
+
+       WEAPONS: Fists 1d3                WEAPONS: Fists 1d3+4
+ Makeshift Club 1+1d3 (100%);                Carbine [6] 5+1d6;
+                                            Hunting Knife 2+2d3
+           Taser 1 (100%);
+                                      EQUIPMENT: Walkie-Talkie;
+  EQUIPMENT: Loudspeaker;           Survival Kit (Tent, Sleeping Bag);
+Survival Kit (Tent, Sleeping Bag);
+                                                   2 Rations;
+               2 Rations;
+
+     SCHOOL                             SEMI-PRO                                TRUCKER
+    TEACHER                              ATHLETE                                   02102
+
+      21020                                00212                               WP 13 RP 7 DMM 1 DMR 2
+                                                                                 INIT 4 ENC 7 PT 3 BP 5
+  WP 10 RP 6 DMM 0 DMR 0              WP 14 RP 8 DMM 2 DMR 2                         Complication: Loss
+    INIT 1 ENC 6 PT 3 BP 6               INIT 2 ENC 8 PT 4 BP 3                    Motivation: Stay Alive
+        Complication: Loss                Complication: Famous
+     Motivation: Find Safety             Motivation: Find Safety                  SKILLS: Demolitions* 2,
+                                                                           General Knowledge 2, Navigation 2,
+       SKILLS: Research 3,                  SKILLS: Athletics 3,
+       General Knowledge 2,          Entertainment 2, Inspiration 2,            Vehicle Repair* 2, Barter 1,
+ Manipulation 2, Psychology* 2,                                                 Hunting 1, Lock-Picking* 1,
+   Athletics 1, Entertainment 1,        Manipulation 2, Tactics* 2,         Manipulation 1, Melee Combat 1,
+     First Aid 1, Inspiration 1,        First Aid 1, Intimidation 1,        Research 1, Scavenging 1, Sleight
+  Intimidation 1, Scavenging 1,     Melee Combat 1, Psychology* 1,           of Hand 1, Stealth 1, Survival 1,
+   Sleight of Hand 1, Stealth 1,    Scavenging 1, Sleight of Hand 1,          Tinkerer 1, Unarmed Combat 1
+
+               Tinkerer 1                   Stealth 1, Survival 1,                WEAPONS: Fists 1d3+2
+                                             Unarmed Combat 1                 Sawed-Off Shotgun [5] 5+2d6;
+       WEAPONS: Fists 1d3                                                   Makeshift Club (Tire Iron) 1+1d3;
+ Makeshift Club 1+1d3 (100%);            WEAPONS: Fists 1d3+3
+                                      Baseball Bat 4+1d6 (100%);               EQUIPMENT: Walkie-Talkie;
+           Taser 1 (100%);                                                  Survival Kit (Tent, Sleeping Bag);
+                                           Hunting Knife 2+2d3;
+    EQUIPMENT: Flashlight;                                                                  2 Rations;
+Survival Kit (Tent, Sleeping Bag);      EQUIPMENT: Flashlight;
+                                    Survival Kit (Tent, Sleeping Bag);
+               2 Rations;
+                                                   2 Rations;
+Each character picks both a Primary &
+Secondary weapon from Tables 10-
+12. Any weapon requiring ammunition
+starts with 1d6 ammo.
+
+Each character also get a Survival Kit
+containing a tent and sleeping bag,
+and 2 Rations, which is enough to
+keep them fed for 2 day.
+
+Additionally, each character may pick
+one item from Table 9: Equipment
+list and one Incidental Item that
+provides no combat value, such as a
+compass, flashlight or lighter.
+
+Write of all this on your character
+sheet. If it's not written on the sheet,
+it isn't in the game.
+
+NOTE: A starting character may not
+take so much equipment that they
+exceed their Encumbrance limit.
+The condition of each weapon or piece of equipment starts out in Pristine condition but over time, they will become
+Used, Worn, Damaged, and finally Broken, as detailed on Table 10: Item Condition.
+
+To ensure items remain in good working order, they will require some form of regular Upkeep Check.
+
+Normal use of equipment or weapons - such as spending a night in a tent or target practice with a pistol - causes no
+degradation or damage to the item being used. However, if an activity puts the item under duress, or if the character
+
+                                                                                   might not be able to pay enough attention to using the
+                                                                                   item correctly - such as firing a rifle during an intense
+                                                                                   and prolonged firefight, or having to urgently pull up a
+                                                                                   tent in the middle of the night - then they need to
+                                                                                   make an Upkeep Check on the item to prevent it
+                                                                                   taking damage and dropping a level of Condition.
+
+                                                                                   There are specific skills that can be used to attempt an
+                                                                                   Upkeep Check for various items - Vehicle Repair*
+                                                                                   for cars, Weaponsmith* for guns, Armorsmith* for
+                                                                                   armor, and Tinkerer for general equipment - and
+                                                                                   characters must have at least 1 level in that skill in
+                                                                                   order to perform an Upkeep Check.
+
+                                                                                   If the Upkeep Check is Successful then the item
+                                                                                   remains at the same Condition level.
+
+                                                                                   On a Failure, it drops one level of Condition.
+
+                                                                                   On a Wild Success or Moment of High Insight,
+                                                                                   the Condition improves by one level (up to a
+                                                                                   maximum of Used).
+
+                                                                                   On a Dire Failure or Moment of Low Insight, the
+                                                                                   item is immediately Broken.
+
+                                                                                   Players should keep track of the Condition of all of
+                                                                                   their items in the Weapons & Equipment section of
+                                                                                   their character sheet.
+No matter how many people were killed by the Dog         combat (see Combat on page 32)
+Flu, there are more than enough remaining to
+make life difficult for anyone else around them.         If they get a total of 14 or above, this Wild
+                                                         Success overcomes any suspicions the NPCs may
+Interacting with other survivors is an integral part of  have and they succeed in making a favorable First
+the game and although most interactions will come        Impression. They get a +1 CMod to all future
+in the form of conversations between the players         social interactions with this NPC.
+and the GM, certain mechanics can help define how
+PCs and NPCs interact.                                   If they get a Moment of Insight (double ones or
+                                                         double sixes) during the First Impressions check,
+Whenever characters encounter NPCs for the first         it counts as a Dire Failure or a Wild Success.
+time they will create a conscious or subconscious
+impression which can determine the course of their       Any Conditional Modifier that comes out of this
+relationship. This is determined by the outcome of a     check should be written in the Relationships
+First Impressions check.                                 section on the character card, as it will influence
+                                                         future social interactions with that NPC, such as
+                                                         Negotiations and Sway skill checks.
+
+A First Impressions uses Influence,                      Similar to a First Impressions check to see how
+Inspiration, Intimidation, or Manipulation,              they came across to an NPC, characters can also
+with the players Filling in the Gaps as to the           make a Gut Instinct check to see what they pick
+specifics of their attempt and what they are saying.     up about an NPC.
+
+Although First Impressions checks can be done            This requires the character to use Psychology*,
+per individual character, when a group is                Survival, Tactics*, or their Acumen to get a read on
+encountering an NPC for the first time they can          the NPC.
+elect to make a Group Check.
+                                                         If they Fail this check, then they really get no read
+If multiple characters encounter an NPC at the           on this person.
+same time, they should make a First Impressions
+Group check (see Group Checks on page 11) as             If they are Successful, the GM should give the
+the NPC will be weighing up the collective threat.       player some insight as to what their take is. Do they
+                                                         get a sense that this NPC be trusted? Does the NPC
+If the player gets a total of 9 or above on their        feel shifty? Are they acting like they have something
+First Impressions check then they are                    to hide, or do they appear to have a truly open and
+Successful, and the NPC has no particularly              inviting nature?
+adverse or positive reaction towards them. They get
+a 0 CMod to future interactions with that NPC.           On a Dire Failure, perhaps the character becomes
+                                                         very taken with the NPC and are inclined to trust
+If they get a total of 8 or below, they Failed to        them. Perhaps they remind them of a lost family
+make a good First Impression on the NPC who              member or friend and on a Wild Success, perhaps
+becomes wary of them. They get a -1 CMod to all          they realize that nothing this character says should
+future social interactions with this NPC.                be taken lightly.
+
+If they get a total of 3 or below, no matter how         Players would do well to remember that no matter
+they have Filled In The Gaps this Dire Failure           the result of a check, appearances will often be
+makes the NPC suspect they might be threatening          deceiving, and they should act on what their
+or even outright hostile, and there is a -5 CMod to      character knows, rather than what they feel.
+all future interactions. Depending on the character's
+next move and demeanor, this may even initiate
+Although many situations are black and white,    The other side now gets to make a Rebuttal
+there will be times when individuals or groups   check which will determine how the
+may have a request or something to offer and     Negotiations resolve themselves.
+will want to Negotiate some kind of
+settlement between the various parties.          A Rebuttal check uses Acumen or any skill that
+                                                 matches the tone of their response. This could
+Negotiations allow for characters and NPCs       be Barter, Inspiration, Intimidation,
+to interact through a process of Gambits &       Manipulation, Psychology*, or Tactics*, all
+Rebuttals, and are an Opposed Check.             depending on the situation.
+
+While the result uses a defined mechanic,        If the character making the Rebuttal check
+there will typically be a lot of back and forth  Fails then they were unable to present a
+and this is a great opportunity for the group    cogent argument and Negotiations are at an
+to Fill in the Gaps and role-play.               impasse
+
+The side leading the negotiation makes a         On a Dire Failure, things fail so spectacularly
+check for their opening Gambit by making an      that the Negotiation is over, and the
+Influence, Barter, Entertainment,                situation could easily become hostile.
+Inspiration, Intimidation, Manipulation
+or Psychology* check, depending on the           If the character making the Rebuttal gets a
+situation, their approach, and the desired       Success, the other side are potentially
+outcome.                                         swayed by their arguments and may well
+                                                 consider their counter.
+If their approach Fails then their tactic or
+argument falls short in the eyes of their        On a Wild Success, the side making the
+opponent who now gets a +1 CMod to their         Rebuttal have made a truly compelling
+Rebuttal check.                                  counteroffer and the other side is very likely
+                                                 to consider their proposal.
+A Dire Failure means that their Gambit is
+not only unsuccessful but is either so weak or   If a Negotiation is a Failure, another
+offensive that the other side doesn't even feel  attempt cannot be made until the situation
+compelled to respond, and negotiations are       changes. This might be in terms of what is
+over.                                            being asked or offered, or because external
+                                                 events have altered the circumstances.
+Depending on the initial posture of the
+Gambit, this could even lead to aggression or    NOTE: Just because one side wishes to
+hostility.                                       Negotiate, the other side doesn't have to
+                                                 agree to take part, and negotiations can easily
+A Success means that the Gambit had the          fall apart before both sides are even at the
+desired effect, and the other party is           table.
+interested or intrigued, and there is a -1 CMod
+to their Rebuttal check.                         It is also possible for an NPC to negotiate with
+                                                 a player, and whilst a player still has agency
+A Wild Success means that the Gambit             and can decide on the negotiation outcome
+resonated with the other side, who now have      themselves, they should be prepared to Fill
+a -3 CMod to their Rebuttal.                     in the Gaps as to how the exchange unfolds
+                                                 and work with the GM to further the narrative.
+Combat takes place in Rounds lasting 3-6        Initiative is decided at the beginning of each
+seconds.                                        combat round and sets the order in which
+                                                participants in combat act, from highest to
+Each Round is broken up into three phases:      lowest.
+Initiative, Actions and Resolution              Characters who weren't attacked and didn't
+                                                attack in the previous round get a +1 Initiative
+1. INITIATIVE: Initiative decides the order     CMod on their next roll.
+in which combat unfolds and when each           An Initiative check is:
+combatant acts. All participants make the
+following roll for Initiative at the beginning        2d6 + Initiative Modifier (Dexterity
+of each Round:                                                  AMod + Acumen AMod + CMods)
+
+            2d6 + Dexterity AMod                An Attack Roll is a combat-related dice check.
+                                                Like with other checks, a player must score 9 or
+                        + Acumen AMod           above to be Successful.
+                                                Attack Rolls are calculated as follows:
+                        + CMods
+                                                      2d6 + Physicality AMod for Melee attacks
+The order of action follows the dice results                + Dexterity AMod for Ranged attacks
+from high to low. In a tie, PC's always beat                + SMod from relevant combat skills:
+NPCs and if multiple characters tie then                          Melee Combat, Ranged Combat,
+actions or attacks by those characters are                        Unarmed Combat, Demolitions*
+considered simultaneous.                                    + CMods, at the discretion of the GM
+                                                            + Any Weapon-specific Modifiers
+A player may choose to defer one or both of                 - DMM / DMR of opposing character
+their actions until any point later in the
+round, as they may want the opportunity to
+wait and react to an unfolding situation.
+
+2. ACTIONS: Each combatant gets 2
+Actions per each Round and can choose
+from any of the 18 available actions
+described on page 34. They are:
+
+Aim, Attack, Charge, Coordinate, Cover
+Fire, Defend, Dice Check, Distract, Fire
+From Cover, Grappling, Inspire, Move,
+Rapid Fire, Ready Weapon, Reposition,
+Sprint, Subdue and Take Cover.
+
+A character can choose to take two different
+actions, or the same action twice.
+Additionally they may choose to defer one or
+both actions until later in the round, and so
+a character might Aim on their first action
+but wait to see how other players actions
+are resolved before using their second action
+later in the round to Attack.
+
+3. RESOLUTION: Once all combatants
+have taken both of their Actions, dealt or
+received damage, and after any deferred or
+delayed actions or attacks have taken place
+(such as a grenade exploding, gas kicking in,
+or a character Repositioning) the Round is
+considered Resolved. The next Round then
+begins, starting with a new Initiative Roll.
+
+In the second and subsequent Rounds, any
+PC who wasn't attacked and who didn't
+attack anyone else in the previous Round
+may add +1 to their next Initiative Roll to
+reflect them having a cooler head than those
+in the heat of combat.
+All attacks deal two types of damage that affect the victims      A character reaching 0 Resilience Points (RP) becomes
+Wound Point and Resilience Point totals. Resilience               Incapacitated for 1d6 Rounds - Physicality Modifier, with a
+Point damage is generally inflicted at 50% of the Wound           minimum of one round.
+Point damage, rounded down.                                       They take no more damage while Incapacitated unless they
+                                                                  are specifically targeted.
+Damage is weapon specific and has both a consistent and a         Upon regaining consciousness, they recover 1 RP immediately,
+random value, as shown for each weapon.                           and then an additional RP for each Combat Round that they
+                                                                  are not actively engaged in combat, up to half of their
+FOR EXAMPLE: A Rifle does 5+1d6 Wound Points (WP)                 maximum.
+damage (for a total of 6 to 11 WP). As each attack also inflicts  When not in combat, a PC recovers 1 RP per hour and recovers
+half the Wound Points as Resilience Point damage                  all remaining RP with a good night's rest.
+(rounded down), a successful Rifle attack doing 6 WP damage
+will also deal 3 RP damage.                                       A character reaching 0 Wound Points is Mortally Wounded
+                                                                  and they have 4 Rounds + Physicality Modifier until they
+Melee weapons that inflict blunt force trauma (such as clubs or   succumb to their injuries and will Die.
+batons) may do the same amount of Resilience Point                A Mortally Wounded character can be Stabilized with a
+Damage as Wound Point damage as a character is more               Successful Reason, First Aid, or Surgery* check. If this takes
+likely to be bludgeoned into an Incapacitated state than          place whilst combat is still happening, then Stabilizing a
+killed outright. These weapons are marked with "100% RP" on       Mortally Wounded character uses both Combat Actions and
+the character sheet.                                              the character making the attempt is unable to do anything
+                                                                  else.
+When using Melee Weapons, the Physicality AMod of the user        Only one attempt can be made per round to Stabilize a
+is added to the damage done. As an example, the damage for        Mortally Wounded character.
+a Baseball Bat is calculated as follows:                          Wound Points naturally heal at a rate of 1 WP per day of
+                                                                  rest.
+                          4 + 1d6 + PHY AMod                      NOTE: Combat in Distemper is brutal and unforgiving and
+                                                                  the only way to prevent a character who wasn't Stabilized
+For any character fighting with just their fists, damage is       from subsequently Dying, is if the player surrenders all of their
+calculated as follows:                                            Insight Dice to the GM, (assuming that the player has at
+                                                                  least one Insight Dice). If that happens, the character recovers
+    1d3 + Physicality AMod + Unarmed Combat SMod                  1 Wound Point and 1 Resilience Point for each Insight Dice
+                                                                  surrendered.
+This means that a character with a Physicality of 1 and
+Unarmed Combat 1 would do 1d3 +1 +1 damage.
+
+See pages 28-29 for a complete list of weapons and their
+damage output.
+
+If a character takes enough damage that they are reduced to
+half their original Resilience Point total (rounded down) then
+they must make a Successful Reason, Inspiration or
+Psychology* check to retain control, otherwise they have
+Panicked.
+
+To determine how their character reacts, the player must roll
+2d6 and check against Table 7: Panic Effects below:
+
+                                                                  PCs need to eat and drink at regular intervals in order to stay
+                                                                  healthy. A character can go one day without eating or drinking
+                                                                  with no adverse impact but on the second and subsequent
+                                                                  days of not eating, they take Subsistence Damage at the
+                                                                  rate of 1 Wound and Resilience Point per day.
+
+                                                                  If they drop to 0 RP, they become too weak to move and
+                                                                  become Incapacitated. At 0 WP, they must be fed to be
+                                                                  Stabilized, otherwise they will Die, and any character that
+                                                                  becomes Incapacitated through Subsistence Damage will
+                                                                  need to be tended to and fed by another character until they
+                                                                  heal enough to look after themselves.
+
+                                                                  Assuming the players find a food source such as tinned goods,
+                                                                  plants, fruit, vegetables, game, fowl, or fish, then they start to
+                                                                  heal at a rate of 1 WP and 1 RP per day until they are at full
+                                                                  health again.
+AIM: +2 CMod to the next Attack on their target. The character's next
+action must be an Attack, or the Aim is lost.
+
+ATTACK: Any attack, Unarmed or with a Ranged or Melee Weapon. If this
+is used for both actions against the same target brings a +1 CMod to the
+second use as the first attack helped them narrow in on their target
+
+CHARGE: Using both actions, this allows a character to move twice, and
+end their action with either a Melee or an Unarmed Combat Attack
+
+COORDINATE: A character making a Successful Tactics* check on a
+target they can clearly see provides a +2 CMod against that target to any
+character within Close range of the player character. On a Wild Success,
+this carries over to the next round as a +1 CMod
+
+COVER FIRE: Characters doing this must make a separate Attack against
+each person/group and on a Success, the target gets a -2 CMod to their
+next action, skill or attribute check.
+
+DEFEND: This action adds +2 to the character's Defensive Modifiers for
+the next incoming attack. This does not carry over into the next round.
+
+DICE CHECK: An action can be used to make any Attribute or Skill check
+the character requires.
+
+DISTRACT: A Successful Intimidation, Psychology* or Tactics* check
+Distracts a target who then loses one of their next Combat Actions.
+
+FIRE FROM COVER: Characters who have taken cover can use both
+combat actions to come out of cover, fire their weapon, and return to cover
+without losing their Defensive Modifier on incoming attacks.
+
+GRAPPLING: A character can make an Opposed Check (see Opposed
+Checks on page 11) using Unarmed Combat to pin an enemy in place.
+
+INSPIRE: On a successful Inspiration check, a target at Close range gains
+an additional Combat Action this round. A character can only be Inspired
+once per round.
+
+MOVE: Players can change Range bands (see Range on page 35).
+
+RAPID FIRE: A character can make two rush shots per round. The first
+one suffers a -1 CMod, the second has a -3 CMod. If a character uses this
+for both Combat Actions, they suffer a -2 CMod and -4 CMod to those
+attacks.
+
+READY WEAPON: Unless a weapon is ready to use, it must be readied.
+This action must also be taken to reload or if a weapon becomes jammed.
+
+REPOSITION: This action takes place at the end of a round in the
+Resolution phase, allowing a character to get situated for their next attack.
+
+SPRINT: Both actions can be used to Sprint and cover 3 times the normal
+amount of ground in a single move. At the end of the round, the character
+must make a successful Athletics check to avoid becoming Winded and
+needing to rest, losing one of the Combat Actions in the following round.
+
+SUBDUE: When attempting to Subdue another character, full Resilience
+Point damage is done but Wound Point damage is dealt at 50% (see
+Damage on page 33). Can only be used with Unarmed or Melee attacks.
+
+TAKE COVER: Taking Cover gives a +2 Defensive Modifier for all attacks
+that take place against that character during that combat round.
+When the tension is rising between a group of           Range in Distemper is handled in an abstract
+characters and combat feels inevitable, one member      manner. Rather than absolute distances, each
+of group may choose to act first, thereby Getting       character's position is relative to one another and is
+The Drop on everyone else.                              determined by range bands.
+
+In game-terms, this amounts to the character taking                              The range bands are: Engaged
+one single action before anyone else rolls for                                   (1), Close (2), Medium (3),
+Initiative. A character might Get the Drop by                                    Long (4) and Distant (5).
+readying a weapon, moving into position, or sucker-
+punching an opponent.                                                            Each range band has a value in
+                                                                                 parentheses, and to move
+Only one combatant can Get The Drop and if                                       between bands it takes the
+multiple characters wish to attempt it then it is the                            cumulative total of the current
+character with the highest combined Dexterity and                                range band, and the other bands
+Acumen AMods who succeeds. If there is a tie and                                 that preceded it.
+no clear winner, no one Gets The Drop and
+combat moves directly to the Initiative phase.          This means it takes:
+
+It is also possible that the GM may decide that an        · 1 round to move from Engaged to Close
+NPC is going to try and Get The Drop on the
+players. If both the player and GM announce that          · 3 rounds to go from Close to Medium
+they are planning on making this move, whichever
+character has the highest combined Dexterity and          · 6 rounds to go from Medium to Long
+Acumen Modifiers wins.
+                                                          · 10 rounds to go from Long to Distant
+NOTE: Any player who Gets The Drop
+automatically incurs a -3 CMod on their next              · 15 rounds to go from Engaged to Distant.
+Initiative Roll, returning to normal on subsequent
+Initiative rolls.                                       ENGAGED: Close enough to wrestle, Engaged
+                                                        combat gives a +1 CMod to Melee attacks and a -1 to
+Players with at least 1 level in Ranged, Melee, or      Ranged attacks.
+Unarmed Combat can attempt a Called Shot by
+picking a specific part of an opponent's body (such     CLOSE: If characters can hear each other clearly
+as their head or limb) or an object (such as the gun    then combat is at Close range. Melee combat can
+an opponent is carrying).                               only take place at Close range with weapons that
+                                                        have a longer reach (such as a Spear) and suffers a -
+Players must state they are taking a Called Shot        1 CMod penalty. This is the ideal range for Pistols,
+before making the check and Fill In The Gaps as         although any type of Firearm gets a +1 Range CMod
+what they are trying to achieve. They must also get     to Attacks at Close range.
+a Wild Success or Moment of High Insight to
+connect, otherwise the attack misses completely.        MEDIUM: Far enough away that a pistol shot would
+                                                        be wasted without taking aim but close enough that a
+If the attack connects then it is up to the player and  machine gun can still cover a room, Medium range
+GM to decide what happens. A successful Called          gives no Modifiers to any attack and is perfect for
+Shot to the knee with a baton might cripple a           carbines or a bow.
+pursuer or a Called Shot with a pistol might
+remotely detonate a container of gasoline.              LONG: Too far for an accurate pistol shot but perfect
+                                                        for Rifles, being at Long range gives a -5 CMod to
+                                                        any pistol shot but a +1 to a Rifle shot.
+
+                                                        DISTANT: Far enough away that characters will not
+                                                        be able to hear each other clearly without radio
+                                                        equipment and may not even be able to see one
+                                                        another. Only someone with a high degree of skill with
+                                                        ranged weapons and the appropriate equipment (such
+                                                        as a hunting or sniper's rifle) can strike a target at
+                                                        Distant range.
+Whilst uncommon, armor can be a life saver. Not only does it     In terms of game mechanics, there is very little
+make it harder for an attack to hit, but armor also lessens the  difference between Melee, Unarmed and Ranged
+amount of damage that gets through.                              Combat. Dice checks and damage modifiers remain
+                                                                 the same and all are potentially lethal, and the
+Each piece of armor has a Defensive Modifier (DM) that is        most notable differences are in the details.
+applied to any attack attempts, reducing the likelihood that it
+will connect. If an attack does land, the damage is also           · Unarmed attacks require no weapon and no
+reduced by the same Defensive Modifier.                                ammunition, but do the lowest amount
+                                                                       damage. A characters' strength (reflected in
+Armor DMs are cumulative and stack, so a character wearing             their Physicality AMod) and training in
+Riot Gear (-2 DM) and bearing a Riot Shield (-2 DM) gets a             martial arts or pugilism (reflected by levels
+total of -4.                                                           of skill in Unarmed Combat) both improve
+                                                                       the amount of damage done.
+Armor degrades with each incoming blow and an Upkeep
+Check must be made after each combat engagement to                 · Melee weapons are hand weapons such as
+prevent the item from dropping a level of condition (see               clubs or knives. They often do less damage
+Upkeep Checks on page 29).                                             than a ranged weapon and require the
+                                                                       attacker to be close to their target, but the
+                                                                       damage dealt with Melee weapons is
+                                                                       increased by a character's Physicality AMod.
+                                                                       Although they won't run out of ammunition,
+                                                                       Melee weapons can break with repeat use.
+
+                                                                   · Ranged weapons can be the most lethal but
+                                                                       not only do they require ammo in a world
+                                                                       running short, some weapons have certain
+                                                                       range restrictions (such as a sniper's rifle).
+
+                                                                   · When attempting to use a ranged weapon
+                                                                       against a character who is fighting with
+                                                                       someone else at Engaged range, the
+                                                                       character gets an automatic -3 CMod to their
+                                                                       ranged attack for the additional complexity.
+                                                                       If they miss their original target, then they
+                                                                       must get a Failure on a second Ranged
+                                                                       Combat attack with a +3 CMod to avoid
+                                                                       hitting the second combatant. This +3
+                                                                       reflects how close the other combatant is to
+                                                                       the target you were shooting at.
+        DICE CHECKS                                     MOMENTS OF INSIGHT                                   OPPOSED CHECKS
+
+All attribute or skill checks require a total        A roll of double one or double six (a score of 2    If two characters are working against one
+score of 9 or above to be successful and take        or 12) is either a Moment of Low or High            another (during a chase, for example), an
+the format:                                          Insight wherein the task went so flawlessly         Opposed Check is used.
+                                                     well or so disastrously awry that the character     This starts with both characters making an
+    2d6 + Attribute Modifier (AMod)                  learned an important lesson about what not to       initiative check to see who goes first.
+         Add their Reason, Acumen,                   do or gained a deep understand of how and           The initiative winner then makes a dice check
+         Physicality, Influence or                   why they were successful.                           using the relevant attribute or skill and the
+         Dexterity AMod, for a range                                                                     other player makes a responding check.
+         of -2 to +4                                 Regardless of any AMod, SMod or CMods               Unlike most other dice checks in Distemper,
+                                                     being applied to the roll, a double one is always   an Opposed Check relies purely on one side
+      + Skill (SMod)                                 treated as a Dire Failure and a double six is       beating the score of the other. If there is no
+         Add relevant SMods from Skills              always treated as a Wild Success.                   clear winner, the Opposed Check starts over.
+         for a range of -3 to +3                                                                         Moments of Insight still apply, and a
+                                                     As a result of this roll, they receive an Insight   character who gets a Moment of Low Insight
+      + Conditional Modifier (CMod)                  Dice that can be used to affect the outcome of      (a double one) will automatically lose (unless
+         For any external influences or              future dice checks.                                 their opponent also gets a Moment of Low
+         unexpected factors, ranging                                                                     Insight) and anyone getting a Moment of
+         from -5 to +5, at the GM's                          INSIGHT DICE                                High Insight will automatically win, unless
+         discretion                                                                                      their opponent gets the same dice roll, in
+                                                     Insight Dice allow players to affect dice rolls or  which case Initiative is re-rolled.
+         MODIFIERS                                   other elements of gameplay in their favor.
+                                                                                                                  SKILL LIST
+Each Dice Check can have up to three possible        Each player starts the game with 2 Insight
+Modifiers that are added to the final total.         Dice and receives an additional Insight Dice              Animal Handling [Sway] (INF)
+Attribute Modifiers (AMods): All characters          each time they roll a double one or a double
+have 5 RAPID Range attributes (Reason,               six and have a Moment of Insight.                        Armorsmith* [Mechanic] (DEX)
+Acumen, Physicality, Influence, & Dexterity)
+ranging from 0 to 4. This number is the              Common uses for Insight Dice are:                             Athletics [Innate] (PHY)
+Attribute Modifier (or AMod), that is added to
+any check that uses that Attribute.                    · Adding an additional dice before                            Barter [Sway] (ACU)
+Skill Modifiers (SMods): Each character has a             making a check, for a 3d6 dice pool
+variety of skills, with a Skill Modifier (or SMod),                                                            Demolitions* [Combat] (PHY)
+ranging from 0 to +4, that is added to any check       · Re-rolling one or both of the original
+using that skill.                                         dice                                                   Entertainment [Sway] (INF)
+Note: Some skills require some degree of
+specialized training and attempting to use one         · A +3 Conditional Modifier                              Farming [Knowledge] (ACU)
+without the training incurs a -3 SMod. These
+skills are marked with a *.                            · `Bending reality' to allowing a player to                First Aid [Medicine] (RSN)
+Conditional Modifiers (CMods): Any dice roll              find an unexpected clue or suddenly
+can have a Conditional Modifier (or CMod)                 have a missing piece of required               General Knowledge [Knowledge] (RSN)
+ranging from -5 to +5 which is added at the               equipment
+GM's discretion to reflect external factors that                                                                   Hunting [Innate] (PHY)
+can influence the dice check.                          · Instead of Dying, a character can
+                                                          surrender all of their Insight Dice in                   Inspiration [Sway] (INF)
+    FILLING IN THE GAPS                                   exchange for recovering 1 Wound Point
+                                                          and 1 Resilience Point for each dice                    Intimidation [Sway] (INF)
+Having the players Fill in the Gaps about what            surrendered. Players cannot choose
+they are seeing or doing can help the GM                  how many dice to use in this method,                 Lock-Picking* [Criminal] (ACU)
+ensure that the whole group are contributing to           this costs all of their Insight Dice
+the narrative.                                                                                                   Manipulation [Sway] (INF)
+The GM may call upon players to provide              There is no limit to how many Insight Dice a
+details about what they are seeing or doing that     player can have and once used, Insight Dice              Melee Combat [Combat] (PHY)
+flesh out the scene or actions for the rest of the   are surrendered back to the GM.
+group.                                                                                                            Navigation [Innate] (ACU)
+                                                     Although Insight Dice can be used by a player
+                                                     to perform an act that helps another player,            Pharmacology* [Medicine] (RSN)
+                                                     they are non-transferable and cannot be given
+                                                     directly to another character.                           Psychology* [Knowledge] (INF)
+
+                                                           GROUP CHECKS                                      Ranged Combat [Combat] (DEX)
+
+                                                     A group of players may elect to make a Group               Research [Knowledge] (RSN)
+                                                     Check and pool their abilities so long as they
+                                                     are using the same Attribute or Skill.                      Scavenging [Innate] (ACU)
+
+                                                     The player with the highest individual Attribute        Sleight of Hand [Criminal] (DEX)
+                                                     or Skill makes a dice check, factoring in AMods
+                                                     and SMods from the group members, and                         Stealth [Criminal] (DEX)
+                                                     adding a +1 CMod for each person
+                                                     contributing. Insight Dice cannot be used                   Surgery* [Medicine] (RSN)
+                                                     during Group Checks.
+                                                                                                                   Survival [Innate] (ACU)
+
+                                                                                                                Tactics* [Knowledge] (RSN)
+
+                                                                                                                 Tinkerer [Mechanic] (DEX)
+
+                                                                                                            Unarmed Combat [Combat] (PHY)
+
+                                                                                                             Vehicle Repair* [Mechanic] (DEX)
+
+                                                                                                             Weaponsmith* [Mechanic] (DEX)
+      COMBAT ROUNDS                                  INITIATIVE is decided at the beginning of each            FIRST IMPRESSIONS
+                                                     combat round and sets the order in which
+Combat Rounds last 6-10 seconds, and consist         participants in combat act, from highest to lowest.  Characters meeting NPCs for the first time
+of 3 phases: Initiative, Actions, Resolution.                                                             should see how they are being perceived by the
+                                                             An INITIATIVE CHECK is:                      NPC by making either an Influence,
+1. Initiative: At the beginning of each round, all           2d6 + Dexterity AMod                         Inspiration, Intimidation, or Tactics* check
+participants make an Initiative check (2d6+Init                                                           and Fill in the Gaps as to the specifics of what
+Mod) to determine the order in which they act,                      + Acumen AMod                         they are doing.
+going from the highest to the lowest score, with                    + Perception SMod
+draws taking place simultaneously. Anyone who                                                             If multiple characters encounter him at the
+was neither attacked nor attacked someone else              A form-fillable PDF version of this           same time, they should make a Group First
+gets a +1 to their next Initiative roll.               INITIATIVE TRACKER is available from               Impression check.
+                                                      www.distemperverse.com/resources
+2. Actions: Each combatant gets two Combat                                                                       GUT INSTINCTS
+Actions per round and may take the same action           COMBAT ACTIONS
+twice or choose two different actions.                                                                    Characters can also see what their Gut
+                                                    AIM: +2 CMod on the next attack against one           Instinct about an NPC is by making a
+3. Resolution: Certain actions, weapons, or         target. The next action must be an Attack.            Psychology*, Survival, Tactics*, or Acumen
+effects will be resolved in this phase after all    ATTACK: Make a Combat Roll                            check.
+characters have taken their actions and before      CHARGE: Uses both actions but lets a
+the round is complete.                              character make 2 moves and end in a Melee             If they are successful, the GM should give the
+                                                    or Unarmed attack                                     player some insight as to what their take is. If
+At the end of the Resolution phase, combat          COORDINATE: On a successful Tactics*                  they fail, the GM may mislead them.
+cycles to a new round and a fresh Initiative        check, this character can provide allies at
+check.                                              Close range with a +2 CMod against a specific                 NEGOTIATIONS
+                                                    target
+     COMBAT ATTACKS                                 COVER FIRE: A Success inflicts a -2 CMod              Negotiations are broken into Gambits &
+                                                    on the target's next action.                          Rebuttals.
+Attack rolls, like all other checks, requires a     DEFEND: +2 to Defensive Modifiers
+score of 9 or above to be successful.               DICE CHECK: Any Attribute or Skill check              A character or NPC states their offer or request
+                                                    DISTRACT: A Successful Intimidation,                  by making an Influence, Barter, Charm,
+Attack rolls take the format:                       Tactics* or Psychology* check causes the              Deception, Entertainment, Inspiration, or
+                                                    target to lose their next action                      Intimidation check, and Filling In the Gaps.
+     2d6 + AMod                                     FIRE FROM COVER: Uses both actions to
+        Physicality for Melee & Unarmed             come out of cover, fire, and return to cover          If the other side agrees to the request or
+        Dexterity for Ranged                        GRAPPLING: An Opposed check to pin a                  demand, the Negotiation is over.
+        + SMod                                      target in place
+        Melee Combat, Ranged Combat,                INSPIRE: A Successful Inspiration check               On a Dire Failure, the Negotiation
+        Unarmed Combat, or Demolitions*             gives a target at close range an additional           immediately falls apart.
+        + CMod as determined by the GM              Combat Action
+        - Target's Ranged or Melee                  MOVE: Change Range bands                              On a Failure, the other side gets a +1 CMod on
+        Defensive Modifier                          RAPID FIRE: Can make two shots per action,            their Rebuttal.
+                                                    but the first incurs a -1 CMod and the second
+             PANIC                                  a -3 CMod. If used for both actions, it incurs -2     On a Success, there is a -1 CMod to any
+                                                    and -4 CMods                                          Rebuttal.
+If a character is reduced to half their original    READY WEAPON: Prepares a weapon for
+Resilience Point total then they must make a        use or clears a jammed weapon.                        On a Wild Success there is a -3 CMod to any
+Successful, Inspiration, Psychology* or             REPOSITION: Can move during the                       Rebuttal.
+Reason check to retain their self-control or they   Resolution phase
+have Panicked.                                      SPRINT: Can cover 3 times the usual amount            Once the other side has heard the opening
+                                                    of ground. Requires an Athletics check or lose        Gambit out, they can offer their Rebuttal by
+Players should roll 2d6 and check against the       one of the Combat Actions in the next round           making an Acumen, Barter, Perception or
+table below for the effect:                         SUBDUE: Can attack and cause 50% of the               Survival check.
+                                                    usual Wound Point damage but 100% of
+ Roll Effect                                        Resilience Point damage                               On a Dire Failure or Failure, there is no
+                                                    TAKE COVER: +2 Defensive Modifier against             common ground but there is potential to have
+  2: Babbling: PC is nonsensical for 1d3 rounds     all incoming attacks during that round. on next       created an enormous amount of bad feeling.
+  3: Loose Grip: PC drops whatever are holding      attack
+                                                                                                          On a Success or Wild Success, their counter
+       and must spend an action picking it up                                                             is met favorably and a deal or agreement can
+  4: Twitchy: Unable to control their spasms, -2                                                          be reached.
+
+       CMod on all attacks for 1d3 rounds                                                                 NPCs can attempt to Negotiate with characters
+  5: Rattled: Unable to focus properly, -2 on next                                                        and although the players always have agency
+                                                                                                          over what they will accept or agree to, they will
+       Initiative Roll                                                                                    need to Fill In The Gaps about what they are
+  6: Frozen: Character loses both of their actions                                                        thinking or saying if they decide not to hold to
+                                                                                                          the terms of the Negotiation.
+       for 1d3 rounds
+  7: Escape: Character disengages and spends                                                                      ITEM UPKEEP
+
+       1d3 rounds trying to get out of combat                                                             Characters will need to regularly maintain their
+  8: Intimidated: Character receives a -2 CMod                                                            weapons & equipment to ensure they continue
+                                                                                                          to work as intended.
+       on attacks for the next 1d3 rounds
+  9: Scream: Character spends the next 1d3                                                                After prolonged or careless use of an item, a
+                                                                                                          character with at least 1 level in Tinkerer,
+       rounds screaming, oblivious to everything                                                          Weaponsmith*, Armorsmith*, or Vehicle
+                                                                                                          Repair* can make an Upkeep Check. On a
+ 10: Tunnel vision: Character's can only focus                                                            Failure, the item drops a level of Condition (see
+      the most immediate threat for 1d3 rounds                                                            page 29).
+
+ 11: Berserk: The character attacks the NPC
+      closest to them
+
+ 12: Faints: Character falls to the ground
+      unconscious for 1d3 rounds
+                              is a post-apocalyptic tabletop roleplaying game set one
+               year after a deadly mutation of `canine distemper', transmitted by
+
+                         Man's Best Friend has wiped out 90% of humanity.
+
+      Groups of 3-6 people will take on the roles of a survivors who must navigate a
+harsh and fractured world to stay alive. Food, water, and shelter Food, water, and shelter
+
+   are the most basic needs, but making it through the day often requires risking it all.
+
+ Will you keep moving, recruit allies, or try to rebuild? Whatever you choose, desperate
+     people and harsh conditions will make every decision a matter of life and death.
+
+    Maybe you will recruit NPCs to you cause and take control of an area or territory.
+
+Maybe you will rebuild. Maybe you will become warlords or start you own religious sect.
+
+            Whatever you choose, you will have to be prepared to fight to keep it.
+
+                is grounded in realism, with no zombies, mutants, or aliens to contend with.
+The game world is a dangerous place, and players must be prepared to fight to survive.
+ With only their wits, skills, and a handful of dice, they must tell collaborative stories of
+
+    survival, betrayal, and redemption in a world where every move may be their last.
+
+         Grab some dice, some friends, and prepare to tell collaborative stories in a
+                harsh and fractured world where every move may be your last.
+

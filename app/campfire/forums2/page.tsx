@@ -172,7 +172,7 @@ export default function Forums2Page() {
   }
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Carlito, sans-serif' }}>
 
       {/* Header */}
       <div style={{ marginBottom: '1rem' }}>

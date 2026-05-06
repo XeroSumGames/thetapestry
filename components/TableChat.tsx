@@ -407,7 +407,7 @@ export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whis
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
           placeholder={whisperTarget ? `Whisper to ${whisperTarget.characterName}...` : 'Type a message...'}
           rows={2}
-          style={{ flex: 1, padding: '6px 8px', background: whisperTarget ? '#1a1a2a' : '#242424', border: `1px solid ${whisperTarget ? '#8b2e8b' : '#3a3a3a'}`, borderRight: 'none', borderRadius: '3px 0 0 3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none', resize: 'none', lineHeight: '1.4' }} />
+          style={{ flex: 1, padding: '6px 8px', background: whisperTarget ? '#1a1a2a' : '#242424', border: `1px solid ${whisperTarget ? '#8b2e8b' : '#3a3a3a'}`, borderRight: 'none', borderRadius: '3px 0 0 3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', resize: 'none', lineHeight: '1.4' }} />
         <button onClick={send}
           style={{ width: '24px', flexShrink: 0, background: whisperTarget ? '#2a102a' : '#1a2e10', border: `1px solid ${whisperTarget ? '#8b2e8b' : '#2d5a1b'}`, borderRadius: '0 3px 3px 0', color: whisperTarget ? '#d48bd4' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', writingMode: 'vertical-rl', letterSpacing: '.08em', padding: 0, transform: 'rotate(180deg)' }}>Send</button>
       </div>

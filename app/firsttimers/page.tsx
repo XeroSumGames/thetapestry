@@ -55,7 +55,7 @@ export default function FirstTimersPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f0f', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', overflowY: 'auto' }}>
+    <div style={{ minHeight: '100vh', background: '#0f0f0f', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', overflowY: 'auto' }}>
 
       {error && (
         <div style={{ maxWidth: '500px', margin: '2rem auto', padding: '12px 16px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px', fontSize: '14px', color: '#f5a89a', textAlign: 'center' }}>

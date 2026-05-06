@@ -944,7 +944,7 @@ function CharacterCardImpl({
         <ModalBackdrop onClose={() => setShowRestModal(false)} zIndex={10001} opacity={0.9} padding="1rem">
           <div style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '1.5rem', width: '320px' }}>
             <div style={{ fontSize: '13px', color: '#7fc458', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '8px' }}>Rest & Heal</div>
-            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '1rem' }}>How much time has passed resting?</div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem' }}>How much time has passed resting?</div>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Hours</div>
@@ -969,7 +969,7 @@ function CharacterCardImpl({
               const wpHeal = wasMortal ? Math.floor(totalDays / 2) : Math.floor(totalDays)
               const rpHeal = totalHours
               return totalHours > 0 ? (
-                <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', marginBottom: '1rem', padding: '8px', background: '#242424', borderRadius: '3px' }}>
+                <div style={{ fontSize: '13px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', marginBottom: '1rem', padding: '8px', background: '#242424', borderRadius: '3px' }}>
                   <div>WP healed: <span style={{ color: '#c0392b', fontWeight: 700 }}>+{wpHeal}</span> ({wasMortal ? '1 per 2 days' : '1 per day'})</div>
                   <div>RP recovered: <span style={{ color: '#7ab3d4', fontWeight: 700 }}>+{rpHeal}</span> (1 per hour)</div>
                 </div>

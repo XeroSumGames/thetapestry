@@ -37,7 +37,7 @@ const panel: React.CSSProperties = { background: '#1a1a1a', border: '1px solid #
 const h1Style: React.CSSProperties = { fontFamily: 'Distemper, Carlito, sans-serif', fontSize: '26px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', marginBottom: '8px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', lineHeight: 1.1 }
 const subLabel: React.CSSProperties = { fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }
 const cellHeader: React.CSSProperties = { ...subLabel, textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #2e2e2e', cursor: 'pointer', userSelect: 'none' }
-const cell: React.CSSProperties = { fontSize: '13px', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee', padding: '6px 8px', borderBottom: '1px solid #1a1a1a' }
+const cell: React.CSSProperties = { fontSize: '13px', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee', padding: '6px 8px', borderBottom: '1px solid #1a1a1a' }
 
 type SortKey = 'name' | 'gm' | 'setting' | 'members' | 'pins' | 'npcs' | 'scenes' | 'handouts' | 'created' | 'last'
 
@@ -172,7 +172,7 @@ export default function CampaignExplorerPage() {
 
   if (!authChecked) return null
   if (!isThriver) return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Barlow, sans-serif', color: '#cce0f5', textAlign: 'center' }}>
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#cce0f5', textAlign: 'center' }}>
       Thriver access only.
     </div>
   )
@@ -189,7 +189,7 @@ export default function CampaignExplorerPage() {
   )
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
+    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>
       <div style={h1Style}>Campaign Explorer</div>
 
       <div style={panel}>
@@ -198,7 +198,7 @@ export default function CampaignExplorerPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by name, GM, or setting…"
-            style={{ flex: '1 1 280px', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif' }}
+            style={{ flex: '1 1 280px', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif' }}
           />
           <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             <input type="checkbox" checked={hideEmpty} onChange={e => setHideEmpty(e.target.checked)} />
@@ -215,7 +215,7 @@ export default function CampaignExplorerPage() {
       </div>
 
       <div style={{ ...panel, padding: 0, overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Barlow, sans-serif', minWidth: '900px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Carlito, sans-serif', minWidth: '900px' }}>
           <thead>
             <tr>
               <SortHeader label="Campaign"  active={sortKey === 'name'}     dir={sortDir} onClick={() => toggleSort('name')}     />

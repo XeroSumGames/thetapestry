@@ -270,7 +270,7 @@ export default function StepNine({ state, onChange }: Props) {
       <div style={section}>
         <div style={sectionTitle}>Additional notes</div>
         <textarea
-          style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', minHeight: '80px', resize: 'vertical', lineHeight: 1.5, boxSizing: 'border-box' }}
+          style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', minHeight: '80px', resize: 'vertical', lineHeight: 1.5, boxSizing: 'border-box' }}
           value={notes}
           onChange={e => setNotes(e.target.value)}
           placeholder="Any additional notes, GM hooks, or personality details..." />
@@ -305,6 +305,6 @@ const fieldInput: React.CSSProperties = {
   width: '100%', padding: '8px 10px',
   background: '#242424', border: '1px solid #3a3a3a',
   borderRadius: '3px', color: '#f5f2ee',
-  fontSize: '13px', fontFamily: 'Barlow, sans-serif',
+  fontSize: '13px', fontFamily: 'Carlito, sans-serif',
   boxSizing: 'border-box',
 }

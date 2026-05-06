@@ -172,7 +172,7 @@ function WeaponSection({
         ))}
         <input value={query} onChange={e => setQuery(e.target.value)}
           placeholder="Search…"
-          style={{ flex: 1, minWidth: '140px', padding: '5px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+          style={{ flex: 1, minWidth: '140px', padding: '5px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} />
       </div>
 
       {/* Compact single-row weapon list */}
@@ -198,7 +198,7 @@ function WeaponSection({
                 borderRadius: '3px',
                 cursor: 'pointer',
                 textAlign: 'left',
-                fontFamily: 'Barlow, sans-serif',
+                fontFamily: 'Carlito, sans-serif',
                 color: '#f5f2ee',
               }}>
               <span style={{ fontSize: '13px', padding: '1px 7px', background: accent.bg, color: accent.fg, border: `1px solid ${accent.border}`, borderRadius: '2px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, minWidth: '64px', textAlign: 'center' }}>
@@ -320,7 +320,7 @@ function EquipmentList({ selected, tab, setTab, query, setQuery, onChange }: Equ
         ))}
         <input value={query} onChange={e => setQuery(e.target.value)}
           placeholder="Search…"
-          style={{ flex: 1, minWidth: '140px', padding: '5px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+          style={{ flex: 1, minWidth: '140px', padding: '5px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginBottom: '1rem', maxHeight: '280px', overflowY: 'auto', paddingRight: '4px' }}>
         {visible.length === 0 ? (
@@ -343,7 +343,7 @@ function EquipmentList({ selected, tab, setTab, query, setQuery, onChange }: Equ
                 borderRadius: '3px',
                 cursor: 'pointer',
                 textAlign: 'left',
-                fontFamily: 'Barlow, sans-serif',
+                fontFamily: 'Carlito, sans-serif',
                 color: '#f5f2ee',
               }}>
               <span style={{ fontSize: '13px', color: rarityColor, fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, minWidth: '64px', textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
@@ -447,7 +447,7 @@ export default function StepEight({ state, onChange }: Props) {
           Or enter your own
         </label>
         <input
-          style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }}
+          style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }}
           value={INCIDENTAL_ITEMS.includes(state.incidentalItem) ? '' : state.incidentalItem}
           onChange={e => onChange({ incidentalItem: e.target.value })}
           placeholder="e.g. a worn photograph, a lucky coin..." />

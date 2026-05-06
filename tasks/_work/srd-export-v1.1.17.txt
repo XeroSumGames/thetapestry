@@ -1,0 +1,1240 @@
+   XERO SUM ENGINE
+                 F X S G
+
+S R D
+                               XERO SUM ENGINE SRD V1.1 | "D R
+XERO SUM ENGINE SRD v1.1                                                                                  XERO SUM ENGINE SRD v1.1
+
+           TABLE OF CONTENTS                                                                                       01. OVERVIEW                                     F P
+
+01. Overview                                                      3                                       I                                                         The Xero Sum Engine ulizes a simple d6 game
+                                                                                                                                                                    mechanic that can intuively facilitate any challenge
+Introducon.................................................................................... 3          The X S E (XSE) is a tabletop roleplaying                 or task resoluon with ease.
+Key Features of XSE ........................................................................ 3            game framework designed for 2­6 players, with robust
+Dice & Naming Convenons........................................................... 3                      core mechanics that can be applied to most genres or      XSE priorizes realism and momentum over needlessly
+                                                                                                          sengs, whilst remaining lightweight enough to keep        complex rules to keep the narrave at the center of
+02. Core Mechanics                                                4                                       the story at the center of the acon.                      the game.
+
+Modifiers ........................................................................................ 4      One player takes on the role of the G M (or               S D
+Insight Dice..................................................................................... 5       GM) and acts as both referee and storyteller, and
+Filling In The Gaps .......................................................................... 6          everyone else is a P C (or PC) within                     Collaborave storytelling fuels the Xero Sum Engine,
+Making The Case ............................................................................ 6            the unfolding story.                                      and it provides players with various tools to drive the
+Aribute Checks ............................................................................. 6                                                                      narrave. These tools include I D, F 
+Group Checks ................................................................................. 6          The rules, skills, and equipment included in this SRD      G, M T C, F I, and
+Opposed Checks ............................................................................. 6            do not cover more fantascal elements, such as magic       G  rules, as well as rules for R
+Percepon Checks .......................................................................... 6              or psionics. This SRD will be updated as new rules are    and C .
+First Impressions ............................................................................ 6          play-tested and refined.
+Gut Insncts ................................................................................... 7                                                                   D  N C
+                                                                                                          This document outlines the C R 
+03. Character Overview                                            7                                       M R added with the XSE SRD 1.1.                           26: Most checks in the XSE SRD use 2 six-sided dice,
+                                                                                                                                                                    adding the scores together to get a final tally.
+RAPID Range Aributes.................................................................. 7                  A worksheet to make tracking community resources
+Skills................................................................................................ 7  and morale easier is available for download at            6: When mulple dice are required for a dice check,
+Secondary Stats .............................................................................. 8          XSG..                                                     it is wrien in the format xd6, such as 3d6 or 4d6. The
+Fleshing A Character Out................................................................ 8                                                                          final score is determined by adding together all the
+                                                                                                          K F  XSE                                                  dice.
+04. Character Creaon                                              9
+                                                                                                          R                                                         3: Rolling a six-sided dice and halving the result
+Backstory Generaon ..................................................................... 9                                                                          (rounding up), for a result of 1-3.
+Paradigms & Pregens.................................................................... 11                XSE is a good fit for games with grounded storylines,
+Character Evoluon ...................................................................... 11               parcularly those in the survival, noir, espionage,        G M: The player who takes on the role of
+                                                                                                          western, war, low fantasy, or hard sci-fi genres. The     facilitator, storyteller, and referee, the Game Master
+05. Skills                                                        12                                      focus is on ordinary people in extraordinary situaons     defines the environment, populates the world and
+                                                                                                          and while the acons of the characters might be            propels the story forward.
+06. Combat                                                        14                                      heroic, they are not super-heroes, gods, wizards, or
+                                                                                                          chosen ones.                                              PC: A player character (also referred to just as a
+Combat Rounds ............................................................................ 14                                                                       character) is the personificaon of the player in the
+Range............................................................................................ 14      Combat in the Xero Sum Engine is brutal, unforgiving,     story.
+Damage ........................................................................................ 16        and can have lasng consequences for characters.
+Incapacitaon............................................................................... 16            Players should never enter combat lightly and should      NPC: Non-player characters (NPCs) are other
+Stress & Breaking Point ................................................................ 17               acvely seek alternaves. Combat is not the only            characters that the players interact with and are
+                                                                                                          threat to characters, and starvaon, sickness, or dying    brought to life by the Game Master.
+07. Weapons & Equipment                                           18                                      of exposure are a possibility, and falling from a
+                                                                                                          window can be lethal.                                     D C: Also called Dice Rolls, a Dice Check is the
+08. Communies                                                     21                                                                                                basic mechanic for seeing if something a character
+                                                                                                          To ensure their long-term survival, players will need to  does is successful and involves rolling two 6-sided dice
+Recruitment.................................................................................. 21          focus on problem solving, diplomacy, and the use of       and totally up the sum of both dice.
+Morale Checks & Community Structure, and Modifiers............... 22                                      social skills.
+Morale Check Modifiers: Mood Around the Campfire:................ 23                                                                                                M: Each Dice Check can be posively or
+                                                                                                                                                                    negavely affected by modifiers that are ed to
+Appendix A: Tables                                                25                                                                                                aributes, skills, and condions.
+
+Appendix B: Skills                                                29
+
+Appendix C: Weapons & Equipment                                   31
+
+Appendix D: Paradigms                                             33
+
+1.1.17 | P: Matt, Jon, Lindy, Tim the Liar, ZeroTheory CHANGELOG:
+                                                                  1.0 | X S E C
+T : Michele, Jack, & Ellie for letting me get this song out of    1.1 | D R
+     my head, and to Matt & Jon for being constant collaborators
+
+.XSS. .XSG. .DV.                                                                                                                                                    3
+02. CORE MECHANICS                                        This means that the character was not only successful   This number is the A M (or AM)                             CMods are applied either at the discreon of the
+                                                          in the task or acon, but there is an addional posive    that applies to any dice check using that aribute. For     Game Master or at the request of a player (see
+D C  O                                                    result that benefits them.                              example, using Reason to solve a puzzle or Physicality     M T C below).
+                                                                                                                  to break open a door).
+If a player or non-player character does something        For example, the safe not only opens but the                                                                       CMods can be wide-ranging to reflect the variety of
+that will affect the storyline (such as using a skill or  characters find something unexpected of value hidden    S M (SM)                                                   situaonal elements that make up any given moment
+making an aack) they must make a D C or                   inside.                                                                                                            and are a powerful narrave tool for the Game
+D R to clearly define the outcome.                                                                                Each character has a variety of skills that range from -3  Master.
+                                                          M  I (6+6  1+1)                                         (I) to +4 (L' W) based on their experse,
+M  D C involves   6-                                                                                              as detailed in T 3: S M.                                   I D
+ (wrien as 26), adding or subtracng M                     When characters perform exceponally well or
+for , , and , and tallying                                disastrously badly, it is possible that they have a     This number is the S M (or SM) that                        I D allow players to directly affect and
+the final score.                                          M  I and gain a deeper understanding                    applies to any dice check using that skill.                influence the narrave.
+                                                          of exactly why they succeeded or failed.
+Although a total of 9 or above is a S, there are                                                                  Each skill is linked to an aribute, such as Physicality    Characters get 2 I D upon creaon and
+gradaons of success and failure, as laid out in T         A double one is a M  L I, which                         being linked to Unarmed Combat. As modifiers are           receive an addional I D each me they get
+1: O.                                                     counts as a D F and a double six is                     cumulave, a dice check oen includes both AM                a M  I - double ones, or double sixes
+                                                          M  H I, which counts as a W                             and SM.                                                    (see M  H  L I on page 4).
+                                                          S.
+T 1: O                                                                                                            T 3: S M (SM)                                              Game Masters and players can use I D in any
+                                                          In addion, the character receives an I D on a                                                                      way they agree upon, but common uses are:
+0-3     D F                                               M  L or H I. See I D.                                   3   I
+                                                                                                                                                                             A      prior to making a dice
+4-8     F                                                 I D cannot be used to re-roll dice in a                 0   U                                                      check, for a 36 .
+                                                          M  L I.
+9-13    S                                                                                                         +1  B                                                      Adding a +3 C M (CM) to the
+                                                                                                                                                                             dice check before rolling the dice.
+14+     W S                                                                                                       +2  J
+                                                                                                                                                                             Aer a dice check, a player can    
+1+1   M  L I                                              M                                                       +3  P                                                        and replace them with an I D,
+                                                                                                                                                                             which are then rolled fresh and added to the total.
+6+6   M  H I                                              Dice checks are influenced by up to three modifiers -   +4  L' W
+                                                          A  (AM), S                                                                                                         Players can  I D for a  
+D F (0-3)                                                 (SM), and C  (CM).                                      C M (CM)                                                     , , or anything they can
+                                                                                                                                                                             successfully M T C for.
+If the final total aer all modifiers are applied is 3     These modifiers are cumulave and are all applied to     There are any number of external, unplanned and
+, the check was a D F.                                    the result of the 2d6 roll and affect the final score.  unancipated factors that can influence a dice check.       Game Masters may allow players to spend an I
+                                                                                                                                                                             D to introduce a   ,
+This means that the character is not only unsuccessful    A M (AM)                                                These variables are represented by C                       such as trying the handle again and realizing the door
+at the task or acon but there is an addional setback                                                              M (or CM) which are added or subtracted                    is unlocked aer all, so long as the player can M
+or consequence.                                           Each character has five aributes - R, A,                from dice checks. CMods range from -5 (D                   T C for it.
+                                                          P, I, D, referred to as the                             F) to +5 (D I), as detailed in
+For example, a failed safe-cracking aempt irreparably     RAPID R A.                                              T 4: C M.                                                  Players can    I D to
+jams the lock, prevenng further aempts.                                                                                                                                      recover 1 Wound Point and 1 Resilience Point per dice
+                                                          T 2: A M (AM)                                                                                                      and save their character from D. Players cannot
+F (4-8)                                                                                                                                                                      choose how many dice to use in this method, it costs
+                                                          2      D                                                T 4: C M (CM)                                              all of their available I D.
+On a score of 4  8, the acon or task F.
+                                                          1      W                                                5   D T F                                                  Once a player uses an I D, they surrender it
+This means aempng to pick the lock on a safe is                                                                                                                              back to the Game Master.
+unsuccessful.                                             0      A                                                4   I
+                                                                                                                                                                             I D cannot be used to re-roll dice in a
+S (9-13)                                                  +1     G                                                3   H                                                      M  L I.
+
+On a score of 9  13, the acon or task is S.               +2     S                                                2   D                                                      I D cannot transfer between characters.
+
+This means that aempng to pick the lock on a safe         +3     E                                                1   C                                                      I D carry over from session to session.
+succeeds.
+                                                          +4     H P                                              0   A
+W S (14+)
+                                                          +5     S                                                +1  S
+If the final total aer all modifiers are applied is 14 
+, the check was a W S.                                                                                            +2  S F
+
+                                                          These aributes range from -2 (D) to +4                  +3  E
+                                                          (H P). Animals and machines can have
+                                                          aributes that can go up to +5 (S), as                   +4  T
+                                                          detailed in T 2: A M.
+                                                                                                                  +5  D I
+
+                                                              4                                                                                                              5
+F I T G                                                   outcome, both aempng to get the upper hand unl           M  L I (1+1): They make a terrible                       T 2: A M (AM)
+                                                          there is a clear winner and loser, such as during an     impression and come across as threatening or hosle
+F I  G directly involves the group with                   arm-wrestling contest.                                   and receive a -3 CM on all future interacons as          2      D
+world building and stage seng.                                                                                     well as an I D.
+                                                          The outcome of an O  is determined by                                                                             1      W
+The Game Master should prompt players to provide          the first side to get a S, W S, or a                     G I
+addional detail, context, or flavor by F  T               Moment of High Insight, while the other side                                                                      0      A
+G during gameplay about what their character is           simultaneously gets a F, D F, or                         Characters can make G I  when they
+seeing or experiencing.                                   M  L I.                                                  first meet NPCs to see what kind of impression they      +1     G
+                                                                                                                   get from this person. They can also make a G
+M T C                                                     If characters get the same outcome on an O               I  during an interacon with an NPC to                    +2     S
+                                                          , the results are negated, and players connue            see how much the players feel they can trust them.
+Similar to F   G, a character can also                    making dice checks unl either a clear winner and                                                                  +3     E
+M T C and offer further context on how their              loser emerges, or one side changes their strategy.       G I checks use the Percepon Modifier,
+acons are shaping the outcome of a dice check.                                                                     although a character can substute for an appropriate     +4     H P
+                                                          P C                                                      skill, such as P*, S, or T*.
+If the Game Master agrees that what they are                                                                                                                                +5     S
+proposing makes narrave sense, they might add a           If a player wants to know if their character has picked  S (9-13): The player gets some insight into how
+CMod to the dice check.                                   up on unspoken queues or is aware of subtle details,     trustworthy they believe the NPC to be.                  R:
+                                                          they may perform a P , using the
+A C                                                       Secondary Stat P (see page 8) as a modifier.             W S (14+)  M  H I                                        The ability to process data, think crically, and make
+                                                          The GM will help them F   G.                             (6+6): The player feels like they understand the NPCs    logical assumpons.
+Players can use a character's RAPID Range aributes                                                                 movaons.
+for checks that do not require a specific skill, such as  F I                                                                                                               A:
+R for - or P for -                                                                                                 F (4-8): The player gets no good read on the
+.                                                         When encountering an NPC for the first me, the           NPC's trustworthiness.                                   The mixture of insnct and cunning required for good
+                                                          character can make a F I check to                                                                                 situaonal awareness.
+In these situaons, only the relevant AMod applies to      influence how they are perceived.                        D F (0-3)  M  L I (1+1):
+any dice check.                                                                                                    The player takes everything the NPC says at face value.  P:
+                                                          A F I dice check uses Influence and
+G C                                                       any appropriate skill, such as Manipulaon,                03. CHARACTER OVERVIEW                                  A measure of athlecism, condioning, discipline, and
+                                                          Streetwise, or Psychology*.                                                                                       self-control.
+Mulple players aempng to undertake the same                                                                        A P C, also referred to as a PC or
+task can work together to increase their chances of       The result of this check influences future interacons    character, is a player's representaon or avatar in the   I:
+success.                                                  with that NPC and the player should note this            game world, funconing as their eyes, ears, hands,
+                                                          R CM on their character sheet.                           and mouth.                                               A combinaon of charisma, charm, or aracveness.
+To take part in a G C, everyone must be
+using the same aribute or skill (even if they have 0).    S (9-13): The NPC has no strong feelings toward          In game terms, a character is composed of physical       D:
+                                                          the player and there is a 0 CM to future                 and mental aributes, skills, and secondary stascs
+The player with the highest relevant AMod or SMod         interacons.                                              derived from those aributes and skills.                  A reflecon of agility, reflexes, and hand-eye
+makes the check and apply any AMods or SMods from                                                                                                                           coordinaon.
+the other characters taking part in the G C.              W S (14+): The player makes a favorable                  RAPID R A
+                                                          impression and receives a +1 CM on future                                                                         A character's RAPID R  is also their
+Players cannot use Insight Dice as part of a G            interacons.                                              Each character has five aributes - R, A,                 A M (AM), which applies to any
+C, but if the outcome of the dice check is a                                                                       P, I and D - referred to as                              dice check that involves that aribute.
+M  I, all members taking part will                        M  H I (6+6): The player makes a                         RAPID R A.
+receive an I D.                                           favorable impression and receives a +2 CM on                                                                      S
+                                                          future interacons as well as an I D.                     Aributes start at 0 (A) but range from -2
+G C are at Game Master discreon and                                                                                (D) up to +4 (H P). Aributes for                         Characters have a variety of skills based on their life
+must make logical sense within the narrave.               F (4-8): The player makes a bad impression and           animals and machines can go up to +5 (S).                experiences. Most skills range from 0 (U) to
+                                                          gets a -1 CM to all future interacons.                                                                            +4 (L' W), although several skills are vocaonal
+O C                                                                                                                RAPID R A are wrien in the format                        and start at -3 (I).
+                                                          D F (0-3): They make a terrible impression               R-A-P-I-D,
+Characters who are directly compeng against one           and come across as threatening or hosle and receive      so a character with all 0 (A) aributes would             T 3: S M (SM)
+another make O  to determine the                          a -2 CM on all future interacons.                        have a RAPID Range of 00000.
+                                                                                                                                                                            3      I
+
+                                                                                                                                                                            0      U
+
+                                                                                                                                                                            +1     B
+
+                                                                                                                                                                            +2     J
+
+                                                                                                                                                                            +3     P
+
+                                                                                                                                                                            +4     L' W
+
+                                                          6                                                                                                                     7
+This skill level is also called S M (or SM),              A characters' M D is equal to their                     These words can serve as a roleplaying anchor and     04. CHARACTER CREATION
+and players add it to any dice check using that skill.    P AM, and their R D is                                  guide how a character reacts to people and situaons
+                                                          equal to their D AM.                                    during the course of the game.                       Players can choose one of three methods to provide
+Each skill is associated with an aribute, such as the                                                                                                                  them with a character to play - B
+B skill being ed to the I  or                             I M                                                     Specific words like , , or                           G, customizing a P, or picking a
+U C skill being ed to the P                                                                                       tend to be more useful than broad or generic ones    P C (P).
+. Dice checks use both AM and SM.                         I M (INIT) are added to iniave                          such as  or , but anything that helps e a
+                                                          checks to determine the order in which parcipants       player to their character is acceptable.             B G
+Certain skills require specific, oen vocaonal training.   act during combat.
+These start at -3 (I) instead of 0 (U) and                                                                        These three words can be shared with other players,  To develop their character, players get 20 C
+are marked with an asterisk, such as P*.                  I M are the sum of a character's                        kept secret, or woven into gameplay by the GM.       D P (CDP) to allocate during
+                                                          A + D AM.                                                                                                    different periods of a character's life and flesh out how
+When a character has 1 level in that skill, they advance                                                          C  M                                                 they became who they are.
+from -3 (I) to +1 (B).                                    E
+                                                                                                                  Character have both a C and M                        At no point during B G may a
+S S                                                       E (ENC) is how much weight a character                  that drive them and serve as narrave tools.          character raise an aribute beyond 3 (E) or
+                                                          can carry before needing to stop and rest or drop                                                            a skill beyond 3 (P).
+PCs have a series of S S that are                         something.                                              Players can choose from those listed on T 6  7
+derived from their aributes and skills and affect                                                                 or roll 2d6 for random C                             Players should write 1-2 sentences about what
+combat, social interacons, or influence the narrave.      Encumbrance starts at 6 + P AM.                         M.                                                   happened to their character during each step and how
+                                                                                                                                                                       it affected them so that, when combined, these
+W P                                                       P                                                       These can be openly shared or woven into the         sentences capture their backstory.
+                                                                                                                  narrave.
+W P (WP) reflect how much damage a                        P (PER) reflects how well a character picks                                                                  S X: W A ?
+character can take before they become M                   up on subtlees and how tuned in they are to their       T 6: C
+W and D.                                                  environment.                                                                                                 Players should define as much of their character
+                                                                                                                  2       A                                            concept as possible before a game starts, including
+Characters start with 10 + P AM +                         The P modifier is the sum of a character's                                                                   basic details such as name, age, height, and weight.
+D AM W P.                                                 R + A AM.                                               3       B
+                                                                                                                                                                       They should also pick 3 themac words that describe
+                                                                                                                  4       C  H                                         this character.
+
+                                                                                                                  5       C P                                          S O: W T G U
+
+R P                                                       S M                                                     6       D                                            This covers the first 10-15 years of a character's life.
+
+R P (RP) are a measure of how much                        Each character has a B P. Their S                       7       D S                                          Players spend 1 CDP on raising a RAPID Range
+damage or stress it takes to I a character.               starts at 0 and culminates at 5.                                                                             aribute from 0 (U) to 1 (G).
+                                                                                                                  8       F O
+Characters start with 6 + P AM                            F A C O                                                                                                      They also get 2 CDP to spend on skills. They may spend
+R P.                                                                                                              9       F                                            both points on raising any 1 skill from 0 (U)
+                                                                                                                                                                       to +2 (J) or any 2 skills from 0
+                                                                                                                  10      L                                            (U) to +1 (B).
+
+D M                                                       T W                                                     11      O D                                          If they take a skill marked with an asterisk (such as
+                                                                                                                                                                       Mechanic* or Medicine*), this moves the skill from -3
+D M (DM) lower the chance of                              Players should choose three words that define the PC's  12      P E                                          (I) to +1 (B).
+geng hit and migate any damage that is dealt.             core behaviors or personality traits.
+                                                                                                                  T 7: M                                               S T: W T L
+
+T 5: S S                                                                                                          2       A                                            This step covers the educaonal stage of a character's
+                                                                                                                                                                       life, and players spend 1 CDP on raising a RAPID Range
+       W P                     10 WP + P + D AM                                                                   3       B                                            aribute and 3 CDP on skills.
+      R P                               6 RP + P AM
+  R D M.                                                                                                          4       F S                                          They may not raise a skill above +2 (J)
+   M D M.     A ' D AM   R D M                                                                                                                                         during this step.
+     I M      A ' P AM   M D M                                                                                    5       H
+
+        E                             A + D AM                                                                    6       M A
+          P                      6 E + P AM
+           M                                                                                                      7       P
+                                       R + A AM
+       S M                     C    M  3                                                                          8       P
+
+                                       R + A AM                                                                   9       R
+
+                                                                                                                  10      R
+
+                                                                                                                  11      S A
+
+                                                                                                                  12      T A
+
+                                                          8                                                                                                            9
+S T: W T L T D                                             S S: W D T?                                   T 5: S S                       10 WP + P + D AM
+                                                                                                                                                 6 RP + P AM
+This reflects skills learned when doing the things that    Players should choose both a C and                   W P
+their characters do in their spare me. Players get 1       M that drives them, or they can roll 2d6 and        R P     A ' D AM   R D M
+CDP to spend on raising a RAPID Range aribute and 3        consult T 6: C and T 7:                        R D M.       A ' P AM   M D M
+CDP on skills.                                             M.                                              M D M.
+                                                                                                             I M                               A + D AM
+They may not raise skills above +2 (J)                     T 6: C                                                                         6 E + P AM
+during this step.                                                                                                E
+                                                           2       A                                              P                             R + A AM
+S F: H T M M                                                                                                        M                   C    M  3
+                                                           3       B
+This step reflects what a character does for work or to                                                        S M                              R + A AM
+make money, and what this has taught them.                 4       C  H
+
+During this step, players get 2 CDP to spend on raising    5       C P
+RAPID Range aributes and 4 CDP to spend on raising
+skills.                                                    6       D
+
+Players can raise aributes to +3 (E) and                   7       D S                                   S S: S S                                               P are seng specific and available for
+skills to +3 (P) during this step.                                                                                                                              download at XSG./P.
+                                                           8       F O                                   Characters all have a series of S S
+XSE has a set of P that combine                                                                          that affect gameplay and are derived from their        P
+themacally similar vocaonal skills. Players can either     9       F                                     aributes. Consult T 5: S S for
+choose a P and spend CDP on the skills                                                                   details.                                               Going one step further than a P, a
+associated with that profession or simply spend the        10      L                                                                                            P C (or P) comes fully
+CDP on skills they feel best match their character                                                       S E: W T H                                             ready to play, with their name, aributes, skills,
+concept.                                                   11      O D                                                                                          Movaons, Complicaons, 3 Words, weapons,
+                                                                                                         Characters start with both a primary and secondary     equipment, and backstory defined.
+Games built on this SRD may have custom                    12      P E                                   weapon picked from T 16 -19 (see 07. W
+P to match the seng.                                                                                      E on page xx).                                        Players need only take a moment to read over the
+                                                           T 7: M                                                                                               character sheet before starng to play.
+S F: W M T T                                                                                             Each weapon comes with 1d3 reloads of ammunion.
+                                                           2       A                                                                                            P are available for download at
+During this step, players get 3 CDP to spend on skills to                                                Characters also get 1 item from T 20: E                XSG./P.
+round out and finalize their character concept.            3       B                                     on page xx and an incidental item that has no combat
+                                                                                                         value but provides some use or helps flesh out their   C E
+They cannot raise aributes beyond +3 (E)                   4       F S                                   personality.
+or skills beyond +3 (P) during this step.                                                                                                                       At the end of each game session, the Game Master
+                                                           5       H                                     S N: F F                                               has the discreon to award 2   CDP that the
+T 8: P  S                                                                                                                                                       players can spend on improving their characters'
+                                                           6       M A                                   Players should review their character and add or       aributes or skills.
+                                                                                                         tweak any details before the game begins. Does this
+                                                           7       P                                     character match the concept you had in mind? Do the
+                                                                                                         three descripve words sll make sense?
+                                                           8       P
+
+                                                           9       R
+
+                                                           10      R
+
+                                                           11      S A
+
+                                                           12      T A
+
+A    F, G K, M*, P*, R, T*, S                                                                            P  P                                                   L    requires the investment of 1
+                                                                                                                                                                Skill CDP to get to level 1.
+D    A H, D, M*, N, S, S  H, T                                                                           PARADIGMS
+                                                                                                                                                                R    requires paying CDP
+E B, G K, I, M, P*, S  H, T                                                                              P are intended to facilitate streamlined               corresponding to the total of the current level and the
+                                                                                                         gameplay by providing familiar tropes or role instead  level the skill is being raised to. Therefore, taking a skill
+L E  A, S, I, M, R C, S, T*                                                                              of using the B G method.                               from level 1 to 2 requires 3 CDP, from 2 to 3 requires 5
+                                                                                                                                                                CDP, and from 3 to 4 requires 7 CDP.
+M    A, B, D*, G K, M*, S, T                                                                             P come with aributes and skills predefined
+                                                                                                         and a player only needs to pick a name, Movaon,        I  RAPID R  costs 3x the
+M    A, G K, I, M*, P*, R, S  H                                                                          Complicaon, 3 Words, weapons and equipment in          CDP per level being raised. This means that raising an
+                                                                                                         order to start playing.                                aribute from 1 to 2 requires 6 CDP, from 2 to 3
+M    A, D*, R C, S, S, T*, U C                                                                                                                                  requires 9 CDP, and from 3 to 4 requires 12 CDP.
+                                                                                                         P from the D and D seng
+O A H, F, M C, N, R C, S, S                                                                              are included in A D: P on page xx.
+
+O I, M, P*, R C, S  H, S, U C
+
+P    A, B, I, M, P*, S  H, S
+
+P B, G K, I, I, M, P*, T*
+
+T B, G K, I, M, S, S  H, T
+
+                                                               10                                                                                               11
+           05. SKILLS                                    When a character has 1 level in that skill, they advance      S  A  D
+                                                         from -3 (I) to +1 (B).
+Skills reflect the experience and experse characters                                                               M*     R  P  , , , 
+have picked up along the way, based upon their life      Levels in skills are called S M (or SM),                                     
+experiences.                                             and players add SMods to dice checks using that skill.    M C P
+                                                                                                                             T      -
+Certain skills require specific, oen vocaonal training.  Each skill is associated with an aribute, such as the     N      A  ,   
+These start at -3 (I) instead of 0 (U) and               B skill being ed to the I  or
+are marked with an asterisk, such as P* or               U C skill being ed to the P                               P      D  I    ,  , 
+T*.                                                      . Dice checks use both AM and SM.                                     
+
+                                                                                                                   P* I      S    ,  ,
+                                                                                                                             ,    
+T 9: S           A  D                                                                                              R C D
+            S                                                                                                                L      
+               I    U     ,                                                                                        R      R  , , ,   
+ A H             R     
+    A                                                                                                              S      A  A     , 
+       A       P    S  ,  ,                                                                                                       
+         B      A   , EVA/-G ,                                                                                     S*     R
+      C          R                                                                                                           B    , ,  
+    D*              F, , ,  ,                                                                                      S  H D            
+        D      P    , , ,   
+               D                                                                                                   S K R     F   , ,   
+   E           I    A ,  ,  ,                                                                                                       
+                A      ,                                                                                           S      P
+        F                                                                                                                    P      
+                A   D      ,                                                                                       S      A  , ,  
+      G                , ,  
+               P                                                                                                   S      A  W    -- , ,
+  H W*         I                                                                                                             , ,    
+      I         A   T     ,                                                                                        T*     R
+               I                                                                                                             K   , ,     
+    L-P*                                                                                                           T      D  , , ,  ,   
+    M            R  D      ,   
+                                                                                                                             K          
+      M*                                                                                                                       
+                    T        
+                    , , , , ,                                                                                                I      , 
+                                                                                                                               ,    
+
+                    K                                                                                                        T         
+                                                                                                                             ,    ,  
+                                                                                                                                     
+                    T       
+                    , ,  ,                                                                                                   T       
+                                                                                                                                     
+
+                    T   , -                                                                                                  B   , ,   ,
+                      , ,                                                                                                    ,         
+                                                                                                                             
+                    B          
+                                                                                                                   U C    P  K    ,  ,   
+                                                                                                                              ,   
+                    B        
+                                                                                                                   W*     D  C, ,     
+                                                                                                                               
+                    G   , ,       
+                       
+
+                    D, , ,    , ,
+                    ,  
+
+                                                         12                                                                  13
+                                                                                                                T 10: C A
+
+06. COMBAT                                              Any character who G T D automacally                     A    +2 CM    A   . T '   
+                                                        incurs a -2 CMod on their next I R.                            A,   A  
+
+C R                                                     R                                                       A    A   U, R  M C. I     
+                                                                                                                         ,    +1 CM    ,  
+Combat is divided into  that last approximately         Rather than having fixed distances that require                      
+3-6 . Each round is comprised of three phases           measurement, each character's posion to another is
+- I, A, R.                                              relave.                                                 C    T             
+                                                                                                                         M   U C A
+I
+                                                        There are five R B - E, C,                              C    I          S T* , 
+I determines the order in which combatants              M, L and D.                                                    C          +2
+act.                                                                                                                     . O  W S,     
+                                                        Each band has a value that ranges from 1 to 5, as laid           +1 CM
+Each parcipant makes an I C by rolling                  out on T 11: R B.
+2ds6 and adding the I M from their                                                                              C F  E /     A. S A
+Secondary Stats.                                                                                                      -2 CM   '  , ,   
+                                                        T 11: R
+The character with the highest I score goes
+first and then combat proceeds in decreasing order to   1  E   +1 CM  M    -                                    D    T   +2   ' D M   
+the character with the lowest score.                           1  R                                                   . T        
+
+In the event of a draw, PCs always beat NPCs. PCs with                  M    -1 CM                              D C  A           
+the same I score act simultaneously.                    2 C . R    +1                                            D   A S I, P*  T*  D  
+                                                                                                                          C A. O  W S,   
+Characters may choose to    unl later                                   R CM                                         C A
+in the combat round.
+                                                        3 M N 
+A
+                                                        4  L   -5 CM                                                                    F F C      T C  
+Each parcipant gets 2 C A per round.                           +1 CM   R                                        F  C       ,   ,    
+
+They may choose to take the same acon twice or take            O  H R   S'                                                                 D M   
+two different acons.                                           R     
+                                                        5  D
+See T 10: C A on page xx.
+                                                                                                                G    A     O C ( O C   7)
+R                                                                                                                     U C      
+
+The R phase of the C R allows                           Moving between bands takes the same number of            I   O   I ,    C    
+for delayed effects from acons and weapons, such as     combat rounds as the sum of the bands being               M  C A  . A     I   
+grenades or R.                                          covered. This means it takes:                           R F  P   R  ( R   17)
+                                                        3 R to move from E to C                                      A       . T     -1 CM,
+Once each character has taken both of their acons       6  to move from E to M                                           -3 CM. I       C A,
+and aer any delayed effects are resolved, the round     10  to move from E to L                                         -2 CM  -4 CM   
+concludes, and the next one begins with a fresh         15  to move from E to D
+I check.                                                                                                        R W  A    R     . T     
+                                                        E                                                                     
+G T D
+                                                        Close enough to wrestle, E combat gives a +1            R    T            R ,
+Before combat starts, one character (including NPCs)    CM  M  and a -1  R .                                      S           
+can preempvely G  D and take a single                   All Unarmed combat takes place at E range.                S  S      3        
+combat acon before anyone else rolls for iniave.                                                                      . I        A   
+                                                        C                                                               ,        C A  
+Only one character can G T D. If mulple                                                                               
+characters aempt it, the one with the highest           If you can sll see the whites of your opponent's eyes,       W   S  ,  R P 
+combined Dexterity and Acumen AMods wins.               then combat is at C range. Melee combat at C                    W P     50% ( D   18). C
+                                                        range suffers a -1 CM penalty.                                   U  M 
+If there is no clear winner, no one G T D and
+combat moves directly to the I phase.                   C range is ideal for pistols, although any type of      T C  T C   +2 D M      
+                                                        Ranged Weapon gets a +1 CM to an aack.                             
+
+                                                           14                                                              15
+M                                                            S D                                                    Once S, the character remains I                          TABLE 12: LASTING WOUNDS
+                                                                                                                    for 16  - P AM, with a minimum
+At M range, there are no modifiers to any                    A character can go without food and water for one day  of 1 round. They will then recover consciousness and     2 L E -1    D
+aack, and it is perfect for carbines or a bow. It is far     without harm, but aer that, they will lose 1 RP per    have 1 WP and 1 RP.
+enough that a pistol shot would be wasted without            day from S D.                                                                                                   3 B I                     -2 R
+taking aim, but sll close enough to throw a grenade.                                                                D
+                                                             If a character drops to 0 RP from S                                                                             4 D                       -1 D
+L                                                            D, they are too weak to move and S 1 WP                Mortally Wounded characters who are not Stabilized
+                                                              . They will need another character to tend to         with Die withing 4 + Physicality AMod rounds.            5 S -1 M. R P
+Too far for an accurate pistol shot but perfect for rifles,  and feed them unl they heal enough to look aer
+being at  range gives a -5 CM to any pistol shot             themselves, otherwise they D.                          The only opon to prevent death is to                     6 W -1 M. W P
+but a +1 CM to a rifle shot.                                                                                        ' I D. The PC remains alive with 1
+                                                             A character with a regular food and water supply will  WP and 1 RP.                                             7 S             -1 I M
+D                                                            heal at a rate of 1 WP and 1 RP per day.                                                                        8 S                   -1 I
+                                                                                                                    H                                                        9 F                  -1 P
+The distance between the characters is so great that         F D                                                                                                             10 H L                 -1 A
+they require radio equipment to communicate and                                                                     Injured characters who were not M W                      11 C
+may struggle to see each other clearly. To hit from          Characters suffer 3 WP & RP damage for each 10' that   will  at 1 WP   if they are resng.                       12 S S       -1 P  -1 A
+D range requires either a hunng rifle with a                 they .                                                                                                                                -2 D
+scope or a sniper's rifle.                                                                                          If the character was M W, they heal at
+                                                             D                                                      1 WP     they are resng.                                 TABLE 13: BREAKING POINT
+D
+                                                             Characters can hold their breath in water for 6 +      If the character is R and undertaking no acvity,         2       C                 -1  D 
+W D                                                          P AM rounds.                                           they  RP     1  .
+                                                                                                                                                                             3 C F                     -2 R
+Each aack deals two types of damage - W                      For each subsequent round, they must make a            L W
+P (WP) damage and R P (RP)                                   successful Physicality check or suffer 3 WP  3 RP                                                               4       B R               -1 D
+damage.                                                        .                                                    A character who is M W must make a
+                                                                                                                    successful Physicality check to avoid taking 1 D.        5 D                       -1 M RP
+Weapons inflict both a consistent and a random               If a character's Resilience or Wound Points reach 0
+amount of damage, expressed as 5+16.                         because of D, they will die unless another             If they fail the check, they should roll 2d6 and suffer  6       O -1 M. W P
+                                                             character saves them.                                  the corresponding injury listed on T 12: L
+For most ranged and slashing weapons, RP                                                                            W.                                                       7       P S               -1 I M
+50%   WP , rounded down.                                     I
+                                                                                                                    As the name suggests, these wounds are permanent         8       F                 -1 I
+Aacks that inflict concussive damage or blunt force          Once a character's R P                                 and cannot be healed.
+trauma (such as fists, batons, or grenades) may do the       0, they will experience I for 4  -                                                                              9 R A                     -1 P
+same amount of RP damage as WP damage. T                     P AM (with a minimum of 1 round).                      S  B P
+16-19 or page xx show which weapons inflict 100%                                                                                                                             10      S-H               -1 A
+Resilience Point damage.                                     The character regains consciousness with 1 RP and      Each character starts with a S L of 0.
+                                                             recovers 1 addional RP per round if they are not in                                                             11 S-D U -1 P -1 A
+When using Melee Weapons or Unarmed Combat, the              combat.                                                When faced with extreme stress or emoonal trauma
+user adds their Physicality AMod to the damage done.                                                                (as determined by the Game Master or narrave             12 I O                    -2 D
+This would be expressed in the format 4+16 +                 M W  D                                                 context), PCs must make a check using their S
+P AM.                                                                                                               M, which is calculated by adding their R                 Characters can reduce their S L by 1 by
+                                                             If a character's Wound Points reach 0, they become     + A AM.                                                  spending at least 8 uninterrupted in-game hours free
+For any character fighng with just their fists, the          M W. They will D in 4 + P                                                                                       from combat, interpersonal conflict, or environmental
+damage done is 13 + P AM + U                                 AM rounds unless they are S.                           If they fail this check, their S L goes up by 1.         threat, while doing something they enjoy (such as
+C SM.                                                                                                                                                                        fishing).
+                                                             S                                                      If a character's S L reaches 5, they hit their
+                                                                                                                    B P.
+                                                             If a character becomes M W, someone
+                                                             must S them with a Successful Medicine* check,         The player rolls 2d6 and consults T 13: B
+                                                             or by achieving a Wild Success with a Reason check.    P to determine their character's reacon. This
+                                                                                                                      16  and, once the reacon is
+                                                                                                                    resolved, their S L resets to 0.
+
+                                                             16                                                                                                                  17
+07. WEAPONS & EQUIPMENT                            They also begin with one piece of equipment from         T 19: S W
+                                                   T 20: E, and an Incidental item that
+Each character starts the game with both a P       does not contribute to combat but adds some in-game      N        S   R    R  D       RP ENC C T
+and S  from T 16-19.                               benefit or helps develop the character, such as a map    F-T      D*  C    R   3+26  50% 2 30 B (3)
+Any weapon that requires ammunion starts with 1d3  or a pocketknife.                                        M C      A   C    U   1+13  50% 2 1 T; B (1)
+reloads.                                                                                                    T G      R   M    R         50% 1 1 S
+                                                   If players do not write items on their character sheet,                           0
+                                                   they do not have those items in the game.
+
+T 16: M W                                                                                                   T 20: E
+
+N      S   R  R                                    D       RP       T                                       N        R   ENC  N  T
+B B    M   E  C                                     4+16  100%      1-                                                        +2  F 
+B K    U   E  U                                           100%      0-                                      A' S     U 1      +2 E
+B      A   C  U                                       +1  100%      1 U (2)                                                   T, S B
+C      M   E  C                                     1+13  100%      2 C (1)                                 B        C   0    -
+F A    M   C  U                                     5+16  50%       1-                                                        -
+H      M   E  C                                     3+23  50%       1-                                      B S K    C   2    +1 P C   L  D R
+H K    M   E  C                                     3+13  50%       1 U (1)                                                   -
+K K    M   E  C                                     2+23  50%       1-                                      B R K    C   0    I , ,  . C     .
+M      M   C  U                                     2+13  50%       1 U (2)                                                   +1 N C
+M C    M   E  C                                     3+23  100%      1-                                      B C      C   1    -
+S      M   E  U                                     3+13  100%      2 C (2)                                                   +2   M* ;  1+23   24  
+S      M   C  U                                     3+33  50%       1 C (2)                                 B        C   1    -
+S      M   C  C                                     2+26  100%      1 U (1)                                                   +1   M* ;  1+13   24  
+S      M   E  U                                     2+23  50%       1-                                      C        C   0    +1  F 
+T B    M   E  U                                     3+33  100%      1-                                                        -
+T      M   E  U                                     4+23  400%      1 S                                     C G      U 1      C  C    P    S(3)
+W A    M   C  U                                           50%       1 C (1)                                                   -
+                                                       2                                                    C        C   0    +1  A   
+                                                    5+13                                                                      -
+                                                                                                            C        C   1    6 C, +1 M      
+                                                                                                                              -
+                                                                                                            D' B     U 1      -
+                                                                                                                              -
+                                                                                                            F- K     C   0    +2 E
+                                                                                                                              +1 T  M* 
+                                                                                                            F A K    C   1    A       
+                                                                                                                              -
+                                                                                                            F K      C   1    -
+                                                                                                                              -
+                                                                                                            F        U 1      -
+                                                                                                                              C  C     PHY   S (3)
+                                                                                                            F        U 1      W T, S B, F- K, 3   
+                                                                                                                              +1  L-P 
+                                                                                                            F        U 1      +3  L-P 
+                                                                                                                              -
+T 17: R W                                                                                                   G H      U 1      +1 M* 
+                                                                                                                              R  20 
+N      S R    R  D RP ENC A                                           C T                                   H        U 1      -
+              U   5+26 50% 2 U                                        30 A B (3)                                              R  W   
+A R    R L    U   5+16 50% 2 U                                         1-                                   I C      U 1      +2 M* 
+              C   4+16 50% 1 C                                         1 T
+B P R R L     U   5+16 50% 1 U                                        30 A B                                H T      U 1
+              C   4+23 50% 2 C                                         1 T
+B      R M    U   4+16 50% 2 U                                         1 U (1)                              L        C   1
+              C   3+23 50% 1 U                                         9-
+C      R M    C   5+16 50% 2 U                                        12 -                                  L        U 1
+              C   3+16 50% 1 C                                         6-
+C B    R L    C   5+26 50% 2 C                                         5 C U                                M B      U 0
+              U   2+36 50% 2 C                                         2 C U
+C      R M    C   1+13 100% 0 C                                        1 T                                  M        C   1
+              R   2+36 50% 2 U                                        10 -
+H P    R C                                                                                                  N V G U 1
+
+H R    R L                                                                                                  R S      C   1
+
+L P    R C                                                                                                  R F      C   1
+
+S (P-A) R M                                                                                                 R        C   1
+
+S (S-O) R C                                                                                                 S        C   1
+
+S      R C                                                                                                  S G      U 1
+
+S' R   R D                                                                                                  S K      U 2
+
+T 18: E W                                                                                                   S L U 0
+
+                                                                                                            C L      R   0
+
+N      S     R  R                                  D. RP ENC C T                                            H T      C   1
+G      A     C  U
+S-G    A     C  U                                  2+26 100% 1        1 T; B R                              T        C   1
+F-B G  A     C  U
+M      D*    D  R                                  -            -  1  1 S                                   W-T      U 1
+R L    D*    D  R                                                                                                    U 1
+                                                   -            -  1  1 S                                   W F      U 1
+                                                                                                            S
+                                                   5+26 100% 2        1 B R
+                                                                                                            W T
+
+                                                   3+36 100% 2        1 B R                                 W' T U 1
+
+                                                   18                                                                            19
+C  U                                                     S (9-13): There is no change to the item's               08. COMMUNITIES                                 F (4-8): The NPC does not join. A R
+                                                         condion.                                                                                                 C may only be aempted again if circumstances
+Items are all in one of 5 C  - P,                                                                           C                                                     change.
+U, W, D, or B.                                           W S (14+): The condion of the item is
+                                                         raised by 1 level, to a maximum of U.              Player characters working together are a G.           D F (0-3): The NPC has no interest in joining
+TABLE 14: ITEM CONDITION                                                                                                                                          the PCs.
+                                                         M  H I (6+6): The condion of the                   Players can recruit NPCs to their G via a
+P  T      .                                              item is raised by 2 levels, to a maximum of U.     R C.                                                  M  L I (1+1): The NPC is alienated
+             +1 CM                                                                                                                                                or offended by the aempt. It is possible that there is
+                                                         F (4-8): The condion of the item is reduced by     If a G grows to a combined total of 13 or more        some escalaon or tension that could include a violent
+U T      .                                               1 level.                                           PCs and NPCs, it becomes a C.                         rejecon of the offer.
+
+W  T     .                                               D F (0-3): The item breaks immediately.            C require regular M C to                              C
+            -1 CM                                                                                           ensure they have the cohesion to remain together.
+                                                         M  L I (1+1): The item breaks                      M C are usually required weekly, but the              These NPCs are forced into service through coercion,
+D  T     .                                               immediately, doing 1 WP damage to the character.   exact cadence is up to the GM and the campaign being  threats, or leverage. The PCs must present a credible
+           -2 CM                                                                                            played.                                               threat for C to work.
+                                                         T
+B    T                                                                                                      Groups do not require M C.                            S (9-13): The NPC is C under duress.
+           D                                             Certain weapons and pieces of equipment have                                                             They will follow orders, regardless of individual
+                                                         T. Items can have mulple T.                        R                                                     feelings, unl the next M C.
+Regular usage will cause no change of condion but if
+an item is subjected to heavy, sustained, prolonged, or  These traits are A B, B R,                         R C                                                   W S (14+): The NPC joins willingly and
+rough use, it will require an U .                        B, C-U, C, S,                                                                                            becomes a commied and loyal follower.
+                                                         T, and U (see T 15: I T).                          While the  C mechanic remains the
+An U  uses M*, T, or a                                                                                      same, depending on how the player F   G,              M  H I (6+6): Not only does the
+weapon related skill, such as R C, M                     Some traits have a number in parenthesis, such as  NPCs are R into one of three different roles -        NPC join but the PC may choose to take them as an
+C, H W, D*, or                                           A B (3). The number is how many                    C, C, or C.                                           A (see below).
+W*.                                                      rounds or charges the item uses.
+                                                                                                            A R C uses a skill that appropriately                 F (4-8): The NPC may appear to comply but will
+TABLE 15: ITEM TRAITS                                                                                       aligns with the approach the PCs are taking, such as  aempt to escape at the first opportunity.
+                                                                                                            B, P*, or T*.
+A     T      ,                                                                                                                                                    D F (0-3): The NPC steadfastly refuses to join.
+   B       E R   . T                                                                                        R C can be influenced by the F
+         ,   A B (3),   3 .                                                                                 I a player made on them (see F                        M  L I (1+1): The NPC is so
+                                                                                                            I on page xx).                                        unwilling to join that they might become hosle or
+                     W  ,       . C                                                                                                                               violent.
+B R E   F . C  C   50%                                                                                      No maer how NPCs are being recruited, each
+                                                                                                            C must make a M C regularly to                        C
+                     .                                                                                      ensure it remains cohesive.
+                                                                                                                                                                  These NPCs are recruited through a shared belief,
+B     B    ,                                                                                                C                                                     ideology. Whether they are being promised answers,
+C-U    (X) WP/RP    3                                                                                                                                             direcon, or security, they ulmately join because
+                                                                                                            These NPCs have a shared interest or goal in common   they believe in the message or vision presented by the
+      T   ,    E R                                                                                          with the PC that is furthered by working together.    PC.
+       50%      
+                                                                                                            S (9-13): The NPC joins unl the next                  S (9-13): NPC joins as a C but will wait
+                     T     ,      P  (X)                                                                    community M C.                                        to see the outcome of the first M C before
+C         -X CM. T  C (2)                                                                                                                                         really comming.
+                                                                                                            W S (14+): The NPC becomes a C
+                      P  2     -2 CM                                                                        immediately.                                          W S (14+): The NPC becomes a commied
+                                                                                                                                                                  believer and follower.
+S     A    W P ,   W S  M                                                                                   M  H I (6+6): Not only does the
+T     H I,    I  16 - PHY M ,                                                                               NPC join but the PC may choose to take them as an     M  H I (6+6): Not only does the
+U       1                                                                                                   A (see below).                                        NPC join but the PC may choose to take them as an
+                                                                                                                                                                  A (see below).
+      W  R T W       
+      . T R W     +1 A    A
+
+      T          ,   
+         D  (X)    -X M  . T 
+      U (2)   D  2     -2 CM
+
+                                                         20                                                                                                       21
+F (4-8): The NPC has no interest in joining. If the        M C  C                                                   Any leader wishing to unite or retain fragments of a  S (9-13): 0 CMod on the next M C.
+players can F   G as to how they are taking                                                                         dissolving community will need to make an immediate
+a different approach, they may aempt another               S,  M                                                    M C as part of this aempt, using the result           F (4-8): -1 CMod on the next M C.
+R C to win the NPC over.                                                                                            of the preceding M C as the M
+                                                           For each week that passes in the game, a community       A  C CMod.                                            D F (0-3): -2 CMod on the next M
+D F (0-3): The NPC becomes wary and will                   must make a successful M  to ensure they                                                                       C.
+aempt to distance themselves from the player.              maintain the cohesion required to stay together.         M A M :
+                                                                                                                                                                          M  L I (1+1): -3 CMod on the next
+M  L I (1+1): The NPC is so                                M  are made at the beginning of the                      A M  is 26 + AM + SM                                  M C.
+unwilling to join that they might become hosle or          week. The outcome of the check might potenally               + CM  M
+violent.                                                   outline the steps leadership will need to take in order  A  C, F, C, E                                         F  C:
+                                                           to ensure the connued well-being of the community.       H, A C V, and S  W O
+A                                                                                                                   M modifiers.                                          These CMods from the F and C checks can
+                                                           A worksheet to make tracking                                                                                   range from -3 to +2 (see G and M
+If a player gets a W S or M  H                               easier is available for download at                    M C O                                                 below).
+I on a R C, they may recruit                               XSG./SRD.
+the NPC as their A.                                                                                                 S (9-13): Morale remains steady. There is 0           E H:
+                                                           M C                                                      CMod for the next M C.
+It is also possible for a player to seek out a specific                                                                                                                   Communies without enough members acng as
+NPC and make a deliberate R aempt.                         Whether it is an NPC or PC, it is assumed that there is  W S (14+): Morale stays strong or improves.           G, M, or S suffer a -1 CMod
+                                                           an acknowledged and recognized community leader          There is a +1 CMod on the next M C.                   for each group that is short, up to a maximum CMod
+Once recruited, an A can undertake tasks                   who will make the check using any AMods or SMods                                                               of -3.
+and acvies on behalf of or act as the proxy for a          that might be appropriate.                               M  H I (6+6): Belief in leadership
+player character.                                                                                                   and the community itself is high. There is a +2 CMod  A C V:
+                                                           If there are a group of characters who are viewed as     on the next M C.
+Once recruited, the player should give the A               leaders in equal standing, they may make a G                                                                   There is no CMod applied if there is a clear leadership
+a name (if they don't already have one), roll 2d6 on       C.                                                       F (4-8): Morale is slipping. Unless they are          but a -1 CMod if there is no clear leadership.
+both the M and C tables, and                                                                                        stopped, 25% of the community will leave in the next
+then work with the GM to F   G on the                      Each M C has six modifiers that are related              week. There is a -1 CMod to the following M           Someone To Watch Over Me:
+A' background.                                             to the tasks, acvies, and roles required to ensure a     C.
+                                                           community has everything they need to survive - F,                                                             There is a -1 CMod if less than 5% of the community
+The player has 3 CDP to spend on raising the RAPID         C, M A  C, E                                             D F (0-3): The morale of the community                are assigned to S dues.
+Range Aributes of the A (see C                             H, A C V, and S  W O                                     collapses. There are major consequences with 50% of
+D P on page xx).                                           M. See M C M on page xx.                                 the community leaving in the next week. There is -2   There is a +1 CMod if there are 10% of more of the
+                                                                                                                    CMod on the next M C.                                 community are assigned to S dues.
+They should pick a seng appropriate P for                  Two of these modifiers - F and C - are
+them (see T 8: P  V S                                      derived from their own checks made prior to the          M  L I (1+1): There is infighng,                      A CM:
+on page xx) and get 5 CDP to spend on raising their        M C (See C S on page                                     riong, outbreaks of anger or violence for the
+skills.                                                    xx). The other modifiers require no dice check but are   following week with 75% of the community leaving.     Throughout the course of gameplay, there might be
+                                                           as a result of the organizaonal structure and health     There is a -3 CMod on the next M C.                   incidents that impact the Community that are not
+Over the course of one month of game me, the               of the community.                                                                                              reflected above. It is up to the Game Master and the
+player can train their A in any single skill                                                                        M C M:                                                players to F   G and quanfy this impact on
+that the player has, to one level lower than the player.   Failed M C will result in members leaving,                                                                     the M .
+This means if the player has level 3 in a skill, they can  further impacng the morale of the community in           M A  C:
+train their A to level 2.                                  future checks.                                                                                                 C S
+                                                                                                                    This modifier is applied as a result of the previous
+If a character receives Character Development Points       Aer three consecuve failures, a community will           Morale check. if there was no previous Morale check,  In order for a community to funcon, a certain
+as part of game progression, the player may choose to      have degraded to the point of immediately and            0 CMod is applied.                                    number of members must be dedicated to specific
+spend them on their A. See C                               irreconcilably falling apart and dissolving. Fast acng                                                         tasks.
+E on page xx.                                              leaders may retain remnants of the group or specific     M  H I (6+6): +2 CMod on the next
+                                                           members.                                                 M C.                                                  G
+A player character can only have one A at
+any me.                                                                                                             W S (14+): +1 CMod on the next M                      33% of any group (rounded down) must be
+                                                                                                                    C.                                                    G. They are responsible for hunng, foraging,
+                                                                                                                                                                          farming, fishing, scavenging, or any other acvity that
+                                                                                                                                                                          brings in food and water for members of the
+                                                                                                                                                                          community in the form of R.
+
+                                                           22                                                                                                             23
+This group is responsible for the F C. The           M  H I (6+6): Buildings and                              T 1: O           T 2: A M (AM)
+possible results of a F C are:                       equipment are in perfect working order. A project or
+                                                     improvement goes well. There is +2 CMod to the next      0-3     D F      2       D
+S (9-13): Baseline Raon needs are met. No            M C.
+CMod to the F C.                                                                                              4-8     F        1       W
+                                                     F (4-8): Minor breakdowns occur, or there is a
+W S (14+): There are enough R to                     deficit in required S. A -1 CMod is applied to           9-13    S        0       A
+create a surplus. There is a -1 CMod on the next     the next M C.
+M C.                                                                                                          14+     W S      +1      G
+                                                     D F (0-3): Connued breakdowns of buildings,
+M  H I (6+6): Enough luxury items                    systems or equipment that impact the community.          1+1   M  L I     +2      S
+are found to provide a boot to the mood of the       There is a -2 CMod on the next M C.
+community. There is +2 CMod on the next M                                                                     6+6   M  H I     +3      E
+C.                                                   M  L I (1+1): There is damage or
+                                                     breakdown of crical infrastructure, buildings,                            +4      H P
+F (4-8): There is a shorall in R leading to          systems, or equipment that directly impact the
+only 1 meal a day. There is a -1 CMod on the next    community. There is a 3 CMod on the next M                                +5      S
+M C.                                                 C.
+                                                                                                              T 3: S M (SM)    T 4: C M (CM)
+D F (0-3): Community members are                     S
+connuously hungry, somemes going days between                                                                 3             I  5   D T F
+R. There is a -2 CMod on the next M                  5-10% of any community is required for policing,
+C.                                                   patrol, firefighng, and other emergency services that    0       U        4       I
+                                                     keep the members safe. This group is also made up of
+M  L I (1+1): There is an addional                   Community leadership.                                    +1      B        3       H
+complicaon, such as food contaminaon or famine
+onset giving a -3 CMod on the next M C.              There is no weekly S check, but not having               +2      J        2       D
+                                                     enough members providing security and safety incurs
+M                                                    a -1 S  W O M CMod on the                                +3      P        1       C
+                                                     Morale check.
+20% of any group (rounded down) are required to be                                                            +4      L' W     0       A
+M.                                                   If there are enough people in each category, there is a
+                                                     +1 E H CMod on the M C.                                                   +1      S
+Not only do they collect the requisite S needed
+such as clothing, tools, or baeries, but they also   If there are not enough people in each category, there                    +2      S F
+repair and maintain buildings, equipment, and        is -1 E H CMod on the M C.
+vehicles to ensure everything remains in a funconal                                                                            +3      E
+condion.                                             P L A
+                                                                                                                               +4      T
+This group is responsible for the C C. The           Unless explicitly stated, it is assumed that the F and
+possible results of a C C are:                       C checks are being performed by NPCs who are                              +5  D I
+                                                     somewhat proficient.
+S (9-13): All systems, buildings, and equipment                                                               T 5: S S                        10 WP + P + D AM      APPENDIX A: TABLES
+are adequately maintained. 0 CMod on the next        Players may choose to spend their me contribung to                                                6 RP + P AM
+M C.                                                 these tasks and can use appropriate AMods or SMods              W P
+                                                     if they can F I T G as to how they contributed                 R P      A ' D AM   R D M
+W S (14+): Buildings and equipment are                                                                          R D M.       A ' P AM   M D M
+adequately repaired, maintained, and even improved.                                                              M D M.
+This gives a +1 CMod on the next M C.                                                                              I M                               A + D AM
+                                                                                                                                                6 E + P AM
+                                                                                                                      E
+                                                                                                                        P                             R + A AM
+                                                                                                                         M                    C    M  3
+
+                                                                                                                     S M                              R + A AM
+
+                                                                                                              T 6: C           T 7: M
+
+                                                                                                              2       A        2       A
+
+                                                                                                              3       B        3       B
+
+                                                                                                              4       C  H     4       F S
+
+                                                                                                              5       C P      5       H
+
+                                                                                                              6       D        6       M A
+
+                                                                                                              7       D S      7       P
+
+                                                                                                              8       F O      8       P
+
+                                                                                                              9       F        9       R
+
+                                                                                                              10            L  10      R
+
+                                                                                                              11      O D      11      S A
+
+                                                     24                                                       12      P E      12      T A
+T 8: P  S                                 T 10: C A (.)
+
+A    F, G K, M*, P*, R, T*, S                M     P   R  ( R   17)
+
+D    A H, D, M*, N, S, S  H, T
+
+E B, G K, I, M, P*, S  H, T                  R F   A       . T     -1 CM,
+                                                       -3 CM. I       C A,
+L E  A, S, I, M, R C, S, T*                           -2 CM  -4 CM   
+
+M    A, B, D*, G K, M*, S, T                       A    R     . T     
+                                                            
+M    A, G K, I, M*, P*, R, S  H           R W
+
+M    A, D*, R C, S, S, T*, U C               R     T            R ,
+                                               S            
+O A H, F, M C, N, R C, S, S                        S      3        
+                                                    . I        A   
+O I, M, P*, R C, S  H, S, U C                         ,        C A  
+                                                    
+P    A, B, I, M, P*, S  H, S
+
+P B, G K, I, I, M, P*, T*
+
+T B, G K, I, M, S, S  H, T                         W   S  ,  R P 
+                                                      W P     50% ( D   18). C
+                                             S         U  M 
+
+T 10: C A                                    T C   T C   +2 D M      
+                                                         
+
+A    +2 CM    A   . T '   
+       A,   A  
+
+     A   U, R  M C. I                     T 11: R
+         ,    +1 CM    ,  
+A                                               +1 CM  M    -
+                                                1  R 
+                                          1  E
+
+C    T                                                    M    -1 CM
+         M   U C A                        2 C . R    +1
+
+     I          S T* ,                                    R CM
+       C          +2
+C        . O  W S,                        3 M N 
+         +1 CM
+                                          4  L  -5 CM      
+                                                +1 CM   R 
+     E /     A. S A
+C F   -2 CM   '  , ,                            O  H R   S'
+                                                R     
+                                          5  D
+
+D    T   +2   ' D M   
+      . T        
+
+                                                                                                                                                                                                     APPENDIX A: TABLESTABLE 12: LASTING WOUNDSTABLE 13: BREAKING POINT
+APPENDIX A: TABLES
+D C A           
+
+     A S I, P*  T*  D                     2 L E -1    D                   2   C                     -1  D 
+          C A. O  W S,   
+D    C A                                  3 B I             -2 R          3 C F                     -2 R
+                                          4 D              -1 D
+                                          5 S      -1 M. R P              4   B R                   -1 D
+
+                        F F C      T C                                    5 D                       -1 M RP
+F  C       ,   ,    
+                                          6 W -1 M. W P                   6   O -1 M. W P
+                           D M   
+                                          7 S      -1 I M                 7   P S                   -1 I M
+
+     A     O C ( O C   7)                 8 S                       -1 I  8   F                     -1 I
+      U C      
+G                                         9 F                       -1 P  9 R A                     -1 P
+
+                                          10 H L                    -1 A  10  S-H                   -1 A
+
+I    O   I ,    C                         11 C -1 P  -1 A                 11 S-D U -1 P -1 A
+     C A  . A     I   
+                                          12 S S                    -2 D  12 I O -2 D
+T 14: I C                             T 9: S
+                                                  S
+P  T      .                                            A  D
+             +1 CM                     A H
+                                          A          I    U     ,  
+U T      .                                   A         R     
+                                               B
+W  T     .                                           P    S  ,  , 
+            -1 CM                           C         A   , EVA/-G ,   
+
+D  T     .                                D*           R  F, , ,  , 
+           -2 CM                                          , , ,   
+                                                     P
+B  T                                                      A ,  ,  , 
+         D                                                   ,   
+
+T 15: I T                                                 D      ,
+                                                             , ,  
+                                                          
+
+                                                          T     ,  
+                                                               
+
+A      T      ,                            D         D    D      ,   
+   B        E R   . T                 E              I       
+          ,   A B (3),   3 .                          A
+                                          F               T        
+                     W  ,       . C                       , , , , ,    
+B R E   F . C  C   50%                                    
+
+                     ,    C  25%   .                      K          
+                                                              
+       B    ,        
+  B     (X) WP/RP    3                G              A    T       
+  C-U                                                     , ,  ,     
+C      T   ,    E R                                           
+        50%      
+                                      H W*           P    T   , -  
+       T     ,      P  (X)                                  , ,  
+               -X CM. T  C (2) 
+        P  2     -2 CM                  I            I    B          
+                                      L-P*            A          
+S      A    W P ,   W S  M            M              I
+T      H I,    I  16 - PHY M ,                            B        
+U        1                                                  
+
+       W  R T W                                           G   , ,       
+       . T R W     +1 A    A                                 
+
+       T          ,                     M*             R  D, , ,    , ,
+          D  (X)    -X M  . T           M*             R  ,  
+       U (2)   D  2     -2 CM         M C            P
+                                                          P  , , , 
+                                                                   
+
+                                                          T      -
+                                                          ,   
+                                                                                                                                                                                                     APPENDIX B: SKILLS
+APPENDIX A: TABLES
+                                      N              A    I    ,  , 
+                                                            
+
+                                      P              D    S    ,  ,
+                                                          ,    
+
+                                      P*             I    L      
+                                                          , , ,   
+
+                                      R C            D    A     , 
+                                                               
+
+                      28                                  29
+T 9: S (C.)                         T 16: M W
+            S
+               A   D                N        S  R   R    D       RP       T
+       R                            B B      M  E   C     4+16  100%      1-
+               R   B    , ,         B K      U  E   U           100%      0-
+                                    B        A  C   U       +1  100%      1 U (2)
+S              A                    C        M  E   C     1+13  100%      2 C (1)
+                   F   , ,          F A      M  C   U     5+16  50%       1-
+S*             R                    H        M  E   C     3+23  50%       1-
+                                    H K      M  E   C     3+13  50%       1 U (1)
+S  H D             P                K K      M  E   C     2+23  50%       1-
+                   , ,              M        M  C   U     2+13  50%       1 U (2)
+S K R                               M C      M  E   C     3+23  100%      1-
+                   W    -- , ,      S        M  E   U     3+13  100%      2 C (2)
+  S            P   , ,              S        M  C   U     3+33  50%       1 C (2)
+S               A                   S        M  C   C     2+26  100%      1 U (1)
+                   K   , ,          S        M  E   U     2+23  50%       1-
+                   , , ,   (  ). T  T B      M  E   U     3+33  100%      1-
+                          .         T        M  E   U     4+23  400%      1 S
+                                    W A      M  C   U           50%       1 C (1)
+                   K                                         2
+                                                          5+13
+
+S              A   I      ,         T 17: R W
+                     ,    
+T*             R                    N        S  R  R  D RP ENC A            C T
+                   T                A R      R  L  U   5+26 50% 2 U         30 A B (3)
+T              D   ,    ,           B P R    R  L  U   5+16 50% 2 U          1-
+                                    B        R  M  C   4+16 50% 1 C          1 T
+                                    C        R  M  U   5+16 50% 1 U         30 A B
+                   T                C B      R  L  C   4+23 50% 2 C          1 T
+                                    C        R  M  U   4+16 50% 2 U          1 U (1)
+                                    H P      R  C  C   3+23 50% 1 U          9-
+                   B   , ,   ,      H R      R  L  C   5+16 50% 2 U         12 -
+                   ,                L P      R  C  C   3+16 50% 1 C          6-
+                                    S (P-A)  R  M  C   5+26 50% 2 C          5 C U
+                                    S (S-O)  R  C  U   2+36 50% 2 C          2 C U
+                                    S        R  C  C   1+13 100% 0 C         1 T
+                                    S' R     R  D  R   2+36 50% 2 U         10 -
+U C                                                                                                                                                                                                  APPENDIX C: WEAPONS & EQUIPMENTPK    ,  ,   
+APPENDIX B: SKILLS  ,   
+
+W*             D   C, ,     
+                     
+
+                                    T 18: E W
+
+                                    N        S     R  R  D. RP ENC C T
+                                    G        A     C  U
+                                    S-G      A     C  U  2+26 100% 1        1 T; B R
+                                    F-B G    A     C  U
+                                    M        D*    D  R  -            -  1  1 S
+                                    R L      D*    D  R
+                                                         -            -  1  1 S
+
+                                                         5+26 100% 2        1 B R
+
+                                                         3+36 100% 2        1 B R
+
+                                    T 19: S W
+
+                                    N        S   R    R  D       RP ENC C T
+                                    F-T      D*  C    R   3+26  50% 2 30 B (3)
+                                    M C      A   C    U   1+13  50% 2 1 T; B (1)
+                                    T G      R   M    R         50% 1 1 S
+                                                             0
+
+                   30                                    31
+T 20: E                                  D P
+
+N        R  ENC  N  T                     S T 31010                         B 02102                 B O 12110
+                 +2  F 
+A' S     U 1     +2 E                       WP 10 RP 6 DMM 0 DMR 0     WP 13 RP 7 DMM 1 DMR 2      WP 11 RP 7 DMM 1 DMR 0
+                 T, S B                     I 2 E 6 P 4 S 4            I 4 E 7 P 2 S 2             I 3 E 7 P 3 S 3
+B        C  0    -
+                 -                                    A:                          D:                      E:
+B S K    C  2    +1 P C   L  D R
+                 -                                E (INF) 2,            D (DEX) 2, B (INF) 1,   B (INF) 2, M (INF) 2,
+B R K    C  0    I , ,  . C     .        I (INF) 2, M* (RSN) 2,      D* (PHY) 1, L-P*           A (PHY) 1, E (INF) 1,
+                 +1 N C                   R (RSN) 2, A (PHY) 1,                                 G (ACU) 1, I (INF) 1,
+B C      C  1    -                       B (INF) 1, M (INF) 1,           (ACU) 1, M (INF) 1,    M* (RSN) 1, P* (RSN) 1,
+                 +2   M* ;  1+23   24                               M* (RSN) 1, M C (PHY) 1,    S (ACU) 1, S  H (DEX) 1,
+B        C  1    -                                 P* (RSN) 1,       N (RSN) 1, S (ACU)
+                 +1   M* ;  1+13   24          S K (RSN)1,                                        S K (RSN) 1, T
+C        C  0    +1  F                      S (PHY) 1, T (DEX) 1      1, S (PHY) 1, S (ACU) 1,      (DEX) 1, U C (PHY) 1
+                 -                                                     T* (RSN) 1, T (DEX) 1,
+C G      U 1     C  C    P    S(3)
+                 -                                                          U C (PHY) 1
+C        C  0    +1  A   
+                 -
+C        C  1    6 C, +1 M      
+                 -
+D' B     U 1     -
+                 -
+F- K     C  0    +2 E
+                 +1 T  M* 
+F A K    C  1    A       
+                 -
+F K      C  1    -                         R S 02021                H R M 11102                         EMT 21011
+                 -
+F        U 1     -                          WP 11 RP 6 DMM 0 DMR 1     WP 13 RP 7 DMM 1 DMR 2      WP 11 RP 6 DMM 0 DMR 1
+                 C  C     PHY   S (3)       I 3 E 6 P 2 S 2            I 4 E 7 P 2 S 2             I 3 E 6 P 3 S 3
+F        U 1     W T, S B, F- K, 3   
+                 +1  L-P                        L E:                             M:                            M:
+F        U 1     +3  L-P 
+                 -                       T* (RSN) 2, M (INF) 2,       M* (RSN) 3, B (INF) 2,    A (PHY) 2, M* (RSN) 2,
+G H      U 1     +1 M*                   A H (INF) 1, B (INF) 1,    D* (PHY) 2, D (DEX) 1,      P* (RSN) 2, D (DEX) 1,
+                 R  20                                              L-P* (ACU) 1, M C           I (INF) 1, M (INF) 1,
+H        U 1     -                         I (INF) 1, L-P*                                      N (RSN) 1, R (RSN) 1,
+                 R  W                          (ACU) 1, N (RSN) 1,        (PHY) 1, N (RSN) 1,   S (ACU) 1, S  H
+I C      U 1     +2 M*                                                   S (ACU) 1, S           (DEX) 1, S K (RSN) 1,
+                                         P* (RSN) 1, R C
+H T      U 1                              (DEX) 1, S (ACU) 1, S                K (RSN) 1,                  S (ACU) 1
+                                                                                 T (DEX) 2
+L        C  1                               H (DEX) 1, S (PHY) 1,
+                                                U C (PHY) 1
+L        U 1
+
+M B      U 0
+
+M        C  1
+
+N V G U 1
+
+                                                                                                                                                                                                     APPENDIX D: PARADIGMSR SC1
+APPENDIX C: WEAPONS & EQUIPMENT
+R F      C  1
+
+R        C  1                               M 01202                       F 02201               P C 01112
+
+S        C  1                             WP 14 RP 8 DMM 2 DMR 2       WP 13 RP 8 DMM 2 DMR 1    WP 13 RP 7 DMM 1 DMR 2
+                                           I 3 E 8 P 1 S 1             I 3 E 8 P 2 S 2           I 3 E 7 P 1 S 1
+S G      U 1
+                                                     M:                      O:                             O:
+S K      U 2
+                                          S (ACU) 3, S (PHY) 2,     F (ACU) 3, S (ACU) 2,              L-P* (ACU) 2,
+S L U 0                                  T* (RSN) 2, A (PHY) 1,                                 M (INF) 2, S
+                                                                      S (PHY) 2, S (ACU) 2,     (ACU) 2, S  H (DEX) 2,
+C L      R  0                                D* (PHY) 1, H                                      S (ACU) 2, B (INF) 1,
+                                          W* (PHY) 1, M C            A H (INF) 1, A
+H T      C  1                             (PHY) 1, R C (DEX) 1,                                        M C (PHY) 1,
+                                         T (DEX) 1, U C               (PHY) 1, N (RSN) 1, R      S (PHY) 1, S (ACU) 1,
+T        C  1
+                                           (PHY) 1, W* (DEX) 1          C (DEX) 1, T (DEX) 1         U C (PHY) 1
+W-T      U 1
+         U 1
+W F      U 1
+S
+
+W T
+
+W' T U 1
+
+                                             P 11030                S T M 21020                 F M T 12020
+
+                                           WP 10 RP 6 DMM 0 DMR 0      WP 10 RP 6 DMM 0 DMR 0      WP 10 RP 6 DMM 0 DMR 0
+                                           I 2 E 6 P 2 S 2             I 1 E 6 P 3 S 3             I 3 E 6 P 3 S 3
+
+                                                    P:                          P:                             T:
+
+                                          I (INF) 3, B (INF) 2,       I (INF) 3, M              B (INF) 3, M (INF) 2,
+                                         M (INF) 2, P*                                          E (INF) 1, T (DEX) 2,
+                                                                         (INF) 3, P* (RSN) 2,   P* (RSN) 1, R (RSN) 1,
+                                            (RSN) 2, E (INF) 1,                                 S (ACU) 1, S  H
+                                           R C (DEX) 1, R           S (ACU) 2, T* (RSN) 2,       (DEX) 1, S K (RSN) 1,
+                                         (RSN) 1, S K (RSN) 1,
+                                           S (PHY) 1, T* (RSN) 1    B (INF) 1, E (INF) 1,          S (PHY) 1, S (ACU) 1
+
+                                                                                 R (RSN) 1
+
+                 32
+                     F   X S E v.
+
+     P D                       C:                             N:
+
+N:                             M:
+
+G:                             W 1:
+
+P:                             W 2:
+
+H:                W:           W 3:
+
+RAPID R                    S N:                           0 M C (PHY)
+                                                          0 N (RSN)
+   REASON RSN              0 A H (INF)                    -3 P* (RSN)
+   ACUMEN ACU              0 A (RSN)                      0 R C (DEX)
+   PHYSICALITY PHY         0 A (PHY)                      0 R (RSN)
+   INFLUENCE INF           0 B (INF)                      0 S (ACU)
+   DEXTERITY DEX           0 C (RSN)                      -3 S* (RSN)
+                           -3 D* (PHY)                    0 S  H (DEX)
+S S                        0 D/P (DEX)                    0 S K (RSN)
+                           0 E (INF)                      0 S (PHY)
+W        10 + P + D        0 F (ACU)                      0 S (ACU)
+P:                         0 G (ACU)                      0 S (ACU)
+                           -3 H W* (PHY)                  -3 T* (RSN)
+R           6 + P          0 I (INF)                      0 T (DEX)
+P:                         -3 L-P* (ACU)                  0 U C (PHY)
+                           0 M (INF)                      -3 W* (DEX)
+R D.     D AM              -3 M* (RSN)
+M:                         -3 M* (RSN)
+
+M D.     P AM
+M:
+
+I        D + A AM
+M:
+
+E: 6 +PHY
+
+                           U: 1D3 + PHY + UNARMED COMBAT
+
+P: R + A AM
+
+                           W 1:                           W 2:
+
+M:             3           T:        WP:                  T:      WP:
+
+                           R:        RP:                  R:      RP:
+
+S        R + A AM          C:        E:                   C:      E:
+M:
+                           T:        C:                   T:      C:
+
+B     0  1  2     3  4  5  A:                             A:
+P:
+
+L W  N:                    E:
+
+I D                        R/CM:
+
+0123456789
+
+CDP
+
+0123456789                                34
+

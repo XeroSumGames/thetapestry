@@ -151,7 +151,7 @@ export default function ImportGmKitPage() {
   const inp: React.CSSProperties = {
     width: '100%', padding: '9px 12px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px',
-    color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif',
+    color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif',
     boxSizing: 'border-box',
   }
 
@@ -163,13 +163,13 @@ export default function ImportGmKitPage() {
 
   if (!authChecked) return null
   if (!isThriver) return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Barlow, sans-serif', color: '#cce0f5', textAlign: 'center' }}>
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#cce0f5', textAlign: 'center' }}>
       Thriver access only.
     </div>
   )
 
   return (
-    <div style={{ maxWidth: '640px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '640px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
           Import GM Kit → Setting Seed
@@ -189,14 +189,14 @@ export default function ImportGmKitPage() {
           <input type="file" accept=".zip,application/zip"
             onChange={e => setFile(e.target.files?.[0] ?? null)}
             style={{ ...inp, padding: '6px' }} />
-          {file && <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Barlow, sans-serif', marginTop: '4px' }}>{file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</div>}
+          {file && <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>{file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</div>}
         </div>
 
         <div>
           <label style={lbl}>Setting key</label>
           <input type="text" value={settingKey} onChange={e => setSettingKey(e.target.value)}
             placeholder="e.g. arena" style={inp} />
-          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginTop: '4px' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
             Must match a key in <code>lib/settings.ts</code> SETTINGS to show up on the create form.
           </div>
         </div>

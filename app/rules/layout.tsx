@@ -23,7 +23,7 @@ export default function RulesLayout({ children }: { children: React.ReactNode })
         display: 'flex',
         background: '#0f0f0f',
         color: '#f5f2ee',
-        fontFamily: 'Barlow, sans-serif',
+        fontFamily: 'Carlito, sans-serif',
         height: '100%',
         minHeight: 0,
         overflow: 'hidden',

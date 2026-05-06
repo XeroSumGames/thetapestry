@@ -75,7 +75,7 @@ export default function WelcomeModal({ username, onClose }: Props) {
           width: '100%', maxWidth: '720px', maxHeight: '90vh',
           background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '6px',
           overflowY: 'auto',
-          fontFamily: 'Barlow, sans-serif', color: '#f5f2ee',
+          fontFamily: 'Carlito, sans-serif', color: '#f5f2ee',
         }}>
 
         {/* Close X — top-right, sticky so it's reachable on long scroll. */}

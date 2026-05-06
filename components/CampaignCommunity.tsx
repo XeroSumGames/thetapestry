@@ -1678,7 +1678,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
   const inp: React.CSSProperties = {
     width: '100%', padding: '5px 8px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee',
-    fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box',
+    fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box',
   }
 
   return (
@@ -1823,7 +1823,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
             {isOpen && (
               <div style={{ padding: '0 18px 18px 18px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {c.description && (
-                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>{c.description}</div>
+                  <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>{c.description}</div>
                 )}
 
                 {/* At-a-Glance — player-facing read-only summary.
@@ -2055,7 +2055,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     return (
                       <div style={{ padding: '8px 12px', background: '#111', border: '1px solid #2e2e2e', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{ fontSize: '14px', color: '#EF9F27', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>📍 Homestead</span>
-                        <span style={{ fontSize: '14px', color: homesteadPin ? '#f5f2ee' : '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
+                        <span style={{ fontSize: '14px', color: homesteadPin ? '#f5f2ee' : '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
                           {homesteadPin ? homesteadPin.name : 'unlocated'}
                         </span>
                       </div>
@@ -2127,7 +2127,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       </div>
                       {stepDownOpen && (
                         <div style={{ padding: '10px', background: '#0f1a2e', border: '1px solid #1a3a5c', borderRadius: '3px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                          <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
                             <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{leaderMember ? memberLabel(leaderMember) : 'The leader'}</span> is stepping down. Pick a successor:
                           </div>
                           <select value={successorChoice} onChange={e => setSuccessorChoice(e.target.value)}
@@ -2238,7 +2238,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '8px', background: '#0f0f0f', border: '1px solid #2e2e2e', borderRadius: '3px' }}>
                           <textarea value={eventDraftBody} onChange={e => setEventDraftBody(e.target.value)}
                             placeholder="Note for the community feed — narrative, council news, downtime events, etc."
-                            style={{ width: '100%', minHeight: '70px', resize: 'vertical', padding: '8px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', lineHeight: 1.5 }} />
+                            style={{ width: '100%', minHeight: '70px', resize: 'vertical', padding: '8px 10px', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', lineHeight: 1.5 }} />
                           <div style={{ display: 'flex', gap: '6px' }}>
                             <button onClick={handleManualPost} disabled={eventSubmitting || !eventDraftBody.trim()}
                               style={{ flex: 1, padding: '7px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '3px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: eventSubmitting ? 'wait' : 'pointer', fontWeight: 600, opacity: eventDraftBody.trim() ? 1 : 0.5 }}>
@@ -2499,7 +2499,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                               const match = EQUIPMENT.find(eq => eq.name.toLowerCase() === e.target.value.trim().toLowerCase())
                               if (match) setAddStockEnc(String(match.enc))
                             }} placeholder="Item name (catalog autofills enc)"
-                              autoFocus style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+                              autoFocus style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} />
                             <input value={addStockQty} onChange={e => setAddStockQty(e.target.value)} type="number" min="1" placeholder="Qty"
                               style={{ width: '50px', padding: '5px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
                             <input value={addStockEnc} onChange={e => setAddStockEnc(e.target.value)} type="number" min="0" placeholder="Enc"
@@ -2507,7 +2507,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                               style={{ width: '52px', padding: '5px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', textAlign: 'center' }} />
                           </div>
                           <input value={addStockNotes} onChange={e => setAddStockNotes(e.target.value)} placeholder="Notes (optional)"
-                            style={{ width: '100%', padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', marginBottom: '6px' }} />
+                            style={{ width: '100%', padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', marginBottom: '6px' }} />
                           <button onClick={async () => {
                             if (!addStockName.trim()) return
                             const trimmedName = addStockName.trim()
@@ -2604,7 +2604,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                                 if (e.key === 'Enter') handleSaveTask(m)
                                 if (e.key === 'Escape') handleCancelEditTask()
                               }}
-                              style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #5a2e5a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif' }} />
+                              style={{ flex: 1, padding: '4px 8px', background: '#242424', border: '1px solid #5a2e5a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }} />
                             <button onClick={() => handleSaveTask(m)}
                               style={{ padding: '4px 8px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>Save</button>
                             <button onClick={handleCancelEditTask}
@@ -2613,7 +2613,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         ) : taskText ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '2px' }}>
                             <span style={{ fontSize: '13px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600 }}>Task</span>
-                            <span style={{ flex: 1, fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', fontStyle: 'italic' }}>{taskText}</span>
+                            <span style={{ flex: 1, fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', fontStyle: 'italic' }}>{taskText}</span>
                             {isGM && (
                               <button onClick={() => handleStartEditTask(m)} title="Edit task"
                                 style={{ background: 'none', border: 'none', color: '#7ab3d4', fontSize: '13px', cursor: 'pointer', padding: '0 4px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>✎ edit</button>
@@ -2675,7 +2675,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                         <option value="pc">PC</option>
                       </select>
                       <select value={addSubjectId} onChange={e => setAddSubjectId(e.target.value)}
-                        style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                        style={{ flex: 1, padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                         <option value="">— choose —</option>
                         {(addKind === 'npc' ? availableNpcs : availableChars).map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
                       </select>
@@ -2710,7 +2710,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       <div style={{ fontSize: '14px', color: '#d48bd4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>
                         📤 Survivor Migration
                       </div>
-                      <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5, marginBottom: '8px' }}>
+                      <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5, marginBottom: '8px' }}>
                         {survivors.length === 0
                           ? 'No NPC survivors recorded. Migration only applies to NPCs scattered by the dissolution.'
                           : `${survivors.length} survivor${survivors.length === 1 ? '' : 's'} can be offered to other communities in the Tapestry.`}
@@ -2783,13 +2783,13 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
               </div>
               <div style={{ padding: '18px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
                   Each picked survivor becomes a migration request to the chosen community. The receiving GM accepts (the survivor narratively joins them) or declines (the survivor's fate stays open). Picking 5 survivors sends 5 separate requests so the receiver can pick and choose.
                 </div>
                 <div>
                   <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Target community</div>
                   <select value={migrationTargetId} onChange={e => setMigrationTargetId(e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                     <option value="">— pick a community —</option>
                     {migrationTargets.map(t => (
                       <option key={t.id} value={t.id}>{t.name} ({t.size_band}){t.faction_label ? ` · ${t.faction_label}` : ''}</option>
@@ -2819,7 +2819,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     placeholder="e.g. They survived the raid that broke us. They carry our last stockpile of antibiotics — please honor what's left of us."
                     onChange={e => setMigrationNarrative(e.target.value)}
                     rows={3}
-                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
+                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
                 </div>
               </div>
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -2865,14 +2865,14 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
               </div>
               <div style={{ padding: '18px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
                   Pick the breakaway faction's members. They leave with reason "schism" and join a new community in this campaign. The original keeps everyone else and its history (Morale roll log, week counter, consecutive failures).
                 </div>
                 <div>
                   <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Breakaway name</div>
                   <input value={schismName}
                     onChange={e => setSchismName(e.target.value)}
-                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
                 </div>
                 <div>
                   <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Description (optional)</div>
@@ -2880,12 +2880,12 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                     placeholder="Why did they leave? What do they believe?"
                     onChange={e => setSchismDescription(e.target.value)}
                     rows={2}
-                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
+                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical' }} />
                 </div>
                 <div>
                   <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Breakaway Homestead pin (optional)</div>
                   <select value={schismHomesteadPinId} onChange={e => setSchismHomesteadPinId(e.target.value)}
-                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                     <option value="">— None (set later) —</option>
                     {pins.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
@@ -2959,7 +2959,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
               </div>
               <div style={{ padding: '18px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
                   Publishing exposes the sanitized fields below to every other campaign in the Tapestry. Your private roster, Morale rolls, and internal notes stay put. Anything published goes through moderation before appearing on the world map.
                 </div>
 
@@ -2967,7 +2967,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase' }}>Preview</div>
                   <div style={{ fontSize: '19px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 700 }}>{c.name}</div>
                   {c.description && (
-                    <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>{c.description}</div>
+                    <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>{c.description}</div>
                   )}
                   <div style={{ display: 'flex', gap: '14px', fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em' }}>
                     <span><span style={{ color: '#5a5550', textTransform: 'uppercase' }}>Size:</span> <span style={{ color: '#f5f2ee', fontWeight: 700 }}>{sizeBand}</span> <span style={{ color: '#5a5550' }}>({total} members)</span></span>
@@ -2981,7 +2981,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   <input value={publishFactionLabel}
                     placeholder="e.g. Reformed Church, Mercantile, Mongrels, Scholars"
                     onChange={e => setPublishFactionLabel(e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
                   <div style={{ fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif', marginTop: '4px' }}>
                     Short label shown on the world map alongside the community's public card. Leave blank for none.
                   </div>
@@ -3030,14 +3030,14 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                   style={{ background: 'none', border: 'none', color: '#f5a89a', fontSize: '22px', cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
               </div>
               <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+                <div style={{ fontSize: '14px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
                   Assigned NPCs are off doing a PC-directed task and don't count toward the labor minimums. Pick who's directing them and what they're doing.
                 </div>
                 <div>
                   <div style={{ ...LABEL_STYLE_LG, marginBottom: '4px' }}>Directed by</div>
                   <select value={assignmentPcDraft}
                     onChange={e => setAssignmentPcDraft(e.target.value)}
-                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', appearance: 'none' }}>
+                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                     <option value="">— pick a PC —</option>
                     {orderedChars.map(c => {
                       const isMember = memberPcIds.has(c.id)
@@ -3054,7 +3054,7 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                       if (e.key === 'Enter' && assignmentPcDraft) handleSaveAssignment()
                       if (e.key === 'Escape') handleCancelAssignment()
                     }}
-                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '7px 10px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
                 </div>
               </div>
               <div style={{ padding: '14px 18px', borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

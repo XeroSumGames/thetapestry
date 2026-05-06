@@ -76,11 +76,11 @@ export default function UserCharactersPage() {
   }
 
   if (loading) return (
-    <div style={{ padding: '2rem', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>Loading...</div>
+    <div style={{ padding: '2rem', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>Loading...</div>
   )
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <Link href="/moderate" style={{ padding: '5px 12px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none', marginTop: '4px' }}>

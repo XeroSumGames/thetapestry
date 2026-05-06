@@ -214,7 +214,7 @@ export default function AccountPage() {
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '8px 10px', background: '#242424', border: '1px solid #3a3a3a',
     borderRadius: '3px', color: '#f5f2ee', fontSize: '14px',
-    fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box',
+    fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box',
   }
   const btnStyle = (disabled: boolean): React.CSSProperties => ({
     padding: '8px 18px', background: disabled ? '#242424' : '#2a1a3e',
@@ -317,7 +317,7 @@ export default function AccountPage() {
                 {emailSaving ? 'Saving…' : 'Save'}
               </button>
             </div>
-            <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
+            <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
               Changing your email sends a confirmation link to the new address. The change finalizes when you click that link.
             </div>
             {emailMessage && (
@@ -331,7 +331,7 @@ export default function AccountPage() {
             <div style={{ ...inputStyle, color: '#cce0f5', background: '#1a1a1a', cursor: 'not-allowed' }}>
               {profile?.role ?? 'survivor'}
             </div>
-            <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
+            <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
               Roles are set by the moderation team. Reach out via the Campfire if you think this is wrong.
             </div>
           </div>
@@ -356,7 +356,7 @@ export default function AccountPage() {
             style={btnStyle(pwdSaving || pwd.length < 8 || pwd !== pwdConfirm)}>
             {pwdSaving ? 'Saving…' : 'Update password'}
           </button>
-          <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Barlow, sans-serif' }}>
+          <div style={{ marginTop: '4px', fontSize: '13px', color: '#5a5550', fontFamily: 'Carlito, sans-serif' }}>
             Minimum 8 characters. You won&apos;t be logged out — your current session keeps working.
           </div>
           {pwdMessage && (
@@ -489,7 +489,7 @@ function DangerZone({ profile }: DangerZoneProps) {
         </button>
       ) : (
         <div>
-          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Barlow, sans-serif', marginBottom: '6px' }}>
+          <div style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', marginBottom: '6px' }}>
             Type your username <strong style={{ color: '#f5f2ee' }}>{expectedConfirm}</strong> to confirm.
           </div>
           <input value={confirm} onChange={e => setConfirm(e.target.value)}
@@ -497,7 +497,7 @@ function DangerZone({ profile }: DangerZoneProps) {
             placeholder={expectedConfirm}
             style={{
               width: '100%', padding: '8px 10px', background: '#241010', border: '1px solid #5a1f1f',
-              borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Barlow, sans-serif',
+              borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif',
               boxSizing: 'border-box', marginBottom: '10px',
             }} />
           {error && (

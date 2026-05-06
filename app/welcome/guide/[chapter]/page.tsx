@@ -74,7 +74,7 @@ export default async function ChapterPage({ params }: PageProps) {
   const next = idx < CHAPTERS.length - 1 ? CHAPTERS[idx + 1] : null
 
   return (
-    <div style={{ background: '#0f0f0f', minHeight: '100vh', padding: '2rem 1rem', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ background: '#0f0f0f', minHeight: '100vh', padding: '2rem 1rem', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ maxWidth: '780px', margin: '0 auto' }}>
         <Link href="/welcome/guide" style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em', textDecoration: 'none' }}>
           ← Beginners' Guide

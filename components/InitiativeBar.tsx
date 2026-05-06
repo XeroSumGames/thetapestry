@@ -430,7 +430,7 @@ function InitiativeBarImpl({
                     if (e.key === 'Escape') { setShowAddNPC(false); setNpcName('') }
                   }}
                   placeholder="NPC name..."
-                  style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', width: '120px' }}
+                  style={{ padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', width: '120px' }}
                 />
                 <button onClick={() => {
                   const name = npcName.trim()

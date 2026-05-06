@@ -201,7 +201,7 @@ export default function CommunityDashboardPage() {
   const label: React.CSSProperties = { fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.5rem 1.5rem 4rem', fontFamily: 'Barlow, sans-serif', color: '#f5f2ee' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.5rem 1.5rem 4rem', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>
       <StoryActionBar campaignId={campaignId} />
       {/* Sub-page label — small, below the canonical campaign name. */}
       <div style={{ fontSize: '13px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '1.25rem' }}>

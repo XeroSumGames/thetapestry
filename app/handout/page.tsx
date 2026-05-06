@@ -31,11 +31,11 @@ export default function HandoutPage() {
     load()
   }, [noteId])
 
-  if (loading) return <div style={{ background: '#0f0f0f', color: '#cce0f5', minHeight: '100vh', padding: '2rem', fontFamily: 'Barlow, sans-serif' }}>Loading...</div>
-  if (!note) return <div style={{ background: '#0f0f0f', color: '#f5a89a', minHeight: '100vh', padding: '2rem', fontFamily: 'Barlow, sans-serif' }}>Handout not found.</div>
+  if (loading) return <div style={{ background: '#0f0f0f', color: '#cce0f5', minHeight: '100vh', padding: '2rem', fontFamily: 'Carlito, sans-serif' }}>Loading...</div>
+  if (!note) return <div style={{ background: '#0f0f0f', color: '#f5a89a', minHeight: '100vh', padding: '2rem', fontFamily: 'Carlito, sans-serif' }}>Handout not found.</div>
 
   return (
-    <div style={{ background: '#0f0f0f', color: '#f5f2ee', minHeight: '100vh', fontFamily: 'Barlow, sans-serif', padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ background: '#0f0f0f', color: '#f5f2ee', minHeight: '100vh', fontFamily: 'Carlito, sans-serif', padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ borderBottom: '2px solid #c0392b', paddingBottom: '12px', marginBottom: '20px' }}>
         <div style={{ fontSize: '13px', color: '#c0392b', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>
           {note.shared ? 'Handout' : 'GM Note'}

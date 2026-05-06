@@ -173,7 +173,7 @@ export default function ForumThreadPage() {
   const inp: React.CSSProperties = {
     width: '100%', padding: '8px 10px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee',
-    fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box',
+    fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box',
   }
 
   const renderAuthorRow = (authorId: string, ts: string) => {
@@ -197,7 +197,7 @@ export default function ForumThreadPage() {
   const isMyThread = thread.author_user_id === myId
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Carlito, sans-serif' }}>
 
       {/* Back link */}
       <Link href="/campfire/forums" style={{ display: 'inline-block', fontSize: '13px', color: '#cce0f5', textDecoration: 'none', marginBottom: '1rem', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>

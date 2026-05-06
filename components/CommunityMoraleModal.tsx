@@ -799,7 +799,7 @@ export default function CommunityMoraleModal({
   const numInput: React.CSSProperties = {
     width: '64px', padding: '5px 8px', background: '#242424',
     border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee',
-    fontSize: '17px', fontFamily: 'Barlow, sans-serif', textAlign: 'center',
+    fontSize: '17px', fontFamily: 'Carlito, sans-serif', textAlign: 'center',
   }
   const rowFlex: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: '10px',
@@ -1178,7 +1178,7 @@ export default function CommunityMoraleModal({
               <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
                 ⚠ Community Dissolves
               </div>
-              <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '17px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif', lineHeight: 1.5 }}>
                 3 consecutive Morale failures. All {r.membersBefore} members scatter. The community is gone.
                 {!retention && leaderInfo && (
                   <> A fast-acting leader may attempt an immediate Retention Check to salvage fragments.</>

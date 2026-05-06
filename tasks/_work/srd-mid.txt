@@ -1,0 +1,406 @@
+This group is responsible for the F C. The           M  H I (6+6): Buildings and                              T 1: O           T 2: A M (AM)
+possible results of a F C are:                       equipment are in perfect working order. A project or
+                                                     improvement goes well. There is +2 CMod to the next      0-3     D F      2       D
+S (9-13): Baseline Raon needs are met. No            M C.
+CMod to the F C.                                                                                              4-8     F        1       W
+                                                     F (4-8): Minor breakdowns occur, or there is a
+W S (14+): There are enough R to                     deficit in required S. A -1 CMod is applied to           9-13    S        0       A
+create a surplus. There is a -1 CMod on the next     the next M C.
+M C.                                                                                                          14+     W S      +1      G
+                                                     D F (0-3): Connued breakdowns of buildings,
+M  H I (6+6): Enough luxury items                    systems or equipment that impact the community.          1+1   M  L I     +2      S
+are found to provide a boot to the mood of the       There is a -2 CMod on the next M C.
+community. There is +2 CMod on the next M                                                                     6+6   M  H I     +3      E
+C.                                                   M  L I (1+1): There is damage or
+                                                     breakdown of crical infrastructure, buildings,                            +4      H P
+F (4-8): There is a shorall in R leading to          systems, or equipment that directly impact the
+only 1 meal a day. There is a -1 CMod on the next    community. There is a 3 CMod on the next M                                +5      S
+M C.                                                 C.
+                                                                                                              T 3: S M (SM)    T 4: C M (CM)
+D F (0-3): Community members are                     S
+connuously hungry, somemes going days between                                                                 3             I  5   D T F
+R. There is a -2 CMod on the next M                  5-10% of any community is required for policing,
+C.                                                   patrol, firefighng, and other emergency services that    0       U        4       I
+                                                     keep the members safe. This group is also made up of
+M  L I (1+1): There is an addional                   Community leadership.                                    +1      B        3       H
+complicaon, such as food contaminaon or famine
+onset giving a -3 CMod on the next M C.              There is no weekly S check, but not having               +2      J        2       D
+                                                     enough members providing security and safety incurs
+M                                                    a -1 S  W O M CMod on the                                +3      P        1       C
+                                                     Morale check.
+20% of any group (rounded down) are required to be                                                            +4      L' W     0       A
+M.                                                   If there are enough people in each category, there is a
+                                                     +1 E H CMod on the M C.                                                   +1      S
+Not only do they collect the requisite S needed
+such as clothing, tools, or baeries, but they also   If there are not enough people in each category, there                    +2      S F
+repair and maintain buildings, equipment, and        is -1 E H CMod on the M C.
+vehicles to ensure everything remains in a funconal                                                                            +3      E
+condion.                                             P L A
+                                                                                                                               +4      T
+This group is responsible for the C C. The           Unless explicitly stated, it is assumed that the F and
+possible results of a C C are:                       C checks are being performed by NPCs who are                              +5  D I
+                                                     somewhat proficient.
+S (9-13): All systems, buildings, and equipment                                                               T 5: S S                        10 WP + P + D AM      APPENDIX A: TABLES
+are adequately maintained. 0 CMod on the next        Players may choose to spend their me contribung to                                                6 RP + P AM
+M C.                                                 these tasks and can use appropriate AMods or SMods              W P
+                                                     if they can F I T G as to how they contributed                 R P      A ' D AM   R D M
+W S (14+): Buildings and equipment are                                                                          R D M.       A ' P AM   M D M
+adequately repaired, maintained, and even improved.                                                              M D M.
+This gives a +1 CMod on the next M C.                                                                              I M                               A + D AM
+                                                                                                                                                6 E + P AM
+                                                                                                                      E
+                                                                                                                        P                             R + A AM
+                                                                                                                         M                    C    M  3
+
+                                                                                                                     S M                              R + A AM
+
+                                                                                                              T 6: C           T 7: M
+
+                                                                                                              2       A        2       A
+
+                                                                                                              3       B        3       B
+
+                                                                                                              4       C  H     4       F S
+
+                                                                                                              5       C P      5       H
+
+                                                                                                              6       D        6       M A
+
+                                                                                                              7       D S      7       P
+
+                                                                                                              8       F O      8       P
+
+                                                                                                              9       F        9       R
+
+                                                                                                              10            L  10      R
+
+                                                                                                              11      O D      11      S A
+
+                                                     24                                                       12      P E      12      T A
+T 8: P  S                                 T 10: C A (.)
+
+A    F, G K, M*, P*, R, T*, S                M     P   R  ( R   17)
+
+D    A H, D, M*, N, S, S  H, T
+
+E B, G K, I, M, P*, S  H, T                  R F   A       . T     -1 CM,
+                                                       -3 CM. I       C A,
+L E  A, S, I, M, R C, S, T*                           -2 CM  -4 CM   
+
+M    A, B, D*, G K, M*, S, T                       A    R     . T     
+                                                            
+M    A, G K, I, M*, P*, R, S  H           R W
+
+M    A, D*, R C, S, S, T*, U C               R     T            R ,
+                                               S            
+O A H, F, M C, N, R C, S, S                        S      3        
+                                                    . I        A   
+O I, M, P*, R C, S  H, S, U C                         ,        C A  
+                                                    
+P    A, B, I, M, P*, S  H, S
+
+P B, G K, I, I, M, P*, T*
+
+T B, G K, I, M, S, S  H, T                         W   S  ,  R P 
+                                                      W P     50% ( D   18). C
+                                             S         U  M 
+
+T 10: C A                                    T C   T C   +2 D M      
+                                                         
+
+A    +2 CM    A   . T '   
+       A,   A  
+
+     A   U, R  M C. I                     T 11: R
+         ,    +1 CM    ,  
+A                                               +1 CM  M    -
+                                                1  R 
+                                          1  E
+
+C    T                                                    M    -1 CM
+         M   U C A                        2 C . R    +1
+
+     I          S T* ,                                    R CM
+       C          +2
+C        . O  W S,                        3 M N 
+         +1 CM
+                                          4  L  -5 CM      
+                                                +1 CM   R 
+     E /     A. S A
+C F   -2 CM   '  , ,                            O  H R   S'
+                                                R     
+                                          5  D
+
+D    T   +2   ' D M   
+      . T        
+
+                                                                                                                                                                                                     APPENDIX A: TABLESTABLE 12: LASTING WOUNDSTABLE 13: BREAKING POINT
+APPENDIX A: TABLES
+D C A           
+
+     A S I, P*  T*  D                     2 L E -1    D                   2   C                     -1  D 
+          C A. O  W S,   
+D    C A                                  3 B I             -2 R          3 C F                     -2 R
+                                          4 D              -1 D
+                                          5 S      -1 M. R P              4   B R                   -1 D
+
+                        F F C      T C                                    5 D                       -1 M RP
+F  C       ,   ,    
+                                          6 W -1 M. W P                   6   O -1 M. W P
+                           D M   
+                                          7 S      -1 I M                 7   P S                   -1 I M
+
+     A     O C ( O C   7)                 8 S                       -1 I  8   F                     -1 I
+      U C      
+G                                         9 F                       -1 P  9 R A                     -1 P
+
+                                          10 H L                    -1 A  10  S-H                   -1 A
+
+I    O   I ,    C                         11 C -1 P  -1 A                 11 S-D U -1 P -1 A
+     C A  . A     I   
+                                          12 S S                    -2 D  12 I O -2 D
+T 14: I C                             T 9: S
+                                                  S
+P  T      .                                            A  D
+             +1 CM                     A H
+                                          A          I    U     ,  
+U T      .                                   A         R     
+                                               B
+W  T     .                                           P    S  ,  , 
+            -1 CM                           C         A   , EVA/-G ,   
+
+D  T     .                                D*           R  F, , ,  , 
+           -2 CM                                          , , ,   
+                                                     P
+B  T                                                      A ,  ,  , 
+         D                                                   ,   
+
+T 15: I T                                                 D      ,
+                                                             , ,  
+                                                          
+
+                                                          T     ,  
+                                                               
+
+A      T      ,                            D         D    D      ,   
+   B        E R   . T                 E              I       
+          ,   A B (3),   3 .                          A
+                                          F               T        
+                     W  ,       . C                       , , , , ,    
+B R E   F . C  C   50%                                    
+
+                     ,    C  25%   .                      K          
+                                                              
+       B    ,        
+  B     (X) WP/RP    3                G              A    T       
+  C-U                                                     , ,  ,     
+C      T   ,    E R                                           
+        50%      
+                                      H W*           P    T   , -  
+       T     ,      P  (X)                                  , ,  
+               -X CM. T  C (2) 
+        P  2     -2 CM                  I            I    B          
+                                      L-P*            A          
+S      A    W P ,   W S  M            M              I
+T      H I,    I  16 - PHY M ,                            B        
+U        1                                                  
+
+       W  R T W                                           G   , ,       
+       . T R W     +1 A    A                                 
+
+       T          ,                     M*             R  D, , ,    , ,
+          D  (X)    -X M  . T           M*             R  ,  
+       U (2)   D  2     -2 CM         M C            P
+                                                          P  , , , 
+                                                                   
+
+                                                          T      -
+                                                          ,   
+                                                                                                                                                                                                     APPENDIX B: SKILLS
+APPENDIX A: TABLES
+                                      N              A    I    ,  , 
+                                                            
+
+                                      P              D    S    ,  ,
+                                                          ,    
+
+                                      P*             I    L      
+                                                          , , ,   
+
+                                      R C            D    A     , 
+                                                               
+
+                      28                                  29
+T 9: S (C.)                         T 16: M W
+            S
+               A   D                N        S  R   R    D       RP       T
+       R                            B B      M  E   C     4+16  100%      1-
+               R   B    , ,         B K      U  E   U           100%      0-
+                                    B        A  C   U       +1  100%      1 U (2)
+S              A                    C        M  E   C     1+13  100%      2 C (1)
+                   F   , ,          F A      M  C   U     5+16  50%       1-
+S*             R                    H        M  E   C     3+23  50%       1-
+                                    H K      M  E   C     3+13  50%       1 U (1)
+S  H D             P                K K      M  E   C     2+23  50%       1-
+                   , ,              M        M  C   U     2+13  50%       1 U (2)
+S K R                               M C      M  E   C     3+23  100%      1-
+                   W    -- , ,      S        M  E   U     3+13  100%      2 C (2)
+  S            P   , ,              S        M  C   U     3+33  50%       1 C (2)
+S               A                   S        M  C   C     2+26  100%      1 U (1)
+                   K   , ,          S        M  E   U     2+23  50%       1-
+                   , , ,   (  ). T  T B      M  E   U     3+33  100%      1-
+                          .         T        M  E   U     4+23  400%      1 S
+                                    W A      M  C   U           50%       1 C (1)
+                   K                                         2
+                                                          5+13
+
+S              A   I      ,         T 17: R W
+                     ,    
+T*             R                    N        S  R  R  D RP ENC A            C T
+                   T                A R      R  L  U   5+26 50% 2 U         30 A B (3)
+T              D   ,    ,           B P R    R  L  U   5+16 50% 2 U          1-
+                                    B        R  M  C   4+16 50% 1 C          1 T
+                                    C        R  M  U   5+16 50% 1 U         30 A B
+                   T                C B      R  L  C   4+23 50% 2 C          1 T
+                                    C        R  M  U   4+16 50% 2 U          1 U (1)
+                                    H P      R  C  C   3+23 50% 1 U          9-
+                   B   , ,   ,      H R      R  L  C   5+16 50% 2 U         12 -
+                   ,                L P      R  C  C   3+16 50% 1 C          6-
+                                    S (P-A)  R  M  C   5+26 50% 2 C          5 C U
+                                    S (S-O)  R  C  U   2+36 50% 2 C          2 C U
+                                    S        R  C  C   1+13 100% 0 C         1 T
+                                    S' R     R  D  R   2+36 50% 2 U         10 -
+U C                                                                                                                                                                                                  APPENDIX C: WEAPONS & EQUIPMENTPK    ,  ,   
+APPENDIX B: SKILLS  ,   
+
+W*             D   C, ,     
+                     
+
+                                    T 18: E W
+
+                                    N        S     R  R  D. RP ENC C T
+                                    G        A     C  U
+                                    S-G      A     C  U  2+26 100% 1        1 T; B R
+                                    F-B G    A     C  U
+                                    M        D*    D  R  -            -  1  1 S
+                                    R L      D*    D  R
+                                                         -            -  1  1 S
+
+                                                         5+26 100% 2        1 B R
+
+                                                         3+36 100% 2        1 B R
+
+                                    T 19: S W
+
+                                    N        S   R    R  D       RP ENC C T
+                                    F-T      D*  C    R   3+26  50% 2 30 B (3)
+                                    M C      A   C    U   1+13  50% 2 1 T; B (1)
+                                    T G      R   M    R         50% 1 1 S
+                                                             0
+
+                   30                                    31
+T 20: E                                  D P
+
+N        R  ENC  N  T                     S T 31010                         B 02102                 B O 12110
+                 +2  F 
+A' S     U 1     +2 E                       WP 10 RP 6 DMM 0 DMR 0     WP 13 RP 7 DMM 1 DMR 2      WP 11 RP 7 DMM 1 DMR 0
+                 T, S B                     I 2 E 6 P 4 S 4            I 4 E 7 P 2 S 2             I 3 E 7 P 3 S 3
+B        C  0    -
+                 -                                    A:                          D:                      E:
+B S K    C  2    +1 P C   L  D R
+                 -                                E (INF) 2,            D (DEX) 2, B (INF) 1,   B (INF) 2, M (INF) 2,
+B R K    C  0    I , ,  . C     .        I (INF) 2, M* (RSN) 2,      D* (PHY) 1, L-P*           A (PHY) 1, E (INF) 1,
+                 +1 N C                   R (RSN) 2, A (PHY) 1,                                 G (ACU) 1, I (INF) 1,
+B C      C  1    -                       B (INF) 1, M (INF) 1,           (ACU) 1, M (INF) 1,    M* (RSN) 1, P* (RSN) 1,
+                 +2   M* ;  1+23   24                               M* (RSN) 1, M C (PHY) 1,    S (ACU) 1, S  H (DEX) 1,
+B        C  1    -                                 P* (RSN) 1,       N (RSN) 1, S (ACU)
+                 +1   M* ;  1+13   24          S K (RSN)1,                                        S K (RSN) 1, T
+C        C  0    +1  F                      S (PHY) 1, T (DEX) 1      1, S (PHY) 1, S (ACU) 1,      (DEX) 1, U C (PHY) 1
+                 -                                                     T* (RSN) 1, T (DEX) 1,
+C G      U 1     C  C    P    S(3)
+                 -                                                          U C (PHY) 1
+C        C  0    +1  A   
+                 -
+C        C  1    6 C, +1 M      
+                 -
+D' B     U 1     -
+                 -
+F- K     C  0    +2 E
+                 +1 T  M* 
+F A K    C  1    A       
+                 -
+F K      C  1    -                         R S 02021                H R M 11102                         EMT 21011
+                 -
+F        U 1     -                          WP 11 RP 6 DMM 0 DMR 1     WP 13 RP 7 DMM 1 DMR 2      WP 11 RP 6 DMM 0 DMR 1
+                 C  C     PHY   S (3)       I 3 E 6 P 2 S 2            I 4 E 7 P 2 S 2             I 3 E 6 P 3 S 3
+F        U 1     W T, S B, F- K, 3   
+                 +1  L-P                        L E:                             M:                            M:
+F        U 1     +3  L-P 
+                 -                       T* (RSN) 2, M (INF) 2,       M* (RSN) 3, B (INF) 2,    A (PHY) 2, M* (RSN) 2,
+G H      U 1     +1 M*                   A H (INF) 1, B (INF) 1,    D* (PHY) 2, D (DEX) 1,      P* (RSN) 2, D (DEX) 1,
+                 R  20                                              L-P* (ACU) 1, M C           I (INF) 1, M (INF) 1,
+H        U 1     -                         I (INF) 1, L-P*                                      N (RSN) 1, R (RSN) 1,
+                 R  W                          (ACU) 1, N (RSN) 1,        (PHY) 1, N (RSN) 1,   S (ACU) 1, S  H
+I C      U 1     +2 M*                                                   S (ACU) 1, S           (DEX) 1, S K (RSN) 1,
+                                         P* (RSN) 1, R C
+H T      U 1                              (DEX) 1, S (ACU) 1, S                K (RSN) 1,                  S (ACU) 1
+                                                                                 T (DEX) 2
+L        C  1                               H (DEX) 1, S (PHY) 1,
+                                                U C (PHY) 1
+L        U 1
+
+M B      U 0
+
+M        C  1
+
+N V G U 1
+
+                                                                                                                                                                                                     APPENDIX D: PARADIGMSR SC1
+APPENDIX C: WEAPONS & EQUIPMENT
+R F      C  1
+
+R        C  1                               M 01202                       F 02201               P C 01112
+
+S        C  1                             WP 14 RP 8 DMM 2 DMR 2       WP 13 RP 8 DMM 2 DMR 1    WP 13 RP 7 DMM 1 DMR 2
+                                           I 3 E 8 P 1 S 1             I 3 E 8 P 2 S 2           I 3 E 7 P 1 S 1
+S G      U 1
+                                                     M:                      O:                             O:
+S K      U 2
+                                          S (ACU) 3, S (PHY) 2,     F (ACU) 3, S (ACU) 2,              L-P* (ACU) 2,
+S L U 0                                  T* (RSN) 2, A (PHY) 1,                                 M (INF) 2, S
+                                                                      S (PHY) 2, S (ACU) 2,     (ACU) 2, S  H (DEX) 2,
+C L      R  0                                D* (PHY) 1, H                                      S (ACU) 2, B (INF) 1,
+                                          W* (PHY) 1, M C            A H (INF) 1, A
+H T      C  1                             (PHY) 1, R C (DEX) 1,                                        M C (PHY) 1,
+                                         T (DEX) 1, U C               (PHY) 1, N (RSN) 1, R      S (PHY) 1, S (ACU) 1,
+T        C  1
+                                           (PHY) 1, W* (DEX) 1          C (DEX) 1, T (DEX) 1         U C (PHY) 1
+W-T      U 1
+         U 1
+W F      U 1
+S
+
+W T
+
+W' T U 1
+
+                                             P 11030                S T M 21020                 F M T 12020
+
+                                           WP 10 RP 6 DMM 0 DMR 0      WP 10 RP 6 DMM 0 DMR 0      WP 10 RP 6 DMM 0 DMR 0
+                                           I 2 E 6 P 2 S 2             I 1 E 6 P 3 S 3             I 3 E 6 P 3 S 3
+
+                                                    P:                          P:                             T:
+
+                                          I (INF) 3, B (INF) 2,       I (INF) 3, M              B (INF) 3, M (INF) 2,
+                                         M (INF) 2, P*                                          E (INF) 1, T (DEX) 2,
+                                                                         (INF) 3, P* (RSN) 2,   P* (RSN) 1, R (RSN) 1,
+                                            (RSN) 2, E (INF) 1,                                 S (ACU) 1, S  H
+                                           R C (DEX) 1, R           S (ACU) 2, T* (RSN) 2,       (DEX) 1, S K (RSN) 1,
+                                         (RSN) 1, S K (RSN) 1,
+                                           S (PHY) 1, T* (RSN) 1    B (INF) 1, E (INF) 1,          S (PHY) 1, S (ACU) 1
+
+                                                                                 R (RSN) 1
+
+                 32
+34
+

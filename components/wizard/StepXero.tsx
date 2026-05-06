@@ -177,7 +177,7 @@ const inp: React.CSSProperties = {
   width: '100%', padding: '8px 10px',
   background: '#242424', border: '1px solid #3a3a3a',
   borderRadius: '3px', color: '#f5f2ee',
-  fontSize: '14px', fontFamily: 'Barlow, sans-serif',
+  fontSize: '14px', fontFamily: 'Carlito, sans-serif',
   boxSizing: 'border-box',
 }
 
@@ -185,7 +185,7 @@ const ta: React.CSSProperties = {
   width: '100%', padding: '8px 10px',
   background: '#242424', border: '1px solid #3a3a3a',
   borderRadius: '3px', color: '#f5f2ee',
-  fontSize: '14px', fontFamily: 'Barlow, sans-serif',
+  fontSize: '14px', fontFamily: 'Carlito, sans-serif',
   minHeight: '60px', resize: 'vertical', lineHeight: 1.5,
   boxSizing: 'border-box',
 }
@@ -200,5 +200,5 @@ const chip: React.CSSProperties = {
   background: '#242424', border: '1px solid #2e2e2e',
   borderRadius: '3px', padding: '4px 6px', fontSize: '13px', cursor: 'pointer',
   textAlign: 'center', lineHeight: 1.3, color: '#f5f2ee',
-  fontFamily: 'Barlow, sans-serif',
+  fontFamily: 'Carlito, sans-serif',
 }

@@ -177,7 +177,7 @@ export default function LoggingPage() {
         })
         const marker = L.marker([v.lat, v.lng], { icon })
         marker.bindPopup(`
-          <div style="font-family:Barlow,sans-serif;min-width:160px;">
+          <div style="font-family:Carlito,sans-serif;min-width:160px;">
             <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${[v.city, v.country_code].filter(Boolean).join(', ') || 'Unknown'}</div>
             <div style="font-size:12px;color:#555;">
               ${v.is_ghost ? 'Ghost' : 'Survivor'}<br/>
@@ -215,7 +215,7 @@ export default function LoggingPage() {
   }
 
   if (loading) return (
-    <div style={{ padding: '2rem', color: '#cce0f5', fontFamily: 'Barlow, sans-serif' }}>Loading logs...</div>
+    <div style={{ padding: '2rem', color: '#cce0f5', fontFamily: 'Carlito, sans-serif' }}>Loading logs...</div>
   )
 
   const tabStyle = (active: boolean) => ({
@@ -229,7 +229,7 @@ export default function LoggingPage() {
   })
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '22px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
@@ -289,7 +289,7 @@ export default function LoggingPage() {
           <div style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px' }}>
             {topPages.map((p, i) => (
               <div key={p.page} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: i < topPages.length - 1 ? '1px solid #2e2e2e' : 'none' }}>
-                <span style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Barlow, sans-serif' }}>{p.page}</span>
+                <span style={{ fontSize: '14px', color: '#d4cfc9', fontFamily: 'Carlito, sans-serif' }}>{p.page}</span>
                 <span style={{ fontSize: '14px', fontWeight: 700, color: '#7ab3d4', fontFamily: 'Carlito, sans-serif' }}>{p.count}</span>
               </div>
             ))}
@@ -314,7 +314,7 @@ export default function LoggingPage() {
           <div style={{ padding: '8px 12px', borderBottom: '1px solid #2e2e2e', background: '#111' }}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <input value={visitorFilter} onChange={e => setVisitorFilter(e.target.value)} placeholder="Search..."
-                style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none' }}
+                style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none' }}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && visitorFilter.trim()) {
                     const term = visitorFilter.trim().toLowerCase()
@@ -359,7 +359,7 @@ export default function LoggingPage() {
                 return haystack.includes(visitorFilter.trim().toLowerCase())
               }).map(v => (
                 <div key={v.id} style={{ display: 'flex', padding: '6px 12px', borderBottom: '1px solid #2e2e2e', alignItems: 'center' }}>
-                  <div style={{ flex: 2, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.page}</div>
+                  <div style={{ flex: 2, fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.page}</div>
                   <div style={{ flex: 1, fontSize: '13px', color: v.username ? '#7fc458' : '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {v.username ?? (v.is_ghost ? 'Ghost' : 'User')}
                   </div>
@@ -380,7 +380,7 @@ export default function LoggingPage() {
           <div style={{ padding: '8px 12px', borderBottom: '1px solid #2e2e2e', background: '#111' }}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <input value={eventFilter} onChange={e => setEventFilter(e.target.value)} placeholder="Search..."
-                style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', outline: 'none' }}
+                style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none' }}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && eventFilter.trim()) {
                     const term = eventFilter.trim().toLowerCase()

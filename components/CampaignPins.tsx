@@ -288,9 +288,9 @@ export default function CampaignPins({ campaignId, isGM, isThriver = false, show
                 /* Edit mode */
                 <div>
                   <input value={editName} onChange={e => setEditName(e.target.value)}
-                    style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', marginBottom: '4px' }} />
+                    style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', marginBottom: '4px' }} />
                   <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} placeholder="Notes..." rows={2}
-                    style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box', resize: 'vertical', marginBottom: '4px' }} />
+                    style={{ width: '100%', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', resize: 'vertical', marginBottom: '4px' }} />
                   {/* Category picker — same icon set the world map uses
                       (lib/pin-categories.ts). Click an icon to set the
                       category; the selected one outlines red. */}
@@ -477,7 +477,7 @@ function AddressSearchRow({ onPick }: { onPick: (lat: number, lng: number) => vo
           onChange={e => setQ(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); runSearch() } }}
           placeholder="Street, city, landmark..."
-          style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Barlow, sans-serif', boxSizing: 'border-box' }} />
+          style={{ flex: 1, padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
         <button onClick={runSearch} disabled={searching || !q.trim()}
           style={{ padding: '0 10px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: searching || !q.trim() ? 'not-allowed' : 'pointer', opacity: searching || !q.trim() ? 0.5 : 1 }}>
           {searching ? '…' : 'Search'}
@@ -488,7 +488,7 @@ function AddressSearchRow({ onPick }: { onPick: (lat: number, lng: number) => vo
           {results.map((r, i) => (
             <button key={i}
               onClick={() => { onPick(parseFloat(r.lat), parseFloat(r.lon)); setResults([]); setQ('') }}
-              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: 'transparent', border: 'none', borderBottom: i < results.length - 1 ? '1px solid #2e2e2e' : 'none', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Barlow, sans-serif', cursor: 'pointer', lineHeight: 1.3 }}
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 8px', background: 'transparent', border: 'none', borderBottom: i < results.length - 1 ? '1px solid #2e2e2e' : 'none', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', lineHeight: 1.3 }}
               onMouseEnter={e => (e.currentTarget.style.background = '#242424')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
               {r.display_name}

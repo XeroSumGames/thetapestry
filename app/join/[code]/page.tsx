@@ -47,13 +47,13 @@ export default function JoinByCodePage() {
   }
 
   if (status === 'loading') return (
-    <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f5f2ee', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
       Looking up story...
     </div>
   )
 
   if (status === 'error') return (
-    <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: '20px', color: '#f5a89a', marginBottom: '8px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.06em' }}>Invalid Code</div>
         <div style={{ fontSize: '13px', color: '#d4cfc9', marginBottom: '16px' }}>That invite code doesn't match any story.</div>
@@ -63,7 +63,7 @@ export default function JoinByCodePage() {
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ maxWidth: '420px', width: '100%', padding: '2rem', background: '#1a1a1a', border: '1px solid #2e2e2e', borderLeft: '3px solid #c0392b', borderRadius: '4px', margin: '1rem' }}>
         <div style={{ fontSize: '13px', color: '#c0392b', textTransform: 'uppercase', letterSpacing: '.1em', fontFamily: 'Carlito, sans-serif', marginBottom: '4px' }}>You've been invited to join</div>
         <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '26px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#f5f2ee', marginBottom: '8px' }}>{campaign.name}</div>

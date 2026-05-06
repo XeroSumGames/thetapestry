@@ -41,12 +41,12 @@ export default function LoginPage() {
     padding: '10px 12px', fontSize: '14px',
     background: '#1a1a1a', border: '1px solid #3a3a3a',
     borderRadius: '3px', color: '#f5f2ee',
-    fontFamily: 'Barlow, sans-serif',
+    fontFamily: 'Carlito, sans-serif',
     width: '100%', boxSizing: 'border-box',
   }
 
   return (
-    <main style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Barlow, sans-serif' }}>
+    <main style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ width: '100%', maxWidth: '380px', padding: '2rem' }}>
 
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
