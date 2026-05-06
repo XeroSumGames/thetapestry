@@ -213,7 +213,7 @@ export default function GMNotesPopoutPage() {
           onSave={v => saveCampaign('description', v || null)}
           multiline
           emptyPlaceholder="Add a campaign description…"
-          textStyle={{ fontSize: '14px', color: '#d4cfc9', marginTop: '8px', lineHeight: 1.6, whiteSpace: 'pre-wrap', display: 'block' }}
+          textStyle={{ fontSize: '17px', color: '#d4cfc9', marginTop: '8px', lineHeight: 1.6, whiteSpace: 'pre-wrap', display: 'block' }}
         />
       </div>
 
