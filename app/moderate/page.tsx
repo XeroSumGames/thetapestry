@@ -795,6 +795,15 @@ export default function ModerationPage() {
                       Make Thriver
                     </button>
                   )}
+                  {/* DM deep-link — opens the existing /messages page on
+                      this user. Same `?dm=<userId>` pattern used by
+                      campfire/lfg, forums, stories member list, and
+                      CampaignCommunity roster. Lets a Thriver reach out
+                      directly from the moderation panel without first
+                      navigating to find them in another surface. */}
+                  <Link href={`/messages?dm=${u.id}`} style={{ ...actionBtn('#2a102a', '#d48bd4'), textDecoration: 'none', textAlign: 'center' }}>
+                    Message
+                  </Link>
                   <Link href={`/moderate/users/${u.id}/characters`} style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', textAlign: 'center' }}>
                     Characters
                   </Link>
