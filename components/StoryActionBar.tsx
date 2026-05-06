@@ -211,6 +211,12 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
       <div style={{ display: 'flex', gap: '4px', marginBottom: '1.25rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
       {/* Player view = a slimmer surface (Launch + Share only). The
           GM-only actions just don't render. */}
+      {/* Order locked by Xero (2026-05-06):
+          LAUNCH → EDIT → GM NOTES → SNAPSHOT → PUBLISH → DELETE → GM KIT.
+          Share button removed — the always-visible Invite Link box
+          below the action bar already has its own COPY LINK button,
+          so Share was redundant. Conditional buttons (Archive,
+          Module update) slot in next to PUBLISH. */}
       <a href={`/stories/${campaignId}/table`} target="_blank" rel="noreferrer"
         style={btn('#c0392b', '#fff', '#c0392b', false)}>
         Launch
@@ -220,14 +226,18 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
           Edit
         </Link>
       )}
-      <button onClick={copyInviteLink} style={btn('#1a3a5c', '#7ab3d4', '#7ab3d4', false) as any}>
-        {copied ? 'Copied!' : 'Share'}
-      </button>
       {isGM && (
-        <button onClick={handleExportKit} disabled={exporting}
-          title="Download every pin, NPC, scene, token, handout (with images) as a portable .zip"
-          style={{ ...btn('#1a2e10', '#7fc458', '#2d5a1b', false), opacity: exporting ? 0.6 : 1 } as any}>
-          {exporting ? 'Packaging…' : 'GM Kit'}
+        <button onClick={() => {
+          // Popout — same window-features as /gm-screen so it lands
+          // beside the table page rather than as a tab. Helps the GM
+          // keep notes open on a second monitor while running combat.
+          const w = 980, h = 800
+          window.open(`/gm-notes-popout?c=${campaignId}`, `gm-notes-${campaignId}`,
+            `width=${w},height=${h},menubar=no,toolbar=no,location=no,status=no`)
+        }}
+          title="Open the GM Notes popout — story overview, scenes, NPC list, plot beats"
+          style={btn('#1a2e2e', '#7adcd4', '#2e5a5a', false) as any}>
+          GM Notes
         </button>
       )}
       {isGM && (
@@ -266,6 +276,13 @@ export default function StoryActionBar({ campaignId, extraButtons }: Props) {
       {isGM && (
         <button onClick={handleDelete} style={btn('#7a1f16', '#f5a89a', '#7a1f16', false) as any}>
           Delete
+        </button>
+      )}
+      {isGM && (
+        <button onClick={handleExportKit} disabled={exporting}
+          title="Download every pin, NPC, scene, token, handout (with images) as a portable .zip"
+          style={{ ...btn('#1a2e10', '#7fc458', '#2d5a1b', false), opacity: exporting ? 0.6 : 1 } as any}>
+          {exporting ? 'Packaging…' : 'GM Kit'}
         </button>
       )}
       {extraButtons}

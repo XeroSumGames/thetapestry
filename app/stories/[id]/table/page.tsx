@@ -5784,6 +5784,19 @@ export default function TablePage() {
           'GM Tools',
           [
             {
+              // GM Notes popout — comprehensive story overview window:
+              // plot beats, scenes, NPC list, pins. Same popout the
+              // GM Notes button on /stories/[id] opens. Lives in GM
+              // Tools so the GM can pop it open mid-session without
+              // navigating off /table.
+              label: 'GM Notes',
+              onClick: () => {
+                const w = 980, h = 800
+                window.open(`/gm-notes-popout?c=${id}`, `gm-notes-${id}`,
+                  `width=${w},height=${h},menubar=no,toolbar=no,location=no,status=no`)
+              },
+            },
+            {
               label: 'Restore',
               onClick: async () => {
                 // Pre-select everyone who's damaged, dead, or wounded
