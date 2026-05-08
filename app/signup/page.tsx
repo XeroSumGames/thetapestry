@@ -13,12 +13,32 @@ function readSafeRedirect(): string | null {
   return target
 }
 
+// Catches machine-generated usernames like "wEpAfxklFqFikMBdndLxo".
+// Real names/handles almost never have 6+ consecutive consonants in a row;
+// random base-62 strings do (the spam account that triggered this had a
+// run of 8). Treats y/Y as a vowel to avoid flagging names like "Grumpy".
+function looksRandom(username: string): boolean {
+  const vowels = new Set('aeiouAEIOUyY')
+  let run = 0
+  for (const ch of username) {
+    if (/[a-zA-Z]/.test(ch)) {
+      if (vowels.has(ch)) { run = 0 } else { if (++run >= 6) return true }
+    } else {
+      run = 0
+    }
+  }
+  return false
+}
+
 export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [error, setError] = useState('')
   const [redirect, setRedirect] = useState<string | null>(null)
+  // Honeypot — real users never see or fill this field (positioned off-screen).
+  // Bots that auto-fill all inputs will populate it; we silently drop the request.
+  const [honeypot, setHoneypot] = useState('')
   const router = useRouter()
   const supabase = createClient()
 
@@ -30,6 +50,16 @@ export default function SignupPage() {
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+
+    // Honeypot — if filled, it's a bot. Silently succeed to avoid tipping off scrapers.
+    if (honeypot) { router.push(redirect ?? '/dashboard'); return }
+
+    // Username sanity — block machine-generated random strings.
+    if (looksRandom(username)) {
+      setError('Username looks randomly generated — please choose a recognizable name.')
+      return
+    }
+
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -88,6 +118,17 @@ export default function SignupPage() {
         </div>
 
         <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Honeypot — visually off-screen, never filled by real users.
+              Not display:none (bots detect that) — use position:absolute + clip. */}
+          <input
+            aria-hidden="true"
+            tabIndex={-1}
+            autoComplete="off"
+            name="website"
+            value={honeypot}
+            onChange={e => setHoneypot(e.target.value)}
+            style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 }}
+          />
           <input placeholder="Username" autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} style={inp} required />
           <input placeholder="Email" type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} style={inp} required />
           <input placeholder="Password" type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} style={inp} required />
