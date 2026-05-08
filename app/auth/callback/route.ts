@@ -1,24 +1,34 @@
 // Auth callback — handles the redirect that comes back from Supabase
-// after a user clicks the email-confirmation link (or any other
-// magic-link / OAuth flow that uses PKCE). Supabase appends `?code=<token>`;
-// we exchange the code for a session via the server-side SSR client so
-// the auth cookie is set on this request before we redirect back to the
-// app. Without this route, clicking a confirmation link lands on a 404
-// and the user never gets a session.
+// after the user clicks an email-confirmation link, OR an OAuth/PKCE
+// flow returns. The two flows arrive with different query params and
+// require different exchange APIs:
 //
-// Optional `?next=/path` is the destination after a successful exchange,
-// so an invite link can preserve "land on /join/<code>" through the
-// confirmation round-trip. Falls back to /dashboard.
+//   - Email confirmation:  ?token_hash=<...>&type=signup  → verifyOtp()
+//   - OAuth / magic link:  ?code=<...>                    → exchangeCodeForSession()
 //
-// On any failure (missing code, expired code, exchange error) we redirect
-// to /login with a helpful error param. The login page surfaces it.
+// First version of this file only handled the OAuth shape, which broke
+// every email-confirmation link silently — Supabase actually sends
+// token_hash on the email link, not code. Real-world signup tested
+// 2026-05-08 and got "Invalid login credentials" because the email
+// was never marked confirmed.
+//
+// Optional `?next=/path` survives both flows — invite links can
+// preserve "land on /join/<code>" through the confirmation round-trip.
+// Falls back to /dashboard.
+//
+// On any failure (missing params, expired token, exchange error) we
+// redirect to /login with a helpful ?error param. The login page
+// surfaces it as a friendly message.
 
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import type { EmailOtpType } from '@supabase/supabase-js'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
+  const tokenHash = searchParams.get('token_hash')
+  const type = searchParams.get('type') as EmailOtpType | null
   const code = searchParams.get('code')
   const nextParam = searchParams.get('next')
   // Same single-slash relative-path guard as the login/signup pages so a
@@ -27,7 +37,7 @@ export async function GET(request: Request) {
     ? nextParam
     : '/dashboard'
 
-  if (!code) {
+  if (!tokenHash && !code) {
     return NextResponse.redirect(`${origin}/login?error=missing_code`)
   }
 
@@ -47,10 +57,32 @@ export async function GET(request: Request) {
     }
   )
 
-  const { data: exchangeData, error } = await supabase.auth.exchangeCodeForSession(code)
-  if (error) {
-    console.error('[auth/callback] exchangeCodeForSession error:', error.message)
-    return NextResponse.redirect(`${origin}/login?error=callback_failed`)
+  // Branch 1 — email confirmation / password recovery / email change.
+  // verifyOtp marks the email confirmed (or completes the recovery /
+  // change flow) AND sets a session in one shot.
+  let userId: string | null = null
+  let userEmail: string | null = null
+  let userMetadataUsername: string | null = null
+  if (tokenHash && type) {
+    const { data, error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash })
+    if (error) {
+      console.error('[auth/callback] verifyOtp error:', error.message)
+      return NextResponse.redirect(`${origin}/login?error=callback_failed`)
+    }
+    userId = data.user?.id ?? null
+    userEmail = data.user?.email ?? null
+    userMetadataUsername = (data.user?.user_metadata?.username as string | undefined) ?? null
+  } else if (code) {
+    // Branch 2 — OAuth / magic-link / PKCE flows. Different API, same
+    // outcome (sets a session cookie on the response).
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error) {
+      console.error('[auth/callback] exchangeCodeForSession error:', error.message)
+      return NextResponse.redirect(`${origin}/login?error=callback_failed`)
+    }
+    userId = data.user?.id ?? null
+    userEmail = data.user?.email ?? null
+    userMetadataUsername = (data.user?.user_metadata?.username as string | undefined) ?? null
   }
 
   // Belt-and-suspenders profile upsert. The handle_new_user() trigger
@@ -58,18 +90,17 @@ export async function GET(request: Request) {
   // gets inserted, but the trigger swallows errors (per the EXCEPTION
   // block in sql/handle-new-user-hardened.sql) — so a username collision
   // or a newly-added NOT NULL column would silently leave the user with
-  // no profile. Doing the upsert here, post-exchange, runs while
+  // no profile. Doing the upsert here, post-verify, runs while
   // auth.uid() == user.id so the RLS policy accepts it; if the trigger
   // already inserted the row, ON CONFLICT (id) makes it a no-op.
-  const user = exchangeData.user
-  if (user) {
-    const username = (user.user_metadata?.username as string | undefined)
-      ?? user.email?.split('@')[0]
+  if (userId) {
+    const username = userMetadataUsername
+      ?? userEmail?.split('@')[0]
       ?? 'survivor'
     const { error: profileError } = await supabase.from('profiles').upsert({
-      id: user.id,
+      id: userId,
       username,
-      email: user.email ?? null,
+      email: userEmail,
       role: 'Survivor',
       onboarded: false,
     }, { onConflict: 'id' })
