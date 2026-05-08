@@ -496,6 +496,27 @@ export default function ModerationPage() {
     setUsersLoading(false)
   }
 
+  // Send a password-reset email to the user. Uses the public
+  // resetPasswordForEmail API rather than the admin one — same delivery
+  // path, same template, but doesn't require service-role from the
+  // browser. The user clicks the link in the email, lands on
+  // /auth/callback (verifyOtp branch with type=recovery), gets a
+  // session, and redirects to /account where they can set a new password.
+  async function handleResetPassword(email: string | null) {
+    if (!email) { alert('No email on file for this user — can\'t send a reset link.'); return }
+    if (!confirm(`Send a password-reset email to ${email}?`)) return
+    // ?reset=1 on the destination tells /account to surface the
+    // "you're in reset mode, scroll down and pick a new password" banner.
+    // encodeURIComponent because the next param is itself a query string.
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent('/account?reset=1')}`
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+    if (error) {
+      alert(`Reset failed: ${error.message}`)
+    } else {
+      alert(`Password-reset email sent to ${email}.`)
+    }
+  }
+
   async function handleRoleChange(id: string, newRole: 'Survivor' | 'Thriver') {
     setActing(id)
     const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', id)
@@ -828,6 +849,12 @@ export default function ModerationPage() {
                       <a href={`mailto:${u.email}`} style={{ ...actionBtn('#1a2a3a', '#7ab3d4'), textDecoration: 'none', textAlign: 'center' }}>
                         Email
                       </a>
+                    )}
+                    {u.email && (
+                      <button onClick={() => handleResetPassword(u.email)} disabled={acting === u.id}
+                        style={actionBtn('#3a2a00', '#EF9F27')}>
+                        Reset Password
+                      </button>
                     )}
                     <Link href={`/moderate/users/${u.id}/characters`} style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', textAlign: 'center' }}>
                       Characters

@@ -229,9 +229,31 @@ export default function AccountPage() {
     fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em',
   })
 
+  // When a moderator triggers a password reset (or the user uses the
+  // "Forgot password?" flow once it lands), the email link bounces them
+  // through /auth/callback?next=/account?reset=1. We surface a banner +
+  // auto-scroll to the Password card so it's obvious what to do next.
+  const [resetMode, setResetMode] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (new URLSearchParams(window.location.search).get('reset') !== '1') return
+    setResetMode(true)
+    // Defer the scroll until the password card is in the DOM.
+    setTimeout(() => {
+      const el = document.getElementById('password-card')
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 200)
+  }, [])
+
   return (
     <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: '#0f0f0f', color: '#d4cfc9' }}>
       <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1.5rem 4rem' }}>
+
+        {resetMode && (
+          <div style={{ marginBottom: '1.25rem', padding: '12px 14px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '4px', fontSize: '14px', color: '#EF9F27', lineHeight: 1.5, fontFamily: 'Carlito, sans-serif' }}>
+            <strong>You&apos;re in password-reset mode.</strong> Scroll down to the Password card and set a new one. Your previous password is no longer valid.
+          </div>
+        )}
 
         {/* Hero */}
         <div style={{ marginBottom: '1.5rem' }}>
@@ -338,7 +360,7 @@ export default function AccountPage() {
         </div>
 
         {/* Password */}
-        <div style={card}>
+        <div id="password-card" style={card}>
           <div style={cardTitle}>Password</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
             <div>
