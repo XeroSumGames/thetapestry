@@ -1,5 +1,18 @@
 # Tapestry — To Do & Backlog
 
+## ✅ Shipped 2026-05-06 marathon-session tail
+
+Commits past the chat-boundary handoff at `f463a6d`. Earlier session work (2026-05-04 → 2026-05-05) is captured in `tasks/handoff-2026-05-06.md`.
+
+- [x] **GM Notes popout — every field click-to-edit** — commit `c4610ad feat(gm-notes): make popout fields inline-editable`. Editable surfaces: campaign description, plot beats (campaign_notes title + content), scene names, NPC name/type/disposition/motivation/notes/hidden, pin name/notes/sort_order/revealed. Helper components `EditableText` / `EditableSelect` / `EditableToggle` / `EditableNumber` at the bottom of the file. Optimistic local update + rollback via `.update().select()` so RLS rejections surface as alerts.
+- [x] **GM Notes popout — campaign description font 14 → 17px** — commit `6200fb2 style(gm-notes): bump campaign description 14→17px on popout`. Reads small from second-monitor distance; lede paragraph now visually distinct.
+- [x] **Sequence guards on `useRollsFeed.refetch` + `useChatPanel.refetch`** — commit `d4a97e1 fix(realtime): sequence guards on rolls + chat refetch`. Ports the `loadEntries` `refetchSeqRef` pattern. Stale earlier query landing AFTER fresher state now drops instead of clobbering.
+- [x] **Thriver godmode UI sweep — 4 of 5 surfaces** — commit `92f9243 feat(thriver): godmode UI sweep on table page`. Single `gmLike = isGM || isThriver` derivation routed through NpcRoster, CampaignCommunity, CampaignObjects, VehicleCard, the GM/Player Notes pane, and the `gm=` flag on the NPC sheet popout URL. Surface 5 (character-sheet edit affordance for non-owned PCs) deferred to next sweep. **Side-effect bug fix:** `VehicleCard canEdit={true}` was wide-open — now `canEdit={gmLike}`, so players can no longer edit shared vehicles.
+- [x] **2026-05-06 backlog snapshot** — commit `24b8456 docs(backlog): 2026-05-06 open-work checklist + printable docx`. Generates `tasks/open-work-checklist-2026-05-06.md` + `tasks/open-work-2026-05-06.docx` + `scripts/build-open-work-docx-2026-05-06.py`. Supersedes `tasks/open-work-2026-05-05-printable.md`.
+- [x] **Validated stale entries (cleanup, no new code)** — *Beginners' guide /welcome links* (already shipped `d4c75b7` 2026-05-05; pruned from checklist) + *PCs riding Minnie passenger-sync* (already shipped `7f71bce` 2026-05-05; pruned from checklist — only the "incompatible terrain" sub-question remains open).
+
+---
+
 ## ✅ Shipped 2026-05-05 verification sweep
 
 - [x] **Mounted-weapon attacks consume an action** — commit `62a2a27 fix(combat): mounted-weapon attacks consume actions`. Mounted weapons now properly decrement actions_remaining.

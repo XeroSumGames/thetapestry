@@ -10,14 +10,16 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
 
 ## TOP PRIORITY — Playtest carry-over
 
-- [ ] **PCs riding Minnie don't move with her.** Passengers in vehicle
-      footprint should follow with offset preserved.
-      *Design call: stickiness vs. explicit mount/disembark; what
-      happens on incompatible terrain.*
-
 - [ ] **Random character — Medic produces no First Aid skill.**
       *Likely a wording mix-up — XSE has no "First Aid" skill;
       Medic seeds Medicine\*. Confirm with player before chasing.*
+
+- [ ] **Vehicle passenger sync — terrain rejection.** Passenger
+      auto-move (`7f71bce`) follows the vehicle without checking
+      whether the destination cell is walkable for a passenger
+      (e.g. wall, water, off-road). Currently passengers track even
+      onto invalid cells. Open: should the vehicle drag also reject
+      the move, or do passengers leave the seat and stay behind?
 
 ---
 
@@ -129,9 +131,6 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
       bandwidth alert. ~30 min vendor-portal config.
 
 - [ ] **Demo / sample campaign** for first-time GMs. ~2–3 hours.
-
-- [ ] **Beginners' guide /welcome links.** `docs/beginners-guide.{txt,
-      docx}` drafted on disk; commit + surface chapter links.
 
 - [ ] **Domain verification spot-check on Resend.** FROM swap is in
       code; confirm outbound mail still lands.
@@ -319,17 +318,19 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
 - ✅ GM Tools → Restore to Full Health speedup — already done (`Promise.all` + optimistic patches, `2026-05-05`)
 - ✅ Sequence guards on `useRollsFeed.refetch` + `useChatPanel.refetch` (`d4a97e1`)
 - ✅ Thriver godmode UI sweep, 4 of 5 surfaces (`92f9243`)
+- ✅ PCs riding Minnie — passenger auto-move sync on tactical map drag (`7f71bce`, 2026-05-05; remaining: terrain rejection — see Top Priority)
+- ✅ Beginners' guide /welcome links — `/welcome/guide` TOC + `/welcome/guide/[chapter]` renderer + 12 chapters (`d4c75b7`, 2026-05-05)
 
 ---
 
 ## SUMMARY
 
-- **Top priority:** 2 (1 design call, 1 confirm-with-player)
+- **Top priority:** 2 (1 confirm-with-player, 1 design call on terrain rejection)
 - **Bugs needing repro:** 5
 - **Partials to finish:** 9
 - **Older bugs:** 5
 - **UX / polish:** 7
-- **Pre-tester polish:** 6
+- **Pre-tester polish:** 5
 - **Pin / map / tools:** 4
 - **Phase 4 tail / Module Phases D–F:** 21
 - **Tactical map long-term + Lv4 (Xero-blocked):** 6
@@ -338,7 +339,7 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
 - **Stale top-level repo:** 2
 - **Long-term roadmap (Phases 6–11):** ~25
 
-**Realistic short-term:** ~30 items not blocked on Lv4 / repro / roadmap.
-**This-week sprint:** the 6 pre-tester polish + 3-4 partials = 9–10 item sprint.
+**Realistic short-term:** ~29 items not blocked on Lv4 / repro / roadmap.
+**This-week sprint:** the 5 pre-tester polish + 3-4 partials = 8–9 item sprint.
 
 *end of checklist*
