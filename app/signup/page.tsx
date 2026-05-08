@@ -156,8 +156,21 @@ export default function SignupPage() {
       setError(signUpError.message)
       return
     }
-    // Create profile row if it doesn't already exist (trigger may handle this, but belt-and-suspenders)
-    if (signUpData.user) {
+    // Profile row is created server-side by the handle_new_user() trigger
+    // (SECURITY DEFINER, bypasses RLS). The previous client-side upsert
+    // here was meant as belt-and-suspenders, but with email-confirm ON
+    // there's no session yet — auth.uid() is null on the client, so the
+    // upsert hits the profiles RLS "id = auth.uid()" check and rejects
+    // with "new row violates row-level security policy."
+    //
+    // Strategy now:
+    //   - When data.session IS present (email confirm OFF): the user is
+    //     authenticated, do the upsert here as before.
+    //   - When data.session IS null (email confirm ON): skip the upsert,
+    //     trust the trigger. /auth/callback runs the same upsert again
+    //     after exchangeCodeForSession to cover the rare case where the
+    //     trigger failed silently (username collision, etc.).
+    if (signUpData.user && signUpData.session) {
       const { error: profileError } = await supabase.from('profiles').upsert({
         id: signUpData.user.id,
         username,

@@ -47,10 +47,38 @@ export async function GET(request: Request) {
     }
   )
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code)
+  const { data: exchangeData, error } = await supabase.auth.exchangeCodeForSession(code)
   if (error) {
     console.error('[auth/callback] exchangeCodeForSession error:', error.message)
     return NextResponse.redirect(`${origin}/login?error=callback_failed`)
+  }
+
+  // Belt-and-suspenders profile upsert. The handle_new_user() trigger
+  // (SECURITY DEFINER) normally creates the profile row when auth.users
+  // gets inserted, but the trigger swallows errors (per the EXCEPTION
+  // block in sql/handle-new-user-hardened.sql) — so a username collision
+  // or a newly-added NOT NULL column would silently leave the user with
+  // no profile. Doing the upsert here, post-exchange, runs while
+  // auth.uid() == user.id so the RLS policy accepts it; if the trigger
+  // already inserted the row, ON CONFLICT (id) makes it a no-op.
+  const user = exchangeData.user
+  if (user) {
+    const username = (user.user_metadata?.username as string | undefined)
+      ?? user.email?.split('@')[0]
+      ?? 'survivor'
+    const { error: profileError } = await supabase.from('profiles').upsert({
+      id: user.id,
+      username,
+      email: user.email ?? null,
+      role: 'Survivor',
+      onboarded: false,
+    }, { onConflict: 'id' })
+    if (profileError) {
+      // Profile setup failure here is non-fatal — the user has a session,
+      // they can still navigate; we just log so a missing-profile bug
+      // doesn't go unnoticed.
+      console.error('[auth/callback] profile upsert error:', profileError.message)
+    }
   }
 
   return NextResponse.redirect(`${origin}${next}`)
