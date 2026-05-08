@@ -4,6 +4,7 @@
 
 - [ ] **Infection audit** - verify Infection condition/progression/treatment is fully implemented against the SRD.
 - [ ] **Armor system** - build armor into character sheet (slots/worn), damage calc (DR), and inventory. Needs SRD rules-extract first.
+- [ ] **Subsistence Damage + Rations** - SRD §06: 1 RP/day after day 1 without food. Quickstart tracks Rations (2 starting). Not yet in the platform. Decision needed: scope to canon, then build Rations as inventory item + daily Subsistence Damage tick. Flagged from SRD audit item A.10.
 
 ---
 

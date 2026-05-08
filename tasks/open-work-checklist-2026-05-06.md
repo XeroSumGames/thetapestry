@@ -93,6 +93,13 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
       (damage reduction), and inventory. Needs rules-extract from SRD
       before building. Flagged 2026-05-08.
 
+- [ ] **Subsistence Damage + Rations (SRD §06 / audit item A.10).**
+      SRD: 1 RP/day after the first day without food. Quickstart tracks
+      Rations as a character sheet item (2 starting). Neither is in the
+      platform. Decision needed first - if canon, build as: Rations =
+      inventory item type, daily Subsistence Damage tick in GM Tools
+      Time (alongside the existing encumbrance tick). Flagged 2026-05-08.
+
 ---
 
 ## OLDER BUGS — Genuinely open
