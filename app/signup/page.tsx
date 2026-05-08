@@ -105,35 +105,17 @@ export default function SignupPage() {
       return
     }
 
-    // Turnstile gate — when a site key is configured (always true in
-    // production), a valid token is REQUIRED. The previous logic fell
-    // through silently if the token was null, which meant ad-blocker users
-    // AND bot scripts (no JS, blocked Cloudflare CDN, fast submit before
-    // mount) both sailed past every check after the honeypot / random-
-    // username pair. Now:
-    //
-    //   - siteKey configured + valid token verified server-side → proceed
-    //   - siteKey configured + token unavailable / widget errored  → BLOCK
-    //   - siteKey not configured (dev only)                        → proceed
-    //
-    // The token is then forwarded to supabase.auth.signUp as captchaToken
-    // so Supabase's own CAPTCHA enforcement (Authentication → Settings →
-    // Bot and Abuse Protection in the dashboard) gates the auth call
-    // server-side too. Belt-and-suspenders: even if a malicious client
-    // bypasses this gate (curl directly to Supabase), the auth call itself
-    // is rejected without a valid token.
-    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
-    let tsToken: string | null = null
-    if (siteKey) {
-      tsToken = await getToken()
-      if (!tsToken) {
-        setError(
-          widgetErroredRef.current
-            ? 'Bot check unavailable. Disable any ad blockers for this site and refresh.'
-            : 'Bot check timed out. Refresh and try again.'
-        )
-        return
-      }
+    // Turnstile (soft gate). When the widget produces a token we verify
+    // server-side and hard-block on rejection. When it doesn't (ad
+    // blocker, blocked CDN, fast submit before mount) we fall through —
+    // honeypot + looksRandom are first-line defenses, and the captchaToken
+    // is forwarded to supabase.auth.signUp so a future dashboard toggle
+    // (Authentication → Attack Protection → Enable Captcha) can tighten
+    // server-side without requiring all ad-blocker users to disable for
+    // the site. If spam volume comes back, switch this to hard-fail (was
+    // shipped briefly in 5dfd9d5; reverted in this commit).
+    const tsToken = await getToken()
+    if (tsToken) {
       const check = await fetch('/api/auth/verify-turnstile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -151,9 +133,8 @@ export default function SignupPage() {
       password,
       options: {
         data: { username },
-        // Forwarded to Supabase's server-side CAPTCHA verifier when Bot
-        // and Abuse Protection is enabled in the dashboard. Omitted when
-        // siteKey isn't configured (dev mode) so local signup still works.
+        // Harmless when dashboard CAPTCHA is off; activates the server-
+        // side gate when it's eventually flipped on.
         ...(tsToken ? { captchaToken: tsToken } : {}),
       },
     })

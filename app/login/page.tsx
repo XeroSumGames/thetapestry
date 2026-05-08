@@ -76,29 +76,15 @@ export default function LoginPage() {
     setSubmitting(true)
 
     try {
-      // Turnstile gate — same hard-fail shape as /signup. When a site key
-      // is configured (always true in production), a valid server-verified
-      // token is REQUIRED. The token is also forwarded to
-      // signInWithPassword as captchaToken so Supabase's own CAPTCHA
-      // enforcement (Authentication → Attack Protection in the dashboard)
-      // gates the auth call too.
-      //
-      // Why we need this even though credentials are required: brute-force
-      // and credential-stuffing run scripts against /login. Turnstile makes
-      // those scripts pay the cost of a real challenge per attempt, which
-      // collapses their throughput.
-      const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
-      let tsToken: string | null = null
-      if (siteKey) {
-        tsToken = await getToken()
-        if (!tsToken) {
-          setError(
-            widgetErroredRef.current
-              ? 'Bot check unavailable. Disable any ad blockers for this site and refresh.'
-              : 'Bot check timed out. Refresh and try again.'
-          )
-          return
-        }
+      // Turnstile (soft gate). When the widget produces a token we verify
+      // server-side and hard-block on rejection. When it doesn't (ad
+      // blocker, blocked CDN, fast submit before mount) we fall through.
+      // captchaToken is still forwarded to signInWithPassword below so a
+      // future Supabase dashboard toggle can tighten server-side without
+      // forcing every ad-blocker user to disable. Hard-fail variant lives
+      // in git history (5dfd9d5/e751d6e) if spam volume requires it.
+      const tsToken = await getToken()
+      if (tsToken) {
         const check = await fetch('/api/auth/verify-turnstile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
