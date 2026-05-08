@@ -1,5 +1,21 @@
 # Tapestry — To Do & Backlog
 
+## ✅ Shipped 2026-05-08 — /moderate redesign + visit-alert fix
+
+- [x] **/moderate user-row redesign** — commit `397c6ec feat(moderate): user-row redesign + Track activity dossier`. Two visual rows: top = username + role chip + suspended chip; bottom = action buttons in one line (Make Survivor/Thriver, Message, Characters, Track, Suspend…/Unsuspend, Delete). New TRACK button opens the activity dossier. Per-user `Joined` and `Last login` dates surfaced.
+- [x] **TRACK activity dossier** — new page `app/moderate/users/[userId]/activity/page.tsx`. Read-only cross-surface dossier: characters, campaigns owned (GM), campaigns joined (player), recent rolls (last 20 + total count), forum threads, forum replies, war stories, LFG posts, bug reports, map pins. All 13 sources fetched in parallel via `Promise.all`. Empty sections render `None.`.
+- [x] **`admin_users_with_login()` + `admin_user_with_login(uuid)` RPCs** — `sql/admin-users-with-login.sql`, applied to live. SECURITY DEFINER, Thriver-gated, joins `profiles` + `auth.users.last_sign_in_at` so the client SDK can surface last-login without exposing `auth.users` directly.
+- [x] **`profiles.email` backfill — GrumpyBattersby caught** — `UPDATE profiles SET email = auth.users.email WHERE profiles.email IS NULL`. All 16 of 16 profiles now have `email`. Old account `2d789818-…` from 2026-04-21 had been missed by the original backfill.
+- [x] **Email visibility on /moderate row** — commit `9861034 fix(moderate,visits): emails always visible + visit alert on new ip_hash only`. Was a CSS-overflow bug (single-line layout with `overflow:hidden + textOverflow:ellipsis + whiteSpace:nowrap` ate emails behind long usernames). Fixed by splitting top row (username + chips) from bottom muted line (email · Joined · Last login) — email can never be cropped now.
+- [x] **Visit-alert email gate — visitNumber === 1 only** — same commit `9861034`. The old gate stacked `isFirstVisit` (per-session) with `!isRepeatSurvivor` (signed-in user with `visitNumber > 5` was suppressed). Live `visitor_logs` showed every active user's `ip_hash` count was 88-1612, so `isRepeatSurvivor=true` on every request → no emails fired anywhere. Per Xero pref: binary gate. Edge function `supabase/functions/log-visit/index.ts` deployed live (`jbudzglgtxeoaufpejrv`).
+- [x] **`RETURNS TABLE` column-ambiguity fix on the admin RPCs** — commit `78df30c fix(moderate): qualify Thriver-gate columns to escape RETURNS TABLE shadowing`. The unqualified Thriver gate `WHERE id = auth.uid() AND lower(role) = 'thriver'` collided with the OUT params declared by `RETURNS TABLE (id uuid, role text, ...)`. Aliased the gate's read as `caller` so every reference is qualified. Lesson captured in `tasks/lessons.md` 2026-05-08.
+
+Testplans:
+- [tasks/moderate-user-redesign-2026-05-08-testplan.md](moderate-user-redesign-2026-05-08-testplan.md)
+- [tasks/moderate-email-visit-fixes-2026-05-08-testplan.md](moderate-email-visit-fixes-2026-05-08-testplan.md)
+
+---
+
 ## ✅ Shipped 2026-05-06 marathon-session tail
 
 Commits past the chat-boundary handoff at `f463a6d`. Earlier session work (2026-05-04 → 2026-05-05) is captured in `tasks/handoff-2026-05-06.md`.
