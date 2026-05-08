@@ -105,13 +105,35 @@ export default function SignupPage() {
       return
     }
 
-    // Turnstile - read the auto-solved token (widget solved on page load).
-    // If the widget errored (domain mismatch, ad blocker, CDN issue) we fail
-    // open so real users aren't locked out. Honeypot + username check are the
-    // first-line defense in that case. Only hard-block if the server explicitly
-    // rejects a token that was actually returned.
-    const tsToken = await getToken()
-    if (tsToken) {
+    // Turnstile gate — when a site key is configured (always true in
+    // production), a valid token is REQUIRED. The previous logic fell
+    // through silently if the token was null, which meant ad-blocker users
+    // AND bot scripts (no JS, blocked Cloudflare CDN, fast submit before
+    // mount) both sailed past every check after the honeypot / random-
+    // username pair. Now:
+    //
+    //   - siteKey configured + valid token verified server-side → proceed
+    //   - siteKey configured + token unavailable / widget errored  → BLOCK
+    //   - siteKey not configured (dev only)                        → proceed
+    //
+    // The token is then forwarded to supabase.auth.signUp as captchaToken
+    // so Supabase's own CAPTCHA enforcement (Authentication → Settings →
+    // Bot and Abuse Protection in the dashboard) gates the auth call
+    // server-side too. Belt-and-suspenders: even if a malicious client
+    // bypasses this gate (curl directly to Supabase), the auth call itself
+    // is rejected without a valid token.
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+    let tsToken: string | null = null
+    if (siteKey) {
+      tsToken = await getToken()
+      if (!tsToken) {
+        setError(
+          widgetErroredRef.current
+            ? 'Bot check unavailable. Disable any ad blockers for this site and refresh.'
+            : 'Bot check timed out. Refresh and try again.'
+        )
+        return
+      }
       const check = await fetch('/api/auth/verify-turnstile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -127,7 +149,13 @@ export default function SignupPage() {
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { username } }
+      options: {
+        data: { username },
+        // Forwarded to Supabase's server-side CAPTCHA verifier when Bot
+        // and Abuse Protection is enabled in the dashboard. Omitted when
+        // siteKey isn't configured (dev mode) so local signup still works.
+        ...(tsToken ? { captchaToken: tsToken } : {}),
+      },
     })
     if (signUpError) {
       console.error('[Signup] auth error:', signUpError.message)
