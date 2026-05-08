@@ -1,5 +1,6 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import Script from 'next/script'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { logEvent } from '../../lib/events'
@@ -39,6 +40,8 @@ export default function SignupPage() {
   // Honeypot — real users never see or fill this field (positioned off-screen).
   // Bots that auto-fill all inputs will populate it; we silently drop the request.
   const [honeypot, setHoneypot] = useState('')
+  const widgetIdRef = useRef<string | null>(null)
+  const tokenResolverRef = useRef<((t: string) => void) | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -46,6 +49,38 @@ export default function SignupPage() {
   // user through signup ends at the original target, not `/firsttimers`.
   // Users invited to a specific campaign skip the generic welcome page.
   useEffect(() => { setRedirect(readSafeRedirect()) }, [])
+
+  // Register the global Turnstile callback so the invisible widget can
+  // hand the token back to the pending submit promise.
+  useEffect(() => {
+    (window as any).__turnstileCb = (token: string) => {
+      tokenResolverRef.current?.(token)
+      tokenResolverRef.current = null
+    }
+  }, [])
+
+  function mountTurnstile() {
+    const ts = (window as any).turnstile
+    const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+    if (!ts || !sitekey || widgetIdRef.current) return
+    widgetIdRef.current = ts.render('#turnstile-container', {
+      sitekey,
+      callback: '__turnstileCb',
+      size: 'invisible',
+    })
+  }
+
+  // Returns a promise that resolves with the Turnstile token.
+  // If the widget isn't available (local dev without secret configured),
+  // resolves immediately with an empty string so signup isn't blocked.
+  function getToken(): Promise<string> {
+    const ts = (window as any).turnstile
+    if (!ts || !widgetIdRef.current) return Promise.resolve('')
+    return new Promise(resolve => {
+      tokenResolverRef.current = resolve
+      ts.execute(widgetIdRef.current!)
+    })
+  }
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
@@ -58,6 +93,25 @@ export default function SignupPage() {
     if (looksRandom(username)) {
       setError('Username looks randomly generated — please choose a recognizable name.')
       return
+    }
+
+    // Turnstile — get an invisible challenge token and verify it server-side
+    // before ever touching Supabase auth. Empty token = widget not loaded
+    // (local dev without secret key) — the API route fails open in non-prod.
+    const tsToken = await getToken()
+    if (tsToken) {
+      const check = await fetch('/api/auth/verify-turnstile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: tsToken }),
+      })
+      if (!check.ok) {
+        // Reset the widget so the user can retry
+        const ts = (window as any).turnstile
+        if (ts && widgetIdRef.current) ts.reset(widgetIdRef.current)
+        setError('Bot check failed — please try again.')
+        return
+      }
     }
 
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -105,6 +159,11 @@ export default function SignupPage() {
   }
 
   return (
+    <>
+    <Script
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+      onLoad={mountTurnstile}
+    />
     <main style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ width: '100%', maxWidth: '380px', padding: '2rem' }}>
 
@@ -152,5 +211,8 @@ export default function SignupPage() {
 
       </div>
     </main>
+    {/* Invisible Turnstile widget — rendered off-screen, executed on submit */}
+    <div id="turnstile-container" style={{ position: 'absolute', left: '-9999px' }} />
+    </>
   )
 }
