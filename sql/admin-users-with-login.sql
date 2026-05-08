@@ -9,6 +9,16 @@
 --
 -- Idempotent — CREATE OR REPLACE.
 
+-- NOTE: RETURNS TABLE (id ..., role ..., created_at ...) declares OUT
+-- parameters with those names. Inside the function body any unqualified
+-- reference to those names (e.g. WHERE id = auth.uid() against profiles)
+-- is treated as ambiguous between the OUT param and the table column —
+-- the function then errors with "column reference \"id\" is ambiguous".
+-- Two ways out: (a) qualify every reference with a table alias,
+-- (b) #variable_conflict use_column. We use (a) here for clarity, plus
+-- a caller-side alias `caller` on the Thriver gate so the OUT-param
+-- collision can't sneak back in.
+
 CREATE OR REPLACE FUNCTION public.admin_users_with_login()
 RETURNS TABLE (
   id               uuid,
@@ -26,8 +36,8 @@ SET search_path = public, auth
 AS $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = auth.uid() AND lower(role) = 'thriver'
+    SELECT 1 FROM public.profiles caller
+    WHERE caller.id = auth.uid() AND lower(caller.role) = 'thriver'
   ) THEN
     RAISE EXCEPTION 'forbidden: thriver role required';
   END IF;
@@ -69,8 +79,8 @@ SET search_path = public, auth
 AS $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = auth.uid() AND lower(role) = 'thriver'
+    SELECT 1 FROM public.profiles caller
+    WHERE caller.id = auth.uid() AND lower(caller.role) = 'thriver'
   ) THEN
     RAISE EXCEPTION 'forbidden: thriver role required';
   END IF;
