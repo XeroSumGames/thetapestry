@@ -69,6 +69,7 @@ CONTENT = [
     (-1, "Demo / sample campaign for first-time GMs. ~2-3 hours.", None),
     (-1, "Beginners' guide /welcome links. docs/beginners-guide.{txt,docx} drafted on disk; commit + surface chapter links.", None),
     (-1, "Domain verification spot-check on Resend. FROM swap is in code; confirm outbound mail still lands.", None),
+    (-1, "Wire Resend as Supabase Auth SMTP provider. Auth emails (signup, password reset) currently use Supabase default service - 4/hr cap, poor deliverability. Steps: (a) Resend add domain mail.distemperverse.com (subdomain avoids Wix root-MX limit), add DKIM/SPF DNS in Wix. (b) Supabase Auth -> Emails -> SMTP Settings -> Enable Custom SMTP, host smtp.resend.com:465, user 'resend', password = RESEND_API_KEY, sender noreply@mail.distemperverse.com. (c) Test signup, verify in Resend Logs. Free tier (3k/mo) covers launch. Blocks email-confirmation gate from being usable.", None),
     (-1, "End-to-end smoke pass — signup → /firsttimers → /welcome → /characters/new → /map → first whisper.", None),
     (-1, "Quick Reference card on /welcome. Placeholder needs CDP / WP-RP / Stress / Inspiration cheat sheet + SRD/CRB links.", None),
 

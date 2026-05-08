@@ -155,6 +155,21 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
 - [ ] **Domain verification spot-check on Resend.** FROM swap is in
       code; confirm outbound mail still lands.
 
+- [ ] **Wire Resend as Supabase Auth SMTP provider.** Auth emails
+      (signup confirmation, password reset, magic link) currently use
+      Supabase's default service — 4 emails/hour cap, "dev only,"
+      poor deliverability. Resend is wired for the Edge Functions
+      (notify-thriver, log-visit) but not for Auth. Steps:
+      (a) Resend → add domain `mail.distemperverse.com` (subdomain
+      avoids the Wix root-MX limitation), add DKIM/SPF DNS in Wix.
+      (b) Supabase → Authentication → Emails → SMTP Settings →
+      Enable Custom SMTP. Host `smtp.resend.com`, port 465,
+      username `resend`, password = `RESEND_API_KEY`, sender
+      `noreply@mail.distemperverse.com`.
+      (c) Test signup with a fresh email; verify delivery in Resend
+      Logs. Free tier (3000 emails/mo) covers launch; no cost.
+      Blocks the email-confirmation gate from being usable.
+
 - [ ] **End-to-end smoke pass** — signup → /firsttimers → /welcome
       → /characters/new → /map → first whisper.
 
