@@ -40,8 +40,9 @@ export default function SignupPage() {
   // Honeypot — real users never see or fill this field (positioned off-screen).
   // Bots that auto-fill all inputs will populate it; we silently drop the request.
   const [honeypot, setHoneypot] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const widgetIdRef = useRef<string | null>(null)
-  const tokenResolverRef = useRef<((t: string) => void) | null>(null)
+  const cachedTokenRef = useRef<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -50,56 +51,61 @@ export default function SignupPage() {
   // Users invited to a specific campaign skip the generic welcome page.
   useEffect(() => { setRedirect(readSafeRedirect()) }, [])
 
-  // Register the global Turnstile callback so the invisible widget can
-  // hand the token back to the pending submit promise.
-  useEffect(() => {
-    (window as any).__turnstileCb = (token: string) => {
-      tokenResolverRef.current?.(token)
-      tokenResolverRef.current = null
-    }
-  }, [])
-
   function mountTurnstile() {
     const ts = (window as any).turnstile
     const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
     if (!ts || !sitekey || widgetIdRef.current) return
+    // Auto-execution: widget solves invisibly as soon as it renders.
+    // Token is cached in cachedTokenRef; we read it on submit rather than
+    // calling execute() which conflicts with Managed mode and hangs.
     widgetIdRef.current = ts.render('#turnstile-container', {
       sitekey,
-      callback: '__turnstileCb',
       size: 'invisible',
+      callback: (token: string) => { cachedTokenRef.current = token },
+      'expired-callback': () => { cachedTokenRef.current = null },
+      'error-callback': () => { cachedTokenRef.current = null },
     })
   }
 
-  // Returns a promise that resolves with the Turnstile token.
-  // If the widget isn't available (local dev without secret configured),
-  // resolves immediately with an empty string so signup isn't blocked.
-  function getToken(): Promise<string> {
+  // Returns the cached token (widget already solved on page load).
+  // Resets + re-solves if expired, with an 8s timeout.
+  // Returns null if the widget isn't mounted (env var missing, etc.).
+  function getToken(): Promise<string | null> {
     const ts = (window as any).turnstile
-    if (!ts || !widgetIdRef.current) return Promise.resolve('')
+    if (!ts || !widgetIdRef.current) return Promise.resolve(null)
+    const existing = cachedTokenRef.current
+    if (existing) return Promise.resolve(existing)
+    // Token not ready yet (very fast submit) - wait up to 8s
     return new Promise(resolve => {
-      tokenResolverRef.current = resolve
-      ts.execute(widgetIdRef.current!)
+      const tid = setTimeout(() => resolve(null), 8000)
+      const orig = (window as any).__turnstileCb
+      ;(window as any).__turnstileCb = (token: string) => {
+        clearTimeout(tid)
+        cachedTokenRef.current = token
+        ;(window as any).__turnstileCb = orig
+        resolve(token)
+      }
+      ts.reset(widgetIdRef.current!)
     })
   }
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    setSubmitting(true)
 
+    try {
     // Honeypot — if filled, it's a bot. Silently succeed to avoid tipping off scrapers.
     if (honeypot) { router.push(redirect ?? '/dashboard'); return }
 
     // Username sanity — block machine-generated random strings.
     if (looksRandom(username)) {
-      setError('Username looks randomly generated — please choose a recognizable name.')
+      setError('Username looks randomly generated - please choose a recognizable name.')
       return
     }
 
-    // Turnstile — get an invisible challenge token and verify it server-side
-    // before ever touching Supabase auth.
-    // If the sitekey is configured but the widget never mounted (missing
-    // NEXT_PUBLIC_TURNSTILE_SITE_KEY in Vercel env, ad blocker, slow CDN),
-    // block instead of failing open.
+    // Turnstile — read the auto-solved token (widget solved on page load).
+    // Null = widget not mounted. If sitekey is configured, that's a hard block.
     const sitekeyConfigured = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
     const tsToken = await getToken()
     if (sitekeyConfigured && !tsToken) {
@@ -113,8 +119,7 @@ export default function SignupPage() {
         body: JSON.stringify({ token: tsToken }),
       })
       if (!check.ok) {
-        const ts = (window as any).turnstile
-        if (ts && widgetIdRef.current) ts.reset(widgetIdRef.current)
+        cachedTokenRef.current = null
         setError('Bot check failed - please try again.')
         return
       }
@@ -154,6 +159,9 @@ export default function SignupPage() {
     // page still exists and is reachable if needed; we just don't force
     // new signups through it.
     router.push(redirect ?? '/dashboard')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const inp: React.CSSProperties = {
@@ -204,9 +212,9 @@ export default function SignupPage() {
             </div>
           )}
 
-          <button type="submit"
-            style={{ marginTop: '4px', padding: '10px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            Sign Up
+          <button type="submit" disabled={submitting}
+            style={{ marginTop: '4px', padding: '10px', background: submitting ? '#7a1f16' : '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.8 : 1 }}>
+            {submitting ? 'Verifying...' : 'Sign Up'}
           </button>
         </form>
 
