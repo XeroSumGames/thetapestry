@@ -63,13 +63,14 @@ and currently does NOT pass a captchaToken — enabling Supabase CAPTCHA
 without first wiring Turnstile into `/login` will lock out all logins.
 
 **Recommended order of operations:**
-1. Ship this commit (signup tightened).
-2. Verify signup still works on production with the new gate.
-3. Wire Turnstile into `/login` (port the same widget mount pattern).
-4. Then flip the Supabase dashboard toggle.
-
-If you skip step 3, every login will fail with "captcha verification process
-failed" once step 4 is applied.
+1. ✅ Ship signup-tighten commit `5dfd9d5`.
+2. ✅ Ship /login Turnstile port (same hard-fail gate + captchaToken
+   forwarded to `signInWithPassword`).
+3. ⚠️ Verify on production: signup with no ad blocker (succeeds), signup
+   with ad blocker (blocks), login likewise.
+4. ⚠️ Flip the Supabase dashboard toggle. Both /signup and /login now
+   forward captchaToken so the auth calls themselves are gated. No
+   bypass remains.
 
 ## Verification — happy path
 
@@ -103,23 +104,35 @@ failed" once step 4 is applied.
       should still work without any CAPTCHA prompt — the gate skips when
       the env var is absent.
 
+## Verification — /login
+
+- [ ] Open `/login` in a normal browser (no ad blocker). Sign in with a
+      valid account. Lands on `/dashboard`. Network tab shows
+      `POST /api/auth/verify-turnstile` returning `200 {ok:true}` BEFORE
+      the auth call.
+- [ ] Wrong password → "Invalid login credentials" error AND the
+      Turnstile widget resets (next attempt requires a fresh challenge,
+      since the previous token was consumed by the failed call).
+- [ ] With uBlock Origin blocking `challenges.cloudflare.com`: same
+      `"Bot check unavailable…"` message as signup.
+
 ## Known limitations / follow-ups
 
-1. **`/login` not yet protected.** Brute-force / credential-stuffing on
-   existing accounts isn't blocked by anything. Port the Turnstile widget
-   mount pattern to `app/login/page.tsx` and pass `captchaToken` to
-   `supabase.auth.signInWithPassword`. ~30 min job.
-2. **Magic link / OAuth.** No magic-link or OAuth flows currently exist;
+1. **Magic link / OAuth.** No magic-link or OAuth flows currently exist;
    if added later, both need captchaToken too.
-3. **Server-side signup endpoint.** Belt-and-suspenders++ would be a
+2. **Server-side signup endpoint.** Belt-and-suspenders++ would be a
    `/api/auth/signup` route that uses the Supabase service role to create
    the account, with mandatory Turnstile verification first. Then the
    client form posts to that route instead of calling
    `supabase.auth.signUp` directly. Defers cleanly to a future hardening
    pass.
-4. **Invite-code gate.** `tasks/scaling-plan-tier-abc.md` flags a
+3. **Invite-code gate.** `tasks/scaling-plan-tier-abc.md` flags a
    `signup_codes` table for invite-only signup. Cleanest way to stop spam
    entirely if open signup isn't required for MVP.
+4. **Password recovery / email change.** Both call Supabase auth methods
+   that also gate on captchaToken when dashboard CAPTCHA is enabled.
+   No code path currently exposes them, but if `/forgot-password` ships
+   later, the same pattern applies.
 
 ## Fingerprint
 

@@ -1,5 +1,6 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import Script from 'next/script'
 import { createClient } from '../../lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { logEvent, logFirstEvent } from '../../lib/events'
@@ -19,6 +20,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [redirect, setRedirect] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  // Turnstile state mirrors /signup. The widget is mounted invisibly off-
+  // screen; a token is auto-solved on page load and cached. We read the
+  // cached token on submit (calling execute() conflicts with Managed mode
+  // and hangs).
+  const widgetIdRef = useRef<string | null>(null)
+  const cachedTokenRef = useRef<string | null>(null)
+  const widgetErroredRef = useRef(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -27,14 +36,107 @@ export default function LoginPage() {
   // (matches SSR) and populated after mount; no hydration mismatch.
   useEffect(() => { setRedirect(readSafeRedirect()) }, [])
 
+  function mountTurnstile() {
+    const ts = (window as any).turnstile
+    const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+    if (!ts || !sitekey || widgetIdRef.current) return
+    widgetIdRef.current = ts.render('#turnstile-container-login', {
+      sitekey,
+      size: 'invisible',
+      callback: (token: string) => { cachedTokenRef.current = token; widgetErroredRef.current = false },
+      'expired-callback': () => { cachedTokenRef.current = null },
+      'error-callback': () => { cachedTokenRef.current = null; widgetErroredRef.current = true },
+    })
+  }
+
+  // Returns the cached token (widget already solved on page load).
+  // Resets + re-solves if expired, with an 8s timeout. Returns null if
+  // the widget isn't mounted (env var missing, script blocked).
+  function getToken(): Promise<string | null> {
+    const ts = (window as any).turnstile
+    if (!ts || !widgetIdRef.current) return Promise.resolve(null)
+    const existing = cachedTokenRef.current
+    if (existing) return Promise.resolve(existing)
+    return new Promise(resolve => {
+      const tid = setTimeout(() => resolve(null), 8000)
+      const orig = (window as any).__turnstileLoginCb
+      ;(window as any).__turnstileLoginCb = (token: string) => {
+        clearTimeout(tid)
+        cachedTokenRef.current = token
+        ;(window as any).__turnstileLoginCb = orig
+        resolve(token)
+      }
+      ts.reset(widgetIdRef.current!)
+    })
+  }
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password })
-    if (loginError) { console.error('[Login] auth error:', loginError.message); setError(loginError.message); return }
-    logEvent('login')
-    logFirstEvent('first_login')
-    router.push(redirect ?? '/dashboard')
+    setSubmitting(true)
+
+    try {
+      // Turnstile gate — same hard-fail shape as /signup. When a site key
+      // is configured (always true in production), a valid server-verified
+      // token is REQUIRED. The token is also forwarded to
+      // signInWithPassword as captchaToken so Supabase's own CAPTCHA
+      // enforcement (Authentication → Attack Protection in the dashboard)
+      // gates the auth call too.
+      //
+      // Why we need this even though credentials are required: brute-force
+      // and credential-stuffing run scripts against /login. Turnstile makes
+      // those scripts pay the cost of a real challenge per attempt, which
+      // collapses their throughput.
+      const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+      let tsToken: string | null = null
+      if (siteKey) {
+        tsToken = await getToken()
+        if (!tsToken) {
+          setError(
+            widgetErroredRef.current
+              ? 'Bot check unavailable. Disable any ad blockers for this site and refresh.'
+              : 'Bot check timed out. Refresh and try again.'
+          )
+          return
+        }
+        const check = await fetch('/api/auth/verify-turnstile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: tsToken }),
+        })
+        if (!check.ok) {
+          cachedTokenRef.current = null
+          setError('Bot check failed - please try again.')
+          return
+        }
+      }
+
+      // Forwarded to Supabase's server-side CAPTCHA verifier when Bot
+      // and Abuse Protection is enabled in the dashboard. Omitted when
+      // siteKey isn't configured (dev mode) so local login still works.
+      const { error: loginError } = await supabase.auth.signInWithPassword(
+        tsToken
+          ? { email, password, options: { captchaToken: tsToken } }
+          : { email, password }
+      )
+      if (loginError) {
+        console.error('[Login] auth error:', loginError.message)
+        // Reset the token — Turnstile tokens are single-use, so a failed
+        // login (wrong password) used the token. Force a fresh challenge
+        // for the next attempt.
+        cachedTokenRef.current = null
+        if (widgetIdRef.current && (window as any).turnstile) {
+          (window as any).turnstile.reset(widgetIdRef.current)
+        }
+        setError(loginError.message)
+        return
+      }
+      logEvent('login')
+      logFirstEvent('first_login')
+      router.push(redirect ?? '/dashboard')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const inp: React.CSSProperties = {
@@ -46,6 +148,11 @@ export default function LoginPage() {
   }
 
   return (
+    <>
+    <Script
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+      onLoad={mountTurnstile}
+    />
     <main style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ width: '100%', maxWidth: '380px', padding: '2rem' }}>
 
@@ -69,9 +176,9 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button type="submit"
-            style={{ marginTop: '4px', padding: '10px', background: '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            Log In
+          <button type="submit" disabled={submitting}
+            style={{ marginTop: '4px', padding: '10px', background: submitting ? '#7a1f16' : '#c0392b', border: 'none', borderRadius: '3px', color: '#fff', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.8 : 1 }}>
+            {submitting ? 'Verifying...' : 'Log In'}
           </button>
         </form>
 
@@ -82,5 +189,8 @@ export default function LoginPage() {
 
       </div>
     </main>
+    {/* Invisible Turnstile widget — rendered off-screen, executed on submit */}
+    <div id="turnstile-container-login" style={{ position: 'absolute', left: '-9999px' }} />
+    </>
   )
 }
