@@ -158,7 +158,7 @@ export default function Sidebar() {
       {/* User header */}
       <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid #2e2e2e', fontFamily: 'Carlito, sans-serif' }}>
         {isGuest ? (
-          <span style={{ color: '#7fc458', fontSize: '14px', letterSpacing: '.12em', textTransform: 'uppercase' }}>Ghost <span style={{ fontSize: '13px' }}>— You Don&apos;t Exist</span></span>
+          <span style={{ color: '#7fc458', fontSize: '14px', letterSpacing: '.12em', textTransform: 'uppercase' }}>You are a Ghost, <Link href="/signup" style={{ color: '#cce0f5', textDecoration: 'underline' }}>Sign Up</Link></span>
         ) : (
           <>
             {/* Line 1: Username, with the role badge ONLY for Thrivers.
