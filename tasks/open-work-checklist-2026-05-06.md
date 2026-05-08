@@ -75,10 +75,10 @@ This supersedes `tasks/open-work-2026-05-05-printable.md`.
 - [ ] **In-app SRD search.** SRD content is structurally complete;
       `/rules/*` just needs a search UI on top of it.
 
-- [ ] **Thriver godmode UI sweep — surface 5 of 5.** Character-sheet
-      edit affordance for non-owned PCs. (Surfaces 1–4 shipped
-      `92f9243`: NpcRoster, CampaignCommunity, CampaignObjects,
-      VehicleCard.)
+- [x] **Thriver godmode UI sweep — surface 5 of 5.** Character-sheet
+      edit affordance for non-owned PCs. Shipped `ae0933a` 2026-05-08:
+      character-sheet canEdit, /characters/[id]/edit ownership bypass,
+      table-page CharacterSheet canEdit widened to gmLike.
 
 ---
 

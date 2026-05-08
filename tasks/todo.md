@@ -8,6 +8,19 @@
 
 ---
 
+## ✅ Shipped 2026-05-08 — anti-spam, Turnstile, godmode surface 5, Leaflet fixes
+
+- [x] **SUSPEND/DELETE layout fix** — `<select>` was filling the full row width due to `globals.css select{width:100%}`. Fixed with `width:'auto'` + wrapped Suspend+Delete as a single inner flex unit so they stay paired. Commits `9045492`, `2cc1a1d`.
+- [x] **Pages Visited section on activity dossier** — added `visitor_logs` fetch (last 20 rows + total count) to the `Promise.all` in `app/moderate/users/[userId]/activity/page.tsx`. Shows path, IP hash, timestamp, and total visit count. Commit `b495cea`.
+- [x] **Per-user Email button on /moderate rows** — `<a href="mailto:...">` rendered between Message and Characters when `u.email` is non-null. Commit `d00c5ac`.
+- [x] **Bot-guard on signup: honeypot + consonant-run username check** — hidden `name="website"` field (positioned off-screen, not `display:none`); `looksRandom()` blocks usernames with 6+ consecutive consonants (y/Y treated as vowel). Triggered by spam account `wEpAfxklFqFikMBdndLxo`. Commit `6e49091`.
+- [x] **Cloudflare Turnstile invisible CAPTCHA on /signup** — Script loads `api.js?render=explicit`, widget renders in Managed (auto-execution) mode; token cached in `cachedTokenRef` on solve callback; read on submit; verified against `/api/auth/verify-turnstile` (new route). Fail-open when widget errors; hard-block only on server token rejection. Commits `3b14a02`, `54c3402`, `315570c`, `3d95be2`.
+- [x] **Cloudflare Turnstile hostname registration** — added `localhost`, `thetapestry.distemperverse.com`, and `vercel.app` to widget Hostname Management. Resolves Sentry error 400020.
+- [x] **Thriver godmode surface 5: character-sheet edit for non-owned PCs** — `app/character-sheet/page.tsx` wires `isThriver` into `canEdit` + `onRoll`; `app/characters/[id]/edit/page.tsx` bypasses `user_id` ownership filter for Thriver profiles; `app/stories/[id]/table/page.tsx` widens `canEdit` on CharacterSheet to `gmLike`. Commit `ae0933a`.
+- [x] **CampaignMap Leaflet fixes (Sentry cleanup)** — added `minZoom:2, maxZoom:19` to `L.map()` init (fixes "Map has no maxZoom" warning); added `map.remove()` in `useEffect` cleanup (fixes orphaned-instance `_leaflet_pos` TypeError when navigating away and back). Commit `b6852e0`.
+
+---
+
 ## ✅ Shipped 2026-05-08 — /moderate redesign + visit-alert fix
 
 - [x] **/moderate user-row redesign** — commit `397c6ec feat(moderate): user-row redesign + Track activity dossier`. Two visual rows: top = username + role chip + suspended chip; bottom = action buttons in one line (Make Survivor/Thriver, Message, Characters, Track, Suspend…/Unsuspend, Delete). New TRACK button opens the activity dossier. Per-user `Joined` and `Last login` dates surfaced.
