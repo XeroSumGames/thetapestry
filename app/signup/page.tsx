@@ -41,6 +41,10 @@ export default function SignupPage() {
   // Bots that auto-fill all inputs will populate it; we silently drop the request.
   const [honeypot, setHoneypot] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  // When Supabase "Confirm email" is enabled, signUp returns no session.
+  // We swap the form view for a "check your email" message instead of
+  // pushing to /dashboard (which would just bounce back to /login).
+  const [checkEmailFor, setCheckEmailFor] = useState<string | null>(null)
   const widgetIdRef = useRef<string | null>(null)
   const cachedTokenRef = useRef<string | null>(null)
   const widgetErroredRef = useRef(false)
@@ -128,10 +132,19 @@ export default function SignupPage() {
       }
     }
 
+    // emailRedirectTo points at the auth/callback route handler. After
+    // the user clicks the confirmation link, Supabase redirects there
+    // with `?code=<token>`, the route exchanges the code for a session,
+    // and then bounces them to the original destination (?next=...) so
+    // an invite-link signup ends at /join/<code> not generic /dashboard.
+    const callbackPath = `/auth/callback${redirect ? `?next=${encodeURIComponent(redirect)}` : ''}`
+    const emailRedirectTo = `${window.location.origin}${callbackPath}`
+
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo,
         data: { username },
         // Harmless when dashboard CAPTCHA is off; activates the server-
         // side gate when it's eventually flipped on.
@@ -159,14 +172,19 @@ export default function SignupPage() {
       }
     }
     logEvent('signup', { username })
-    // Invite flow: land on the target path (e.g. /join/<code>) so the user
-    // can accept the invite without losing context.
-    // No redirect: go straight to /dashboard for now.
-    // `/firsttimers` is DISABLED as a landing until the site is ready to
-    // onboard new users (see tasks/todo.md Long-term / Post-launch). The
-    // page still exists and is reachable if needed; we just don't force
-    // new signups through it.
-    router.push(redirect ?? '/dashboard')
+
+    // If "Confirm email" is enabled in the Supabase dashboard, signUp
+    // returns { user, session: null } — the user is created but can't sign
+    // in until they click the email link. Surface that state instead of
+    // pushing to /dashboard (where they'd just bounce back to /login).
+    //
+    // If "Confirm email" is OFF, signUp returns a session immediately and
+    // we proceed straight to the destination, same as before.
+    if (signUpData.session) {
+      router.push(redirect ?? '/dashboard')
+    } else {
+      setCheckEmailFor(email)
+    }
     } finally {
       setSubmitting(false)
     }
@@ -189,6 +207,53 @@ export default function SignupPage() {
     <main style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ width: '100%', maxWidth: '380px', padding: '2rem' }}>
 
+        {checkEmailFor ? (
+          // Post-signup state when Supabase "Confirm email" is enabled.
+          // Account exists; user has to click the link in the email
+          // before they can sign in.
+          <>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
+                Check Your Email
+              </div>
+            </div>
+            <div style={{ fontSize: '14px', color: '#d4cfc9', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+              We sent a confirmation link to{' '}
+              <strong style={{ color: '#f5f2ee' }}>{checkEmailFor}</strong>.
+              Click the link in that email to finish creating your account.
+            </div>
+            <div style={{ fontSize: '13px', color: '#cce0f5', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+              Didn't get it? Check your spam folder. Still nothing after a
+              few minutes — click below to resend.
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                const { error } = await supabase.auth.resend({
+                  type: 'signup',
+                  email: checkEmailFor,
+                  options: {
+                    emailRedirectTo: `${window.location.origin}/auth/callback${redirect ? `?next=${encodeURIComponent(redirect)}` : ''}`,
+                  },
+                })
+                if (error) alert(`Resend failed: ${error.message}`)
+                else alert('Confirmation email resent.')
+              }}
+              style={{ width: '100%', padding: '10px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#d4cfc9', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              Resend Confirmation Email
+            </button>
+            <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '13px', color: '#cce0f5' }}>
+              Wrong email?{' '}
+              <button
+                type="button"
+                onClick={() => setCheckEmailFor(null)}
+                style={{ color: '#d4cfc9', background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer', fontSize: '13px', fontFamily: 'Carlito, sans-serif', padding: 0 }}>
+                Start over
+              </button>
+            </p>
+          </>
+        ) : (
+        <>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '28px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#f5f2ee' }}>
             Create Account
@@ -230,6 +295,8 @@ export default function SignupPage() {
           Already have an account?{' '}
           <a href={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'} style={{ color: '#d4cfc9', textDecoration: 'none' }}>Log in</a>
         </p>
+        </>
+        )}
 
       </div>
     </main>

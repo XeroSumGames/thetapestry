@@ -21,6 +21,11 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [redirect, setRedirect] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  // When sign-in fails because the account hasn't confirmed its email,
+  // we surface a Resend button. Storing the email on the dedicated state
+  // (separate from `error`) lets the inline button know which address to
+  // resend to without re-reading the form.
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null)
   // Turnstile state mirrors /signup. The widget is mounted invisibly off-
   // screen; a token is auto-solved on page load and cached. We read the
   // cached token on submit (calling execute() conflicts with Managed mode
@@ -35,6 +40,15 @@ export default function LoginPage() {
   // target survives the login round-trip. Rendering is null on first render
   // (matches SSR) and populated after mount; no hydration mismatch.
   useEffect(() => { setRedirect(readSafeRedirect()) }, [])
+
+  // Surface ?error=... from /auth/callback. Code-exchange failures land
+  // back here with a hint about what went wrong instead of silently
+  // bouncing back to the form.
+  useEffect(() => {
+    const err = new URLSearchParams(window.location.search).get('error')
+    if (err === 'missing_code') setError('Confirmation link was incomplete. Try signing up again or click the most recent email.')
+    else if (err === 'callback_failed') setError('Confirmation link expired or was already used. Sign in normally if your account is confirmed.')
+  }, [])
 
   function mountTurnstile() {
     const ts = (window as any).turnstile
@@ -114,7 +128,18 @@ export default function LoginPage() {
         if (widgetIdRef.current && (window as any).turnstile) {
           (window as any).turnstile.reset(widgetIdRef.current)
         }
-        setError(loginError.message)
+        // Supabase returns "Email not confirmed" verbatim when the user
+        // exists but hasn't clicked the confirmation link. Surface a
+        // friendlier copy + offer Resend instead of dumping the raw
+        // error string.
+        const isUnconfirmed = /email\s*not\s*confirmed/i.test(loginError.message)
+        if (isUnconfirmed) {
+          setUnconfirmedEmail(email)
+          setError('')
+        } else {
+          setUnconfirmedEmail(null)
+          setError(loginError.message)
+        }
         return
       }
       logEvent('login')
@@ -159,6 +184,33 @@ export default function LoginPage() {
           {error && (
             <div style={{ fontSize: '13px', color: '#f5a89a', padding: '8px 10px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px' }}>
               {error}
+            </div>
+          )}
+
+          {unconfirmedEmail && (
+            <div style={{ fontSize: '13px', color: '#cce0f5', padding: '10px 12px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', lineHeight: 1.5 }}>
+              <div style={{ marginBottom: '8px' }}>
+                <strong style={{ color: '#EF9F27' }}>Email not confirmed yet.</strong>
+                {' '}Check the inbox for{' '}
+                <strong style={{ color: '#f5f2ee' }}>{unconfirmedEmail}</strong>{' '}
+                and click the confirmation link before signing in.
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  const { error } = await supabase.auth.resend({
+                    type: 'signup',
+                    email: unconfirmedEmail,
+                    options: {
+                      emailRedirectTo: `${window.location.origin}/auth/callback${redirect ? `?next=${encodeURIComponent(redirect)}` : ''}`,
+                    },
+                  })
+                  if (error) alert(`Resend failed: ${error.message}`)
+                  else alert('Confirmation email resent.')
+                }}
+                style={{ width: '100%', padding: '8px', background: 'transparent', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                Resend Confirmation Email
+              </button>
             </div>
           )}
 
