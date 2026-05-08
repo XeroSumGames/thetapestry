@@ -88,6 +88,15 @@ interface PinRow {
   status: string | null
 }
 
+interface VisitRow {
+  id: string
+  page: string | null
+  created_at: string
+  city: string | null
+  country_code: string | null
+  is_ghost: boolean
+}
+
 function formatDate(iso: string | null) {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('en-US', {
@@ -122,6 +131,8 @@ export default function UserActivityPage() {
   const [lfgPosts, setLfgPosts] = useState<LfgRow[]>([])
   const [bugs, setBugs] = useState<BugRow[]>([])
   const [pins, setPins] = useState<PinRow[]>([])
+  const [visits, setVisits] = useState<VisitRow[]>([])
+  const [visitCount, setVisitCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -132,13 +143,13 @@ export default function UserActivityPage() {
       const { data: myProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       if (myProfile?.role?.toLowerCase() !== 'thriver') { router.push('/dashboard'); return }
 
-      // All 11 data sources in parallel — header, character list +
+      // All 13 data sources in parallel — header, character list +
       // count, campaigns owned + joined, roll log preview + count,
       // forum threads + replies, war stories, LFG posts, bug reports,
-      // map pins. Counts use head:true; previews limit to 10 newest.
+      // map pins, pages visited (visitor_logs, most recent 30).
       const [
         hdr, chars, charCount, owned, joinedRows, rollData, rollTotal,
-        threads, replies, stories, lfg, bugRows, pinRows,
+        threads, replies, stories, lfg, bugRows, pinRows, visitData, visitTotal,
       ] = await Promise.all([
         supabase.rpc('admin_user_with_login', { target_user_id: userId }),
         supabase.from('characters').select('id, name, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
@@ -153,6 +164,8 @@ export default function UserActivityPage() {
         supabase.from('lfg_posts').select('id, title, created_at, setting').eq('author_user_id', userId).order('created_at', { ascending: false }).limit(20),
         supabase.from('bug_reports').select('id, description, created_at, status, page_url').eq('reporter_id', userId).order('created_at', { ascending: false }).limit(20),
         supabase.from('map_pins').select('id, title, created_at, pin_type, status').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
+        supabase.from('visitor_logs').select('id, page, created_at, city, country_code, is_ghost').eq('user_id', userId).order('created_at', { ascending: false }).limit(30),
+        supabase.from('visitor_logs').select('id', { count: 'exact', head: true }).eq('user_id', userId),
       ])
 
       const headerRow = (hdr.data ?? [])[0] as UserHeader | undefined
@@ -179,6 +192,8 @@ export default function UserActivityPage() {
       setLfgPosts((lfg.data ?? []) as LfgRow[])
       setBugs((bugRows.data ?? []) as BugRow[])
       setPins((pinRows.data ?? []) as PinRow[])
+      setVisits((visitData.data ?? []) as VisitRow[])
+      setVisitCount(visitTotal.count ?? 0)
       setLoading(false)
     }
     load()
@@ -307,6 +322,14 @@ export default function UserActivityPage() {
         {pins.length === 0 ? <Empty /> : pins.map(p => (
           <Row key={p.id} primary={p.title ?? '(untitled)'}
             secondary={`${p.pin_type ?? '—'} · ${p.status ?? '—'} · ${shortDate(p.created_at)}`} />
+        ))}
+      </Section>
+
+      <Section title="Pages visited" count={visitCount} subtitle={visitCount > visits.length ? `showing ${visits.length} most recent` : undefined}>
+        {visits.length === 0 ? <Empty /> : visits.map(v => (
+          <Row key={v.id}
+            primary={v.page ?? '(unknown)'}
+            secondary={[v.city, v.country_code].filter(Boolean).join(', ') + ' · ' + shortDate(v.created_at)} />
         ))}
       </Section>
     </div>
