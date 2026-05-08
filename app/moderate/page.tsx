@@ -824,6 +824,11 @@ export default function ModerationPage() {
                     <Link href={`/messages?dm=${u.id}`} style={{ ...actionBtn('#2a102a', '#d48bd4'), textDecoration: 'none', textAlign: 'center' }}>
                       Message
                     </Link>
+                    {u.email && (
+                      <a href={`mailto:${u.email}`} style={{ ...actionBtn('#1a2a3a', '#7ab3d4'), textDecoration: 'none', textAlign: 'center' }}>
+                        Email
+                      </a>
+                    )}
                     <Link href={`/moderate/users/${u.id}/characters`} style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', textAlign: 'center' }}>
                       Characters
                     </Link>
