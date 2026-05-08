@@ -31,6 +31,10 @@ interface Profile {
   suspended?: boolean
   suspended_until: string | null
   suspended_reason: string | null
+  // Joined from auth.users via the admin_users_with_login() RPC.
+  // Null when the user has never signed in (rare, but possible if
+  // a profile was inserted directly without a real auth flow).
+  last_sign_in_at: string | null
 }
 
 function actionBtn(borderColor: string, color: string): React.CSSProperties {
@@ -478,11 +482,17 @@ export default function ModerationPage() {
 
   async function loadUsers() {
     setUsersLoading(true)
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false })
-    setUsers(data ?? [])
+    // SECURITY DEFINER RPC — joins profiles + auth.users for the
+    // last_sign_in_at field that the client SDK can't read directly.
+    // Gated to Thrivers inside the function. Sorted by created_at desc.
+    // Source: sql/admin-users-with-login.sql
+    const { data, error } = await supabase.rpc('admin_users_with_login')
+    if (error) {
+      alert(`Failed to load users: ${error.message}`)
+      setUsers([])
+    } else {
+      setUsers((data ?? []) as Profile[])
+    }
     setUsersLoading(false)
   }
 
@@ -743,85 +753,95 @@ export default function ModerationPage() {
           {usersLoading && <div style={{ color: '#d4cfc9', fontSize: '13px' }}>Loading...</div>}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {users.map(u => (
-              <div key={u.id} style={{
-                background: '#1a1a1a', border: '1px solid #2e2e2e',
-                borderLeft: `3px solid ${u.role?.toLowerCase() === 'thriver' ? '#c0392b' : '#3a3a3a'}`,
-                borderRadius: '4px', padding: '10px 1.25rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              }}>
-                <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
-                  <div style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {u.username}
-                    {u.email && <span style={{ color: '#cce0f5', fontWeight: 400, marginLeft: '6px', fontSize: '14px' }}>({u.email})</span>}
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#cce0f5', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    Joined {formatDate(u.created_at)}
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap', justifyContent: 'flex-end', flexShrink: 0 }}>
-                  {(() => {
-                    // suspended_until in the future = currently suspended.
-                    // Past or null = clear. Renders a chip with the until-
-                    // date so a Thriver can see when it expires.
-                    const until = u.suspended_until ? new Date(u.suspended_until) : null
-                    const isSuspended = until && until.getTime() > Date.now()
-                    if (!isSuspended) return null
-                    const isPermanent = until!.getFullYear() >= 2099
-                    return (
-                      <span title={u.suspended_reason ?? undefined}
-                        style={{ fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px', background: '#2a1a00', color: '#EF9F27', border: '1px solid #EF9F27' }}>
-                        {isPermanent ? 'Suspended (perm)' : `Suspended → ${until!.toLocaleDateString()}`}
+            {users.map(u => {
+              // suspended_until in the future = currently suspended.
+              // Past or null = clear. Permanent suspensions use a sentinel
+              // year ≥ 2099 so we can render "perm" instead of a date.
+              const until = u.suspended_until ? new Date(u.suspended_until) : null
+              const isSuspended = !!(until && until.getTime() > Date.now())
+              const isPermanent = isSuspended && until!.getFullYear() >= 2099
+              const lastLogin = u.last_sign_in_at ? new Date(u.last_sign_in_at) : null
+              return (
+                <div key={u.id} style={{
+                  background: '#1a1a1a', border: '1px solid #2e2e2e',
+                  borderLeft: `3px solid ${u.role?.toLowerCase() === 'thriver' ? '#c0392b' : '#3a3a3a'}`,
+                  borderRadius: '4px', padding: '10px 1.25rem',
+                  display: 'flex', flexDirection: 'column', gap: '8px',
+                }}>
+                  {/* TOP: identity row — username + role/suspended chips
+                      on the left, joined + last-login dates on the right.
+                      Username gets ellipsis on overflow so chips/dates
+                      stay anchored. */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                      <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '16px', fontWeight: 700, color: '#f5f2ee', letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                        {u.username}
                       </span>
-                    )
-                  })()}
-                  <span style={{
-                    fontSize: '13px', fontFamily: 'Carlito, sans-serif',
-                    letterSpacing: '.08em', textTransform: 'uppercase',
-                    padding: '3px 8px', borderRadius: '2px',
-                    background: u.role?.toLowerCase() === 'thriver' ? '#2a1210' : '#1a1a2e',
-                    color: u.role?.toLowerCase() === 'thriver' ? '#f5a89a' : '#7ab3d4',
-                    border: `1px solid ${u.role?.toLowerCase() === 'thriver' ? '#c0392b' : '#2e2e5a'}`,
-                  }}>
-                    {u.role}
-                  </span>
-                  {u.role?.toLowerCase() === 'thriver' ? (
-                    <button onClick={() => handleRoleChange(u.id, 'Survivor')} disabled={acting === u.id} style={actionBtn('#3a3a3a', '#d4cfc9')}>
-                      Make Survivor
-                    </button>
-                  ) : (
-                    <button onClick={() => handleRoleChange(u.id, 'Thriver')} disabled={acting === u.id} style={actionBtn('#c0392b', '#f5a89a')}>
-                      Make Thriver
-                    </button>
-                  )}
-                  {/* DM deep-link — opens the existing /messages page on
-                      this user. Same `?dm=<userId>` pattern used by
-                      campfire/lfg, forums, stories member list, and
-                      CampaignCommunity roster. Lets a Thriver reach out
-                      directly from the moderation panel without first
-                      navigating to find them in another surface. */}
-                  <Link href={`/messages?dm=${u.id}`} style={{ ...actionBtn('#2a102a', '#d48bd4'), textDecoration: 'none', textAlign: 'center' }}>
-                    Message
-                  </Link>
-                  <Link href={`/moderate/users/${u.id}/characters`} style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', textAlign: 'center' }}>
-                    Characters
-                  </Link>
-                  {(() => {
-                    const until = u.suspended_until ? new Date(u.suspended_until) : null
-                    const isSuspended = until && until.getTime() > Date.now()
-                    if (isSuspended) {
-                      return (
-                        <button onClick={() => handleSuspend(u.id, 0)} disabled={acting === u.id}
-                          style={actionBtn('#2d5a1b', '#7fc458')}>
-                          Unsuspend
-                        </button>
-                      )
-                    }
-                    // Inline duration picker — user picks length, we
-                    // immediately apply. Default placeholder reads
-                    // "Suspend…" so the GM intent is clear.
-                    return (
+                      {u.email && (
+                        <span style={{ color: '#cce0f5', fontFamily: 'Carlito, sans-serif', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {u.email}
+                        </span>
+                      )}
+                      <span style={{
+                        fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+                        letterSpacing: '.08em', textTransform: 'uppercase',
+                        padding: '3px 8px', borderRadius: '2px',
+                        background: u.role?.toLowerCase() === 'thriver' ? '#2a1210' : '#1a1a2e',
+                        color: u.role?.toLowerCase() === 'thriver' ? '#f5a89a' : '#7ab3d4',
+                        border: `1px solid ${u.role?.toLowerCase() === 'thriver' ? '#c0392b' : '#2e2e5a'}`,
+                        flexShrink: 0,
+                      }}>
+                        {u.role}
+                      </span>
+                      {isSuspended && (
+                        <span title={u.suspended_reason ?? undefined}
+                          style={{ fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '2px', background: '#2a1a00', color: '#EF9F27', border: '1px solid #EF9F27', flexShrink: 0 }}>
+                          {isPermanent ? 'Suspended (perm)' : `Suspended → ${until!.toLocaleDateString()}`}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', flexShrink: 0 }}>
+                      <span><span style={{ color: '#7a8a9a' }}>Joined </span>{formatDate(u.created_at)}</span>
+                      <span><span style={{ color: '#7a8a9a' }}>Last login </span>{lastLogin ? formatDate(lastLogin.toISOString()) : 'never'}</span>
+                    </div>
+                  </div>
+
+                  {/* BOTTOM: action row — every button on a single line,
+                      left-aligned. Wraps only if the viewport is too narrow.
+                      Order: role-flip, Message, Characters, Track,
+                      Suspend/Unsuspend, Delete. */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    {u.role?.toLowerCase() === 'thriver' ? (
+                      <button onClick={() => handleRoleChange(u.id, 'Survivor')} disabled={acting === u.id} style={actionBtn('#3a3a3a', '#d4cfc9')}>
+                        Make Survivor
+                      </button>
+                    ) : (
+                      <button onClick={() => handleRoleChange(u.id, 'Thriver')} disabled={acting === u.id} style={actionBtn('#c0392b', '#f5a89a')}>
+                        Make Thriver
+                      </button>
+                    )}
+                    {/* DM deep-link — opens the existing /messages page on
+                        this user. Same `?dm=<userId>` pattern used by
+                        campfire/lfg, forums, stories member list, and
+                        CampaignCommunity roster. */}
+                    <Link href={`/messages?dm=${u.id}`} style={{ ...actionBtn('#2a102a', '#d48bd4'), textDecoration: 'none', textAlign: 'center' }}>
+                      Message
+                    </Link>
+                    <Link href={`/moderate/users/${u.id}/characters`} style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', textAlign: 'center' }}>
+                      Characters
+                    </Link>
+                    {/* TRACK — opens the cross-surface activity dossier:
+                        characters, campaigns, recent rolls, forum posts,
+                        war stories, LFG posts, bug reports, map pins. */}
+                    <Link href={`/moderate/users/${u.id}/activity`} style={{ ...actionBtn('#1a4a3a', '#7adcb3'), textDecoration: 'none', textAlign: 'center' }}>
+                      Track
+                    </Link>
+                    {isSuspended ? (
+                      <button onClick={() => handleSuspend(u.id, 0)} disabled={acting === u.id}
+                        style={actionBtn('#2d5a1b', '#7fc458')}>
+                        Unsuspend
+                      </button>
+                    ) : (
                       <select value="" disabled={acting === u.id}
                         onChange={async e => {
                           const v = e.target.value
@@ -849,14 +869,14 @@ export default function ModerationPage() {
                         <option value="30">30 days</option>
                         <option value="perm">Permanent</option>
                       </select>
-                    )
-                  })()}
-                  <button onClick={() => handleDeleteUser(u.id)} disabled={acting === u.id} style={actionBtn('#7a1f16', '#f5a89a')}>
-                    Delete
-                  </button>
+                    )}
+                    <button onClick={() => handleDeleteUser(u.id)} disabled={acting === u.id} style={actionBtn('#7a1f16', '#f5a89a')}>
+                      Delete
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </>
       )}
