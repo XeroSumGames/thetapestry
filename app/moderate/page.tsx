@@ -830,12 +830,14 @@ export default function ModerationPage() {
                       Suspend/Unsuspend, Delete. */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                     {u.role?.toLowerCase() === 'thriver' ? (
-                      <button onClick={() => handleRoleChange(u.id, 'Survivor')} disabled={acting === u.id} style={actionBtn('#3a3a3a', '#d4cfc9')}>
-                        Make Survivor
+                      <button onClick={() => handleRoleChange(u.id, 'Survivor')} disabled={acting === u.id} style={actionBtn('#3a3a3a', '#d4cfc9')}
+                        title="Demote to Survivor">
+                        Demote
                       </button>
                     ) : (
-                      <button onClick={() => handleRoleChange(u.id, 'Thriver')} disabled={acting === u.id} style={actionBtn('#c0392b', '#f5a89a')}>
-                        Make Thriver
+                      <button onClick={() => handleRoleChange(u.id, 'Thriver')} disabled={acting === u.id} style={actionBtn('#c0392b', '#f5a89a')}
+                        title="Promote to Thriver">
+                        Promote
                       </button>
                     )}
                     {/* DM deep-link — opens the existing /messages page on
@@ -852,8 +854,9 @@ export default function ModerationPage() {
                     )}
                     {u.email && (
                       <button onClick={() => handleResetPassword(u.email)} disabled={acting === u.id}
+                        title="Send password-reset email"
                         style={actionBtn('#3a2a00', '#EF9F27')}>
-                        Reset Password
+                        Reset
                       </button>
                     )}
                     <Link href={`/moderate/users/${u.id}/characters`} style={{ ...actionBtn('#1a3a5c', '#7ab3d4'), textDecoration: 'none', textAlign: 'center' }}>
