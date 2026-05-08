@@ -16,6 +16,7 @@ export default function CharacterSheetPage() {
   const [stateId, setStateId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [isGM, setIsGM] = useState(false)
+  const [isThriver, setIsThriver] = useState(false)
   const [isMySheet, setIsMySheet] = useState(false)
   const [loading, setLoading] = useState(true)
   const [notes, setNotes] = useState('')
@@ -34,11 +35,13 @@ export default function CharacterSheetPage() {
       setCharacter(char)
       setNotes(char.data?.session_notes ?? '')
 
-      // Check GM status
-      if (campaignId) {
-        const { data: camp } = await supabase.from('campaigns').select('gm_user_id').eq('id', campaignId).single()
-        if (camp) setIsGM(camp.gm_user_id === user.id)
-      }
+      // Check GM status + Thriver role in parallel
+      const [campRes, profRes] = await Promise.all([
+        campaignId ? supabase.from('campaigns').select('gm_user_id').eq('id', campaignId).single() : Promise.resolve({ data: null }),
+        supabase.from('profiles').select('role').eq('id', user.id).single(),
+      ])
+      if (campRes.data) setIsGM((campRes.data as any).gm_user_id === user.id)
+      if (profRes.data) setIsThriver((profRes.data as any).role?.toLowerCase() === 'thriver')
 
       // Check ownership
       setIsMySheet(char.user_id === user.id)
@@ -91,14 +94,14 @@ export default function CharacterSheetPage() {
       <CharacterCard
         character={character}
         liveState={liveState ?? undefined}
-        canEdit={isMySheet || isGM}
+        canEdit={isMySheet || isGM || isThriver}
         showButtons={true}
         isMySheet={isMySheet}
         isGM={isGM}
         onStatUpdate={stateId ? async (_sid: string, field: string, value: number) => {
           await supabase.from('character_states').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', stateId)
         } : undefined}
-        onRoll={(campaignId && (isMySheet || isGM)) ? (label, amod, smod, weapon) => {
+        onRoll={(campaignId && (isMySheet || isGM || isThriver)) ? (label, amod, smod, weapon) => {
           // Skills / attacks clicked in the popout broadcast to the parent
           // table tab over BroadcastChannel — the table tab owns the roll
           // modal + initiative gates + CMod stack, so reuse it. Same-browser

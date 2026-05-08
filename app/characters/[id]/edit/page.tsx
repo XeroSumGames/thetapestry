@@ -47,12 +47,16 @@ export default function EditCharacterPage() {
     async function load() {
       const { user } = await getCachedAuth()
       if (!user) { router.push('/login'); return }
-      const { data: row, error } = await supabase
-        .from('characters')
-        .select('id, name, data')
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .single()
+
+      // Thrivers can edit any character (godmode surface 5).
+      // Everyone else must own the character — non-owners are redirected.
+      const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      const isThriver = (prof as any)?.role?.toLowerCase() === 'thriver'
+
+      let query = supabase.from('characters').select('id, name, data').eq('id', id)
+      if (!isThriver) query = query.eq('user_id', user.id)
+
+      const { data: row, error } = await query.single()
       if (error || !row) { router.push('/characters'); return }
       const d = row.data
       setCharacterName(row.name)

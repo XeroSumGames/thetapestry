@@ -6978,7 +6978,7 @@ export default function TablePage() {
                 campaignId={id}
                 character={syncedSelectedEntry.character}
                 liveState={syncedSelectedEntry.liveState}
-                canEdit={isGM || syncedSelectedEntry.userId === userId}
+                canEdit={gmLike || syncedSelectedEntry.userId === userId}
                 showButtons={true}
                 isMySheet={syncedSelectedEntry.userId === userId}
                 isGM={isGM}
