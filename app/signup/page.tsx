@@ -43,6 +43,7 @@ export default function SignupPage() {
   const [submitting, setSubmitting] = useState(false)
   const widgetIdRef = useRef<string | null>(null)
   const cachedTokenRef = useRef<string | null>(null)
+  const widgetErroredRef = useRef(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -61,9 +62,9 @@ export default function SignupPage() {
     widgetIdRef.current = ts.render('#turnstile-container', {
       sitekey,
       size: 'invisible',
-      callback: (token: string) => { cachedTokenRef.current = token },
+      callback: (token: string) => { cachedTokenRef.current = token; widgetErroredRef.current = false },
       'expired-callback': () => { cachedTokenRef.current = null },
-      'error-callback': () => { cachedTokenRef.current = null },
+      'error-callback': () => { cachedTokenRef.current = null; widgetErroredRef.current = true },
     })
   }
 
@@ -104,14 +105,12 @@ export default function SignupPage() {
       return
     }
 
-    // Turnstile — read the auto-solved token (widget solved on page load).
-    // Null = widget not mounted. If sitekey is configured, that's a hard block.
-    const sitekeyConfigured = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+    // Turnstile - read the auto-solved token (widget solved on page load).
+    // If the widget errored (domain mismatch, ad blocker, CDN issue) we fail
+    // open so real users aren't locked out. Honeypot + username check are the
+    // first-line defense in that case. Only hard-block if the server explicitly
+    // rejects a token that was actually returned.
     const tsToken = await getToken()
-    if (sitekeyConfigured && !tsToken) {
-      setError('Security check failed to load - please refresh and try again.')
-      return
-    }
     if (tsToken) {
       const check = await fetch('/api/auth/verify-turnstile', {
         method: 'POST',
