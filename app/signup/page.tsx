@@ -96,9 +96,16 @@ export default function SignupPage() {
     }
 
     // Turnstile — get an invisible challenge token and verify it server-side
-    // before ever touching Supabase auth. Empty token = widget not loaded
-    // (local dev without secret key) — the API route fails open in non-prod.
+    // before ever touching Supabase auth.
+    // If the sitekey is configured but the widget never mounted (missing
+    // NEXT_PUBLIC_TURNSTILE_SITE_KEY in Vercel env, ad blocker, slow CDN),
+    // block instead of failing open.
+    const sitekeyConfigured = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
     const tsToken = await getToken()
+    if (sitekeyConfigured && !tsToken) {
+      setError('Security check failed to load - please refresh and try again.')
+      return
+    }
     if (tsToken) {
       const check = await fetch('/api/auth/verify-turnstile', {
         method: 'POST',
@@ -106,10 +113,9 @@ export default function SignupPage() {
         body: JSON.stringify({ token: tsToken }),
       })
       if (!check.ok) {
-        // Reset the widget so the user can retry
         const ts = (window as any).turnstile
         if (ts && widgetIdRef.current) ts.reset(widgetIdRef.current)
-        setError('Bot check failed — please try again.')
+        setError('Bot check failed - please try again.')
         return
       }
     }
