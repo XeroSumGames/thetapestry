@@ -833,51 +833,53 @@ export default function ModerationPage() {
                     <Link href={`/moderate/users/${u.id}/activity`} style={{ ...actionBtn('#1a4a3a', '#7adcb3'), textDecoration: 'none', textAlign: 'center' }}>
                       Track
                     </Link>
-                    {isSuspended ? (
-                      <button onClick={() => handleSuspend(u.id, 0)} disabled={acting === u.id}
-                        style={actionBtn('#2d5a1b', '#7fc458')}>
-                        Unsuspend
+                    {/* Suspend/Delete are wrapped in a paired div so they
+                        are always ONE flex item in the parent wrap container.
+                        Without this, when the select wraps to its own line it
+                        fills the full row width regardless of width:'auto'.
+                        globals.css still sets select{width:100%} — the inline
+                        width:'auto' overrides that, but only matters once the
+                        select and delete share a line inside this inner flex. */}
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+                      {isSuspended ? (
+                        <button onClick={() => handleSuspend(u.id, 0)} disabled={acting === u.id}
+                          style={actionBtn('#2d5a1b', '#7fc458')}>
+                          Unsuspend
+                        </button>
+                      ) : (
+                        <select value="" disabled={acting === u.id}
+                          onChange={async e => {
+                            const v = e.target.value
+                            if (!v) return
+                            const reason = window.prompt('Reason for suspension (optional, shown to other Thrivers):', '') ?? undefined
+                            const days = v === 'perm' ? -1 : parseInt(v, 10)
+                            await handleSuspend(u.id, days, reason)
+                            e.target.value = ''
+                          }}
+                          style={{
+                            padding: '4px 6px',
+                            background: '#3a2a00',
+                            border: '1px solid #5a3a00',
+                            borderRadius: '3px',
+                            color: '#EF9F27',
+                            fontSize: '13px',
+                            fontFamily: 'Carlito, sans-serif',
+                            letterSpacing: '.06em',
+                            textTransform: 'uppercase',
+                            cursor: 'pointer',
+                            width: 'auto',
+                          }}>
+                          <option value="">Suspend…</option>
+                          <option value="1">24 hours</option>
+                          <option value="7">7 days</option>
+                          <option value="30">30 days</option>
+                          <option value="perm">Permanent</option>
+                        </select>
+                      )}
+                      <button onClick={() => handleDeleteUser(u.id)} disabled={acting === u.id} style={actionBtn('#7a1f16', '#f5a89a')}>
+                        Delete
                       </button>
-                    ) : (
-                      <select value="" disabled={acting === u.id}
-                        onChange={async e => {
-                          const v = e.target.value
-                          if (!v) return
-                          const reason = window.prompt('Reason for suspension (optional, shown to other Thrivers):', '') ?? undefined
-                          const days = v === 'perm' ? -1 : parseInt(v, 10)
-                          await handleSuspend(u.id, days, reason)
-                          e.target.value = ''
-                        }}
-                        style={{
-                          padding: '4px 6px',
-                          background: '#3a2a00',
-                          border: '1px solid #5a3a00',
-                          borderRadius: '3px',
-                          color: '#EF9F27',
-                          fontSize: '13px',
-                          fontFamily: 'Carlito, sans-serif',
-                          letterSpacing: '.06em',
-                          textTransform: 'uppercase',
-                          cursor: 'pointer',
-                          // globals.css forces select { width: 100% } on
-                          // every select on the site. Override to natural
-                          // content width so the dropdown sizes to its
-                          // widest option ("Permanent") and DELETE can
-                          // sit next to it on the same line. flexShrink:0
-                          // keeps it from collapsing under flex pressure.
-                          width: 'auto',
-                          flexShrink: 0,
-                        }}>
-                        <option value="">Suspend…</option>
-                        <option value="1">24 hours</option>
-                        <option value="7">7 days</option>
-                        <option value="30">30 days</option>
-                        <option value="perm">Permanent</option>
-                      </select>
-                    )}
-                    <button onClick={() => handleDeleteUser(u.id)} disabled={acting === u.id} style={actionBtn('#7a1f16', '#f5a89a')}>
-                      Delete
-                    </button>
+                    </div>
                   </div>
                 </div>
               )
