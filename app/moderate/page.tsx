@@ -859,6 +859,14 @@ export default function ModerationPage() {
                           letterSpacing: '.06em',
                           textTransform: 'uppercase',
                           cursor: 'pointer',
+                          // globals.css forces select { width: 100% } on
+                          // every select on the site. Override to natural
+                          // content width so the dropdown sizes to its
+                          // widest option ("Permanent") and DELETE can
+                          // sit next to it on the same line. flexShrink:0
+                          // keeps it from collapsing under flex pressure.
+                          width: 'auto',
+                          flexShrink: 0,
                         }}>
                         <option value="">Suspend…</option>
                         <option value="1">24 hours</option>
